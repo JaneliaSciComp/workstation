@@ -27,14 +27,11 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -47,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView<T, S> {
+public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationTablePanel.class);
     
@@ -57,19 +54,7 @@ public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView
     private DynamicTable dynamicTable;
     private JLabel summaryLabel;
     private List<Annotation> annotations = new ArrayList<>();
-    private SelectionModel<T,S> selectionModel;
-    private ImageModel<T,S> imageModel;
-    
-    @Override
-    public void setSelectionModel(SelectionModel<T, S> selectionModel) {
-        this.selectionModel = selectionModel;
-    }
 
-    @Override
-    public void setImageModel(ImageModel<T, S> imageModel) {
-        this.imageModel = imageModel;
-    }
-    
     public AnnotationTablePanel() {
         setLayout(new BorderLayout());
         setOpaque(false);
@@ -255,6 +240,7 @@ public class AnnotationTablePanel<T, S> extends JPanel implements AnnotationView
         worker.execute();
     }
 
+    // TODO: use the AnnotationContextMenu
     private JPopupMenu getPopupMenu(final MouseEvent e, final Annotation annotation) {
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();

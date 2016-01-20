@@ -38,11 +38,11 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainObjectPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
@@ -92,7 +92,7 @@ public class DomainInspectorPanel extends JPanel {
 
     private final JLabel annotationsLoadingLabel;
     private final JPanel annotationsPanel;
-    private final AnnotationView<DomainObject, Reference> annotationsView;
+    private final AnnotationView annotationsView;
 
     private final DomainObjectPermissionDialog dopDialog;
 

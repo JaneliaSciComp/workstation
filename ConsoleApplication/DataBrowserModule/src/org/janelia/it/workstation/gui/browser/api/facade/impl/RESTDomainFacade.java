@@ -531,7 +531,19 @@ public class RESTDomainFacade implements DomainFacade {
         return updatedObjectSet;
     }
 
-    // general user info/permissions/etc
+    public List<Subject> loginSubject() {
+        Response response = serviceEndpoints.get("user")
+                .path("subjects")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
+            return null;
+        }
+        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>() {
+        });
+        return subjects;
+    }
+
     public List<Subject> getSubjects() {
         Response response = serviceEndpoints.get("user")
                 .path("subjects")

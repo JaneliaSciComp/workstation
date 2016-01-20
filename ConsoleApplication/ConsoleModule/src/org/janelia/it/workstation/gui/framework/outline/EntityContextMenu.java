@@ -184,7 +184,9 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
-        add(getWrapEntityItem());
+        for (JMenuItem wrapItem: getWrapEntityItem()) {
+            add(wrapItem);
+        }
 
    //     if (("SessionMgr.getSubjectKey()".equals("user:simpsonj") || "SessionMgr.getSubjectKey()"
     //            .equals("group:simpsonlab")) && !this.multiple) {
@@ -417,7 +419,7 @@ public class EntityContextMenu extends JPopupMenu {
         return orderedMap.values();
     }
     
-    public JMenuItem getWrapEntityItem() {
+    public List<JMenuItem> getWrapEntityItem() {
         if (multiple) return null;
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(rootedEntity);
     }
@@ -1092,8 +1094,7 @@ public class EntityContextMenu extends JPopupMenu {
                             return;
                         }
 
-                        String filepath = EntityUtils.getAnyFilePath(movie);
-
+                        String filepath = EntityUtils.getFilePath(movie);
                         if (StringUtils.isEmpty(filepath)) {
                             JOptionPane.showMessageDialog(mainFrame, "Verification movie has no path",
                                     "Not Found", JOptionPane.ERROR_MESSAGE);
@@ -1688,7 +1689,7 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         JMenuItem menuItem = null;
-        if (isLocallyAccessibleFilepath(path)) {
+        if (!StringUtils.isEmpty(path)) {
             menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1708,7 +1709,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (!OpenWithDefaultAppAction.isSupported())
             return null;
         String path = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-        if (isLocallyAccessibleFilepath(path)) {
+        if (!StringUtils.isEmpty(path)) {
             OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
@@ -1724,7 +1725,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (isLocallyAccessibleFilepath(path)) {
+        if (!StringUtils.isEmpty(path)) {
             JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1828,7 +1829,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (isLocallyAccessibleFilepath(path)) {
+        if (!StringUtils.isEmpty(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1850,7 +1851,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-        if (isLocallyAccessibleFilepath(path)) {
+        if (!StringUtils.isEmpty(path)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1987,6 +1988,20 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
+    protected JMenuItem getRemoteSWCLoad() {
+        if (multiple) {
+            return null;
+        }
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            JMenuItem menuItem = new JMenuItem("  ????");
+            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+            return menuItem;
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public JMenuItem add(JMenuItem menuItem) {
 
@@ -2036,17 +2051,5 @@ public class EntityContextMenu extends JPopupMenu {
             }
 
         }
-    }
-
-    /**
-     * Checks if the file path is or can be made locally accessible through the 
-     * file cache. This is mainly to filter out Scality files, which we can't 
-     * handle at the moment. In this future this may return true for all file
-     * paths which are not empty. 
-     * @param filepath
-     * @return 
-     */
-    private boolean isLocallyAccessibleFilepath(String filepath) {
-        return !StringUtils.isEmpty(filepath);
     }
 }

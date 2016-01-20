@@ -162,7 +162,7 @@ public class ImagesPanel extends JScrollPane {
             AnnotatedImageButton button;
 
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconPanel.getCurrImageRole());
-            if (filepath != null && !filepath.startsWith(EntityConstants.SCALITY_PATH_PREFIX)) {
+            if (filepath != null) {
                 button = new DynamicImageButton(rootedEntity, iconPanel);
             }
             else {

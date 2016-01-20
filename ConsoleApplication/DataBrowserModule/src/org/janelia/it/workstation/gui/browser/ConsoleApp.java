@@ -13,11 +13,12 @@ import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.openide.LifecycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.ProtectionDomain;
-
+import javax.swing.ToolTipManager;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
@@ -94,7 +95,7 @@ public class ConsoleApp {
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 log.warn("User closed login window without successfully logging in, exiting program.");
-                SessionMgr.getSessionMgr().systemExit();
+                LifecycleManager.getDefault().exit(0);
             }
             
             log.info("Successfully logged in user "+AccessManager.getUsername());
@@ -104,7 +105,7 @@ public class ConsoleApp {
             }
             catch (Exception e) {
                 sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
-                //AccessManager.getAccessManager().handleException(e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
             
             sessionMgr.newBrowser();
@@ -136,7 +137,7 @@ public class ConsoleApp {
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
-            SessionMgr.getSessionMgr().systemExit();
+            LifecycleManager.getDefault().exit(0);
         }
     }
 }

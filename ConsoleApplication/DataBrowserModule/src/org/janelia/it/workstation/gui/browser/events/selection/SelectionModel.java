@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class SelectionModel<T,S> {
     
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
+    private static final Logger log = LoggerFactory.getLogger(SelectionModel.class);
     
     private final List<S> selected = new ArrayList<>();
     private Object source;
@@ -40,22 +40,36 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(T object, boolean clearAll) {
-        log.debug("select {}, clear={}",object,clearAll);
         S id = getId(object);
-        if (clearAll && selected.contains(id) && selected.size()==1) {
-            // Already single selected
-            return;
+        log.trace("select {}, clearAll={}",id,clearAll);
+        if (!isCorrectlySelected(id, clearAll)) {
+            if (clearAll) {
+                selected.clear();
+            }
+            selected.add(id);
         }
-        if (!clearAll && selected.contains(id) && selected.size()>1) {
-            // Already multiple selected
-            return;
-        }
-        if (clearAll) {
-            selected.clear();
-        }
-        selected.add(id);
         selectionChanged(object, id, true, clearAll);
-        
+    }
+    
+    private boolean isCorrectlySelected(S id, boolean clearAll) {
+        if (selected.contains(id)) {
+            if (clearAll) {
+                if (selected.size()==1) {
+                    // Already single selected
+                    return true;
+                }
+                else {
+                    // Multi-selected, but needs to be single selected
+                    return false;
+                }
+            }
+            else {
+                // Already multi-selected
+                return true;
+            }
+        }
+        // Not selected
+        return false;
     }
 
     /**
@@ -63,8 +77,8 @@ public abstract class SelectionModel<T,S> {
      * @param object
      */
     public final void deselect(T object) {
-        log.debug("deselect {}",object);
         S id = getId(object);
+        log.trace("deselect {}",id);
         if (!selected.contains(id)) {
             return;
         }

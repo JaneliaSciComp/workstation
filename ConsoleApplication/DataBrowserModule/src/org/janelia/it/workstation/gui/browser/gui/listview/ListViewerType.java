@@ -10,7 +10,7 @@ import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTab
  */
 public enum ListViewerType {
 
-    IconViewer("Icon View", DomainObjectIconGridViewer.class),
+    IconViewer("Image View", DomainObjectIconGridViewer.class),
     TableViewer("Table View", DomainObjectTableViewer.class);
 
     private final String name;

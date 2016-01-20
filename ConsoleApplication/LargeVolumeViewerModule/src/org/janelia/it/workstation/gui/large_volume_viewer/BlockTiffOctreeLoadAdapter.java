@@ -5,18 +5,18 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 
+import com.sun.media.jai.codec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 
@@ -136,12 +136,13 @@ extends AbstractTextureLoadAdapter
             final ActionString actionString = new ActionString(
                      folderOpenTimestamp + ":" + relativeSlice + ":" + tileIndex.toString() + ":elapsed_ms=" + elapsedMs
             );
+            // Use the by-category granularity for these.
             SessionMgr.getSessionMgr().logToolEvent(
                     LVV_LOGSTAMP_ID,
                     LIX_CATEGORY_STRING,
                     actionString,
                     elapsedMs,
-                    999.0
+                    Double.MAX_VALUE
             );
         }
 
@@ -151,7 +152,7 @@ extends AbstractTextureLoadAdapter
 	}
 
 	public static TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders, int channelCount)
-	throws TileLoadError 
+	throws TileLoadError
     {
 		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[channelCount];
@@ -205,8 +206,14 @@ extends AbstractTextureLoadAdapter
 	{
 		return createImageDecoders(folder, axis, false, tileFormat.getChannelCount());
 	}
-	
-	public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount)
+            throws MissingTileException, TileLoadError
+    {
+        return createImageDecoders(folder, axis, acceptNullDecoders, channelCount, false);
+    }
+
+    public static ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders, int channelCount, boolean fileToMemory)
 			throws MissingTileException, TileLoadError 
 	{
         String tiffBase = OctreeMetadataSniffer.getTiffBase(axis);
@@ -240,7 +247,14 @@ extends AbstractTextureLoadAdapter
                         InputStream inputStream = url.openStream();
                         decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
                     } else {
-                        SeekableStream s = new FileSeekableStream(tiff);
+                        SeekableStream s=null;
+                        if (fileToMemory) {
+                            Path path = Paths.get(tiff.getAbsolutePath());
+                            byte[] data = Files.readAllBytes(path);
+                            s = new ByteArraySeekableStream(data);
+                        } else {
+                            s = new FileSeekableStream(tiff);
+                        }
                         decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
                     }
                 } catch (IOException e) {

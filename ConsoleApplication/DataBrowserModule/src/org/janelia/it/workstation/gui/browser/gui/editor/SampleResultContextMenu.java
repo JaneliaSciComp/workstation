@@ -109,15 +109,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         
-        JMenuItem menuItem = getNamedActionItem(new OpenInFinderAction(path) {
-            @Override
-            public String getName() {
-                String name = super.getName();
-                if (name == null)
-                    return null;
-                return "  " + name;
-            }
-        });
+        JMenuItem menuItem = getNamedActionItem(new OpenInFinderAction(path));
         return menuItem;
     }
 
@@ -125,13 +117,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
-        OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path) {
-            @Override
-            public String getName() {
-                return "  Open With OS";
-            }
-        };
-        return getNamedActionItem(action);
+        return getNamedActionItem(new OpenWithDefaultAppAction(path));
     }
 
     protected JMenuItem getNeuronAnnotatorItem() {

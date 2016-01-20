@@ -6,11 +6,14 @@ import javax.swing.JComponent;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -52,6 +55,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     private static final Logger log = LoggerFactory.getLogger(DomainViewerTopComponent.class);
     
     public static final String TC_NAME = "DomainViewerTopComponent";
+    public static final String TC_VERSION = "1.0";
         
     /* Instance variables */
     
@@ -164,16 +168,48 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
         return null;
     }
-    
+
     void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
+        p.setProperty("version", TC_VERSION);
+        DomainObject current = getCurrent();
+        if (current!=null) {
+            String objectRef = Reference.createFor(current).toString();
+            log.info("Writing state: {}",objectRef);
+            p.setProperty("objectRef", objectRef);
+        }
+        else {
+            p.remove("objectRef");
+        }
     }
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-        // TODO read your settings according to their version
+        final String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: {}",objectStrRef);
+        if (TC_VERSION.equals(version) && objectStrRef!=null) {
+
+            SimpleWorker worker = new SimpleWorker() {
+                DomainObject object;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (object!=null) {
+                        loadDomainObject(object);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+        }
     }
 }

@@ -96,7 +96,7 @@ public final class AccessManager {
         final String user = username;
         final String pw = password;
 
-        Subject authenticatedSubject = null;
+        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(username);
         log.info("Setting default authenticator");
         if (authenticatedSubject!=null) {
             Authenticator.setDefault(new Authenticator() {
@@ -154,7 +154,7 @@ public final class AccessManager {
     }
     
     private void resetSession() {
- /*       final Browser browser = AccessManager.getBrowser();
+        final Browser browser = AccessManager.getBrowser();
         if (browser != null) {
             log.info("Refreshing all views");
             browser.resetView();
@@ -162,7 +162,6 @@ public final class AccessManager {
         log.info("Resetting model");
         ModelMgr.getModelMgr().reset();
         sessionModel.removeAllBrowserModels();
-   */
     }
     
     public void logoutUser() {

@@ -16,6 +16,8 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
  */
 public interface AnnotatedDomainObjectList {
 
+    public Class<? extends DomainObject> getDomainClass();
+    
     public List<DomainObject> getDomainObjects();
     
     public List<Annotation> getAnnotations(Long domainObjectId);

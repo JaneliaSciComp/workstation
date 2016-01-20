@@ -16,6 +16,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
@@ -28,13 +29,14 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +46,7 @@ import com.google.common.eventbus.Subscribe;
 import de.javasoft.swing.SimpleDropDownButton;
 
 /**
- * A panel that builds pagination and selection features around an AnnotatedDomainObjectListViewer. 
+ * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -137,7 +139,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         selectAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                selectAll();
+                loadAndSelectAll();
             }
         });
 
@@ -179,22 +181,16 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
-
-        JMenuItem iconViewItem = new JMenuItem("Icon View");
-        iconViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ListViewerType.IconViewer);
-            }
-        });
-        popupMenu.add(iconViewItem);
-
-        JMenuItem tableViewItem = new JMenuItem("Table View");
-        tableViewItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                setViewerType(ListViewerType.TableViewer);
-            }
-        });
-        popupMenu.add(tableViewItem);
+        
+        for(final ListViewerType type : ListViewerType.values()) {
+            JMenuItem viewItem = new JMenuItem(type.getName());
+            viewItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    setViewerType(type);
+                }
+            });
+            popupMenu.add(viewItem);
+        }
 
         return popupMenu;
     }
@@ -207,6 +203,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
             }
             else {
                 AnnotatedDomainObjectListViewer viewer = viewerType.getViewerClass().newInstance();
+                viewer.getPanel().addMouseListener(new MouseForwarder(this, "AnnotatedDomainObjectListViewer->PaginatedResultsPanel"));
                 setViewer(viewer);
             }
         }
@@ -214,20 +211,21 @@ public abstract class PaginatedResultsPanel extends JPanel {
             log.error("Error instantiating viewer class",e);
             setViewer(null);
         }
+
+        final List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        for(Reference id : selectionModel.getSelectedIds()) {
+            DomainObject domainObject = model.getDomainObject(id);
+            if (domainObject!=null) {
+                selectedDomainObjects.add(domainObject);
+            }
+        }
         
         // Set user driven to false in order to avoid selecting the first item
-        updateResultsView(false, new Callable<Void>() {   
+        updateResultsView(new Callable<Void>() {   
             @Override
             public Void call() throws Exception {
                 // Reselect the items that were selected
-                List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                for(Reference id : selectionModel.getSelectedIds()) {
-                    DomainObject domainObject = model.getDomainObject(id);
-                    if (domainObject!=null) {
-                        selectedDomainObjects.add(domainObject);
-                    }
-                }
                 log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),viewerType.getName());
                 resultsView.selectDomainObjects(selectedDomainObjects, true, true);
                 return null;
@@ -236,6 +234,10 @@ public abstract class PaginatedResultsPanel extends JPanel {
         
     }
 
+    public AnnotatedDomainObjectListViewer getViewer() {
+        return resultsView;
+    }
+    
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
         viewer.setSelectionModel(selectionModel);
         viewer.setSearchProvider(searchProvider);
@@ -255,11 +257,12 @@ public abstract class PaginatedResultsPanel extends JPanel {
         updateStatusBar();
 //        updateHud(false);
     }
-
+    
     @Subscribe
     public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
                 
         for(final ResultPage page : searchResults.getPages()) {
+            if (page==null) continue; // Page not yet loaded
             final Long domainObjectId = event.getDomainObject().getId();
             final DomainObject pageObject = page.getDomainObject(domainObjectId);
             if (pageObject!=null) {
@@ -288,18 +291,67 @@ public abstract class PaginatedResultsPanel extends JPanel {
             }
         }
     }
+
+    private void loadAndSelectAll() {
+        
+        if (!searchResults.isAllLoaded()) {
+            int rv = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), 
+                    "Load all "+searchResults.getNumTotalResults()+" results?",
+                    "Load all?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+            if (rv == JOptionPane.YES_OPTION) {
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        searchResults.loadAllResults();
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        selectAll();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
+                worker.execute();
+                return;
+            }
+        }
+        else {
+            Utils.setWaitingCursor(SessionMgr.getMainFrame());
+            selectAll();
+            Utils.setDefaultCursor(SessionMgr.getMainFrame());
+        }
+    }
+    
+    private void selectAll() {
+        boolean clearAll = true;
+        for(ResultPage page : searchResults.getPages()) {
+            if (page==null) continue; // Page not yet loaded
+            for(DomainObject domainObject : page.getDomainObjects()) {
+                selectionModel.select(domainObject, clearAll);
+                clearAll = false;
+            }
+        }
+    }
     
     private void updateStatusBar() {
         int s = selectionModel.getSelectedIds().size();
         if (resultPage==null) {
             statusLabel.setText("");
+            selectionButtonContainer.setVisible(false);
         }
         else {
             int pn = resultPage.getNumPageResults();
-            int total = s>pn?resultPage.getNumTotalResults():pn;
-            statusLabel.setText(s + " of " + total + " selected");
+            int tn = resultPage.getNumTotalResults();
+            int total = s>pn?tn:pn;
+            statusLabel.setText(s + " of " + tn + " selected");
+            selectionButtonContainer.setVisible(s==pn && tn>pn);
         }
-        setSelectAllVisible(false);
     }
     
     private synchronized void goPrevPage() {
@@ -327,24 +379,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         this.currPage = numPages - 1;
         showCurrPage();
     }
-
-    private synchronized void selectAll() {
-        Utils.setWaitingCursor(this);
-        boolean clearAll = true;
-        for(ResultPage page : searchResults.getPages()) {
-            for(DomainObject domainObject : page.getDomainObjects()) {
-                selectionModel.select(domainObject, clearAll);
-                clearAll = false;
-            }
-        }
-        setSelectAllVisible(false);
-        Utils.setDefaultCursor(this);
-    }
     
-    public void setSelectAllVisible(boolean visible) {
-        selectionButtonContainer.setVisible(visible);
-    }
-
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
@@ -377,7 +412,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
         this.searchResults = searchResults;
-        selectionModel.reset();
         numPages = searchResults.getNumTotalPages();
         this.currPage = 0;
         showCurrPage(isUserDriven);
@@ -389,8 +423,8 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     protected void showCurrPage(final boolean isUserDriven) {
 
-        updatePagingStatus();
         showLoadingIndicator();
+        updatePagingStatus();
                 
         if (searchResults==null) {
             throw new IllegalStateException("Cannot show page when there are no search results");
@@ -405,7 +439,27 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
             @Override
             protected void hadSuccess() {
-                updateResultsView(isUserDriven, null);
+                updateResultsView(new Callable<Void>() {   
+                    @Override
+                    public Void call() throws Exception {
+                        if (isUserDriven) {
+                            //
+                            // If and only if this is a user driven selection, we should automatically select the first item.
+                            //
+                            // This behavior is disabled for auto-generated events, in order to enable the browsing behavior where a user 
+                            // walks through a list of domain objects (e.g. Samples) with the object set viewer, and each one triggers a 
+                            // load in the domain object viewer, which automatically selects its first result, which in turn triggers another 
+                            // load (of, say, Neuron Fragments). If we selected the first Neuron Fragment, then it would generate a selection 
+                            // event that would overwrite the Sample in the Data Inspector.
+                            //
+                            List<DomainObject> objects = resultPage.getDomainObjects();
+                            if (!objects.isEmpty()) {
+                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true);
+                            }
+                        }
+                        return null;
+                    }
+                });
             }
 
             @Override
@@ -418,31 +472,10 @@ public abstract class PaginatedResultsPanel extends JPanel {
         worker.execute();
     }
     
-    private void updateResultsView(final boolean isUserDriven, final Callable<Void> success) {
+    private void updateResultsView(final Callable<Void> success) {
+        selectionModel.reset();
         if (resultPage!=null) {
-
-            resultsView.showDomainObjects(resultPage, new Callable<Void>() {   
-                @Override
-                public Void call() throws Exception {
-                    if (isUserDriven) {
-                        //
-                        // If and only if this is a user driven selection, we should automatically select the first item.
-                        //
-                        // This behavior is disabled for auto-generated events, in order to enable the browsing behavior where a user 
-                        // walks through a list of domain objects (e.g. Samples) with the object set viewer, and each one triggers a 
-                        // load in the domain object viewer, which automatically selects its first result, which in turn triggers another 
-                        // load (of, say, Neuron Fragments). If we selected the first Neuron Fragment, then it would generate a selection 
-                        // event that would overwrite the Sample in the Data Inspector.
-                        //
-                        List<DomainObject> objects = resultPage.getDomainObjects();
-                        if (!objects.isEmpty()) {
-                            resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true);
-                        }
-                    }
-                    ConcurrentUtils.invokeAndHandleExceptions(success);
-                    return null;
-                }
-            });
+            resultsView.showDomainObjects(resultPage, success);
             showResultsView();
         }
         else {

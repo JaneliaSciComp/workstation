@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -11,18 +10,14 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.EnumItem;
-import org.janelia.it.jacs.model.domain.ontology.EnumText;
-import org.janelia.it.jacs.model.domain.ontology.Interval;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
-import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -95,7 +90,7 @@ public class ApplyAnnotationAction extends NodeAction {
         }
     }
     
-    private void performAction(OntologyTermNode node) {
+    private void performAction(final OntologyTermNode node) {
         
         OntologyTerm ontologyTerm = node.getOntologyTerm();
         Long keyTermId = node.getId();
@@ -123,65 +118,8 @@ public class ApplyAnnotationAction extends NodeAction {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
 
-        // Get the input value, if required
-
-        Object value = null;
-        if (ontologyTerm instanceof Interval) {
-            value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
-            		"Value:\n", ontologyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-
-            Interval interval = (Interval) ontologyTerm;
-            if (StringUtils.isEmpty((String)value)) return;
-            try {
-                Double dvalue = Double.parseDouble((String)value);
-                if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
-                    throw new NumberFormatException();
-                }
-            }
-            catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), 
-                		"Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
-                return;
-            }
-        }
-        else if (ontologyTerm instanceof EnumText) {
-
-            // TODO: get enum by id
-            Long valueEnumId = ((EnumText) ontologyTerm).getValueEnumId();
-            OntologyTermNode enumNode = node.getOntologyNode().getNodeById(valueEnumId);
-
-            if (enumNode == null) {
-                Exception error = new Exception(ontologyTerm.getName() + " has no supporting enumeration.");
-                SessionMgr.getSessionMgr().handleException(error);
-                return;
-            }
-
-            List<OntologyTerm> children = new ArrayList<>();
-            for(Node childNode : enumNode.getChildren().getNodes()) {
-                OntologyTermNode childTermNode = (OntologyTermNode)childNode;
-                children.add(childTermNode.getOntologyTerm());
-            }
-            
-            int i = 0;
-            Object[] selectionValues = new Object[children.size()];
-            for (OntologyTerm child : children) {
-                selectionValues[i++] = child;
-            }
-
-            value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
-                    "Value:\n", ontologyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
-            if (value == null)
-                return;
-        }
-        else if (ontologyTerm instanceof Text) {
-            AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
-            dialog.setVisible(true);
-            value = dialog.getAnnotationValue();
-            if (value==null || value.equals("")) return;
-        }
-        
-        final OntologyTermNode finalTermNode = node;
-        final Object finalValue = value;
+        AnnotationEditor editor = new AnnotationEditor(node.getOntology(), ontologyTerm);
+        final String value = editor.showEditor();
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -189,7 +127,7 @@ public class ApplyAnnotationAction extends NodeAction {
             protected void doStuff() throws Exception {
                 int i = 1;
                 for (DomainObject domainObject : selectedDomainObjects) {
-                    doAnnotation(domainObject, finalTermNode, finalValue);
+                    doAnnotation(domainObject, node, value);
                     setProgress(i++, selectedDomainObjects.size());
                 }
             }
@@ -212,8 +150,6 @@ public class ApplyAnnotationAction extends NodeAction {
     
     public void doAnnotation(DomainObject target, OntologyTermNode termNode, Object value) throws Exception {
         
-        // TODO: ensure no duplicates?
-        
         Ontology ontology = termNode.getOntology();
         
         // Save the annotation
@@ -230,27 +166,16 @@ public class ApplyAnnotationAction extends NodeAction {
         }
 
         final Annotation annotation = new Annotation();
-        
-        OntologyTermReference keyTermRef = new OntologyTermReference();
-        keyTermRef.setOntologyId(ontology.getId());
-        keyTermRef.setOntologyTermId(keyTerm.getId());
-        annotation.setKeyTerm(keyTermRef);
-        
-        if (valueTerm!=null) {
-            OntologyTermReference valueTermRef = new OntologyTermReference();
-            valueTermRef.setOntologyId(ontology.getId());
-            valueTermRef.setOntologyTermId(valueTerm.getId());
-            annotation.setValueTerm(valueTermRef);
-        }
-        
         annotation.setKey(keyString);
         annotation.setValue(valueString);
+        annotation.setTarget(Reference.createFor(target));
         
-        Reference targetRef = new Reference();
-        targetRef.setTargetClassName(target.getClass().getName());
-        targetRef.setTargetId(target.getId());
-        annotation.setTarget(targetRef);
+        annotation.setKeyTerm(new OntologyTermReference(ontology, keyTerm));
+        if (valueTerm!=null) {
+            annotation.setValueTerm(new OntologyTermReference(ontology, valueTerm));
+        }
         
+        // TODO: move this business logic to the DAO
         String tag = (annotation.getValue()==null ? annotation.getKey() : 
                      annotation.getKey() + " = " + annotation.getValue());
         annotation.setName(tag);

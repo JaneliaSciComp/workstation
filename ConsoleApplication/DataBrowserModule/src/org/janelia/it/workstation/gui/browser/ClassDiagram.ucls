@@ -35,9 +35,9 @@
       <operations public="false" package="false" protected="false" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ViewerToolbar" 
+  <class id="4" language="java" name="org.janelia.it.workstation.gui.browser.gui.listview.ViewerToolbar" 
     project="ConsoleApplication" 
-    file="/ConsoleApplication/DataBrowserModule/src/org/janelia/it/workstation/gui/browser/gui/listview/icongrid/ViewerToolbar.java" 
+    file="/ConsoleApplication/DataBrowserModule/src/org/janelia/it/workstation/gui/browser/gui/listview/ViewerToolbar.java" 
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="1260" y="827"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 

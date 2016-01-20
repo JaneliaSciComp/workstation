@@ -40,7 +40,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private QuadViewUi viewUI;
     private ModelMgrObserver modelMgrObserver;
-    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(null); // For communicating annotations to Horta
+    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
     public LargeVolumeViewViewer() {

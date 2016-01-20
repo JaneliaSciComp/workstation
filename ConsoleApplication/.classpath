@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="DataBrowserModule/build/classes-generated"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/compute"/>
 	<classpathentry kind="src" path="DataBrowserModule/src"/>
-	<classpathentry kind="src" path="ConsoleModule/build/classes-generated"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/compute"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
-	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
-	<classpathentry kind="lib" path="ConsoleModule/release/modules/ext/jbossall-client.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MongoDB"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JAX-RS"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
+	<classpathentry kind="lib" path="ConsoleModule/release/modules/ext/jbossall-client.jar"/>
+	<classpathentry kind="src" path="DataBrowserModule/build/classes-generated"/>
+	<classpathentry kind="src" path="ConsoleModule/build/classes-generated"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
+	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

@@ -38,6 +38,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -243,21 +245,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if it's a bare sample, we don't have anything to do
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // at this point, we know the entity is a workspace, so:
+                    // Must make known to user that things are happening,
+                    // even if slowly.
+                    progress.start();
+                    progress.setDisplayName("Loading annotations");
+                    progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
+                    // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
                 }
 
                 @Override
                 protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
+                    progress.finish();
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
+                    progress.finish();
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
@@ -482,6 +492,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchorID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(annotationID);
+
+        // is the target neuron visible?
+        if (!getNeuronStyle(annotationModel.getNeuronFromNeuronID(targetAnnotation.getNeuronId())).isVisible()) {
+            return false;
+        }
 
         // distance: close enough?
         double dx = anchorLocation.getX() - targetAnnotation.getX();
@@ -867,6 +882,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getNote(annotationID);
     }
 
+    public String getNote(Long annotationID, TmNeuron neuron) {
+        return annotationModel.getNote(annotationID, neuron);
+    }
+
     public void setNote(final Long annotationID, final String noteText) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
@@ -1195,15 +1214,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 if (ann.isEnd()) {
                     break;
                 }
-                if (ann.isBranch()) {
-                    ann = neuron.getChildrenOfOrdered(ann).get(0);
+                ann = neuron.getChildrenOfOrdered(ann).get(0);
+                if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
+                    break;
                 }
                 while (!ann.isEnd() && !ann.isBranch()) {
                     ann = neuron.getChildrenOf(ann).get(0);
-                    // bit inefficient, but oh, well
-                    if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
-                        break;
-                    }
                 }
                 break;
             case NEXT_PARALLEL:
@@ -1407,6 +1423,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  Jan. 2014, that monitor's window repositions itself and comes to front on every
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
+    }
+
+    public void showWorkspaceInfoDialog() {
+        // implementation note; this is sloppy; in Raveler, I have a SessionInfoDialog class
+        //  that has a nice table layout and methods for adding new lines to that table
+        //  (including using blank lines as dividers); next time we need to add info
+        //  to this dialog, refactor and do it right
+
+        // you can also look to the Raveler dialog to see what kinds of info we could add
+        //  eg,  move sample name, path to here
+
+        if (annotationModel.getCurrentWorkspace() != null) {
+            int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
+            int nannotations = 0;
+            for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
+                nannotations += neuron.getGeoAnnotationMap().size();
+            }
+            JOptionPane.showMessageDialog(quadViewUi,
+                    "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                    "Info",
+                    JOptionPane.PLAIN_MESSAGE);
+        }
     }
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {

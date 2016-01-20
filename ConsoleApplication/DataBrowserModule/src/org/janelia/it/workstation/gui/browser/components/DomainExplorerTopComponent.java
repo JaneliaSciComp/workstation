@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -20,7 +21,10 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
@@ -77,7 +81,7 @@ import com.google.common.eventbus.Subscribe;
     "CTL_DomainExplorerAction=Domain Explorer",
     "CTL_DomainExplorerTopComponent=Domain Explorer"
 })
-public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
+public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener, FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
@@ -87,29 +91,47 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
 
+    private final CustomTreeToolbar toolbar;
     private final JPanel treePanel;
     private final CustomTreeView beanTreeView;
+    private final FindToolbar findToolbar;
+    
     private final ExplorerManager mgr = new ExplorerManager();
     private final DomainObjectNodeSelectionModel selectionModel = new DomainObjectNodeSelectionModel();
     private final Debouncer debouncer = new Debouncer();
 
     private Lookup.Result<AbstractNode> result = null;
     private RootNode root;
-    
+
     public DomainExplorerTopComponent() {
         initComponents();
-
-        this.treePanel = new JPanel(new BorderLayout());
-        this.beanTreeView = new CustomTreeView(this);
-        beanTreeView.setDefaultActionAllowed(false);
-        beanTreeView.setRootVisible(false);
-        selectionModel.setSource(this);
-        
         setName(Bundle.CTL_DomainExplorerTopComponent());
         
+        selectionModel.setSource(this);
+
         Lookup lookup = new ProxyLookup (ExplorerUtils.createLookup(mgr, getActionMap()), Lookups.singleton(selectionModel));
         associateLookup(lookup);
         
+        this.beanTreeView = new CustomTreeView(this);
+        beanTreeView.setDefaultActionAllowed(false);
+        beanTreeView.setRootVisible(false);
+        beanTreeView.addMouseListener(new MouseForwarder(this, "BeanTreeView->DomainExplorerTopComponent"));
+        
+        this.toolbar = new CustomTreeToolbar(beanTreeView) {
+            @Override
+            protected void refresh() {
+                DomainExplorerTopComponent.this.refresh();
+            }
+        };
+        this.treePanel = new JPanel(new BorderLayout());
+        this.findToolbar = new FindToolbar(this);
+        
+        add(toolbar, BorderLayout.PAGE_START);
+        add(treePanel, BorderLayout.CENTER);
+        add(findToolbar, BorderLayout.PAGE_END);
+
+        showLoadingIndicator();
+
         ActionMap map = this.getActionMap();
         map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
@@ -118,17 +140,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
 //        bindKeys();
         
-        CustomTreeToolbar toolbar = new CustomTreeToolbar(beanTreeView) {
-            @Override
-            protected void refresh() {
-                DomainExplorerTopComponent.this.refresh();
-            }
-        };
-        add(toolbar, BorderLayout.PAGE_START);
-        add(treePanel, BorderLayout.CENTER);
-
-        showLoadingIndicator();
-
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -415,5 +426,29 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             selectNode(node);
             break;
         }
+    }
+
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    }
+    
+    @Override
+    public void selectMatch() {
     }
 }

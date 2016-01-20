@@ -9,29 +9,31 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -49,257 +51,30 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewerPanel<T,S> extends JPanel {
+public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
+    private IconGridViewerToolbar toolbar;
     private ImagesPanel<T,S> imagesPanel;
-    private IconGridViewerToolbar iconDemoToolbar;
+    private FindToolbar findToolbar;
     
     // These members deal with the context and entities within it
     private List<T> objectList;
     private Map<S,T> objectMap;
-    private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
+    // TODO: use this reference to implement an export button, like in TableViewerPanel
     private SearchProvider searchProvider;
+    
+    // UI state
+    private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+    private Integer selectionAnchorIndex;
+    private Integer selectionCurrIndex;
 
     // Listeners
     private final SessionModelListener sessionModelListener;
-    private ModelMgrObserver modelMgrObserver;
-    
-    // Listen for key strokes and execute the appropriate key bindings
-    protected KeyListener keyListener = new KeyAdapter() {
-        @Override
-        public void keyPressed(KeyEvent e) {
-
-            if (KeymapUtil.isModifier(e)) {
-                return;
-            }
-            if (e.getID() != KeyEvent.KEY_PRESSED) {
-                return;
-            }
-
-            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
-
-                // No keybinds matched, use the default behavior
-                // Ctrl-A or Meta-A to select all
-                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    boolean clearAll = true;
-                    for (T object : objectList) {
-                        selectObject(object, clearAll);
-                        clearAll = false;
-                    }
-                    searchProvider.userRequestedSelectAll();
-                    return;
-                }
-
-                // Space on a single entity triggers a preview 
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    // TODO: notify our hud container
-//                    updateHud(true);
-                    e.consume();
-                    return;
-                }
-
-                // Enter with a single entity selected triggers an outline
-                // navigation
-//                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-//                    List<S> selectedIds = selectionModel.getSelectedIds();
-//                    if (selectedIds.size() != 1) {
-//                        return;
-//                    }
-//                    S selectedId = selectedIds.get(0);
-//                    T selectedObject = getImageByUniqueId(selectedId);
-//                    selectionModel.select(selectedObject, true);
-//                    return;
-//                }
-
-                // Delete triggers deletion
-                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    List<AnnotatedImageButton<T,S>> selected = imagesPanel.getSelectedButtons();
-                    List<T> toDelete = new ArrayList<>();
-                    for(AnnotatedImageButton<T,S> button : selected) {
-                        T object = button.getUserObject();
-                        toDelete.add(object);
-                    }
-                    
-                    if (selected.isEmpty()) {
-                        return;
-                    }
-                    // TODO: implement DomainObject deletion
-//                    final Action action = new RemoveEntityAction(toDelete, true, false);
-//                    action.doAction();
-                    e.consume();
-                    return;
-                }
-
-                // Tab and arrow navigation to page through the images
-                boolean clearAll = false;
-                T object = null;
-                if (e.getKeyCode() == KeyEvent.VK_TAB) {
-                    clearAll = true;
-                    if (e.isShiftDown()) {
-                        object = getPreviousObject();
-                    }
-                    else {
-                        object = getNextObject();
-                    }
-                }
-                else {
-                    clearAll = true;
-                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        object = getPreviousObject();
-                    }
-                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        object = getNextObject();
-                    }
-                }
-
-                if (object != null) {
-                    S id = getImageModel().getImageUniqueId(object);
-                    AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
-                    if (button != null) {
-                        selectObject(object, clearAll);
-                        imagesPanel.scrollObjectToCenter(object);
-                        button.requestFocus();
-//                        updateHud(false);
-                    }
-                }
-            }
-
-            revalidate();
-            repaint();
-        }
-    };
-
-    // Listener for clicking on buttons
-    protected MouseListener buttonMouseListener = new MouseHandler() {
-
-        @Override
-        protected void popupTriggered(MouseEvent e) {
-            if (e.isConsumed()) {
-                return;
-            }
-            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            // Make sure the button is selected
-            if (!button.isSelected()) {
-                buttonSelection(button, false, false);
-            }
-            getContextualPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-            e.consume();
-        }
-
-        @Override
-        protected void doubleLeftClicked(MouseEvent e) {
-            if (e.isConsumed()) {
-                return;
-            }
-            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            final DomainObject domainObject = (DomainObject)button.getUserObject();
-            buttonDrillDown(domainObject);
-            e.consume();
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-            super.mouseReleased(e);
-            if (e.isConsumed()) {
-                return;
-            }
-            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
-            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
-                return;
-            }
-//            log.info("mouseReleased: {}",button.getImageObject());
-//            hud.setKeyListener(keyListener);
-            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
-            e.consume();
-        }
-    };
-
-    protected abstract JPopupMenu getContextualPopupMenu();
-
-    /**
-     * This is a separate method so that it can be overridden to accommodate other behavior patterns.
-     */
-    protected abstract void buttonDrillDown(DomainObject domainObject);
-
-    protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
-        
-        final T object = (T)button.getUserObject();
-        final S uniqueId = getImageModel().getImageUniqueId(object);
-
-        if (multiSelect) {
-            // With the meta key we toggle items in the current selection without clearing it
-            if (!button.isSelected()) {
-                selectObject(object, false);
-            }
-            else {
-                deselectObject(object);
-            }
-        }
-        else {
-            // With shift, we select ranges
-            S lastSelectedId = selectionModel.getLastSelectedId();
-            log.trace("lastSelectedId="+lastSelectedId);
-            if (rangeSelect && lastSelectedId != null) {
-                // Walk through the buttons and select everything between the last and current selections
-                boolean selecting = false;
-                for (T otherObject : objectList) {
-                    final S otherUniqueId = getImageModel().getImageUniqueId(otherObject);
-                    log.trace("Consider "+otherUniqueId);
-                    if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
-                        if (otherUniqueId.equals(lastSelectedId)) {
-                            log.trace("  Last selected!");
-                        }
-                        if (otherUniqueId.equals(uniqueId)) {
-                            // Always select the button that was clicked
-                            selectObject(otherObject, false);
-                        }
-                        if (selecting) {
-                            log.trace("  End selecting");
-                            return; // We already selected, this is the end
-                        }
-                        log.trace("  Begin selecting");
-                        selecting = true; // Start selecting
-                        continue; // Skip selection of the first and last items, which should already be selected
-                    }
-                    if (selecting) {
-                        selectObject(otherObject, false);
-                    }
-                }
-            }
-            else {
-                // This is a good old fashioned single button selection
-                selectObject(object, true);
-            }
-        }
-
-        button.requestFocus();
-    }
-
-    protected void selectObject(T object, boolean clearAll) {
-        S id = getImageModel().getImageUniqueId(object);
-        imagesPanel.setSelectionByUniqueId(id, true, clearAll);
-        selectionModel.select(object, clearAll);
-    }
-
-    protected void deselectObject(T object) {
-        S id = getImageModel().getImageUniqueId(object);
-        imagesPanel.setSelectionByUniqueId(id, false, false);
-        selectionModel.deselect(object);
-    }
-
-    private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
-        Component c = component;
-        while (!(c instanceof AnnotatedImageButton)) {
-            c = c.getParent();
-        }
-        return (AnnotatedImageButton<T,S>) c;
-    }
 
     public IconGridViewerPanel() {
 
@@ -307,15 +82,29 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        iconDemoToolbar = createToolbar();
-        iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
+        toolbar = createToolbar();
+        toolbar.addMouseListener(new MouseForwarder(this, "ViewerToolbar->IconDemoPanel"));
 
-        imagesPanel = new ImagesPanel<>();
+        imagesPanel = new ImagesPanel<T,S>() {
+            
+            @Override
+            protected void moreAnnotationsButtonDoubleClicked(AnnotatedImageButton<T, S> button) {
+                IconGridViewerPanel.this.moreAnnotationsButtonDoubleClicked(button.getUserObject());
+            }
+
+            @Override
+            protected JPopupMenu getPopupMenu(AnnotatedImageButton<T, S> button, Annotation annotation) {
+                return IconGridViewerPanel.this.getAnnotationPopupMenu(annotation);
+            }
+        };
+
         imagesPanel.setButtonKeyListener(keyListener);
-        imagesPanel.setButtonMouseListener(buttonMouseListener);
-        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
-
         addKeyListener(keyListener);
+        imagesPanel.setButtonMouseListener(mouseListener);
+        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
+        
+        findToolbar = new FindToolbar(this);
+        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->IconGridViewerPanel"));
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -342,9 +131,9 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                     }
                     currTableHeight = tableHeight;
                     imagesPanel.resizeTables(tableHeight);
-                    imagesPanel.setMaxImageWidth(iconDemoToolbar.getCurrImageSize());
+                    imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
                     imagesPanel.recalculateGrid();
-                    imagesPanel.scrollSelectedEntitiesToCenter();
+                    imagesPanel.scrollSelectedObjectsToCenter();
                     imagesPanel.loadUnloadImages();
                 }
             }
@@ -353,30 +142,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
     }
 
-    public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
-    }
-    
-    protected ImageModel<T, S> getImageModel() {
-        return imageModel;
-    }
-
-    protected void setImageModel(ImageModel<T, S> imageModel) {
-        this.imageModel = imageModel;
-        imagesPanel.setImageModel(imageModel);
-    }
-    
-    public void setSelectionModel(SelectionModel<T,S> selectionModel) {
-        this.selectionModel = selectionModel;
-        imagesPanel.setSelectionModel(selectionModel);
-        selectionModel.setSource(this);
-    }
-    
-    public SelectionModel<T,S> getSelectionModel() {
-        return selectionModel;
-    }
-    
-    protected IconGridViewerToolbar createToolbar() {
+    private IconGridViewerToolbar createToolbar() {
 
         return new IconGridViewerToolbar() {
 
@@ -404,11 +170,273 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        imagesPanel.scrollSelectedEntitiesToCenter();
+                        imagesPanel.scrollSelectedObjectsToCenter();
                     }
                 });
             }
         };
+    }
+
+    // Listen for key strokes and execute the appropriate key bindings
+    protected KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+            if (KeymapUtil.isModifier(e)) {
+                return;
+            }
+            if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+            
+            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+                
+                // No keybinds matched, use the default behavior
+                // Ctrl-A or Meta-A to select all
+                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+                    boolean clearAll = true;
+                    for (T object : objectList) {
+                        selectObject(object, clearAll);
+                        clearAll = false;
+                    }
+                    return;
+                } 
+                else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    // TODO: notify our hud container
+//                    updateHud(true);
+                    e.consume();
+                    return;
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    enterKeyPressed();
+                    return;
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                    deleteKeyPressed();
+                    e.consume();
+                    return;
+                }
+
+                if (e.isShiftDown() && (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT)) {
+                    
+                    if (selectionAnchorIndex==null) {
+                        // Begin anchored selection mode
+                        T selectionAnchorObject = getLastSelectedObject();
+                        beginRangeSelection(objectList.indexOf(selectionAnchorObject));
+                    }
+                    
+                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                        if (selectionCurrIndex<1) return;
+                        selectionCurrIndex -= 1;
+                        if (selectionCurrIndex<selectionAnchorIndex) {
+                            selectObject(objectList.get(selectionCurrIndex), false);
+                        }
+                        else if (selectionCurrIndex+1!=selectionAnchorIndex) {
+                            deselectObject(objectList.get(selectionCurrIndex+1));
+                        }
+                    }
+                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                        if (selectionCurrIndex>=objectList.size()) return;
+                        selectionCurrIndex += 1;
+                        if (selectionCurrIndex>selectionAnchorIndex) {
+                            selectObject(objectList.get(selectionCurrIndex), false);
+                        }
+                        else if (selectionCurrIndex-1!=selectionAnchorIndex) {
+                            deselectObject(objectList.get(selectionCurrIndex-1));
+                        }
+                    }
+
+                }
+                else {
+                    endRangeSelection();
+                    T object = null;
+                    if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                        if (e.isShiftDown()) {
+                            object = getPreviousObject();
+                        }
+                        else {
+                            object = getNextObject();
+                        }
+                    }
+                    else {
+                        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                            object = getPreviousObject();
+                        }
+                        else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                            object = getNextObject();
+                        }
+                    }
+
+                    if (object != null) {
+                        selectObject(object, true);
+                        // TODO: the rest of this should happen automatically as a consequence of the selectObject call
+                        S id = getImageModel().getImageUniqueId(object);
+                        AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
+                        if (button != null) {
+                            imagesPanel.scrollObjectToCenter(object);
+                            button.requestFocus();
+//                            updateHud(false);
+                        }
+                    }
+                }
+            }
+
+            revalidate();
+            repaint();
+        }
+    };
+    
+    protected void enterKeyPressed() {}
+    
+    protected void deleteKeyPressed() {}
+    
+    // Listener for clicking on buttons
+    protected MouseListener mouseListener = new MouseHandler() {
+
+        @Override
+        protected void popupTriggered(MouseEvent e) {
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
+            if (button!=null) {
+                // Make sure the button is selected
+                if (!button.isSelected()) {
+                    buttonSelection(button, false, false);
+                }
+                getContextualPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+        }
+
+        @Override
+        protected void doubleLeftClicked(MouseEvent e) {
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
+            if (button!=null) {
+                final DomainObject domainObject = (DomainObject)button.getUserObject();
+                buttonDrillDown(domainObject);
+                e.consume();
+            }
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            super.mouseReleased(e);
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
+            if (button!=null) {
+                if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
+                    return;
+                }
+    //            hud.setKeyListener(keyListener);
+                buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+//                e.consume();
+            }
+        }
+    };
+
+    protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
+    
+    protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
+    
+    protected abstract JPopupMenu getContextualPopupMenu();
+
+    protected abstract void buttonDrillDown(DomainObject domainObject);
+
+    protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
+
+        final T object = (T)button.getUserObject();
+        final S uniqueId = getImageModel().getImageUniqueId(object);
+
+        if (multiSelect) {
+            // With the meta key we toggle items in the current selection without clearing it
+            if (!button.isSelected()) {
+                selectObject(object, false);
+            }
+            else {
+                deselectObject(object);
+            }
+            endRangeSelection();
+        }
+        else {
+            // With shift, we select ranges
+            S lastSelectedId = selectionModel.getLastSelectedId();
+            log.trace("lastSelectedId="+lastSelectedId);
+            if (rangeSelect && lastSelectedId != null) {
+                // Walk through the buttons and select everything between the last and current selections
+                boolean selecting = false;
+                for (T otherObject : objectList) {
+                    final S otherUniqueId = getImageModel().getImageUniqueId(otherObject);
+                    log.trace("Consider "+otherUniqueId);
+                    if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
+                        if (otherUniqueId.equals(lastSelectedId)) {
+                            log.trace("  Last selected!");
+                        }
+                        if (otherUniqueId.equals(uniqueId)) {
+                            // Always select the button that was clicked
+                            selectObject(otherObject, false);
+                            // This becomes the selection anchor if the user keeps holding shift
+                            beginRangeSelection(objectList.indexOf(otherObject));
+                        }
+                        if (selecting) {
+                            log.trace("  End selecting");
+                            return; // We already selected, this is the end
+                        }
+                        log.trace("  Begin selecting");
+                        selecting = true; // Start selecting
+                        continue; // Skip selection of the first and last items, which should already be selected
+                    }
+                    if (selecting) {
+                        selectObject(otherObject, false);
+                        endRangeSelection();
+                    }
+                }
+            }
+            else {
+                // This is a good old fashioned single button selection
+                selectObject(object, true);
+                endRangeSelection();
+            }
+        }
+
+        button.requestFocus();
+    }
+
+    private void beginRangeSelection(int anchorIndex) {
+        selectionAnchorIndex = selectionCurrIndex = anchorIndex;
+    }
+    
+    private void endRangeSelection() {
+        selectionAnchorIndex = selectionCurrIndex = null;
+    }
+    
+    protected void selectObject(T object, boolean clearAll) {
+        if (object==null) return;
+        S id = getImageModel().getImageUniqueId(object);
+        imagesPanel.setSelectionByUniqueId(id, true, clearAll);
+        selectionModel.select(object, clearAll);
+    }
+
+    protected void deselectObject(T object) {
+        if (object==null) return;
+        S id = getImageModel().getImageUniqueId(object);
+        imagesPanel.setSelectionByUniqueId(id, false, false);
+        selectionModel.deselect(object);
+    }
+
+    private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
+        Component c = component;
+        while (!(c instanceof AnnotatedImageButton)) {
+            c = c.getParent();
+            if (c==null) return null;
+        }
+        return (AnnotatedImageButton<T,S>) c;
     }
 
     /**
@@ -445,7 +473,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void showObjects(final List<T> objects, final Callable<Void> success) {
         
         log.debug("showObjects(objects.size={})",objects.size());
-        
+
         // Cancel previous loads
         imagesPanel.cancelAllLoads();
 
@@ -466,11 +494,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
 
         imagesPanel.setTagTable(tagTable);
-        imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
-        imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
+        imagesPanel.setTagVisbility(toolbar.areTagsVisible());
+        imagesPanel.setTitleVisbility(toolbar.areTitlesVisible());
 
         // Actually display everything
-        showImagePanel();
+        showAll();
 
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
@@ -492,99 +520,13 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             button.refresh(object);
         }
     }
-    
+
     public void refresh() {
-        refresh(false, null);
+        showObjects(objectList, null);
     }
-
+    
     public void totalRefresh() {
-        refresh(true, null);
-    }
-
-    public void refresh(final Callable<Void> successCallback) {
-        refresh(false, successCallback);
-    }
-
-    public void totalRefresh(final Callable<Void> successCallback) {
-        refresh(true, successCallback);
-    }
-
-    private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-
-    public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
-
-//        if (contextImageObject == null) {
-//            return;
-//        }
-//
-//        if (refreshInProgress.getAndSet(true)) {
-//            log.debug("Skipping refresh, since there is one already in progress");
-//            return;
-//        }
-//
-//        log.debug("Starting a refresh");
-//
-//        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
-//        final Callable<Void> success = new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//                // At the very end, reselect our buttons if possible
-//                boolean first = true;
-//                for (String selectedId : selectedIds) {
-//                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
-//                    first = false;
-//                }
-//                // Now call the user's callback 
-//                if (successCallback != null) {
-//                    successCallback.call();
-//                }
-//                return null;
-//            }
-//        };
-//
-//        SimpleWorker refreshWorker = new SimpleWorker() {
-//
-//            T imageObject = contextImageObject;
-//
-//            protected void doStuff() throws Exception {
-//                if (invalidateCache) {
-//                    ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
-//                }
-//                Entity entity = ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
-//                rootedEntity.setEntity(entity);
-//            }
-//
-//            protected void hadSuccess() {
-//                SwingUtilities.invokeLater(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (rootedEntity.getEntity() == null) {
-//                            clear();
-//                            if (success != null) {
-//                                try {
-//                                    success.call();
-//                                }
-//                                catch (Exception e) {
-//                                    hadError(e);
-//                                }
-//                            }
-//                        }
-//                        else {
-//                            //loadEntity(rootedEntity, success);
-//                        }
-//                        refreshInProgress.set(false);
-//                        log.debug("Refresh complete");
-//                    }
-//                });
-//            }
-//
-//            protected void hadError(Throwable error) {
-//                refreshInProgress.set(false);
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//
-//        refreshWorker.execute();
+        DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
     public synchronized void clear() {
@@ -595,21 +537,20 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     public void close() {
+        // TODO: this should be called by something 
         SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
-        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
 
-    public synchronized void showImagePanel() {
-
+    public synchronized void showAll() {
         removeAll();
-        add(iconDemoToolbar, BorderLayout.NORTH);
+        add(toolbar, BorderLayout.NORTH);
         add(imagesPanel, BorderLayout.CENTER);
-
+        add(findToolbar, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
-
+    
     public T getPreviousObject() {
         if (objectList == null) {
             return null;
@@ -651,6 +592,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
     }
 
+    
+    
 //
 //    public List<RootedEntity> getSelectedEntities() {
 //        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
@@ -665,14 +608,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //        }
 //        return selectedEntities;
 //    }
-
-    public IconGridViewerToolbar getToolbar() {
-        return iconDemoToolbar;
-    }
-    
-    public void scrollSelectedEntitiesToCenter() {
-        imagesPanel.scrollSelectedEntitiesToCenter();
-    }
     
 //    public Hud getHud() {
 //        return hud;
@@ -735,4 +670,72 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 //            }
 //        });
 //    }
+
+    
+    protected Map<S, T> getObjectMap() {
+        return objectMap;
+    }
+    
+    public List<T> getObjectList() {
+        return objectList;
+    }
+
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+    
+    protected ImageModel<T, S> getImageModel() {
+        return imageModel;
+    }
+
+    protected void setImageModel(ImageModel<T, S> imageModel) {
+        this.imageModel = imageModel;
+        imagesPanel.setImageModel(imageModel);
+    }
+    
+    public void setSelectionModel(SelectionModel<T,S> selectionModel) {
+        this.selectionModel = selectionModel;
+        imagesPanel.setSelectionModel(selectionModel);
+        selectionModel.setSource(this);
+    }
+    
+    public SelectionModel<T,S> getSelectionModel() {
+        return selectionModel;
+    }
+
+    public IconGridViewerToolbar getToolbar() {
+        return toolbar;
+    }
+    
+    public void scrollSelectedObjectsToCenter() {
+        imagesPanel.scrollSelectedObjectsToCenter();
+    }
+
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedObjectsToCenter();
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
+        selectObject(searcher.find(), true);
+        scrollSelectedObjectsToCenter();
+    }
+
+    @Override
+    public void selectMatch() {
+    }
 }

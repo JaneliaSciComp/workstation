@@ -24,16 +24,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ImagesPanel<T,S> extends JScrollPane {
+public abstract class ImagesPanel<T,S> extends JScrollPane {
 
     private static final Logger log = LoggerFactory.getLogger(ImagesPanel.class);
 
@@ -67,6 +69,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
     private SelectionModel<T,S> selectionModel;
 
     // State
+    private boolean tagTable = false;
     private boolean titlesVisible = true;
     private boolean tagsVisible = true;
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
@@ -382,7 +385,7 @@ public class ImagesPanel<T,S> extends JScrollPane {
         viewport.scrollRectToVisible(rect);
     }
 
-    public void scrollSelectedEntitiesToCenter() {
+    public void scrollSelectedObjectsToCenter() {
         List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
@@ -421,27 +424,39 @@ public class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void setTagTable(boolean tagTable) {
+        this.tagTable = tagTable;
         for (final AnnotatedImageButton<T,S> button : buttons.values()) {
-            if (tagTable) {
-                if (button.getAnnotationView() instanceof AnnotationTablePanel) {
-                    return;
-                }
-                button.setAnnotationView(new AnnotationTablePanel<T,S>());
-            }
-            else {
-                if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
-                    return;
-                }
-                button.setAnnotationView(new AnnotationTagCloudPanel<T,S>() {
-                    @Override
-                    protected void moreDoubleClicked(MouseEvent e) {
-                        // TODO: show more annotations
-                        //new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
-                    }
-                });
-            }
+            ensureCorrectAnnotationView(button);
         }
     }
+    
+    void ensureCorrectAnnotationView(final AnnotatedImageButton<T, S> button) {
+        if (tagTable) {
+            if (button.getAnnotationView() instanceof AnnotationTablePanel) {
+                return;
+            }
+            button.setAnnotationView(new AnnotationTablePanel());
+        }
+        else {
+            if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
+                return;
+            }
+            button.setAnnotationView(new AnnotationTagCloudPanel() {
+                @Override
+                protected void moreDoubleClicked(MouseEvent e) {
+                    ImagesPanel.this.moreAnnotationsButtonDoubleClicked(button);
+                }
+                @Override
+                protected JPopupMenu getPopupMenu(Annotation tag) {
+                    return ImagesPanel.this.getPopupMenu(button, tag);
+                }
+            });
+        }
+    }
+
+    protected abstract void moreAnnotationsButtonDoubleClicked(AnnotatedImageButton<T,S> button);
+    
+    protected abstract JPopupMenu getPopupMenu(AnnotatedImageButton<T,S> button, Annotation annotation);
     
     private boolean setSelection(final AnnotatedImageButton<T,S> button, boolean selection) {
         if (button.isSelected() != selection) {

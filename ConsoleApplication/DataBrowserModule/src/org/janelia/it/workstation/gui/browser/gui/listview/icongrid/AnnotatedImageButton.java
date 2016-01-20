@@ -28,16 +28,13 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
-import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -47,15 +44,13 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implements DragGestureListener {
 
-    private static final Logger log = LoggerFactory.getLogger(AnnotatedImageButton.class);
-    
     protected final JLabel titleLabel;
     protected final JLabel subtitleLabel;
     protected final JPanel mainPanel;
     protected final JPanel buttonPanel;
     protected final JLabel loadingLabel;
     protected boolean viewable = false;
-    protected AnnotationView<T,S> annotationView;
+    protected AnnotationView annotationView;
     protected boolean annotationsLoaded = false;
     protected DragSource source;
     protected double aspectRatio;
@@ -160,7 +155,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         subtitleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
 
-        setAnnotationView(new AnnotationTagCloudPanel<T,S>());
+        imagesPanel.ensureCorrectAnnotationView(this);
 
         mainPanel.removeAll();
         this.innerComponent = init(imageObject, imageModel);
@@ -221,7 +216,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         ((JPanel) annotationView).setVisible(visible);
     }
 
-    public final synchronized void setAnnotationView(AnnotationView<T,S> annotationView) {
+    public final synchronized void setAnnotationView(AnnotationView annotationView) {
         this.annotationView = annotationView;
         // Fix event dispatching so that user can click on the tags and still select the button
         ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
@@ -230,29 +225,30 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         }
     }
 
-    public synchronized AnnotationView<T,S> getAnnotationView() {
+    public synchronized AnnotationView getAnnotationView() {
         return annotationView;
     }
 
     private void showAnnotations(List<Annotation> annotations) {
 
-        annotationView.setAnnotations(annotations);
-        annotationView.setSelectionModel(selectionModel);
-        annotationView.setImageModel(imageModel);
+        if (annotationView!=null) {
+            annotationView.setAnnotations(annotations);
+        }
         
         annotationsLoaded = true;
 
         buttonPanel.remove(loadingLabel);
+        
         if (annotationView != null) {
             buttonPanel.remove((JPanel) annotationView);
+            GridBagConstraints c = new GridBagConstraints();
+            c.gridx = 0;
+            c.gridy = 3;
+            c.fill = GridBagConstraints.BOTH;
+            c.anchor = GridBagConstraints.PAGE_START;
+            c.weighty = 1;
+            buttonPanel.add((JPanel) annotationView, c);
         }
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 3;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 1;
-        buttonPanel.add((JPanel) annotationView, c);
 
         buttonPanel.revalidate();
     }

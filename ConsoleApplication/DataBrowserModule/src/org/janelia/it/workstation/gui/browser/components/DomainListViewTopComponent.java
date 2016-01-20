@@ -5,13 +5,17 @@ import java.awt.BorderLayout;
 import javax.swing.JComponent;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -50,14 +54,15 @@ import org.slf4j.LoggerFactory;
 public final class DomainListViewTopComponent extends TopComponent {
 
     private static final Logger log = LoggerFactory.getLogger(DomainListViewTopComponent.class);
-    
+
     public static final String TC_NAME = "DomainListViewTopComponent";
+    public static final String TC_VERSION = "1.0";
     
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
     private DomainObjectSelectionEditor editor;
-            
+    
     public DomainListViewTopComponent() {
         initComponents();
         setName(Bundle.CTL_DomainListViewTopComponent());
@@ -117,13 +122,21 @@ public final class DomainListViewTopComponent extends TopComponent {
     
     public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
         try {
+            
             if (editor!=null) {
                 remove((JComponent)editor);
+                Events.getInstance().unregisterOnEventBus(editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
+            
             editor = editorClass.newInstance();
-            add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
+            Events.getInstance().registerOnEventBus(editor);
+            
+            JComponent editorComponent = (JComponent)editor;
+            
+            editorComponent.addMouseListener(new MouseForwarder(this, "DomainObjectSelectionEditor->DomainListViewTopComponent"));
+            add(editorComponent, BorderLayout.CENTER);
         }
         catch (InstantiationException | IllegalAccessException e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -164,13 +177,46 @@ public final class DomainListViewTopComponent extends TopComponent {
     }
     
     void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
+        p.setProperty("version", TC_VERSION);
+        DomainObject current = getCurrent();
+        if (current!=null) {
+            String objectRef = Reference.createFor(current).toString();
+            log.info("Writing state: {}",objectRef);
+            p.setProperty("objectRef", objectRef);
+        }
+        else {
+            p.remove("objectRef");
+        }
     }
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
-        // TODO read your settings according to their version
+        final String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: {}",objectStrRef);
+        if (TC_VERSION.equals(version) && objectStrRef!=null) {
+
+            SimpleWorker worker = new SimpleWorker() {
+                DomainObject object;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (object!=null) {
+                        loadDomainObject(object);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+        }
     }
 }

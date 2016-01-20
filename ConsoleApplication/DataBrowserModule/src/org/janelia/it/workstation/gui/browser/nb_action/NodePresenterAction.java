@@ -2,10 +2,10 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
-import org.openide.util.actions.Presenter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -4,8 +4,9 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.shared.util;
+package org.janelia.it.jacs.shared.swc;
 
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.junit.After;

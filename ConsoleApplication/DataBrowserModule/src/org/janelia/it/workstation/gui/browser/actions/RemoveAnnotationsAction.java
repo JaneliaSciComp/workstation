@@ -5,9 +5,11 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
-import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.apache.commons.lang.StringUtils;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
@@ -15,33 +17,37 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
- * TBD
+ * Remove annotations from multiple domain objects.
+ * 
+ * This action works in two modes, depending on the value of matchIdOrName:
+ * 1) True: matches the annotation name, or id (if only one object is selected)
+ * 2) False: matches the annotation's key id
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RemoveAnnotationTermAction<T,S> implements NamedAction {
+public class RemoveAnnotationsAction implements NamedAction {
 
-    private final ImageModel<T,S> imageModel;
-    private final List<T> selectedObjects;
-    
-    private final OntologyTermReference keyRef;
-    private final String annotationKeyName;
+    private final ImageModel<DomainObject,Reference> imageModel;
+    private final List<DomainObject> selectedObjects;
+    private Annotation tag;
+    private boolean matchIdOrName = false;
 
-    public RemoveAnnotationTermAction(ImageModel<T,S> imageModel, List<T> selectedObjects, OntologyTermReference keyRef, String annotationKeyName) {
+    public RemoveAnnotationsAction(ImageModel<DomainObject,Reference> imageModel, List<DomainObject> selectedObjects, Annotation tag, boolean matchIdOrName) {
         this.imageModel = imageModel;
         this.selectedObjects = selectedObjects;
-        this.keyRef = keyRef;
-        this.annotationKeyName = annotationKeyName;
+        this.tag = tag;
+        this.matchIdOrName = matchIdOrName;
     }
 
     @Override
     public String getName() {
-        return selectedObjects.size() > 1 ? "  Remove \"" + annotationKeyName + "\" Annotation From " + selectedObjects.size() + " Items" : "  Remove Annotation";
+        String target = matchIdOrName ? tag.getName() : tag.getKey();
+        return selectedObjects.size() > 1 ? "Remove \"" + target + "\" Annotation From " + selectedObjects.size() + " Items" : "Remove Annotation";
     }
 
     @Override
     public void doAction() {
-    
+
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         if (selectedObjects.size() > 1) {
@@ -56,10 +62,18 @@ public class RemoveAnnotationTermAction<T,S> implements NamedAction {
             @Override
             protected void doStuff() throws Exception {
 
+                if (selectedObjects.size()==1 && matchIdOrName) {
+                    model.remove(tag);    
+                    return;
+                }
+                
                 List<Annotation> toRemove = new ArrayList<>();
-                for (T selectedObject : selectedObjects) {
+                for (DomainObject selectedObject : selectedObjects) {
                     for (Annotation annotation : imageModel.getAnnotations(selectedObject)) {
-                        if (annotation.getKeyTerm().getOntologyTermId().equals(keyRef.getOntologyTermId())) {
+                        if (matchIdOrName && StringUtils.equals(annotation.getName(),tag.getName())) {
+                            toRemove.add(annotation);            
+                        }
+                        else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(tag.getKeyTerm().getOntologyTermId())) {
                             toRemove.add(annotation);            
                         }
                     }

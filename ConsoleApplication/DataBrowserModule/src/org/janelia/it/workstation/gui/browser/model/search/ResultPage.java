@@ -23,7 +23,6 @@ public class ResultPage implements AnnotatedDomainObjectList {
     private final ListMultimap<Long,Annotation> annotationsByDomainObjectId;
     private final int numTotalResults;
     
-    // TODO: might want to use References here for consistency, even if it's less efficient
     private Map<Long, DomainObject> domainObjectById;
     
     public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, int totalNumResults) {
@@ -45,6 +44,16 @@ public class ResultPage implements AnnotatedDomainObjectList {
     
     public int getNumPageResults() {
         return domainObjects.size();
+    }
+
+    @Override
+    public Class<? extends DomainObject> getDomainClass() {
+        if (domainObjects.isEmpty()) {
+            return null;
+        }
+        else {
+            return domainObjects.get(0).getClass();
+        }
     }
     
     @Override

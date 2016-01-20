@@ -66,13 +66,12 @@ import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 public final class ModelMgr {
@@ -1185,7 +1184,7 @@ public final class ModelMgr {
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
-
+    
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
     }
@@ -1301,11 +1300,11 @@ public final class ModelMgr {
     public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
+    
+    public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles( basePath, viewerCoord );
+    }
 
-	public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
-		return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles(basePath, viewerCoord);
-	}
-	
 	public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
 
         List<List<Object>> rootPaths = new ArrayList<>();

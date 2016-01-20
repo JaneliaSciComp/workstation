@@ -82,6 +82,11 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public boolean isServerPathAvailable( String serverPath, boolean directoryOnly ) {
+        return EJBFactory.getRemoteComputeBean().isServerPathAvailable(serverPath, directoryOnly);
+    }
+    
+    @Override
     public void removePreferenceCategory(String preferenceCategory) throws Exception {
         EJBFactory.getRemoteComputeBean().removePreferenceCategory(preferenceCategory);
     }

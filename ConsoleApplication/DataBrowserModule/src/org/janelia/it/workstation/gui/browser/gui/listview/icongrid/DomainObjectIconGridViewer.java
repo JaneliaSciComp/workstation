@@ -2,7 +2,10 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,13 +22,18 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
+import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -131,7 +139,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
         
         @Override
-        public Object getImageLabel(DomainObject domainObject) {
+        public String getImageLabel(DomainObject domainObject) {
             return domainObject.getName();
         }
         
@@ -173,25 +181,34 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
+
+        Set<Reference> selectedIds = new HashSet<>();
         
         boolean currClearAll = clearAll;
         for(DomainObject domainObject : domainObjects) {
-            if (select) {
+            Reference id = getImageModel().getImageUniqueId(domainObject);
+            if (select && getObjectMap().get(id)!=null) {
                 selectObject(domainObject, currClearAll);
-            }
-            else {
-                deselectObject(domainObject);
+                selectedIds.add(id);
             }
             currClearAll = false;
         }
 
+        if (clearAll) {
+            // Clear out everything that was not selected above
+            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+                if (!selectedIds.contains(selectedId)) {
+                    deselectObject(imageModel.getImageByUniqueId(selectedId));
+                }
+            }
+        }
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                scrollSelectedEntitiesToCenter();
+                scrollSelectedObjectsToCenter();
             }
-        });
-        
+        });   
     }
 
     @Override
@@ -365,9 +382,35 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         ((DomainObjectContextMenu) popupMenu).addMenuItems();
         return popupMenu;
     }
+
+    @Override
+    protected JPopupMenu getAnnotationPopupMenu(Annotation annotation) {
+        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        AnnotationContextMenu menu = new AnnotationContextMenu(annotation, selectedObjects, imageModel);
+        menu.addMenuItems();
+        return menu;
+    }
+
+    @Override
+    protected void moreAnnotationsButtonDoubleClicked(DomainObject domainObject) {
+        // TODO: popup dialog with annotation details
+    }
     
     @Override
     protected void buttonDrillDown(DomainObject domainObject) {
+    }
+    
+    @Override
+    protected void deleteKeyPressed() {
+        IsParent parent = selectionModel.getParentObject();
+        if (parent instanceof ObjectSet) {
+            ObjectSet objectSet = (ObjectSet)parent; 
+            if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
+                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
+                action.doAction();
+            }
+        }
     }
     
     /**

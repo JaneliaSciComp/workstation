@@ -8,18 +8,18 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
-@ActionID(
-        category = "Search",
-        id = "GlobalSolrSearchAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_GlobalSolrSearch"
-)
-@ActionReferences({
-    @ActionReference(path = "Menu/Search", position = 1000),
-    @ActionReference(path = "Shortcuts", name = "M-F")
-})
-@Messages("CTL_GlobalSolrSearch=Search")
+//@ActionID(
+//        category = "Search",
+//        id = "GlobalSolrSearchAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_GlobalSolrSearch"
+//)
+//@ActionReferences({
+//    @ActionReference(path = "Menu/Search", position = 1000),
+//    @ActionReference(path = "Shortcuts", name = "M-F")
+//})
+//@Messages("CTL_GlobalSolrSearch=Search")
 public final class GlobalSolrSearchAction implements ActionListener {
 
     @Override

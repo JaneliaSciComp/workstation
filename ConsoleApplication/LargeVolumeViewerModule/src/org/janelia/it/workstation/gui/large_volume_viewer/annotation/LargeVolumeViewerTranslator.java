@@ -11,10 +11,7 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -216,6 +213,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         fireNeuronStyleChangeEvent(neuron, style);
     }
 
+    @Override
+    public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+        fireNeuronStylesChangedEvent(neuronStyleMap);
+    }
+
     public void annotationSelected(Long id) {
         fireNextParentEvent(id);
     }
@@ -251,14 +253,16 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             //  use a default style
             Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
             NeuronStyle style;
+            Map<TmNeuron, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 if (neuronStyleMap.containsKey(neuron.getId())) {
                     style = neuronStyleMap.get(neuron.getId());
                 } else {
                     style = NeuronStyle.getStyleForNeuron(neuron.getId());
                 }
-                fireNeuronStyleChangeEvent(neuron,style);
+                updateNeuronStyleMap.put(neuron, style);
             }
+            fireNeuronStylesChangedEvent(updateNeuronStyleMap);
             // note: we currently don't clean up old styles in the prefs that belong
             //  to deleted neurons; this is the place to do it if/when we put that in
             //  (see FW-3100); you would iterate over the style map and remove
@@ -372,6 +376,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireNeuronStyleChangeEvent(TmNeuron neuron, NeuronStyle style) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStyleChanged(neuron, style);
+        }
+    }
+    private void fireNeuronStylesChangedEvent(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+        for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
+            l.neuronStylesChanged(neuronStyleMap);
         }
     }
     

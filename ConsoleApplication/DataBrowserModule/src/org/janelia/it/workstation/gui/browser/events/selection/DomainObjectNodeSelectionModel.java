@@ -6,6 +6,8 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A selection model implementation which tracks the selection of domain object nodes.
@@ -14,8 +16,11 @@ import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
  */
 public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectNode,Reference> {
 
+    private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
+    
     @Override
     protected void selectionChanged(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll) {
+        log.debug((select?"select":"deselect")+" {}, clearAll={}",id,clearAll);
         if (domainObjectNode instanceof ObjectSetNode) {
             ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
             Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode));

@@ -6,13 +6,24 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 import net.miginfocom.swing.MigLayout;
+
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.openide.LifecycleManager;
 
 /**
  * A dialog for entering username and password, with some additional options.
@@ -141,7 +152,7 @@ public class LoginDialog extends ModalDialog {
                     "Please correct your email information.", "Email Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer != 0) {
-                SessionMgr.getSessionMgr().systemExit();
+                LifecycleManager.getDefault().exit(0);
             }
             else {
                 return;
@@ -157,7 +168,7 @@ public class LoginDialog extends ModalDialog {
                     "Please correct your login information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer != 0) {
-                SessionMgr.getSessionMgr().systemExit();
+                LifecycleManager.getDefault().exit(0);
             }
         }
         else {

@@ -3,6 +3,7 @@ package org.janelia.it.workstation.api.facade.abstract_facade;
 import java.util.Collection;
 
 import org.janelia.it.jacs.compute.api.support.MappedId;
+import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -102,6 +103,8 @@ public interface EntityFacade {
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception;
 
+    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception;
+    
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
 
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception;
