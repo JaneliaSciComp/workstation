@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
-import org.janelia.it.jacs.integration.framework.session_mgr.SessionSupport;
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 import org.janelia.it.jacs.model.user_data.Group;
@@ -8,6 +7,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.integration.framework.session_mgr.SessionSupport;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
