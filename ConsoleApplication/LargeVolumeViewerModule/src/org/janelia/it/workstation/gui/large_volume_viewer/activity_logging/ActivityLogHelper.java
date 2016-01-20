@@ -21,7 +21,7 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_ADD_ANCHOR_CATEGORY_STRING = new CategoryString("addAnchor");
     private static final CategoryString LVV_MERGE_NEURITES_CATEGORY_STRING = new CategoryString("mergeNeurites");
     private static final CategoryString LVV_3D_LAUNCH_CATEGORY_STRING = new CategoryString("launch3dBrickView");
-    private static final CategoryString LVV_LANDMARK_LAUNCH_CATEGORY_STRING = new CategoryString("launchLandmarkView");
+    private static final CategoryString LVV_NAVIGATE_LANDMARK_CATEGORY_STRING = new CategoryString("navigateInLandmarkView");
     
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
 
@@ -72,11 +72,11 @@ public class ActivityLogHelper {
         );
     }
     
-    public void logSnapshotLaunch(String labelText, String urlStr) {
+    public void logSnapshotLaunch(String labelText, Long workspaceId) {
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LVV_3D_LAUNCH_CATEGORY_STRING,
-                new ActionString(labelText + ":" + urlStr)
+                new ActionString(labelText + " workspaceId=" + workspaceId)
         );
     }
     
@@ -89,7 +89,7 @@ public class ActivityLogHelper {
         }
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
-                LVV_LANDMARK_LAUNCH_CATEGORY_STRING,
+                LVV_NAVIGATE_LANDMARK_CATEGORY_STRING,
                 new ActionString(action)
         );
     }

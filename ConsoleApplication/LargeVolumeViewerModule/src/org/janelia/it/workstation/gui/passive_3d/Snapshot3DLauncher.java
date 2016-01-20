@@ -196,6 +196,7 @@ public class Snapshot3DLauncher {
             }
             final String labelText = labelTextForRaw3d( dimensions );
             final String frameTitle = "Fetching raw data";
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
@@ -224,7 +225,7 @@ public class Snapshot3DLauncher {
                     dataUrl
             );            
 
-            activityLog.logSnapshotLaunch(labelText, dataUrl.toString());
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
