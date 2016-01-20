@@ -6,7 +6,6 @@
 
 package org.janelia.it.jacs.integration.framework.session_mgr;
 
-import java.util.Map;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
@@ -18,44 +17,9 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
  *
  * @author fosterl
  */
-public interface SessionSupport {
-    public static final String LOOKUP_PATH = "SessionManager/Location/Nodes";
+public interface ActivityLogging {
+    public static final String LOOKUP_PATH = "ActivityLogging/Location/Nodes";
             
-    int addExternalClient(String newClientName);
-
-    /**
-     * Removes all locally cached files.
-     */
-    void clearFileCache();
-
-    String getApplicationName();
-
-    String getApplicationOutputDirectory();
-
-    String getApplicationVersion();
-
-    Long getCurrentSessionId();
-
-    /**
-     * @return the total size (in gigabytes) of all currently cached files.
-     */
-    double getFileCacheGigabyteUsage();
-
-    Object getModelProperty(Object key);
-
-    void handleException(Throwable throwable);
-
-    boolean isDarkLook();
-
-    /**
-     * @return true if a local file cache is available for this session; otherwise false.
-     */
-    boolean isFileCacheAvailable();
-
-    boolean isLoggedIn();
-
-    boolean isUnloadImages();
-
     /**
      * Send an event described by the information given as parameters, to the
      * logging apparatus. Apply the criteria of:
@@ -105,43 +69,5 @@ public interface SessionSupport {
      * @todo see about reusing code between this and non-threshold.
      */
     void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs);
-
-    boolean loginSubject(String username, String password);
-
-    void logoutUser();
-
-    void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception;
-
-    void removeExternalClientByPort(int targetPort);
-
-    void saveUserSettings();
-
-    void sendMessageToExternalClients(String operationName, Map<String, Object> parameters);
-
-    void setApplicationName(String name);
-
-    void setApplicationVersion(String version);
-
-    void setCurrentSessionId(Long currentSessionId);
-
-    /**
-     * Enables or disables the local file cache and
-     * saves the setting as a session preference.
-     *
-     * @param isDisabled if true, cache will be disabled;
-     * otherwise cache will be enabled.
-     */
-    void setFileCacheDisabled(boolean isDisabled);
-
-    /**
-     * Sets the local file cache capacity and saves the setting as a session preference.
-     *
-     * @param gigabyteCapacity cache capacity in gigabytes.
-     */
-    void setFileCacheGigabyteCapacity(Integer gigabyteCapacity);
-
-    Object setModelProperty(Object key, Object value);
-
-    boolean setRunAsUser(String runAsUser);
 
 }
