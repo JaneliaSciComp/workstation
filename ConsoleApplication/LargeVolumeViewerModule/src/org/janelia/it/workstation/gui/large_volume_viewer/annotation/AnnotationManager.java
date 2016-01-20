@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 
@@ -62,7 +63,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // annotation model object
     private AnnotationModel annotationModel;
-
+    
     // quad view ui object
     private QuadViewUi quadViewUi;
 

@@ -61,11 +61,11 @@ public class ActivityLogHelper {
         );
     }
     
-    public void logReparentedAnchor(TmGeoAnnotation anchor) {
+    public void logMergedNeurite(Long sourceID, Long targetID) {
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LVV_MERGE_NEURITES_CATEGORY_STRING, 
-                new ActionString(anchor.getNeuronId() + ":" + anchor.getX() + "," + anchor.getY() + "," + anchor.getZ())
+                new ActionString("Source=" + sourceID + " Target=" + targetID)
         );
     }
 }

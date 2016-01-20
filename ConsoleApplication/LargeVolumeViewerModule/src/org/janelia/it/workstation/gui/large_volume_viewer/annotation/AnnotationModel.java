@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
@@ -75,6 +76,7 @@ called from a  SimpleWorker thread.
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
     private SWCDataConverter swcDataConverter;
+    private ActivityLogHelper activityLog;
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
@@ -108,6 +110,7 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
+        activityLog = new ActivityLogHelper();
 
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -475,6 +478,7 @@ called from a  SimpleWorker thread.
         //  be the parent)
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "");
+        activityLog.logAddAnchor(annotation);
 
         // update neuron locally instead of getting from db again
         neuron.getRootAnnotations().add(annotation);
@@ -509,6 +513,7 @@ called from a  SimpleWorker thread.
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
+        activityLog.logAddAnchor(annotation);
 
         // update the neuron locally so we don't have to update from db
         TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
@@ -624,6 +629,7 @@ called from a  SimpleWorker thread.
          Stopwatch stopwatch = new Stopwatch();
          stopwatch.start();
 
+        activityLog.logMergedNeurite(sourceAnnotationID, targetAnnotationID);
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 

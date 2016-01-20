@@ -43,7 +43,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
-    private ActivityLogHelper activityLog = new ActivityLogHelper();
     
     private static SkeletonController instance = new SkeletonController();
     
@@ -146,7 +145,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
         Anchor anchor = skeleton.addTmGeoAnchor(tmAnchor);
         anchor.setSkeletonAnchorListener(skeletonAnchorListener);
-        activityLog.logAddAnchor(tmAnchor);
         skeletonChanged();
     }
 
@@ -168,7 +166,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void anchorReparented(TmGeoAnnotation anchor) {
         skeleton.reparentTmGeoAnchor(anchor);
-        activityLog.logReparentedAnchor(anchor);
         skeletonChanged();
     }
 
