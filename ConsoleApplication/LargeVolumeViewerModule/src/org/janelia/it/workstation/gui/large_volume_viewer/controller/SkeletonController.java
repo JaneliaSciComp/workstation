@@ -14,6 +14,7 @@ import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -42,6 +43,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
+    private ActivityLogHelper activityLog = new ActivityLogHelper();
     
     private static SkeletonController instance = new SkeletonController();
     
@@ -144,6 +146,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void anchorAdded(TmGeoAnnotation tmAnchor) {
         Anchor anchor = skeleton.addTmGeoAnchor(tmAnchor);
         anchor.setSkeletonAnchorListener(skeletonAnchorListener);
+        activityLog.logAddAnchor(tmAnchor);
         skeletonChanged();
     }
 
@@ -165,6 +168,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void anchorReparented(TmGeoAnnotation anchor) {
         skeleton.reparentTmGeoAnchor(anchor);
+        activityLog.logReparentedAnchor(anchor);
         skeletonChanged();
     }
 
