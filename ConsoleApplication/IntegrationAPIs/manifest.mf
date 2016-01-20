@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.janelia.it.jacs.integration
+OpenIDE-Module-Localizing-Bundle: org/janelia/it/jacs/integration/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

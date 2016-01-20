@@ -125,6 +125,10 @@ import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -334,6 +338,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             );
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
+            FrameworkImplProvider.getSessonSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta"), new ActionString(sampleLocation.getSampleUrl().toString()));
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
