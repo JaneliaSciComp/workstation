@@ -138,14 +138,14 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 return;
             }
             
-            List<Subject> subjects = new ArrayList<>(ModelMgr.getModelMgr().getSubjects());
-            EntityUtils.sortSubjects(subjects);
+           // List<Subject> subjects = new ArrayList<>(ModelMgr.getModelMgr().getSubjects());
+            //EntityUtils.sortSubjects(subjects);
 
             DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
             model.removeAllElements();
-            for (Subject subject : subjects) {
+            /*for (Subject subject : subjects) {
                 model.addElement(subject);
-            }
+            }*/
 
             packAndShow();
         }

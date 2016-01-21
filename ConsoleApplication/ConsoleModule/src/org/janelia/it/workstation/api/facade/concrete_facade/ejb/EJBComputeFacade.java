@@ -63,7 +63,8 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public List<Task> getUserTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasks("SessionMgr.getSubjectKey()");
+        return null;
+       // return EJBFactory.getRemoteComputeBean().getUserTasks("SessionMgr.getSubjectKey()");
     }
 
     @Override
@@ -73,17 +74,13 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, "SessionMgr.getSubjectKey()");
+       return null;
+       // return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, "SessionMgr.getSubjectKey()");
     }
 
     @Override
     public Subject saveOrUpdateSubject(Subject subject) throws Exception {
         return EJBFactory.getRemoteComputeBean().saveOrUpdateSubject(subject);
-    }
-
-    @Override
-    public boolean isServerPathAvailable( String serverPath, boolean directoryOnly ) {
-        return EJBFactory.getRemoteComputeBean().isServerPathAvailable(serverPath, directoryOnly);
     }
     
     @Override

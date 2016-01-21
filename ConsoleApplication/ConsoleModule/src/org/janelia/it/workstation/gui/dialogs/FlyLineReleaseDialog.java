@@ -224,14 +224,14 @@ public class FlyLineReleaseDialog extends ModalDialog {
                     dataSetMap.put(identifier, dataSet);
                 }
 
-                for (Subject subject : ModelMgr.getModelMgr().getSubjects()) {
-                   /* if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
+                /*for (Subject subject : ModelMgr.getModelMgr().getSubjects()) {
+                    if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
                         continue;
                     }
-                    */
+                    
                     subjects.add(subject);
                     subjectMap.put(subject.getKey(), subject);
-                }
+                }*/
 
                 Collections.sort(dataSets, new Comparator<Entity>() {
                     @Override

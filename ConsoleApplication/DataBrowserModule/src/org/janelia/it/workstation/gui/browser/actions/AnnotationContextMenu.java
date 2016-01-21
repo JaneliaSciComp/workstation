@@ -20,7 +20,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 
 /**
  * Context pop up menu for annotations.
@@ -98,7 +98,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyAnnotationItem() {
         if (multiple) return null;
-        if (!SessionMgr.getSubjectKey().equals(annotation.getOwnerKey())) return null;
+        if (!AccessManager.getSubjectKey().equals(annotation.getOwnerKey())) return null;
     
         JMenuItem deleteByTermItem = new JMenuItem("  Copy Annotation");
         deleteByTermItem.addActionListener(new ActionListener() {
@@ -110,7 +110,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getRemoveAnnotationItem() {
-        if (!SessionMgr.getSubjectKey().equals(annotation.getOwnerKey())) return null;    
+        if (!AccessManager.getSubjectKey().equals(annotation.getOwnerKey())) return null;
         final RemoveAnnotationsAction removeAction = new RemoveAnnotationsAction(imageModel, domainObjectList, annotation, true);
         return getNamedActionItem(removeAction);
     }

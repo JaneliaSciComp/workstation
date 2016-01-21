@@ -160,7 +160,7 @@ public class LoginDialog extends ModalDialog {
         }
         
         boolean loginSuccess = true;
-        //SessionMgr.getSessionMgr().loginSubject(username, password);
+        AccessManager.getAccessManager().loginSubject(username, password);
         
         if (!loginSuccess) {
             Object[] options = { "Fix Login", "Exit Program" };

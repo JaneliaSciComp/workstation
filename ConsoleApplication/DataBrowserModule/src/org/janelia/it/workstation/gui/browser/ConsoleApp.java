@@ -76,7 +76,7 @@ public class ConsoleApp {
 
             ServerStatusReportManager.getReportManager().startCheckingForReport();
 
-            FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+            // FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 
             // Assuming that the user has entered the login/password information, now validate
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
@@ -98,7 +98,7 @@ public class ConsoleApp {
                 LifecycleManager.getDefault().exit(0);
             }
             
-            log.info("Successfully logged in user "+AccessManager.getUsername());
+            log.info("Successfully logged in user " + AccessManager.getUsername());
 
             try {
                 AccessManager.getAccessManager().setRunAsUser(runAsUser);
@@ -111,6 +111,7 @@ public class ConsoleApp {
             sessionMgr.newBrowser();
             log.debug("Displaying main frame");
             SessionMgr.getMainFrame().setVisible(true);
+
 
             // Once the main frame is visible, we can do some things in the background
             SimpleWorker worker = new SimpleWorker() {
@@ -136,6 +137,7 @@ public class ConsoleApp {
             worker.execute();
         }
         catch (Exception ex) {
+            ex.printStackTrace();
             SessionMgr.getSessionMgr().handleException(ex);
             LifecycleManager.getDefault().exit(0);
         }

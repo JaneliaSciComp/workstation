@@ -31,11 +31,16 @@ public interface DomainFacade {
     public List<Subject> getSubjects();
 
     /**
-     * Returns all the subjects (i.e. users and groups) in the system.
-     * @return list of Subject objects
+     * Returns a specific subject given it's human-readable key
+     * @return the Subject object if it exists
      */
     public Subject getSubjectByKey(String subjectKey);
 
+    /**
+     * authenticates the user against LDAP then loads the user subject
+     * @return authenticated Subject
+     */
+    public Subject loginSubject(String username, String password);
 
     /**
      * Returns the current subject's preferences.

@@ -142,11 +142,7 @@ public final class ModelMgr {
     }
     
     public void init() throws Exception {
-        log.info("Preloading subjects");
-        List<Subject> subjects = getSubjects();
-        for(Subject subject : subjects) {
-            subjectByKey.put(subject.getKey(), subject);
-        }
+
     }
     
     public void addModelMgrObserver(ModelMgrObserver mml) {
@@ -304,7 +300,8 @@ public final class ModelMgr {
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
         Subject subject = null;
-        //ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        return null;
+        /*//ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -312,7 +309,7 @@ public final class ModelMgr {
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
 
-        return ontologyKeyBindings;
+        return ontologyKeyBindings;*/
     }
 
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
@@ -1022,11 +1019,6 @@ public final class ModelMgr {
     public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
        return null;
         //return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
-    }
-
-    public List<Subject> getSubjects() throws Exception {
-        return null;
-        //return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
     }
 
     public Subject saveOrUpdateSubject(Subject subject) throws Exception {

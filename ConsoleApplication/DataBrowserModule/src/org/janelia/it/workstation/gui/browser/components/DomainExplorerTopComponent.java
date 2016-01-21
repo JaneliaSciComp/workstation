@@ -165,7 +165,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     break; // For now, we'll only expand the user's default workspace
                 }
                 synchronized (DomainExplorerTopComponent.this) {
-                    beanTreeView.expand(pathsToExpand);
+                    //beanTreeView.expand(pathsToExpand);
                     pathsToExpand = null;
                 }
             }

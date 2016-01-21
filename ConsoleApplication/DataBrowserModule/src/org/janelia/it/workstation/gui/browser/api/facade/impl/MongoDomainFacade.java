@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl;
 
+import java.lang.Override;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -18,9 +19,12 @@ import org.janelia.it.jacs.model.domain.support.DomainDAO;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.shared.security.LDAPProvider;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.jacs.shared.security.LDAPProvider;
+import org.janelia.it.jacs.shared.security.BasicAuthToken;
 
 /**
  * Implementation of the DomainFacade using a direct MongoDB connection.
@@ -51,6 +55,16 @@ public class MongoDomainFacade implements DomainFacade {
     public Subject getSubjectByKey(String key) {
         return dao.getSubjectByKey(key);
     }
+
+    @Override
+    public Subject loginSubject (String username, String password) {
+        BasicAuthToken userInfo = new BasicAuthToken();
+        userInfo.setUsername(username);
+        userInfo.setPassword(password);
+
+        Subject user = dao.getSubjectByKey("user:" + userInfo.getUsername());
+        return user;
+     }
 
     @Override
     public List<Preference> getPreferences() {

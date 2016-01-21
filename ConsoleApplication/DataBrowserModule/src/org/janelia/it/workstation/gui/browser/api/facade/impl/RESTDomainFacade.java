@@ -13,6 +13,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -38,6 +39,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +82,7 @@ public class RESTDomainFacade implements DomainFacade {
         serviceEndpoints.put("objectset", client.target(serverUrl + "objectset"));
         serviceEndpoints.put("user", client.target(serverUrl + "user"));
         serviceEndpoints.put("dataset", client.target(serverUrl + "dataset"));
+        serviceEndpoints.put("login", client.target(serverUrl + "login"));
     }
 
     // general CRUD for all domain object hierarchies
@@ -531,17 +534,17 @@ public class RESTDomainFacade implements DomainFacade {
         return updatedObjectSet;
     }
 
-    public List<Subject> loginSubject() {
-        Response response = serviceEndpoints.get("user")
-                .path("subjects")
+    public Subject loginSubject(String username, String password) {
+        String credentials = new String("Basic " + Base64.encodeAsString(username + ":" + password));
+        Response response = serviceEndpoints.get("login")
                 .request("application/json")
+                .header("Authorization", credentials)
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
+        if (checkBadResponse(response.getStatus(), "problem making authenticating user against the server")) {
             return null;
         }
-        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>() {
-        });
-        return subjects;
+        Subject authSubject = response.readEntity(Subject.class);
+        return authSubject;
     }
 
     public List<Subject> getSubjects() {
@@ -620,7 +623,8 @@ public class RESTDomainFacade implements DomainFacade {
     }
 
     private boolean checkBadResponse (int responseStatus, String failureError) {
-        if (responseStatus!=200) {
+        if (responseStatus<200 || responseStatus>=300) {
+            log.error("ERROR RESPONSE: " + responseStatus);
             log.error(failureError);
             return true;
         }

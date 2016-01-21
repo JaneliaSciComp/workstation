@@ -728,6 +728,10 @@ public class DomainModel {
         return facade.getSubjectByKey(subjectKey);
     }
 
+    public Subject loginSubject(String username, String password) throws Exception {
+        return facade.loginSubject(username, password);
+    }
+
     private void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));

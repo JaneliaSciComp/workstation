@@ -27,6 +27,7 @@ import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -56,7 +57,7 @@ public class TableViewerConfigDialog extends ModalDialog {
                 DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, domainClass.getName());
         
         if (columnsPreference==null) {
-            this.columnsPreference = new Preference(SessionMgr.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, domainClass.getName(), "");
+            this.columnsPreference = new Preference(AccessManager.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, domainClass.getName(), "");
             this.config = new TableViewerConfiguration(); 
         }
         else {

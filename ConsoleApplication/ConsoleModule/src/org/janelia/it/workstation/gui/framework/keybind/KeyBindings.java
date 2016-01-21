@@ -113,24 +113,26 @@ public class KeyBindings {
 
         try {
             OntologyKeyBindings ontologyKeyBindings = ModelMgr.getModelMgr().loadOntologyKeyBindings(rootId);
-            Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
+            if (ontologyKeyBindings!=null) {
+                Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
 
-            for (OntologyKeyBind bind : keybinds) {
-                KeyboardShortcut shortcut = KeyboardShortcut.fromString(bind.getKey());
+                for (OntologyKeyBind bind : keybinds) {
+                    KeyboardShortcut shortcut = KeyboardShortcut.fromString(bind.getKey());
 
-                try {
-                    long entityId = bind.getOntologyTermId();
+                    try {
+                        long entityId = bind.getOntologyTermId();
 
-                    for (String uniqueId : entityActionMap.keySet()) {
-                        if (uniqueId.endsWith(""+entityId)) {
-                            Action action = entityActionMap.get(uniqueId);
-                            ontologyBindings.put(shortcut, action);
+                        for (String uniqueId : entityActionMap.keySet()) {
+                            if (uniqueId.endsWith("" + entityId)) {
+                                Action action = entityActionMap.get(uniqueId);
+                                ontologyBindings.put(shortcut, action);
+                            }
                         }
-                    }
 
-                }
-                catch (Exception e) {
-                    log.error("Could not load key binding from user preference '" + bind.getKey() + "'.", e);
+                    }
+                    catch (Exception e) {
+                        log.error("Could not load key binding from user preference '" + bind.getKey() + "'.", e);
+                    }
                 }
             }
         }

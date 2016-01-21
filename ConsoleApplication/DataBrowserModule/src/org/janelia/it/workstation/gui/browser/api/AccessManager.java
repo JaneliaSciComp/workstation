@@ -23,6 +23,7 @@ import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,10 +68,14 @@ public final class AccessManager {
                 relogin = true;
             }
 
-//            findAndRemoveWindowsSplashFile();
+            //findAndRemoveWindowsSplashFile();
             // Login and start the session
             authenticatedSubject = authenticateSubject(username, password);
+            System.out.println ("TRACE 2");
+
+            System.out.println (authenticatedSubject);
             if (null != authenticatedSubject) {
+                System.out.println ("TRACE 1");
                 isLoggedIn = true;                
                 loggedInSubject = authenticatedSubject;
                 log.info("Authenticated as {}", authenticatedSubject.getKey());
@@ -96,28 +101,33 @@ public final class AccessManager {
         final String user = username;
         final String pw = password;
 
-        Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(username);
-        log.info("Setting default authenticator");
-        if (authenticatedSubject!=null) {
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(user,
-                            pw.toCharArray());
-                }
-            });
+        try {
+            Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
 
-            SessionMgr.getSessionMgr().getWebDavClient().setCredentialsUsingAuthenticator();
+            if (authenticatedSubject!=null) {
+                log.info("Setting default authenticator");
+                Authenticator.setDefault(new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(user,
+                                pw.toCharArray());
+                    }
+                });
+                SessionMgr.getSessionMgr().getWebDavClient().setCredentialsUsingAuthenticator();
+            }
+            return authenticatedSubject;
+        } catch (Exception e) {
+            log.error("Problem getting the subject using key " + username);
         }
-        return authenticatedSubject;
+        return null;
     }
 
     private void beginSession () {
-
+        // TO DO: add to eventBus server logging
     }
 
     private void endSession () {
-
+        // TO DO: add to eventBus server logging
     }
 
     public boolean setRunAsUser(String runAsUser) {
@@ -154,14 +164,14 @@ public final class AccessManager {
     }
     
     private void resetSession() {
-        final Browser browser = AccessManager.getBrowser();
+        final Browser browser = SessionMgr.getBrowser();
         if (browser != null) {
             log.info("Refreshing all views");
             browser.resetView();
         }
         log.info("Resetting model");
         ModelMgr.getModelMgr().reset();
-        sessionModel.removeAllBrowserModels();
+        SessionMgr.getSessionMgr().getSessionModel().removeAllBrowserModels();
     }
     
     public void logoutUser() {
@@ -214,7 +224,7 @@ public final class AccessManager {
         return subject.getGroups().contains(groupName);
     }
 
-    public static List<String> getSubjects() {
+    public static List<String> getSubjectKeys() {
         List<String> subjectKeys = new ArrayList<>();
         Subject subject = AccessManager.getAccessManager().getSubject();
         if (subject != null) {

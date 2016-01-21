@@ -77,7 +77,7 @@ public class RunAsUserDialog extends ModalDialog {
     }
 
     public void showDialog() {
-       // String runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
+       String runAsUser = (String) getModelProperty(AccessManager.RUN_AS_USER, "");
        // usernameField.setText(runAsUser);
         packAndShow();
     }
@@ -89,7 +89,7 @@ public class RunAsUserDialog extends ModalDialog {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
         
-       // boolean runAsSuccess = SessionMgr.getSessionMgr().setRunAsUser(runAsUser);
+        boolean runAsSuccess = AccessManager.getAccessManager().setRunAsUser(runAsUser);
         
         if (false) {
             Object[] options = { "Fix username", "Cancel" };
