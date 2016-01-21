@@ -1,15 +1,24 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -22,6 +31,8 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
@@ -30,6 +41,7 @@ import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -38,6 +50,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+
+import de.javasoft.swing.SimpleDropDownButton;
+import javax.swing.BorderFactory;
 
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 
@@ -52,7 +67,12 @@ import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 public class NeuronSeparationEditorPanel extends JPanel implements SampleResultEditor, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
+
+    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
+    private final JPanel controlPanel;
+    private final SimpleDropDownButton resultButton;
+    private final JButton openInNAButton;
     private final PaginatedResultsPanel resultsPanel;
     
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
@@ -69,6 +89,26 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         
         setLayout(new BorderLayout());
         
+        resultButton = new SimpleDropDownButton("Choose Result...");
+
+        openInNAButton = new JButton();
+        openInNAButton.setIcon(Icons.getIcon("v3d_32x32x32.png"));
+        openInNAButton.setFocusable(false);
+        openInNAButton.setBorderPainted(false);
+        openInNAButton.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+        openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
+        openInNAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openInNA();
+            }
+        });
+        
+        controlPanel = new JPanel();
+        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.LINE_AXIS));
+        controlPanel.add(resultButton);
+        controlPanel.add(openInNAButton);
+        
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
@@ -76,7 +116,41 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
+        
+        add(controlPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
+    }
+
+    private void openInNA() {
+        
+    }
+    
+    private JPopupMenu getResultPopupMenu(PipelineResult pipelineResult) {
+
+        JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+        
+        if (pipelineResult.hasResults()) {
+            for(final PipelineResult result : pipelineResult.getResults()) {
+                if (result instanceof NeuronSeparation) {
+                    final NeuronSeparation separation = (NeuronSeparation)result;
+                    JMenuItem viewItem = new JMenuItem(getLabel(separation));
+                    viewItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent actionEvent) {
+                            setResult(separation, true, null);
+                        }
+                    });
+                    popupMenu.add(viewItem);
+                }
+            }
+        }
+
+        return popupMenu;
+    }
+    
+    private String getLabel(NeuronSeparation separation) {
+        if (separation==null) return "";
+        return dateFormatter.format(separation.getCreationDate())+" ("+separation.getFragmentsReference().getCount()+" fragments)";
     }
     
     @Override
@@ -87,21 +161,36 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             return;
         }
         
-        log.debug("loadDomainObject(ObjectSet:{})",sampleResult.getName());
+        log.info("loadDomainObject(SampleResult:{})",sampleResult.getName());
         
         this.sampleResult = sampleResult;
         
-        // TODO: allow user to choose which separation to use
+        PipelineResult result;
         NeuronSeparation separation;
         if (sampleResult.getResult() instanceof NeuronSeparation) {
             separation = (NeuronSeparation)sampleResult.getResult();
+            result = separation.getParentResult();
         }
         else {
-            separation = sampleResult.getResult().getLatestSeparationResult();
+            result =  sampleResult.getResult();
+            separation = result.getLatestSeparationResult();
         }
         
-        final NeuronSeparation finalSeparation = separation;
+        log.info("Result: "+result.getName());
+        resultButton.setPopupMenu(getResultPopupMenu(result));
         
+        if (separation==null) {
+            showNothing();
+            debouncer.success();
+        }
+        else {
+            log.info("Separation: "+separation.getName());
+            setResult(separation, isUserDriven, success);
+        }
+    }
+    
+    private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final Callable<Void> success) {
+        this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         
         SimpleWorker childLoadingWorker = new SimpleWorker() {
@@ -109,12 +198,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                if (finalSeparation==null) {
+                if (separation==null) {
                     domainObjects = new ArrayList<>();
                     annotations = new ArrayList<>();
                 }
                 else {
-                    domainObjects = model.getDomainObjects(finalSeparation.getFragmentsReference());
+                    domainObjects = model.getDomainObjects(separation.getFragmentsReference());
                     annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
                 }
                 log.info("Showing "+domainObjects.size()+" neurons");

@@ -216,13 +216,13 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        sampleResult = getSampleResult(sample, neuronFragment);
+                        sampleResult = getNeuronSeparation(sample, neuronFragment);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         viewer.requestActive();
-                        Events.getInstance().postOnEventBus(new SampleResultSelectionEvent(source, sampleResult, true));
+                        viewer.loadSampleResult(sampleResult, true, null);
                     }
 
                     @Override
@@ -235,9 +235,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         });
         return copyMenuItem;
     }
-
     
-    public static SampleResult getSampleResult(Sample sample, NeuronFragment neuronFragment) {
+    public static SampleResult getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
         if (neuronFragment==null) return null;
         for(String objective : sample.getOrderedObjectives()) {
             ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
@@ -249,7 +248,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                 if (secondaryResult!=null && secondaryResult instanceof NeuronSeparation) {
                                     NeuronSeparation separation = (NeuronSeparation)secondaryResult;
                                     if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
-                                        return new SampleResult(sample, secondaryResult);
+                                        return new SampleResult(sample, separation);
                                     }
                                 }
                             }

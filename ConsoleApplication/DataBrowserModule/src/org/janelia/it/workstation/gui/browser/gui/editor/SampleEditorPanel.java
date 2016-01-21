@@ -18,7 +18,6 @@ import java.awt.event.MouseListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -189,9 +188,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         GridBagConstraints c = new GridBagConstraints();
         int y = 0;
                 
-        List<String> objectives = new ArrayList<>(sample.getObjectives().keySet());
-        Collections.sort(objectives);
-        
+        List<String> objectives = new ArrayList<>(sample.getOrderedObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
         
         for(String objective : objectives) {
