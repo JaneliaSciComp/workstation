@@ -6,6 +6,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /**
@@ -19,6 +20,8 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_SESSION_CATEGORY_STRING = new CategoryString("openFolder");
     private static final CategoryString LVV_ADD_ANCHOR_CATEGORY_STRING = new CategoryString("addAnchor");
     private static final CategoryString LVV_MERGE_NEURITES_CATEGORY_STRING = new CategoryString("mergeNeurites");
+    private static final CategoryString LVV_3D_LAUNCH_CATEGORY_STRING = new CategoryString("launch3dBrickView");
+    private static final CategoryString LVV_NAVIGATE_LANDMARK_CATEGORY_STRING = new CategoryString("navigateInLandmarkView");
     
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
 
@@ -66,6 +69,28 @@ public class ActivityLogHelper {
                 LVV_LOGSTAMP_ID, 
                 LVV_MERGE_NEURITES_CATEGORY_STRING, 
                 new ActionString("Source=" + sourceID + " Target=" + targetID)
+        );
+    }
+    
+    public void logSnapshotLaunch(String labelText, Long workspaceId) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LVV_3D_LAUNCH_CATEGORY_STRING,
+                new ActionString(labelText + " workspaceId=" + workspaceId)
+        );
+    }
+    
+    public void logLandmarkViewPick(AnnotationModel annotationModel, Long annotationId) {
+        String action = "Unknown";
+        if (annotationModel != null
+                && annotationModel.getCurrentWorkspace() != null
+                && annotationModel.getCurrentWorkspace().getId() != null) {
+            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleID() + ":" + annotationId;
+        }
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID, 
+                LVV_NAVIGATE_LANDMARK_CATEGORY_STRING,
+                new ActionString(action)
         );
     }
 }

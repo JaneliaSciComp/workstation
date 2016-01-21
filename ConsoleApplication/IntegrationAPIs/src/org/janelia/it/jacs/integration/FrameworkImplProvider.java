@@ -7,7 +7,7 @@
 package org.janelia.it.jacs.integration;
 
 import java.util.Collection;
-import org.janelia.it.jacs.integration.framework.session_mgr.SessionSupport;
+import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -16,9 +16,9 @@ import org.openide.util.lookup.Lookups;
  * @author fosterl
  */
 public class FrameworkImplProvider {
-    public static SessionSupport getSessonSupport() {
-        Collection<? extends SessionSupport> candidates
-                = Lookups.forPath(SessionSupport.LOOKUP_PATH).lookupAll(SessionSupport.class);
+    public static ActivityLogging getSessonSupport() {
+        Collection<? extends ActivityLogging> candidates
+                = Lookups.forPath(ActivityLogging.LOOKUP_PATH).lookupAll(ActivityLogging.class);
         if (candidates.size() > 0) {
             return candidates.iterator().next();
         }

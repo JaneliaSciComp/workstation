@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
-import org.janelia.it.jacs.integration.framework.session_mgr.SessionSupport;
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 import org.janelia.it.jacs.model.user_data.Group;
@@ -8,6 +7,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -55,7 +55,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
-public final class SessionMgr implements SessionSupport {
+public final class SessionMgr implements ActivityLogging {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -355,12 +355,10 @@ public final class SessionMgr implements SessionSupport {
         return SessionModel.getKeyBindings();
     }
 
-    @Override
     public Object getModelProperty(Object key) {
         return sessionModel.getModelProperty(key);
     }
 
-    @Override
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
@@ -369,22 +367,18 @@ public final class SessionMgr implements SessionSupport {
         modelManager.registerExceptionHandler(handler);
     }
 
-    @Override
     public void setApplicationName(String name) {
         appName = name;
     }
 
-    @Override
     public String getApplicationName() {
         return appName;
     }
 
-    @Override
     public void setApplicationVersion(String version) {
         appVersion = version;
     }
 
-    @Override
     public String getApplicationVersion() {
         return appVersion;
     }
@@ -403,7 +397,6 @@ public final class SessionMgr implements SessionSupport {
     /**
      * @return true if a local file cache is available for this session; otherwise false.
      */
-    @Override
     public boolean isFileCacheAvailable() {
         return (localFileCache != null);
     }
@@ -415,7 +408,6 @@ public final class SessionMgr implements SessionSupport {
      * @param isDisabled if true, cache will be disabled;
      * otherwise cache will be enabled.
      */
-    @Override
     public void setFileCacheDisabled(boolean isDisabled) {
 
         setModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
@@ -462,7 +454,6 @@ public final class SessionMgr implements SessionSupport {
      *
      * @param gigabyteCapacity cache capacity in gigabytes.
      */
-    @Override
     public void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
 
         if ((gigabyteCapacity == null)
@@ -487,7 +478,6 @@ public final class SessionMgr implements SessionSupport {
     /**
      * @return the total size (in gigabytes) of all currently cached files.
      */
-    @Override
     public double getFileCacheGigabyteUsage() {
         double usage = 0.0;
         if (isFileCacheAvailable()) {
@@ -500,7 +490,6 @@ public final class SessionMgr implements SessionSupport {
     /**
      * Removes all locally cached files.
      */
-    @Override
     public void clearFileCache() {
         if (isFileCacheAvailable()) {
             localFileCache.clear();
@@ -631,7 +620,6 @@ public final class SessionMgr implements SessionSupport {
         logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
     }
     
-    @Override
     public void handleException(Throwable throwable) {
         modelManager.handleException(throwable);
     }
@@ -704,13 +692,11 @@ public final class SessionMgr implements SessionSupport {
         }
     }
 
-    @Override
     public boolean isUnloadImages() {
         Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
         return unloadImagesBool != null && unloadImagesBool;
     }
 
-    @Override
     public boolean isDarkLook() {
         return isDarkLook;
     }
@@ -833,7 +819,6 @@ public final class SessionMgr implements SessionSupport {
         return webServer;
     }
     
-    @Override
     public void saveUserSettings() {
         writeSettings();
     }
@@ -856,7 +841,6 @@ public final class SessionMgr implements SessionSupport {
         }
     }
 
-    @Override
     public boolean loginSubject(String username, String password) {
         try {
             boolean relogin = false;
@@ -891,7 +875,6 @@ public final class SessionMgr implements SessionSupport {
         }
     }
 
-    @Override
     public boolean setRunAsUser(String runAsUser) {
         
         if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
@@ -935,7 +918,6 @@ public final class SessionMgr implements SessionSupport {
         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
     }
     
-    @Override
     public void logoutUser() {
         try {
             if (loggedInSubject != null) {
@@ -951,12 +933,10 @@ public final class SessionMgr implements SessionSupport {
         }
     }
 
-    @Override
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
 
-    @Override
     public String getApplicationOutputDirectory() {
         return prefsDir;
     }
@@ -1106,12 +1086,10 @@ public final class SessionMgr implements SessionSupport {
         }
     }
 
-    @Override
     public Long getCurrentSessionId() {
         return currentSessionId;
     }
 
-    @Override
     public void setCurrentSessionId(Long currentSessionId) {
         this.currentSessionId = currentSessionId;
     }
