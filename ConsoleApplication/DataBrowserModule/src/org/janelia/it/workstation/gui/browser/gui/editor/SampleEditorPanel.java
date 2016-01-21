@@ -15,6 +15,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -59,6 +61,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
     
     private final static String ALL_VALUE = "all";
+    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
     // UI Components
     private final SampleEditorToolbar toolbar;
@@ -351,6 +354,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         private final PipelineResult result;
         private JLabel label = new JLabel();
+        private JLabel subLabel = new JLabel();
         
         private PipelineResultPanel(PipelineResult result) {
             
@@ -371,7 +375,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             imagePanel.add(getImagePanel(signalMip));
             imagePanel.add(getImagePanel(refMip));
 
-            add(label, BorderLayout.NORTH);
+            JPanel titlePanel = new JPanel(new BorderLayout());
+            titlePanel.add(label, BorderLayout.PAGE_START);
+            titlePanel.add(subLabel, BorderLayout.PAGE_END);
+            
+            add(titlePanel, BorderLayout.NORTH);
             add(imagePanel, BorderLayout.CENTER);
 
             addMouseListener(resultMouseListener);
@@ -386,6 +394,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             else {
                 label.setText(objective+" "+result.getName());
             }
+            subLabel.setText(dateFormatter.format(result.getCreationDate()).toLowerCase());
         }
 
         public PipelineResult getResult() {
