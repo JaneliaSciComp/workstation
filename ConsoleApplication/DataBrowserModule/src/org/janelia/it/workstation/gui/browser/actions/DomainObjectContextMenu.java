@@ -13,16 +13,26 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,17 +52,15 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Lock copyFileLock = new ReentrantLock();
 
     // Current selection
+    protected Component source;
     protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
 
-    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList) {
+    public DomainObjectContextMenu(Component source, DomainObject contextObject, List<DomainObject> domainObjectList) {
+        this.source = source;
         this.contextObject = contextObject;
-        init(domainObjectList);
-    }
-    
-    public final void init(List<DomainObject> domainObjectList) {
         this.domainObjectList = domainObjectList;
         this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
         this.multiple = domainObjectList.size() > 1;
@@ -71,8 +79,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         
+        setNextAddRequiresSeparator(true);
         add(getOpenInNewEditorItem());
+        add(getOpenSampleInNewEditorItem());
+        add(getOpenSeparationInNewEditorItem());
         
+        setNextAddRequiresSeparator(true);
         add(getPasteAnnotationItem());
 //        add(getDetailsItem());
 //        add(getPermissionItem());
@@ -160,6 +172,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     
     protected JMenuItem getOpenInNewEditorItem() {
         if (multiple) return null;
+        if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
         
         JMenuItem copyMenuItem = new JMenuItem("  Open In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
@@ -168,6 +181,80 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                 viewer.requestActive();
                 viewer.loadDomainObject(domainObject);
+            }
+        });
+        return copyMenuItem;
+    }
+
+    protected JMenuItem getOpenSampleInNewEditorItem() {
+        if (multiple) return null;
+        if (!(domainObject instanceof NeuronFragment)) return null;
+        
+        JMenuItem copyMenuItem = new JMenuItem("  Open Sample In New Viewer");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                final NeuronFragment neuronFragment = (NeuronFragment)domainObject;
+                
+                SimpleWorker worker = new SimpleWorker() {
+                    Sample sample;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        viewer.requestActive();
+                        viewer.loadDomainObject(sample);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
+            }
+        });
+        return copyMenuItem;
+    }
+    
+    protected JMenuItem getOpenSeparationInNewEditorItem() {
+        if (multiple) return null;
+        if (!(domainObject instanceof NeuronFragment)) return null;
+        
+        JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+                final NeuronFragment neuronFragment = (NeuronFragment)domainObject;
+                
+
+                SimpleWorker worker = new SimpleWorker() {
+                    SampleResult sampleResult;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
+                        sampleResult = SampleResultViewerManager.getSampleResult(sample, neuronFragment);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        viewer.requestActive();
+                        Events.getInstance().postOnEventBus(new SampleResultSelectionEvent(source, sampleResult, true));
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
             }
         });
         return copyMenuItem;

@@ -39,6 +39,8 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+
 /**
  * An editor which can display the most recent neuron separation on a given sample result. 
  * 
@@ -61,6 +63,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     
+    private final Debouncer debouncer = new Debouncer();
+    
     public NeuronSeparationEditorPanel() {
         
         setLayout(new BorderLayout());
@@ -76,15 +80,27 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     @Override
-    public void loadSampleResult(final SampleResult sampleResult, final boolean isUserDriven) {
+    public void loadSampleResult(final SampleResult sampleResult, final boolean isUserDriven, final Callable<Void> success) {
 
+        if (!debouncer.queue(null)) {
+            log.debug("Skipping load, since there is one already in progress");
+            return;
+        }
+        
         log.debug("loadDomainObject(ObjectSet:{})",sampleResult.getName());
         
         this.sampleResult = sampleResult;
-        final NeuronSeparation separation = sampleResult.getResult().getLatestSeparationResult();
-
-        // TODO: Should Samples be parents of neurons?
-//        selectionModel.setParentObject(sampleResult.getSample());
+        
+        // TODO: allow user to choose which separation to use
+        NeuronSeparation separation;
+        if (sampleResult.getResult() instanceof NeuronSeparation) {
+            separation = (NeuronSeparation)sampleResult.getResult();
+        }
+        else {
+            separation = sampleResult.getResult().getLatestSeparationResult();
+        }
+        
+        final NeuronSeparation finalSeparation = separation;
         
         resultsPanel.showLoadingIndicator();
         
@@ -93,12 +109,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                if (separation==null) {
+                if (finalSeparation==null) {
                     domainObjects = new ArrayList<>();
                     annotations = new ArrayList<>();
                 }
                 else {
-                    domainObjects = model.getDomainObjects(separation.getFragmentsReference());
+                    domainObjects = model.getDomainObjects(finalSeparation.getFragmentsReference());
                     annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
                 }
                 log.info("Showing "+domainObjects.size()+" neurons");
@@ -110,14 +126,17 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     @Override
                     public Void call() throws Exception {
                         showResults(isUserDriven);
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
                         return null;
                     }
                 });
+                debouncer.success();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
+                debouncer.failure();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -127,47 +146,36 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
     private void sort(final String sortCriteria, final Callable<Void> success) {
 
-        SimpleWorker worker = new SimpleWorker() {
-        
-            @Override
-            protected void doStuff() throws Exception {
-                final String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-                final boolean ascending = !sortCriteria.startsWith("-");
-                Collections.sort(domainObjects, new Comparator<DomainObject>() {
-                    @Override
-                    @SuppressWarnings({ "rawtypes", "unchecked" })
-                    public int compare(DomainObject o1, DomainObject o2) {
-                        try {
-                            // TODO: speed could be improved by moving the reflection calls outside of the sort
-                            Comparable v1 = (Comparable)ReflectionUtils.get(o1, sortField);
-                            Comparable v2 = (Comparable)ReflectionUtils.get(o2, sortField);
-                            Ordering ordering = Ordering.natural().nullsLast();
-                            if (!ascending) {
-                                ordering = ordering.reverse();
-                            }
-                            return ComparisonChain.start().compare(v1, v2, ordering).result();
+        try {
+            final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+            final boolean ascending = !sortCriteria.startsWith("-");
+            Collections.sort(domainObjects, new Comparator<DomainObject>() {
+                @Override
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                public int compare(DomainObject o1, DomainObject o2) {
+                    try {
+                        // TODO: speed could be improved by moving the reflection calls outside of the sort
+                        Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
+                        Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
+                        Ordering ordering = Ordering.natural().nullsLast();
+                        if (!ascending) {
+                            ordering = ordering.reverse();
                         }
-                        catch (Exception e) {
-                            log.error("Problem encountered when sorting DomainObjects",e);
-                            return 0;
-                        }
+                        return ComparisonChain.start().compare(v1, v2, ordering).result();
                     }
-                }); 
-            }
-
-            @Override
-            protected void hadSuccess() {
-                ConcurrentUtils.invokeAndHandleExceptions(success);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                resultsPanel.showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        
-        worker.execute();
+                    catch (Exception e) {
+                        log.error("Problem encountered when sorting DomainObjects", e);
+                        return 0;
+                    }
+                }
+            });
+            
+            ConcurrentUtils.invokeAndHandleExceptions(success);
+        }
+        catch (Exception e) {
+            resultsPanel.showNothing();
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
     @Override
@@ -237,13 +245,24 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                         showNothing();
                         return;
                     }
-                    loadSampleResult(new SampleResult(updatedSample, result), false);
+                    loadSampleResult(new SampleResult(updatedSample, result), false, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            // TODO: reselect the selected neurons
+                            return null;
+                        }
+                    });
                     break;
                 }
                 else if (domainObject.getClass().equals(NeuronFragment.class)) {
                     log.info("Some objects of class NeuronFragment were invalidated, reloading...");
-                    loadSampleResult(sampleResult, false);
-                    // TODO: reselect the selected neurons
+                    loadSampleResult(sampleResult, false, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            // TODO: reselect the selected neurons
+                            return null;
+                        }
+                    });
                 }
             }
         }

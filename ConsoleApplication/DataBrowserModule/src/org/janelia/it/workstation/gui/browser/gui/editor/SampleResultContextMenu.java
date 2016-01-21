@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
+import static org.janelia.it.jacs.model.domain.enums.FileType.*;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -59,9 +59,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
+        add(getCopyIdToClipboardItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInSeparationNewViewer());
+        
+        setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
@@ -91,14 +94,27 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return copyMenuItem;
     }
 
+    protected JMenuItem getCopyIdToClipboardItem() {
+        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID To Clipboard");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Transferable t = new StringSelection(result.getId().toString());
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+            }
+        });
+        return copyMenuItem;
+    }
+    
     protected JMenuItem getOpenInSeparationNewViewer() {
-        JMenuItem copyMenuItem = new JMenuItem("  View Neuron Fragments");
+        JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 SampleResult sampleResult = new SampleResult(sample, result);
-                SampleResultViewerTopComponent targetViewer = ViewerUtils.provisionViewer(SampleResultViewerManager.getInstance(), "editor3"); 
-                targetViewer.loadSampleResult(sampleResult, true);
+                SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+                viewer.requestActive(); 
+                viewer.loadSampleResult(sampleResult, true, null);
             }
         });
         return copyMenuItem;
@@ -106,16 +122,17 @@ public class SampleResultContextMenu extends PopupContextMenu {
     
     protected JMenuItem getOpenInFinderItem() {
         if (!OpenInFinderAction.isSupported()) return null;
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getFilepath(result, LosslessStack);
+        if (path==null) path = DomainUtils.getFilepath(result, VisuallyLosslessStack);
         if (path==null) return null;
-        
         JMenuItem menuItem = getNamedActionItem(new OpenInFinderAction(path));
         return menuItem;
     }
 
     protected JMenuItem getOpenWithAppItem() {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getFilepath(result, LosslessStack);
+        if (path==null) path = DomainUtils.getFilepath(result, VisuallyLosslessStack);
         if (path==null) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
     }

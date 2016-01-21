@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
+import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
@@ -54,6 +55,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     private static final Logger log = LoggerFactory.getLogger(SampleResultViewerTopComponent.class);
     
     public static final String TC_NAME = "SampleResultViewerTopComponent";
+    public static final String TC_VERSION = "1.0";
         
     /* Instance variables */
     
@@ -177,13 +179,13 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         return editor;
     }
 
-    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven) {
+    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven, Callable<Void> success) {
         
         // Do we already have the given node loaded?
         if (!setCurrent(sampleResult)) {
             return;
         }
         
-        editor.loadSampleResult(sampleResult, isUserDriven);
+        editor.loadSampleResult(sampleResult, isUserDriven, success);
     }
 }

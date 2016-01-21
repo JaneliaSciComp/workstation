@@ -23,26 +23,30 @@ public class Debouncer {
 
     private final Logger log = LoggerFactory.getLogger(Debouncer.class);
     
-    private final AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean operationInProgress = new AtomicBoolean(false);
     private final Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<>();
 
+    public boolean queue() {
+        return queue(null);
+    }
+    
     public synchronized boolean queue(Callable<Void> success) {
         if (success != null) {
             callbacks.add(success);
         }
-        if (refreshInProgress.getAndSet(true)) {
+        if (operationInProgress.getAndSet(true)) {
             return false;
         }
         return true;
     }
     
     public void success() {
-        refreshInProgress.set(false);
+        operationInProgress.set(false);
         executeCallBacks();
     }
     
     public void failure() {
-        refreshInProgress.set(false);
+        operationInProgress.set(false);
     }
     
     private synchronized void executeCallBacks() {

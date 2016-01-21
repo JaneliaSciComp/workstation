@@ -7,6 +7,7 @@ import javax.swing.JComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -143,9 +144,10 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
         
     public void loadDomainObject(DomainObject domainObject) {
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
+        
+        if (domainObject instanceof NeuronFragment) {
+            NeuronFragment fragment = (NeuronFragment)domainObject;
+            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
         }
         
         final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
@@ -155,6 +157,12 @@ public final class DomainViewerTopComponent extends TopComponent {
             log.info("No viewer defined for domain object of type {}",domainObject.getClass().getName());
             return;
         }
+        
+        // Do we already have the given node loaded?
+        if (!setCurrent(domainObject)) {
+            return;
+        }
+        
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
@@ -162,11 +170,15 @@ public final class DomainViewerTopComponent extends TopComponent {
         setName(StringUtils.abbreviate(domainObject.getName(), 30));
     }
 
-    private Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
+    private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Sample) {
             return SampleEditorPanel.class;
         }
         return null;
+    }
+    
+    public static boolean isSupported(DomainObject domainObject) {
+        return getEditorClass(domainObject)!=null;
     }
 
     void writeProperties(java.util.Properties p) {

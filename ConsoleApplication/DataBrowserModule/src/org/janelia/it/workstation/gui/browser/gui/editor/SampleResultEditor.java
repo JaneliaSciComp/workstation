@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
+import java.util.concurrent.Callable;
+
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
 
 /**
@@ -9,7 +11,7 @@ import org.janelia.it.workstation.gui.browser.model.SampleResult;
  */
 public interface SampleResultEditor {
     
-    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven);
+    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven, Callable<Void> success);
     
     public String getName();
     
