@@ -360,51 +360,68 @@ public class Texture3d extends BasicTexture implements GL3Resource
         };
         shortsOut.rewind();
         bytesOut.rewind();
-        int [] zeroOnly = new int [] {0};
         int [] samples = new int [8];
+
+        int [] zIn = new int [2];
+        int [] yIn = new int [2];
+        int [] xIn = new int [2];
+
+        final int IGNORE_VALUE=Integer.MIN_VALUE;
+
         // Outer loops over output texture voxels
         for (int z = 0; z < result.depth; ++z) {
-            float fractionalZOut = (z + 0.5f) / result.depth;
-            int [] zIn = new int [] {
-                (int)( (fractionalZOut - halfInputDeltaUvw[2]) * depth),
-                (int)( (fractionalZOut + halfInputDeltaUvw[2]) * depth),
-            };
-            if (depth == 1) zIn = zeroOnly;
-            else if (zIn[0] == zIn[1]) zIn = new int[] {zIn[0]};
+            if (depth==1) {
+                zIn[0]=0;
+                xIn[1]=IGNORE_VALUE;
+            } else {
+                float fractionalZOut = (z + 0.5f) / result.depth;
+                zIn[0] = (int) ((fractionalZOut - halfInputDeltaUvw[2]) * depth);
+                zIn[1] = (int) ((fractionalZOut + halfInputDeltaUvw[2]) * depth);
+                if (zIn[0] == zIn[1]) zIn[1]=IGNORE_VALUE;
+            }
             for (int y = 0; y < result.height; ++y) {
-                float fractionalYOut = (y + 0.5f) / result.height;
-                int [] yIn = new int [] {
-                    (int)( (fractionalYOut - halfInputDeltaUvw[1]) * height),
-                    (int)( (fractionalYOut + halfInputDeltaUvw[1]) * height),
-                };
-                if (height == 1) yIn = zeroOnly;
-                else if (yIn[0] == yIn[1]) yIn = new int[] {yIn[0]};
+                if (height==1) {
+                    yIn[0]=0;
+                    yIn[1]=IGNORE_VALUE;
+                } else {
+                    float fractionalYOut = (y + 0.5f) / result.height;
+                    yIn[0] = (int) ((fractionalYOut - halfInputDeltaUvw[1]) * height);
+                    yIn[1] = (int) ((fractionalYOut + halfInputDeltaUvw[1]) * height);
+                    if (yIn[0] == yIn[1]) yIn[1]=IGNORE_VALUE;
+                }
                 for (int x = 0; x < result.width; ++x) {
-                    float fractionalXOut = (x + 0.5f) / result.width;
-                    int [] xIn = new int [] {
-                        (int)( (fractionalXOut - halfInputDeltaUvw[0]) * width),
-                        (int)( (fractionalXOut + halfInputDeltaUvw[0]) * width),
-                    };
-                    if (width == 1) 
-                        xIn = zeroOnly;
-                    else if (xIn[0] == xIn[1]) 
-                        xIn = new int[] {xIn[0]};
+                    if (width==1) {
+                        xIn[0]=0;
+                        xIn[1]=IGNORE_VALUE;
+                    } else {
+                        float fractionalXOut = (x + 0.5f) / result.width;
+                        xIn[0] = (int) ((fractionalXOut - halfInputDeltaUvw[0]) * width);
+                        xIn[1] = (int) ((fractionalXOut + halfInputDeltaUvw[0]) * width);
+                        if (xIn[0] == xIn[1]) xIn[1]=IGNORE_VALUE;
+                    }
                     int sampleCount = 0;
                     for (int c = 0; c < numberOfComponents; ++c) {
                         // Inner loops over input texture voxels
                         for (int iz : zIn) {
-                            for (int iy : yIn)
-                                for (int ix : xIn) {
-                                    int offset = iz * height * width * numberOfComponents
-                                            + iy * width * numberOfComponents
-                                            + ix * numberOfComponents
-                                            + c;
-                                    if (bytesPerIntensity > 1)
-                                        samples[sampleCount] = shortsIn.get(offset) & 0xffff;
-                                    else
-                                        samples[sampleCount] = bytesIn.get(offset) & 0xff;
-                                    sampleCount += 1;
-                                }                    
+                            if (iz!=IGNORE_VALUE) {
+                                for (int iy : yIn) {
+                                    if (iy != IGNORE_VALUE) {
+                                        for (int ix : xIn) {
+                                            if (ix != IGNORE_VALUE) {
+                                                int offset = iz * height * width * numberOfComponents
+                                                        + iy * width * numberOfComponents
+                                                        + ix * numberOfComponents
+                                                        + c;
+                                                if (bytesPerIntensity > 1)
+                                                    samples[sampleCount] = shortsIn.get(offset) & 0xffff;
+                                                else
+                                                    samples[sampleCount] = bytesIn.get(offset) & 0xff;
+                                                sampleCount += 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                         int maxIntensity = secondLargestIntensity(samples, sampleCount);
                         if (bytesPerIntensity > 1)
