@@ -577,7 +577,10 @@ void integrate_intensity(
 
         // Incorporate path length into voxel opacity
         float segmentLengthInRayParam = voxelRayState.exitRayParameter - voxelRayState.entryRayParameter;
-        vec3 voxelMicrometers = volumeMicrometers * rayParams.textureScale;
+        vec3 fineVoxelMicrometers = volumeMicrometers / textureSize(volumeTexture, 0);
+        vec3 coarseVoxelMicrometers = volumeMicrometers * rayParams.textureScale;
+        // vec3 voxelMicrometers = coarseVoxelMicrometers; // pops darker at coarser LOD
+        vec3 voxelMicrometers = fineVoxelMicrometers; // generally pops lighter at coarser LOD, but it's closer
         // TODO: optimization: precompute umPerRayParam once per ray
         float umPerRayParam = dot(abs(rayParams.rayDirectionInTexels), voxelMicrometers);
         float segmentLengthInUm = segmentLengthInRayParam * umPerRayParam;
