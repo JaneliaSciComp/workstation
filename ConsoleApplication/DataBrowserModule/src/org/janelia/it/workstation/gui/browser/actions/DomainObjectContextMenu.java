@@ -7,14 +7,16 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -25,11 +27,9 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
-import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -44,12 +44,6 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
-
-    protected static final Browser browser = SessionMgr.getBrowser();
-    protected static final Component mainFrame = SessionMgr.getMainFrame();
-
-    // Lock to make sure only one file is downloaded at a time
-    private static final Lock copyFileLock = new ReentrantLock();
 
     // Current selection
     protected Component source;
@@ -88,38 +82,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getPasteAnnotationItem());
 //        add(getDetailsItem());
 //        add(getPermissionItem());
-//        add(getSetSortCriteriaItem());
 //        add(getGotoRelatedItem());
         
-//        setNextAddRequiresSeparator(true);
-//        add(getNewFolderItem());
         add(getAddToSetItem());
-//        add(getRenameItem());
-//        add(getErrorFlag());
         add(getRemoveFromSetItem());
-//        add(getDeleteInBackgroundItem());
+        
+//      setNextAddRequiresSeparator(true);
+//        add(getErrorFlag());
 //        add(getMarkForReprocessingItem());
 //        add(getProcessingBlockItem());
 //        add(getVerificationMovieItem());
 //        
 //        setNextAddRequiresSeparator(true);
-//        add(getOpenInFirstViewerItem());
-//        add(getOpenInSecondViewerItem());
-//        add(getOpenInFinderItem());
-//        add(getOpenWithAppItem());
-//        add(getNeuronAnnotatorItem());
-//        add(getVaa3dTriViewItem());
-//        add(getVaa3d3dViewItem());
-//        add(getFijiViewerItem());
-//
-//        setNextAddRequiresSeparator(true);
-//        add(getSearchHereItem());
-//
-//        setNextAddRequiresSeparator(true);
 //        add(getSortBySimilarityItem());
 //        add(getMergeItem());
-//        add(getLsmDownloadMenu());
-//        add(getDownloadMenu());
 //        add(getImportItem());
 //
 //        setNextAddRequiresSeparator(true);
@@ -240,7 +216,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        sampleResult = SampleResultViewerManager.getSampleResult(sample, neuronFragment);
+                        sampleResult = getSampleResult(sample, neuronFragment);
                     }
 
                     @Override
@@ -258,6 +234,31 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         });
         return copyMenuItem;
+    }
+
+    
+    public static SampleResult getSampleResult(Sample sample, NeuronFragment neuronFragment) {
+        if (neuronFragment==null) return null;
+        for(String objective : sample.getOrderedObjectives()) {
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
+                if (run!=null && run.getResults()!=null) {
+                    for(PipelineResult result : run.getResults()) {
+                        if (result!=null && result.getResults()!=null) {
+                            for(PipelineResult secondaryResult : result.getResults()) {
+                                if (secondaryResult!=null && secondaryResult instanceof NeuronSeparation) {
+                                    NeuronSeparation separation = (NeuronSeparation)secondaryResult;
+                                    if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
+                                        return new SampleResult(sample, secondaryResult);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
     
 //    private void addBadDataButtons(JMenu errorMenu) {
@@ -686,40 +687,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        };
 //
 //        worker.execute();
-//    }
-//
-//    protected JMenuItem getRenameItem() {
-//        if (multiple) return null;
-//        if (virtual) return null;
-//        
-//        JMenuItem renameItem = new JMenuItem("  Rename");
-//        renameItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                String newName = (String) JOptionPane.showInputDialog(mainFrame, "Name:\n", "Rename "
-//                        + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, rootedEntity
-//                        .getEntity().getName());
-//                if ((newName == null) || (newName.length() <= 0)) {
-//                    return;
-//                }
-//
-//                try {
-//                    ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
-//                } catch (Exception ex) {
-//                    ex.printStackTrace();
-//                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                            "Error renaming entity", "Error", JOptionPane.ERROR_MESSAGE);
-//                }
-//
-//            }
-//        });
-//
-//        Entity entity = rootedEntity.getEntity();
-//        if (!ModelMgrUtils.hasWriteAccess(entity) || EntityUtils.isProtected(entity)) {
-//            renameItem.setEnabled(false);
-//        }
-//
-//        return renameItem;
 //    }
 //
 //    protected JMenu getErrorFlag() {
@@ -1294,415 +1261,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
 //        return sortItem;
 //    }
-//
-//    protected JMenuItem getSetSortCriteriaItem() {
-//
-//        if (multiple) {
-//            return null;
-//        }
-//
-//        final Entity targetEntity = rootedEntity.getEntity();
-//        final String targetType = targetEntity.getEntityTypeName();
-//        if (!targetType.equals(EntityConstants.TYPE_FOLDER) && !targetType.equals(EntityConstants.TYPE_WORKSPACE)) {
-//            return null;
-//        }
-//        
-//        JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
-//
-//        sortItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                try {
-//                    SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
-//                    dialog.showForEntity(targetEntity);
-//                } 
-//                catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                }
-//            }
-//        });
-//
-//        return sortItem;
-//    }
 //    
-//    protected JMenuItem getDownloadMenu() {
-//
-//        List<Entity> entitiesWithFilepaths = new ArrayList<>();
-//        for(final RootedEntity re : rootedEntityList) {
-//            final Entity targetEntity = re.getEntity();
-//            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-//            if (filepath!=null) {
-//                // conversion pipeline can't handle bz2 (yet), so filter them out
-//                if (! filepath.endsWith(Utils.EXTENSION_BZ2)) {
-//                    entitiesWithFilepaths.add(targetEntity);
-//                }
-//            }
-//        }
-//        if (entitiesWithFilepaths.isEmpty()) {
-//            return null;
-//        }
-//
-//        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};
-//        String itemTitle;
-//        if (entitiesWithFilepaths.size()>1) {
-//            itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
-//        }
-//        else {
-//            itemTitle = "  Download 3D Image As...";
-//        }
-//        
-//        JMenu downloadMenu = new JMenu(itemTitle);
-//        for(String extension : DOWNLOAD_EXTENSIONS) {
-//            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));
-//        }
-//        for(String extension : DOWNLOAD_EXTENSIONS) {
-//            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));
-//        }
-//        return downloadMenu;
-//    }
-//
-//    protected JMenuItem getLsmDownloadMenu() {
-//
-//        boolean foundAtLeastOneBzippedFile = false;
-//
-//        List<Entity> entitiesWithFilepaths = new ArrayList<>();
-//        for (RootedEntity re : rootedEntityList) {
-//            Entity targetEntity = re.getEntity();
-//            String filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-//            if (filePath != null) {
-//                // only include .lsm or .lsm.bz2 files
-//                if (filePath.endsWith(Utils.EXTENSION_LSM)) {
-//                    entitiesWithFilepaths.add(targetEntity);
-//                } else if (filePath.endsWith(Utils.EXTENSION_LSM_BZ2)) {
-//                    foundAtLeastOneBzippedFile = true;
-//                    entitiesWithFilepaths.add(targetEntity);
-//                }
-//            }
-//        }
-//
-//        if (entitiesWithFilepaths.isEmpty()) {
-//            return null;
-//        }
-//
-//        String itemTitle;
-//        if (entitiesWithFilepaths.size()>1) {
-//            itemTitle = "  Download " + entitiesWithFilepaths.size() + " LSMs As...";
-//        }
-//        else {
-//            itemTitle = "  Download LSM As...";
-//        }
-//
-//        JMenu downloadMenu = new JMenu(itemTitle);
-//        add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
-//        if (foundAtLeastOneBzippedFile) {
-//            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_BZ2));
-//        }
-//
-//        return downloadMenu;
-//    }
-//
-//    protected JMenuItem getDownloadItem(final Collection<Entity> entitiesWithFilepaths,
-//                                        final boolean splitChannels,
-//                                        final String extension) {
-//
-//        String itemTitle;
-//        if (splitChannels) {
-//            if (multiple) {
-//                itemTitle = "Split Channel "+extension+" Files (Background Task)";
-//            }
-//            else {
-//                itemTitle = "Split Channel "+extension+" File (Background Task)";
-//            }
-//        }
-//        else {
-//            if (multiple) {
-//                itemTitle = extension+" Files (Background Task)";
-//            }
-//            else {
-//                itemTitle = extension+" File (Background Task)";
-//            }
-//        }
-//        
-//        JMenuItem downloadItem = new JMenuItem(itemTitle);
-//
-//        downloadItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                try {
-//                    for (Entity entity : entitiesWithFilepaths) {
-//                        org.janelia.it.workstation.shared.workers.SampleDownloadWorker sampleDownloadWorker =
-//                                new org.janelia.it.workstation.shared.workers.SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
-//                        sampleDownloadWorker.execute();
-//                    }
-//                } catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                }
-//            }
-//        });
-//        
-//        return downloadItem;
-//    }
-//
-//    protected JMenuItem getOpenInFirstViewerItem() {
-//        if (multiple) return null;
-//        if (virtual) return null;
-//        if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-//        
-//        JMenuItem copyMenuItem = new JMenuItem("  Open (Left Pane)");
-//
-//        copyMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                SimpleWorker worker = new SimpleWorker() {
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-//                            rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
-//                                    false));
-//                        }
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                        browser.getViewerManager().showEntityInMainViewer(rootedEntity);
-//                        ModelMgr.getModelMgr().getEntitySelectionModel()
-//                                .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//                worker.execute();
-//            }
-//        });
-//        return copyMenuItem;
-//    }
-//
-//    protected JMenuItem getOpenInSecondViewerItem() {
-//        if (multiple) return null;
-//        if (virtual) return null;
-//        if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-//        
-//        JMenuItem copyMenuItem = new JMenuItem("  Open (Right Pane)");
-//
-//        copyMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                SimpleWorker worker = new SimpleWorker() {
-//
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-//                            rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
-//                                    false));
-//                        }
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                        browser.getViewerManager().showEntityInSecViewer(rootedEntity);
-//                        ModelMgr.getModelMgr().getEntitySelectionModel()
-//                                .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//                worker.execute();
-//            }
-//        });
-//        return copyMenuItem;
-//    }
-//
-//    protected JMenuItem getOpenInFinderItem() {
-//        if (multiple)
-//            return null;
-//        if (!OpenInFinderAction.isSupported())
-//            return null;
-//        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-//        JMenuItem menuItem = null;
-//        if (!StringUtils.isEmpty(filepath)) {
-//            menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
-//                @Override
-//                public String getName() {
-//                    String name = super.getName();
-//                    if (name == null)
-//                        return null;
-//                    return "  " + name;
-//                }
-//            });
-//        }
-//        return menuItem;
-//    }
-//
-//    protected JMenuItem getOpenWithAppItem() {
-//        if (multiple)
-//            return null;
-//        if (!OpenWithDefaultAppAction.isSupported())
-//            return null;
-//        String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-//        if (!StringUtils.isEmpty(filepath)) {
-//            OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
-//                @Override
-//                public String getName() {
-//                    return "  Open With OS";
-//                }
-//            };
-//            return getActionItem(action);
-//        }
-//        return null;
-//    }
-//
-//    protected JMenuItem getFijiViewerItem() {
-//        if (multiple)
-//            return null;
-//        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-//        if (path != null) {
-//            JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
-//            fijiMenuItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    try {
-//                        ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
-//                    } catch (Exception e) {
-//                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-//                                        + "Please choose the appropriate file path from the Tools->Configure Tools area",
-//                                "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
-//                    }
-//                }
-//            });
-//            return fijiMenuItem;
-//        }
-//        return null;
-//    }
-//
-//    protected JMenuItem getNeuronAnnotatorItem() {
-//        if (multiple)
-//            return null;
-//        final String entityType = rootedEntity.getEntity().getEntityTypeName();
-//        if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
-//                || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-//            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Neuron Annotator");
-//            vaa3dMenuItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    try {
-//                        Entity result = rootedEntity.getEntity();
-//                        if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-//                            result = ModelMgr.getModelMgr().getAncestorWithType(result,
-//                                    EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-//                        }
-//
-//                        if (result != null) {
-//                            // Check that there is a valid NA instance running
-//                            List<ExternalClient> clients = SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-//                            // If no NA client then try to start one
-//                            if (clients.isEmpty()) {
-//                                startNA();
-//                            }
-//                            // If NA clients "exist", make sure they are up
-//                            else {
-//                                ArrayList<ExternalClient> finalList = new ArrayList<>();
-//                                for (ExternalClient client : clients) {
-//                                    boolean connected = client.isConnected();
-//                                    if (!connected) {
-//                                        log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-//                                        SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
-//                                    }
-//                                    else {
-//                                        finalList.add(client);
-//                                    }
-//                                }
-//                                // If none are up then start one
-//                                if (finalList.size()==0) {
-//                                    startNA();
-//                                }
-//                            }
-//
-//                            if (SessionMgr.getSessionMgr()
-//                                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-//                                JOptionPane.showMessageDialog(mainFrame,
-//                                        "Could not get Neuron Annotator to launch and connect. "
-//                                                + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
-//                                return;
-//                            }
-//
-//                            log.debug("Requesting entity view in Neuron Annotator: " + result.getId());
-//                            ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
-//                        }
-//                    } catch (Exception e) {
-//                        SessionMgr.getSessionMgr().handleException(e);
-//                    }
-//                }
-//            });
-//            return vaa3dMenuItem;
-//        }
-//        return null;
-//    }
-//
-//    private void startNA() throws Exception {
-//        log.debug("Client {} is not running. Starting a new instance.",
-//                ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-//        ToolMgr.runTool(ToolMgr.TOOL_NA);
-//        boolean notRunning = true;
-//        int killCount = 0;
-//        while (notRunning && killCount < 2) {
-//            if (SessionMgr.getSessionMgr()
-//                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-//                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-//                Thread.sleep(3000);
-//                killCount++;
-//            }
-//            else {
-//                notRunning = false;
-//            }
-//        }
-//    }
-//
-//    protected JMenuItem getVaa3dTriViewItem() {
-//        if (multiple)
-//            return null;
-//        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-//        if (path != null) {
-//            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
-//            vaa3dMenuItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    try {
-//                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
-//                    } catch (Exception e) {
-//                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-//                                + "Please choose the appropriate file path from the Tools->Configure Tools area",
-//                                "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
-//                    }
-//                }
-//            });
-//            return vaa3dMenuItem;
-//        }
-//        return null;
-//    }
-//
-//    protected JMenuItem getVaa3d3dViewItem() {
-//        if (multiple)
-//            return null;
-//        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
-//        if (path != null) {
-//            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
-//            vaa3dMenuItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    try {
-//                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
-//                    } catch (Exception e) {
-//                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-//                                + "Please choose the appropriate file path from the Tools->Configure Tools area",
-//                                "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
-//                    }
-//                }
-//            });
-//            return vaa3dMenuItem;
-//        }
-//        return null;
-//    }
-//
 //    protected JMenuItem getImportItem() {
 //        if (multiple) return null;
 //        
@@ -1722,58 +1281,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //            return newAttachmentItem;
 //        }
 //        return null;
-//    }
-//
-//    protected JMenuItem getNewFolderItem() {
-//        if (multiple) return null;
-//        
-//        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityTypeName())) {
-//            JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
-//            newFolderItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//
-//                    // Add button clicked
-//                    String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-//                            "Create folder under " + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE,
-//                            null, null, null);
-//                    if ((folderName == null) || (folderName.length() <= 0)) {
-//                        return;
-//                    }
-//
-//                    try {
-//                        // Update database
-//                        Entity parentFolder = rootedEntity.getEntity();
-//                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-//                        ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
-//                                parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
-//
-//                    } catch (Exception ex) {
-//                        SessionMgr.getSessionMgr().handleException(ex);
-//                    }
-//                }
-//            });
-//
-//            return newFolderItem;
-//        }
-//        return null;
-//    }
-//
-//    protected JMenuItem getSearchHereItem() {
-//        if (multiple) return null;
-//        if (virtual) return null;
-//        
-//        JMenuItem searchHereMenuItem = new JMenuItem("  Search Here");
-//        searchHereMenuItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                try {
-//                    SessionMgr.getBrowser().getGeneralSearchDialog()
-//                            .showDialog(rootedEntity.getEntity());
-//                } catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                }
-//            }
-//        });
-//        return searchHereMenuItem;
 //    }
 //
 //    protected JMenuItem getActionItem(final Action action) {
