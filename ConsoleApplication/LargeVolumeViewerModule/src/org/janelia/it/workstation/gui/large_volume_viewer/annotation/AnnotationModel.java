@@ -93,7 +93,6 @@ called from a  SimpleWorker thread.
 
     private String cachedNeuronStyleMapString;
     private Map<Long, NeuronStyle> cachedNeuronStyleMap;
-    private ActivityLogHelper activityLog;
 
     private LoadTimer addTimer = new LoadTimer();
 
@@ -628,7 +627,6 @@ called from a  SimpleWorker thread.
         log.info("beginning mergeNeurite()");
          Stopwatch stopwatch = new Stopwatch();
          stopwatch.start();
-        activityLog.logMergeNeurites(sourceAnnotationID, targetAnnotationID);
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
