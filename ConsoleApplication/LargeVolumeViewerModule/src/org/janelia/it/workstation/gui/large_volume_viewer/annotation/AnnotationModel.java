@@ -849,7 +849,9 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(link, parent);
 
         // update domain object; update child/parent relationships
-        parent.getChildIds().remove(link.getId());
+        if (parent != null) {
+            parent.getChildIds().remove(link.getId());
+        }
         if (child != null) {
             link.getChildIds().remove(child.getId());
             child.setParentId(parent.getId());
@@ -863,12 +865,15 @@ called from a  SimpleWorker thread.
                 neuron.getAnchoredPathMap().remove(pair);
             }
         }
-
         if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
         }
+
         // ...and finally get rid of the thing itself
         neuron.getGeoAnnotationMap().remove(link.getId());
+        if (neuron.getRootAnnotations().contains(link)) {
+            neuron.getRootAnnotations().remove(link);
+        }
 
 
         final TmWorkspace workspace = getCurrentWorkspace();
