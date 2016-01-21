@@ -1,21 +1,29 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import org.janelia.it.workstation.gui.WorkstationEnvironment;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.WindowConstants;
+
+import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.gui.browser.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.model.entity.*;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.

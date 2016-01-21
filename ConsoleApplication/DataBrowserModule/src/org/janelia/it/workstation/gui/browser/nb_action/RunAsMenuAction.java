@@ -1,17 +1,19 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.JMenuItem;
+
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.RunAsUserDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.Presenter;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import org.janelia.it.workstation.gui.dialogs.RunAsUserDialog;
-import org.openide.awt.ActionReferences;
 
 @ActionID(
         category = "File",

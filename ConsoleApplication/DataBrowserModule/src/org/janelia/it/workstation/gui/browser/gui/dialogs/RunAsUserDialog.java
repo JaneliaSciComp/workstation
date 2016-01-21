@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.dialogs;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
