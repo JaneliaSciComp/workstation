@@ -64,6 +64,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     // annotation model object
     private AnnotationModel annotationModel;
     
+    private ActivityLogHelper activityLog;
+    
     // quad view ui object
     private QuadViewUi quadViewUi;
 
@@ -87,6 +89,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
         modelMgr = ModelMgr.getModelMgr();
+        activityLog = new ActivityLogHelper();
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -157,9 +160,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
                 return;
             } else if (ans == JOptionPane.YES_OPTION) {
+                activityLog.logMergedNeurite(getSampleID(), closest);
                 mergeNeurite(anchor.getGuid(), closest.getId());
             } else {
                 // move, don't merge
+                activityLog.logMergedNeurite(getSampleID(), closest);
                 moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
@@ -335,6 +340,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
+                activityLog.logAddAnchor(AnnotationManager.this.annotationModel.getCurrentWorkspace().getSampleID(), finalLocation);
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -372,7 +378,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         } else {
             // verify it's a link and not a root or branch:
-            TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             if (annotation == null) {
                 presentError(
                         "No annotation to delete.",
@@ -394,6 +400,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
+                    activityLog.logDeleteLink(getSampleID(), annotation);
                     annotationModel.deleteLink(annotationModel.getGeoAnnotationFromID(annotationID));
                 }
 
@@ -424,6 +431,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if more than a handful of nodes, ask the user if they are sure (we have
             //  no undo right now!)
             final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            activityLog.logDeleteSubTree(getSampleID(), annotation);
             int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
             if (nAnnotations >= 5) {
                 int ans = JOptionPane.showConfirmDialog(
@@ -706,6 +714,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker splitter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                activityLog.logSplitAnnotation(getSampleID(), annotation);
                 annotationModel.splitAnnotation(annotation);
             }
 
@@ -733,6 +742,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker rerooter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                activityLog.logRerootNeurite(getSampleID(), newRootAnnotationID);
                 annotationModel.rerootNeurite(newRootAnnotationID);
             }
 
@@ -1110,7 +1120,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             sampleID = initialEntity.getId();
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            sampleID = annotationModel.getCurrentWorkspace().getSampleID();
+            sampleID = getSampleID();
         } else {
             presentError(
                     "You must load a brain sample before creating a workspace!",
@@ -1592,6 +1602,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void presentError(String message, String title, Throwable error) throws HeadlessException {
         log.error(message, error);
         presentError(message, title);
+    }
+
+    private Long getSampleID() {
+        return annotationModel.getCurrentWorkspace().getSampleID();
     }
 
 }

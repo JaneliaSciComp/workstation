@@ -478,7 +478,6 @@ called from a  SimpleWorker thread.
         //  be the parent)
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "");
-        activityLog.logAddAnchor(annotation);
 
         // update neuron locally instead of getting from db again
         neuron.getRootAnnotations().add(annotation);
@@ -513,7 +512,6 @@ called from a  SimpleWorker thread.
         final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
         final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
-        activityLog.logAddAnchor(annotation);
 
         // update the neuron locally so we don't have to update from db
         TmGeoAnnotation parent = getGeoAnnotationFromID(annotation.getParentId());
@@ -629,7 +627,6 @@ called from a  SimpleWorker thread.
          Stopwatch stopwatch = new Stopwatch();
          stopwatch.start();
 
-        activityLog.logMergedNeurite(sourceAnnotationID, targetAnnotationID);
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
 
