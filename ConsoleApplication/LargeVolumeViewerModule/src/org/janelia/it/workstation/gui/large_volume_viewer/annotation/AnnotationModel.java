@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
@@ -90,6 +91,7 @@ called from a  SimpleWorker thread.
 
     private String cachedNeuronStyleMapString;
     private Map<Long, NeuronStyle> cachedNeuronStyleMap;
+    private ActivityLogHelper activityLog;
 
     private LoadTimer addTimer = new LoadTimer();
 
@@ -108,6 +110,7 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
+        activityLog = new ActivityLogHelper();
 
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -623,6 +626,7 @@ called from a  SimpleWorker thread.
         log.info("beginning mergeNeurite()");
          Stopwatch stopwatch = new Stopwatch();
          stopwatch.start();
+        activityLog.logMergeNeurites(sourceAnnotationID, targetAnnotationID);
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);

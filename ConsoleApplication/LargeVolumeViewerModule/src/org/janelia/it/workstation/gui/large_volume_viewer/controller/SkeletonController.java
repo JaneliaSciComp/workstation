@@ -168,7 +168,6 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void anchorReparented(TmGeoAnnotation anchor) {
         skeleton.reparentTmGeoAnchor(anchor);
-        activityLog.logReparentedAnchor(anchor);
         skeletonChanged();
     }
 
