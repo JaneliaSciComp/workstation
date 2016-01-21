@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.List;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
@@ -92,6 +93,7 @@ called from a  SimpleWorker thread.
 
     private String cachedNeuronStyleMapString;
     private Map<Long, NeuronStyle> cachedNeuronStyleMap;
+    private ActivityLogHelper activityLog;
 
     private LoadTimer addTimer = new LoadTimer();
 
@@ -626,6 +628,7 @@ called from a  SimpleWorker thread.
         log.info("beginning mergeNeurite()");
          Stopwatch stopwatch = new Stopwatch();
          stopwatch.start();
+        activityLog.logMergeNeurites(sourceAnnotationID, targetAnnotationID);
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
@@ -848,7 +851,9 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(link, parent);
 
         // update domain object; update child/parent relationships
-        parent.getChildIds().remove(link.getId());
+        if (parent != null) {
+            parent.getChildIds().remove(link.getId());
+        }
         if (child != null) {
             link.getChildIds().remove(child.getId());
             child.setParentId(parent.getId());
@@ -862,12 +867,15 @@ called from a  SimpleWorker thread.
                 neuron.getAnchoredPathMap().remove(pair);
             }
         }
-
         if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
         }
+
         // ...and finally get rid of the thing itself
         neuron.getGeoAnnotationMap().remove(link.getId());
+        if (neuron.getRootAnnotations().contains(link)) {
+            neuron.getRootAnnotations().remove(link);
+        }
 
 
         final TmWorkspace workspace = getCurrentWorkspace();
