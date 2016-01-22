@@ -1,21 +1,21 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 
 /**
  * Event that is thrown when a sample result is selected in the Sample Viewer. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SampleResultSelectionEvent {
+public class PipelineResultSelectionEvent {
 
     private final Object source;
-    private final SampleResult sampleResult;
+    private final PipelineResult result;
     private final boolean isUserDriven;
     
-    public SampleResultSelectionEvent(Object source, SampleResult sampleResult, boolean isUserDriven) {
+    public PipelineResultSelectionEvent(Object source, PipelineResult sampleResult, boolean isUserDriven) {
         this.source = source;
-        this.sampleResult = sampleResult;
+        this.result = sampleResult;
         this.isUserDriven = isUserDriven;
     }
 
@@ -23,8 +23,8 @@ public class SampleResultSelectionEvent {
         return source;
     }
     
-    public SampleResult getSampleResult() {
-        return sampleResult;
+    public PipelineResult getPipelineResult() {
+        return result;
     }
     
     public boolean isUserDriven() {
@@ -33,6 +33,6 @@ public class SampleResultSelectionEvent {
 
     @Override
     public String toString() {
-        return "PipelineResultSelectionEvent[" + "source=" + source + ", sampleResult=" + sampleResult + ']';
+        return "PipelineResultSelectionEvent[" + "source=" + source + ", result=" + result + ']';
     }
 }

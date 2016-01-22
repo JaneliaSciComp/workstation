@@ -4,8 +4,9 @@ import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
-import org.apache.commons.lang3.StringUtils;
 
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
@@ -13,7 +14,6 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -137,19 +137,19 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
     }
     
-    private SampleResult getCurrent() {
-        return getLookup().lookup(SampleResult.class);
+    private PipelineResult getCurrent() {
+        return getLookup().lookup(PipelineResult.class);
     }
 
-    private boolean setCurrent(SampleResult sampleResult) {
-        SampleResult curr = getCurrent();
-        if (sampleResult.equals(curr)) {
+    private boolean setCurrent(PipelineResult result) {
+        PipelineResult curr = getCurrent();
+        if (result.getId()!=null && result.getId().equals(curr.getId())) {
             return false;
         }
         if (curr!=null) {
             content.remove(curr);
         }
-        content.add(sampleResult);
+        content.add(result);
         return true;
     }
 
@@ -180,14 +180,14 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         return editor;
     }
 
-    public void loadSampleResult(SampleResult sampleResult, boolean isUserDriven, Callable<Void> success) {
+    public void loadSampleResult(PipelineResult result, boolean isUserDriven, Callable<Void> success) {
         
         // Do we already have the given node loaded?
-        if (!setCurrent(sampleResult)) {
+        if (!setCurrent(result)) {
             return;
         }
         
-        editor.loadSampleResult(sampleResult, isUserDriven, success);
-        setName("Neurons for "+StringUtils.abbreviate(sampleResult.getSample().getName(), 18));
+        editor.loadSampleResult(result, isUserDriven, success);
+        setName("Neurons for "+StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18));
     }
 }

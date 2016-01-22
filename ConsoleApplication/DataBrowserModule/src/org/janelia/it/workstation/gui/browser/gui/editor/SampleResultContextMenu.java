@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.*;
+import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
+import static org.janelia.it.jacs.model.domain.enums.FileType.VisuallyLosslessStack;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -25,7 +26,6 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.ws.ExternalClient;
@@ -111,10 +111,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SampleResult sampleResult = new SampleResult(sample, result);
                 SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
                 viewer.requestActive(); 
-                viewer.loadSampleResult(sampleResult, true, null);
+                viewer.loadSampleResult(result, true, null);
             }
         });
         return copyMenuItem;

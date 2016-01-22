@@ -40,12 +40,11 @@ import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,8 +139,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
         }
         resultPanel.setSelected(true);
-        SampleResult sampleResult = new SampleResult(sample, resultPanel.getResult());
-        Events.getInstance().postOnEventBus(new SampleResultSelectionEvent(this, sampleResult, isUserDriven));
+        Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel.getResult(), isUserDriven));
     }
     
     private PipelineResultPanel getResultPanelAncestor(Component component) {

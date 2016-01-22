@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,14 +55,14 @@ public class SampleResultViewerManager implements ViewerManager<SampleResultView
     }
 
     @Subscribe
-    public void sampleResultSelected(SampleResultSelectionEvent event) {
+    public void sampleResultSelected(PipelineResultSelectionEvent event) {
         
-        log.info("sampleResultSelected({})",event.getSampleResult());
+        log.info("sampleResultSelected({})",event.getPipelineResult());
 
         SampleResultViewerTopComponent viewer = SampleResultViewerManager.getInstance().getActiveViewer();
         
         if (viewer!=null) {   
-            viewer.loadSampleResult(event.getSampleResult(), event.isUserDriven(), null);
+            viewer.loadSampleResult(event.getPipelineResult(), event.isUserDriven(), null);
         }
     }
 }

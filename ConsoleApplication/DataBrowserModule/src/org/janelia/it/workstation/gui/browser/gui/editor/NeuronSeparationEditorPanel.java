@@ -3,18 +3,21 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JToggleButton;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -31,9 +34,10 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -48,13 +52,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.SimpleDropDownButton;
-import javax.swing.Box;
-import javax.swing.JLabel;
-import javax.swing.JToggleButton;
-import net.miginfocom.swing.MigLayout;
-
-import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 
 /**
  * An editor which can display the neuron separations for a given sample result. 
@@ -76,7 +73,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
     private SearchResults searchResults;
     
-    private SampleResult sampleResult;
+    private NeuronSeparation separation;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     
@@ -173,25 +170,23 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     @Override
-    public void loadSampleResult(final SampleResult sampleResult, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadSampleResult(final PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
 
         if (!debouncer.queue(null)) {
             log.debug("Skipping load, since there is one already in progress");
             return;
         }
         
-        log.info("loadDomainObject(SampleResult:{})",sampleResult.getName());
+        log.info("loadSampleResult(PipelineResult:{})",result.getName());
+                
+        PipelineResult parentResult;
         
-        this.sampleResult = sampleResult;
-        
-        PipelineResult result;
-        NeuronSeparation separation;
-        if (sampleResult.getResult() instanceof NeuronSeparation) {
-            separation = (NeuronSeparation)sampleResult.getResult();
-            result = separation.getParentResult();
+        if (result instanceof NeuronSeparation) {
+            separation = (NeuronSeparation)result;
+            parentResult = separation.getParentResult();
         }
         else {
-            result =  sampleResult.getResult();
+            parentResult = result;
             separation = result.getLatestSeparationResult();
         }
         
@@ -202,7 +197,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             debouncer.success();
         }
         else {
-            String title = sampleResult.getSample().getName() + " - " + DomainModelViewUtils.getLabel(result);
+            String title = parentResult.getParentRun().getParent().getParent().getName() + " - " + DomainModelViewUtils.getLabel(result);
             titleLabel.setText(title);
             setResult(separation, isUserDriven, success);
         }
@@ -346,18 +341,18 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             search();
         }
         else {
-            Sample sample = sampleResult.getSample();
+            Sample sample = separation.getParentRun().getParent().getParent();
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(sample.getId())) {
                     log.info("Sample invalidated, reloading...");
                     Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                    PipelineResult result = updatedSample.findResultById(sampleResult.getResult().getId());
+                    PipelineResult result = updatedSample.findResultById(separation.getId());
                     if (result==null) {
-                        log.info("Sample no longer has result with id: "+sampleResult.getResult().getId());
+                        log.info("Sample no longer has result with id: "+separation.getId());
                         showNothing();
                         return;
                     }
-                    loadSampleResult(new SampleResult(updatedSample, result), false, new Callable<Void>() {
+                    loadSampleResult(result, false, new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // TODO: reselect the selected neurons
@@ -368,7 +363,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 }
                 else if (domainObject.getClass().equals(NeuronFragment.class)) {
                     log.info("Some objects of class NeuronFragment were invalidated, reloading...");
-                    loadSampleResult(sampleResult, false, new Callable<Void>() {
+                    loadSampleResult(separation, false, new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // TODO: reselect the selected neurons

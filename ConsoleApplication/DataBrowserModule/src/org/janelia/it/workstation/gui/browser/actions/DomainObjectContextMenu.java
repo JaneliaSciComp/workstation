@@ -26,12 +26,8 @@ import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponen
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
-import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,18 +207,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 
 
                 SimpleWorker worker = new SimpleWorker() {
-                    SampleResult sampleResult;
+                    NeuronSeparation separation;
                     
                     @Override
                     protected void doStuff() throws Exception {
                         Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        sampleResult = getNeuronSeparation(sample, neuronFragment);
+                        separation = getNeuronSeparation(sample, neuronFragment);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         viewer.requestActive();
-                        viewer.loadSampleResult(sampleResult, true, null);
+                        viewer.loadSampleResult(separation, true, null);
                     }
 
                     @Override
@@ -236,7 +232,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return copyMenuItem;
     }
     
-    public static SampleResult getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
+    public static NeuronSeparation getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
         if (neuronFragment==null) return null;
         for(String objective : sample.getOrderedObjectives()) {
             ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
@@ -248,7 +244,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                 if (secondaryResult!=null && secondaryResult instanceof NeuronSeparation) {
                                     NeuronSeparation separation = (NeuronSeparation)secondaryResult;
                                     if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
-                                        return new SampleResult(sample, separation);
+                                        return separation;
                                     }
                                 }
                             }
