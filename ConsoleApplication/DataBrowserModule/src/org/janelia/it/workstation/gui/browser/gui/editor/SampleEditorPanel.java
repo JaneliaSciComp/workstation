@@ -15,8 +15,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -46,6 +44,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.SampleResultSelec
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.SampleResult;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.slf4j.Logger;
@@ -60,7 +59,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
     
     private final static String ALL_VALUE = "all";
-    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
     // UI Components
     private final SampleEditorToolbar toolbar;
@@ -391,7 +389,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             else {
                 label.setText(objective+" "+result.getName());
             }
-            subLabel.setText(dateFormatter.format(result.getCreationDate()).toLowerCase());
+            subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
         }
 
         public PipelineResult getResult() {

@@ -117,33 +117,33 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         
             @Override
             protected void doStuff() throws Exception {
-                final String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+                final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
                 final boolean ascending = !sortCriteria.startsWith("-");
-        		Collections.sort(domainObjects, new Comparator<DomainObject>() {
-					@Override
-					@SuppressWarnings({ "rawtypes", "unchecked" })
-        			public int compare(DomainObject o1, DomainObject o2) {
-        				try {
-        	                // TODO: speed could be improved by moving the reflection calls outside of the sort
-        					Comparable v1 = (Comparable)ReflectionUtils.get(o1, sortField);
-        					Comparable v2 = (Comparable)ReflectionUtils.get(o2, sortField);
-        					Ordering ordering = Ordering.natural().nullsLast();
-        					if (!ascending) {
-        						ordering = ordering.reverse();
-        					}
-    		                return ComparisonChain.start().compare(v1, v2, ordering).result();
-        				}
-        				catch (Exception e) {
-        					log.error("Problem encountered when sorting DomainObjects",e);
-        					return 0;
-        				}
-        			}
-        		});	
+                Collections.sort(domainObjects, new Comparator<DomainObject>() {
+                    @Override
+                    @SuppressWarnings({"rawtypes", "unchecked"})
+                    public int compare(DomainObject o1, DomainObject o2) {
+                        try {
+                            // TODO: speed could be improved by moving the reflection calls outside of the sort
+                            Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
+                            Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
+                            Ordering ordering = Ordering.natural().nullsLast();
+                            if (!ascending) {
+                                ordering = ordering.reverse();
+                            }
+                            return ComparisonChain.start().compare(v1, v2, ordering).result();
+                        }
+                        catch (Exception e) {
+                            log.error("Problem encountered when sorting DomainObjects", e);
+                            return 0;
+                        }
+                    }
+                });
             }
 
             @Override
             protected void hadSuccess() {
-        		showResults();
+                    showResults();
             }
 
             @Override

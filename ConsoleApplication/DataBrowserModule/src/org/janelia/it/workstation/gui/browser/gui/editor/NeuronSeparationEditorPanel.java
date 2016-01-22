@@ -11,14 +11,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -31,8 +29,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
-import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
@@ -52,26 +48,27 @@ import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.SimpleDropDownButton;
-import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JLabel;
+import javax.swing.JToggleButton;
+import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 
 /**
- * An editor which can display the most recent neuron separation on a given sample result. 
- * 
- * TODO: allow the user to toggle between different separation runs on the same result
- * TODO: allow users to hide certain neurons (persisted)
+ * An editor which can display the neuron separations for a given sample result. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class NeuronSeparationEditorPanel extends JPanel implements SampleResultEditor, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
-
-    private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
-    private final JPanel controlPanel;
+    private final JPanel separationPanel;
+    private final JLabel titleLabel;
     private final SimpleDropDownButton resultButton;
+    private final JToggleButton editModeButton;
     private final JButton openInNAButton;
     private final PaginatedResultsPanel resultsPanel;
     
@@ -89,13 +86,32 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         
         setLayout(new BorderLayout());
         
-        resultButton = new SimpleDropDownButton("Choose Result...");
+        separationPanel = new JPanel();
+        separationPanel.setLayout(new MigLayout(
+                "ins 10 5 5 5, fillx", 
+                "[grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 100, growprio 100]"
+        ));
+        add(separationPanel);
+        
+        titleLabel = new JLabel("");
 
+        resultButton = new SimpleDropDownButton("Choose version...");
+        resultButton.setFocusable(false);
+        
+        editModeButton = new JToggleButton();
+        editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
+        editModeButton.setFocusable(false);
+        editModeButton.setToolTipText("Edit the visibility of the fragments in the current separation");
+        editModeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                enterEditMode();
+            }
+        });
+        
         openInNAButton = new JButton();
-        openInNAButton.setIcon(Icons.getIcon("v3d_32x32x32.png"));
+        openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
-        openInNAButton.setBorderPainted(false);
-        openInNAButton.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
         openInNAButton.addActionListener(new ActionListener() {
             @Override
@@ -104,10 +120,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
-        controlPanel = new JPanel();
-        controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.LINE_AXIS));
-        controlPanel.add(resultButton);
-        controlPanel.add(openInNAButton);
+        separationPanel.add(titleLabel, "span, wrap");
+        separationPanel.add(new JLabel("History:"));
+        separationPanel.add(resultButton, "gapx 0 5");
+        separationPanel.add(editModeButton, "width 40:40:40");
+        separationPanel.add(openInNAButton, "width 40:40:40");
+        separationPanel.add(Box.createHorizontalGlue());
         
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
@@ -116,13 +134,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
-        
-        add(controlPanel, BorderLayout.NORTH);
-        add(resultsPanel, BorderLayout.CENTER);
+    }
+    
+    private void enterEditMode() {
+        // TODO: implement editing mode
     }
 
     private void openInNA() {
-        
+        // TODO: port integration with Neuron Annotator
     }
     
     private JPopupMenu getResultPopupMenu(PipelineResult pipelineResult) {
@@ -150,7 +169,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     private String getLabel(NeuronSeparation separation) {
         if (separation==null) return "";
-        return dateFormatter.format(separation.getCreationDate())+" ("+separation.getFragmentsReference().getCount()+" fragments)";
+        return DomainModelViewUtils.getDateString(separation.getCreationDate());
     }
     
     @Override
@@ -176,7 +195,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             separation = result.getLatestSeparationResult();
         }
         
-        log.info("Result: "+result.getName());
         resultButton.setPopupMenu(getResultPopupMenu(result));
         
         if (separation==null) {
@@ -184,7 +202,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             debouncer.success();
         }
         else {
-            log.info("Separation: "+separation.getName());
+            String title = sampleResult.getSample().getName() + " - " + DomainModelViewUtils.getLabel(result);
+            titleLabel.setText(title);
             setResult(separation, isUserDriven, success);
         }
     }
@@ -279,10 +298,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     public void showNothing() {
-        resultsPanel.showNothing();
+        removeAll();
+        updateUI();
     }
     
     public void showResults(boolean isUserDriven) {
+        add(separationPanel, BorderLayout.NORTH);
+        add(resultsPanel, BorderLayout.CENTER);
+        updateUI();
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, isUserDriven);
     }

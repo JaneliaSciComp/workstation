@@ -167,7 +167,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject);
-        setName(StringUtils.abbreviate(domainObject.getName(), 30));
+        setName("Results for "+StringUtils.abbreviate(domainObject.getName(), 18));
     }
 
     private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {

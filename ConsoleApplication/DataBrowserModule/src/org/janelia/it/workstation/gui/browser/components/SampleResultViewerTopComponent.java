@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
+import org.apache.commons.lang3.StringUtils;
 
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
@@ -187,5 +188,6 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
         
         editor.loadSampleResult(sampleResult, isUserDriven, success);
+        setName("Neurons for "+StringUtils.abbreviate(sampleResult.getSample().getName(), 18));
     }
 }
