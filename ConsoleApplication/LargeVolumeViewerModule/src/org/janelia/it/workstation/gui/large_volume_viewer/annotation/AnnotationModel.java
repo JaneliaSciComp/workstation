@@ -26,9 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.List;
-import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
@@ -77,7 +75,6 @@ called from a  SimpleWorker thread.
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
     private SWCDataConverter swcDataConverter;
-    private ActivityLogHelper activityLog;
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
@@ -111,7 +108,6 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
-        activityLog = new ActivityLogHelper();
 
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {

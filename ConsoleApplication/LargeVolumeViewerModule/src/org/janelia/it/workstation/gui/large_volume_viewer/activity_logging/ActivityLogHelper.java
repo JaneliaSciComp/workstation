@@ -4,8 +4,10 @@ import java.util.Date;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
@@ -16,6 +18,9 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
  * @author fosterl
  */
 public class ActivityLogHelper {
+    public static final String VOX_COORDS_FMT = "%d:0,0,0:%f,%f,%f";
+    public static final String BOTH_COORDS_FMT = "%d:%f,%f,%f:%f,%f,%f";
+
     // These category strings are used similarly.  Lining them up spatially
     // makes it easier to see that they are all different.
     private static final CategoryString LIX_CATEGORY_STRING                     = new CategoryString("loadTileIndexToRam:elapsed");
@@ -33,6 +38,12 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_NAVIGATE_LANDMARK_CATEGORY_STRING   = new CategoryString("navigateInLandmarkView");
     
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
+    
+    private TileFormat tileFormat;
+    
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
+    }
 
     public void logTileLoad(int relativeSlice, TileIndex tileIndex, final double elapsedMs, long folderOpenTimestamp) {
         final ActionString actionString = new ActionString(
@@ -129,10 +140,31 @@ public class ActivityLogHelper {
     }
     
     private void logGeometricEvent(Long sampleID, TmGeoAnnotation anno, CategoryString category) {
-            SessionMgr.getSessionMgr().logToolEvent(
+        TileFormat.MicrometerXyz mxyz = null;
+        String action = null;
+        if (tileFormat != null) {
+            mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(anno.getX().intValue(), anno.getY().intValue(), anno.getZ().intValue()),
+                    CoordinateAxis.Z);
+            action = String.format(
+                    BOTH_COORDS_FMT,
+                    sampleID,
+                    mxyz.getX(), mxyz.getY(), mxyz.getZ(),
+                    anno.getX(), anno.getY(), anno.getZ()
+            );
+        }
+        else {
+            action = String.format(
+                    VOX_COORDS_FMT,
+                    sampleID,
+                    anno.getX(), anno.getY(), anno.getZ()
+            );
+            
+        }
+        SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
                 category, 
-                new ActionString(sampleID + ":" + anno.getX() + "," + anno.getY() + "," + anno.getZ())
+                new ActionString(action)
         );
     }
 

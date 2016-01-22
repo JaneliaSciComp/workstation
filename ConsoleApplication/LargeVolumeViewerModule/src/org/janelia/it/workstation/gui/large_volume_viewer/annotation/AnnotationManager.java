@@ -263,6 +263,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
+                    activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
                 }
 
                 @Override
