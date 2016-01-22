@@ -40,11 +40,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(SampleResultContextMenu.class);
     
-    private final Sample sample;
     private final PipelineResult result;
 
-    public SampleResultContextMenu(Sample sample, PipelineResult result) {
-        this.sample = sample;
+    public SampleResultContextMenu(PipelineResult result) {
         this.result = result;
     }
     

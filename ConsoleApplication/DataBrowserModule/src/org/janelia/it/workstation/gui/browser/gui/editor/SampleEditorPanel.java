@@ -154,7 +154,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     private JPopupMenu getButtonPopupMenu(PipelineResult result) {
-        SampleResultContextMenu popupMenu = new SampleResultContextMenu(sample, result);
+        SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
         popupMenu.addMenuItems();
         return popupMenu;
     }
