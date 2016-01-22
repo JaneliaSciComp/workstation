@@ -18,8 +18,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
  * @author fosterl
  */
 public class ActivityLogHelper {
-    public static final String VOX_COORDS_FMT = "%d:0,0,0:%f,%f,%f";
-    public static final String BOTH_COORDS_FMT = "%d:%f,%f,%f:%f,%f,%f";
+    public static final String BOTH_COORDS_FMT = "%d:%7.3f,%7.3f,%7.3f:%7.3f,%7.3f,%7.3f";
 
     // These category strings are used similarly.  Lining them up spatially
     // makes it easier to see that they are all different.
@@ -76,13 +75,12 @@ public class ActivityLogHelper {
         );
     }
     
-    public void logAddAnchor(Long sampleId, Vec3 location) {
+    public void logAddAnchor(Long sampleId, Vec3 location) {        
         //  Change Vec3 to double[] if inconvenient.
-        SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
-                LVV_ADD_ANCHOR_CATEGORY_STRING, 
-                new ActionString(sampleId + ":" + location.getX() + "," + location.getY() + "," + location.getZ())
-        );
+        logGeometricEvent(
+                sampleId,
+                location.getX(), location.getY(), location.getZ(), 
+                LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
     
     public void logRerootNeurite(Long sampleID, Long neuronID) {
@@ -139,33 +137,43 @@ public class ActivityLogHelper {
         );
     }
     
-    private void logGeometricEvent(Long sampleID, TmGeoAnnotation anno, CategoryString category) {
-        TileFormat.MicrometerXyz mxyz = null;
-        String action = null;
-        if (tileFormat != null) {
-            mxyz = tileFormat.micrometerXyzForVoxelXyz(
-                    new TileFormat.VoxelXyz(anno.getX().intValue(), anno.getY().intValue(), anno.getZ().intValue()),
-                    CoordinateAxis.Z);
-            action = String.format(
-                    BOTH_COORDS_FMT,
-                    sampleID,
-                    mxyz.getX(), mxyz.getY(), mxyz.getZ(),
-                    anno.getX(), anno.getY(), anno.getZ()
-            );
-        }
-        else {
-            action = String.format(
-                    VOX_COORDS_FMT,
-                    sampleID,
-                    anno.getX(), anno.getY(), anno.getZ()
-            );
-            
-        }
+    private void logGeometricEvent(Long sampleID, Double x, Double y, Double z, CategoryString category) {
+        String action = formatGeoAction(x, y, z, sampleID);
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
-                category, 
+                LVV_LOGSTAMP_ID,
+                category,
                 new ActionString(action)
         );
+    }
+
+    private void logGeometricEvent(Long sampleID, TmGeoAnnotation anno, CategoryString category) {
+        logGeometricEvent(
+                sampleID,
+                anno.getX(), anno.getY(), anno.getZ(),
+                category);
+    }
+
+    private String formatGeoAction(Double x, Double y, Double z, Long sampleID) {
+        TileFormat.MicrometerXyz mxyz;
+        String action;
+        double muX = 0;
+        double muY = 0;
+        double muZ = 0;
+        if (tileFormat != null) {
+            mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(x.intValue(), y.intValue(), z.intValue()),
+                    CoordinateAxis.Z);
+            muX = mxyz.getX();
+            muY = mxyz.getY();
+            muZ = mxyz.getZ();
+        }
+        action = String.format(
+                BOTH_COORDS_FMT,
+                sampleID,
+                muX, muY, muZ,
+                x, y, z
+        );
+        return action;
     }
 
 }
