@@ -779,6 +779,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker splitter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                activityLog.logSplitNeurite(getSampleID(), annotation);
                 annotationModel.splitNeurite(annotation.getId());
             }
 

@@ -21,14 +21,15 @@ public class ActivityLogHelper {
     private static final CategoryString LIX_CATEGORY_STRING                     = new CategoryString("loadTileIndexToRam:elapsed");
     private static final CategoryString LONG_TILE_LOAD_CATEGORY_STRING          = new CategoryString("longRunningTileIndexLoad");
     private static final CategoryString LVV_SESSION_CATEGORY_STRING             = new CategoryString("openFolder");
-    private static final CategoryString LVV_ADD_ANCHOR_CATEGORY_STRING          = new CategoryString("addAnchor");
-    private static final CategoryString LVV_MERGE_NEURITES_CATEGORY_STRING      = new CategoryString("mergeNeurites");
-    private static final CategoryString LVV_MOVE_NEURITE_CATEGORY_STRING        = new CategoryString("moveNeurite");
-    private static final CategoryString LVV_SPLIT_ANNO_CATEGORY_STRING          = new CategoryString("splitAnnotation");
-    private static final CategoryString LVV_DELETE_LINK_CATEGORY_STRING         = new CategoryString("deleteLink");
-    private static final CategoryString LVV_DELETE_SUBTREE_CATEGORY_STRING      = new CategoryString("deleteSubTree");
-    private static final CategoryString LVV_3D_LAUNCH_CATEGORY_STRING           = new CategoryString("launch3dBrickView");
+    private static final CategoryString LVV_ADD_ANCHOR_CATEGORY_STRING          = new CategoryString("addAnchor:xyz");
+    private static final CategoryString LVV_MERGE_NEURITES_CATEGORY_STRING      = new CategoryString("mergeNeurites:xyz");
+    private static final CategoryString LVV_MOVE_NEURITE_CATEGORY_STRING        = new CategoryString("moveNeurite:xyz");
+    private static final CategoryString LVV_SPLIT_NEURITE_CATEGORY_STRING       = new CategoryString("splitNeurite:xyz");
+    private static final CategoryString LVV_SPLIT_ANNO_CATEGORY_STRING          = new CategoryString("splitAnnotation:xyz");
+    private static final CategoryString LVV_DELETE_LINK_CATEGORY_STRING         = new CategoryString("deleteLink:xyz");
+    private static final CategoryString LVV_DELETE_SUBTREE_CATEGORY_STRING      = new CategoryString("deleteSubTree:xyz");
     private static final CategoryString LVV_REROOT_NEURITE_CATEGORY_STRING      = new CategoryString("rerootNeurite");
+    private static final CategoryString LVV_3D_LAUNCH_CATEGORY_STRING           = new CategoryString("launch3dBrickView");
     private static final CategoryString LVV_NAVIGATE_LANDMARK_CATEGORY_STRING   = new CategoryString("navigateInLandmarkView");
     
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
@@ -89,6 +90,10 @@ public class ActivityLogHelper {
         this.logGeometricEvent(sampleID, source, LVV_MOVE_NEURITE_CATEGORY_STRING);
     }
     
+    public void logSplitNeurite(Long sampleID, TmGeoAnnotation source) {
+        this.logGeometricEvent(sampleID, source, LVV_SPLIT_NEURITE_CATEGORY_STRING);
+    }
+
     public void logSplitAnnotation(Long sampleID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, source, LVV_SPLIT_ANNO_CATEGORY_STRING);
     }
