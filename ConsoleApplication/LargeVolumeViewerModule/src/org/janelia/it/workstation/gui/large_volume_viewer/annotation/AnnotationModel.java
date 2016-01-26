@@ -1318,7 +1318,7 @@ called from a  SimpleWorker thread.
 
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
-		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
+		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
         neuronManager.saveNeuronData(neuron);
 
         // updates
