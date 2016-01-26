@@ -26,19 +26,34 @@ import org.slf4j.LoggerFactory;
 /**
  * Widget to help with editing the common paths used by all of LVV userdom.
  * @author Leslie L Foster
+ * @todo better formatting for the "delete" button.
+ * @todo pre-check paths on remote server prior to adding them.
  */
 public class PathCollectionEditor extends JPanel {
     private static final int VALUE_COL = 0;
 	public static final int PCE_HEIGHT = 500;
 	public static final int PCE_WIDTH = 800;
     public static final String SETTINGS_ENTITY_NAME = "settings";
+    
+    private JTable table;
 
 	private static Logger log = LoggerFactory.getLogger(PathCollectionEditor.class);
 	
+    /**
+     * Takes entity which should have a property by the name given, and uses
+     * that to lookup its collection of paths.  The paths are expected to be
+     * as Property on the PropertySet entity under the given entity.  The
+     * Property should have format propName=Path1\nPath2\nPath3\n...
+     * 
+     * @param entity should have a PropertySet sub entity.
+     * @param propName a Property entityData on the PropertySet subentity has a value beginning {propName}=.
+     * @param completionListener allows the 'Done' button to signal back to some containing dialog/frame.
+     */
 	public PathCollectionEditor(final Entity entity, final String propName, final CompletionListener completionListener) {
 		super();
 		this.setSize(PCE_WIDTH, PCE_HEIGHT);
-		final JTable table = new JTable();
+		table = new JTable();
+    
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 	    table.setModel(new EntityDataModel(propName, entity));
         JScrollPane scrollPane = new JScrollPane(table);
@@ -47,7 +62,7 @@ public class PathCollectionEditor extends JPanel {
         textField.setBorder(new TitledBorder("New Path"));
 
         JButton addButton = new JButton("Add");
-        addButton.addActionListener(new AddValueListener(propName, textField, entity));
+        addButton.addActionListener(new AddValueListener(propName, table, textField, entity));
         
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BorderLayout());
@@ -73,18 +88,21 @@ public class PathCollectionEditor extends JPanel {
                     if (objToDelete != null) {
                         String valueToDelete = objToDelete.toString();
                         log.info("Deleting {} {}", propName, valueToDelete);
-                        StringBuilder builder = new StringBuilder();
+                        StringBuilder builder = new StringBuilder(propName).append('=');
+                        int appendCount = 0;
                         for (int i = 0; i < table.getModel().getRowCount(); i++) {
                             if (i != table.getSelectedRow()) {
-                                if (i > 0) {
+                                if (appendCount > 0) {
                                     builder.append("\n");
                                 }
                                 builder.append(table.getModel().getValueAt(i, VALUE_COL));                                
+                                appendCount++;
                             }
                         }
                         String updatedValue = builder.toString();
                         ValueBean valueBean = findOldValue(entity, propName);
                         updateValue(valueBean, updatedValue, entity);
+                        ((AbstractTableModel) table.getModel()).fireTableDataChanged();
                     }
                 }
             }
@@ -96,19 +114,32 @@ public class PathCollectionEditor extends JPanel {
         controlPanel.setLayout(new BorderLayout());
         controlPanel.add(textField, BorderLayout.NORTH);
         buttonPanel.add(addButton, BorderLayout.WEST);
+        buttonPanel.add(delButton, BorderLayout.CENTER);
         controlPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         add(controlPanel, BorderLayout.SOUTH);
 	}
+
+    private static boolean ensureFullyLoaded(Entity entity) {
+        try {
+            ModelMgr.getModelMgr().loadLazyEntity(entity, true);
+        } catch (Exception ex) {
+            ModelMgr.getModelMgr().handleException(ex);
+            return false;
+        }
+        return true;
+    }
     
     private static class AddValueListener implements ActionListener {
         private Entity entity;
         private String propName;
+        private JTable table;
         private JTextField inputField;
         
-        public AddValueListener(String propName, JTextField inputField, Entity entity) {
+        public AddValueListener(String propName, JTable table, JTextField inputField, Entity entity) {
             this.propName = propName;
             this.entity = entity;
+            this.table = table;
             this.inputField = inputField;
         }
 
@@ -126,30 +157,34 @@ public class PathCollectionEditor extends JPanel {
             ValueBean oldValue = findOldValue(entity, propName);
             
             String updatedValueString = null;
-            if (oldValue == null) {
+            if (oldValue == null  ||  oldValue.oldValue == null) {
                 // First entry.
                 updatedValueString = propName + "=" + inputValue;
             }
             else {
-                updatedValueString = oldValue.oldValue;                
+                // Subsequent entries.
+                updatedValueString = oldValue.oldValue + '\n' + inputValue; 
             }
-
-            // Now update the set of values. Since we
-            // append, we don't mind the equal sign.
-            if (updatedValueString.length() > 0) {
-                updatedValueString += '\n';
-            }
-            updatedValueString += inputValue;
+            
+            // Now update the set of values.
             updateValue(oldValue, updatedValueString, entity);
+            ((AbstractTableModel) table.getModel()).fireTableDataChanged();
+            inputField.setText("");
         }
 
     }
 	
     private static ValueBean findOldValue(Entity entity, String propName) {
+        if (! ensureFullyLoaded(entity)) {
+            return null;
+        }
         ValueBean oldValueBean = new ValueBean();
         // Now find old value in db.
         Set<Entity> children = entity.getChildren();
         for (Entity child : children) {
+            if (child.getEntityTypeName() == null  ||  child.getName() == null) {
+                continue;
+            }
             if (child.getEntityTypeName().equals(EntityConstants.TYPE_PROPERTY_SET)
                     && child.getName().equals(SETTINGS_ENTITY_NAME)) {
 
@@ -159,7 +194,7 @@ public class PathCollectionEditor extends JPanel {
                     if (ed.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_PROPERTY)) {
                         String nameValue = ed.getValue();
                         String[] nameValueArr = nameValue.split("=");
-                        if (nameValueArr.length == 2 && nameValueArr[0].trim() == propName) {
+                        if (nameValueArr.length == 2 && nameValueArr[0].trim().equals(propName)) {
                             oldValueBean.targetEntityData = ed;
                             oldValueBean.oldValue = nameValue;
                         }
@@ -170,7 +205,7 @@ public class PathCollectionEditor extends JPanel {
         return oldValueBean;
     }
     
-    private static void updateValue(ValueBean valueBean, String updatedValueString, Entity entity) {
+    private static EntityData updateValue(ValueBean valueBean, String updatedValueString, Entity entity) {
         if (valueBean == null) {
             valueBean = new ValueBean();
         }
@@ -198,9 +233,13 @@ public class PathCollectionEditor extends JPanel {
         }
         try {
             valueBean.targetEntityData.setValue(updatedValueString); 
-            ModelMgr.getModelMgr().saveOrUpdateEntityData(valueBean.targetEntityData);
+            //valueBean.targetEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(valueBean.targetEntityData);
+            valueBean.targetEntity.getEntityData().add(valueBean.targetEntityData);
+            ModelMgr.getModelMgr().saveOrUpdateEntity(valueBean.targetEntity);
+            return valueBean.targetEntityData;
         } catch (Exception ex) {
             ModelMgr.getModelMgr().handleException(ex);
+            return null;
         }
     }
 
@@ -208,32 +247,31 @@ public class PathCollectionEditor extends JPanel {
      * Encapsulates and adapts the collection of paths to be modified.
      */
 	private static class EntityDataModel extends AbstractTableModel {
+        private static final String[] COL_NAMES = new String[] {"Path"};
 		private Entity entity;
         private List<String> values = new ArrayList<>();
+        private String propName;
 		public EntityDataModel(String propName, Entity entity) {
 			this.entity = entity;
-			Set<String> values = new HashSet<>();
-            ValueBean valueBean = findOldValue(entity, propName);
-            if (valueBean != null  &&  valueBean.oldValue != null) {
-                String nameValue = valueBean.oldValue;
-                String[] nameValueArr = nameValue.split("=");
-                if (nameValueArr.length == 2  &&  nameValueArr[0].trim().equals(propName)) {
-                    String[] allValues = nameValueArr[1].split("\n");
-                    for (String aValue : allValues) {
-                        values.add(aValue);
-                    }
-                } else {
-                    log.warn("Invalid name/value string in property attribute. " + nameValue);
-                }
-            }
-            this.values.addAll( values );
+            this.propName = propName;
+            update();
 		}
 
+        @Override
+        public String getColumnName(int colNum) {
+            if (colNum <= COL_NAMES.length) {
+                return COL_NAMES[colNum];
+            }
+            else {
+                return "-Unknown-";
+            }
+        }
+    
         @Override
         public int getRowCount() {
             return values.size();
         }
-
+        
         @Override
         public int getColumnCount() {
             return 1;
@@ -243,12 +281,38 @@ public class PathCollectionEditor extends JPanel {
         public Object getValueAt(int rowIndex, int columnIndex) {
             switch (columnIndex) {
                 case VALUE_COL: {
-                    return values.get(columnIndex);
+                    return values.get(rowIndex);
                 }
                 default : {
                     return null;
                 }
             }
+        }
+        
+        private void update() {
+            Set<String> valuesSet = new HashSet<>();
+            ValueBean valueBean = findOldValue(entity, propName);
+            if (valueBean != null && valueBean.oldValue != null) {
+                String nameValue = valueBean.oldValue;
+                String[] nameValueArr = nameValue.split("=");
+                if (nameValueArr.length == 2 && nameValueArr[0].trim().equals(propName)) {
+                    String[] allValues = nameValueArr[1].split("\n");
+                    log.info("Found " + allValues.length + " paths.");
+                    for (String aValue : allValues) {
+                        valuesSet.add(aValue);
+                    }
+                } else {
+                    log.warn("Invalid name/value string in property attribute. " + nameValue);
+                }
+            }
+            this.values.clear();
+            this.values.addAll(valuesSet);
+        }
+
+        @Override
+        public void fireTableDataChanged() {
+            update();
+            super.fireTableDataChanged();
         }
 	}
     
