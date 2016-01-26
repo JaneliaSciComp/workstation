@@ -1315,14 +1315,13 @@ called from a  SimpleWorker thread.
     }
 
     public void removeNote(TmStructuredTextAnnotation textAnnotation) throws Exception {
-        //modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
 
-        // updates
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
 		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
         neuronManager.saveNeuronData(neuron);
 
+        // updates
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
