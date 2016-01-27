@@ -777,6 +777,4 @@ public class DomainModel {
         invalidated.add(domainObject);
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
-
-
 }

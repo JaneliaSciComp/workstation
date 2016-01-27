@@ -64,6 +64,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     private final JPanel separationPanel;
     private final JLabel titleLabel;
+    private final JLabel historyLabel;
     private final SimpleDropDownButton resultButton;
     private final JToggleButton editModeButton;
     private final JButton openInNAButton;
@@ -91,6 +92,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         add(separationPanel);
         
         titleLabel = new JLabel("");
+        historyLabel = new JLabel("History:");
 
         resultButton = new SimpleDropDownButton("Choose version...");
         resultButton.setFocusable(false);
@@ -118,7 +120,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         });
         
         separationPanel.add(titleLabel, "span, wrap");
-        separationPanel.add(new JLabel("History:"));
+        separationPanel.add(historyLabel);
         separationPanel.add(resultButton, "gapx 0 5");
         separationPanel.add(editModeButton, "width 40:40:40");
         separationPanel.add(openInNAButton, "width 40:40:40");
@@ -190,7 +192,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             separation = result.getLatestSeparationResult();
         }
         
-        resultButton.setPopupMenu(getResultPopupMenu(result));
+        JPopupMenu popupMenu = getResultPopupMenu(result);
+        historyLabel.setText("History ("+popupMenu.getComponentCount()+"):");
+        resultButton.setPopupMenu(popupMenu);
         
         if (separation==null) {
             showNothing();
@@ -207,7 +211,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         
-        SimpleWorker childLoadingWorker = new SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -230,10 +234,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     public Void call() throws Exception {
                         showResults(isUserDriven);
                         ConcurrentUtils.invokeAndHandleExceptions(success);
+                        debouncer.success();
                         return null;
                     }
                 });
-                debouncer.success();
             }
 
             @Override
@@ -244,7 +248,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         };
 
-        childLoadingWorker.execute();
+        worker.execute();
     }
 
     private void sort(final String sortCriteria, final Callable<Void> success) {

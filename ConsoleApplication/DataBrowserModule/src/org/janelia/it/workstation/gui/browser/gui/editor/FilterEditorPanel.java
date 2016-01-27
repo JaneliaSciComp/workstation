@@ -88,6 +88,9 @@ import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
+import java.util.concurrent.Callable;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -109,6 +112,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private static final int MAX_VALUES_STRING_LENGTH = 20;
     private static final Font FILTER_NAME_FONT = new Font("Sans Serif", Font.BOLD, 16);
     
+    // Utilities
+    private final Debouncer debouncer = new Debouncer();
+    
     // UI Elements
     private JPanel filterPanel;
     private JLabel filterNameLabel;
@@ -116,12 +122,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private JButton saveAsButton;
     private JPanel criteriaPanel;
     private final PaginatedResultsPanel resultsPanel;
-    
     private SimpleDropDownButton typeCriteriaButton;
     private SimpleDropDownButton addCriteriaButton;
     private JComboBox inputField;    
     
-    // Search state
+    // State
     private Filter filter;    
     private boolean dirty = false;
     private SearchConfiguration searchConfig;
@@ -288,11 +293,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         Filter newFilter = new Filter();
         newFilter.setName(DEFAULT_FILTER_NAME);
         newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
-        loadDomainObject(newFilter);
+        loadDomainObject(newFilter, true, null);
     }
     
     @Override
-    public void loadDomainObject(Filter filter) {
+    public void loadDomainObject(Filter filter, final boolean isUserDriven, final Callable<Void> success) {
+        
+        if (!debouncer.queue(success)) {
+            log.info("Skipping load, since there is one already in progress");
+            return;
+        }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
         selectionModel.setParentObject(filter);
@@ -352,10 +362,26 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
 
     private void refreshSearchResults() {
+        debouncer.queue();
+        refreshSearchResults(new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                debouncer.success();
+                return null;
+            }
+        },new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                debouncer.failure();
+                return null;
+            }
+        });
+    }
+    
+    private void refreshSearchResults(final Callable<Void> success, final Callable<Void> failure) {
         log.trace("refresh");
         
         String inputFieldValue = getInputFieldValue();
-        
         if (filter.getSearchString()!=null && !filter.getSearchString().equals(inputFieldValue)) {
             dirty = true;
         }
@@ -364,7 +390,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
-        performSearch(true);
+        performSearch(success, failure);
     }
     
     private void updateView() {
@@ -539,7 +565,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                             updateFacet(attr.getName(), facetValue.getValue(), false);
                         }
                         dirty = true;
-                        refreshSearchResults();
+                        refreshSearchResults(null, null);
                     }
                 });
                 menuItem.setSelected(selectedValues.contains(facetValue.getValue()));
@@ -555,7 +581,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
     @Override
     public void search() {
-        performSearch(true);
+        refreshSearchResults();
     }
 
     @Override
@@ -594,11 +620,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         worker.execute();
     }
         
-    public synchronized void performSearch(final boolean showLoading) {
+    public synchronized void performSearch(final Callable<Void> success, final Callable<Void> failure) {
 
+        log.info("Performing search");
         if (searchConfig.getSearchClass()==null) return;
-        
-        log.info("performSearch(showLoading={})", showLoading);
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -612,9 +637,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 try {
                     resultsPanel.showSearchResults(searchResults, true);
                     updateView();
-//                    if (showLoading) {
-//                        resultsPanel.showResultsView();
-//                    }
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -623,16 +646,13 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
             @Override
             protected void hadError(Throwable error) {
+                resultsPanel.showNothing();
+                ConcurrentUtils.invokeAndHandleExceptions(failure);
                 SessionMgr.getSessionMgr().handleException(error);
-                if (showLoading) {
-                    resultsPanel.showNothing();
-                }
             }
         };
 
-//        if (showLoading) {
-//            resultsPanel.showLoadingIndicator();
-//        }
+        resultsPanel.showLoadingIndicator();
         worker.execute();
     }
     
@@ -772,7 +792,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
                     Filter updatedFilter = DomainMgr.getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-                    loadDomainObject(updatedFilter);
+                    loadDomainObject(updatedFilter, false, null);
                     break;
                 }
                 else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {

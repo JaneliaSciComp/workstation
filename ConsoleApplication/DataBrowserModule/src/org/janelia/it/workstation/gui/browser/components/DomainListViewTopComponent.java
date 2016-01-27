@@ -237,7 +237,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        editor.loadDomainObject(domainObject);
+        editor.loadDomainObject(domainObject, true, null);
         setName(editor.getName());
     }
 

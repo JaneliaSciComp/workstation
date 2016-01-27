@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -46,6 +47,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,7 +178,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     
     @Override
-    public void loadDomainObject(final Sample sample) {
+    public void loadDomainObject(final Sample sample, final boolean isUserDriven, final Callable<Void> success) {
                 
         this.sample = sample;
 
@@ -247,6 +249,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         // Force update
         updateUI();
+        
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
 
     private void populateObjectiveButton(List<String> objectives) {
@@ -268,7 +272,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void setObjective(String objective) {
         this.currObjective = objective;
-        loadDomainObject(sample);
+        loadDomainObject(sample, true, null);
     }
     
     private void populateAreaButton(List<String> areas) {
@@ -290,7 +294,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     private void setArea(String area) {
         this.currArea = area;
-        loadDomainObject(sample);
+        loadDomainObject(sample, true, null);
     }
     
     private boolean areEqualOrEmpty(String value1, String value2) {

@@ -166,7 +166,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        editor.loadDomainObject(domainObject);
+        editor.loadDomainObject(domainObject, true, null);
         setName(editor.getName());
     }
 
