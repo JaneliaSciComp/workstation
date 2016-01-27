@@ -92,6 +92,7 @@
                 <package>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</package>
                 <package>org.janelia.it.jacs.shared.node</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
+                <package>org.janelia.it.jacs.shared.sample_discovery</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
                 <package>org.janelia.it.jacs.shared.solr</package>
                 <package>org.janelia.it.jacs.shared.swc</package>

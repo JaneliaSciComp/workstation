@@ -14,6 +14,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+import static org.janelia.it.jacs.shared.sample_discovery.SampleDiscoveryConstants.*;
 
 //Temporarily out of action.  The target values are unused, and changes
 // are needed for the PathCollectionEditor.  see that class for todo list.
@@ -28,12 +29,8 @@ import org.openide.util.NbBundle.Messages;
 @ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
 @Messages("CTL_LvvBaseListAction=Large Volume Viewer Base Directory List Editor")
 public final class LvvBaseListAction implements ActionListener {
-
-    public static final String PATHS_ATTRIBUTE = "sample paths";
-    private static final String ENTITY_FOLDER_NAME = "3D Tile Microscope Samples";
-    private static final String REQURED_OWNER = "group:mouselight";
     public static final String DIALOG_TITLE = "Edit Large Volume Base Paths";
-
+    
     @Override
 	public void actionPerformed(ActionEvent ae) {
         try {
@@ -44,7 +41,7 @@ public final class LvvBaseListAction implements ActionListener {
             }
             
             for (Entity e: parentEntities) {
-                if (e.getOwnerKey().equals(REQURED_OWNER)) {
+                if (e.getOwnerKey().equals(REQUIRED_OWNER)) {
                     JDialog lvvBaseDialog = new JDialog();
                     final PathCollectionEditor pathCollectionEditor = 
                             new PathCollectionEditor(e, PATHS_ATTRIBUTE, new PathCollectionCompletionListener(lvvBaseDialog));
