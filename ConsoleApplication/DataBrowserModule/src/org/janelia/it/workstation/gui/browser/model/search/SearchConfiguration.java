@@ -82,21 +82,24 @@ public class SearchConfiguration {
     public final void setSearchClass(Class<? extends DomainObject> searchClass) {
 
         log.info("Setting search class: {}",searchClass);
-    	// Update the filter
     	this.searchClass = searchClass;
        
+        // Clear
+        searchAttrs.clear();
         facets.clear();
-        facets.add(SOLR_TYPE_FIELD);
+        facetValues.clear();
         
         if (searchClass==null) return;
                
         filter.setSearchClass(searchClass.getName());
  
         for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
-            if (attr.isFacet()) {
-                facets.add(attr.getSearchKey());
+            if (attr.isDisplay()) {
+                if (attr.isFacet()) {
+                    facets.add(attr.getSearchKey());
+                }
+                searchAttrs.put(attr.getName(),attr);
             }
-            searchAttrs.put(attr.getName(),attr);
         }
         
         // Remove any criteria which are no longer relevant

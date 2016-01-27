@@ -120,7 +120,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                             @Override
                             public void run() {
                                 explorer.expand(idPath);
-                                explorer.select(idPath);
+                                explorer.selectNodeByPath(idPath);
                             }
                         });
                     }
@@ -168,7 +168,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                             @Override
                             public void run() {
                                 explorer.expand(idPath);
-                                explorer.select(idPath);
+                                explorer.selectNodeByPath(idPath);
                             }
                         });
                     }
@@ -226,7 +226,7 @@ public class MoveToFolderAction extends NodePresenterAction {
                                     @Override
                                     public void run() {
                                         explorer.expand(idPath);
-                                        explorer.select(idPath);
+                                        explorer.selectNodeByPath(idPath);
                                     }
                                 });
                             }

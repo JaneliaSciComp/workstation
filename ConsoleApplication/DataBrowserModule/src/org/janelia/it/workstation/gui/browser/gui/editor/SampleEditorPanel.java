@@ -161,7 +161,12 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     @Override
     public String getName() {
-        return "Sample Editor";
+        if (sample==null) {
+            return "Sample Editor";
+        }
+        else {
+            return "Sample: "+org.apache.commons.lang3.StringUtils.abbreviate(sample.getName(), 15);
+        }
     }
     
     @Override

@@ -444,20 +444,21 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         beanTreeView.expand(idPath);
     }
 
-    public Node select(Long[] idPath) {
+    public void selectNode(Node node) {
+        log.info("selectNode({})",node.getDisplayName());
+        beanTreeView.selectNode(node);
+    }
+    
+    public Node selectNodeByPath(Long[] idPath) {
         if (root==null) return null;
         Node node = NodeUtils.findNodeWithPath(root, idPath);
         if (node!=null) {
-            log.info("Found node with path {}: {}",NodeUtils.createPathString(idPath),node.getDisplayName());
+            log.info("Found node with path {}",NodeUtils.createPathString(idPath));
             selectNode(node);
         }
         return node;
     }
     
-    public void selectNode(Node node) {
-        beanTreeView.selectNode(node);
-    }
-
     public void selectNodeById(Long id) {
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);

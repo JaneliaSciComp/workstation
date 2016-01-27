@@ -92,7 +92,7 @@ public final class NewSetAction implements ActionListener {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        explorer.select(idPath);
+                        explorer.selectNodeByPath(idPath);
                     }
                 });
             }

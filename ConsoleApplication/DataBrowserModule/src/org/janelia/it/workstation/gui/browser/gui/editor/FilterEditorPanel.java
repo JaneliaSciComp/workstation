@@ -226,13 +226,15 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         ButtonGroup typeGroup = new ButtonGroup();
         
-        for (final Class<? extends DomainObject> searchClazz : ClientDomainUtils.getSearchClasses()) {
-            final String label = searchClazz.getAnnotation(SearchType.class).label();
-            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClazz.equals(DEFAULT_SEARCH_CLASS));
+        for (final Class<? extends DomainObject> searchClass : ClientDomainUtils.getSearchClasses()) {
+            final String label = searchClass.getAnnotation(SearchType.class).label();
+            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(DEFAULT_SEARCH_CLASS));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     dirty = true;
-                    setSearchClass((Class<? extends DomainObject>)searchClazz);
+                    searchConfig.setSearchClass(searchClass);
+                    updateView();
+                    refreshSearchResults();
                 }
             });
             typeGroup.add(menuItem);
@@ -252,7 +254,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         AbstractAction mySearchAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                refresh();
+                refreshSearchResults();
             }
         };
         
@@ -283,10 +285,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     public void loadNewFilter() {
-        Filter filter = new Filter();
-        filter.setName(DEFAULT_FILTER_NAME);
-        filter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
-        loadDomainObject(filter);
+        Filter newFilter = new Filter();
+        newFilter.setName(DEFAULT_FILTER_NAME);
+        newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
+        loadDomainObject(newFilter);
     }
     
     @Override
@@ -295,22 +297,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         log.debug("loadDomainObject(Filter:{})",filter.getName());
         selectionModel.setParentObject(filter);
         
+        this.dirty = false;
         this.filter = filter;
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
         
         try {
-            if (searchConfig.getSearchClass()!=null) {
-                SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
-                typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());        
-            }
-            else {
-                typeCriteriaButton.setText("Type: None");        
-            }
-            refresh();
+            updateView();
+            refreshSearchResults();
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
-            loadNewFilter(); // TODO: fix potential for infinite recursion
         }
     }
 
@@ -320,7 +316,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     
     @Override
     public String getName() {
-        return "Filter Editor";
+        if (filter==null) {
+            return "Filter Editor";
+        }
+        else {
+            return "Filter: "+org.apache.commons.lang3.StringUtils.abbreviate(filter.getName(), 15);
+        }
     }
     
     @Override
@@ -347,16 +348,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         filter.addCriteria(criteria);
 
         dirty = true;   
-        refresh();
-    }
-    
-    private void setSearchClass(Class<? extends DomainObject> searchClass) {
-    	searchConfig.setSearchClass(searchClass);
-        updateFilterView();
-        refresh();
+        refreshSearchResults();
     }
 
-    private void refresh() {
+    private void refreshSearchResults() {
         log.trace("refresh");
         
         String inputFieldValue = getInputFieldValue();
@@ -372,8 +367,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         performSearch(true);
     }
     
-    private void updateFilterView() {
-    	
+    private void updateView() {
+
     	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
         typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
         
@@ -386,6 +381,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.isFacet()) {
+                log.debug("Adding facet: {}",attr.getLabel());
                 StringBuilder label = new StringBuilder();
                 label.append(attr.getLabel());
                 List<String> values = new ArrayList<>(getSelectedFacetValues(attr.getName()));
@@ -451,7 +447,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     if (criteria!=null) {
                         filter.addCriteria(criteria);
                         dirty = true;
-                        refresh();
+                        refreshSearchResults();
                     }
                 }
             });
@@ -460,7 +456,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         criteriaPanel.add(addCriteriaButton);
         
-        criteriaPanel.revalidate();
+        criteriaPanel.updateUI();
     }
     
     private SimpleDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
@@ -491,7 +487,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 EditCriteriaDialog dialog = new EditCriteriaDialog();
                 if (dialog.showForCriteria(criteria, attr.getLabel())!=null) {
                     dirty = true;
-                    refresh();
+                    refreshSearchResults();
                 }
             }
         });
@@ -502,7 +498,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             public void actionPerformed(ActionEvent e) {
                 removeAttributeCriteria(criteria.getAttributeName());
                 dirty = true;
-                refresh();
+                refreshSearchResults();
             }
         });
         popupMenu.add(removeMenuItem);
@@ -522,7 +518,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 public void actionPerformed(ActionEvent e) {
                     updateFacet(attr.getName(), null, false);
                     dirty = true;
-                    refresh();
+                    refreshSearchResults();
                 }
             });
             popupMenu.add(menuItem);
@@ -543,7 +539,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                             updateFacet(attr.getName(), facetValue.getValue(), false);
                         }
                         dirty = true;
-                        refresh();
+                        refreshSearchResults();
                     }
                 });
                 menuItem.setSelected(selectedValues.contains(facetValue.getValue()));
@@ -553,14 +549,14 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
 
     @Override
-	public void setSortField(String sortCriteria) {
-		this.filter.setSort(sortCriteria);
-	}
+    public void setSortField(String sortCriteria) {
+        this.filter.setSort(sortCriteria);
+    }
 
     @Override
-	public void search() {
-		performSearch(true);
-	}
+    public void search() {
+        performSearch(true);
+    }
 
     @Override
     public void export() {
@@ -602,7 +598,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
 
         if (searchConfig.getSearchClass()==null) return;
         
-        log.debug("performSearch(showLoading={})", showLoading);
+        log.info("performSearch(showLoading={})", showLoading);
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -615,10 +611,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             protected void hadSuccess() {
                 try {
                     resultsPanel.showSearchResults(searchResults, true);
-                    updateFilterView();
-                    if (showLoading) {
-                        resultsPanel.showResultsView();
-                    }
+                    updateView();
+//                    if (showLoading) {
+//                        resultsPanel.showResultsView();
+//                    }
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -634,9 +630,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         };
 
-        if (showLoading) {
-            resultsPanel.showLoadingIndicator();
-        }
+//        if (showLoading) {
+//            resultsPanel.showLoadingIndicator();
+//        }
         worker.execute();
     }
     

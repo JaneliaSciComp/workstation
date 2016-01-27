@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Simple editor panel for viewing object sets. In the future it may support drag and drop editing of object sets. 
@@ -183,7 +184,12 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     
     @Override
     public String getName() {
-        return "Object Set Editor";
+        if (objectSet==null) {
+            return "Set Editor";
+        }
+        else {
+            return "Set: "+StringUtils.abbreviate(objectSet.getName(), 15);
+        }
     }
     
     @Override

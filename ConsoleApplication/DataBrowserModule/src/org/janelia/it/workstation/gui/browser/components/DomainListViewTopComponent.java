@@ -238,7 +238,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject);
-        setName(domainObject.getName());
+        setName(editor.getName());
     }
 
     private Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {

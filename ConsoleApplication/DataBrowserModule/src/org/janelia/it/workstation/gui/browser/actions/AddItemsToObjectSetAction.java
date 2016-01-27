@@ -99,7 +99,7 @@ public class AddItemsToObjectSetAction implements NamedAction {
                             @Override
                             public void run() {
                                 explorer.expand(idPath);
-                                explorer.select(idPath);
+                                explorer.selectNodeByPath(idPath);
                             }
                         });
                     }
@@ -148,7 +148,7 @@ public class AddItemsToObjectSetAction implements NamedAction {
                             @Override
                             public void run() {
                                 explorer.expand(idPath);
-                                explorer.select(idPath);
+                                explorer.selectNodeByPath(idPath);
                             }
                         });
                     }
@@ -208,7 +208,7 @@ public class AddItemsToObjectSetAction implements NamedAction {
                                     @Override
                                     public void run() {
                                         explorer.expand(idPath);
-                                        explorer.select(idPath);
+                                        explorer.selectNodeByPath(idPath);
                                     }
                                 });
                             }

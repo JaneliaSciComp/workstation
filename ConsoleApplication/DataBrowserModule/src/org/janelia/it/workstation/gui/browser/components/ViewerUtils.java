@@ -74,7 +74,6 @@ public class ViewerUtils {
             }
         }
 
-        targetViewer.requestActive();
         return targetViewer;
     }
 }
