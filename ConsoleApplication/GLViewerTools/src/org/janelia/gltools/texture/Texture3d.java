@@ -52,6 +52,8 @@ import javax.media.opengl.GL3;
 import org.apache.commons.io.IOUtils;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -59,9 +61,14 @@ import org.janelia.gltools.GL3Resource;
  */
 public class Texture3d extends BasicTexture implements GL3Resource 
 {
+
+    private static final Logger log = LoggerFactory.getLogger(Texture3d.class);
+
     protected int height = 0;
     protected int depth = 0;
     protected int pixelBufferObject = 0;
+    byte[] pixelBytes;
+    short[] shortBytes;
     
     public Texture3d() {
         textureTarget = GL3.GL_TEXTURE_3D;
@@ -153,7 +160,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     
     protected void allocatePixels() {
         int byteCount = numberOfComponents * bytesPerIntensity * width * height * depth;
-        byte[] pixelBytes = new byte[byteCount];
+        pixelBytes = new byte[byteCount];
         pixels = ByteBuffer.wrap(pixelBytes);
         pixels.order(ByteOrder.nativeOrder());
         pixels.rewind();
@@ -283,6 +290,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     }
 
     protected void computeMipmaps() {
+        log.info("computeMipmaps() numberOfComponents="+numberOfComponents);
         mipmaps.clear();
         PerformanceTimer timer = new PerformanceTimer();
         Texture3d mipmap = createMipmapUsingMaxFilter();
@@ -336,6 +344,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     }
     
     public Texture3d createMipmapUsingMaxFilter() {
+        log.info("createMipmapUsingMaxFilter() numberOfComponents="+numberOfComponents);
         // Check whether smaller mipmap is possible
         if ( (width <= 1) && (height <= 1) && (depth <= 1) )
             return null; // already smallest possible texture
@@ -367,6 +376,26 @@ public class Texture3d extends BasicTexture implements GL3Resource
         int [] xIn = new int [2];
 
         final int IGNORE_VALUE=Integer.MIN_VALUE;
+
+        int HWN = height * width * numberOfComponents;
+        int WN = width * numberOfComponents;
+
+        short[] shortArr=null;
+        byte[] byteArr=null;
+
+        if (bytesPerIntensity>1) {
+            if (shortBytes==null) {
+                int length = pixelBytes.length / 2;
+                shortBytes = new short[length];
+                for (int i=0;i<length;i++) {
+                    int o=i*2;
+                    shortBytes[i]=(short)(((pixelBytes[o] & 0xff) | (pixelBytes[o+1] & 0xff) << 8) & 0xffff);
+                }
+            }
+            shortArr=shortBytes;
+        } else {
+            byteArr=pixelBytes;
+        }
 
         // Outer loops over output texture voxels
         for (int z = 0; z < result.depth; ++z) {
@@ -400,34 +429,117 @@ public class Texture3d extends BasicTexture implements GL3Resource
                         if (xIn[0] == xIn[1]) xIn[1]=IGNORE_VALUE;
                     }
                     int sampleCount = 0;
-                    for (int c = 0; c < numberOfComponents; ++c) {
-                        // Inner loops over input texture voxels
-                        for (int iz : zIn) {
-                            if (iz!=IGNORE_VALUE) {
-                                for (int iy : yIn) {
-                                    if (iy != IGNORE_VALUE) {
-                                        for (int ix : xIn) {
-                                            if (ix != IGNORE_VALUE) {
-                                                int offset = iz * height * width * numberOfComponents
-                                                        + iy * width * numberOfComponents
-                                                        + ix * numberOfComponents
-                                                        + c;
-                                                if (bytesPerIntensity > 1)
-                                                    samples[sampleCount] = shortsIn.get(offset) & 0xffff;
-                                                else
-                                                    samples[sampleCount] = bytesIn.get(offset) & 0xff;
-                                                sampleCount += 1;
+
+                    if (numberOfComponents==1) {
+
+                            if (shortArr != null) {
+
+                                // Inner loops over input texture voxels
+                                for (int iz : zIn) {
+                                    if (iz != IGNORE_VALUE) {
+                                        int ZHWN = iz * HWN;
+                                        for (int iy : yIn) {
+                                            if (iy != IGNORE_VALUE) {
+                                                int ZYWN = iy * WN + ZHWN;
+                                                for (int ix : xIn) {
+                                                    if (ix != IGNORE_VALUE) {
+                                                        int offset = ZYWN + ix;
+                                                        samples[sampleCount++] = shortArr[offset];
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
+
+                            } else {
+
+                                // Inner loops over input texture voxels
+                                for (int iz : zIn) {
+                                    if (iz != IGNORE_VALUE) {
+                                        int ZHWN = iz * HWN;
+                                        for (int iy : yIn) {
+                                            if (iy != IGNORE_VALUE) {
+                                                int ZYWN = iy * WN + ZHWN;
+                                                for (int ix : xIn) {
+                                                    if (ix != IGNORE_VALUE) {
+                                                        int offset = ZYWN + ix;
+                                                        samples[sampleCount++] = byteArr[offset] & 0xff;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            int maxIntensity = secondLargestIntensity(samples, sampleCount);
+
+                            if (bytesPerIntensity > 1)
+                                shortsOut.put((short) (maxIntensity & 0xffff));
+                            else
+                                bytesOut.put((byte) (maxIntensity & 0xff));
                         }
-                        int maxIntensity = secondLargestIntensity(samples, sampleCount);
-                        if (bytesPerIntensity > 1)
-                            shortsOut.put((short)(maxIntensity & 0xffff));
-                        else
-                            bytesOut.put((byte)(maxIntensity & 0xff));
+
+                    } else {
+
+                        for (int c = 0; c < numberOfComponents; ++c) {
+
+                            if (shortArr != null) {
+
+                                // Inner loops over input texture voxels
+                                for (int iz : zIn) {
+                                    if (iz != IGNORE_VALUE) {
+                                        int ZHWN = iz * HWN;
+                                        for (int iy : yIn) {
+                                            if (iy != IGNORE_VALUE) {
+                                                int ZYWN = iy * WN + ZHWN;
+                                                for (int ix : xIn) {
+                                                    if (ix != IGNORE_VALUE) {
+                                                        int offset = ZYWN
+                                                                + ix * numberOfComponents
+                                                                + c;
+                                                        samples[sampleCount] = shortArr[offset];
+                                                        sampleCount += 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            } else {
+
+                                // Inner loops over input texture voxels
+                                for (int iz : zIn) {
+                                    if (iz != IGNORE_VALUE) {
+                                        int ZHWN = iz * HWN;
+                                        for (int iy : yIn) {
+                                            if (iy != IGNORE_VALUE) {
+                                                int ZYWN = iy * WN + ZHWN;
+                                                for (int ix : xIn) {
+                                                    if (ix != IGNORE_VALUE) {
+                                                        int offset = ZYWN
+                                                                + ix * numberOfComponents
+                                                                + c;
+                                                        samples[sampleCount] = byteArr[offset] & 0xff;
+                                                        sampleCount += 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+
+                            int maxIntensity = secondLargestIntensity(samples, sampleCount);
+
+                            if (bytesPerIntensity > 1)
+                                shortsOut.put((short) (maxIntensity & 0xffff));
+                            else
+                                bytesOut.put((byte) (maxIntensity & 0xff));
+                        }
+
                     }
                 }
             }
