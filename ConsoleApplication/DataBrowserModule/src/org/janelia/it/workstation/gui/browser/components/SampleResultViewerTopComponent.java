@@ -143,7 +143,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
 
     private boolean setCurrent(PipelineResult result) {
         PipelineResult curr = getCurrent();
-        if (result.getId()!=null && result.getId().equals(curr.getId())) {
+        if (result!=null && curr!=null && result.getId().equals(curr.getId())) {
             return false;
         }
         if (curr!=null) {
