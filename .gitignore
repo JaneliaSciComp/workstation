@@ -17,3 +17,4 @@ ConsoleApplication/HortaTracer/*.log
 *.iws
 *.ipr
 *~
+.recommenders
