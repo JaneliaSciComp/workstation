@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.swing.JButton;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -23,13 +24,14 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Widget to help with editing the common paths used by all of LVV userdom.
  * @author Leslie L Foster
- * @todo better formatting for the "delete" button.
  * @todo pre-check paths on remote server prior to adding them.
  */
 public class PathCollectionEditor extends JPanel {
@@ -63,6 +65,7 @@ public class PathCollectionEditor extends JPanel {
         
         JTextField textField = new JTextField();
         textField.setBorder(new TitledBorder("New Path"));
+        textField.addKeyListener(new PathCorrectionKeyListener( textField ));
 
         JButton addButton = new JButton("Add");
         addButton.addActionListener(new AddValueListener(propName, table, textField, entity, completionListener));
@@ -273,22 +276,29 @@ public class PathCollectionEditor extends JPanel {
             //  widget.  It can be added to this panel, along with its
             //  descriptive border.
             final String inputValue = inputField.getText().trim();
+            // Wish to check if this one exists on server.
+            final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
+            if (cf.isServerPathAvailable(inputValue, true)) {
+                // Now create an updated value.
+                ValueBean valueBean = findOldValue(entity, propName);
 
-            // Now create an updated value.
-            ValueBean valueBean = findOldValue(entity, propName);
+                String updatedValueString = null;
+                if (valueBean == null || valueBean.oldValue == null) {
+                    // First entry.
+                    updatedValueString = propName + "=" + inputValue;
+                } else {
+                    // Subsequent entries.
+                    updatedValueString = valueBean.oldValue + '\n' + inputValue;
+                }
 
-            String updatedValueString = null;
-            if (valueBean == null || valueBean.oldValue == null) {
-                // First entry.
-                updatedValueString = propName + "=" + inputValue;
-            } else {
-                // Subsequent entries.
-                updatedValueString = valueBean.oldValue + '\n' + inputValue;
+                // Now update the set of values.
+                updateValue(valueBean, updatedValueString, completionListener, entity, table);
+                inputField.setText("");
+            }
+            else {
+                JOptionPane.showMessageDialog(table, "Directory " + inputValue + " not found on server.  Please check.");
             }
 
-            // Now update the set of values.
-            updateValue(valueBean, updatedValueString, completionListener, entity, table);
-            inputField.setText("");
         }
 
     }
