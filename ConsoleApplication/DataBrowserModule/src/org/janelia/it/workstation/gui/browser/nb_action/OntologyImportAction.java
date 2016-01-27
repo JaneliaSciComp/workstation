@@ -22,7 +22,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.util.YamlFileFilter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.yaml.snakeyaml.Yaml;
 import org.openide.nodes.Node;
 
