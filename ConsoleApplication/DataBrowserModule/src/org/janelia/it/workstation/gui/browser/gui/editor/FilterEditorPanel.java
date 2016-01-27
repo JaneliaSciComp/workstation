@@ -62,7 +62,6 @@ import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -300,7 +299,14 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
         
         try {
-            setSearchClass(searchConfig.getSearchClass());
+            if (searchConfig.getSearchClass()!=null) {
+                SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
+                typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());        
+            }
+            else {
+                typeCriteriaButton.setText("Type: None");        
+            }
+            refresh();
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -345,22 +351,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     private void setSearchClass(Class<? extends DomainObject> searchClass) {
-        
-        SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
-        typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
-
-        if (filter.hasCriteria()) {
-            for(Iterator<Criteria> i=filter.getCriteriaList().iterator(); i.hasNext(); ) {
-                Criteria criteria = i.next();
-                if (criteria instanceof AttributeCriteria) {
-                   AttributeCriteria ac = (AttributeCriteria)criteria;
-                   if (searchConfig.getDomainObjectAttribute(ac.getAttributeName())==null) {
-                       i.remove();
-                   }
-                }
-            }
-        }
-        
+    	searchConfig.setSearchClass(searchClass);
+        updateFilterView();
         refresh();
     }
 
@@ -381,6 +373,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     private void updateFilterView() {
+    	
+    	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
+        typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
         
         filterNameLabel.setText(filter.getName());
         
@@ -605,6 +600,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
     public synchronized void performSearch(final boolean showLoading) {
 
+        if (searchConfig.getSearchClass()==null) return;
+        
         log.debug("performSearch(showLoading={})", showLoading);
         
         SimpleWorker worker = new SimpleWorker() {
