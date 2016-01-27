@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,23 +26,23 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -52,41 +53,66 @@ public class SearchConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SearchConfiguration.class);
 
-    public static final String SOLR_TYPE_FIELD = "type";
+    public static final String SOLR_TYPE_FIELD = "search_type";
     
     // Source state
-    private Filter filter;
+    private final Filter filter;
     private final int pageSize;
     
     // Derived from source state
     private Class<? extends DomainObject> searchClass;
-    private Map<String,DomainObjectAttribute> searchAttrs = new TreeMap<>();
-    private List<String> facets = new ArrayList<>();
-    private Map<String,List<FacetValue>> facetValues = new HashMap<>();
+    private final Map<String,DomainObjectAttribute> searchAttrs = new TreeMap<>();
+    private final List<String> facets = new ArrayList<>();
+    private final Map<String,List<FacetValue>> facetValues = new HashMap<>();
 
     // Actual query
     private SolrQuery query;
     private String displayQueryString;
     
     public SearchConfiguration(Filter filter, int pageSize) {
-        
         this.filter = filter;
-        this.searchClass = DomainUtils.getObjectClassByName(filter.getSearchClass());
         this.pageSize = pageSize;
-        
-        facets.add(SOLR_TYPE_FIELD);
-        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
-            if (attr.isFacet()) {
-                facets.add(attr.getSearchKey());
-            }
-            searchAttrs.put(attr.getName(),attr);
-        }
+        setSearchClass(DomainUtils.getObjectClassByName(filter.getSearchClass()));
     }
     
     public Filter getFilter() {
         return filter;
     }
 
+    public final void setSearchClass(Class<? extends DomainObject> searchClass) {
+
+        log.info("Setting search class: {}",searchClass);
+    	// Update the filter
+    	this.searchClass = searchClass;
+       
+        facets.clear();
+        facets.add(SOLR_TYPE_FIELD);
+        
+        if (searchClass==null) return;
+               
+        filter.setSearchClass(searchClass.getName());
+ 
+        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
+            if (attr.isFacet()) {
+                facets.add(attr.getSearchKey());
+            }
+            searchAttrs.put(attr.getName(),attr);
+        }
+        
+        // Remove any criteria which are no longer relevant
+        if (filter.hasCriteria()) {
+            for(Iterator<Criteria> i=filter.getCriteriaList().iterator(); i.hasNext(); ) {
+                Criteria criteria = i.next();
+                if (criteria instanceof AttributeCriteria) {
+                   AttributeCriteria ac = (AttributeCriteria)criteria;
+                   if (getDomainObjectAttribute(ac.getAttributeName())==null) {
+                       i.remove();
+                   }
+                }
+            }
+        }
+    }
+    
     public Class<? extends DomainObject> getSearchClass() {
         return searchClass;
     }
@@ -105,8 +131,11 @@ public class SearchConfiguration {
     
     public List<FacetValue> getFacetValues(String searchKey) {
         return facetValues.get(searchKey);
-        
     }
+
+	public String getDisplayQueryString() {
+		return displayQueryString;
+	}
     
     /**
      * Returns a query builder for the current search parameters.
