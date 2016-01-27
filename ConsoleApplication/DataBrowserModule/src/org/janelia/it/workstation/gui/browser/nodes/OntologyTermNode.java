@@ -33,6 +33,8 @@ import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComp
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
+import org.janelia.it.workstation.gui.browser.nb_action.OntologyExportAction;
+import org.janelia.it.workstation.gui.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -220,6 +222,9 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         actions.add(null);
         actions.add(new InternalNode.CopyNameAction());
         actions.add(new CopyGUIDAction());
+        actions.add(null);
+        actions.add(OntologyImportAction.get());
+        actions.add(OntologyExportAction.get());
         actions.add(null);
         actions.add(new AssignShortcutAction());
         actions.add(AddOntologyTermAction.get());

@@ -64,13 +64,15 @@ public class OntologyContextMenu extends EntityContextMenu {
     }
 
     protected JMenuItem getImportOntologyItem() {
-        return getActionItem(new OntologyImportAction(ontologyElement));
+       return null;
+        //return getActionItem(new OntologyImportAction(ontologyElement));
     }
-    
+
     protected JMenuItem getExportOntologyItem() {
-        return getActionItem(new OntologyExportAction(ontologyElement));
+        return null;
+        //return getActionItem(new OntologyExportAction(ontologyElement));
     }
-    
+
     protected JMenu getAddItemMenu() {
 
         OntologyElementType type = ontologyElement.getType();
