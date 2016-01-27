@@ -1,6 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.components;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -62,13 +65,12 @@ public class PathCollectionEditor extends JPanel {
         textField.setBorder(new TitledBorder("New Path"));
 
         JButton addButton = new JButton("Add");
-        addButton.addActionListener(new AddValueListener(propName, table, textField, entity));
+        addButton.addActionListener(new AddValueListener(propName, table, textField, entity, completionListener));
         
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BorderLayout());
+        JButton doneButton = null;
 
         if (completionListener != null) {
-            JButton doneButton = new JButton("Done");
+            doneButton = new JButton("Done");
             //e -> listener.done()
             doneButton.addActionListener(new ActionListener() {
                 @Override
@@ -76,49 +78,45 @@ public class PathCollectionEditor extends JPanel {
                     completionListener.done();
                 }
             });
-            buttonPanel.add(doneButton, BorderLayout.EAST);
         }
         
         JButton delButton = new JButton("Delete");
-        delButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                if (table.getSelectedRow() > -1) {
-                    Object objToDelete = table.getModel().getValueAt(table.getSelectedRow(), VALUE_COL);
-                    if (objToDelete != null) {
-                        String valueToDelete = objToDelete.toString();
-                        log.info("Deleting {} {}", propName, valueToDelete);
-                        StringBuilder builder = new StringBuilder(propName).append('=');
-                        int appendCount = 0;
-                        for (int i = 0; i < table.getModel().getRowCount(); i++) {
-                            if (i != table.getSelectedRow()) {
-                                if (appendCount > 0) {
-                                    builder.append("\n");
-                                }
-                                builder.append(table.getModel().getValueAt(i, VALUE_COL));                                
-                                appendCount++;
-                            }
-                        }
-                        String updatedValue = builder.toString();
-                        ValueBean valueBean = findOldValue(entity, propName);
-                        updateValue(valueBean, updatedValue, entity);
-                        ((AbstractTableModel) table.getModel()).fireTableDataChanged();
-                    }
-                }
-            }
-        });
+        delButton.addActionListener(new DeleteValueListener(propName, table, entity, completionListener));
 
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new BorderLayout());
         controlPanel.add(textField, BorderLayout.NORTH);
-        buttonPanel.add(addButton, BorderLayout.WEST);
-        buttonPanel.add(delButton, BorderLayout.CENTER);
+        JPanel buttonPanel = layoutButtonPanel(addButton, delButton, doneButton);
         controlPanel.add(buttonPanel, BorderLayout.SOUTH);
         
         add(controlPanel, BorderLayout.SOUTH);
 	}
+
+    private JPanel layoutButtonPanel(JButton addButton, JButton delButton, JButton doneButton) {
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = 0;
+        gbc.gridwidth = 1;
+
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets( 0, 0, 0, 30 );
+        buttonPanel.add(addButton, gbc);
+        gbc.gridx = 1;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.insets = new Insets( 0, 15, 0, 15 );
+        buttonPanel.add(delButton, gbc);
+        if (doneButton != null) {
+            gbc.gridx = 2;
+            gbc.anchor = GridBagConstraints.EAST;
+            gbc.insets = new Insets(0, 30, 0, 0);
+            buttonPanel.add(doneButton, gbc);
+        }
+        return buttonPanel;
+    }
 
     private static boolean ensureFullyLoaded(Entity entity) {
         try {
@@ -130,50 +128,6 @@ public class PathCollectionEditor extends JPanel {
         return true;
     }
     
-    private static class AddValueListener implements ActionListener {
-        private Entity entity;
-        private String propName;
-        private JTable table;
-        private JTextField inputField;
-        
-        public AddValueListener(String propName, JTable table, JTextField inputField, Entity entity) {
-            this.propName = propName;
-            this.entity = entity;
-            this.table = table;
-            this.inputField = inputField;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // First, check the input.
-            //todo, see LoadedWorkspaceCreator which has a pathTextField.
-            //  The pathTextField needs to become its own separate widget.
-            //  then, it can be passed into here, as a self-validating
-            //  widget.  It can be added to this panel, along with its
-            //  descriptive border.
-            final String inputValue = inputField.getText().trim();
-            
-            // Now create an updated value.
-            ValueBean oldValue = findOldValue(entity, propName);
-            
-            String updatedValueString = null;
-            if (oldValue == null  ||  oldValue.oldValue == null) {
-                // First entry.
-                updatedValueString = propName + "=" + inputValue;
-            }
-            else {
-                // Subsequent entries.
-                updatedValueString = oldValue.oldValue + '\n' + inputValue; 
-            }
-            
-            // Now update the set of values.
-            updateValue(oldValue, updatedValueString, entity);
-            ((AbstractTableModel) table.getModel()).fireTableDataChanged();
-            inputField.setText("");
-        }
-
-    }
-	
     private static ValueBean findOldValue(Entity entity, String propName) {
         if (! ensureFullyLoaded(entity)) {
             return null;
@@ -197,6 +151,7 @@ public class PathCollectionEditor extends JPanel {
                         if (nameValueArr.length == 2 && nameValueArr[0].trim().equals(propName)) {
                             oldValueBean.targetEntityData = ed;
                             oldValueBean.oldValue = nameValue;
+                            break;
                         }
                     }
                 }
@@ -241,6 +196,101 @@ public class PathCollectionEditor extends JPanel {
             ModelMgr.getModelMgr().handleException(ex);
             return null;
         }
+    }
+
+    private static void updateValue(ValueBean valueBean, String updatedValue, CompletionListener completionListener, Entity entity, JTable table) {
+        EntityData rtnVal = updateValue(valueBean, updatedValue, entity);
+        if (rtnVal != null) {
+            ((AbstractTableModel) table.getModel()).fireTableDataChanged();
+        } else if (completionListener != null) {
+            // Break out on exception.
+            completionListener.done();
+        }
+    }
+
+    private static class DeleteValueListener implements ActionListener {
+
+        private JTable table;
+        private String propName;
+        private Entity entity;
+        private CompletionListener completionListener;
+
+        public DeleteValueListener(String propName, JTable table, Entity entity, CompletionListener completionListener) {
+            this.table = table;
+            this.propName = propName;
+            this.entity = entity;
+            this.completionListener = completionListener;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent ae) {
+            if (table.getSelectedRow() > -1) {
+                Object objToDelete = table.getModel().getValueAt(table.getSelectedRow(), VALUE_COL);
+                if (objToDelete != null) {
+                    String valueToDelete = objToDelete.toString();
+                    log.info("Deleting {} {}", propName, valueToDelete);
+                    StringBuilder builder = new StringBuilder(propName).append('=');
+                    int appendCount = 0;
+                    for (int i = 0; i < table.getModel().getRowCount(); i++) {
+                        if (i != table.getSelectedRow()) {
+                            if (appendCount > 0) {
+                                builder.append("\n");
+                            }
+                            builder.append(table.getModel().getValueAt(i, VALUE_COL));
+                            appendCount++;
+                        }
+                    }
+                    String updatedValue = builder.toString();
+                    ValueBean valueBean = findOldValue(entity, propName);
+                    updateValue(valueBean, updatedValue, completionListener, entity, table);
+                }
+            }
+        }
+    }
+
+    private static class AddValueListener implements ActionListener {
+
+        private Entity entity;
+        private String propName;
+        private JTable table;
+        private JTextField inputField;
+        private CompletionListener completionListener;
+
+        public AddValueListener(String propName, JTable table, JTextField inputField, Entity entity, CompletionListener completionListener) {
+            this.propName = propName;
+            this.entity = entity;
+            this.table = table;
+            this.inputField = inputField;
+            this.completionListener = completionListener;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // First, check the input.
+            //todo, see LoadedWorkspaceCreator which has a pathTextField.
+            //  The pathTextField needs to become its own separate widget.
+            //  then, it can be passed into here, as a self-validating
+            //  widget.  It can be added to this panel, along with its
+            //  descriptive border.
+            final String inputValue = inputField.getText().trim();
+
+            // Now create an updated value.
+            ValueBean valueBean = findOldValue(entity, propName);
+
+            String updatedValueString = null;
+            if (valueBean == null || valueBean.oldValue == null) {
+                // First entry.
+                updatedValueString = propName + "=" + inputValue;
+            } else {
+                // Subsequent entries.
+                updatedValueString = valueBean.oldValue + '\n' + inputValue;
+            }
+
+            // Now update the set of values.
+            updateValue(valueBean, updatedValueString, completionListener, entity, table);
+            inputField.setText("");
+        }
+
     }
 
     /**

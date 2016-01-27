@@ -18,15 +18,15 @@ import org.openide.util.NbBundle.Messages;
 //Temporarily out of action.  The target values are unused, and changes
 // are needed for the PathCollectionEditor.  see that class for todo list.
 
-//@ActionID(
-//		category = "File/New",
-//		id = "org.janelia.it.workstation.gui.large_volume_viewer.nb_action.LvvBaseListAction"
-//)
-//@ActionRegistration(
-//		displayName = "#CTL_LvvBaseListAction"
-//)
-//@ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
-//@Messages("CTL_LvvBaseListAction=Large Volume Viewer Base Directory List Editor")
+@ActionID(
+		category = "File/New",
+		id = "org.janelia.it.workstation.gui.large_volume_viewer.nb_action.LvvBaseListAction"
+)
+@ActionRegistration(
+		displayName = "#CTL_LvvBaseListAction"
+)
+@ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
+@Messages("CTL_LvvBaseListAction=Large Volume Viewer Base Directory List Editor")
 public final class LvvBaseListAction implements ActionListener {
 
     public static final String PATHS_ATTRIBUTE = "sample paths";
