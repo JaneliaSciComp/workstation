@@ -26,6 +26,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -228,25 +229,44 @@ public class PathCollectionEditor extends JPanel {
         @Override
         public void actionPerformed(ActionEvent ae) {
             if (table.getSelectedRow() > -1) {
-                Object objToDelete = table.getModel().getValueAt(table.getSelectedRow(), VALUE_COL);
-                if (objToDelete != null) {
-                    String valueToDelete = objToDelete.toString();
-                    log.info("Deleting {} {}", propName, valueToDelete);
-                    StringBuilder builder = new StringBuilder(propName).append('=');
-                    int appendCount = 0;
-                    for (int i = 0; i < table.getModel().getRowCount(); i++) {
-                        if (i != table.getSelectedRow()) {
-                            if (appendCount > 0) {
-                                builder.append("\n");
+                SimpleWorker delTask = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        Object objToDelete = table.getModel().getValueAt(table.getSelectedRow(), VALUE_COL);
+                        if (objToDelete != null) {
+                            String valueToDelete = objToDelete.toString();
+                            log.info("Deleting {} {}", propName, valueToDelete);
+                            StringBuilder builder = new StringBuilder(propName).append('=');
+                            int appendCount = 0;
+                            for (int i = 0; i < table.getModel().getRowCount(); i++) {
+                                if (i != table.getSelectedRow()) {
+                                    if (appendCount > 0) {
+                                        builder.append("\n");
+                                    }
+                                    builder.append(table.getModel().getValueAt(i, VALUE_COL));
+                                    appendCount++;
+                                }
                             }
-                            builder.append(table.getModel().getValueAt(i, VALUE_COL));
-                            appendCount++;
+                            String updatedValue = builder.toString();
+                            ValueBean valueBean = findOldValue(entity, propName);
+                            updateValue(valueBean, updatedValue, completionListener, entity, table);
                         }
                     }
-                    String updatedValue = builder.toString();
-                    ValueBean valueBean = findOldValue(entity, propName);
-                    updateValue(valueBean, updatedValue, completionListener, entity, table);
-                }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // Nothing
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        ModelMgr.getModelMgr().handleException(error);
+                    }
+                    
+                };
+
+                delTask.execute();
             }
         }
     }
@@ -269,36 +289,49 @@ public class PathCollectionEditor extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            // First, check the input.
-            //todo, see LoadedWorkspaceCreator which has a pathTextField.
-            //  The pathTextField needs to become its own separate widget.
-            //  then, it can be passed into here, as a self-validating
-            //  widget.  It can be added to this panel, along with its
-            //  descriptive border.
-            final String inputValue = inputField.getText().trim();
-            // Wish to check if this one exists on server.
-            final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
-            if (cf.isServerPathAvailable(inputValue, true)) {
-                // Now create an updated value.
-                ValueBean valueBean = findOldValue(entity, propName);
+            SimpleWorker updateTask = new SimpleWorker() {
 
-                String updatedValueString = null;
-                if (valueBean == null || valueBean.oldValue == null) {
-                    // First entry.
-                    updatedValueString = propName + "=" + inputValue;
-                } else {
-                    // Subsequent entries.
-                    updatedValueString = valueBean.oldValue + '\n' + inputValue;
+                @Override
+                protected void doStuff() throws Exception {
+                    // First, check the input.
+                    // Wish to check if this one exists on server.
+                    final String inputValue = inputField.getText().trim();
+                    final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
+                    if (cf.isServerPathAvailable(inputValue, true)) {
+                        // Now create an updated value.
+                        ValueBean valueBean = findOldValue(entity, propName);
+
+                        String updatedValueString = null;
+                        if (valueBean == null || valueBean.oldValue == null) {
+                            // First entry.
+                            updatedValueString = propName + "=" + inputValue;
+                        } else {
+                            // Subsequent entries.
+                            updatedValueString = valueBean.oldValue + '\n' + inputValue;
+                        }
+
+                        // Now update the set of values.
+                        updateValue(valueBean, updatedValueString, completionListener, entity, table);
+                        inputField.setText("");
+                    } else {
+                        JOptionPane.showMessageDialog(table, "Directory " + inputValue + " not found on server.  Please check.");
+                    }
+
                 }
 
-                // Now update the set of values.
-                updateValue(valueBean, updatedValueString, completionListener, entity, table);
-                inputField.setText("");
-            }
-            else {
-                JOptionPane.showMessageDialog(table, "Directory " + inputValue + " not found on server.  Please check.");
-            }
+                @Override
+                protected void hadSuccess() {
+                    // Nothing to do.
+                }
 
+                @Override
+                protected void hadError(Throwable error) {
+                    // Not much to do.
+                    ModelMgr.getModelMgr().handleException(error);
+                }
+                
+            };
+            updateTask.execute();
         }
 
     }
