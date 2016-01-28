@@ -404,8 +404,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 xIn[1]=IGNORE_VALUE;
             } else {
                 float fractionalZOut = (z + 0.5f) / result.depth;
-                zIn[0] = (int) ((fractionalZOut - halfInputDeltaUvw[2]) * depth);
-                zIn[1] = (int) ((fractionalZOut + halfInputDeltaUvw[2]) * depth);
+                zIn[0] = (int) ((fractionalZOut - halfInputDeltaUvw[2]) * depth) * HWN;
+                zIn[1] = (int) ((fractionalZOut + halfInputDeltaUvw[2]) * depth) * HWN;
                 if (zIn[0] == zIn[1]) zIn[1]=IGNORE_VALUE;
             }
             for (int y = 0; y < result.height; ++y) {
@@ -414,8 +414,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
                     yIn[1]=IGNORE_VALUE;
                 } else {
                     float fractionalYOut = (y + 0.5f) / result.height;
-                    yIn[0] = (int) ((fractionalYOut - halfInputDeltaUvw[1]) * height);
-                    yIn[1] = (int) ((fractionalYOut + halfInputDeltaUvw[1]) * height);
+                    yIn[0] = (int) ((fractionalYOut - halfInputDeltaUvw[1]) * height) * WN;
+                    yIn[1] = (int) ((fractionalYOut + halfInputDeltaUvw[1]) * height) * WN;
                     if (yIn[0] == yIn[1]) yIn[1]=IGNORE_VALUE;
                 }
                 for (int x = 0; x < result.width; ++x) {
@@ -437,10 +437,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                 // Inner loops over input texture voxels
                                 for (int iz : zIn) {
                                     if (iz != IGNORE_VALUE) {
-                                        int ZHWN = iz * HWN;
                                         for (int iy : yIn) {
                                             if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy * WN + ZHWN;
+                                                int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
                                                         int offset = ZYWN + ix;
@@ -457,10 +456,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                 // Inner loops over input texture voxels
                                 for (int iz : zIn) {
                                     if (iz != IGNORE_VALUE) {
-                                        int ZHWN = iz * HWN;
                                         for (int iy : yIn) {
                                             if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy * WN + ZHWN;
+                                                int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
                                                         int offset = ZYWN + ix;
@@ -489,10 +487,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                 // Inner loops over input texture voxels
                                 for (int iz : zIn) {
                                     if (iz != IGNORE_VALUE) {
-                                        int ZHWN = iz * HWN;
                                         for (int iy : yIn) {
                                             if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy * WN + ZHWN;
+                                                int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
                                                         int offset = ZYWN
@@ -512,10 +509,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                 // Inner loops over input texture voxels
                                 for (int iz : zIn) {
                                     if (iz != IGNORE_VALUE) {
-                                        int ZHWN = iz * HWN;
                                         for (int iy : yIn) {
                                             if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy * WN + ZHWN;
+                                                int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
                                                         int offset = ZYWN
