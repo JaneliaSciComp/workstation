@@ -17,7 +17,6 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
@@ -26,9 +25,10 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.ws.ExternalClient;
+import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,7 +144,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     // Check that there is a valid NA instance running
-                    List<ExternalClient> clients = SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+                    List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
                     // If no NA client then try to start one
                     if (clients.isEmpty()) {
                         startNA();
@@ -156,7 +156,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
                             boolean connected = client.isConnected();
                             if (!connected) {
                                 log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-                                SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
+                                ExternalClientMgr.getInstance().removeExternalClientByPort(client.getClientPort());
                             }
                             else {
                                 finalList.add(client);
@@ -168,18 +168,17 @@ public class SampleResultContextMenu extends PopupContextMenu {
                         }
                     }
 
-                    if (SessionMgr.getSessionMgr()
-                            .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                    if (ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
                         JOptionPane.showMessageDialog(mainFrame,
                                 "Could not get Neuron Annotator to launch and connect. "
                                         + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
-                    // TODO: neuron annotator integration
-//                    log.debug("Requesting entity view in Neuron Annotator: " + result.getId());
-//                    ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
-                } catch (Exception e) {
+                    log.debug("Requesting entity view in Neuron Annotator: " + separation.getId());
+                    ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(separation.getId());
+                } 
+                catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
             }
