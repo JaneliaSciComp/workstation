@@ -32,6 +32,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
+import org.janelia.it.jacs.model.domain.DomainObject;
 
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
@@ -42,6 +43,7 @@ import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
@@ -89,6 +91,18 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             e.consume();
         }
 
+        @Override
+        protected void doubleLeftClicked(MouseEvent e) {
+            if (e.isConsumed()) {
+                return;
+            }
+            PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
+            // Select the button first
+            resultPanelSelection(resultPanel, true);
+            buttonDrillDown(resultPanel.getResult());
+            e.consume();
+        }
+        
         @Override
         public void mouseReleased(MouseEvent e) {
             super.mouseReleased(e);
@@ -159,6 +173,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
         popupMenu.addMenuItems();
         return popupMenu;
+    }
+    
+    private void buttonDrillDown(PipelineResult result) {
+        SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
+        popupMenu.runDefaultAction();
     }
     
     @Override

@@ -398,6 +398,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(DomainObject domainObject) {
+        List<Reference> ids = selectionModel.getSelectedIds();
+        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
+        popupMenu.runDefaultAction();
     }
     
     @Override

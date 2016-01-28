@@ -8,8 +8,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -18,15 +16,15 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
+import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.ws.ExternalClient;
-import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.slf4j.Logger;
@@ -71,6 +69,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getFijiViewerItem());
         add(getDownloadMenu());
         
+    }
+    
+    public void runDefaultAction() {
+        SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+        viewer.requestActive(); 
+        viewer.loadSampleResult(result, true, null);
     }
     
     protected JMenuItem getTitleItem() {
@@ -135,74 +139,10 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getNeuronAnnotatorItem() {
-
         final NeuronSeparation separation = result.getLatestSeparationResult();
         if (separation==null) return null;
-        
-        JMenuItem vaa3dMenuItem = new JMenuItem("  View In Neuron Annotator");
-        vaa3dMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    // Check that there is a valid NA instance running
-                    List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                    // If no NA client then try to start one
-                    if (clients.isEmpty()) {
-                        startNA();
-                    }
-                    // If NA clients "exist", make sure they are up
-                    else {
-                        ArrayList<ExternalClient> finalList = new ArrayList<>();
-                        for (ExternalClient client : clients) {
-                            boolean connected = client.isConnected();
-                            if (!connected) {
-                                log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-                                ExternalClientMgr.getInstance().removeExternalClientByPort(client.getClientPort());
-                            }
-                            else {
-                                finalList.add(client);
-                            }
-                        }
-                        // If none are up then start one
-                        if (finalList.isEmpty()) {
-                            startNA();
-                        }
-                    }
-
-                    if (ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                        JOptionPane.showMessageDialog(mainFrame,
-                                "Could not get Neuron Annotator to launch and connect. "
-                                        + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    }
-
-                    log.debug("Requesting entity view in Neuron Annotator: " + separation.getId());
-                    ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(separation.getId());
-                } 
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
-            }
-        });
-        return vaa3dMenuItem;
-    }
-
-    private void startNA() throws Exception {
-        log.debug("Client {} is not running. Starting a new instance.",
-                ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-        ToolMgr.runTool(ToolMgr.TOOL_NA);
-        boolean notRunning = true;
-        int killCount = 0;
-        while (notRunning && killCount < 2) {
-            if (SessionMgr.getSessionMgr()
-                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                Thread.sleep(3000);
-                killCount++;
-            }
-            else {
-                notRunning = false;
-            }
-        }
+        JMenuItem menuItem = getNamedActionItem(new OpenInNeuronAnnotatorAction(separation));
+        return menuItem;
     }
         
     protected JMenuItem getVaa3dTriViewItem() {

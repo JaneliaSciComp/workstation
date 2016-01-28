@@ -56,6 +56,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         this.multiple = domainObjectList.size() > 1;
     }
     
+    public void runDefaultAction() {
+        DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+        viewer.requestActive();
+        viewer.loadDomainObject(domainObject);
+    }
+    
     public void addMenuItems() {
         
         if (domainObjectList.isEmpty()) {
