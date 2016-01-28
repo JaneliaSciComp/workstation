@@ -342,7 +342,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
         
         return second;
     }
-    
+
     public Texture3d createMipmapUsingMaxFilter() {
         log.info("createMipmapUsingMaxFilter() numberOfComponents="+numberOfComponents);
         // Check whether smaller mipmap is possible
@@ -356,16 +356,19 @@ public class Texture3d extends BasicTexture implements GL3Resource
         result.height = Math.max(height/2, 1);
         result.depth = Math.max(depth/2, 1);
         result.mipMapLevel = mipMapLevel + 1;
+
+        log.info("Creating mipmap width="+result.width+" height="+result.height+" depth="+result.depth+" level="+result.mipMapLevel);
+
         result.allocatePixels();
-        
+
         ByteBuffer bytesIn = pixels;
         ByteBuffer bytesOut = result.pixels;
         ShortBuffer shortsIn = pixels.asShortBuffer();
         ShortBuffer shortsOut = result.pixels.asShortBuffer();
-        
+
         // New way - TODO - output oriented, with kernel
         float [] halfInputDeltaUvw = new float[] { // normalized inter-pixel distance of input texture
-            0.5f/width, 0.5f/height, 0.5f/depth // Not useful for s
+                0.5f/width, 0.5f/height, 0.5f/depth // Not useful for s
         };
         shortsOut.rewind();
         bytesOut.rewind();
@@ -398,14 +401,19 @@ public class Texture3d extends BasicTexture implements GL3Resource
         }
 
         // Outer loops over output texture voxels
+        int zh1=(int)(halfInputDeltaUvw[2]*depth);
+        int yh1=(int)(halfInputDeltaUvw[1]*height);
+        int xh1=(int)(halfInputDeltaUvw[0]*width);
+
         for (int z = 0; z < result.depth; ++z) {
             if (depth==1) {
                 zIn[0]=0;
                 xIn[1]=IGNORE_VALUE;
             } else {
                 float fractionalZOut = (z + 0.5f) / result.depth;
-                zIn[0] = (int) ((fractionalZOut - halfInputDeltaUvw[2]) * depth) * HWN;
-                zIn[1] = (int) ((fractionalZOut + halfInputDeltaUvw[2]) * depth) * HWN;
+                int zf1=(int)(fractionalZOut*depth);
+                zIn[0] = (zf1-zh1) * HWN;
+                zIn[1] = (zf1+zh1) * HWN;
                 if (zIn[0] == zIn[1]) zIn[1]=IGNORE_VALUE;
             }
             for (int y = 0; y < result.height; ++y) {
@@ -414,8 +422,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
                     yIn[1]=IGNORE_VALUE;
                 } else {
                     float fractionalYOut = (y + 0.5f) / result.height;
-                    yIn[0] = (int) ((fractionalYOut - halfInputDeltaUvw[1]) * height) * WN;
-                    yIn[1] = (int) ((fractionalYOut + halfInputDeltaUvw[1]) * height) * WN;
+                    int yf1=(int)(fractionalYOut*height);
+                    yIn[0] = (yf1-yh1) * WN;
+                    yIn[1] = (yf1+yh1) * WN;
                     if (yIn[0] == yIn[1]) yIn[1]=IGNORE_VALUE;
                 }
                 for (int x = 0; x < result.width; ++x) {
@@ -424,59 +433,61 @@ public class Texture3d extends BasicTexture implements GL3Resource
                         xIn[1]=IGNORE_VALUE;
                     } else {
                         float fractionalXOut = (x + 0.5f) / result.width;
-                        xIn[0] = (int) ((fractionalXOut - halfInputDeltaUvw[0]) * width);
-                        xIn[1] = (int) ((fractionalXOut + halfInputDeltaUvw[0]) * width);
+                        int xf1=(int)(fractionalXOut*width);
+                        xIn[0] = (xf1-xh1);
+                        xIn[1] = (xf1+xh1);
                         if (xIn[0] == xIn[1]) xIn[1]=IGNORE_VALUE;
                     }
                     int sampleCount = 0;
 
                     if (numberOfComponents==1) {
 
-                            if (shortArr != null) {
+                        if (shortArr != null) {
 
-                                // Inner loops over input texture voxels
-                                for (int iz : zIn) {
-                                    if (iz != IGNORE_VALUE) {
-                                        for (int iy : yIn) {
-                                            if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy + iz;
-                                                for (int ix : xIn) {
-                                                    if (ix != IGNORE_VALUE) {
-                                                        int offset = ZYWN + ix;
-                                                        samples[sampleCount++] = shortArr[offset];
-                                                    }
+                            // Inner loops over input texture voxels
+                            for (int iz : zIn) {
+                                if (iz != IGNORE_VALUE) {
+                                    for (int iy : yIn) {
+                                        if (iy != IGNORE_VALUE) {
+                                            int ZYWN = iy + iz;
+                                            for (int ix : xIn) {
+                                                if (ix != IGNORE_VALUE) {
+                                                    int offset = ZYWN + ix;
+                                                    samples[sampleCount++] = shortArr[offset];
                                                 }
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                            } else {
+                        } else {
 
-                                // Inner loops over input texture voxels
-                                for (int iz : zIn) {
-                                    if (iz != IGNORE_VALUE) {
-                                        for (int iy : yIn) {
-                                            if (iy != IGNORE_VALUE) {
-                                                int ZYWN = iy + iz;
-                                                for (int ix : xIn) {
-                                                    if (ix != IGNORE_VALUE) {
-                                                        int offset = ZYWN + ix;
-                                                        samples[sampleCount++] = byteArr[offset] & 0xff;
-                                                    }
+                            // Inner loops over input texture voxels
+                            for (int iz : zIn) {
+                                if (iz != IGNORE_VALUE) {
+                                    for (int iy : yIn) {
+                                        if (iy != IGNORE_VALUE) {
+                                            int ZYWN = iy + iz;
+                                            for (int ix : xIn) {
+                                                if (ix != IGNORE_VALUE) {
+                                                    int offset = ZYWN + ix;
+                                                    samples[sampleCount++] = byteArr[offset] & 0xff;
                                                 }
                                             }
                                         }
                                     }
                                 }
-
-                            int maxIntensity = secondLargestIntensity(samples, sampleCount);
-
-                            if (bytesPerIntensity > 1)
-                                shortsOut.put((short) (maxIntensity & 0xffff));
-                            else
-                                bytesOut.put((byte) (maxIntensity & 0xff));
+                            }
                         }
+
+                        int maxIntensity = secondLargestIntensity(samples, sampleCount);
+
+                        if (bytesPerIntensity > 1)
+                            shortsOut.put((short) (maxIntensity & 0xffff));
+                        else
+                            bytesOut.put((byte) (maxIntensity & 0xff));
+
 
                     } else {
 
