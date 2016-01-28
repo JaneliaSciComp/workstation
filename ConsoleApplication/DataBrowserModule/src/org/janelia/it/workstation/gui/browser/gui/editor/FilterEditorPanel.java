@@ -299,6 +299,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     @Override
     public void loadDomainObject(Filter filter, final boolean isUserDriven, final Callable<Void> success) {
         
+        if (filter==null) return;
+        
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;

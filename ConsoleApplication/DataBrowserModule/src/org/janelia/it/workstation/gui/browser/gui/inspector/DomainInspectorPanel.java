@@ -523,8 +523,13 @@ public class DomainInspectorPanel extends JPanel {
 
     public void refresh() {
         this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-        loadSubjects();
-        loadAttributes();
-        loadAnnotations();
+        if (domainObject!=null) {
+            loadSubjects();
+            loadAttributes();
+            loadAnnotations();
+        }
+        else {
+            showNothing();
+        }
     }
 }

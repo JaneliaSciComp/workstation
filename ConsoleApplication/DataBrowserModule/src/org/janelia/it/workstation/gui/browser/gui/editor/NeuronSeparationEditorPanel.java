@@ -176,6 +176,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     @Override
     public void loadSampleResult(final PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
 
+        if (result==null) return;
+        
         if (!debouncer.queue(null)) {
             log.debug("Skipping load, since there is one already in progress");
             return;
@@ -184,7 +186,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         log.info("loadSampleResult(PipelineResult:{})",result.getName());
                 
         PipelineResult parentResult;
-        
         if (result instanceof NeuronSeparation) {
             separation = (NeuronSeparation)result;
             parentResult = separation.getParentResult();
@@ -342,6 +343,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (separation==null) {
+            return; // Nothing to refresh
+        } 
         if (event.isTotalInvalidation()) {
             log.info("Total invalidation, reloading...");
             search();

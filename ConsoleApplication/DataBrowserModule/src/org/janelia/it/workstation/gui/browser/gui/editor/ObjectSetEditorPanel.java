@@ -77,6 +77,8 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     @Override
     public void loadDomainObject(final ObjectSet objectSet, final boolean isUserDriven, final Callable<Void> success) {
 
+        if (objectSet==null) return;
+        
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
@@ -214,14 +216,18 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
             ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
-            loadDomainObject(updatedSet, false, null);
+            if (updatedSet!=null) {
+                loadDomainObject(updatedSet, false, null);
+            }
         }
         else {
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(objectSet.getId())) {
                     log.info("objects set invalidated, reloading...");
                     ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
-                    loadDomainObject(updatedSet, false, null);
+                    if (updatedSet!=null) {
+                        loadDomainObject(updatedSet, false, null);
+                    }
                     break;
                 }
             }
