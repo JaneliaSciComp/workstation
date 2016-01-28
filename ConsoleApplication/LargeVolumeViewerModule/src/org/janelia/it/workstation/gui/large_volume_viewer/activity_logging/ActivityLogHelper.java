@@ -84,11 +84,11 @@ public class ActivityLogHelper {
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
     
-    public void logRerootNeurite(Long sampleID, Long neuronID) {
+    public void logRerootNeurite(Long sampleID, Long workspaceID, Long neuronID) {
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
                 LVV_REROOT_NEURITE_CATEGORY_STRING, 
-                new ActionString(sampleID + ":" + neuronID)
+                new ActionString(sampleID + ":" + workspaceID + ":" + neuronID)
         );
     }
     

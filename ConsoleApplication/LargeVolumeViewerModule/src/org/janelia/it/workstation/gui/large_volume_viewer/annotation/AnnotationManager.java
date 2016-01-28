@@ -249,7 +249,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             // if it's a bare sample, we don't have anything to do
-
+            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
             SimpleWorker loader = new SimpleWorker() {
@@ -342,7 +342,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
                 final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
-                activityLog.logAddAnchor(currentWorkspace.getId(), currentWorkspace.getSampleID(), finalLocation);
+                activityLog.logAddAnchor(currentWorkspace.getSampleID(), currentWorkspace.getId(), finalLocation);
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -744,7 +744,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker rerooter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                activityLog.logRerootNeurite(getSampleID(), newRootAnnotationID);
+                activityLog.logRerootNeurite(getSampleID(), getWorkspaceID(), newRootAnnotationID);
                 annotationModel.rerootNeurite(newRootAnnotationID);
             }
 
