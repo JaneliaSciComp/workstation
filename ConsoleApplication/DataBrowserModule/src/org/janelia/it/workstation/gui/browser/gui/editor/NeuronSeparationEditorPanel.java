@@ -13,7 +13,6 @@ import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
@@ -26,8 +25,9 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.actions.NamedAction;
+import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
@@ -40,10 +40,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.ws.ExternalClient;
-import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -144,63 +141,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void openInNA() {
-    	
-    	try {
-	        // Check that there is a valid NA instance running
-	        List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-	        // If no NA client then try to start one
-	        if (clients.isEmpty()) {
-	            startNA();
-	        }
-	        // If NA clients "exist", make sure they are up
-	        else {
-	            ArrayList<ExternalClient> finalList = new ArrayList<>();
-	            for (ExternalClient client : clients) {
-	                boolean connected = client.isConnected();
-	                if (!connected) {
-	                    log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-	                    ExternalClientMgr.getInstance().removeExternalClientByPort(client.getClientPort());
-	                }
-	                else {
-	                    finalList.add(client);
-	                }
-	            }
-	            // If none are up then start one
-	            if (finalList.size()==0) {
-	                startNA();
-	            }
-	        }
-	
-	        if (ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-	            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-	                    "Could not get Neuron Annotator to launch and connect. "
-	                            + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-	
-	        log.debug("Requesting entity view in Neuron Annotator: " + separation.getId());
-	        ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(separation.getId());
-        } 
-    	catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-    }
-
-    private void startNA() throws Exception {
-        log.debug("Client {} is not running. Starting a new instance.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-        ToolMgr.runTool(ToolMgr.TOOL_NA);
-        boolean notRunning = true;
-        int killCount = 0;
-        while (notRunning && killCount < 2) {
-            if (ExternalClientMgr.getInstance().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                Thread.sleep(3000);
-                killCount++;
-            }
-            else {
-                notRunning = false;
-            }
-        }
+        NamedAction action = new OpenInNeuronAnnotatorAction(separation);
+        action.doAction();
     }
     
     private JPopupMenu getResultPopupMenu(PipelineResult pipelineResult) {

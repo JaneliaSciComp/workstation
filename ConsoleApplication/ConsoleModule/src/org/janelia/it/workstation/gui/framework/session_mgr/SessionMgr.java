@@ -82,7 +82,7 @@ public final class SessionMgr {
     
     private ImageIcon browserImageIcon;
     private ExternalListener externalHttpListener;
-    private EmbeddedAxisServer axisServer;
+//    private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
@@ -586,48 +586,59 @@ public final class SessionMgr {
             externalHttpListener = new ExternalListener(port);
         }
     }
+    
+    private int axisServerPort;
 
-    public int startAxisServer(int startingPort) {
-        int port = startingPort;
-        try {
-            if (axisServer == null) {
-                axisServer = new EmbeddedAxisServer();
-            }
-            int tries = 0;
-            while (true) {
-                try {
-                    axisServer.start(port);
-                    log.info("Started web services on port " + port);
-                    sessionModel.setPortOffset(port);
-                    break;
-                } 
-                catch (Exception e) {
-                    if (e instanceof BindException || e.getCause() instanceof BindException) {
-                        log.info("Could not start web service on port: " + port);
-                        port += PORT_INCREMENT;
-                        tries++;
-                        if (tries >= MAX_PORT_TRIES) {
-                            log.error("Tried to start web service on " + MAX_PORT_TRIES + " ports, giving up.");
-                            return -1;
-                        }
-                    } 
-                    else {
-                        log.error("Could not start web service on port: " + port);
-                        throw e;
-                    }
-                }
-            }
-            return port;
-        } 
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-            return -1;
-        }
+    public int getAxisServerPort() {
+        return axisServerPort;
     }
 
-    public EmbeddedAxisServer getAxisServer() {
-        return axisServer;
+    public void setAxisServerPort(int axisServerPort) {
+        this.axisServerPort = axisServerPort;
     }
+    
+
+//    public int startAxisServer(int startingPort) {
+//        int port = startingPort;
+//        try {
+//            if (axisServer == null) {
+//                axisServer = new EmbeddedAxisServer();
+//            }
+//            int tries = 0;
+//            while (true) {
+//                try {
+//                    axisServer.start(port);
+//                    log.info("Started web services on port " + port);
+//                    sessionModel.setPortOffset(port);
+//                    break;
+//                } 
+//                catch (Exception e) {
+//                    if (e instanceof BindException || e.getCause() instanceof BindException) {
+//                        log.info("Could not start web service on port: " + port);
+//                        port += PORT_INCREMENT;
+//                        tries++;
+//                        if (tries >= MAX_PORT_TRIES) {
+//                            log.error("Tried to start web service on " + MAX_PORT_TRIES + " ports, giving up.");
+//                            return -1;
+//                        }
+//                    } 
+//                    else {
+//                        log.error("Could not start web service on port: " + port);
+//                        throw e;
+//                    }
+//                }
+//            }
+//            return port;
+//        } 
+//        catch (Exception e) {
+//            SessionMgr.getSessionMgr().handleException(e);
+//            return -1;
+//        }
+//    }
+
+//    public EmbeddedAxisServer getAxisServer() {
+//        return axisServer;
+//    }
 
     public int startWebServer(int startingPort) {
         int port = startingPort;

@@ -284,7 +284,7 @@ public class ToolMgr extends PreferenceManager {
             String path = tmpTool.getPath();
             // When executing vaa3d, give it a port to connect back to the console
             if (toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D)) {
-                int consolePort = SessionMgr.getSessionMgr().getAxisServer().getPort();
+                int consolePort = SessionMgr.getSessionMgr().getAxisServerPort();
                 if (consolePort > 0) {
                     path = "env " + CONSOLE_PORT_VAR_NAME + "=" + consolePort + " " + path;
                     log.info("Executing with environment: " + path);

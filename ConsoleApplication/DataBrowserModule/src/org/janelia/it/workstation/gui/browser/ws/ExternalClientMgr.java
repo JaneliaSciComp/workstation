@@ -1,11 +1,21 @@
 package org.janelia.it.workstation.gui.browser.ws;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.MapMaker;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Keeps track of external clients to the Workstation. 
@@ -15,8 +25,12 @@ import org.slf4j.LoggerFactory;
 public class ExternalClientMgr {
 
     // Singleton
-    private static final ExternalClientMgr instance = new ExternalClientMgr();
+    private static ExternalClientMgr instance;
     public static ExternalClientMgr getInstance() {
+        if (instance==null) {
+            instance = new ExternalClientMgr();
+            Events.getInstance().registerOnEventBus(instance);
+        }
         return instance;
     }
     
@@ -26,7 +40,14 @@ public class ExternalClientMgr {
     private int portOffset = 0;
     private int portCounter = 1;
 	
+
+    Map<Long,NeuronSeparation> separationCache;
+    public ExternalClientMgr() {
+        this.separationCache = new MapMaker().weakValues().makeMap();
+    }
+    
     public void setPortOffset(int portOffset) {
+        log.info("Setting external client port offset to: {}",portOffset);
     	this.portOffset = portOffset;
     }
 
@@ -82,5 +103,38 @@ public class ExternalClientMgr {
                 log.error("Error sending message to external clients: " + operationName, e);
             }
         }
-    }    
+    }
+    
+    // TODO: move these elsewhere?
+    
+    @Subscribe
+    public void ontologySelected(DomainObjectSelectionEvent event) {
+        DomainObject obj = event.getDomainObject();
+        if (obj instanceof Ontology) {
+            Map<String, Object> parameters = new LinkedHashMap<>();
+            parameters.put("rootId", obj.getId());
+            ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologySelected", parameters);   
+        }
+    }
+
+    @Subscribe
+    public void ontologyChanged(DomainObjectChangeEvent event) {
+        DomainObject obj = event.getDomainObject();
+        if (obj instanceof Ontology) {
+            Map<String, Object> parameters = new LinkedHashMap<>();
+            parameters.put("rootId", obj.getId());
+            ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologyChanged", parameters);
+        }
+    }
+    
+    public void sendNeuronSeparationRequested(NeuronSeparation separation) {
+        separationCache.put(separation.getId(), separation);
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("entityId", separation.getId());
+        ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);
+    }
+
+    public NeuronSeparation getNeuronSeparation(Long separationId) {
+        return separationCache.get(separationId);
+    }
 }

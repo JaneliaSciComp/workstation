@@ -1,16 +1,6 @@
 package org.janelia.it.workstation.gui.browser.ws;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import javax.xml.ws.Endpoint;
-
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * This Axis server contains the web service end-points for both the console
@@ -55,32 +45,4 @@ public class EmbeddedAxisServer {
     public Endpoint getDataServiceEndpoint() {
         return cds;
     }
-
-    @Subscribe
-    public void ontologySelected(DomainObjectSelectionEvent event) {
-    	DomainObject obj = event.getDomainObject();
-    	if (obj instanceof Ontology) {
-            Map<String, Object> parameters = new LinkedHashMap<>();
-            parameters.put("rootId", obj.getId());
-            ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologySelected", parameters);	
-    	}
-    }
-
-    @Subscribe
-    public void ontologyChanged(DomainObjectChangeEvent event) {
-    	DomainObject obj = event.getDomainObject();
-    	if (obj instanceof Ontology) {
-	        Map<String, Object> parameters = new LinkedHashMap<>();
-	        parameters.put("rootId", obj.getId());
-	        ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologyChanged", parameters);
-    	}
-    }
-
-    public void entityViewRequested(long entityId) {
-        Map<String, Object> parameters = new LinkedHashMap<>();
-        parameters.put("entityId", entityId);
-        ExternalClientMgr.getInstance().sendMessageToExternalClients("entityViewRequested", parameters);
-    }
-
-
 }
