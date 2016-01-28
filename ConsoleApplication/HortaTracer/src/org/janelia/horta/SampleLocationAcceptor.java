@@ -46,6 +46,8 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+
+import org.janelia.horta.cache.VolumeCacheBrickSource;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
@@ -91,7 +93,12 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     progress.setDisplayName("Loading brain specimen (tilebase.cache.yml)...");
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
-                    StaticVolumeBrickSource volumeSource = setSampleUrl(sampleLocation.getSampleUrl(), progress);
+                    StaticVolumeBrickSource volumeSource=null;
+                    if (sampleLocation.getImageryType().equals(SampleLocation.IMAGERY_TYPE.RAW)) {
+                        volumeSource=setSampleUrl(sampleLocation.getSampleUrl(), progress);
+                    } else if (sampleLocation.getImageryType().equals(SampleLocation.IMAGERY_TYPE.RENDERED)) {
+                        volumeSource=VolumeCacheBrickSource.createFromSampleLocation(sampleLocation);
+                    }
                     if (volumeSource == null) {
                         throw new IOException("Loading volume source failed");
                     }

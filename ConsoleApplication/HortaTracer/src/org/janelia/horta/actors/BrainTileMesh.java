@@ -38,6 +38,8 @@ import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.geometry3d.VolumeTextureMesh;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Specialized Mesh for mouse brain tile rendering
@@ -46,6 +48,8 @@ import org.janelia.geometry3d.VolumeTextureMesh;
 public class BrainTileMesh extends MeshGeometry
 implements VolumeTextureMesh
 {
+    private static final Logger log = LoggerFactory.getLogger(BrainTileMesh.class);
+
     private final BrickInfo brickInfo;
     private Matrix4 transformWorldToTexCoord;
     
@@ -55,6 +59,7 @@ implements VolumeTextureMesh
         // NOTE: These are actual corners, not axis-aligned bounding box
         int cornerCount = 0;
         for ( ConstVector3 corner : brickInfo.getCornerLocations() ) {
+            log.info("BrainTileMesh() corner="+corner);
             // spatial coordinates
             Vertex v = addVertex(corner);
             

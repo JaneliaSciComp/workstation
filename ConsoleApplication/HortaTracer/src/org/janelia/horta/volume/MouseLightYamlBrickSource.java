@@ -34,6 +34,8 @@ import org.janelia.geometry3d.Box3;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.OsFilePathRemapper;
 import org.netbeans.api.progress.ProgressHandle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -51,6 +53,8 @@ import java.util.Map;
 public class MouseLightYamlBrickSource 
 implements StaticVolumeBrickSource
 {
+    private static final Logger log = LoggerFactory.getLogger(MouseLightYamlBrickSource.class);
+
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
@@ -99,8 +103,10 @@ implements StaticVolumeBrickSource
                     resolution = oldRes;
             }
            
-            if (! resMap.containsKey(resolution))
+            if (! resMap.containsKey(resolution)) {
+                log.info("resMap adding BrickInfoSet for resolution="+resolution);
                 resMap.put(resolution, new BrickInfoSet());
+            }
             BrickInfoSet brickSet = resMap.get(resolution);
             brickSet.add(tileInfo);
             // System.out.println(tilePath);

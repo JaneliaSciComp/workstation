@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceLoader {
-    private Logger logger = LoggerFactory.getLogger(NeuronTraceLoader.class);
+    private Logger log = LoggerFactory.getLogger(NeuronTraceLoader.class);
     
     private NeuronTracerTopComponent nttc;
     private NeuronMPRenderer neuronMPRenderer;
@@ -146,8 +146,10 @@ public class NeuronTraceLoader {
         Double brickResolution = bestRes;
         assert brickResolution != null : "No best-resolution found.  Volume Source=" + volumeSource;
 
+        log.info("loadTileAtCurrentFocus() using brickResolution="+brickResolution);
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
+        log.info("loadTileAtCurrentFocus() using focus position="+pCam.getVantage().getFocusPosition());
 
         // Check for existing brick already loaded here
         BrainTileInfo brainTileInfo = (BrainTileInfo) brickInfo;
