@@ -800,55 +800,37 @@ called from a  SimpleWorker thread.
             return;
         }
 
-        // delete it; reparent its child (if any) to its parent
+        // begin the (long) deletion process
+        // reparent the deleted node's child (if there is one) to the node's parent
         TmGeoAnnotation parent = neuron.getParentOf(link);
         TmGeoAnnotation child = null;
         if (link.getChildIds().size() == 1) {
             child = neuron.getChildrenOf(link).get(0);
             neuronManager.reparentGeometricAnnotation(child, parent.getId(), neuron);
 
-            // if segment to child had a trace, remove it
+            // if segment to child had a traced path, remove it
             removeAnchoredPath(link, child);
         }
-
-        // delete the deleted annotation that is to be deleted (and its note, too):
-        TmStructuredTextAnnotation note = neuron.getStructuredTextAnnotationMap().get(link.getId());
-        if (note != null) {
-            // don't use removeNote(); it triggers updates we don't want yet
-            neuron.getStructuredTextAnnotationMap().remove(link.getId());
-            //  Database deletion handled at serialization of Neuron.
-            //modelMgr.deleteStructuredTextAnnotation(note.getId());
-        }
-
-        //  Database deletion handled at serialization of Neuron.
-        //modelMgr.deleteGeometricAnnotation(link.getId());
 
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
-        // update domain object; update child/parent relationships
-        parent.getChildIds().remove(link.getId());
-        if (child != null) {
-            link.getChildIds().remove(child.getId());
-            child.setParentId(parent.getId());
-            parent.getChildIds().add(child.getId());
-        }
-
-        // remove anchored paths and notes, if any
-        for (TmAnchoredPathEndpoints pair: new ArrayList<>(neuron.getAnchoredPathMap().keySet())) {
-            // doesn't matter which ID in endpoint pair we test
-            if (link.getId().equals(pair.getAnnotationID1())) {
-                neuron.getAnchoredPathMap().remove(pair);
-            }
-        }
-
-        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
+        // if the link had a note, delete it:
+        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {            
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
         }
-        // ...and finally get rid of the thing itself
+
+        // if link had a child, remove it
+        if (child != null) {
+            link.getChildIds().remove(child.getId());
+        }
+
+        // remove link from its parent
+        parent.getChildIds().remove(link.getId());
+
+        // ...and finally get rid of the link itself; then, we're done, and 
+        //  the neuron can be serialized
         neuron.getGeoAnnotationMap().remove(link.getId());
-        
-        // Not complete until the neuron is serialized.
         neuronManager.saveNeuronData(neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
