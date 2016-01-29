@@ -48,6 +48,11 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.media.opengl.GL3;
 import org.apache.commons.io.IOUtils;
 import org.janelia.geometry.util.PerformanceTimer;
@@ -372,12 +377,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
         };
         shortsOut.rewind();
         bytesOut.rewind();
-        int [] samples = new int [8];
-
-        int [] zIn = new int [2];
-        int [] yIn = new int [2];
-        int [] xIn = new int [2];
-
 
         int HWN = height * width * numberOfComponents;
         int WN = width * numberOfComponents;
@@ -404,10 +403,32 @@ public class Texture3d extends BasicTexture implements GL3Resource
         int yh1=(int)(halfInputDeltaUvw[1]*height);
         int xh1=(int)(halfInputDeltaUvw[0]*width);
 
-        for (int z = 0; z < result.depth; ++z) {
-            MipMapMaxFilterZSlice zRunnable=new MipMapMaxFilterZSlice(z, zh1, yh1, xh1, HWN, WN, result, depth,
+        ScheduledThreadPoolExecutor threadPoolExecutor=new ScheduledThreadPoolExecutor(4);
+        List<Future> threadList=new ArrayList<>();
+        for (int z = 0; z < result.depth;) {
+            int zCount=4;
+            int zRemaining=result.depth-z;
+            if (zRemaining<zCount) {
+                zCount=zRemaining;
+            }
+            MipMapMaxFilterZSlice zRunnable=new MipMapMaxFilterZSlice(z, zCount, zh1, yh1, xh1, HWN, WN, result, depth,
                     width, height, numberOfComponents, shortArr, byteArr, bytesPerIntensity, shortsOut, bytesOut);
-            zRunnable.run();
+            threadList.add(threadPoolExecutor.submit(zRunnable));
+            z+=zCount;
+        }
+        int doneCount=0;
+        long startTime=new Date().getTime();
+        while(doneCount<threadList.size()) {
+            long currentTime=new Date().getTime();
+            if (currentTime-startTime>30000) {
+                log.error("createMipmapUsingMaxFilter() exceeded max thread pool wait time");
+                break;
+            }
+            try { Thread.sleep(10); } catch (Exception ex) {}
+            doneCount=0;
+            for (Future f : threadList) {
+                if (f.isDone()) doneCount++;
+            }
         }
         return result;
     }
@@ -416,7 +437,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         final int IGNORE_VALUE=Integer.MIN_VALUE;
 
-        int z, zh1, yh1, xh1, HWN, WN, depth, height, width, numberOfComponents, bytesPerIntensity;
+        int z, zCount, zh1, yh1, xh1, HWN, WN, depth, height, width, numberOfComponents, bytesPerIntensity;
         Texture3d result;
         short[] shortArr;
         byte[] byteArr;
@@ -429,10 +450,11 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         int [] samples = new int [8];
 
-        public MipMapMaxFilterZSlice(int z, int zh1, int yh1, int xh1, int HWN, int WN, Texture3d result, int depth,
+        public MipMapMaxFilterZSlice(int z, int zCount, int zh1, int yh1, int xh1, int HWN, int WN, Texture3d result, int depth,
                                      int width, int height, int numberOfComponents, short[] shortArr, byte[] byteArr,
                                      int bytesPerIntensity, ShortBuffer shortsOut, ByteBuffer bytesOut) {
             this.z=z;
+            this.zCount=zCount;
             this.zh1=zh1;
             this.yh1=yh1;
             this.xh1=xh1;
@@ -452,92 +474,49 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         public void run() {
 
-            if (depth==1) {
-                zIn[0]=0;
-                xIn[1]=IGNORE_VALUE;
-            } else {
-                float fractionalZOut = (z + 0.5f) / result.depth;
-                int zf1=(int)(fractionalZOut*depth);
-                zIn[0] = (zf1-zh1) * HWN;
-                zIn[1] = (zf1+zh1) * HWN;
-                if (zIn[0] == zIn[1]) zIn[1]=IGNORE_VALUE;
-            }
-            for (int y = 0; y < result.height; ++y) {
-                if (height==1) {
-                    yIn[0]=0;
-                    yIn[1]=IGNORE_VALUE;
+            int zMax = z + zCount;
+
+            int RHWC=result.height*result.width*numberOfComponents;
+
+            while (z < zMax) {
+
+                int outputIndex = z * RHWC;
+
+                if (depth == 1) {
+                    zIn[0] = 0;
+                    xIn[1] = IGNORE_VALUE;
                 } else {
-                    float fractionalYOut = (y + 0.5f) / result.height;
-                    int yf1=(int)(fractionalYOut*height);
-                    yIn[0] = (yf1-yh1) * WN;
-                    yIn[1] = (yf1+yh1) * WN;
-                    if (yIn[0] == yIn[1]) yIn[1]=IGNORE_VALUE;
+                    float fractionalZOut = (z + 0.5f) / result.depth;
+                    int zf1 = (int) (fractionalZOut * depth);
+                    zIn[0] = (zf1 - zh1) * HWN;
+                    zIn[1] = (zf1 + zh1) * HWN;
+                    if (zIn[0] == zIn[1]) zIn[1] = IGNORE_VALUE;
                 }
-                for (int x = 0; x < result.width; ++x) {
-                    if (width==1) {
-                        xIn[0]=0;
-                        xIn[1]=IGNORE_VALUE;
+                for (int y = 0; y < result.height; ++y) {
+                    if (height == 1) {
+                        yIn[0] = 0;
+                        yIn[1] = IGNORE_VALUE;
                     } else {
-                        float fractionalXOut = (x + 0.5f) / result.width;
-                        int xf1=(int)(fractionalXOut*width);
-                        xIn[0] = (xf1-xh1);
-                        xIn[1] = (xf1+xh1);
-                        if (xIn[0] == xIn[1]) xIn[1]=IGNORE_VALUE;
+                        float fractionalYOut = (y + 0.5f) / result.height;
+                        int yf1 = (int) (fractionalYOut * height);
+                        yIn[0] = (yf1 - yh1) * WN;
+                        yIn[1] = (yf1 + yh1) * WN;
+                        if (yIn[0] == yIn[1]) yIn[1] = IGNORE_VALUE;
                     }
-                    int sampleCount = 0;
-
-                    if (numberOfComponents==1) {
-
-                        if (shortArr != null) {
-
-                            // Inner loops over input texture voxels
-                            for (int iz : zIn) {
-                                if (iz != IGNORE_VALUE) {
-                                    for (int iy : yIn) {
-                                        if (iy != IGNORE_VALUE) {
-                                            int ZYWN = iy + iz;
-                                            for (int ix : xIn) {
-                                                if (ix != IGNORE_VALUE) {
-                                                    int offset = ZYWN + ix;
-                                                    samples[sampleCount++] = shortArr[offset];
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
+                    for (int x = 0; x < result.width; ++x) {
+                        if (width == 1) {
+                            xIn[0] = 0;
+                            xIn[1] = IGNORE_VALUE;
                         } else {
-
-                            // Inner loops over input texture voxels
-                            for (int iz : zIn) {
-                                if (iz != IGNORE_VALUE) {
-                                    for (int iy : yIn) {
-                                        if (iy != IGNORE_VALUE) {
-                                            int ZYWN = iy + iz;
-                                            for (int ix : xIn) {
-                                                if (ix != IGNORE_VALUE) {
-                                                    int offset = ZYWN + ix;
-                                                    samples[sampleCount++] = byteArr[offset] & 0xff;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            float fractionalXOut = (x + 0.5f) / result.width;
+                            int xf1 = (int) (fractionalXOut * width);
+                            xIn[0] = (xf1 - xh1);
+                            xIn[1] = (xf1 + xh1);
+                            if (xIn[0] == xIn[1]) xIn[1] = IGNORE_VALUE;
                         }
+                        int sampleCount = 0;
 
-                        int maxIntensity = secondLargestIntensity(samples, sampleCount);
-
-                        if (bytesPerIntensity > 1)
-                            shortsOut.put((short) (maxIntensity & 0xffff));
-                        else
-                            bytesOut.put((byte) (maxIntensity & 0xff));
-
-
-                    } else {
-
-                        for (int c = 0; c < numberOfComponents; ++c) {
+                        if (numberOfComponents == 1) {
 
                             if (shortArr != null) {
 
@@ -549,11 +528,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                                 int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
-                                                        int offset = ZYWN
-                                                                + ix * numberOfComponents
-                                                                + c;
-                                                        samples[sampleCount] = shortArr[offset];
-                                                        sampleCount += 1;
+                                                        int offset = ZYWN + ix;
+                                                        samples[sampleCount++] = shortArr[offset];
                                                     }
                                                 }
                                             }
@@ -571,30 +547,90 @@ public class Texture3d extends BasicTexture implements GL3Resource
                                                 int ZYWN = iy + iz;
                                                 for (int ix : xIn) {
                                                     if (ix != IGNORE_VALUE) {
-                                                        int offset = ZYWN
-                                                                + ix * numberOfComponents
-                                                                + c;
-                                                        samples[sampleCount] = byteArr[offset] & 0xff;
-                                                        sampleCount += 1;
+                                                        int offset = ZYWN + ix;
+                                                        samples[sampleCount++] = byteArr[offset] & 0xff;
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-
                             }
 
                             int maxIntensity = secondLargestIntensity(samples, sampleCount);
 
-                            if (bytesPerIntensity > 1)
-                                shortsOut.put((short) (maxIntensity & 0xffff));
-                            else
-                                bytesOut.put((byte) (maxIntensity & 0xff));
-                        }
+                            if (bytesPerIntensity > 1) {
+                                shortsOut.put(outputIndex, (short) (maxIntensity & 0xffff));
+                            } else {
+                                bytesOut.put(outputIndex, (byte) (maxIntensity & 0xff));
+                            }
 
+                            outputIndex++;
+
+                        } else {
+
+                            for (int c = 0; c < numberOfComponents; ++c) {
+
+                                if (shortArr != null) {
+
+                                    // Inner loops over input texture voxels
+                                    for (int iz : zIn) {
+                                        if (iz != IGNORE_VALUE) {
+                                            for (int iy : yIn) {
+                                                if (iy != IGNORE_VALUE) {
+                                                    int ZYWN = iy + iz;
+                                                    for (int ix : xIn) {
+                                                        if (ix != IGNORE_VALUE) {
+                                                            int offset = ZYWN
+                                                                    + ix * numberOfComponents
+                                                                    + c;
+                                                            samples[sampleCount++] = shortArr[offset];
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                } else {
+
+                                    // Inner loops over input texture voxels
+                                    for (int iz : zIn) {
+                                        if (iz != IGNORE_VALUE) {
+                                            for (int iy : yIn) {
+                                                if (iy != IGNORE_VALUE) {
+                                                    int ZYWN = iy + iz;
+                                                    for (int ix : xIn) {
+                                                        if (ix != IGNORE_VALUE) {
+                                                            int offset = ZYWN
+                                                                    + ix * numberOfComponents
+                                                                    + c;
+                                                            samples[sampleCount++] = byteArr[offset] & 0xff;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                }
+
+                                int maxIntensity = secondLargestIntensity(samples, sampleCount);
+
+                                if (bytesPerIntensity > 1) {
+                                    shortsOut.put(outputIndex, (short) (maxIntensity & 0xffff));
+                                } else {
+                                    bytesOut.put(outputIndex, (byte) (maxIntensity & 0xff));
+                                }
+
+                                outputIndex++;
+
+                            }
+
+                        }
                     }
                 }
+                z++;
             }
         }
     }
