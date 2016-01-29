@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -51,6 +52,7 @@ public class Snapshot3DLauncher {
     private Integer maxIntensity;
     private Integer numberOfChannels;
     private AnnotationManager annotationManager;
+    private ActivityLogHelper activityLog;
     private Logger logger = LoggerFactory.getLogger( Snapshot3DLauncher.class );
     
     public Snapshot3DLauncher(
@@ -66,6 +68,7 @@ public class Snapshot3DLauncher {
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider;
         this.sharedImageColorModel = imageColorModel;
+        this.activityLog = new ActivityLogHelper();
         this.basePath = basePath;
         this.dataUrl = dataUrl;
         this.camera = camera;
@@ -193,6 +196,7 @@ public class Snapshot3DLauncher {
             }
             final String labelText = labelTextForRaw3d( dimensions );
             final String frameTitle = "Fetching raw data";
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
@@ -221,6 +225,7 @@ public class Snapshot3DLauncher {
                     dataUrl
             );            
 
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {

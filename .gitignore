@@ -17,3 +17,6 @@ ConsoleApplication/HortaTracer/*.log
 *.iws
 *.ipr
 *~
+ConsoleApplication/LargeVolumeViewerModule/doc/Datasources/
+ConsoleApplication/LargeVolumeViewerModule/doc/Logs/
+ConsoleApplication/LargeVolumeViewerModule/doc/Shapes/
