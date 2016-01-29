@@ -315,7 +315,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     }
     
     
-    private int secondLargestIntensity(int[] samples, int sampleCount) {
+    private static int secondLargestIntensity(int[] samples, int sampleCount) {
         if (sampleCount == 1)
             return samples[0];
         
@@ -378,7 +378,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
         int [] yIn = new int [2];
         int [] xIn = new int [2];
 
-        final int IGNORE_VALUE=Integer.MIN_VALUE;
 
         int HWN = height * width * numberOfComponents;
         int WN = width * numberOfComponents;
@@ -406,6 +405,53 @@ public class Texture3d extends BasicTexture implements GL3Resource
         int xh1=(int)(halfInputDeltaUvw[0]*width);
 
         for (int z = 0; z < result.depth; ++z) {
+            MipMapMaxFilterZSlice zRunnable=new MipMapMaxFilterZSlice(z, zh1, yh1, xh1, HWN, WN, result, depth,
+                    width, height, numberOfComponents, shortArr, byteArr, bytesPerIntensity, shortsOut, bytesOut);
+            zRunnable.run();
+        }
+        return result;
+    }
+
+    private static class MipMapMaxFilterZSlice implements Runnable {
+
+        final int IGNORE_VALUE=Integer.MIN_VALUE;
+
+        int z, zh1, yh1, xh1, HWN, WN, depth, height, width, numberOfComponents, bytesPerIntensity;
+        Texture3d result;
+        short[] shortArr;
+        byte[] byteArr;
+        ShortBuffer shortsOut;
+        ByteBuffer bytesOut;
+
+        int [] zIn = new int [2];
+        int [] yIn = new int [2];
+        int [] xIn = new int [2];
+
+        int [] samples = new int [8];
+
+        public MipMapMaxFilterZSlice(int z, int zh1, int yh1, int xh1, int HWN, int WN, Texture3d result, int depth,
+                                     int width, int height, int numberOfComponents, short[] shortArr, byte[] byteArr,
+                                     int bytesPerIntensity, ShortBuffer shortsOut, ByteBuffer bytesOut) {
+            this.z=z;
+            this.zh1=zh1;
+            this.yh1=yh1;
+            this.xh1=xh1;
+            this.HWN=HWN;
+            this.WN=WN;
+            this.result=result;
+            this.depth=depth;
+            this.width=width;
+            this.height=height;
+            this.numberOfComponents=numberOfComponents;
+            this.shortArr=shortArr;
+            this.byteArr=byteArr;
+            this.bytesPerIntensity=bytesPerIntensity;
+            this.shortsOut=shortsOut;
+            this.bytesOut=bytesOut;
+        }
+
+        public void run() {
+
             if (depth==1) {
                 zIn[0]=0;
                 xIn[1]=IGNORE_VALUE;
@@ -551,44 +597,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 }
             }
         }
-
-        /*
-        // Discard the final value of odd sized dimensions, to avoid index overflow
-        int sx = Math.max(1, width - width%2);
-        int sy = Math.max(1, height - height%2);
-        int sz = Math.max(1, depth - depth%2);
-        // Populate mipmap using MAX filter
-        shortsOut.rewind();
-        bytesOut.rewind();
-        for (int z = 0; z < sz; ++z) {
-            int zOff0 = z * height * width * numberOfComponents;
-            int zOff1 = (z/2) * result.height * result.width * numberOfComponents;
-            for (int y = 0; y < sy; ++y) {
-                int yOff0 = zOff0 + y * width * numberOfComponents;
-                int yOff1 = zOff1 + (y/2) * result.width * numberOfComponents;
-                for (int x = 0; x < sx; ++x) {
-                    int xOff0 = yOff0 + x * numberOfComponents;
-                    int xOff1 = yOff1 + (x/2) * numberOfComponents;
-                    for (int c = 0; c < numberOfComponents; ++c) {
-                        int cOff0 = xOff0 + c;
-                        int cOff1 = xOff1 + c;
-                        if (bytesPerIntensity > 1) {
-                            int i0 = shortsIn.get(cOff0) & 0xffff;
-                            int i1 = shortsOut.get(cOff1) & 0xffff;
-                            int intensity = Math.max(i0, i1);
-                            shortsOut.put(cOff1, (short)(intensity & 0xffff)); 
-                        } else {
-                            byte intensity = (byte) Math.max(
-                                    bytesIn.get(cOff0) & 0xff,
-                                    bytesOut.get(cOff1) & 0xff);
-                            shortsOut.put(cOff1, intensity);
-                        }
-                    }
-                }
-            }
-        }
-         */
-        return result;
     }
     
     private RenderedImage[] renderedImagesFromTiffStack(File tiffFile) throws IOException {
