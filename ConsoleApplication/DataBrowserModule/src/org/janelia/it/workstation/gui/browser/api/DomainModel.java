@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -296,8 +297,8 @@ public class DomainModel {
      * @param domainObject
      * @return canonical domain object instance
      */
-    public DomainObject getDomainObject(DomainObject domainObject) {
-        return getDomainObject(Reference.createFor(domainObject));
+    public <T extends DomainObject> T getDomainObject(T domainObject) {
+        return (T)getDomainObject(Reference.createFor(domainObject));
     }
 
     /**
@@ -420,7 +421,6 @@ public class DomainModel {
         return domainObjects;
     }
 
-
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) {
         // TODO: cache these?
         return facade.getDomainObjects(reverseReference);
@@ -437,7 +437,7 @@ public class DomainModel {
         return facade.getAnnotations(references);
     }
 
-    public Collection<Workspace> getWorkspaces() {
+    public List<Workspace> getWorkspaces() {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
@@ -457,7 +457,7 @@ public class DomainModel {
         return getWorkspaces().iterator().next();
     }
 
-    public Collection<DataSet> getDataSets() throws Exception {
+    public List<DataSet> getDataSets() throws Exception {
         List<DataSet> dataSets = new ArrayList<>();
         for (DataSet dataSet : facade.getDataSets()) {
             dataSets.add(putOrUpdate(dataSet));
@@ -465,13 +465,21 @@ public class DomainModel {
         Collections.sort(dataSets, new DomainObjectComparator());
         return dataSets;
     }
+    
+    public List<LSMImage> getLsmsForSample(Long sampleId) {
+        List<LSMImage> images = new ArrayList<>();
+        for(LSMImage image : facade.getLsmsForSample(sampleId)) {
+            images.add(putOrUpdate(image));
+        }
+        return images;
+    }
 
     /**
      * Returns all of the ontologies that a user has access to view. 
      * @return collection of ontologies
      * @throws Exception
      */
-    public Collection<Ontology> getOntologies() throws Exception {
+    public List<Ontology> getOntologies() throws Exception {
         List<Ontology> ontologies = new ArrayList<>();
         for (Ontology ontology : facade.getOntologies()) {
             ontologies.add(putOrUpdate(ontology));

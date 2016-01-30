@@ -5,8 +5,8 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;

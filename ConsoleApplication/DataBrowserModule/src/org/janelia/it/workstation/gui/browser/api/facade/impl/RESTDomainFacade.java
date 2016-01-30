@@ -30,6 +30,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.ontology.Tag;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -266,6 +267,12 @@ public class RESTDomainFacade implements DomainFacade {
         return response.readEntity(new GenericType<List<DataSet>>() {});
     }
 
+    @Override
+    public Collection<LSMImage> getLsmsForSample(Long sampleId) {
+        // TODO: implement
+        throw new UnsupportedOperationException();
+    }
+    
     public DataSet create(DataSet dataSet) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());

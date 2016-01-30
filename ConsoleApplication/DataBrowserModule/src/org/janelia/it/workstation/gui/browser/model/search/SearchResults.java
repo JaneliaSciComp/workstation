@@ -26,7 +26,7 @@ public class SearchResults {
      * @param annotations
      * @return 
      */
-    public static SearchResults paginate(List<DomainObject> domainObjects, List<Annotation> annotations) {
+    public static SearchResults paginate(Collection<? extends DomainObject> domainObjects, Collection<Annotation> annotations) {
         
         SearchResults searchResults = null;
         List<DomainObject> pageObjects = new ArrayList<>();

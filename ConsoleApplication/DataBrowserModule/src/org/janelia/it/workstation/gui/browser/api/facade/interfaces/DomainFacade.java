@@ -13,6 +13,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -98,7 +99,12 @@ public interface DomainFacade {
      */
     public Collection<DataSet> getDataSets();
 
-
+    /**
+     * Returns all of the LSM images for a given sample. 
+     * @return list of LSM images
+     */
+    public Collection<LSMImage> getLsmsForSample(Long sampleId);
+    
     /**
      * Returns all the annotations associated with all of the domain objects given by the given references.
      * @param targetIds collection of GUIDs
