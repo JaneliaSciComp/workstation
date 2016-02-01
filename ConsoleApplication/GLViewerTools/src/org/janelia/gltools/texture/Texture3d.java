@@ -403,34 +403,45 @@ public class Texture3d extends BasicTexture implements GL3Resource
         int yh1=(int)(halfInputDeltaUvw[1]*height);
         int xh1=(int)(halfInputDeltaUvw[0]*width);
 
-        ScheduledThreadPoolExecutor threadPoolExecutor=new ScheduledThreadPoolExecutor(4);
-        List<Future> threadList=new ArrayList<>();
-        for (int z = 0; z < result.depth;) {
-            int zCount=4;
-            int zRemaining=result.depth-z;
-            if (zRemaining<zCount) {
-                zCount=zRemaining;
-            }
-            MipMapMaxFilterZSlice zRunnable=new MipMapMaxFilterZSlice(z, zCount, zh1, yh1, xh1, HWN, WN, result, depth,
+        if (result.depth<8) {
+            MipMapMaxFilterZSlice zRunnable = new MipMapMaxFilterZSlice(0, result.depth, zh1, yh1, xh1, HWN, WN, result, depth,
                     width, height, numberOfComponents, shortArr, byteArr, bytesPerIntensity, shortsOut, bytesOut);
-            threadList.add(threadPoolExecutor.submit(zRunnable));
-            z+=zCount;
-        }
-        int doneCount=0;
-        long startTime=new Date().getTime();
-        while(doneCount<threadList.size()) {
-            long currentTime=new Date().getTime();
-            if (currentTime-startTime>30000) {
-                log.error("createMipmapUsingMaxFilter() exceeded max thread pool wait time");
-                break;
+            zRunnable.run();
+            return result;
+        } else {
+            ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(4);
+            List<Future> threadList = new ArrayList<>();
+            for (int z = 0; z < result.depth; ) {
+                int zCount = 4;
+                int zRemaining = result.depth - z;
+                if (zRemaining < zCount) {
+                    zCount = zRemaining;
+                }
+                MipMapMaxFilterZSlice zRunnable = new MipMapMaxFilterZSlice(z, zCount, zh1, yh1, xh1, HWN, WN, result, depth,
+                        width, height, numberOfComponents, shortArr, byteArr, bytesPerIntensity, shortsOut, bytesOut);
+                threadList.add(threadPoolExecutor.submit(zRunnable));
+                z += zCount;
             }
-            try { Thread.sleep(10); } catch (Exception ex) {}
-            doneCount=0;
-            for (Future f : threadList) {
-                if (f.isDone()) doneCount++;
+            int doneCount = 0;
+            long startTime = new Date().getTime();
+            while (doneCount < threadList.size()) {
+                long currentTime = new Date().getTime();
+                if (currentTime - startTime > 30000) {
+                    log.error("createMipmapUsingMaxFilter() exceeded max thread pool wait time");
+                    break;
+                }
+                try {
+                    Thread.sleep(10);
+                }
+                catch (Exception ex) {
+                }
+                doneCount = 0;
+                for (Future f : threadList) {
+                    if (f.isDone()) doneCount++;
+                }
             }
+            return result;
         }
-        return result;
     }
 
     private static class MipMapMaxFilterZSlice implements Runnable {
