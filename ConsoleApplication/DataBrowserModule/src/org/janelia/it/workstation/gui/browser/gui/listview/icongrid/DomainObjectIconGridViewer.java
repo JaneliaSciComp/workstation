@@ -215,6 +215,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
+        this.defaultResult = null;
+        this.defaultImageType = null;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
         
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
@@ -273,12 +275,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         for(final String resultName : countedResultNames.elementSet()) {
             if (countedResultNames.count(resultName)>1) {
+                if (defaultResult == null) {
+                    this.defaultResult = new DefaultResult(resultName);
+                }
                 JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-
                         defaultResult = new DefaultResult(resultName);
-                        
                         SimpleWorker worker = new SimpleWorker() {
 
                             @Override
@@ -293,7 +296,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                                     }
                                     DomainMgr.getDomainMgr().savePreference(preference);
                                 }
-                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved if ncessary when the object is persisted. 
+                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted. 
                             }
 
                             @Override
@@ -320,6 +323,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         for(final String typeName : countedTypeNames.elementSet()) {
             if (countedTypeNames.count(typeName)>1) {
+                if (defaultImageType == null) {
+                    this.defaultImageType = typeName;
+                }
                 FileType fileType = FileType.valueOf(typeName);
                 JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(defaultImageType));
                 menuItem.addActionListener(new ActionListener() {
@@ -392,11 +398,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    protected JPopupMenu getContextualPopupMenu() {
+    protected DomainObjectContextMenu getContextualPopupMenu() {
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        JPopupMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
-        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
+        popupMenu.addMenuItems();
         return popupMenu;
     }
 
@@ -415,10 +421,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(DomainObject domainObject) {
-        List<Reference> ids = selectionModel.getSelectedIds();
-        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
-        popupMenu.runDefaultAction();
+        getContextualPopupMenu().runDefaultAction();
     }
     
     @Override
