@@ -17,10 +17,13 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
@@ -57,9 +60,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
-        DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-        viewer.requestActive();
-        viewer.loadDomainObject(domainObject);
+        DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+        if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
+            viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+            viewer.requestActive();
+            viewer.loadDomainObject(domainObject);
+        }
     }
     
     public void addMenuItems() {

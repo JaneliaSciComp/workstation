@@ -178,7 +178,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
     }
     
-    private DomainObject getCurrent() {
+    public DomainObject getCurrent() {
         return getLookup().lookup(DomainObject.class);
     }
 

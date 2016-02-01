@@ -72,9 +72,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
-        SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
-        viewer.requestActive(); 
-        viewer.loadSampleResult(result, true, null);
+        SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
+        if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), result)) {
+            viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+            viewer.requestActive();
+            viewer.loadSampleResult(result, true, null);
+        }
     }
     
     protected JMenuItem getTitleItem() {

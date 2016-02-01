@@ -186,13 +186,18 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    protected JPopupMenu getContextualPopupMenu() {
+    protected DomainObjectContextMenu getContextualPopupMenu() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        JPopupMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
-        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
+        popupMenu.addMenuItems();
         return popupMenu;
+    }
+
+    @Override
+    protected void objectDoubleClicked(DomainObject object) {
+        getContextualPopupMenu().runDefaultAction();
     }
 
     @Override
