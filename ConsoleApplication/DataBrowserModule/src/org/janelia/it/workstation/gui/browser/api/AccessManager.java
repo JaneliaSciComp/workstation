@@ -71,11 +71,8 @@ public final class AccessManager {
             //findAndRemoveWindowsSplashFile();
             // Login and start the session
             authenticatedSubject = authenticateSubject(username, password);
-            System.out.println ("TRACE 2");
 
-            System.out.println (authenticatedSubject);
             if (null != authenticatedSubject) {
-                System.out.println ("TRACE 1");
                 isLoggedIn = true;                
                 loggedInSubject = authenticatedSubject;
                 log.info("Authenticated as {}", authenticatedSubject.getKey());
@@ -139,9 +136,17 @@ public final class AccessManager {
         try {
             if (!StringUtils.isEmpty(runAsUser)) {
                 // set subject from RESTful service
-                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(runAsUser);
+                String fullUserKey = runAsUser;
+                if (!runAsUser.startsWith("user") || runAsUser.startsWith("group")) {
+                    fullUserKey = "user:" + fullUserKey;
+                }
+                Subject runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
                 if (runAsSubject==null) {
-                    return false;
+                    // try group before failing
+                    fullUserKey = "group:" + runAsUser;
+                    runAsSubject = DomainMgr.getDomainMgr().getModel().getSubjectByKey(fullUserKey);
+                    if (runAsSubject==null)
+                        return false;
                 }
                 loggedInSubject = runAsSubject;
             }
