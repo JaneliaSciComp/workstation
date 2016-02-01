@@ -6,6 +6,7 @@
 package org.janelia.it.workstation.gui.full_skeleton_view.viewer;
 
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
@@ -21,11 +22,13 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
     private final AnnotationSkeletonDataSourceI dataSource;
     private IdCoderProvider idCoderProvider;
     private AnnotationSkeletonPanel annoSkeletonPanel;
+    private ActivityLogHelper activityLog;
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource, IdCoderProvider idCoderProvider, AnnotationSkeletonPanel redrawComponent) {
         this.dataSource = dataSource;
         this.idCoderProvider = idCoderProvider;
         this.annoSkeletonPanel = redrawComponent;
+        this.activityLog = new ActivityLogHelper();
     }
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {
@@ -57,6 +60,7 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
             if (annotation != null) {
                 long annoId = annotation.getAnnotationID();
                 annoSkeletonPanel.positionForSelection(annoId);
+                activityLog.logLandmarkViewPick(dataSource.getAnnotationModel(), annoId);
             }
         }
         redraw();

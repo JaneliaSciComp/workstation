@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.creation;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,7 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -28,6 +26,7 @@ import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
@@ -226,34 +225,6 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
      */
     private RootedEntity getRootedEntity() {
         return rootedEntity;
-    }
-
-    private static class PathCorrectionKeyListener implements KeyListener {
-        private JTextField pathTextField;
-        public PathCorrectionKeyListener(JTextField pathTextField) {
-            this.pathTextField = pathTextField;
-        }
-
-        @Override
-        public void keyTyped(KeyEvent e) {
-        }
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-        }
-
-        @Override
-        public void keyReleased(KeyEvent e) {
-            char keyChar = e.getKeyChar();
-            if (keyChar == '\\') {
-                // Trim the backslash off the end, and add back
-                // a front-slash.
-                pathTextField.setText(
-                        pathTextField.getText().substring(0, pathTextField.getText().length() - 1) + '/'
-                );
-            }
-        }
-
     }
 
 }
