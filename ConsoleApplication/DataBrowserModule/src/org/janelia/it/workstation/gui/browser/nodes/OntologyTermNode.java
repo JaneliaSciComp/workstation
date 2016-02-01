@@ -14,6 +14,7 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.ontology.Category;
@@ -33,9 +34,9 @@ import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComp
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
+import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyImportAction;
-import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
@@ -280,6 +281,23 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
 
         @Override
         public void actionPerformed(ActionEvent e) {
+
+            String title;
+            String msg;
+            if (getOntologyTerm() instanceof Ontology) {
+                title = "Delete Ontology";
+                msg = "Are you sure you want to delete this ontology?";
+            }
+            else {
+                title = "Delete Ontology Item";
+                msg = "Are you sure you want to delete the item '"+getOntologyTerm().getName()+"' and all of its descendants?";   
+            }
+            
+            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
+                    msg, title, JOptionPane.OK_CANCEL_OPTION);
+
+            if (result != 0) return;
+            
             try {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 if (getOntologyTerm() instanceof Ontology) {
