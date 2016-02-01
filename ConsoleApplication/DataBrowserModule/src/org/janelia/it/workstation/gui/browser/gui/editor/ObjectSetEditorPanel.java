@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
@@ -12,6 +13,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -19,11 +21,13 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidat
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
-import java.util.concurrent.Callable;
-import org.apache.commons.lang3.StringUtils;
-import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 /**
  * Simple editor panel for viewing object sets. In the future it may support drag and drop editing of object sets. 
@@ -72,50 +72,6 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ObjectSetEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
-    }
-    
-    @Override
-    public void loadDomainObject(final ObjectSet objectSet, final boolean isUserDriven, final Callable<Void> success) {
-
-        if (objectSet==null) return;
-        
-        if (!debouncer.queue(success)) {
-            log.info("Skipping load, since there is one already in progress");
-            return;
-        }
-        
-        log.info("loadDomainObject(ObjectSet:{})",objectSet.getName());
-        resultsPanel.showLoadingIndicator();
-
-        this.objectSet = objectSet;
-        selectionModel.setParentObject(objectSet);
-        
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
-                annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
-                log.info("Showing "+domainObjects.size()+" items");
-            }
-
-            @Override
-            protected void hadSuccess() {
-                showResults();
-                ConcurrentUtils.invokeAndHandleExceptions(success);
-                debouncer.success();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                showNothing();
-                debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        worker.execute();
     }
 
     @Override
@@ -164,22 +120,12 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         };
         
         worker.execute();
-        
 	}
-
-    public void showResults() {
-        this.searchResults = SearchResults.paginate(domainObjects, annotations);
-        resultsPanel.showSearchResults(searchResults, true);
-    }
-
-    public void showNothing() {
-        resultsPanel.showNothing();
-    }
 
     @Override
-	public void search() {
-		// Nothing needs to be done here, because results were updated by setSortField()
-	}
+    public void search() {
+        // Nothing needs to be done here, because results were updated by setSortField()
+    }
 
     @Override
     public void export() {
@@ -190,7 +136,6 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
     }
-    
     @Override
     public String getName() {
         if (objectSet==null) {
@@ -199,11 +144,6 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         else {
             return "Set: "+StringUtils.abbreviate(objectSet.getName(), 15);
         }
-    }
-    
-    @Override
-    public DomainObjectSelectionModel getSelectionModel() {
-        return selectionModel;
     }
     
     @Override
@@ -233,4 +173,63 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
             }
         }
     }
+    
+    @Override
+    public void loadDomainObject(final ObjectSet objectSet, final boolean isUserDriven, final Callable<Void> success) {
+
+        if (objectSet==null) return;
+        
+        if (!debouncer.queue(success)) {
+            log.info("Skipping load, since there is one already in progress");
+            return;
+        }
+        
+        log.info("loadDomainObject(ObjectSet:{})",objectSet.getName());
+        resultsPanel.showLoadingIndicator();
+
+        this.objectSet = objectSet;
+        selectionModel.setParentObject(objectSet);
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
+                annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                log.info("Showing "+domainObjects.size()+" items");
+            }
+
+            @Override
+            protected void hadSuccess() {
+                showResults();
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+                debouncer.success();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                debouncer.failure();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
+    }
+    
+    public void showResults() {
+        this.searchResults = SearchResults.paginate(domainObjects, annotations);
+        resultsPanel.showSearchResults(searchResults, true);
+    }
+
+    public void showNothing() {
+        resultsPanel.showNothing();
+    }
+    
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+
 }

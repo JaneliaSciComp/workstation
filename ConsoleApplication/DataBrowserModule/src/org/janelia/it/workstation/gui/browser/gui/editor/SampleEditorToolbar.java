@@ -20,6 +20,7 @@ import de.javasoft.swing.SimpleDropDownButton;
 public class SampleEditorToolbar extends JPanel {
 
     protected JToolBar toolbar;
+    private final SimpleDropDownButton viewButton;
     private final SimpleDropDownButton objectiveButton;
     private final SimpleDropDownButton areaButton;
 
@@ -32,6 +33,9 @@ public class SampleEditorToolbar extends JPanel {
         toolbar.setRollover(true);
         add(toolbar);
 
+        viewButton = new SimpleDropDownButton("View: ");
+        toolbar.add(viewButton);
+        
         objectiveButton = new SimpleDropDownButton("Objective: ");
         toolbar.add(objectiveButton);
         
@@ -39,6 +43,10 @@ public class SampleEditorToolbar extends JPanel {
         toolbar.add(areaButton);
     }
 
+    public SimpleDropDownButton getViewButton() {
+        return viewButton;
+    }
+    
     public SimpleDropDownButton getObjectiveButton() {
         return objectiveButton;
     }

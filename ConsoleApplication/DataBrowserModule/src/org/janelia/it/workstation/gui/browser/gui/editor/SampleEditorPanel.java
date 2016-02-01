@@ -16,6 +16,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,49 +35,85 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
-import org.janelia.it.jacs.model.domain.DomainObject;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.AnnotatedImageButton;
+import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
+import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
+
+
 /**
+ * Specialized component for viewing information about Samples, including their LSMs and processing results.  
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Sample> {
+public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Sample>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
     
+    // Constants
+    private final static String MODE_LSMS = "LSMs";
+    private final static String MODE_RESULTS = "Results";
     private final static String ALL_VALUE = "all";
+
+    // Utilities
+    private final Debouncer debouncer = new Debouncer();
     
     // UI Components
     private final SampleEditorToolbar toolbar;
     private final JPanel mainPanel;
+    private final PaginatedResultsPanel resultsPanel;
     private final JScrollPane scrollPane;
     private final JPanel dataPanel;
     private final List<PipelineResultPanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-        
+
+    // Results
+    private SearchResults searchResults;
+    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    
     // State
+    private Sample sample;
+    private List<LSMImage> lsms;
+    private List<Annotation> lsmAnnotations;
+    private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
-    private Sample sample;
     
     // Listener for clicking on result panels
     protected MouseListener resultMouseListener = new MouseHandler() {
@@ -121,11 +160,18 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         setLayout(new BorderLayout());
         
-        // TODO: load filter from user prefs
         toolbar = new SampleEditorToolbar();
+        populateViewButton();
+        // TODO: load from user prefs
         toolbar.getObjectiveButton().setText("Objective: "+currObjective);
         toolbar.getAreaButton().setText("Area: "+currArea);
-        add(toolbar, BorderLayout.NORTH);
+
+        resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
+            @Override
+            protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
+                return searchResults.getPage(page);
+            }
+        };
         
         dataPanel = new JPanel();
         dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.PAGE_AXIS));
@@ -135,7 +181,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         scrollPane = new JScrollPane(); 
         scrollPane.setViewportView(mainPanel);
-        add(scrollPane, BorderLayout.CENTER);
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -181,12 +226,75 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     @Override
+    public void setSortField(final String sortCriteria) {
+
+        resultsPanel.showLoadingIndicator();
+
+        SimpleWorker worker = new SimpleWorker() {
+        
+            @Override
+            protected void doStuff() throws Exception {
+                final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+                final boolean ascending = !sortCriteria.startsWith("-");
+                Collections.sort(lsms, new Comparator<DomainObject>() {
+                    @Override
+                    @SuppressWarnings({"rawtypes", "unchecked"})
+                    public int compare(DomainObject o1, DomainObject o2) {
+                        try {
+                            // TODO: speed could be improved by moving the reflection calls outside of the sort
+                            Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
+                            Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
+                            Ordering ordering = Ordering.natural().nullsLast();
+                            if (!ascending) {
+                                ordering = ordering.reverse();
+                            }
+                            return ComparisonChain.start().compare(v1, v2, ordering).result();
+                        }
+                        catch (Exception e) {
+                            log.error("Problem encountered when sorting DomainObjects", e);
+                            return 0;
+                        }
+                    }
+                });
+            }
+
+            @Override
+            protected void hadSuccess() {
+                    showResults();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        
+        worker.execute();
+    }
+    
+    @Override
+    public void search() {
+        // Nothing needs to be done here, because results were updated by setSortField()
+    }
+
+    @Override
+    public void export() {
+        DomainObjectTableViewer viewer = null;
+        if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
+            viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+        }
+        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
+        action.doAction();
+    }
+    
+    @Override
     public String getName() {
         if (sample==null) {
             return "Sample Editor";
         }
         else {
-            return "Sample: "+org.apache.commons.lang3.StringUtils.abbreviate(sample.getName(), 15);
+            return "Sample: "+StringUtils.abbreviate(sample.getName(), 15);
         }
     }
     
@@ -194,15 +302,99 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     public Object getEventBusListener() {
         return this;
     }
-    
-    
+
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+            if (updatedSample!=null) {
+                loadDomainObject(updatedSample, false, null);
+            }
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(sample.getId())) {
+                    log.info("objects set invalidated, reloading...");
+                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                    if (updatedSample!=null) {
+                        loadDomainObject(updatedSample, false, null);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     @Override
     public void loadDomainObject(final Sample sample, final boolean isUserDriven, final Callable<Void> success) {
-                
-        this.sample = sample;
 
+        if (sample==null) return;
+        
+        if (!debouncer.queue(success)) {
+            log.info("Skipping load, since there is one already in progress");
+            return;
+        }
+        
         log.info("loadDomainObject({})",sample.getName());
         
+        this.sample = sample;
+        this.lsms = null;
+        
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                if (MODE_LSMS.equals(currMode))  {
+                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                    lsms = model.getLsmsForSample(sample.getId());
+                    lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
+                }
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                showResults();
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+                debouncer.success();
+            }
+            
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                debouncer.failure();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
+    }
+    
+    public void showNothing() {
+        removeAll();
+        updateUI();
+    }
+    
+    public void showResults() {
+        if (MODE_LSMS.equals(currMode))  {
+            showLsmView();
+        }
+        else if (MODE_RESULTS.equals(currMode)) {
+            showResultView();
+        }
+        updateUI();
+    }
+
+    private void showLsmView() {
+        // TODO: filter by objective
+        searchResults = SearchResults.paginate(lsms, lsmAnnotations);
+        resultsPanel.showSearchResults(searchResults, true);
+        removeAll();
+        add(toolbar, BorderLayout.NORTH);
+        add(resultsPanel, BorderLayout.CENTER);
+    }
+
+    private void showResultView() {
+
         lips.clear();
         resultPanels.clear();
         dataPanel.removeAll();
@@ -265,13 +457,35 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (!resultPanels.isEmpty()) {
             resultPanelSelection(resultPanels.get(0), false);
         }
-        
-        // Force update
-        updateUI();
-        
-        ConcurrentUtils.invokeAndHandleExceptions(success);
+
+        removeAll();
+        add(toolbar, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+    }
+    
+    private void populateViewButton() {
+        toolbar.getViewButton().setText(currMode);
+        JPopupMenu popupMenu = toolbar.getViewButton().getPopupMenu();
+        popupMenu.removeAll();
+        ButtonGroup group = new ButtonGroup();
+        for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS)) {
+            JMenuItem menuItem = new JMenuItem(mode);
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    toolbar.getViewButton().setText(mode);
+                    setViewMode(mode);
+                }
+            });
+            group.add(menuItem);
+            popupMenu.add(menuItem);
+        }
     }
 
+    private void setViewMode(String currMode) {
+        this.currMode = currMode;
+        loadDomainObject(sample, true, null);
+    }
+    
     private void populateObjectiveButton(List<String> objectives) {
         toolbar.getObjectiveButton().setText("Objective: "+currObjective);
         JPopupMenu popupMenu = toolbar.getObjectiveButton().getPopupMenu();

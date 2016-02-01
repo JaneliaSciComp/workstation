@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -69,6 +70,7 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
@@ -78,6 +80,7 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WrapLayout;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.datatransfer.ExTransferable;
@@ -88,9 +91,6 @@ import com.google.common.eventbus.Subscribe;
 
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
-import java.util.concurrent.Callable;
-import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -332,7 +332,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             return "Filter Editor";
         }
         else {
-            return "Filter: "+org.apache.commons.lang3.StringUtils.abbreviate(filter.getName(), 15);
+            return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
         }
     }
     

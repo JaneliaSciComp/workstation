@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.support.DomainDAO;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -31,10 +32,10 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
  */
 public class MongoDomainFacade implements DomainFacade {
 
-    protected static final String MONGO_SERVER_URL = "mongodb1";
+    protected static final String MONGO_SERVER_URL = "dev-mongodb";
     protected static final String MONGO_DATABASE = "jacs";
-    protected static final String MONGO_USERNAME = "flyportal";
-    protected static final String MONGO_PASSWORD = "flyportal";
+    protected static final String MONGO_USERNAME = "";
+    protected static final String MONGO_PASSWORD = "";
 
     private final DomainDAO dao;
 
@@ -122,6 +123,11 @@ public class MongoDomainFacade implements DomainFacade {
         return dao.getDataSets(AccessManager.getSubjectKey());
     }
 
+    @Override
+    public Collection<LSMImage> getLsmsForSample(Long sampleId) {
+        return dao.getLsmsBySampleId(AccessManager.getSubjectKey(), sampleId);
+    }
+    
     @Override
     public Ontology create(Ontology ontology) throws Exception {
         return dao.save(AccessManager.getSubjectKey(), ontology);

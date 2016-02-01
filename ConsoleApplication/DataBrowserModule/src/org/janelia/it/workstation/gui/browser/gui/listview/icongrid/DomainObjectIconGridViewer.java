@@ -244,31 +244,26 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     if (run==null || run.getResults()==null) continue;
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups) {
+                            countedTypeNames.addAll(get2dTypeNames((HasFileGroups)result));
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
                                 String name = objective+" "+result.getName()+" ("+groupKey+")";
                                 countedResultNames.add(name);
-                                HasFiles hasFiles = hasGroups.getGroup(groupKey);
-                                if (hasFiles.getFiles()!=null) {
-                                    for(FileType fileType : hasFiles.getFiles().keySet()) {
-                                        if (!fileType.is2dImage()) continue;
-                                        countedTypeNames.add(fileType.name());
-                                    }
-                                }
                             }
                         }
                         else {
                             String name = objective+" "+result.getName();
                             countedResultNames.add(name);
-                            if (result.getFiles()!=null) {
-                                for(FileType fileType : result.getFiles().keySet()) {
-                                    if (!fileType.is2dImage()) continue;
-                                    countedTypeNames.add(fileType.name());
-                                }
-                            }
+                            countedTypeNames.addAll(get2dTypeNames(result));
                         }
                     }
                 }
+            }
+            else if (domainObject instanceof HasFileGroups) {
+                countedTypeNames.addAll(get2dTypeNames((HasFileGroups)domainObject));
+            }
+            else if (domainObject instanceof HasFiles) {
+                countedTypeNames.addAll(get2dTypeNames((HasFiles)domainObject));
             }
         }
         
@@ -367,6 +362,28 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }        
         
         showObjects(domainObjectList.getDomainObjects(), success);
+    }
+    
+    private Multiset<String> get2dTypeNames(HasFileGroups hasGroups) {
+        Multiset<String> countedTypeNames = LinkedHashMultiset.create();
+        for(String groupKey : hasGroups.getGroupKeys()) {
+            HasFiles hasFiles = hasGroups.getGroup(groupKey);
+            if (hasFiles.getFiles()!=null) {
+                countedTypeNames.addAll(get2dTypeNames(hasFiles));
+            }
+        }
+        return countedTypeNames;
+    }
+    
+    private Multiset<String> get2dTypeNames(HasFiles hasFiles) {
+        Multiset<String> countedTypeNames = LinkedHashMultiset.create();
+        if (hasFiles.getFiles()!=null) {
+            for(FileType fileType : hasFiles.getFiles().keySet()) {
+                if (!fileType.is2dImage()) continue;
+                countedTypeNames.add(fileType.name());
+            }
+        }
+        return countedTypeNames;
     }
 
     @Override
