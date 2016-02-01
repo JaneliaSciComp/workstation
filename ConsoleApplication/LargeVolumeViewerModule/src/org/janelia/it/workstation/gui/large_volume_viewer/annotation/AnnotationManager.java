@@ -853,7 +853,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.removeNote(annotationID);
+                    annotationModel.removeNote(textAnnotation);
                 }
 
                 @Override
