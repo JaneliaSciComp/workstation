@@ -31,7 +31,6 @@ package org.janelia.horta;
 
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
-import org.janelia.horta.actors.NeuriteActor;
 import org.janelia.horta.actors.CenterCrossHairActor;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 // import com.jogamp.opengl.util.awt.TextRenderer;
@@ -123,7 +122,6 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -352,17 +350,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // 3) Neurite model
         for (GL3Actor tracingActor : tracingInteractor.createActors()) {
             sceneWindow.getRenderer().addActor(tracingActor);
-            if (tracingActor instanceof NeuriteActor) // TODO: deprecate NeuriteActor
-            {
-                NeuriteActor neuriteActor = (NeuriteActor)tracingActor;
-                neuriteActor.getModel().addObserver(new Observer() {
-                    @Override
-                    public void update(Observable o, Object arg) {
-                        redrawNow();
-                    }
-                });
-            }
-            else if (tracingActor instanceof SpheresActor) // highlight hover actor
+            if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
                 spheresActor.getNeuron().getMembersAddedObservable().addObserver(new Observer() {
@@ -378,7 +366,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
             }
-            // TODO: update that fourth actor, which uses a NeuronModel
         }
 
         // 4) Scale bar
@@ -546,21 +533,15 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     private void reportIntensity(StringBuilder msg, MouseEvent event) {
-        // Use neuron cursor position, if available, rather than hardware mouse position.
+        // TODO: Use neuron cursor position, if available, rather than hardware mouse position.
         Vector3 worldXyz = null;
         double intensity = 0;
-        NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-        if (hoverAnchor != null) {
-            worldXyz = hoverAnchor.getLocationUm();
-            intensity = hoverAnchor.getIntensity();
-            // System.out.println("hover intensity = "+intensity);
-        } else {
+        
             PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
             double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
             worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
             intensity = neuronMPRenderer.intensityForScreenXy(event.getPoint());
             // System.out.println("non-hover intensity = "+intensity);
-        }
 
         mouseStageLocation = worldXyz;
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
@@ -1029,8 +1010,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 menu.add(new JPopupMenu.Separator());
                 // Fetch anchor location before popping menu, because menu causes
                 // hover location to clear
-                NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                tracingInteractor.exportMenuItems(menu, hoverAnchor);
+                // TODO:
+                // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                // tracingInteractor.exportMenuItems(menu, hoverAnchor);
 
                 boolean showLinkToLvv = true;
                 if ( (mouseStageLocation != null) && (showLinkToLvv) ) {

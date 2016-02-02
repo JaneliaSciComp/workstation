@@ -29,10 +29,8 @@
  */
 package org.janelia.horta;
 
-import org.janelia.horta.actors.NeuriteActor;
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -41,7 +39,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.AbstractAction;
 import javax.swing.JPopupMenu;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -68,7 +65,7 @@ public class TracingInteractor extends MouseAdapter
     // private final Stack<NeuriteAnchor> provisionalModel = new Stack<>();
     // private final List<NeuriteAnchor> persistedModel = new ArrayList<>();
     private final int max_tol = 5; // pixels
-    
+        
     // For selection affordance
     // For GUI feedback on existing model, contains zero or one vertex.
     // Larger yellow overlay over an existing vertex under the mouse pointer.
@@ -86,14 +83,6 @@ public class TracingInteractor extends MouseAdapter
     // This is the new neuron cursor
     private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
     private Vector3 cachedDensityCursorXyz = null;
-    
-    // TODO: refactor these other visual models, below
-    private NeuriteAnchor cachedHoverLocation = null; // TODO: - refactor as SELECTED vertex
-    private TracingMode tracingMode = TracingMode.NAVIGATING;
-
-    private final NeuriteModel provisionalModel = new NeuriteModel();
-    private final NeuriteModel previousHoverModel = new NeuriteModel();
-    private final NeuriteModel persistedModel = new NeuriteModel();  
     
     RadiusEstimator radiusEstimator = 
             new TwoDimensionalRadiusEstimator();
@@ -114,44 +103,7 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void keyReleased(KeyEvent keyEvent) {
         // System.out.println("KeyReleased");
-        if(keyEvent.getKeyCode() == KeyEvent.VK_ESCAPE)
-        {
-            // System.out.println("ESCAPE");
-            setTracingModeOff();
-        }
     }
-
-    public boolean setTracingModeOn() {
-        if (cachedHoverLocation == null)
-            return false; // cannot start tracing without an anchor
-        return setTracingModeOn(cachedHoverLocation);
-    }
-    
-    public boolean setTracingModeOn(NeuriteAnchor sourceAnchor) {
-        if (TracingMode.TRACING == this.tracingMode)
-            return false; // no change
-        this.tracingMode = TracingMode.TRACING;
-        previousHoverModel.clear();
-        previousHoverModel.add(sourceAnchor);
-        previousHoverModel.notifyObservers();
-        return true;
-    }
-    
-    public void setTracingModeOff() {
-        if (TracingMode.TRACING != this.tracingMode)
-            return; // no change
-        this.tracingMode = TracingMode.NAVIGATING;
-        provisionalModel.clear();
-        provisionalModel.setChanged();
-        previousHoverModel.clear();
-        previousHoverModel.setChanged();
-        provisionalModel.notifyObservers();
-        previousHoverModel.notifyObservers();
-    }
-    
-    public TracingMode getTracingMode() {return tracingMode;}
-    
-    static public enum TracingMode {TRACING, NAVIGATING};
 
     public TracingInteractor(
             VolumeProjection volumeProjection) 
@@ -160,10 +112,6 @@ public class TracingInteractor extends MouseAdapter
         connectMouseToComponent();
     }
 
-    public NeuriteAnchor getHoverLocation() {
-        return cachedHoverLocation;
-    }
-    
     private void connectMouseToComponent() {
         volumeProjection.getMouseableComponent().addMouseListener(this);
         volumeProjection.getMouseableComponent().addMouseMotionListener(this);
@@ -174,10 +122,6 @@ public class TracingInteractor extends MouseAdapter
         List<GL3Actor> result = new ArrayList<>();
 
         // Create actors in the order that they should be rendered;
-        NeuriteActor nextActor = new NeuriteActor(null, persistedModel);
-        result.add(nextActor);
-        result.add(new NeuriteActor(null, provisionalModel));
-        result.add(new NeuriteActor(null, previousHoverModel));
 
         // Create a special single-vertex actor for highlighting the selected parent vertex
         SpheresActor parentActor = new ParentVertexActor(parentVertexModel);
@@ -194,103 +138,27 @@ public class TracingInteractor extends MouseAdapter
         densityCursorActor.setMinPixelRadius(1.0f);
         result.add(densityCursorActor);
         
-        // Colors 
-        ((NeuriteActor)result.get(0)).setColor(Color.WHITE);
-        ((NeuriteActor)result.get(1)).setColor(new Color(0.6f, 0.6f, 0.1f));
-        ((NeuriteActor)result.get(2)).setColor(new Color(0.2f, 0.6f, 0.1f));
-        ((SpheresActor)result.get(3)).setColor(new Color(1.0f, 1.0f, 0.1f));
-        
         return result;
     }
     
-    /**
-     * 
-     * @param menu - existing menu to add tracing options to
-     */
-    public void exportMenuItems(JPopupMenu menu, NeuriteAnchor anchor) {
-        if (tracingMode == TracingMode.TRACING)
-            exportEnabledMenuItems(menu, anchor);
-        else
-            exportDisabledMenuItems(menu, anchor);
-    }
-
-    private void exportEnabledMenuItems(JPopupMenu menu, NeuriteAnchor anchor) 
-    {
-        menu.add(new AbstractAction("Exit tracing mode [ESC]") {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                setTracingModeOff();
-            }
-        });
-    }
-
-    private void exportDisabledMenuItems(JPopupMenu menu, final NeuriteAnchor anchor) {
-        /*
-        menu.add(new AbstractAction("Begin tracing at this location") {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                setTracingModeOn(anchor);
-            }
-        }); 
-                */
-    }    
-
-    private boolean extendProvisionalAnchors(NeuriteAnchor anchor) {
-        NeuriteAnchor sourceAnchor = previousHoverModel.getLast();
-        if (sourceAnchor == null) {
-            return false; // nothing to extend
-        }
-        boolean bChanged = false; // not whether anything changes...
-        
-        // Build up series of provisional points
-        float sourceD2 = sourceAnchor.distanceSquared(anchor.getLocationUm());
-
-        // remove anchors farther from source than cursor
-        NeuriteAnchor w = null;
-        if (provisionalModel.size() > 0) {
-            w = provisionalModel.getLast();
-        }
-
-        while ((w != null) && (sourceAnchor.distanceSquared(w.getLocationUm()) > sourceD2)) {
-            // remove anchors farther tnan cursor from sourceAnchor
-            bChanged = true;
-            provisionalModel.pollLast();
-            if (provisionalModel.size() > 0) {
-                w = provisionalModel.getLast();
-            } else {
-                w = null;
-            }
-        }
-
-        if (w == null) {
-            w = sourceAnchor;
-        }
-
-        // maybe append a new provisional anchor
-        double min_d = 3 + anchor.getRadiusUm() + w.getRadiusUm();
-        double min_d2 = min_d * min_d;
-        float localD2 = w.distanceSquared(anchor.getLocationUm());
-        // IJ.log("d2b = "+sourceD2);
-        if (localD2 > min_d2) {
-            bChanged = true;
-            provisionalModel.add(anchor);
-        }
-
-        return bChanged;
-    }
-
-    // Click to commit current set of anchors
+    // Mouse clicking for recentering, selection, and tracing
     @Override
     public void mouseClicked(MouseEvent event) {
         // System.out.println("Mouse clicked in tracer");
-        
+
+        // single click on primary (left) button
         if ( (event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1) )
         {
-            // Shift-clicking causes entry into tracing mode
-            if (event.isShiftDown()) {
-                // setTracingModeOn();
+            // Shift-clicking might add a new vertex to the neuron model
+            if (event.isShiftDown() && densityIsHovered()) {
+                if (parentIsSelected()) {
+                    // TODO: add vertex to existing model
+                    System.out.println("append neuron vertex (TODO)");
+                }
+                else {
+                    // TODO: create a new neuron
+                    System.out.println("create new neuron (TODO)");
+                }
             }
             else {
                 // Click on highlighted vertex to make it the next parent
@@ -304,13 +172,6 @@ public class TracingInteractor extends MouseAdapter
                         parentVertexModel.getMembersRemovedObservable().notifyObservers();
                 }
             }
-
-            // Regular click has no tracing effect in navigating mode
-            if (tracingMode == TracingMode.NAVIGATING)
-                return;
-
-            // In tracing mode, clicking causes provisional anchors to be persisted.
-            // persistProvisionalAnchors();
         }
     }
 
@@ -381,6 +242,20 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getColorChangeObservable().notifyObservers();
         
         return true; 
+    }
+    
+    private boolean parentIsSelected() {
+        if (parentVertexModel == null) return false;
+        if (parentVertexModel.getVertexes() == null) return false;
+        if (parentVertexModel.getVertexes().isEmpty()) return false;
+        return true;
+    }
+    
+    private boolean densityIsHovered() {
+        if (densityCursorModel == null) return false;
+        if (densityCursorModel.getVertexes() == null) return false;
+        if (densityCursorModel.getVertexes().isEmpty()) return false;
+        return true;
     }
     
     // Clear display of existing vertex highlight
@@ -517,7 +392,6 @@ public class TracingInteractor extends MouseAdapter
         highlightHoverModel.getVertexes().clear();
         highlightHoverModel.getEdges().clear();
         highlightHoverModel.getMembersRemovedObservable().setChanged();
-        cachedHoverLocation = null;
         previousHoverPoint = null;
         cachedHighlightVertex = null;
         return true;
@@ -530,19 +404,6 @@ public class TracingInteractor extends MouseAdapter
         moveHoverCursor(event.getPoint());
     }
 
-    private NeuriteAnchor anchorForScreenPoint(Point screenPoint) {
-        double intensity = volumeProjection.getIntensity(screenPoint);
-        if (intensity <= 0) return null;
-        float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
-        if (radius <= 0) return null;
-        Vector3 xyz = volumeProjection.worldXyzForScreenXy(screenPoint);
-        NeuriteAnchor anchor = new NeuriteAnchor(
-                xyz,
-                intensity,
-                radius);
-        return anchor;
-    }
-    
     // Show provisional Anchor radius and position for current mouse location
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {

@@ -144,8 +144,10 @@ public class SpheresActor extends BasicGL3Actor
             neuron.getColorChangeObservable().notifyObservers();
             neuron.getGeometryChangeObservable().notifyObservers();
         }
+
         // if (meshGeometry.size() < 1) return;
         // gl.glDisable(GL3.GL_DEPTH_TEST);
+
         super.display(gl, camera, parentModelViewMatrix);       
     }
 
