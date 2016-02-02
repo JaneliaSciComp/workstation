@@ -107,7 +107,6 @@ public class AnnotationCollectionWorkspaceCreator implements EntityWrapperCreato
                             String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
                             try {
                                 // Fetch the sample id from the collection.
-                                Long collectionId = rootedEntity.getEntityId();
                                 Entity collectionEntity = rootedEntity.getEntity();
                                 
                                 List<EntityData> neurons = new ArrayList<EntityData>();
@@ -144,7 +143,6 @@ public class AnnotationCollectionWorkspaceCreator implements EntityWrapperCreato
                                 BASE64Decoder decoder = new BASE64Decoder();
                                 BASE64Encoder encoder = new BASE64Encoder();
                                 TmProtobufExchanger exchanger = new TmProtobufExchanger();
-                                IdSource idSource = new IdSource();
                                 Entity workspaceEntity = modelMgr.getEntityById(workspace.getId());
 
                                 for (EntityData neuronEntityData: neurons) {
@@ -152,31 +150,36 @@ public class AnnotationCollectionWorkspaceCreator implements EntityWrapperCreato
                                     String rawVal = neuronEntityData.getValue();
                                     byte[] protoBytes = decoder.decodeBuffer(rawVal);
                                     TmNeuron tmNeuron = exchanger.deserializeNeuron(protoBytes);
+                                    
+                                    // And now, write empty, small neuron back.
+                                    // This will be a fully-new copy of the neuron's data.  Intentionally duplicated.
+                                    EntityData wsNeuronEntityData = new EntityData();
+                                    //wsNeuronEntityData.setValue(rawVal);  Value not yet ready.
+                                    wsNeuronEntityData.setCreationDate(new Date());
+                                    wsNeuronEntityData.setEntityAttrName(neuronEntityData.getEntityAttrName());
+                                    wsNeuronEntityData.setOwnerKey(ownerKey);
+                                    wsNeuronEntityData.setParentEntity(workspaceEntity);
+                                    
+                                    EntityData savedEntityData = modelMgr.saveOrUpdateEntityData(wsNeuronEntityData);
+
                                     // Now, must modify the neuron, so it fits
                                     // in its new environment.
                                     tmNeuron.setWorkspaceId(workspaceId);
-                                    Long neuronId = idSource.next();
+
+                                    Long neuronId = savedEntityData.getId();
                                     tmNeuron.setId(neuronId);
-                                    for (TmGeoAnnotation anno: tmNeuron.getGeoAnnotationMap().values()) {
+                                    for (TmGeoAnnotation anno : tmNeuron.getGeoAnnotationMap().values()) {
                                         if (anno.getParentId() == anno.getNeuronId()) {
                                             anno.setParentId(neuronId);
                                         }
                                         anno.setNeuronId(neuronId);
                                     }
-                                    
                                     // Prepare data for serialization.
                                     protoBytes = exchanger.serializeNeuron(tmNeuron);
                                     rawVal = encoder.encodeBuffer(protoBytes);
-                                    
-                                    // And now, write the neuron back.
-                                    // This will be a fully-new copy of the neuron's data.  Intentionally duplicated.
-                                    EntityData wsNeuronEntityData = new EntityData();
-                                    wsNeuronEntityData.setId(neuronId);
-                                    wsNeuronEntityData.setValue(rawVal);
-                                    wsNeuronEntityData.setCreationDate(new Date());
-                                    wsNeuronEntityData.setEntityAttrName(neuronEntityData.getEntityAttrName());
-                                    wsNeuronEntityData.setOwnerKey(ownerKey);
-                                    wsNeuronEntityData.setParentEntity(workspaceEntity);
+
+                                    savedEntityData.setValue(rawVal);
+                                    modelMgr.saveOrUpdateEntityData(savedEntityData);
                                 }
                             } catch (Exception ex) {
                                 ex.printStackTrace();
