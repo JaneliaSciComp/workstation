@@ -155,12 +155,13 @@ public class TracingInteractor extends MouseAdapter
             if (event.isShiftDown() && densityIsHovered()) {
                 if (parentIsSelected()) {
                     // TODO: add vertex to existing model
-                    System.out.println("append neuron vertex (TODO)");
+                    // System.out.println("append neuron vertex (TODO)");
                     NeuronVertexIndex vix = volumeProjection.getVertexIndex();
                     NeuronModel neuron = vix.neuronForVertex(cachedParentVertex);
                     NeuronVertex templateVertex = densityCursorModel.getVertexes().iterator().next();
                     NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
                     if (addedVertex != null) {
+                        vix.addNeuronVertex(neuron, addedVertex); // update index, before select parent
                         selectParentVertex(addedVertex);
                     }
                 }

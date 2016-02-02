@@ -114,11 +114,15 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
     private void addNeuronModel(NeuronModel neuron) {
         currentNeuronModels.add(neuron);
         for (NeuronVertex vertex : neuron.getVertexes()) {
-            if (add(vertex)) {
-                vertexNeurons.put(vertex, neuron);
-            }
+            addNeuronVertex(neuron, vertex);
         }
         // TODO: observe neuron changes
+    }
+    
+    public void addNeuronVertex(NeuronModel neuron, NeuronVertex vertex) {
+        if (addPrivately(vertex)) {
+            vertexNeurons.put(vertex, neuron);
+        }
     }
     
     private void addNeuronSet(NeuronSet set) {
@@ -169,6 +173,11 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
 
     @Override
     public boolean add(NeuronVertex e)
+    {
+        throw new UnsupportedOperationException();
+    }
+    
+    private boolean addPrivately(NeuronVertex e)
     {
         try {
             double[] key = keyForVertex(e);
