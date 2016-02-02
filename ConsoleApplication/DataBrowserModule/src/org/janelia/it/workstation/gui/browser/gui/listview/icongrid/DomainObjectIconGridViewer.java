@@ -61,9 +61,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     
-    private DefaultResult defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
-    private String defaultImageType = FileType.SignalMip.name();
-    
+    private DefaultResult defaultResult;
+    private String defaultImageType;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -231,12 +230,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }
         
+        if (defaultResult == null) {
+            this.defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
+        }
+        
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
         Multiset<String> countedResultNames = LinkedHashMultiset.create();
         // Add twice so that it is selected by >1 filter below
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
-        
+            
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
@@ -274,10 +277,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         popupMenu.removeAll();
         
         for(final String resultName : countedResultNames.elementSet()) {
-            if (countedResultNames.count(resultName)>1) {
-                if (defaultResult == null) {
-                    this.defaultResult = new DefaultResult(resultName);
-                }
+            if (countedResultNames.count(resultName)>1 || countedResultNames.size()==1) {
                 JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -322,7 +322,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         popupMenu2.removeAll();
 
         for(final String typeName : countedTypeNames.elementSet()) {
-            if (countedTypeNames.count(typeName)>1) {
+            if (countedTypeNames.count(typeName)>1 || countedTypeNames.size()==1) {
                 if (defaultImageType == null) {
                     this.defaultImageType = typeName;
                 }
@@ -366,6 +366,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 popupMenu2.add(menuItem);
             }
         }        
+        
+        if (defaultImageType == null) {
+            this.defaultImageType = FileType.SignalMip.name();
+        }
         
         showObjects(domainObjectList.getDomainObjects(), success);
     }

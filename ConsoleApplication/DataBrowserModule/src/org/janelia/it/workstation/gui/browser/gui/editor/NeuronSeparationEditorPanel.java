@@ -195,6 +195,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             separation = result.getLatestSeparationResult();
         }
         
+        Sample sample = parentResult.getParentRun().getParent().getParent();
+        selectionModel.setParentObject(sample);
+        
         JPopupMenu popupMenu = getResultPopupMenu(result);
         historyLabel.setText("History ("+popupMenu.getComponentCount()+"):");
         resultButton.setPopupMenu(popupMenu);
@@ -204,7 +207,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             debouncer.success();
         }
         else {
-            String title = parentResult.getParentRun().getParent().getParent().getName() + " - " + DomainModelViewUtils.getLabel(result);
+            String title = sample.getName() + " - " + DomainModelViewUtils.getLabel(result);
             titleLabel.setText(title);
             setResult(separation, isUserDriven, success);
         }

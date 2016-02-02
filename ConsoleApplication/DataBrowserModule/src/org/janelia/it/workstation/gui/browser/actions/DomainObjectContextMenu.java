@@ -22,8 +22,6 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
-import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
 import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;

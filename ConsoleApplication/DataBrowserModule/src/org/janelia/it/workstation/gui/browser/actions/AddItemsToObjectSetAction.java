@@ -56,6 +56,7 @@ public class AddItemsToObjectSetAction implements NamedAction {
 
     @Override
     public void doAction() {
+        throw new IllegalStateException("This action must be executed via its popup presenter");
     }
     
     public JMenuItem getPopupPresenter() {
