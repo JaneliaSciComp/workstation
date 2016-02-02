@@ -779,4 +779,15 @@ public final class SessionMgr {
             return null;
         }
     }
+
+    // TODO: this is a temporary hack to inject the subject key from the AccessManager back into the ConsoleModule, for the older stuff to use. It should go away. 
+    private static String subjectKey;
+    
+    public static void setSubjectKey(String s) {
+        subjectKey = s;
+    }
+
+    public static String getSubjectKey() {
+        return subjectKey;
+    }
 }

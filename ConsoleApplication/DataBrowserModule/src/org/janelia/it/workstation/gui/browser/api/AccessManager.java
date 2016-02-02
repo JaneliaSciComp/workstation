@@ -1,34 +1,26 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.*;
-import java.text.ParseException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.stub.data.FatalCommError;
+import org.janelia.it.workstation.api.stub.data.SystemError;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
-import org.janelia.it.workstation.api.stub.data.SystemError;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class AccessManager {
+    
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
     public static String RUN_AS_USER = "RunAs";
@@ -51,7 +43,6 @@ public final class AccessManager {
             PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
         }
-
     }
 
     static public AccessManager getAccessManager() {
@@ -74,7 +65,7 @@ public final class AccessManager {
 
             if (null != authenticatedSubject) {
                 isLoggedIn = true;                
-                loggedInSubject = authenticatedSubject;
+                setSubject(authenticatedSubject);
                 log.info("Authenticated as {}", authenticatedSubject.getKey());
 
                 beginSession();
@@ -93,7 +84,7 @@ public final class AccessManager {
         }
     }
 
-    private Subject authenticateSubject (String username, String password) {
+    private Subject authenticateSubject(String username, String password) {
         // make RESTful call to authenticate user
         final String user = username;
         final String pw = password;
@@ -148,21 +139,21 @@ public final class AccessManager {
                     if (runAsSubject==null)
                         return false;
                 }
-                loggedInSubject = runAsSubject;
+                setSubject(runAsSubject);
             }
             else {
-                loggedInSubject = authenticatedSubject;
+                setSubject(authenticatedSubject);
             }
 
-            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
+            if (!authenticatedSubject.getId().equals(getSubject().getId())) {
+                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), getSubject().getId());
             }
                 
             resetSession();
             return true;
         }
         catch (Exception e) {
-            loggedInSubject = authenticatedSubject;
+            setSubject(authenticatedSubject);
             SessionMgr.getSessionMgr().handleException(e);
             return false;
         }
@@ -181,12 +172,12 @@ public final class AccessManager {
     
     public void logoutUser() {
         try {
-            if (loggedInSubject != null) {
+            if (getSubject() != null) {
                 endSession();
-                log.info("Logged out with: {}", loggedInSubject.getKey());
+                log.info("Logged out with: {}", getSubject().getKey());
             }
             isLoggedIn = false;
-            loggedInSubject = null;
+            setSubject(null);
             authenticatedSubject = null;
         }
         catch (Exception e) {
@@ -198,8 +189,10 @@ public final class AccessManager {
         return isLoggedIn;
     }
 
-    public void setSubject(Subject subject) {
+    private void setSubject(Subject subject) {
         this.loggedInSubject = subject;
+        // TODO: This is a temporary hack to inject this information back into the old modules. It should go away eventually.
+        SessionMgr.setSubjectKey(loggedInSubject==null?null:loggedInSubject.getKey());
     }
 
     public Subject getSubject() {
@@ -210,7 +203,7 @@ public final class AccessManager {
         return authenticatedSubject;
     }
 
-    public static Subject getSubjectByKey (String key) {
+    public static Subject getSubjectByKey(String key) {
         try {
             return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
         } catch (Exception e) {
