@@ -270,5 +270,10 @@ public class BasicNeuronModel implements NeuronModel
     {
         return membersRemovedObservable;
     }
+
+    @Override
+    public NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

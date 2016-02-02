@@ -30,6 +30,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
+import Jama.Matrix;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,8 +47,10 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +77,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
+    private TmWorkspace workspace;
 
     public NeuronModelAdapter(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) 
     {
@@ -83,6 +87,45 @@ public class NeuronModelAdapter implements NeuronModel
         bIsVisible = true; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), workspace);
         edges = new EdgeList(vertexes);
+        this.workspace = workspace;
+    }
+
+    // Special method for adding annotations from the Horta side
+    @Override
+    public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
+    {
+        if (! (parent instanceof NeuronVertexAdapter))
+            return null; // TODO: error?
+        NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
+        TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
+        
+        // Convert micron coordinates to voxel coordinates
+        Matrix m2v = workspace.getMicronToVoxMatrix();
+                // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix micLoc = new Jama.Matrix(new double[][] {
+            {micronXyz[0], }, 
+            {micronXyz[1], }, 
+            {micronXyz[2], },
+            {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix voxLoc = m2v.times(micLoc);
+        Vec3 voxelXyz = new Vec3(
+            (float) voxLoc.get(0, 0), 
+            (float) voxLoc.get(1, 0), 
+            (float) voxLoc.get(2, 0) );
+        NeuronVertex result = null;
+        try {
+            // TODO: radius
+            TmGeoAnnotation ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+            if (ann != null) {
+                NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
+                result = vertex;
+            }
+        } catch (Exception ex) {
+        }
+        return result;
     }
     
     void addVertex(TmGeoAnnotation annotation)
@@ -108,6 +151,7 @@ public class NeuronModelAdapter implements NeuronModel
         }
         assert this.annotationModel == annotationModel; // We are not willing to update THAT far
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap(), workspace);
+        this.workspace = workspace;
     }
 
     public boolean updateEdges() {

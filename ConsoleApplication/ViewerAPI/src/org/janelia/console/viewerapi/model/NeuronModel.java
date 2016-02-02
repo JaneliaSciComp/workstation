@@ -60,4 +60,7 @@ public interface NeuronModel extends Hideable
     
     // Signals when the visibility of this neuron is toggled on or off
     ObservableInterface getVisibilityChangeObservable();
+
+    // Custom method to help hook into LVV model from Horta
+    NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
 }
