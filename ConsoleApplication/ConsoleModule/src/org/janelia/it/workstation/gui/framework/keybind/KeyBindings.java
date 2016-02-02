@@ -153,7 +153,7 @@ public class KeyBindings {
 
         log.debug("Saving key bindings for ontology " + rootId);
 
-        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings("SessionMgr.getSubjectKey()", rootId);
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getSubjectKey(), rootId);
         try {
             for (Map.Entry<KeyboardShortcut, Action> entry : ontologyBindings.entrySet()) {
                 if (entry.getValue() instanceof OntologyElementAction) {

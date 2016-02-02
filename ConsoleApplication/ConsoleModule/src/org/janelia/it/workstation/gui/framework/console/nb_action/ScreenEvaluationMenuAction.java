@@ -45,6 +45,6 @@ public final class ScreenEvaluationMenuAction extends AbstractAction implements 
     }
 
     public static boolean isAccessible() {
-        return "user:jenetta".equals("SessionMgr.getSubjectKey()");
+        return "user:jenetta".equals(SessionMgr.getSubjectKey());
     }
 }

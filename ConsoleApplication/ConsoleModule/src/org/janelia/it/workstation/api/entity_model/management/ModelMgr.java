@@ -988,7 +988,7 @@ public final class ModelMgr {
     }
 
     public Task submitJob(String processDefName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
-        GenericTask task = new GenericTask(new HashSet<Node>(), "SessionMgr.getSubjectKey()", new ArrayList<Event>(),
+        GenericTask task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(),
                 parameters, processDefName, displayName);
         return submitJob(task);
     }

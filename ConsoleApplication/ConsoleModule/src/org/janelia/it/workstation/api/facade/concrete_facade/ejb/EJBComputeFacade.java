@@ -64,18 +64,18 @@ public class EJBComputeFacade implements ComputeFacade {
     @Override
     public List<Task> getUserTasks() throws Exception {
         return null;
-       // return EJBFactory.getRemoteComputeBean().getUserTasks("SessionMgr.getSubjectKey()");
+       // return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getSubjectKey());
     }
 
     @Override
     public List<Task> getUserParentTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks("SessionMgr.getSubjectKey()");
+        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(SessionMgr.getSubjectKey());
     }
     
     @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
        return null;
-       // return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, "SessionMgr.getSubjectKey()");
+       // return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getSubjectKey());
     }
 
     @Override

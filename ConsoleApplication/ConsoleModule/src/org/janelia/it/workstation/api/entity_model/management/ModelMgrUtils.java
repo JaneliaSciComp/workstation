@@ -29,7 +29,7 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean isOwner(Entity entity) {
-        return EntityUtils.isOwner(entity, "SessionMgr.getSubjectKey()");
+        return EntityUtils.isOwner(entity, SessionMgr.getSubjectKey());
     }
 
     /**
