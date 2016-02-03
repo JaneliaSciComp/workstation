@@ -195,7 +195,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private String currentSource;
     private NeuronTraceLoader loader;
     
-    private boolean doCubifyVoxels = false;
+    private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     private final NeuronManager neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
@@ -306,6 +306,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 sceneWindow
                 // tracingInteractor
         );
+        
+        // Default to compressed voxels, per user request February 2016
+        setCubifyVoxels(true);
         
         workspace.notifyObservers();
     }
