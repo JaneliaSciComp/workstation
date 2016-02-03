@@ -45,12 +45,14 @@ public class OsFilePathRemapper
     private static final Map<String,String> sMacPrefixMappings = new HashMap<>();
     static {
         sWinPrefixMappings.put("/nobackup/mousebrainmicro/", "//fxt/nobackup/mousebrainmicro/"); // Windows
+        sWinPrefixMappings.put("/nobackup2/mouselight/", "//fxt/nobackup2/mouselight/"); // Windows
         sWinPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/");
         sWinPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "//tier2/mousebrainmicro/mousebrainmicro/");
         //prefixMappings.put("/tier2/", "//tier2/"); // Windows
         //prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
 
         sMacPrefixMappings.put("/nobackup/mousebrainmicro/", "/Volumes/nobackup/mousebrainmicro/"); // Mac
+        sMacPrefixMappings.put("/nobackup2/mouselight/", "/Volumes/nobackup2/mouselight/"); // Mac
         sMacPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "/Volumes/mousebrainmicro/");
         sMacPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "/Volumes/mousebrainmicro/mousebrainmicro/");
     }
