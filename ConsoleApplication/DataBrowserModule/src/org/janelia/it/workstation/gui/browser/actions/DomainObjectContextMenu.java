@@ -1,9 +1,5 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
-import static org.janelia.it.jacs.model.domain.enums.FileType.VisuallyLosslessStack;
-
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -14,10 +10,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -29,6 +22,8 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -36,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Context pop up menu for entities.
+ * Context pop up menu for entities. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -45,21 +40,22 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
     // Current selection
-    protected Component source;
     protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
     protected DomainObject domainObject;
     protected boolean multiple;
+    protected ResultDescriptor resultDescriptor;
 
-    public DomainObjectContextMenu(Component source, DomainObject contextObject, List<DomainObject> domainObjectList) {
-        this.source = source;
+    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ResultDescriptor resultDescriptor) {
         this.contextObject = contextObject;
         this.domainObjectList = domainObjectList;
         this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
         this.multiple = domainObjectList.size() > 1;
+        this.resultDescriptor = resultDescriptor;
     }
     
     public void runDefaultAction() {
+        if (!DomainViewerTopComponent.isSupported(domainObject)) return;
         DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
         if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
             viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
@@ -90,7 +86,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getPasteAnnotationItem());
 //        add(getDetailsItem());
 //        add(getPermissionItem());
-//        add(getGotoRelatedItem());
         
         add(getAddToSetItem());
         add(getRemoveFromSetItem());
@@ -136,10 +131,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getCopyNameToClipboardItem() {
+        if (multiple) return null;
         return getNamedActionItem(new CopyToClipboardAction("Name",domainObject.getName()));
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
+        if (multiple) return null;
         return getNamedActionItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
     }
     
@@ -147,7 +144,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
         
-        JMenuItem copyMenuItem = new JMenuItem("  Open In New Viewer");
+        JMenuItem copyMenuItem = new JMenuItem("  Open "+domainObject.getType()+" In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -213,7 +210,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        separation = getNeuronSeparation(sample, neuronFragment);
+                        separation = DomainModelViewUtils.getNeuronSeparation(sample, neuronFragment);
                     }
 
                     @Override
@@ -231,30 +228,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         });
         return copyMenuItem;
-    }
-    
-    public static NeuronSeparation getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
-        if (neuronFragment==null) return null;
-        for(String objective : sample.getOrderedObjectives()) {
-            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-            for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                if (run!=null && run.getResults()!=null) {
-                    for(PipelineResult result : run.getResults()) {
-                        if (result!=null && result.getResults()!=null) {
-                            for(PipelineResult secondaryResult : result.getResults()) {
-                                if (secondaryResult!=null && secondaryResult instanceof NeuronSeparation) {
-                                    NeuronSeparation separation = (NeuronSeparation)secondaryResult;
-                                    if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
-                                        return separation;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
     }
     
     
@@ -442,249 +415,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        return orderedMap.values();
 //    }
 //    
-//    public JMenuItem getWrapEntityItem() {
-//        if (multiple) return null;
-//        return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( rootedEntity );
-//    }
-//       
-//    private class EntityDataPath {
-//        private List<EntityData> path;
-//        private String rootOwner;
-//        private boolean isHidden = false;
-//
-//        public EntityDataPath(List<EntityData> path) {
-//            this.path = path;
-//            EntityData first = path.get(0);
-//            this.rootOwner = first.getParentEntity().getOwnerKey();
-//            for (EntityData ed : path) {
-//                if (EntityUtils.isHidden(ed))
-//                    this.isHidden = true;
-//            }
-//        }
-//
-//        public String getUniqueId() {
-//            return EntityUtils.getUniqueIdFromParentEntityPath(path);
-//        }
-//
-//        @Override
-//        public String toString() {
-//            StringBuilder sb = new StringBuilder();
-//            for (EntityData pathEd : path) {
-//                if (sb.length() <= 0) {
-//                    sb.append(" / ").append(pathEd.getParentEntity().getName());
-//                }
-//                sb.append(" / ").append(pathEd.getChildEntity().getName());
-//            }
-//            return sb.toString();
-//        }
-//
-//        public List<EntityData> getPath() {
-//            return path;
-//        }
-//
-//        public String getRootOwner() {
-//            return rootOwner;
-//        }
-//
-//        public boolean isHidden() {
-//            return isHidden;
-//        }
-//    }
-//
-//    protected JMenuItem getGotoRelatedItem() {
-//        if (multiple) return null;
-//        
-//        JMenu relatedMenu = new JMenu("  Go To Related");
-//        final Entity entity = rootedEntity.getEntity();
-//        String type = entity.getEntityTypeName();
-//        
-//        if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)
-//                || EntityConstants.TYPE_LSM_STACK.equals(type)
-//                // TODO: this should be more specific, but right now we're only using virtual entities to represent LSMs
-//                || EntityConstants.IN_MEMORY_TYPE_VIRTUAL_ENTITY.equals(type) 
-//                || EntityConstants.TYPE_PIPELINE_RUN.equals(type) 
-//                || EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type) 
-//                || EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type) 
-//                || EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)
-//                || EntityConstants.TYPE_CURATED_NEURON.equals(type)
-//                || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)
-//                || EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
-//            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
-//        }
-//        
-//        if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)
-//                || EntityConstants.TYPE_CURATED_NEURON.equals(type)
-//                || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)) {
-//            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT,
-//                                EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
-//        }
-//        else if (EntityConstants.TYPE_FLY_LINE.equals(type)) {
-//            add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
-//            add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
-//            add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE));
-//        }
-//        else if (EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
-//            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SCREEN_SAMPLE, EntityConstants.TYPE_SCREEN_SAMPLE));
-//            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
-//        }
-//        else if (EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
-//            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
-//        }
-//        
-//        JMenuItem showAllRefsItem = new JMenuItem("Show All References");
-//        showAllRefsItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                gotoReference(rootedEntity);
-//            }
-//        });
-//        relatedMenu.add(showAllRefsItem);
-//        
-//        JMenuItem showAllPathsItem = new JMenuItem("Show All Paths...");
-//        showAllPathsItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                GoToRelatedEntityAction action = new GoToRelatedEntityAction(entity, null);
-//                action.doAction();
-//            }
-//        });
-//        relatedMenu.add(showAllPathsItem);
-//        
-//        return relatedMenu;
-//    }
 //    
-//    private JMenuItem getChildEntityItem(Entity entity, String attributeName) {
-//        final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
-//        if (ed == null) return null;
-//        return getAncestorEntityItem(ed.getChildEntity(), null, attributeName);
-//    }
-//
-//    private JMenuItem getAncestorEntityItem(final Entity entity, final String ancestorType, final String label) {
-//        if (entity == null) return null;
-//        
-//        JMenuItem relatedMenuItem = new JMenuItem(label);
-//        relatedMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                gotoEntity(entity, ancestorType);
-//            }
-//        });
-//        return relatedMenuItem;
-//    }
-//
-//    private void gotoReference(final RootedEntity rootedEntity) {
-//
-//        log.trace("Showing references of {}",rootedEntity.getName());
-//        
-//        Utils.setWaitingCursor(mainFrame);
-//
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            RootedEntity tempSearchRE;
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(rootedEntity.getEntityId());
-//                Entity entity = new Entity();
-//                entity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
-//                entity.setName("Entities referencing "+rootedEntity.getName());
-//                entity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
-//
-//                HashSet<EntityData> eds = new HashSet<>();
-//                for(EntityData parentEd : parentEds) {
-//                    EntityData ed = new EntityData();
-//                    ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
-//                    ed.setParentEntity(entity);
-//                    Entity childEntity = ModelMgr.getModelMgr().getEntityById(parentEd.getParentEntity().getId());
-//                    ed.setChildEntity(childEntity);
-//                    eds.add(ed);
-//                }
-//
-//                log.info("Setting "+eds.size()+" children");
-//                entity.setEntityData(eds);
-//                entity.setOwnerKey(AccessManager.getSubjectKey());
-//                this.tempSearchRE = new RootedEntity(entity);
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                WindowLocator.activateAndGet(IconPanelTopComponent.PREFERRED_ID, "editor");
-//                browser.getViewerManager().showEntityInActiveViewer(tempSearchRE);
-//                Utils.queueDefaultCursor(mainFrame);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                SessionMgr.getSessionMgr().handleException(error);
-//                Utils.setDefaultCursor(mainFrame);
-//            }
-//        };
-//
-//        worker.execute();
-//    }
-//    
-//    private void gotoEntity(final Entity entity, final String ancestorType) {
-//
-//        log.trace("Navigating to ancestor {} of entity {}",ancestorType,entity);
-//        
-//        Utils.setWaitingCursor(mainFrame);
-//
-//        SimpleWorker worker = new SimpleWorker() {
-//
-//            private Entity targetEntity = entity;
-//            private String uniqueId;
-//
-//            @Override
-//            protected void doStuff() throws Exception {
-//                if (ancestorType != null) {
-//                    targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
-//                }
-//
-//                final String currUniqueId = rootedEntity.getUniqueId();
-//                final String targetId = targetEntity.getId().toString();
-//                if (currUniqueId.contains(targetId)) {
-//                    // A little optimization, if you're already in the right
-//                    // subtree
-//                    this.uniqueId = currUniqueId.substring(0, currUniqueId.indexOf(targetId) + targetId.length());
-//                }
-//                else {
-//                    // Find the best context to show the entity in
-//                    List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
-//                    List<EntityDataPath> paths = new ArrayList<>();
-//                    for (List<EntityData> path : edPaths) {
-//                        EntityDataPath edp = new EntityDataPath(path);
-//                        if (!edp.isHidden()) {
-//                            paths.add(edp);
-//                        }
-//                    }
-//                    sortPathsByPreference(paths);
-//
-//                    if (paths.isEmpty()) {
-//                        throw new Exception("Could not find the related entity");
-//                    }
-//
-//                    EntityDataPath chosen = paths.get(0);
-//                    this.uniqueId = chosen.getUniqueId();
-//                }
-//            }
-//
-//            @Override
-//            protected void hadSuccess() {
-//                WindowLocator.activateAndGet(IconPanelTopComponent.PREFERRED_ID, "editor");
-//                log.info("Selecting {}",uniqueId);
-//                browser.getEntityOutline().selectEntityByUniqueId(uniqueId);
-//                Utils.queueDefaultCursor(mainFrame);
-//            }
-//
-//            @Override
-//            protected void hadError(Throwable error) {
-//                Utils.setDefaultCursor(mainFrame);
-//                SessionMgr.getSessionMgr().handleException(error);
-//            }
-//        };
-//
-//        worker.execute();
-//    }
 //
 //    protected JMenu getErrorFlag() {
 //        if (multiple) return null;
@@ -1115,32 +846,31 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         return deleteItem;
     }
-    
 
     protected JMenuItem getOpenInFinderItem() {
     	if (multiple) return null;
-        if (!OpenInFinderAction.isSupported()) return null;
-        if (!(domainObject instanceof HasFiles)) return null;
-        HasFiles fileProvider = (HasFiles)domainObject;
+        HasFiles fileProvider = getSingleResult();
+        if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
+        if (!OpenInFinderAction.isSupported()) return null;
         return getNamedActionItem(new OpenInFinderAction(path));
     }
 
     protected JMenuItem getOpenWithAppItem() {
     	if (multiple) return null;
-        if (!OpenWithDefaultAppAction.isSupported()) return null;
-        if (!(domainObject instanceof HasFiles)) return null;
-        HasFiles fileProvider = (HasFiles)domainObject;
+        HasFiles fileProvider = getSingleResult();
+        if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
+        if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
     }
         
     protected JMenuItem getVaa3dTriViewItem() {
     	if (multiple) return null;
-    	if (!(domainObject instanceof HasFiles)) return null;
-        HasFiles fileProvider = (HasFiles)domainObject;
+    	HasFiles fileProvider = getSingleResult();
+        if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, null));
@@ -1148,8 +878,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getVaa3d3dViewItem() {
     	if (multiple) return null;
-    	if (!(domainObject instanceof HasFiles)) return null;
-        HasFiles fileProvider = (HasFiles)domainObject;
+        HasFiles fileProvider = getSingleResult();
+        if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D));
@@ -1157,28 +887,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getFijiViewerItem() {
     	if (multiple) return null;
-    	if (!(domainObject instanceof HasFiles)) return null;
-        HasFiles fileProvider = (HasFiles)domainObject;
+        HasFiles fileProvider = getSingleResult();
+        if (fileProvider==null) return null;
         String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
     
     protected JMenuItem getDownloadMenu() {
-    	if (multiple) return null;
-    	if (domainObject instanceof Sample) {
-	        Sample sample = (Sample)domainObject;
-	        // TODO: add support for multi-file download
-	        HasFiles result = null; // TODO: get the result
-	        FileDownloadAction action = new FileDownloadAction(sample, result);
-	        return action.getPopupPresenter();
-    	}
-    	else if (domainObject instanceof HasFiles) {
-	        HasFiles result = (HasFiles)domainObject;
-	        FileDownloadAction action = new FileDownloadAction(null, result);
-	        return action.getPopupPresenter();
-    	}
-    	return null;
+        FileDownloadAction action = new FileDownloadAction(domainObjectList, resultDescriptor);
+        return action.getPopupPresenter();
     }    
     
   
@@ -1399,4 +1117,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //    }
 
+    
+    private HasFiles getSingleResult() {
+        HasFiles result = null;
+        if (domainObject instanceof Sample) {
+            Sample sample = (Sample)domainObject;
+            result = DomainModelViewUtils.getResult(sample, resultDescriptor);
+        }
+        else if (domainObject instanceof HasFiles) {
+            result = (HasFiles)domainObject;
+        }
+        return result;
+    }
 }

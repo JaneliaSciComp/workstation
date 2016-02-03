@@ -158,7 +158,7 @@ public class DomainModel {
      * @param objects
      * @return canonical domain object instances
      */
-    private List<DomainObject> putOrUpdateAll(Collection<DomainObject> objects) {
+    private List<DomainObject> putOrUpdateAll(Collection<? extends DomainObject> objects) {
         List<DomainObject> putObjects = new ArrayList<>();
         for (DomainObject domainObject : objects) {
             putObjects.add(putOrUpdate(domainObject));
@@ -660,11 +660,11 @@ public class DomainModel {
         return addChildren(treeNode, Arrays.asList(domainObject), index);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
+    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
         return addChildren(treeNode, domainObjects, null);
     }
 
-    public TreeNode addChildren(TreeNode treeNode, Collection<DomainObject> domainObjects, Integer index) throws Exception {
+    public TreeNode addChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects, Integer index) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.addChildren(treeNode, DomainUtils.getReferences(domainObjects), index));
@@ -676,7 +676,7 @@ public class DomainModel {
         return removeChildren(treeNode, Arrays.asList(domainObject));
     }
 
-    public TreeNode removeChildren(TreeNode treeNode, Collection<DomainObject> domainObjects) throws Exception {
+    public TreeNode removeChildren(TreeNode treeNode, Collection<? extends DomainObject> domainObjects) throws Exception {
         TreeNode canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeChildren(treeNode, DomainUtils.getReferences(domainObjects)));
@@ -696,7 +696,7 @@ public class DomainModel {
         return addMembers(objectSet, Arrays.asList(domainObject));
     }
 
-    public ObjectSet addMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
+    public ObjectSet addMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.addMembers(objectSet, DomainUtils.getReferences(domainObjects)));
@@ -708,7 +708,7 @@ public class DomainModel {
         return removeMembers(objectSet, Arrays.asList(domainObject));
     }
 
-    public ObjectSet removeMembers(ObjectSet objectSet, Collection<DomainObject> domainObjects) throws Exception {
+    public ObjectSet removeMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
         ObjectSet canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects)));
