@@ -158,9 +158,12 @@ public class Texture3d extends BasicTexture implements GL3Resource
     public Texture3d loadTiffStack(File tiffFile) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
         RenderedImage[] slices = renderedImagesFromTiffStack(tiffFile);
-        // System.out.println("Tiff load to RenderedImages took "+timer.reportMsAndRestart()+" ms");
+        float t1=timer.reportMsAndRestart();
+        System.out.println("Tiff load to RenderedImages took "+t1+" ms");
         Texture3d result = loadStack(slices);
-        // System.out.println("Tiff RenderedImages to Buffer took "+timer.reportMsAndRestart()+" ms");
+        float t2=timer.reportMsAndRestart();
+        System.out.println("Tiff RenderedImages to Buffer took "+t2+" ms");
+        System.out.println("loadTiffStack() total time="+(t1+t2)+" ms");
         return result;
     }
 
@@ -231,6 +234,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         System.out.println("Initializing texture buffer took "+timer.reportMsAndRestart()+" ms");
 
+        // NOTE: empirically, this step cannot be done with multiple-threads. It is mysteriously not thread-safe.
         Raster[] raster=new Raster[stack.length];
         for (int i=0;i<stack.length;i++) {
             raster[i]=stack[i].getData();
@@ -436,7 +440,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         public void run() {
             int shortOffset=zStart*height*width*numberOfComponents;
-            log.info("LoadStackZSlice16bit run() zStart="+zStart+" zCount="+zCount+" shortOffset="+shortOffset);
+            //log.info("LoadStackZSlice16bit run() zStart="+zStart+" zCount="+zCount+" shortOffset="+shortOffset);
             int zMax=zStart+zCount;
             for (int z = zStart; z < zMax; ++z) {
                 Raster sliceRaster=raster[z];
