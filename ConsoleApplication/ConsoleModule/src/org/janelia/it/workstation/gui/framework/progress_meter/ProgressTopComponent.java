@@ -1,14 +1,13 @@
 package org.janelia.it.workstation.gui.framework.progress_meter;
 
 import java.awt.BorderLayout;
-import java.awt.Image;
 import java.util.Properties;
 
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 
 /**
  * Top component which usually slides in from the right side when a background
@@ -44,19 +43,19 @@ public final class ProgressTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_ProgressTopComponent());
         setToolTipText(Bundle.HINT_ProgressTopComponentTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, true);
-        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, false);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, true);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, true);
-        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, true);
-        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, false);
+//        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, true);
+//        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, false);
+//        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, true);
+//        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, true);
+//        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, true);
+//        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, false);
         add(ProgressMeterPanel.getSingletonInstance(), BorderLayout.CENTER);
     }
     
-    @Override
-    public boolean canClose() { 
-        return false; 
-    }
+//    @Override
+//    public boolean canClose() { 
+//        return false; 
+//    }
     
     /**
      * This method is called from within the constructor to initialize the form.
