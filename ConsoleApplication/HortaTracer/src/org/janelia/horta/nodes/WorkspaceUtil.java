@@ -49,14 +49,23 @@ public class WorkspaceUtil
     }
     
     public NeuronSet getOrCreateTemporaryNeuronSet() {
-        for (NeuronSet neuronSet : workspace.getNeuronSets()) {
-            if (neuronSet.getName().equals("TemporaryNeurons"))
-                return neuronSet;
-        }
-        NeuronSet result = new BasicNeuronSet("Temporary Neurons", new ArrayList<NeuronModel>());
+        NeuronSet result = getTemporaryNeuronSetOrNull();
+        if (result != null)
+            return result;
+        final String nameOfSet = "Temporary Neurons";
+        result = new BasicNeuronSet(nameOfSet, new ArrayList<NeuronModel>());
         workspace.getNeuronSets().add(result);
         workspace.setChanged();
         return result;
+    }
+    
+    public NeuronSet getTemporaryNeuronSetOrNull() {
+        final String nameOfSet = "Temporary Neurons";
+        for (NeuronSet neuronSet : workspace.getNeuronSets()) {
+            if (neuronSet.getName().equals(nameOfSet))
+                return neuronSet;
+        }
+        return null;
     }
     
     // Convenience function for use after dragging a lone SWC onto the viewer.

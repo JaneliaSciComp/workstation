@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="AlignmentBoardModule/src"/>
+	<classpathentry kind="src" path="IntegrationAPIs/src"/>
 	<classpathentry kind="src" path="ConsoleModule/build/classes-generated"/>
 	<classpathentry kind="src" path="AlignmentBoardModule/build/classes-generated"/>
 	<classpathentry kind="src" path="AlignmentBoardModule/test/unit/src"/>

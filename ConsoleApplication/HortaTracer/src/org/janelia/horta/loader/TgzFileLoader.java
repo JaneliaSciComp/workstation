@@ -28,101 +28,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.horta.loader;
 
-import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.SwcVertex;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
+import org.apache.commons.io.FilenameUtils;
 
 /**
- *
+ * Delegates contents of tarred, gzipped file as individual file loads.
  * @author Christopher Bruns
  */
-public class BasicSwcVertex implements SwcVertex
+public class TgzFileLoader implements FileTypeLoader
 {
-    private final float[] location = {0,0,0};
-    private float radius = 0.0f; // micrometers
-    private int label = 1;
-    private int typeIndex = 0;
-    private SwcVertex parent = null;
-
-    public BasicSwcVertex(float x, float y, float z)
-    {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
-    }
 
     @Override
-    public float[] getLocation()
+    public boolean supports(DataSource source)
     {
-        return location;
-    }
-
-    public void setLocation(Vector3 location)
-    {
-        System.arraycopy(location.toArray(), 0, this.location, 0, 3);
-    }
+        String ext = FilenameUtils.getExtension(source.getFileName()).toUpperCase();
+        if (ext.equals("TGZ"))
+            return true;
+        return false;    }
 
     @Override
-    public void setLocation(float x, float y, float z)
+    public boolean load(DataSource source, FileHandler handler) throws IOException
     {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
+        // Delegate to uncompressed datasource
+        InputStream uncompressedStream = new GZIPInputStream(source.getInputStream());
+        // Create extension ".tar", so next delegated layer knows to handle this as a tar file
+        String uncompressedName = FilenameUtils.getBaseName(source.getFileName()) + ".tar";
+        DataSource uncompressed = new BasicDataSource(uncompressedStream, uncompressedName);
+        return handler.handleDataSource(uncompressed);
     }
-
-    @Override
-    public float getRadius()
-    {
-        return radius;
-    }
-
-    @Override
-    public void setRadius(float radius)
-    {
-        this.radius = radius;
-    }
-
-    @Override
-    public int getLabel()
-    {
-        return label;
-    }
-
-    @Override
-    public void setLabel(int label)
-    {
-        this.label = label;
-    }
-
-    @Override
-    public int getTypeIndex()
-    {
-        return typeIndex;
-    }
-
-    @Override
-    public void setTypeIndex(int typeIndex)
-    {
-        this.typeIndex = typeIndex;
-    }
-
-    @Override
-    public SwcVertex getParent()
-    {
-        return parent;
-    }
-
-    @Override
-    public void setParent(SwcVertex parent)
-    {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean hasRadius()
-    {
-        return true;
-    }
-
+    
 }

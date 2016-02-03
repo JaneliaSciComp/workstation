@@ -230,16 +230,16 @@ public class VolumeMipMaterial extends BasicMaterial
             // Brightness/Contrast
             // float [] oc = new float[] {0, 0, 1};
             // TODO - make use of alpha channel, which gets set to "1.0" for images with less than 4 channels
-            float [] opMin = new float[] {0, 0, 0, 1};
-            float [] opMax = new float[] {1, 1, 1, 2};
+            float [] opMin = new float[] {0, 0};
+            float [] opMax = new float[] {1, 1};
             if (colorMap != null) {
-                for (int i = 0; i < 3; ++i) {
+                for (int i = 0; i < 2; ++i) {
                     opMin[i] = colorMap.getMinimum();
                     opMax[i] = colorMap.getMaximum();
                 }
             }
-            gl.glUniform4fv(opacityFunctionMinIndex, 1, opMin, 0);
-            gl.glUniform4fv(opacityFunctionMaxIndex, 1, opMax, 0);
+            gl.glUniform2fv(opacityFunctionMinIndex, 1, opMin, 0);
+            gl.glUniform2fv(opacityFunctionMaxIndex, 1, opMax, 0);
 
             Vector4 micrometerVolumes = world_X_tc.multiply(new Vector4(1, 1, 1, 0));
             float [] volMic = new float[] {

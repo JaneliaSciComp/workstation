@@ -28,88 +28,34 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.geometry3d;
+package org.janelia.horta.loader;
 
-import java.util.Observer;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.Copyable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.io.InputStream;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BrightnessModel 
-implements Copyable<BrightnessModel>, ObservableInterface
+public class BasicDataSource implements DataSource
 {
-    private float minimum = 0; // range 0-1
-    private float maximum = 1; // range 0-1
-    private final ComposableObservable changeObservable = new ComposableObservable();
+    private final InputStream stream;
+    private final String fileName;
 
-    public BrightnessModel() {}
-
-    public BrightnessModel(BrightnessModel rhs) {
-        copy(rhs);
-    }
-
-    @Override
-    public final void copy(BrightnessModel rhs) {
-        setMinimum(rhs.minimum);
-        setMaximum(rhs.maximum);        
+    public BasicDataSource(InputStream stream, String fileName) {
+        this.stream = stream;
+        this.fileName = fileName;
     }
     
-    public float getMaximum() {
-        return maximum;
-    }
-
-    public float getMinimum() {
-        return minimum;
-    }
-
-    public final void setMinimum(float minimum) {
-        if (minimum == this.minimum)
-            return;
-        // System.out.println("Min changed!");
-        changeObservable.setChanged();
-        this.minimum = minimum;
-    }
-
-    public final void setMaximum(float maximum) {
-        if (maximum == this.maximum)
-            return;
-        changeObservable.setChanged();
-        this.maximum = maximum;
-    }
-
     @Override
-    public void setChanged() {
-        changeObservable.setChanged();
-    }
-
-    @Override
-    public void notifyObservers() {
-        changeObservable.notifyObservers();
-    }
-
-    @Override
-    public void addObserver(Observer observer) {
-        changeObservable.addObserver(observer);
-    }
-
-    @Override
-    public void deleteObserver(Observer observer) {
-        changeObservable.deleteObserver(observer);
-    }
-
-    @Override
-    public void deleteObservers() {
-        changeObservable.deleteObservers();
-    }
-
-    @Override
-    public boolean hasChanged()
+    public InputStream getInputStream()
     {
-        return changeObservable.hasChanged();
+        return stream;
+    }
+
+    @Override
+    public String getFileName()
+    {
+        return fileName;
     }
     
 }

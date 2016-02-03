@@ -53,13 +53,10 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -67,17 +64,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -92,12 +82,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
-import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -118,11 +106,16 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.horta.actors.SpheresActor;
+import org.janelia.horta.loader.DroppedFileHandler;
+import org.janelia.horta.loader.GZIPFileLoader;
+import org.janelia.horta.loader.HortaSwcLoader;
+import org.janelia.horta.loader.TarFileLoader;
+import org.janelia.horta.loader.TgzFileLoader;
+import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
-import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -137,13 +130,8 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.util.Exceptions;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.RequestProcessor;
-import org.openide.util.Utilities;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -182,6 +170,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaWorkspace workspace;
+    private final NeuronVertexIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -223,12 +212,15 @@ public final class NeuronTracerTopComponent extends TopComponent
         setToolTipText(Bundle.HINT_NeuronTracerTopComponent());
 
         // Below is custom methods by me CMB
+        
+        // Insert a specialized SceneWindow into the component
+        initialize3DViewer(); // initializes workspace
+
         // Drag a YML tilebase file to put some data in the viewer
         setupDragAndDropYml();
 
-        // Insert a specialized SceneWindow into the component
-        initialize3DViewer(); // initializes workspace
         neuronManager = new NeuronManager(workspace);
+        neuronVertexIndex = new NeuronVertexIndex(workspace);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -251,7 +243,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             {
                 // System.out.println("hide models");
                 if (neuronMPRenderer.setHideAll(true))
-                    sceneWindow.getInnerComponent().repaint();
+                    redrawNow();
             }
         });
         actionMap.put("unhideModels", new AbstractAction(){
@@ -260,7 +252,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             {
                 // System.out.println("unhide models");
                 if (neuronMPRenderer.setHideAll(false))
-                    sceneWindow.getInnerComponent().repaint();
+                    redrawNow();
             }
         });
 
@@ -292,7 +284,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void update(Observable o, Object arg) {
                 // logger.info("Camera changed");
-                sceneWindow.getInnerComponent().repaint();
+                redrawNow();
             }
         });
 
@@ -306,7 +298,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void update(Observable o, Object arg)
             {
                 setBackgroundColor( workspace.getBackgroundColor() );
-                sceneWindow.getInnerComponent().repaint();                
+                redrawNow();
             }
         });
 
@@ -358,14 +350,35 @@ public final class NeuronTracerTopComponent extends TopComponent
         renderers.add(neuronMPRenderer0);
                 
         // 3) Neurite model
-        for (NeuriteActor tracingActor : tracingInteractor.createActors()) {
+        for (GL3Actor tracingActor : tracingInteractor.createActors()) {
             sceneWindow.getRenderer().addActor(tracingActor);
-            tracingActor.getModel().addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg) {
-                    sceneWindow.getInnerComponent().repaint();
-                }
-            });
+            if (tracingActor instanceof NeuriteActor) // TODO: deprecate NeuriteActor
+            {
+                NeuriteActor neuriteActor = (NeuriteActor)tracingActor;
+                neuriteActor.getModel().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        redrawNow();
+                    }
+                });
+            }
+            else if (tracingActor instanceof SpheresActor) // highlight hover actor
+            {
+                SpheresActor spheresActor = (SpheresActor)tracingActor;
+                spheresActor.getNeuron().getMembersAddedObservable().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        redrawNow();
+                    }
+                });
+                spheresActor.getNeuron().getMembersRemovedObservable().addObserver(new Observer() {
+                    @Override
+                    public void update(Observable o, Object arg) {
+                        redrawNow();
+                    }
+                });
+            }
+            // TODO: update that fourth actor, which uses a NeuronModel
         }
 
         // 4) Scale bar
@@ -647,8 +660,28 @@ public final class NeuronTracerTopComponent extends TopComponent
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
 
     }
-
-    private void setupDragAndDropYml() {
+    
+    public void loadDroppedYaml(InputStream yamlStream) throws IOException, ParseException
+    {
+        // currentSource = Utilities.toURI(file).toURL().toString();
+        volumeSource = loadYaml(yamlStream, loader, null);
+        loader.loadTileAtCurrentFocus(volumeSource);
+    }
+    
+    
+    private void setupDragAndDropYml() 
+    {
+        final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
+        droppedFileHandler.addLoader(new GZIPFileLoader());
+        droppedFileHandler.addLoader(new TarFileLoader());
+        droppedFileHandler.addLoader(new TgzFileLoader());
+        droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
+        // Put dropped neuron models into "Temporary neurons"
+        WorkspaceUtil ws = new WorkspaceUtil(workspace);
+        NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
+        final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, neuronMPRenderer);
+        droppedFileHandler.addLoader(swcLoader);
+        
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
 
@@ -692,114 +725,39 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
                 Transferable t = dtde.getTransferable();
-                
-                final ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading File...");
+
                 try {
                     List<File> fileList = (List) t.getTransferData(DataFlavor.javaFileListFlavor);
-                    final List<File> neuronFileList = new ArrayList<>();
                     // Drop could be YAML and/or SWC
                     for (File f : fileList) {
-                        String extension = FilenameUtils.getExtension(f.getName()).toUpperCase();
-                        switch (extension) {
-                            case "SWC":
-                                neuronFileList.add(f);
-                                break;
-                            case "YML":
-                            case "YAML":
-                                InputStream sourceYamlStream = new FileInputStream(f);
-                                currentSource = Utilities.toURI(f).toURL().toString();
-                                volumeSource = loadYaml(sourceYamlStream, loader, progress);
-                                sourceYamlStream.close();
-                                loader.loadTileAtCurrentFocus(volumeSource);
-                                logger.info("dragged Yaml file loaded!");
-                                break;
-                        }
+                        droppedFileHandler.handleFile(f);
                     }
-                    // Show progress for loading large numbers of swc files
-                    Runnable swcLoadTask = new Runnable() {
+
+                    // Update after asynchronous load completes
+                    swcLoader.runAfterLoad(new Runnable() {
                         @Override
-                        public void run() {
-                            loadNeuronFiles(neuronFileList);                    
+                        public void run()
+                        {
+                            // Update models after drop.
+                            if (workspace == null) return;
+                            WorkspaceUtil ws = new WorkspaceUtil(workspace);
+                            NeuronSet ns = ws.getTemporaryNeuronSetOrNull();
+                            if (ns == null) return;
+                            if (! ns.getMembershipChangeObservable().hasChanged()) return;
+                            ns.getMembershipChangeObservable().notifyObservers();
+                            // force repaint - just once per drop action though.
+                            workspace.setChanged();
+                            workspace.notifyObservers();
                         }
-                    };
-                    RequestProcessor.getDefault().post(swcLoadTask);
+                    });
                     
-                } catch (UnsupportedFlavorException | IOException | ParseException ex) {
+                } catch (UnsupportedFlavorException | IOException ex) {
                     JOptionPane.showMessageDialog(NeuronTracerTopComponent.this, "Error loading dragged file");
                     Exceptions.printStackTrace(ex);
-                } finally {
-                    progress.finish();
-                }
+                } 
                 
             }
         }));
-    }
-    
-    private void loadNeuronFiles(List<File> neuronFileList)
-    {
-        // TODO: load neurons multithreaded
-        if (neuronFileList.isEmpty()) return;
-        final ProgressHandle progress
-                = ProgressHandleFactory.createHandle("Loading SWC Files...");
-        progress.start();
-        WorkspaceUtil ws = new WorkspaceUtil(workspace);
-        final NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
-        final AtomicInteger loadedCount = new AtomicInteger(0);
-        final int fileCount = neuronFileList.size();
-        progress.switchToDeterminate(fileCount);
-        progress.progress(0);
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-        final Collection<NeuronModel> newNeurons = new ArrayList<>();
-        for (final File f : neuronFileList) {
-            Runnable loadJob = new Runnable() {
-                @Override
-                public void run()
-                {
-                    try {
-                        NeuronModel neuron = new BasicNeuronModel(f);
-                        // TODO: safe multithreaded access to NeuronSet ns
-                        synchronized(newNeurons) {
-                            newNeurons.add(neuron);
-                        }
-                        synchronized(progress) {
-                            progress.progress(loadedCount.getAndIncrement());
-                        }
-                    } catch (IOException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                }
-            };
-            // loadJob.run();
-            pool.submit(loadJob);
-        }
-        pool.shutdown();
-        try {
-            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
-                pool.shutdownNow();
-        } catch (InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        progress.finish();
-
-        final ProgressHandle progress2
-                = ProgressHandleFactory.createHandle("Creating neuron models...");
-        progress2.start();
-        progress2.switchToDeterminate(newNeurons.size());
-        // Parallel construction of neuron actors...
-        neuronMPRenderer.bulkAddNeuronActors(newNeurons);
-        int ix = 0;
-        for (NeuronModel neuron : newNeurons) {
-            if (ns.add(neuron))
-                ns.getMembershipChangeObservable().setChanged();
-            progress2.progress(ix);
-            ix += 1;
-        }
-        progress2.finish();
-       
-        // TODO: the slow part follows:
-        workspace.notifyObservers();
-        ns.getMembershipChangeObservable().notifyObservers();        
     }
     
     private void setupContextMenu(Component innerComponent) {
@@ -1296,6 +1254,26 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public void componentClosed() {
         neuronManager.onClosed();
+    }
+
+    @Override
+    public boolean isNeuronModelAt(Point2D xy)
+    {
+        return neuronMPRenderer.isNeuronModelAt(xy, 
+                sceneWindow.getCamera());
+    }
+
+    @Override
+    public boolean isVolumeDensityAt(Point2D xy)
+    {
+        return neuronMPRenderer.isVolumeDensityAt(xy,
+                sceneWindow.getCamera());
+    }
+
+    @Override
+    public NeuronVertexIndex getVertexIndex()
+    {
+        return neuronVertexIndex;
     }
     
 }

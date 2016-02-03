@@ -37,7 +37,7 @@ import org.janelia.geometry3d.Vector3;
  */
 
 /**
- *
+ * TODO: obsolete NeuronAnchor class in favor of NeuronVertex API
  * @author Christopher Bruns
  */
 public class NeuriteAnchor implements ImmutableNeuriteAnchor 

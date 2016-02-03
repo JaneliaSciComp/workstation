@@ -31,11 +31,15 @@
 package org.janelia.horta.nodes;
 
 import java.awt.Color;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -72,9 +76,23 @@ public class BasicNeuronModel implements NeuronModel
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    
+    /*
+     * Creates an empty neuron model
+    */
+    public BasicNeuronModel(String modelName)    
+    {
+        this.name = modelName;
+    }
+    
     public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
     {
-        BufferedReader br = new BufferedReader(new FileReader(swcFile));
+        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName());
+    }
+    
+    public BasicNeuronModel(InputStream swcStream, String fileName) throws IOException
+    {
+        BufferedReader br = new BufferedReader(new InputStreamReader(swcStream));
         String line;
         
         // Parse origin offset from header
@@ -162,7 +180,7 @@ public class BasicNeuronModel implements NeuronModel
         }
         // Take name from file
         if (nodes.size() > 0) {
-            this.name = FilenameUtils.getBaseName(swcFile.getName());
+            this.name = FilenameUtils.getBaseName(fileName);
         }
     }
 

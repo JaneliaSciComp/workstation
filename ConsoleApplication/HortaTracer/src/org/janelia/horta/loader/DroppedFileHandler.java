@@ -28,101 +28,53 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.nodes;
+package org.janelia.horta.loader;
 
-import org.janelia.geometry3d.Vector3;
-import org.janelia.horta.modelapi.SwcVertex;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
- *
+ * Helper class used when user drags-and-drops a file onto HortaWorkspaceNode or 
+ * onto NeuronTracerTopComponent.
+ * 
  * @author Christopher Bruns
  */
-public class BasicSwcVertex implements SwcVertex
+public class DroppedFileHandler implements FileHandler
 {
-    private final float[] location = {0,0,0};
-    private float radius = 0.0f; // micrometers
-    private int label = 1;
-    private int typeIndex = 0;
-    private SwcVertex parent = null;
-
-    public BasicSwcVertex(float x, float y, float z)
-    {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
+    private final Collection<FileTypeLoader> typeLoaders = new ArrayList<>();
+    
+    public void addLoader(FileTypeLoader loader) {
+        typeLoaders.add(loader);
     }
-
+    
+    public boolean handleFile(File f) 
+            throws FileNotFoundException, IOException 
+    {
+        DataSource source = new FileDataSource(f);
+        return handleDataSource(source);
+    }
+    
+    public boolean handleStream(InputStream stream, String fileName) 
+            throws IOException 
+    {
+        DataSource source = new BasicDataSource(stream, fileName);
+        return handleDataSource(source);
+    }
+    
     @Override
-    public float[] getLocation()
+    public boolean handleDataSource(DataSource source) 
+            throws IOException 
     {
-        return location;
+        for (FileTypeLoader loader : typeLoaders) {
+            if (loader.supports(source)) {
+                if (loader.load(source, this))
+                    return true;
+            }
+        }
+        return false;
     }
-
-    public void setLocation(Vector3 location)
-    {
-        System.arraycopy(location.toArray(), 0, this.location, 0, 3);
-    }
-
-    @Override
-    public void setLocation(float x, float y, float z)
-    {
-        location[0] = x;
-        location[1] = y;
-        location[2] = z;
-    }
-
-    @Override
-    public float getRadius()
-    {
-        return radius;
-    }
-
-    @Override
-    public void setRadius(float radius)
-    {
-        this.radius = radius;
-    }
-
-    @Override
-    public int getLabel()
-    {
-        return label;
-    }
-
-    @Override
-    public void setLabel(int label)
-    {
-        this.label = label;
-    }
-
-    @Override
-    public int getTypeIndex()
-    {
-        return typeIndex;
-    }
-
-    @Override
-    public void setTypeIndex(int typeIndex)
-    {
-        this.typeIndex = typeIndex;
-    }
-
-    @Override
-    public SwcVertex getParent()
-    {
-        return parent;
-    }
-
-    @Override
-    public void setParent(SwcVertex parent)
-    {
-        this.parent = parent;
-    }
-
-    @Override
-    public boolean hasRadius()
-    {
-        return true;
-    }
-
 }

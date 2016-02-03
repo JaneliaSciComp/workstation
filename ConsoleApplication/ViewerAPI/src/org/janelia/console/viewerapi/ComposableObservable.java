@@ -65,4 +65,10 @@ implements ObservableInterface
     public void setChanged() {
         super.setChanged();
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return super.hasChanged();
+    }
 }
