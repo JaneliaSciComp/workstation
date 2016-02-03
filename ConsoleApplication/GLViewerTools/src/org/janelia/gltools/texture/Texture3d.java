@@ -48,6 +48,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -230,52 +231,87 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         System.out.println("Initializing texture buffer took "+timer.reportMsAndRestart()+" ms");
 
-        int[] pxl = new int[numberOfComponents];
-        if (bytesPerIntensity < 2) {
+        Raster[] raster=new Raster[stack.length];
+        for (int i=0;i<stack.length;i++) {
+            raster[i]=stack[i].getData();
+        }
+
+        System.out.println("Getting Rasters from RenderedImages took "+timer.reportMsAndRestart()+" ms");
+
+        if (bytesPerIntensity<2) { // 8-bit
             pixels.rewind();
-            for (int z = 0; z < depth; ++z) {
-                Raster raster = stack[z].getData();
-                for (int y = 0; y < height; ++y) {
-                    for (int x = 0; x < width; ++x) {
-                        raster.getPixel(x, y, pxl);
-                        for (int c = 0; c < numberOfComponents; ++c) {
-                            pixels.put((byte)(pxl[c] & 0xFF));
-                        }
+            if (depth<6) {
+                LoadStackZSlice8bit loadStackZSlice8bit=new LoadStackZSlice8bit(0,depth,pixels,raster,depth,height,width,numberOfComponents);
+                loadStackZSlice8bit.run();
+            } else {
+                ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
+                List<Future> threadList=new ArrayList<>();
+                for (int z=0;z<depth;) {
+                    int remainingZ=depth-z;
+                    int zCount=3;
+                    if (remainingZ<zCount) {
+                        zCount=remainingZ;
+                    }
+                    LoadStackZSlice8bit loadStackZSlice8bit=new LoadStackZSlice8bit(z,zCount,pixels,raster,depth,height,width,numberOfComponents);
+                    threadList.add(scheduledThreadPoolExecutor.submit(loadStackZSlice8bit));
+                    z+=zCount;
+                }
+                int doneCount = 0;
+                long startTime = new Date().getTime();
+                while (doneCount < threadList.size()) {
+                    long currentTime = new Date().getTime();
+                    if (currentTime - startTime > 30000) {
+                        log.error("loadStack() exceeded max thread pool wait time");
+                        break;
+                    }
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (Exception ex) {
+                    }
+                    doneCount = 0;
+                    for (Future f : threadList) {
+                        if (f.isDone()) doneCount++;
                     }
                 }
             }
             pixels.flip();
-        }
-        else { // 16 bit
-            shortPixels = pixels.asShortBuffer();
+        } else { // 16-bit
+            shortPixels=pixels.asShortBuffer();
             shortPixels.rewind();
-            // System.out.println("Casting short buffer took "+timer.reportMsAndRestart()+" ms");
-            Raster[] sliceRasters = new Raster[depth];
-
-            // TODO Run this in parallel
-            for (int z = 0; z < depth; ++z) {
-                sliceRasters[z] = stack[z].getData(); // slow 35-40 ms per slice                
-            }
-            System.out.println("Getting Raster data took "+timer.reportMsAndRestart()+" ms");
-
-            for (int z = 0; z < depth; ++z) {
-                final boolean useRawBytes = true;
-                if (useRawBytes) { // not faster! 12 seconds
-                    DataBufferUShort dbu = (DataBufferUShort)sliceRasters[z].getDataBuffer();
-                    // System.out.println("Slice "+z+" getDataBuffer() took "+timer.reportMsAndRestart()+" ms");
-                    short[] sliceData = dbu.getData();
-                    // System.out.println("Slice "+z+" getData() [2] took "+timer.reportMsAndRestart()+" ms");
-                    shortPixels.put(sliceData);
-                    /// System.out.println("Slice "+z+" put() took "+timer.reportMsAndRestart()+" ms");
+            if (depth<6) {
+                LoadStackZSlice16bit loadStackZSlice16bit=new LoadStackZSlice16bit(0,depth,shortPixels,raster,depth,height,width,numberOfComponents);
+                loadStackZSlice16bit.run();
+            } else {
+                ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
+                List<Future> threadList=new ArrayList<>();
+                for (int z=0;z<depth;) {
+                    int remainingZ=depth-z;
+                    int zCount=3;
+                    if (remainingZ<zCount) {
+                        zCount=remainingZ;
+                    }
+                    LoadStackZSlice16bit loadStackZSlice16bit=new LoadStackZSlice16bit(z,zCount,shortPixels,raster,depth,height,width,numberOfComponents);
+                    threadList.add(scheduledThreadPoolExecutor.submit(loadStackZSlice16bit));
+                    //loadStackZSlice16bit.run();
+                    z+=zCount;
                 }
-                else { // 12 seconds
-                    for (int y = 0; y < height; ++y) {
-                        for (int x = 0; x < width; ++x) {
-                            sliceRasters[z].getPixel(x, y, pxl);
-                            for (int c = 0; c < numberOfComponents; ++c) {
-                                shortPixels.put((short)(pxl[c] & 0xFFFF));
-                            }
-                        }
+                int doneCount = 0;
+                long startTime = new Date().getTime();
+                while (doneCount < threadList.size()) {
+                    long currentTime = new Date().getTime();
+                    if (currentTime - startTime > 30000) {
+                        log.error("loadStack() exceeded max thread pool wait time");
+                        break;
+                    }
+                    try {
+                        Thread.sleep(10);
+                    }
+                    catch (Exception ex) {
+                    }
+                    doneCount = 0;
+                    for (Future f : threadList) {
+                        if (f.isDone()) doneCount++;
                     }
                 }
             }
@@ -283,7 +319,60 @@ public class Texture3d extends BasicTexture implements GL3Resource
         }
         pixels.rewind();
 
-        System.out.println("Populating texture buffer took "+timer.reportMsAndRestart()+" ms");
+//        int[] pxl = new int[numberOfComponents];
+//        if (bytesPerIntensity < 2) {
+//            pixels.rewind();
+//            for (int z = 0; z < depth; ++z) {
+//                Raster raster = stack[z].getData();
+//                for (int y = 0; y < height; ++y) {
+//                    for (int x = 0; x < width; ++x) {
+//                        raster.getPixel(x, y, pxl);
+//                        for (int c = 0; c < numberOfComponents; ++c) {
+//                            pixels.put((byte)(pxl[c] & 0xFF));
+//                        }
+//                    }
+//                }
+//            }
+//            pixels.flip();
+//        }
+//        else { // 16 bit
+//            shortPixels = pixels.asShortBuffer();
+//            shortPixels.rewind();
+//            // System.out.println("Casting short buffer took "+timer.reportMsAndRestart()+" ms");
+//            Raster[] sliceRasters = new Raster[depth];
+//
+//            // TODO Run this in parallel
+//            for (int z = 0; z < depth; ++z) {
+//                sliceRasters[z] = stack[z].getData(); // slow 35-40 ms per slice
+//            }
+//            System.out.println("Getting Raster data took "+timer.reportMsAndRestart()+" ms");
+//
+//            for (int z = 0; z < depth; ++z) {
+//                final boolean useRawBytes = true;
+//                if (useRawBytes) { // not faster! 12 seconds
+//                    DataBufferUShort dbu = (DataBufferUShort)sliceRasters[z].getDataBuffer();
+//                    // System.out.println("Slice "+z+" getDataBuffer() took "+timer.reportMsAndRestart()+" ms");
+//                    short[] sliceData = dbu.getData();
+//                    // System.out.println("Slice "+z+" getData() [2] took "+timer.reportMsAndRestart()+" ms");
+//                    shortPixels.put(sliceData);
+//                    /// System.out.println("Slice "+z+" put() took "+timer.reportMsAndRestart()+" ms");
+//                }
+//                else { // 12 seconds
+//                    for (int y = 0; y < height; ++y) {
+//                        for (int x = 0; x < width; ++x) {
+//                            sliceRasters[z].getPixel(x, y, pxl);
+//                            for (int c = 0; c < numberOfComponents; ++c) {
+//                                shortPixels.put((short)(pxl[c] & 0xFFFF));
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//            shortPixels.flip();
+//        }
+//        pixels.rewind();
+
+        System.out.println("Getting Raster data and populating texture buffer took "+timer.reportMsAndRestart()+" ms");
 
         computeMipmaps();
 
@@ -292,6 +381,78 @@ public class Texture3d extends BasicTexture implements GL3Resource
         needsUpload = true;
 
         return this;
+    }
+
+    private static class LoadStackZSlice8bit implements Runnable {
+        int zStart, zCount, depth, height, width, numberOfComponents;
+        ByteBuffer pixels;
+        Raster[] raster;
+
+        public LoadStackZSlice8bit(int zStart, int zCount, ByteBuffer pixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
+            this.zStart=zStart;
+            this.zCount=zCount;
+            this.pixels=pixels;
+            this.raster=raster;
+            this.depth=depth;
+            this.height=height;
+            this.width=width;
+            this.numberOfComponents=numberOfComponents;
+        }
+
+        public void run() {
+            int pixelOffset=zStart*height*width*numberOfComponents;
+            int[] pxl = new int[numberOfComponents];
+            int zMax=zStart+zCount;
+            for (int z = zStart; z < zMax; ++z) {
+                Raster r = raster[z];
+                for (int y = 0; y < height; ++y) {
+                    for (int x = 0; x < width; ++x) {
+                        r.getPixel(x, y, pxl);
+                        for (int c = 0; c < numberOfComponents; ++c) {
+                            pixels.put(pixelOffset++, (byte)(pxl[c] & 0xFF));
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private static class LoadStackZSlice16bit implements Runnable {
+        int zStart, zCount, depth, height, width, numberOfComponents;
+        ShortBuffer shortPixels;
+        Raster[] raster;
+
+        public LoadStackZSlice16bit(int zStart, int zCount, ShortBuffer shortPixels, Raster[] raster, int depth, int height, int width, int numberOfComponents) {
+            this.zStart=zStart;
+            this.zCount=zCount;
+            this.shortPixels=shortPixels;
+            this.raster=raster;
+            this.depth=depth;
+            this.height=height;
+            this.width=width;
+            this.numberOfComponents=numberOfComponents;
+        }
+
+        public void run() {
+            int shortOffset=zStart*height*width*numberOfComponents;
+            log.info("LoadStackZSlice16bit run() zStart="+zStart+" zCount="+zCount+" shortOffset="+shortOffset);
+            int zMax=zStart+zCount;
+            for (int z = zStart; z < zMax; ++z) {
+                Raster sliceRaster=raster[z];
+                DataBufferUShort dbu = (DataBufferUShort)sliceRaster.getDataBuffer();
+                short[] sliceData = dbu.getData();
+                addArrayToBuffer(shortPixels, sliceData, shortOffset);
+                shortOffset+=sliceData.length;
+            }
+        }
+
+        private void addArrayToBuffer(ShortBuffer shortBuffer, short[] arr, int bufferOffset) {
+            for (int i=0;i<arr.length;i++) {
+                shortBuffer.put(bufferOffset+i, arr[i]);
+            }
+        }
+
     }
 
     protected void computeMipmaps() {
@@ -652,30 +813,46 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         ImageDecoder decoder;
 
-        // Performance results for various load strategies below:
+        // Performance results for various load strategies below. NOTE: ALL STEPS INCLUDING:
+        //   1) Decoder creation (here)
+        //   2) RenderedImage generation (next step)
+        //   3) Raster creation from RenderedImage (2nd next step)
+        //
+        // MUST be considered wrt performance implication of the choice of decoder configuration.
+        // The total timings of these 3 steps is mentioned below (in seconds)
+
         final boolean useMemoryCache = false;
         final boolean useFileCache = false;
-        final boolean useFileSS = true; // FASTEST
+        final boolean useFileSS = false;
         final boolean useFileStream = false;
-        if (useMemoryCache) { // [20, 18] seconds buffered;[30,22,41] seconds unbuffered
+
+        final boolean useFilesReadAllBytesAndByteArraySeekableStream = true; // BY FAR THE FASTEST
+
+        // PLEASE USE THIS ONE!
+        if (useFilesReadAllBytesAndByteArraySeekableStream) { // 6.2, 7.0, 7.9, 6.5 seconds
+            byte[] bytes= Files.readAllBytes(tiffFile.toPath());
+            SeekableStream s = new ByteArraySeekableStream(bytes);
+            decoder = ImageCodec.createImageDecoder("tiff", s, null);
+        } else
+        if (useMemoryCache) { // 18.0, 15.5, 13.0, 13.2 seconds
             InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
             SeekableStream s = new MemoryCacheSeekableStream(tiffStream);
             decoder = ImageCodec.createImageDecoder("tiff", s, null);
         }
-        else if (useFileCache) { // [59] seconds ;[100] seconds unbuffered
+        else if (useFileCache) { // >65.0 seconds
             InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
             SeekableStream s = new FileCacheSeekableStream(tiffStream);
             decoder = ImageCodec.createImageDecoder("tiff", s, null);
         }
-        else if (useFileSS) { // [4,0.6,3.2,1.2] seconds BEST
+        else if (useFileSS) { // 15.3, 16.3, 13.3, 14.6 seconds
             SeekableStream s = new FileSeekableStream(tiffFile);
             decoder = ImageCodec.createImageDecoder("tiff", s, null);
         }
-        else if (useFileStream) { // [55] seconds
+        else if (useFileStream) { // >68.0 seconds
             InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
             decoder = ImageCodec.createImageDecoder("tiff", tiffStream, null); // 55 seconds
         }
-        else { // [33] seconds
+        else { // 68.0, 37.8 seconds
             InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
             byte[] bytes = IOUtils.toByteArray(tiffStream);
             SeekableStream s = new ByteArraySeekableStream(bytes);
