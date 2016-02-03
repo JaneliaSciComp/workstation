@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
+import static org.janelia.it.jacs.model.domain.enums.FileType.VisuallyLosslessStack;
+
 import java.awt.Component;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -11,6 +11,7 @@ import java.util.List;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
@@ -29,6 +30,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopCo
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,6 +94,15 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         add(getAddToSetItem());
         add(getRemoveFromSetItem());
+
+        setNextAddRequiresSeparator(true);
+        add(getOpenInFinderItem());
+        add(getOpenWithAppItem());
+//        add(getNeuronAnnotatorItem());
+        add(getVaa3dTriViewItem());
+        add(getVaa3d3dViewItem());
+        add(getFijiViewerItem());
+        add(getDownloadMenu());
         
 //      setNextAddRequiresSeparator(true);
 //        add(getErrorFlag());
@@ -125,31 +136,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getCopyNameToClipboardItem() {
-        if (multiple) return null;
-        
-        JMenuItem copyMenuItem = new JMenuItem("  Copy Name To Clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(domainObject.getName());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-            }
-        });
-        return copyMenuItem;
+        return getNamedActionItem(new CopyToClipboardAction("Name",domainObject.getName()));
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
-        if (multiple) return null;
-        
-        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID To Clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(domainObject.getId().toString());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-            }
-        });
-        return copyMenuItem;
+        return getNamedActionItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
     }
     
     protected JMenuItem getOpenInNewEditorItem() {
@@ -265,6 +256,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
         return null;
     }
+    
     
 //    private void addBadDataButtons(JMenu errorMenu) {
 //
@@ -1123,8 +1115,73 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         return deleteItem;
     }
-//    
-//    
+    
+
+    protected JMenuItem getOpenInFinderItem() {
+    	if (multiple) return null;
+        if (!OpenInFinderAction.isSupported()) return null;
+        if (!(domainObject instanceof HasFiles)) return null;
+        HasFiles fileProvider = (HasFiles)domainObject;
+        String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInFinderAction(path));
+    }
+
+    protected JMenuItem getOpenWithAppItem() {
+    	if (multiple) return null;
+        if (!OpenWithDefaultAppAction.isSupported()) return null;
+        if (!(domainObject instanceof HasFiles)) return null;
+        HasFiles fileProvider = (HasFiles)domainObject;
+        String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+        
+    protected JMenuItem getVaa3dTriViewItem() {
+    	if (multiple) return null;
+    	if (!(domainObject instanceof HasFiles)) return null;
+        HasFiles fileProvider = (HasFiles)domainObject;
+        String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, null));
+    }
+
+    protected JMenuItem getVaa3d3dViewItem() {
+    	if (multiple) return null;
+    	if (!(domainObject instanceof HasFiles)) return null;
+        HasFiles fileProvider = (HasFiles)domainObject;
+        String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D));
+    }
+
+    protected JMenuItem getFijiViewerItem() {
+    	if (multiple) return null;
+    	if (!(domainObject instanceof HasFiles)) return null;
+        HasFiles fileProvider = (HasFiles)domainObject;
+        String path = DomainUtils.getDefault3dImageFilePath(fileProvider);
+        if (path==null) return null;
+        return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
+    }
+    
+    protected JMenuItem getDownloadMenu() {
+    	if (multiple) return null;
+    	if (domainObject instanceof Sample) {
+	        Sample sample = (Sample)domainObject;
+	        // TODO: add support for multi-file download
+	        HasFiles result = null; // TODO: get the result
+	        FileDownloadAction action = new FileDownloadAction(sample, result);
+	        return action.getPopupPresenter();
+    	}
+    	else if (domainObject instanceof HasFiles) {
+	        HasFiles result = (HasFiles)domainObject;
+	        FileDownloadAction action = new FileDownloadAction(null, result);
+	        return action.getPopupPresenter();
+    	}
+    	return null;
+    }    
+    
+  
 //    protected JMenuItem getMergeItem() {
 //
 //        // If multiple items are not selected then leave

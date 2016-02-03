@@ -84,10 +84,8 @@ public final class AccessManager {
         }
     }
 
-    private Subject authenticateSubject(String username, String password) {
+    private Subject authenticateSubject(final String username, final String password) {
         // make RESTful call to authenticate user
-        final String user = username;
-        final String pw = password;
 
         try {
             Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
@@ -97,15 +95,14 @@ public final class AccessManager {
                 Authenticator.setDefault(new Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(user,
-                                pw.toCharArray());
+                        return new PasswordAuthentication(username, password.toCharArray());
                     }
                 });
                 SessionMgr.getSessionMgr().getWebDavClient().setCredentialsUsingAuthenticator();
             }
             return authenticatedSubject;
         } catch (Exception e) {
-            log.error("Problem getting the subject using key " + username);
+            log.error("Problem getting the subject using key " + username, e);
         }
         return null;
     }
@@ -206,7 +203,8 @@ public final class AccessManager {
     public static Subject getSubjectByKey(String key) {
         try {
             return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             log.error("Error getting Subject Key: " + key + ", ", e);
         }
         return null;

@@ -465,10 +465,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 if (!m.matches()) {
                     throw new IllegalStateException("Result name cannot be parsed: "+parts[1]);
                 }
-                else {
-                    this.resultNamePrefix = m.matches()?m.group(1):null;
-                    this.groupName = m.matches()?m.group(3):null;
-                }
+                this.resultNamePrefix = m.matches()?m.group(1):null;
+                this.groupName = m.matches()?m.group(3):null;
             }
             else {
                 this.objective = null;

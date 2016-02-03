@@ -103,17 +103,14 @@ public class SampleResultContextMenu extends PopupContextMenu {
     
     protected JMenuItem getOpenInFinderItem() {
         if (!OpenInFinderAction.isSupported()) return null;
-        String path = DomainUtils.getFilepath(result, LosslessStack);
-        if (path==null) path = DomainUtils.getFilepath(result, VisuallyLosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
-        JMenuItem menuItem = getNamedActionItem(new OpenInFinderAction(path));
-        return menuItem;
+        return getNamedActionItem(new OpenInFinderAction(path));
     }
 
     protected JMenuItem getOpenWithAppItem() {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
-        String path = DomainUtils.getFilepath(result, LosslessStack);
-        if (path==null) path = DomainUtils.getFilepath(result, VisuallyLosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
     }
@@ -146,6 +143,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         final String path = DomainUtils.getFilepath(result, LosslessStack);
         if (path==null) return null;
         Sample sample = result.getParentRun().getParent().getParent();
+        // TODO: add support for multi-select download
         FileDownloadAction action = new FileDownloadAction(sample, result);
         return action.getPopupPresenter();
     }
