@@ -105,7 +105,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     protected void componentDeactivated() {
     }
 
-    private DomainObject getCurrent() {
+    public DomainObject getCurrent() {
         return getLookup().lookup(DomainObject.class);
     }
 

@@ -252,7 +252,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            Transferable t = new StringSelection(getDisplayName());
+            Transferable t = new StringSelection(getName());
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
     }

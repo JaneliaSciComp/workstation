@@ -322,6 +322,18 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     }
                     break;
                 }
+                else if (lsms!=null) {
+                    for(LSMImage lsm : lsms) {
+                        if (domainObject.getId().equals(lsm.getId())) {
+                            log.info("lsm invalidated, reloading...");
+                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                            if (updatedSample!=null) {
+                                loadDomainObject(updatedSample, false, null);
+                            }
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -337,6 +349,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         
         log.info("loadDomainObject({})",sample.getName());
+        selectionModel.setParentObject(sample);
         
         this.sample = sample;
         this.lsms = null;
@@ -375,6 +388,36 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     public void showResults() {
+
+        List<String> objectives = new ArrayList<>(sample.getOrderedObjectives());
+        Set<String> areaSet = new LinkedHashSet<>();
+        
+        for(String objective : objectives) {
+            
+            ObjectiveSample objSample = sample.getObjectiveSample(objective);
+            if (objSample==null) continue;
+            SamplePipelineRun run = objSample.getLatestRun();
+            if (run==null || run.getResults()==null) continue;
+            
+            for(PipelineResult result : run.getResults()) {
+
+                String area = null;
+                if (result instanceof HasAnatomicalArea) {
+                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
+                }
+                
+                if (area==null) area = "";
+                areaSet.add(area);
+            }
+        }
+        
+        objectives.add(0, ALL_VALUE);
+        populateObjectiveButton(objectives);
+        
+        List<String> areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+        populateAreaButton(areas);
+        
         if (MODE_LSMS.equals(currMode))  {
             showLsmView();
         }
@@ -385,8 +428,26 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
 
     private void showLsmView() {
-        // TODO: filter by objective
-        searchResults = SearchResults.paginate(lsms, lsmAnnotations);
+
+        List<LSMImage> filtered = new ArrayList<>();
+        for(LSMImage lsm : lsms) {
+
+            boolean display = true;
+
+            if (!currObjective.equals(ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
+                display = false;
+            }
+            
+            if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
+                display = false;
+            }
+            
+            if (display) {
+                filtered.add(lsm);
+            }
+        }
+        
+        searchResults = SearchResults.paginate(filtered, lsmAnnotations);
         resultsPanel.showSearchResults(searchResults, true);
         removeAll();
         add(toolbar, BorderLayout.NORTH);
@@ -402,10 +463,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         GridBagConstraints c = new GridBagConstraints();
         int y = 0;
                 
-        List<String> objectives = new ArrayList<>(sample.getOrderedObjectives());
-        Set<String> areaSet = new LinkedHashSet<>();
-        
-        for(String objective : objectives) {
+        for(String objective : sample.getOrderedObjectives()) {
             
             boolean diplayObjective = true;
             
@@ -426,7 +484,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 if (area==null) area = "";
-                areaSet.add(area);
                 
                 boolean display = diplayObjective;
                 if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
@@ -446,13 +503,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             }
         }
-        
-        objectives.add(0, ALL_VALUE);
-        populateObjectiveButton(objectives);
-        
-        List<String> areas = new ArrayList<>(areaSet);
-        areas.add(0, ALL_VALUE);
-        populateAreaButton(areas);
         
         if (!resultPanels.isEmpty()) {
             resultPanelSelection(resultPanels.get(0), false);

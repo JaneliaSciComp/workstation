@@ -188,7 +188,7 @@ public class EntityContextMenu extends JPopupMenu {
             add(wrapItem);
         }
 
-   //     if (("SessionMgr.getSubjectKey()".equals("user:simpsonj") || "SessionMgr.getSubjectKey()"
+   //     if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
     //            .equals("group:simpsonlab")) && !this.multiple) {
             add(getSpecialAnnotationSession());
      //   }
@@ -294,8 +294,8 @@ public class EntityContextMenu extends JPopupMenu {
                 Integer p2Score = 0;
                 p1Score += p1.getRootOwner().startsWith("group:") ? 2 : 0;
                 p2Score += p2.getRootOwner().startsWith("group:") ? 2 : 0;
-               // p1Score += "SessionMgr.getSubjectKey()".equals(p1.getRootOwner()) ? 1 : 0;
-              //  p2Score += "SessionMgr.getSubjectKey()".equals(p2.getRootOwner()) ? 1 : 0;
+               // p1Score += SessionMgr.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
+              //  p2Score += SessionMgr.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
                 EntityData e1 = p1.getPath().get(0);
                 EntityData e2 = p2.getPath().get(0);
                 int c = p2Score.compareTo(p1Score);
@@ -579,7 +579,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                 log.info("Setting "+eds.size()+" children");
                 entity.setEntityData(eds);
-                entity.setOwnerKey("SessionMgr.getSubjectKey()");
+                entity.setOwnerKey(SessionMgr.getSubjectKey());
                 this.tempSearchRE = new RootedEntity(entity);
             }
 

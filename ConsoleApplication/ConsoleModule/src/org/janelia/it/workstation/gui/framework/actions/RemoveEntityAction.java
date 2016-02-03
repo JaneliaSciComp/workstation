@@ -135,8 +135,8 @@ public class RemoveEntityAction implements Action {
                                 sharedNames.add(permission.getSubjectName());
                                // sharedKeys.add(permission.getSubjectKey());
                             }
-                            if (sharedKeys.size() == 1 && sharedKeys.get(0).equals("SessionMgr.getSubjectKey()")) {
-                                log.trace("Entity {} is shared with the current user ({}) only", child.getId(), "SessionMgr.getSubjectKey()");
+                            if (sharedKeys.size() == 1 && sharedKeys.get(0).equals(SessionMgr.getSubjectKey())) {
+                                log.trace("Entity {} is shared with the current user ({}) only", child.getId(), SessionMgr.getSubjectKey());
                             }
                             else {
                                 Collections.sort(sharedNames);

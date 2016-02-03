@@ -57,6 +57,19 @@ public class ViewerUtils {
         
         return viewer;
     }
+
+    public static <T extends TopComponent> T getViewer(ViewerManager<T> manager, final String modeName) {
+
+        T targetViewer = manager.getActiveViewer();
+        if (targetViewer==null || !targetViewer.isVisible() || !targetViewer.isOpened()) {
+            return null;
+        }
+        else {
+            // TODO: this should probably also check to make sure the viewer is in the correct mode
+            log.info("Getting viewer: {}",manager.getViewerName());
+            return targetViewer;
+        }
+    }
     
     public static <T extends TopComponent> T provisionViewer(ViewerManager<T> manager, final String modeName) {
 

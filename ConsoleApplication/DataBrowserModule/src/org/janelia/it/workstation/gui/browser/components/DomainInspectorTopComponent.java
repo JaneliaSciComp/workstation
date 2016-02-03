@@ -88,10 +88,10 @@ public final class DomainInspectorTopComponent extends TopComponent {
             return;
         }
 
-        if (!event.isClearAll()) {
-            log.debug("Event is not clear all: {}",event);
-            return;
-        }
+//        if (!event.isClearAll()) {
+//            log.debug("Event is not clear all: {}",event);
+//            return;
+//        }
         
         detailsPanel.loadDomainObject(event.getDomainObject());
     }

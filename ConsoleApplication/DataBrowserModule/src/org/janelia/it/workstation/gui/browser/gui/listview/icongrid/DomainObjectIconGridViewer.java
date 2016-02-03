@@ -61,9 +61,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     
-    private DefaultResult defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
-    private String defaultImageType = FileType.SignalMip.name();
-    
+    private DefaultResult defaultResult;
+    private String defaultImageType;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -215,6 +214,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
+        this.defaultResult = null;
+        this.defaultImageType = null;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
         
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
@@ -229,12 +230,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }
         
+        if (defaultResult == null) {
+            this.defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
+        }
+        
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
         Multiset<String> countedResultNames = LinkedHashMultiset.create();
         // Add twice so that it is selected by >1 filter below
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
-        
+            
         for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
@@ -272,13 +277,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         popupMenu.removeAll();
         
         for(final String resultName : countedResultNames.elementSet()) {
-            if (countedResultNames.count(resultName)>1) {
+            if (countedResultNames.count(resultName)>1 || countedResultNames.size()==1) {
                 JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-
                         defaultResult = new DefaultResult(resultName);
-                        
                         SimpleWorker worker = new SimpleWorker() {
 
                             @Override
@@ -293,7 +296,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                                     }
                                     DomainMgr.getDomainMgr().savePreference(preference);
                                 }
-                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved if ncessary when the object is persisted. 
+                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted. 
                             }
 
                             @Override
@@ -319,7 +322,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         popupMenu2.removeAll();
 
         for(final String typeName : countedTypeNames.elementSet()) {
-            if (countedTypeNames.count(typeName)>1) {
+            if (countedTypeNames.count(typeName)>1 || countedTypeNames.size()==1) {
+                if (defaultImageType == null) {
+                    this.defaultImageType = typeName;
+                }
                 FileType fileType = FileType.valueOf(typeName);
                 JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(defaultImageType));
                 menuItem.addActionListener(new ActionListener() {
@@ -361,6 +367,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
         
+        if (defaultImageType == null) {
+            this.defaultImageType = FileType.SignalMip.name();
+        }
+        
         showObjects(domainObjectList.getDomainObjects(), success);
     }
     
@@ -392,11 +402,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    protected JPopupMenu getContextualPopupMenu() {
+    protected DomainObjectContextMenu getContextualPopupMenu() {
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        JPopupMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
-        ((DomainObjectContextMenu) popupMenu).addMenuItems();
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
+        popupMenu.addMenuItems();
         return popupMenu;
     }
 
@@ -415,10 +425,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void buttonDrillDown(DomainObject domainObject) {
-        List<Reference> ids = selectionModel.getSelectedIds();
-        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
-        popupMenu.runDefaultAction();
+        getContextualPopupMenu().runDefaultAction();
     }
     
     @Override
@@ -458,10 +465,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 if (!m.matches()) {
                     throw new IllegalStateException("Result name cannot be parsed: "+parts[1]);
                 }
-                else {
-                    this.resultNamePrefix = m.matches()?m.group(1):null;
-                    this.groupName = m.matches()?m.group(3):null;
-                }
+                this.resultNamePrefix = m.matches()?m.group(1):null;
+                this.groupName = m.matches()?m.group(3):null;
             }
             else {
                 this.objective = null;

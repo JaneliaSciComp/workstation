@@ -137,7 +137,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
     }
     
-    private PipelineResult getCurrent() {
+    public PipelineResult getCurrent() {
         return getLookup().lookup(PipelineResult.class);
     }
 

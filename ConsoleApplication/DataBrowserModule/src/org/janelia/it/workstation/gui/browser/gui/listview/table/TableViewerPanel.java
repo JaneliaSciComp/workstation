@@ -24,6 +24,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
@@ -85,6 +86,12 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
             }
 
             @Override
+            protected void rowDoubleClicked(int row) {
+                final T object = (T) getRows().get(row).getUserObject();
+                objectDoubleClicked(object);
+            }
+
+            @Override
             protected JPopupMenu createPopupMenu(MouseEvent e) {
                 return getContextualPopupMenu();
             }
@@ -100,13 +107,19 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                 // Everything selected in the table should be selected in the model
                 for(Object object : resultsTable.getSelectedObjects()) {
                     T obj = (T)object;
-                    selectedIds.add(imageModel.getImageUniqueId(obj));
-                    selectionModel.select(obj, false);
+                    S id = imageModel.getImageUniqueId(obj);
+                    selectedIds.add(id);
+                    if (!selectionModel.isSelected(id)) {
+                        selectionModel.select(obj, false);
+                    }
                 }
                 // Clear out everything that was not selected above
                 for(S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
                     if (!selectedIds.contains(selectedId)) {
-                        selectionModel.deselect(imageModel.getImageByUniqueId(selectedId));
+                        T object = imageModel.getImageByUniqueId(selectedId);
+                        if (selectionModel.isSelected(selectedId)) {
+                            selectionModel.deselect(object);
+                        }
                     }
                 }
             }
@@ -157,6 +170,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     }
 
     protected abstract JPopupMenu getContextualPopupMenu();
+
+    protected abstract void objectDoubleClicked(T object);
     
     protected abstract void chooseColumnsButtonPressed();
     
