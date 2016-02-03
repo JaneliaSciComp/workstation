@@ -1038,13 +1038,11 @@ called from a  SimpleWorker thread.
         TmNeuron neuron = getNeuronFromAnnotationID(newRoot.getId());
         neuronManager.rerootNeurite(neuron, newRoot);
 
-        // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
-        // NOTE: is this now redundant?
-        updateCurrentWorkspaceAndNeuron();
-
         // see notes in addChildAnnotation re: the predef notes
         // in this case, the new root is the only annotation we need to check
-        stripPredefNotes(getNeuronFromAnnotationID(newRootID), newRootID);
+        stripPredefNotes(neuron, newRootID);
+
+        neuronManager.saveNeuronData(neuron);
 
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             final TmNeuron updateNeuron = getCurrentNeuron();
