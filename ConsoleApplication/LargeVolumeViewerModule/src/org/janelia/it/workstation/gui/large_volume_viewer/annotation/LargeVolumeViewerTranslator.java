@@ -432,8 +432,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
         // prepare the data:
         TmAnchoredPathEndpoints endpoints = path.getEndpoints();
-        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
-                endpoints.getAnnotationID2());
+        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getFirstAnnotationID(),
+                endpoints.getSecondAnnotationID());
 
         final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
         final CoordinateAxis axis = CoordinateAxis.Z;

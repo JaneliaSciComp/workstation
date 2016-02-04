@@ -1091,8 +1091,8 @@ called from a  SimpleWorker thread.
 
         // check we can find both endpoints in same neuron
         //  don't need to check that they are neighboring; UI gesture already enforces it
-        TmNeuron neuron1 = getNeuronFromAnnotationID(endpoints.getAnnotationID1());
-        TmNeuron neuron2 = getNeuronFromAnnotationID(endpoints.getAnnotationID2());
+        TmNeuron neuron1 = getNeuronFromAnnotationID(endpoints.getFirstAnnotationID());
+        TmNeuron neuron2 = getNeuronFromAnnotationID(endpoints.getSecondAnnotationID());
         if (eitherIsNull(neuron1, neuron2)) {
             // something's been deleted
             return;
@@ -1107,8 +1107,8 @@ called from a  SimpleWorker thread.
         //  annotations, in some order (despite stated convention, I have not found the point
         //  list to be in consistent order vis a vis the ordering of the annotation IDs)
 
-        TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getAnnotationID1());
-        TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getAnnotationID2());
+        TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getFirstAnnotationID());
+        TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getSecondAnnotationID());
 
         boolean order1 = annotationAtPoint(ann1, points.get(0)) && annotationAtPoint(ann2, points.get(points.size() - 1));
         boolean order2 = annotationAtPoint(ann2, points.get(0)) && annotationAtPoint(ann1, points.get(points.size() - 1));
@@ -1124,8 +1124,8 @@ called from a  SimpleWorker thread.
         }
 
         // transform point list and persist
-        final TmAnchoredPath path = neuronManager.addAnchoredPath(neuron1, endpoints.getAnnotationID1(),
-                endpoints.getAnnotationID2(), points);
+        final TmAnchoredPath path = neuronManager.addAnchoredPath(neuron1, endpoints.getFirstAnnotationID(),
+                endpoints.getSecondAnnotationID(), points);
 
         // update local domain object - now redundant.  Serialized above.
         //TmNeuron neuron = getNeuronFromAnnotationID(ann1.getId());
