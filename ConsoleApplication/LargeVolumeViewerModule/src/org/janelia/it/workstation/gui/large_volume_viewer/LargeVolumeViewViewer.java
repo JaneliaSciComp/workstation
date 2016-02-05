@@ -104,32 +104,31 @@ public class LargeVolumeViewViewer extends JPanel {
                             public void run() {
                                 JOptionPane.showMessageDialog(
                                     LargeVolumeViewViewer.this,
-                                    "The workspace version is not compatible with this version of Large Volume Viewer.",
-                                    "Could not open workspace",
-                                    JOptionPane.ERROR_MESSAGE
+                                    "The workspace version is being converted for this version of Large Volume Viewer.  Several minutes' delay may ensue.",
+                                    "Must Convert Workspace",
+                                    JOptionPane.INFORMATION_MESSAGE
                                 );
                             }
                         });
                     }
-                    else {
-                        String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
-                        try {
-                            sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        if (sliceSample == null) {
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                            "Could not find sample entity for this workspace!",
-                                            "Could not open workspace",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                        }
-                    }                    
+                    
+                    String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+                    try {
+                        sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (sliceSample == null) {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                        "Could not find sample entity for this workspace!",
+                                        "Could not open workspace",
+                                        JOptionPane.ERROR_MESSAGE);
+                            }
+                        });
+                    }
                 }
             }
 
