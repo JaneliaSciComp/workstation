@@ -76,10 +76,15 @@ public class MongoDomainFacade implements DomainFacade {
     }
 
     @Override
-    public DomainObject getDomainObject(Class<? extends DomainObject> domainClass, Long id) {
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
         return dao.getDomainObject(AccessManager.getSubjectKey(), domainClass, id);
     }
 
+    @Override
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
+        return dao.getDomainObjectsByName(AccessManager.getSubjectKey(), domainClass, name);
+    }
+    
     @Override
     public DomainObject getDomainObject(Reference reference) {
         return dao.getDomainObject(AccessManager.getSubjectKey(), reference);

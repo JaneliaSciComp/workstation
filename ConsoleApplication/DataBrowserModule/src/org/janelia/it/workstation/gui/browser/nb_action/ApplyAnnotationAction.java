@@ -86,16 +86,16 @@ public class ApplyAnnotationAction extends NodeAction {
     protected void performAction(Node[] activatedNodes) {
         if (!enable(activatedNodes)) return;
         for(OntologyTermNode node : selected) {
-            performAction(node);
+            performAction(node.getOntologyTerm());
         }
     }
     
-    private void performAction(final OntologyTermNode node) {
+    public void performAction(final OntologyTerm ontologyTerm) {
         
-        OntologyTerm ontologyTerm = node.getOntologyTerm();
-        Long keyTermId = node.getId();
-        String keyTermValue = node.getDisplayName();
-
+        Ontology ontology = ontologyTerm.getOntology();
+        String keyTermValue = ontologyTerm.getName();
+        Long keyTermId = ontologyTerm.getId();
+        
         if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
             // Cannot annotate with a category or enum
             return;
@@ -118,7 +118,7 @@ public class ApplyAnnotationAction extends NodeAction {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
 
-        AnnotationEditor editor = new AnnotationEditor(node.getOntology(), ontologyTerm);
+        AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
         final String value = editor.showEditor();
 
         SimpleWorker worker = new SimpleWorker() {
@@ -127,7 +127,7 @@ public class ApplyAnnotationAction extends NodeAction {
             protected void doStuff() throws Exception {
                 int i = 1;
                 for (DomainObject domainObject : selectedDomainObjects) {
-                    doAnnotation(domainObject, node, value);
+                    doAnnotation(domainObject, ontologyTerm, value);
                     setProgress(i++, selectedDomainObjects.size());
                 }
             }
@@ -148,19 +148,19 @@ public class ApplyAnnotationAction extends NodeAction {
         worker.execute();
     }
     
-    public void doAnnotation(DomainObject target, OntologyTermNode termNode, Object value) throws Exception {
+    public void doAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
         
-        Ontology ontology = termNode.getOntology();
+        Ontology ontology = ontologyTerm.getOntology();
         
         // Save the annotation
-        OntologyTerm keyTerm = termNode.getOntologyTerm();
+        OntologyTerm keyTerm = ontologyTerm;
         OntologyTerm valueTerm = null;
         String keyString = keyTerm.getName();
         String valueString = value == null ? null : value.toString();
 
         if (keyTerm instanceof EnumItem) {
-            keyTerm = termNode.getParent().getOntologyTerm();
-            valueTerm = termNode.getOntologyTerm();
+            keyTerm = ontologyTerm.getParent();
+            valueTerm = ontologyTerm;
             keyString = keyTerm.getName();
             valueString = valueTerm.getName();
         }

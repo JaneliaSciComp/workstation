@@ -89,13 +89,18 @@ public class RESTDomainFacade implements DomainFacade {
     }
 
     // general CRUD for all domain object hierarchies
-    public DomainObject getDomainObject(Class<? extends DomainObject> domainClass, Long id) {
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add(id);
         List<DomainObject> objList = getDomainObjects(domainClass.getName(), ids);
         if (objList!=null && objList.size()>0) {
-            return objList.get(0);
+            return (T)objList.get(0);
         }
+        return null;
+    }
+    
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
+        // TODO: implement
         return null;
     }
 

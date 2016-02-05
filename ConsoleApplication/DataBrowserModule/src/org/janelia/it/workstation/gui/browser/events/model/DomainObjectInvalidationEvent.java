@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.browser.events.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 
 /**
@@ -19,8 +21,11 @@ public class DomainObjectInvalidationEvent {
         this.domainObjects = null;
     }
     
-    public DomainObjectInvalidationEvent(Collection<DomainObject> domainObjects) {
-        this.domainObjects = domainObjects;
+    public DomainObjectInvalidationEvent(Collection<? extends DomainObject> domainObjects) {
+        this.domainObjects = new ArrayList<>();
+        for(DomainObject object : domainObjects) {
+            this.domainObjects.add(object);
+        }
     }
     
     public Collection<DomainObject> getDomainObjects() {

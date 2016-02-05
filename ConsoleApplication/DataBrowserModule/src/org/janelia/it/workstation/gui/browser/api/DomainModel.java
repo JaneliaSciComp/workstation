@@ -27,6 +27,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -193,14 +194,14 @@ public class DomainModel {
         objects.add(domainObject);
         invalidate(objects);
     }
-
+    
     /**
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request.
      *
      * @param objects
      * @param recurse
      */
-    private void invalidate(Collection<DomainObject> objects) {
+    public void invalidate(Collection<? extends DomainObject> objects) {
         log.debug("Invalidating {} objects", objects.size());
         for (DomainObject domainObject : objects) {
             invalidateInternal(domainObject);
@@ -384,6 +385,14 @@ public class DomainModel {
         return objects.isEmpty() ? null : objects.get(0);
     }
 
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
+        List<T> objects = new ArrayList<>();
+        for(DomainObject domainObject : facade.getDomainObjects(domainClass, name)) {
+            objects.add((T)domainObject);
+        }
+        return objects;
+    }
+    
     public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
 
         if (className==null || ids==null) return new ArrayList<>();
@@ -437,6 +446,10 @@ public class DomainModel {
         return facade.getAnnotations(Arrays.asList(reference));
     }
 
+    public List<Annotation> getAnnotations(DomainObject domainObject) {
+        return getAnnotations(Reference.createFor(domainObject));
+    }
+    
     public List<Annotation> getAnnotations(Collection<Reference> references) {
         if (references==null) return new ArrayList<>();
         // TODO: cache these?
@@ -780,7 +793,7 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
     }
 
-    private void notifyDomainObjectsInvalidated(Collection<DomainObject> objects) {
+    private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());
         }

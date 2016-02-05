@@ -5,7 +5,9 @@ import java.awt.event.ActionListener;
 import java.util.Arrays;
 
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -61,6 +63,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
         add(getDownloadMenu());
+        
+        setNextAddRequiresSeparator(true);
+        add(getVerificationMovieItem());
         
     }
     
@@ -149,4 +154,29 @@ public class SampleResultContextMenu extends PopupContextMenu {
         FileDownloadAction action = new FileDownloadAction(Arrays.asList(sample), descriptor);
         return action.getPopupPresenter();
     }
+    
+    private JMenuItem getVerificationMovieItem() {
+        
+        if (!OpenWithDefaultAppAction.isSupported()) return null;
+        
+        JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
+        movieItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                String path = DomainUtils.getFilepath(result,FileType.AlignmentVerificationMovie);
+                
+                if (path == null) {
+                    JOptionPane.showMessageDialog(mainFrame, "Could not locate verification movie",
+                            "Not Found", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path);
+                action.doAction();
+            }
+        });
+
+        return movieItem;
+    }
+
 }

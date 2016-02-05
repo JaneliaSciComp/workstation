@@ -2,17 +2,30 @@ package org.janelia.it.workstation.gui.browser.actions;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.shared.utils.domain.DataReporter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
@@ -21,14 +34,19 @@ import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponen
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 /**
  * Context pop up menu for entities. 
@@ -36,8 +54,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectContextMenu extends PopupContextMenu {
-
-    private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
     // Current selection
     protected DomainObject contextObject;
@@ -84,8 +100,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getPasteAnnotationItem());
-//        add(getDetailsItem());
-//        add(getPermissionItem());
+        add(getDetailsItem());
+        add(getPermissionItem());
         
         add(getAddToSetItem());
         add(getRemoveFromSetItem());
@@ -93,20 +109,17 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
-//        add(getNeuronAnnotatorItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
         add(getDownloadMenu());
         
-//      setNextAddRequiresSeparator(true);
-//        add(getErrorFlag());
-//        add(getMarkForReprocessingItem());
-//        add(getProcessingBlockItem());
-//        add(getVerificationMovieItem());
+        setNextAddRequiresSeparator(true);
+        add(getErrorFlag());
+        add(getMarkForReprocessingItem());
+        add(getProcessingBlockItem());
 //        
 //        setNextAddRequiresSeparator(true);
-//        add(getSortBySimilarityItem());
 //        add(getMergeItem());
 //        add(getImportItem());
 //
@@ -117,10 +130,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //        add(getWrapEntityItem());
 //
-//        if ((AccessManager.getSubjectKey().equals("user:simpsonj") || AccessManager.getSubjectKey()
-//                .equals("group:simpsonlab")) && !this.multiple) {
-//            add(getSpecialAnnotationSession());
-//        }
+        
+        add(getSpecialAnnotationSession());
     }
 
     protected JMenuItem getTitleItem() {
@@ -230,89 +241,38 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return copyMenuItem;
     }
     
-    
-//    private void addBadDataButtons(JMenu errorMenu) {
-//
-//        Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
-//        
-//        if (errorOntology!=null && EntityUtils.isInitialized(errorOntology)) {
-//            for (final EntityData entityData : ModelMgrUtils.getAccessibleEntityDatasWithChildren(errorOntology)) {
-//            	final OntologyElement element = new OntologyElement(entityData.getParentEntity(), entityData.getChildEntity());
-//                errorMenu.add(new JMenuItem(element.getName())).addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//
-//                        final AnnotateAction action = new AnnotateAction();
-//                        action.init(element);
-//                        final String value = (String)JOptionPane.showInputDialog(mainFrame,
-//                                "Please provide details:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-//                        if (value==null || value.equals("")) return;
-//                        
-//                        SimpleWorker simpleWorker = new SimpleWorker() {
-//                            @Override
-//                            protected void doStuff() throws Exception {
-//                                action.doAnnotation(rootedEntity.getEntity(), element, value);
-//                                String annotationValue = "";
-//                                List<Entity> annotationEntities = ModelMgr.getModelMgr().getAnnotationsForEntity(rootedEntity.getEntity().getId());
-//                                for (Entity annotation : annotationEntities) {
-//                                    if (annotation.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM).contains(element.getName())) {
-//                                        annotationValue = annotation.getName();
-//                                    }
-//                                }
-//                                DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
-//                                reporter.reportData(rootedEntity.getEntity(), annotationValue);
-//                            }
-//
-//                            @Override
-//                            protected void hadSuccess() {
-//                            }
-//
-//                            @Override
-//                            protected void hadError(Throwable error) {
-//                                SessionMgr.getSessionMgr().handleException(error);
-//                            }
-//                        };
-//                        
-//                        simpleWorker.execute();
-//                    }
-//                });
-//
-//            }
-//
-//        }
-//    }
+    protected JMenuItem getDetailsItem() {
+        if (multiple) return null;
+        
+        JMenuItem detailsMenuItem = new JMenuItem("  View Details");
+        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
+        detailsMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new DomainDetailsDialog().showForDomainObject(domainObject);
+            }
+        });
+        return detailsMenuItem;
+    }
 
-    
-//    protected JMenuItem getDetailsItem() {
-//        if (multiple) return null;
-//        
-//        JMenuItem detailsMenuItem = new JMenuItem("  View Details");
-//        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
-//        detailsMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                new EntityDetailsDialog().showForRootedEntity(rootedEntity);
-//            }
-//        });
-//        return detailsMenuItem;
-//    }
-//
-//    protected JMenuItem getPermissionItem() {
-//        if (multiple) return null;
-//        if (virtual) return null;
-//        
-//        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
-//        
-//        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
-//        detailsMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
-//            }
-//        });
-//        return detailsMenuItem;
-//    }
-//
+    protected JMenuItem getPermissionItem() {
+        if (multiple) return null;
+        
+        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
+        detailsMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
+            }
+        });
+
+        if (!ClientDomainUtils.isOwner(domainObject)) {
+            detailsMenuItem.setEnabled(false);
+        }
+        
+        return detailsMenuItem;
+    }
+
 //    protected JMenuItem getHudMenuItem() {
 //        JMenuItem toggleHudMI = null;
 //        if (rootedEntity != null && rootedEntity.getEntity() != null) {
@@ -331,30 +291,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //
 //        return toggleHudMI;
 //    }
-//
-//    private void sortPathsByPreference(List<EntityDataPath> paths) {
-//
-//        Collections.sort(paths, new Comparator<EntityDataPath>() {
-//            @Override
-//            public int compare(EntityDataPath p1, EntityDataPath p2) {
-//                Integer p1Score = 0;
-//                Integer p2Score = 0;
-//                p1Score += p1.getRootOwner().startsWith("group:") ? 2 : 0;
-//                p2Score += p2.getRootOwner().startsWith("group:") ? 2 : 0;
-//                p1Score += AccessManager.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
-//                p2Score += AccessManager.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
-//                EntityData e1 = p1.getPath().get(0);
-//                EntityData e2 = p2.getPath().get(0);
-//                int c = p2Score.compareTo(p1Score);
-//                if (c == 0) {
-//                    return e2.getId().compareTo(e1.getId());
-//                }
-//                return c;
-//            }
-//
-//        });
-//    }
-//
+
     public JMenuItem getPasteAnnotationItem() {
         if (null == StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation()) {
             return null;
@@ -364,314 +301,187 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return pasteItem;
     }
 
-//    /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-//    public Collection<JComponent> getOpenForContextItems() {
-//        TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
-//        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-//            final Entity entity = rootedEntity.getEntity();
-//            if (entity!=null) {
-//
-//                final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-//                Collection<EntityAcceptor> entityAcceptors
-//                        = helper.findHandler(
-//                                entity, 
-//                                EntityAcceptor.class,
-//                                EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
-//                        );
-//                boolean lastItemWasSeparator = false;
-//                int expectedCount = 0;
-//                List<JComponent> actionItemList = new ArrayList<>();
-//                for ( EntityAcceptor entityAcceptor: entityAcceptors ) {                    
-//                    final Integer order = entityAcceptor.getOrder();
-//                    if (entityAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
-//                        orderedMap.put(order - 1, new JSeparator());
-//                        expectedCount ++;
-//                    }
-//                    JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
-//                    item.addActionListener( new EntityAcceptorActionListener( entityAcceptor ) );
-//                    orderedMap.put(order, item);
-//                    actionItemList.add( item ); // Bail alternative if ordering fails.
-//                    expectedCount ++;
-//                    if (entityAcceptor.isSucceededBySeparator()) {
-//                        orderedMap.put(order + 1, new JSeparator());
-//                        expectedCount ++;
-//                        lastItemWasSeparator = true;
-//                    }
-//                    else {
-//                        lastItemWasSeparator = false;
-//                    }
-//                }
-//                
-//                // This is the bail strategy for order key clashes.
-//                if ( orderedMap.size() < expectedCount) {
-//                    log.warn("With menu items and separators, expected {} but added {} open-for-context items." +
-//                            "  This indicates an order key clash.  Please check the getOrder methods of all impls." +
-//                            "  Returning an unordered version of item list.",
-//                            expectedCount, orderedMap.size());
-//                    return actionItemList;
-//                }
-//            }
-//        }
-//        return orderedMap.values();
-//    }
-//    
-//    
-//
-//    protected JMenu getErrorFlag() {
-//        if (multiple) return null;
-//        
-//        JMenu errorMenu = new JMenu("  Report A Problem With This Data");
-//        addBadDataButtons(errorMenu);
-//        return errorMenu;
-//    }
-//
-//    protected JMenuItem getProcessingBlockItem() {
-//
-//        final List<Entity> samples = new ArrayList<>();
-//        for (RootedEntity re : rootedEntityList) {
-//            Entity sample = re.getEntity();
-//            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-//                if (!sample.getName().contains("~")) {
-//                    samples.add(sample);
-//                }
-//            }
-//        }
-//        
-//        if (samples.isEmpty()) return null;
-//        
-//        final String samplesText = multiple?samples.size()+" Samples":"Sample";
-//        
-//        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
-//        blockItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge "+samples.size()+" sample(s) "+
-//                        "by deleting all large files associated with them, and block all future processing?",  
-//                		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
-//                
-//                if (result != 0) return;
-//
-//                Task task;
-//                try {
-//                    StringBuilder sampleIdBuf = new StringBuilder();
-//                    for(Entity sample : samples) {
-//                        if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
-//                        sampleIdBuf.append(sample.getId());
-//                    }
-//                    
-//                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-//                    taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-//                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
-//                }
-//                catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                    return;
-//                }
-//
-//                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-//
-//                    @Override
-//                    public String getName() {
-//                        return "Purging and blocking "+samples.size()+" samples";
-//                    }
-//
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        setStatus("Executing");
-//                        super.doStuff();
-//                        for(Entity sample : samples) {
-//                            ModelMgr.getModelMgr().invalidateCache(sample, true);
-//                        }
-//                    }
-//                };
-//
-//                taskWorker.executeWithEvents();
-//            }
-//        });
-//
-//        for(RootedEntity rootedEntity : rootedEntityList) {
-//            Entity sample = rootedEntity.getEntity();
-//            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-//                blockItem.setEnabled(false);
-//                break;
-//            }
-//        }
-//        
-//        return blockItem;
-//    }
-//
-//    protected JMenuItem getMarkForReprocessingItem() {
-//
-//        final List<Entity> samples = new ArrayList<>();
-//        for (RootedEntity rootedEntity : rootedEntityList) {
-//            Entity sample = rootedEntity.getEntity();
-//            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-//                if (!sample.getName().contains("~")) {
-//                    samples.add(sample);
-//                }
-//            }
-//        }
-//        
-//        if (samples.isEmpty()) return null;
-//
-//        final String samplesText = multiple?samples.size()+" Samples":"Sample";
-//        
-//        JMenuItem markItem = new JMenuItem("  Mark "+samplesText+" for Reprocessing");
-//        markItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
-//                        + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
-//                
-//                if (result != 0) return;
-//
-//                SimpleWorker worker = new SimpleWorker() {
-//                    
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        for(final Entity sample : samples) {
-//                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
-//                        }
-//                    }
-//                    
-//                    @Override
-//                    protected void hadSuccess() {   
-//                    }
-//                    
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//                
-//                worker.execute();
-//            }
-//        });
-//
-//        for(RootedEntity rootedEntity : rootedEntityList) {
-//            Entity sample = rootedEntity.getEntity();
-//            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-//                markItem.setEnabled(false);
-//                break;
-//            }
-//        }
-//
-//        return markItem;
-//    }
-//    
-//    private JMenuItem getVerificationMovieItem() {
-//        if (multiple) return null;
-//
-//        if (!OpenWithDefaultAppAction.isSupported())
-//            return null;
-//        
-//        final Entity sample = rootedEntity.getEntity();
-//
-//        if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-//            return null;
-//        }
-//        
-//        JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
-//        movieItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                SimpleWorker worker = new SimpleWorker() {
-//                  
-//                    private Entity movie;
-//                    
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        ModelMgr.getModelMgr().loadLazyEntity(sample, false);
-//                        Entity alignedSample = null;
-//                        for(Entity child : ModelMgrUtils.getAccessibleChildren(sample)) {
-//                            if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) 
-//                                    && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE)!=null) {
-//                                alignedSample = child;
-//                            }
-//                        }
-//                        
-//                        if (alignedSample==null) {
-//                            alignedSample = sample;
-//                        }
-//                        
-//                        final ModelMgrEntityLoader loader = new ModelMgrEntityLoader();
-//                        EntityVistationBuilder.create(loader).startAt(alignedSample)
-//                                .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
-//                                .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
-//                                .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
-//                                .run(new EntityVisitor() {
-//                            public void visit(Entity supportingData) throws Exception {
-//                                loader.populateChildren(supportingData);
-//                                for(Entity child : ModelMgrUtils.getAccessibleChildren(supportingData)) {
-//                                    if (child.getName().equals("VerifyMovie.mp4") 
-//                                            || child.getName().equals("AlignVerify.mp4")) {
-//                                        movie = child;
-//                                        break;   
-//                                    }
-//                                }
-//                            }
-//                        });
-//                    }
-//                    
-//                    @Override
-//                    protected void hadSuccess() {
-//
-//                        if (movie == null) {
-//                            JOptionPane.showMessageDialog(mainFrame, "Could not locate verification movie",
-//                                    "Not Found", JOptionPane.ERROR_MESSAGE);
-//                            return;
-//                        }
-//
-//                        String filepath = EntityUtils.getAnyFilePath(movie);
-//                        
-//                        if (StringUtils.isEmpty(filepath)) {
-//                            JOptionPane.showMessageDialog(mainFrame, "Verification movie has no path",
-//                                    "Not Found", JOptionPane.ERROR_MESSAGE);
-//                            return;
-//                        }
-//                        
-//                        OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(movie);
-//                        action.doAction();
-//                    }
-//                    
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//
-//                worker.execute();
-//            }
-//        });
-//
-//        if (EntityConstants.VALUE_BLOCKED.equals(sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_STATUS))) {
-//            movieItem.setEnabled(false);
-//        }
-//        
-//        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-//            movieItem.setEnabled(false);
-//        }
-//
-//        return movieItem;
-//    }
-//    
-//    private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
-//    
-//    private void updateAddToRootFolderHistory(Entity commonRoot) {
-//        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
-//        if (addHistory==null) {
-//            addHistory = new ArrayList<>();
-//        }
-//        if (addHistory.contains(commonRoot.getId())) {
-//            return;
-//        }
-//        if (addHistory.size()>=MAX_ADD_TO_ROOT_HISTORY) {
-//            addHistory.remove(addHistory.size()-1);
-//        }
-//        addHistory.add(0, commonRoot.getId());
-//        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, addHistory);
-//    }
-//    
+    protected JMenu getErrorFlag() {
+        if (multiple) return null;
+        
+        JMenu errorMenu = new JMenu("  Report A Problem With This Data");
+
+        OntologyTerm errorOntology = StateMgr.getStateMgr().getErrorOntology();
+        if (errorOntology==null) return null;
+        
+        for (final OntologyTerm term : errorOntology.getTerms()) {
+            errorMenu.add(new JMenuItem(term.getName())).addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    final ApplyAnnotationAction action = ApplyAnnotationAction.get();
+                    final String value = (String)JOptionPane.showInputDialog(mainFrame,
+                            "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if (value==null || value.equals("")) return;
+                    
+                    SimpleWorker simpleWorker = new SimpleWorker() {
+                        @Override
+                        protected void doStuff() throws Exception {
+                            action.doAnnotation(domainObject, term, value);
+                            String annotationValue = "";
+                            List<Annotation> annotationEntities = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
+                            for (Annotation annotation : annotationEntities) {
+                                if (annotation.getKeyTerm().getOntologyTermId().equals(term.getId())) {
+                                    annotationValue = annotation.getName();
+                                }
+                            }
+                            DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                            reporter.reportData(domainObject, annotationValue);
+                        }
+
+                        @Override
+                        protected void hadSuccess() {
+                        }
+
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    
+                    simpleWorker.execute();
+                }
+            });
+
+        }
+
+        return errorMenu;
+    }
+    
+
+    protected JMenuItem getProcessingBlockItem() {
+
+        final List<Sample> samples = new ArrayList<>();
+        for (DomainObject re : domainObjectList) {
+            if (re instanceof Sample) {
+                samples.add((Sample)re);
+            }
+        }
+        
+        if (samples.isEmpty()) return null;
+        
+        final String samplesText = multiple?samples.size()+" Samples":"Sample";
+        
+        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
+        blockItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), 
+                        "Are you sure you want to purge "+samples.size()+" sample(s) "+
+                        "by deleting all large files associated with them, and block all future processing?",  
+                		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                Task task;
+                try {
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                    for(Sample sample : samples) {
+                        if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                        sampleIdBuf.append(sample.getId());
+                    }
+                    
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
+                    taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
+                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                    return;
+                }
+
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                    @Override
+                    public String getName() {
+                        return "Purging and blocking "+samples.size()+" samples";
+                    }
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        setStatus("Executing");
+                        super.doStuff();
+                        for(Sample sample : samples) {
+                            DomainMgr.getDomainMgr().getModel().invalidate(sample);
+                        }
+                        DomainMgr.getDomainMgr().getModel().invalidate(samples);
+                    }
+                };
+
+                taskWorker.executeWithEvents();
+            }
+        });
+
+        for(Sample sample : samples) {
+            if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                blockItem.setEnabled(false);
+                break;
+            }
+        }
+        
+        return blockItem;
+    }
+
+    protected JMenuItem getMarkForReprocessingItem() {
+
+        final List<Sample> samples = new ArrayList<>();
+        for (DomainObject re : domainObjectList) {
+            if (re instanceof Sample) {
+                samples.add((Sample)re);
+            }
+        }
+        
+        if (samples.isEmpty()) return null;
+
+        final String samplesText = multiple?samples.size()+" Samples":"Sample";
+        
+        JMenuItem markItem = new JMenuItem("  Mark "+samplesText+" for Reprocessing");
+        markItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
+                        + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        for(final Sample sample : samples) {
+                            DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {   
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+
+        for(Sample sample : samples) {
+            if (!ClientDomainUtils.hasWriteAccess(sample)) {
+                markItem.setEnabled(false);
+                break;
+            }
+        }
+        
+        return markItem;
+    }
+    
     protected JMenuItem getAddToSetItem() {
         AddItemsToObjectSetAction action = new AddItemsToObjectSetAction(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
@@ -679,154 +489,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return item;
     }
     
-//        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-//                
-//        JMenu newFolderMenu = new JMenu("  Add To Folder");
-//
-//        JMenuItem createNewItem = new JMenuItem("Create New Top-Level Folder...");
-//
-//        createNewItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                // Add button clicked
-//                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
-//                        "Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
-//                if ((folderName == null) || (folderName.length() <= 0)) {
-//                    return;
-//                }
-//
-//                SimpleWorker worker = new SimpleWorker() {
-//                    private Entity commonRoot;
-//
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        // Update database
-//                        commonRoot = ModelMgr.getModelMgr().createCommonRoot(folderName);
-//                        addToCommonRoot(commonRoot);
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                        // No need to update the UI, the event bus will get it done
-//                        log.debug("Added to common root {}",commonRoot.getName());
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating folder...", ""));
-//                worker.execute();
-//            }
-//        });
-//
-//        newFolderMenu.add(createNewItem);
-//        
-//        JMenuItem chooseItem = new JMenuItem("Choose Folder...");
-//        
-//        chooseItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//
-//                final EntityChooser entityChooser = new EntityChooser("Choose folder to add to", entityOutline);
-//                int returnVal = entityChooser.showDialog(entityOutline);
-//                if (returnVal != EntityChooser.CHOOSE_OPTION) return;
-//                if (entityChooser.getChosenElements().isEmpty()) return;
-//                final Entity commonRoot = entityChooser.getChosenElements().get(0).getChildEntity();
-//                
-//                SimpleWorker worker = new SimpleWorker() {
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        addToCommonRoot(commonRoot);
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                        // No need to update the UI, the event bus will get it done
-//                        log.debug("Added to common root {}",commonRoot.getName());
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//                worker.execute();
-//            }
-//        });
-//
-//        newFolderMenu.add(chooseItem);
-//        newFolderMenu.addSeparator();
-//        
-//        List<Long> addHistory = (List<Long>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_ROOT_HISTORY);
-//        if (addHistory!=null && !addHistory.isEmpty()) {
-//            
-//            JMenuItem item = new JMenuItem("Recent:");
-//            item.setEnabled(false);
-//            newFolderMenu.add(item);
-//            
-//            for (Long rootId : addHistory) {
-//
-//                Set<Entity> entities = entityOutline.getEntitiesById(rootId);
-//
-//                if (entities.isEmpty()) {
-//                    continue;
-//                }
-//                if (entities.size()>1) {
-//                    log.warn("More than one entity in the entity outline for id={}",rootId);
-//                }
-//
-//                final Entity commonRoot = entities.iterator().next();
-//                if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
-//
-//                JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
-//                commonRootItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                
-//                        SimpleWorker worker = new SimpleWorker() {
-//                            @Override
-//                            protected void doStuff() throws Exception {
-//                                addToCommonRoot(commonRoot);
-//                            }
-//
-//                            @Override
-//                            protected void hadSuccess() {
-//                                // No need to update the UI, the event bus will get it done
-//                                log.debug("Added to common root {}",commonRoot.getName());
-//                            }
-//
-//                            @Override
-//                            protected void hadError(Throwable error) {
-//                                SessionMgr.getSessionMgr().handleException(error);
-//                            }
-//                        };
-//                        worker.execute();
-//                    }
-//                });
-//
-//                newFolderMenu.add(commonRootItem);
-//            }
-//        }
-//        
-//        return newFolderMenu;
-//    }
-//
-//    private void addToCommonRoot(Entity commonRoot) throws Exception {
-//
-//        // Update database
-//        List<Long> ids = new ArrayList<>();
-//        for (RootedEntity re : rootedEntityList) {
-//            Entity entity = re.getEntity();
-//            if (!EntityConstants.IN_MEMORY_TYPE_PLACEHOLDER_ENTITY.equals(entity.getEntityTypeName()) && entity.getId()!=null) {
-//                ids.add(entity.getId());
-//            }
-//        }
-//        
-//        ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
-//        // Update history
-//        updateAddToRootFolderHistory(commonRoot);                
-//    }
-//    
     protected JMenuItem getRemoveFromSetItem() {
         
         NamedAction action = null;
@@ -839,7 +501,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
         JMenuItem deleteItem = getNamedActionItem(action);
 
-        // User can't delete if they don't have write access
         if (!ClientDomainUtils.hasWriteAccess(contextObject)) {
             deleteItem.setEnabled(false);
         }
@@ -997,51 +658,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        return mergeItem;
 //    }
 //
-//    protected JMenuItem getSortBySimilarityItem() {
-//
-//        // If multiple items are selected then leave
-//        if (multiple) {
-//            return null;
-//        }
-//
-//        final Entity targetEntity = rootedEntity.getEntity();
-//
-//        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK)
-//                && !targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_IMAGE_3D)) {
-//            return null;
-//        }
-//
-//        String parentId = Utils.getParentIdFromUniqueId(rootedEntity.getUniqueId());
-//        final Entity folder = browser.getEntityOutline().getEntityByUniqueId(parentId);
-//
-//        if (!folder.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
-//            return null;
-//        }
-//
-//        JMenuItem sortItem = new JMenuItem("  Sort Folder By Similarity To This Image");
-//
-//        sortItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                try {
-//                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-//                    taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
-//                    taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
-//                    Task task = ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
-//
-//                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
-//                    dialog.showForTask(task);
-//                    browser.getViewerManager().getActiveViewer().refresh();
-//                } 
-//                catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                }
-//            }
-//        });
-//
-//        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
-//        return sortItem;
-//    }
-//    
 //    protected JMenuItem getImportItem() {
 //        if (multiple) return null;
 //        
@@ -1063,39 +679,79 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        return null;
 //    }
 //
-//    protected JMenuItem getActionItem(final Action action) {
-//        JMenuItem actionMenuItem = new JMenuItem(action.getName());
-//        actionMenuItem.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                action.doAction();
-//            }
-//        });
-//        return actionMenuItem;
-//    }
+    private JMenuItem getSpecialAnnotationSession() {
+        if (!this.multiple) return null;
+        JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");
+        specialAnnotationSession.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (null == StateMgr.getStateMgr().getCurrentOntologyId()) {
+                    JOptionPane.showMessageDialog(mainFrame,
+                            "Please select an ontology in the ontology window.", "Null Ontology Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                } else {
+                    if (!SpecialAnnotationChooserDialog.getDialog().isVisible()) {
+                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
+                    } else {
+                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
+                    }
+                }
+            }
+        });
+
+        return specialAnnotationSession;
+    }
+
+//  /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
+//  public Collection<JComponent> getOpenForContextItems() {
+//      TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
+//      if (rootedEntity != null && rootedEntity.getEntityData() != null) {
+//          final Entity entity = rootedEntity.getEntity();
+//          if (entity!=null) {
 //
-//    private JMenuItem getSpecialAnnotationSession() {
-//        JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");
-//        specialAnnotationSession.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                if (null == ModelMgr.getModelMgr().getCurrentOntology()) {
-//                    JOptionPane.showMessageDialog(mainFrame,
-//                            "Please select an ontology in the ontology window.", "Null Ontology Warning",
-//                            JOptionPane.WARNING_MESSAGE);
-//                } else {
-//                    if (!SpecialAnnotationChooserDialog.getDialog().isVisible()) {
-//                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
-//                    } else {
-//                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
-//                    }
-//                }
-//            }
-//        });
-//
-//        return specialAnnotationSession;
-//    }
-//    
+//              final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
+//              Collection<EntityAcceptor> entityAcceptors
+//                      = helper.findHandler(
+//                              entity, 
+//                              EntityAcceptor.class,
+//                              EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
+//                      );
+//              boolean lastItemWasSeparator = false;
+//              int expectedCount = 0;
+//              List<JComponent> actionItemList = new ArrayList<>();
+//              for ( EntityAcceptor entityAcceptor: entityAcceptors ) {                    
+//                  final Integer order = entityAcceptor.getOrder();
+//                  if (entityAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
+//                      orderedMap.put(order - 1, new JSeparator());
+//                      expectedCount ++;
+//                  }
+//                  JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
+//                  item.addActionListener( new EntityAcceptorActionListener( entityAcceptor ) );
+//                  orderedMap.put(order, item);
+//                  actionItemList.add( item ); // Bail alternative if ordering fails.
+//                  expectedCount ++;
+//                  if (entityAcceptor.isSucceededBySeparator()) {
+//                      orderedMap.put(order + 1, new JSeparator());
+//                      expectedCount ++;
+//                      lastItemWasSeparator = true;
+//                  }
+//                  else {
+//                      lastItemWasSeparator = false;
+//                  }
+//              }
+//              
+//              // This is the bail strategy for order key clashes.
+//              if ( orderedMap.size() < expectedCount) {
+//                  log.warn("With menu items and separators, expected {} but added {} open-for-context items." +
+//                          "  This indicates an order key clash.  Please check the getOrder methods of all impls." +
+//                          "  Returning an unordered version of item list.",
+//                          expectedCount, orderedMap.size());
+//                  return actionItemList;
+//              }
+//          }
+//      }
+//      return orderedMap.values();
+//  }
 //    public class EntityAcceptorActionListener implements ActionListener {
 //
 //        private EntityAcceptor entityAcceptor;
@@ -1117,7 +773,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //    }
 
-    
     private HasFiles getSingleResult() {
         HasFiles result = null;
         if (domainObject instanceof Sample) {

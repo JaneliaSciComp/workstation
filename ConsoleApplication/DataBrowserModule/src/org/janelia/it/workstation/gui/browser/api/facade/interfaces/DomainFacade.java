@@ -68,8 +68,16 @@ public interface DomainFacade {
      * @param id GUID of domain object
      * @return the domain object
      */
-    public DomainObject getDomainObject(Class<? extends DomainObject> domainClass, Long id);
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id);
 
+    /**
+     * Returns the domain object with the given class and name.
+     * @param domainClass class of the domain object
+     * @param name name of the domain object
+     * @return
+     */
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name);
+    
     /**
      * Returns the domain object specified by the given reference.
      * @param reference to a domain object
@@ -336,6 +344,5 @@ public interface DomainFacade {
      * @throws Exception something went wrong
      */
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
-
 
 }

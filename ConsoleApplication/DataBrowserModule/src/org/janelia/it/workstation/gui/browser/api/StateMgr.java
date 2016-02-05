@@ -1,10 +1,17 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.util.List;
+
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.ontology.Category;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
+import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +42,7 @@ public class StateMgr {
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
+    private OntologyTerm errorOntology;
     
     private StateMgr() {
     }
@@ -65,6 +73,23 @@ public class StateMgr {
 
     public void setCurrentSelectedOntologyAnnotation(Annotation currentSelectedOntologyAnnotation) {
         this.currentSelectedOntologyAnnotation = currentSelectedOntologyAnnotation;
+    }
+    
+    public OntologyTerm getErrorOntology() {
+        if (errorOntology == null) {
+            List<Ontology> ontologies = DomainMgr.getDomainMgr().getModel().getDomainObjects(Ontology.class, DomainConstants.ERROR_ONTOLOGY_NAME);
+            for (Ontology ontology : ontologies) {
+                if (DomainConstants.GENERAL_USER_GROUP_KEY.equals(ontology.getOwnerKey())) {
+                    OntologyTerm term = DomainUtils.findTerm(ontology, DomainConstants.ERROR_ONTOLOGY_CATEGORY);
+                    if (term instanceof Category) {
+                        errorOntology = term;
+                        break;
+                    }
+                }
+            }
+            
+        }
+        return errorOntology;
     }
     
     
