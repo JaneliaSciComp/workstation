@@ -26,6 +26,7 @@ public class TaskMonitoringWorker extends BackgroundWorker {
     
     private Long taskId;
     private Task task;
+    private ProgressHandle handle;
 
     public TaskMonitoringWorker() {
     }
@@ -36,7 +37,6 @@ public class TaskMonitoringWorker extends BackgroundWorker {
     
     @Override
     protected void doStuff() throws Exception {
-        ProgressHandle handle = null;
         
         while (true) {
             this.task = ModelMgr.getModelMgr().getTaskById(taskId);
@@ -65,11 +65,11 @@ public class TaskMonitoringWorker extends BackgroundWorker {
             }   
 
             if (task.isDone()) {
+                handle.finish();
                 // Check for errors
                 if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
                     throw new ServiceException(task.getLastEvent().getDescription());
                 }
-                handle.finish();
                 return;
             }
             
@@ -77,13 +77,13 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                 Thread.sleep(REFRESH_DELAY_MS);
             }
             catch (InterruptedException e) {
-                hadError(e);
                 handle.finish();
+                hadError(e);
                 return;
             }
         }
     }
-
+    
     public void setTaskId(Long taskId) {
         this.taskId = taskId;
     }
