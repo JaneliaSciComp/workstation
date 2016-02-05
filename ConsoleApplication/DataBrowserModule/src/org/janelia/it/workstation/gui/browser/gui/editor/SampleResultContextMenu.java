@@ -1,14 +1,13 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.LosslessStack;
-import static org.janelia.it.jacs.model.domain.enums.FileType.VisuallyLosslessStack;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Arrays;
 
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -22,6 +21,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 
 /**
@@ -51,7 +51,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getCopyIdToClipboardItem());
         
         setNextAddRequiresSeparator(true);
-        add(getOpenInSeparationNewViewer());
+        add(getOpenSeparationInNewViewer());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -88,7 +88,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CopyToClipboardAction("GUID",result.getId().toString()));
     }
     
-    protected JMenuItem getOpenInSeparationNewViewer() {
+    protected JMenuItem getOpenSeparationInNewViewer() {
         JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -122,29 +122,31 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
         
     protected JMenuItem getVaa3dTriViewItem() {
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, null));
     }
 
     protected JMenuItem getVaa3d3dViewItem() {
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D));
     }
 
     protected JMenuItem getFijiViewerItem() {
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
     
     protected JMenuItem getDownloadMenu() {
-        final String path = DomainUtils.getFilepath(result, LosslessStack);
+        String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
-        Sample sample = result.getParentRun().getParent().getParent();
-        // TODO: add support for multi-select download
-        FileDownloadAction action = new FileDownloadAction(sample, result);
+        ObjectiveSample objectiveSample = result.getParentRun().getParent();
+        Sample sample = objectiveSample.getParent();
+        String resultKey = objectiveSample.getObjective()+" "+result.getName();
+        ResultDescriptor descriptor = new ResultDescriptor(resultKey);
+        FileDownloadAction action = new FileDownloadAction(Arrays.asList(sample), descriptor);
         return action.getPopupPresenter();
     }
 }

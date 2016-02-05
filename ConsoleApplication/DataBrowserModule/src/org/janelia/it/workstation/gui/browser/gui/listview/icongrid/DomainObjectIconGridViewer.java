@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -33,14 +31,16 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainConstants;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -61,8 +61,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     
-    private DefaultResult defaultResult;
-    private String defaultImageType;
+    private ResultDescriptor currResult;
+    private String currImage2dType;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -73,63 +73,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         @Override
         public String getImageFilepath(DomainObject domainObject) {
+            HasFiles result = null;
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
-                List<String> objectives = sample.getOrderedObjectives();
-                if (objectives==null || objectives.isEmpty()) return null;
-                
-                HasFiles chosenResult = null;
-                if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(defaultResult.getResultKey())) {
-                    ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
-                    if (objSample==null) return null;
-                    SamplePipelineRun run = objSample.getLatestRun();
-                    if (run==null) return null;
-                    chosenResult = run.getLatestResult();
-
-                    if (chosenResult instanceof HasFileGroups) {
-                        HasFileGroups hasGroups = (HasFileGroups)chosenResult;
-                        // Pick the first group, since there is no way to tell which is latest
-                        for(String groupKey : hasGroups.getGroupKeys()) {
-                            chosenResult = hasGroups.getGroup(groupKey);
-                            break;
-                        }
-                    }
-                }
-                else {
-                    for(String objective : objectives) {
-                        if (!objective.equals(defaultResult.getObjective())) continue;
-                        ObjectiveSample objSample = sample.getObjectiveSample(objective);
-                        if (objSample==null) continue;
-                        SamplePipelineRun run = objSample.getLatestRun();
-                        if (run==null || run.getResults()==null) continue;
-                        
-                        for(PipelineResult result : run.getResults()) {
-                            if (result instanceof HasFileGroups) {
-                                HasFileGroups hasGroups = (HasFileGroups)result;
-                                for(String groupKey : hasGroups.getGroupKeys()) {
-                                    if (result.getName().equals(defaultResult.getResultNamePrefix()) && groupKey.equals(defaultResult.getGroupName())) {
-                                        chosenResult = hasGroups.getGroup(groupKey);
-                                        break;
-                                    }
-                                }
-                            }
-                            else {
-                                if (result.getName().equals(defaultResult.getResultName())) {
-                                    chosenResult = result;
-                                    break;
-                                }
-                            }   
-                        }
-                    }
-                }
-                
-                return chosenResult==null? null : DomainUtils.getFilepath(chosenResult, defaultImageType);
+                result = DomainModelViewUtils.getResult(sample, currResult);
             }
             else if (domainObject instanceof HasFiles) {
-                HasFiles hasFiles = (HasFiles)domainObject;
-                return DomainUtils.getFilepath(hasFiles, defaultImageType);
+                result = (HasFiles)domainObject;
             }
-            return null;
+            return result==null? null : DomainUtils.getFilepath(result, currImage2dType);
         }
         
         @Override
@@ -214,24 +166,24 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
-        this.defaultResult = null;
-        this.defaultImageType = null;
+        this.currResult = null;
+        this.currImage2dType = null;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
         
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, parentObject.getId().toString());
             if (preference!=null) {
-                this.defaultResult = new DefaultResult(preference.getValue());
+                this.currResult = new ResultDescriptor(preference.getValue());
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, parentObject.getId().toString());
             if (preference2!=null) {
-                this.defaultImageType = preference2.getValue();
+                this.currImage2dType = preference2.getValue();
             }
         }
         
-        if (defaultResult == null) {
-            this.defaultResult = new DefaultResult(DomainConstants.PREFERENCE_VALUE_LATEST);
+        if (currResult == null) {
+            this.currResult = new ResultDescriptor(DomainConstants.PREFERENCE_VALUE_LATEST);
         }
         
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
@@ -278,10 +230,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         for(final String resultName : countedResultNames.elementSet()) {
             if (countedResultNames.count(resultName)>1 || countedResultNames.size()==1) {
-                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(defaultResult.getResultKey()));
+                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        defaultResult = new DefaultResult(resultName);
+                        currResult = new ResultDescriptor(resultName);
                         SimpleWorker worker = new SimpleWorker() {
 
                             @Override
@@ -323,15 +275,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         for(final String typeName : countedTypeNames.elementSet()) {
             if (countedTypeNames.count(typeName)>1 || countedTypeNames.size()==1) {
-                if (defaultImageType == null) {
-                    this.defaultImageType = typeName;
+                if (currImage2dType == null) {
+                    this.currImage2dType = typeName;
                 }
                 FileType fileType = FileType.valueOf(typeName);
-                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(defaultImageType));
+                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(currImage2dType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
 
-                        defaultImageType = typeName;
+                        currImage2dType = typeName;
                         
                         SimpleWorker worker = new SimpleWorker() {
 
@@ -367,8 +319,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }        
         
-        if (defaultImageType == null) {
-            this.defaultImageType = FileType.SignalMip.name();
+        if (currImage2dType == null) {
+            this.currImage2dType = FileType.SignalMip.name();
         }
         
         showObjects(domainObjectList.getDomainObjects(), success);
@@ -405,7 +357,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected DomainObjectContextMenu getContextualPopupMenu() {
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(this, (DomainObject)selectionModel.getParentObject(), selected);
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, currResult);
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -438,62 +390,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
                 action.doAction();
             }
-        }
-    }
-    
-    /**
-     * The purpose of this class is to parse the default result key and cache 
-     * the resulting tokens for use within speed-sensitive UI rendering methods.
-     */
-    private class DefaultResult {
-
-        private final String resultKey;
-        private final String objective;
-        private final String resultName;
-        private final String resultNamePrefix;
-        private final String groupName;
-
-        private DefaultResult(String resultKey) {
-            this.resultKey = resultKey;
-            if (!DomainConstants.PREFERENCE_VALUE_LATEST.equals(resultKey)) {
-                String[] parts = resultKey.split(" ",2);
-                this.objective = parts[0];
-                this.resultName = parts[1];
-
-                Pattern p = Pattern.compile("(.*?)\\s*(\\((.*?)\\))?");
-                Matcher m = p.matcher(resultName);
-                if (!m.matches()) {
-                    throw new IllegalStateException("Result name cannot be parsed: "+parts[1]);
-                }
-                this.resultNamePrefix = m.matches()?m.group(1):null;
-                this.groupName = m.matches()?m.group(3):null;
-            }
-            else {
-                this.objective = null;
-                this.resultName = null;
-                this.resultNamePrefix = null;
-                this.groupName = null;
-            }
-        }
-
-        public String getResultKey() {
-            return resultKey;
-        }
-
-        public String getObjective() {
-            return objective;
-        }
-
-        public String getResultName() {
-            return resultName;
-        }
-
-        public String getResultNamePrefix() {
-            return resultNamePrefix;
-        }
-
-        public String getGroupName() {
-            return groupName;
         }
     }
 }

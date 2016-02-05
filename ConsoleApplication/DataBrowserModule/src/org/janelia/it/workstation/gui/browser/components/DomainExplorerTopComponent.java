@@ -75,7 +75,7 @@ import com.google.common.eventbus.Subscribe;
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.DomainExplorerTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
-@TopComponent.OpenActionRegistration(
+@TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME
 )

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.table;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -24,7 +23,6 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
