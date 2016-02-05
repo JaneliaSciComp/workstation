@@ -13,6 +13,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.apache.solr.common.SolrDocumentList;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -35,12 +36,12 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.shared.solr.SolrJsonResults;
+import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +85,7 @@ public class RESTDomainFacade implements DomainFacade {
         serviceEndpoints.put("user", client.target(serverUrl + "user"));
         serviceEndpoints.put("dataset", client.target(serverUrl + "dataset"));
         serviceEndpoints.put("login", client.target(serverUrl + "login"));
+        serviceEndpoints.put("search", client.target(serverUrl + "search"));
     }
 
     // general CRUD for all domain object hierarchies
@@ -133,7 +135,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("details")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request getDomainObjectd from server" + ids)) {
+        if (checkBadResponse(response.getStatus(), "problem making request getDomainObjects from server" + ids)) {
             return null;
         }
         List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
@@ -427,6 +429,23 @@ public class RESTDomainFacade implements DomainFacade {
         }
         Filter newFilter = response.readEntity(Filter.class);
         return newFilter;
+    }
+
+    /**
+     * Performs a search against the SolrServer and returns the results.
+     * @param query the query to execute against the search server
+     * @return the search results
+     * @throws Exception something went wrong
+     */
+    public SolrJsonResults performSearch(SolrParams query) {
+        Response response = serviceEndpoints.get("search")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making search request to the server" + query)) {
+            return null;
+        }
+        SolrJsonResults results = response.readEntity(SolrJsonResults.class);
+        return results;
     }
 
     public TreeNode create(TreeNode treeNode) throws Exception {

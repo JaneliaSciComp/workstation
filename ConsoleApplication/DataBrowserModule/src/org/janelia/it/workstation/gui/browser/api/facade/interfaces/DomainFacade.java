@@ -3,6 +3,10 @@ package org.janelia.it.workstation.gui.browser.api.facade.interfaces;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocumentList;
+import org.apache.solr.common.params.ModifiableSolrParams;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -17,6 +21,8 @@ import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.shared.solr.SolrJsonResults;
+import org.janelia.it.jacs.shared.solr.SolrParams;
 
 /**
  * Interface for client implementations providing domain object access. 
@@ -248,6 +254,14 @@ public interface DomainFacade {
      * @throws Exception something went wrong
      */
     public Filter update(Filter filter) throws Exception;
+
+    /**
+     * Performs a search against the SolrServer and returns the results.
+     * @param query the query to execute against the search server
+     * @return the search results
+     * @throws Exception something went wrong
+     */
+    public SolrJsonResults performSearch(SolrParams query) throws Exception;
 
     /**
      * Create and return a new tree node. 

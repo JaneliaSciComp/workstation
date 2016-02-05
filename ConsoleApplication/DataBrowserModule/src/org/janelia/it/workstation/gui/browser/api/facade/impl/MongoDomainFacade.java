@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.response.FacetField;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -20,6 +20,8 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.security.BasicAuthToken;
+import org.janelia.it.jacs.shared.solr.*;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 
@@ -101,6 +103,27 @@ public class MongoDomainFacade implements DomainFacade {
     @Override
     public List<Annotation> getAnnotations(Collection<Reference> references) {
         return dao.getAnnotations(AccessManager.getSubjectKey(), references);
+    }
+
+    @Override
+    // return null since SolrConnector is in compute module
+    public SolrJsonResults performSearch(SolrParams queryParams) throws Exception {
+        SolrQuery query = SolrQueryBuilder.deSerializeSolrQuery(queryParams);
+        SolrResults sr = ModelMgr.getModelMgr().searchSolr(query, false);
+        SolrJsonResults sjr = new SolrJsonResults();
+        Map<String,List<FacetValue>> facetValues = new HashMap<>();
+        for (final FacetField ff : sr.getResponse().getFacetFields()) {
+            List<FacetValue> favetValues = new ArrayList<>();
+            if (ff.getValues()!=null) {
+                for (final FacetField.Count count : ff.getValues()) {
+                    favetValues.add(new FacetValue(count.getName(),count.getCount()));
+                }
+            }
+            facetValues.put(ff.getName(), favetValues);
+        }
+        sjr.setFacetValues(facetValues);
+        sjr.setResults(sr.getResponse().getResults());
+        return sjr;
     }
 
     @Override

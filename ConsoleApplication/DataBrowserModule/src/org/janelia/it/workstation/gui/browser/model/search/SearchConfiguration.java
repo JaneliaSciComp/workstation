@@ -14,7 +14,6 @@ import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -27,11 +26,8 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.solr.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -289,7 +285,7 @@ public class SearchConfiguration {
 
     public SolrSearchResults performSearch() throws Exception {
         SolrQueryBuilder builder = getQueryBuilder();
-        
+
         // We don't want to display all the system level query parameters, so build a simplified version of 
         // the query string for display purposes. 
         StringBuilder qs = new StringBuilder();
@@ -320,20 +316,19 @@ public class SearchConfiguration {
      * @throws Exception
      */
     ResultPage performSearch(int page) throws Exception {
-        
         if (SwingUtilities.isEventDispatchThread()) {
             throw new RuntimeException("SearchConfiguration.performSearch called in the EDT");
         }
         
-        query.setStart(pageSize*page);
+        query.setStart(pageSize * page);
         query.setRows(pageSize);
-        
-        // TODO: use the DomainMgr instead
-        SolrResults solrResults = ModelMgr.getModelMgr().searchSolr(query, false);
-        QueryResponse qr = solrResults.getResponse();
+
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        SolrParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
+        SolrJsonResults results = model.search(queryParams);
         
         List<Reference> refs = new ArrayList<>();
-        for(SolrDocument doc : qr.getResults()) {
+        for(SolrDocument doc : results.getResults()) {
             Long id = new Long(doc.get("id").toString());
             String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
             String className = ClientDomainUtils.getClassNameForSearchType(type);
@@ -344,29 +339,18 @@ public class SearchConfiguration {
                 log.warn("Unrecognized type has no collection mapping: "+type);
             }
         }
-        
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
+
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
         
-        int numFound = (int)qr.getResults().getNumFound();
+        int numFound = (int)results.getResults().getNumFound();
         
-        log.info("Search found {} objects",numFound);
-        log.info("Page contains {} objects and {} annotations",domainObjects.size(),annotations.size());
+        log.info("Search found {} objects", numFound);
+        log.info("Page contains {} objects and {} annotations", domainObjects.size(), annotations.size());
         
         facetValues.clear();
-        if (qr.getFacetFields()!=null) {
-            for (final FacetField ff : qr.getFacetFields()) {
-                log.debug("Facet {}",ff.getName());
-                List<FacetValue> favetValues = new ArrayList<>();
-                if (ff.getValues()!=null) {
-                    for (final FacetField.Count count : ff.getValues()) {
-                        favetValues.add(new FacetValue(count.getName(),count.getCount()));
-                        log.debug("  Value: {} (count={})",count.getName(),count.getCount());
-                    }
-                }
-                facetValues.put(ff.getName(), favetValues);
-            }
+        if (results.getFacetValues()!=null) {
+            facetValues.putAll(results.getFacetValues());
         }
         
         return new ResultPage(domainObjects, annotations, numFound);
