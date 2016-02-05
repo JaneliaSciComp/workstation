@@ -161,22 +161,22 @@ public class DomainInspectorPanel extends JPanel {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
                 DomainObjectPermission dop = (DomainObjectPermission) userObject;
-                if (null != dop) {
-                    if (column.getName().equals(PERMISSIONS_COLUMN_SUBJECT)) {
-                        return subjectMap.get(dop.getSubjectKey()).getFullName();
+                if (dop == null) return null;
+                if (column.getName().equals(PERMISSIONS_COLUMN_SUBJECT)) {
+                    Subject subject = subjectMap.get(dop.getSubjectKey());
+                    return subject==null ? null : subject.getFullName();
+                }
+                else if (column.getName().equals(PERMISSIONS_COLUMN_TYPE)) {
+                    if (dop.isOwner()) {
+                        return OWNER_PERMISSION;
                     }
-                    else if (column.getName().equals(PERMISSIONS_COLUMN_TYPE)) {
-                        if (dop.isOwner()) {
-                            return OWNER_PERMISSION;
-                        }
-                        return dop.getSubjectKey().split(":")[0];
-                    }
-                    else if (column.getName().equals(PERMISSIONS_COLUMN_READ)) {
-                        return new Boolean(dop.getPermissions().contains("r"));
-                    }
-                    else if (column.getName().equals(PERMISSIONS_COLUMN_WRITE)) {
-                        return new Boolean(dop.getPermissions().contains("w"));
-                    }
+                    return dop.getSubjectKey().split(":")[0];
+                }
+                else if (column.getName().equals(PERMISSIONS_COLUMN_READ)) {
+                    return dop.getPermissions().contains("r");
+                }
+                else if (column.getName().equals(PERMISSIONS_COLUMN_WRITE)) {
+                    return dop.getPermissions().contains("w");
                 }
                 return null;
             }
