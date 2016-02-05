@@ -1210,6 +1210,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mbmPrefixes = {
                     "/groups/mousebrainmicro/mousebrainmicro/",
                     "/nobackup/mousebrainmicro/",
+                    "/nobackup2/mousebrainmicro/",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/tier2/mousebrainmicro-nb/"
             };

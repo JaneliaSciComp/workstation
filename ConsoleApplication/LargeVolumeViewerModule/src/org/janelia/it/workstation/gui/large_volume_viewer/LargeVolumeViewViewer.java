@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronSet;
