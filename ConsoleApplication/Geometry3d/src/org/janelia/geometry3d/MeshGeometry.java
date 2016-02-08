@@ -457,5 +457,11 @@ implements Collection<Vertex>, ObservableInterface
     public void deleteObservers() {
         observable.deleteObservers();
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return observable.hasChanged();
+    }
     
 }

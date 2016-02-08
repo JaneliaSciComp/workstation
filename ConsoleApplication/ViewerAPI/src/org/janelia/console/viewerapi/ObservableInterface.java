@@ -38,6 +38,7 @@ import java.util.Observer;
  */
 public interface ObservableInterface {
     void setChanged();
+    boolean hasChanged();
     void notifyObservers();
     void addObserver(Observer observer);
     void deleteObserver(Observer observer);

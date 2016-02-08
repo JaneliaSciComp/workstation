@@ -1,11 +1,3 @@
-package org.janelia.horta;
-
-
-import org.janelia.geometry3d.BasicVector;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector3;
-
 /*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
@@ -36,45 +28,53 @@ import org.janelia.geometry3d.Vector3;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package org.janelia.horta.loader;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
- *
+ * Helper class used when user drags-and-drops a file onto HortaWorkspaceNode or 
+ * onto NeuronTracerTopComponent.
+ * 
  * @author Christopher Bruns
  */
-public class NeuriteAnchor implements ImmutableNeuriteAnchor 
+public class DroppedFileHandler implements FileHandler
 {
-    private final Vector3 xyzUm;
-    private final double intensity;
-    private float radiusUm;
+    private final Collection<FileTypeLoader> typeLoaders = new ArrayList<>();
     
-    public NeuriteAnchor(Vector3 locationUm, double intensity, float radiusUm) {
-        this.xyzUm = locationUm;
-        this.intensity = intensity;
-        this.radiusUm = radiusUm;
+    public void addLoader(FileTypeLoader loader) {
+        typeLoaders.add(loader);
     }
-
-    @Override
-    public Vector3 getLocationUm() {
-        return xyzUm;
-    }
-
-    @Override
-    public double getIntensity() {
-        return intensity;
-    }
-
-    @Override
-    public float getRadiusUm() {
-        return radiusUm;
-    }
-
-    public void setRadiusUm(float radiusUm) {
-        this.radiusUm = radiusUm;
-    }
-
-    @Override
-    public float distanceSquared(ConstVector3 rhs)
+    
+    public boolean handleFile(File f) 
+            throws FileNotFoundException, IOException 
     {
-        return xyzUm.distanceSquared(rhs);
+        DataSource source = new FileDataSource(f);
+        return handleDataSource(source);
     }
     
+    public boolean handleStream(InputStream stream, String fileName) 
+            throws IOException 
+    {
+        DataSource source = new BasicDataSource(stream, fileName);
+        return handleDataSource(source);
+    }
+    
+    @Override
+    public boolean handleDataSource(DataSource source) 
+            throws IOException 
+    {
+        for (FileTypeLoader loader : typeLoaders) {
+            if (loader.supports(source)) {
+                if (loader.load(source, this))
+                    return true;
+            }
+        }
+        return false;
+    }
 }

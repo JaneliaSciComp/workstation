@@ -46,6 +46,11 @@ import javax.swing.Action;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.horta.loader.DroppedFileHandler;
+import org.janelia.horta.loader.GZIPFileLoader;
+import org.janelia.horta.loader.SwcLoader;
+import org.janelia.horta.loader.TarFileLoader;
+import org.janelia.horta.loader.TgzFileLoader;
 import org.openide.ErrorManager;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -74,6 +79,7 @@ public class NeuronSetNode extends AbstractNode
         this.neuronList = neuronList;
         String name = neuronList.getName();
         setDisplayName(name);
+
         neuronList.getNameChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg)
@@ -94,34 +100,49 @@ public class NeuronSetNode extends AbstractNode
     
     // Allow to drop SWC files on List, to add neurons
     @Override
-    public PasteType getDropType(final Transferable transferable, int action, int index) {
+    public PasteType getDropType(final Transferable transferable, int action, int index) 
+    {
+        final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
+        droppedFileHandler.addLoader(new GZIPFileLoader());
+        droppedFileHandler.addLoader(new TarFileLoader());
+        droppedFileHandler.addLoader(new TgzFileLoader());        
+        final SwcLoader swcLoader = new SwcLoader(neuronList);
+        droppedFileHandler.addLoader(swcLoader);
+       
         return new PasteType() {
             @Override
             public Transferable paste() throws IOException
             {
-                System.out.println("Dropping neuron...");
                 try {
                     List<File> fileList = (List) transferable.getTransferData(DataFlavor.javaFileListFlavor);
                     for (File f : fileList) {
-                        String extension = FilenameUtils.getExtension(f.getName());
-                        if ( "SWC".equals(extension.toUpperCase()) ) {
-                            // If no neuron lists are available, create a new one.
-                            NeuronModel neuron = new BasicNeuronModel(f);
-                            neuronList.add(neuron);
-                            neuronList.getMembershipChangeObservable().setChanged();
-                            // workspace.setChanged();
-                            neuronList.getMembershipChangeObservable().notifyObservers();
-                            // neuron.getGeometryChangeObservable().setChanged();
-                            // neuron.getGeometryChangeObservable().notifyObservers();
-                        } else {
-                        }
+                        droppedFileHandler.handleFile(f);
                     }
+                    // Update after asynchronous load completes
+                    swcLoader.runAfterLoad(new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        if (! neuronList.getMembershipChangeObservable().hasChanged())
+                            return;
+                        // Update models after drop.
+                        neuronList.getMembershipChangeObservable().notifyObservers();
+                        // force repaint - just once per drop action though.
+                        triggerRepaint();
+                    }
+                });
                 } catch (UnsupportedFlavorException ex) {
                     Exceptions.printStackTrace(ex);
                 }
                 return null;
             }
         };
+    }
+    
+    private void triggerRepaint() {
+        HortaWorkspaceNode parentNode = (HortaWorkspaceNode)(getParentNode());
+        if (parentNode != null)
+            parentNode.triggerRepaint();
     }
     
     @Override

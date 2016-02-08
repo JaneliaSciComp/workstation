@@ -496,9 +496,9 @@ called from a  SimpleWorker thread.
      * @param xyz = location of new child annotation
      * @throws Exception
      */
-    public void addChildAnnotation(TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
+    public TmGeoAnnotation addChildAnnotation(TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
         if (parentAnn == null) {
-            return;
+            return null;
         }
 
         addTimer.mark("start addChildAnn");
@@ -537,6 +537,7 @@ called from a  SimpleWorker thread.
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
         addTimer.clearPreviousStepName();
+        return annotation;
     }
 
     /**

@@ -88,4 +88,7 @@ void main() {
         image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
         // light_rig(s, normal, color.rgb),
         color.a);
+        // 1.0);
+
+    // fragColor = vec4(1, 0.9, 0.9, 1.0); // for debugging
 }
