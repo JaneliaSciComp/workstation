@@ -71,7 +71,8 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         defaultResultButton.setIcon(Icons.getIcon("folder_open_page.png"));
         defaultResultButton.setFocusable(false);
         defaultResultButton.setToolTipText("Select the result to display");
-        defaultResultButton.addMouseListener(new MouseForwarder(toolbar, "DefaultResultButton->JToolBar"));
+        // For some reason, this seems to break the mouse interaction with this button. Why?
+//        defaultResultButton.addMouseListener(new MouseForwarder(toolbar, "DefaultResultButton->JToolBar"));
         toolbar.add(defaultResultButton);
 
         defaultTypeButton = new SimpleDropDownButton();
@@ -81,7 +82,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         defaultTypeButton.setIcon(Icons.getIcon("page.png"));
         defaultTypeButton.setFocusable(false);
         defaultTypeButton.setToolTipText("Select the result type to display");
-        defaultTypeButton.addMouseListener(new MouseForwarder(toolbar, "DefaultTypeButton->JToolBar"));
+//        defaultTypeButton.addMouseListener(new MouseForwarder(toolbar, "DefaultTypeButton->JToolBar"));
         toolbar.add(defaultTypeButton);
                 
         toolbar.addSeparator();

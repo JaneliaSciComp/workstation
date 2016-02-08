@@ -186,7 +186,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             this.currResult = new ResultDescriptor(DomainConstants.PREFERENCE_VALUE_LATEST);
         }
         
-        Multiset<String> countedTypeNames = LinkedHashMultiset.create();
+        populateResultButton();
+        populateTypeButton();
+        
+        if (currImage2dType == null) {
+            this.currImage2dType = FileType.SignalMip.name();
+        }
+        
+        showObjects(domainObjectList.getDomainObjects(), success);
+    }
+
+    private void populateResultButton() {
+
         Multiset<String> countedResultNames = LinkedHashMultiset.create();
         // Add twice so that it is selected by >1 filter below
         countedResultNames.add(DomainConstants.PREFERENCE_VALUE_LATEST);
@@ -201,7 +212,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     if (run==null || run.getResults()==null) continue;
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups) {
-                            countedTypeNames.addAll(get2dTypeNames((HasFileGroups)result));
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
                                 String name = objective+" "+result.getName()+" ("+groupKey+")";
@@ -211,16 +221,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                         else {
                             String name = objective+" "+result.getName();
                             countedResultNames.add(name);
-                            countedTypeNames.addAll(get2dTypeNames(result));
                         }
                     }
                 }
-            }
-            else if (domainObject instanceof HasFileGroups) {
-                countedTypeNames.addAll(get2dTypeNames((HasFileGroups)domainObject));
-            }
-            else if (domainObject instanceof HasFiles) {
-                countedTypeNames.addAll(get2dTypeNames((HasFiles)domainObject));
             }
         }
         
@@ -234,96 +237,94 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         currResult = new ResultDescriptor(resultName);
-                        SimpleWorker worker = new SimpleWorker() {
-
-                            @Override
-                            protected void doStuff() throws Exception {
-                                if (parentObject.getId()!=null) {
-                                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT,parentObject.getId().toString());
-                                    if (preference==null) {
-                                        preference = new Preference(AccessManager.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, parentObject.getId().toString(), resultName);
-                                    }
-                                    else {
-                                        preference.setValue(resultName);
-                                    }
-                                    DomainMgr.getDomainMgr().savePreference(preference);
-                                }
-                                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted. 
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                showDomainObjects(domainObjectList, null);
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-
-                        worker.execute();
+                        setPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT, resultName);
                     }
                 });
                 popupMenu.add(menuItem);
             }
         }        
+    }
+    
+    private void populateTypeButton() {
 
+        Multiset<String> countedTypeNames = LinkedHashMultiset.create();
+            
+        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
+            if (domainObject instanceof Sample) {
+                Sample sample = (Sample)domainObject;
+                HasFiles result = DomainModelViewUtils.getResult(sample, currResult);
+                if (result!=null) {
+                    countedTypeNames.addAll(get2dTypeNames(result));
+                }
+            }
+            else if (domainObject instanceof HasFileGroups) {
+                countedTypeNames.addAll(get2dTypeNames((HasFileGroups)domainObject));
+            }
+            else if (domainObject instanceof HasFiles) {
+                countedTypeNames.addAll(get2dTypeNames((HasFiles)domainObject));
+            }
+        }
+        
         getToolbar().getDefaultTypeButton().setVisible(!countedTypeNames.isEmpty());
         JPopupMenu popupMenu2 = getToolbar().getDefaultTypeButton().getPopupMenu();
         popupMenu2.removeAll();
 
-        for(final String typeName : countedTypeNames.elementSet()) {
-            if (countedTypeNames.count(typeName)>1 || countedTypeNames.size()==1) {
+        // If the preference is set to something which cannot be seen, clear it.
+        if (!countedTypeNames.contains(currImage2dType)) {
+            this.currImage2dType = null;
+        }
+        
+        for(FileType fileType : FileType.values()) {
+            final String typeName = fileType.name();
+            if (countedTypeNames.count(typeName)>1 || (countedTypeNames.count(typeName)>0 && countedTypeNames.size()==1)) {
                 if (currImage2dType == null) {
                     this.currImage2dType = typeName;
                 }
-                FileType fileType = FileType.valueOf(typeName);
                 JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(currImage2dType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-
                         currImage2dType = typeName;
-                        
-                        SimpleWorker worker = new SimpleWorker() {
-
-                            @Override
-                            protected void doStuff() throws Exception {
-                                if (parentObject.getId()!=null) {
-                                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE,parentObject.getId().toString());
-                                    if (preference==null) {
-                                        preference = new Preference(AccessManager.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, parentObject.getId().toString(), typeName);
-                                    }
-                                    else {
-                                        preference.setValue(typeName);
-                                    }
-                                    DomainMgr.getDomainMgr().savePreference(preference);
-                                }
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                showDomainObjects(domainObjectList, null);
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-
-                        worker.execute();
+                        setPreference(DomainConstants.PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE, typeName);
                     }
                 });
                 popupMenu2.add(menuItem);
             }
-        }        
-        
-        if (currImage2dType == null) {
-            this.currImage2dType = FileType.SignalMip.name();
         }
-        
-        showObjects(domainObjectList.getDomainObjects(), success);
+    }
+    
+    private void setPreference(final String name, final String value) {
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                
+                final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
+                if (parentObject.getId()!=null) {
+                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
+                    if (preference==null) {
+                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
+                    }
+                    else {
+                        preference.setValue(value);
+                    }
+                    DomainMgr.getDomainMgr().savePreference(preference);
+                }
+                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted.
+            }
+
+            @Override
+            protected void hadSuccess() {
+                showDomainObjects(domainObjectList, null);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
     
     private Multiset<String> get2dTypeNames(HasFileGroups hasGroups) {
