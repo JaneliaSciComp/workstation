@@ -66,7 +66,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
         defaultResultButton = new SimpleDropDownButton();
         JYPopupMenu popupMenu = new JYPopupMenu();
-        popupMenu.setVisibleElements(10);
+        popupMenu.setVisibleElements(20);
         defaultResultButton.setPopupMenu(popupMenu);
         defaultResultButton.setIcon(Icons.getIcon("folder_open_page.png"));
         defaultResultButton.setFocusable(false);
@@ -77,7 +77,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
         defaultTypeButton = new SimpleDropDownButton();
         JYPopupMenu popupMenu2 = new JYPopupMenu();
-        popupMenu2.setVisibleElements(10);
+        popupMenu2.setVisibleElements(20);
         defaultTypeButton.setPopupMenu(popupMenu2);
         defaultTypeButton.setIcon(Icons.getIcon("page.png"));
         defaultTypeButton.setFocusable(false);

@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -231,7 +232,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         JPopupMenu popupMenu = getToolbar().getDefaultResultButton().getPopupMenu();
         popupMenu.removeAll();
         
-        for(final String resultName : countedResultNames.elementSet()) {
+        // Sort in alphanumeric order, with Latest first
+        List<String> sortedResultNames = new ArrayList<>(countedResultNames.elementSet());
+        sortedResultNames.remove(DomainConstants.PREFERENCE_VALUE_LATEST);
+        Collections.sort(sortedResultNames);
+        sortedResultNames.add(0, DomainConstants.PREFERENCE_VALUE_LATEST);
+        
+        for(final String resultName : sortedResultNames) {
             if (countedResultNames.count(resultName)>1 || countedResultNames.size()==1) {
                 JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.getResultKey()));
                 menuItem.addActionListener(new ActionListener() {
