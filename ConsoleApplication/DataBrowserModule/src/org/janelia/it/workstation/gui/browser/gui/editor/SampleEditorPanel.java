@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
-import static org.janelia.it.jacs.model.domain.enums.FileType.ReferenceMip;
-import static org.janelia.it.jacs.model.domain.enums.FileType.SignalMip;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -37,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.Scrollable;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
@@ -49,12 +47,14 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
+import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -63,6 +63,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
+import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -97,14 +98,14 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     // UI Components
     private final SampleEditorToolbar toolbar;
     private final JPanel mainPanel;
-    private final PaginatedResultsPanel resultsPanel;
+    private final PaginatedResultsPanel lsmPanel;
     private final JScrollPane scrollPane;
     private final JPanel dataPanel;
     private final List<PipelineResultPanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
-
+    
     // Results
-    private SearchResults searchResults;
+    private SearchResults lsmSearchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     // State
@@ -114,6 +115,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
+    private int currResultIndex;
     
     // Listener for clicking on result panels
     protected MouseListener resultMouseListener = new MouseHandler() {
@@ -166,13 +168,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         toolbar.getObjectiveButton().setText("Objective: "+currObjective);
         toolbar.getAreaButton().setText("Area: "+currArea);
 
-        resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
+        lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
             }
         };
-        
+
         dataPanel = new JPanel();
         dataPanel.setLayout(new BoxLayout(dataPanel, BoxLayout.PAGE_AXIS));
 
@@ -194,6 +196,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     private void resultPanelSelection(PipelineResultPanel resultPanel, boolean isUserDriven) {
+        if (resultPanel==null) return;
         for(PipelineResultPanel otherResultPanel : resultPanels) {
             if (resultPanel != otherResultPanel) {
                 otherResultPanel.setSelected(false);
@@ -224,11 +227,35 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
         popupMenu.runDefaultAction();
     }
+
+    public PipelineResultPanel getPreviousObject() {
+        if (resultPanels == null) {
+            return null;
+        }
+        int i = resultPanels.indexOf(currResultIndex);
+        if (i < 1) {
+            // Already at the beginning
+            return null;
+        }
+        return resultPanels.get(i - 1);
+    }
+
+    public PipelineResultPanel getNextObject() {
+        if (resultPanels == null) {
+            return null;
+        }
+        int i = resultPanels.indexOf(currResultIndex);
+        if (i > resultPanels.size() - 2) {
+            // Already at the end
+            return null;
+        }
+        return resultPanels.get(i + 1);
+    }
     
     @Override
     public void setSortField(final String sortCriteria) {
 
-        resultsPanel.showLoadingIndicator();
+        lsmPanel.showLoadingIndicator();
 
         SimpleWorker worker = new SimpleWorker() {
         
@@ -281,10 +308,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     @Override
     public void export() {
         DomainObjectTableViewer viewer = null;
-        if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
-            viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+        if (lsmPanel.getViewer() instanceof DomainObjectTableViewer) {
+            viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
         }
-        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
+        ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
         action.doAction();
     }
     
@@ -303,6 +330,29 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         return this;
     }
 
+    @Override
+    public void activate() {
+    }
+
+    @Override
+    public void deactivate() {
+    }
+
+    protected void updateHud(boolean toggle) {
+
+        Hud hud = Hud.getSingletonInstance();
+                
+        PipelineResultPanel pipelineResultPanel = resultPanels.get(currResultIndex);
+        ResultDescriptor resultDescriptor = pipelineResultPanel.getResultDescriptor();
+        
+        if (toggle) {
+            hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
+        }
+        else {
+            hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString());
+        }
+    }
+    
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
@@ -429,7 +479,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     private void showLsmView() {
 
-        List<LSMImage> filtered = new ArrayList<>();
+        List<LSMImage> filteredLsms = new ArrayList<>();
         for(LSMImage lsm : lsms) {
 
             boolean display = true;
@@ -443,15 +493,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
             
             if (display) {
-                filtered.add(lsm);
+                filteredLsms.add(lsm);
             }
         }
         
-        searchResults = SearchResults.paginate(filtered, lsmAnnotations);
-        resultsPanel.showSearchResults(searchResults, true);
+        lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
+        lsmPanel.showSearchResults(lsmSearchResults, true);
         removeAll();
         add(toolbar, BorderLayout.NORTH);
-        add(resultsPanel, BorderLayout.CENTER);
+        add(lsmPanel, BorderLayout.CENTER);
     }
 
     private void showResultView() {
@@ -497,7 +547,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     c.anchor = GridBagConstraints.PAGE_START;
                     c.weightx = 1;
                     c.weighty = 0.9;
-                    PipelineResultPanel resultPanel = new PipelineResultPanel(objective, result);
+                    PipelineResultPanel resultPanel = new PipelineResultPanel(result);
                     resultPanels.add(resultPanel);
                     dataPanel.add(resultPanel);
                 }
@@ -636,7 +686,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
 
     private class PipelineResultPanel extends SelectablePanel {
-
+        
+        private final ResultDescriptor resultDescriptor;
         private final PipelineResult result;
         private JLabel label = new JLabel();
         private JLabel subLabel = new JLabel();
@@ -652,38 +703,43 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
-            if (result==null) return;
-
-            String signalMip = DomainUtils.getFilepath(result, SignalMip);
-            String refMip = DomainUtils.getFilepath(result, ReferenceMip);
-
-            imagePanel.add(getImagePanel(signalMip));
-            imagePanel.add(getImagePanel(refMip));
-
-            JPanel titlePanel = new JPanel(new BorderLayout());
-            titlePanel.add(label, BorderLayout.PAGE_START);
-            titlePanel.add(subLabel, BorderLayout.PAGE_END);
-            
-            add(titlePanel, BorderLayout.NORTH);
-            add(imagePanel, BorderLayout.CENTER);
-
-            addMouseListener(resultMouseListener);
-        }
-        
-        public PipelineResultPanel(String objective, PipelineResult result) {
-            this(result);
-            if (result instanceof SampleAlignmentResult) {
-                SampleAlignmentResult sar = (SampleAlignmentResult)result;
-                label.setText(objective+" "+result.getName()+" ("+sar.getAlignmentSpace()+")");
+            if (result!=null) {
+                this.resultDescriptor = ClientDomainUtils.getResultDescriptor(result);
+                if (result instanceof SampleAlignmentResult) {
+                    SampleAlignmentResult sar = (SampleAlignmentResult)result;
+                    label.setText(resultDescriptor+" ("+sar.getAlignmentSpace()+")");
+                }
+                else {
+                    label.setText(resultDescriptor.toString());
+                }
+                subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
+                
+                String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);
+                String refMip = DomainUtils.getFilepath(result, FileType.ReferenceMip);
+    
+                imagePanel.add(getImagePanel(signalMip));
+                imagePanel.add(getImagePanel(refMip));
+    
+                JPanel titlePanel = new JPanel(new BorderLayout());
+                titlePanel.add(label, BorderLayout.PAGE_START);
+                titlePanel.add(subLabel, BorderLayout.PAGE_END);
+                
+                add(titlePanel, BorderLayout.NORTH);
+                add(imagePanel, BorderLayout.CENTER);
+    
+                addMouseListener(resultMouseListener);
             }
             else {
-                label.setText(objective+" "+result.getName());
+                this.resultDescriptor = null;
             }
-            subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
         }
 
         public PipelineResult getResult() {
             return result;
+        }
+      
+        public ResultDescriptor getResultDescriptor() {
+            return resultDescriptor;
         }
     
         private JPanel getImagePanel(String filepath) {

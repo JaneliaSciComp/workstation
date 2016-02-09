@@ -60,7 +60,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     private IconGridViewerToolbar toolbar;
     private ImagesPanel<T,S> imagesPanel;
     private FindToolbar findToolbar;
-    
+
     // These members deal with the context and entities within it
     private List<T> objectList;
     private Map<S,T> objectMap;
@@ -82,7 +82,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
         setFocusable(true);
-
+        
         toolbar = createToolbar();
         toolbar.addMouseListener(new MouseForwarder(this, "ViewerToolbar->IconDemoPanel"));
 
@@ -205,8 +205,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    // TODO: notify our hud container
-//                    updateHud(true);
+                    updateHud(true);
                     e.consume();
                     return;
                 }
@@ -278,7 +277,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         if (button != null) {
                             imagesPanel.scrollObjectToCenter(object);
                             button.requestFocus();
-//                            updateHud(false);
+                            updateHud(false);
                         }
                     }
                 }
@@ -336,9 +335,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                 if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 1) {
                     return;
                 }
-    //            hud.setKeyListener(keyListener);
                 buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
-//                e.consume();
+                e.consume();
             }
         }
     };
@@ -353,7 +351,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 
     protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
 
-        final T object = (T)button.getUserObject();
+        final T object = button.getUserObject();
         final S uniqueId = getImageModel().getImageUniqueId(object);
 
         if (multiSelect) {
@@ -444,29 +442,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     /**
      * This should be called by any handler that wishes to show/unshow the HUD.
      */
-//    private void updateHud(boolean toggle) {
-//        List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-//        if (selectedIds.size() != 1) {
-//            hud.hideDialog();
-//            return;
-//        }
-//        Entity entity = null;
-//        String selectedId = selectedIds.get(0);
-//        for (RootedEntity re : getRootedEntitiesById(selectedId)) {
-//            // Get the image from the annotated image button which is also a Dynamic Image Button.
-//            final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
-//            if (button instanceof DynamicImageButton) {
-//                entity = re.getEntity();
-//                break;   // Only one.
-//            }
-//        }
-//        if (toggle) {
-//            hud.setEntityAndToggleDialog(entity);
-//        }
-//        else {
-//            hud.setEntity(entity);
-//        }
-//    }
+    protected void updateHud(boolean toggle) {
+    }
     
 //    public void showImageObjects(List<T> imageObjects) {
 //        showImageObjects(imageObjects, null);
@@ -609,10 +586,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 //            }
 //        }
 //        return selectedEntities;
-//    }
-    
-//    public Hud getHud() {
-//        return hud;
 //    }
 
 //    public EntityViewerState saveViewerState() {

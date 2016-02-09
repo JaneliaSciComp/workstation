@@ -9,12 +9,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface SampleResultEditor {
+public interface SampleResultEditor extends Editor {
     
     public void loadSampleResult(PipelineResult pipelineResult, boolean isUserDriven, Callable<Void> success);
-    
-    public String getName();
-    
-    public Object getEventBusListener();
-    
 }

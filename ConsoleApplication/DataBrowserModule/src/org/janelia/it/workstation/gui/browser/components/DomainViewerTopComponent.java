@@ -99,10 +99,60 @@ public final class DomainViewerTopComponent extends TopComponent {
     @Override
     protected void componentActivated() {
         DomainViewerManager.getInstance().activate(this);
+        if (editor!=null) {
+            editor.activate();
+        }
     }
     
     @Override
     protected void componentDeactivated() {
+        if (editor!=null) {
+            editor.deactivate();
+        }
+    }
+
+    void writeProperties(java.util.Properties p) {
+        p.setProperty("version", TC_VERSION);
+        DomainObject current = getCurrent();
+        if (current!=null) {
+            String objectRef = Reference.createFor(current).toString();
+            log.info("Writing state: {}",objectRef);
+            p.setProperty("objectRef", objectRef);
+        }
+        else {
+            p.remove("objectRef");
+        }
+    }
+
+    void readProperties(java.util.Properties p) {
+        String version = p.getProperty("version");
+        final String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: {}",objectStrRef);
+        if (TC_VERSION.equals(version) && objectStrRef!=null) {
+
+            SimpleWorker worker = new SimpleWorker() {
+                DomainObject object;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (object!=null) {
+                        loadDomainObject(object);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+        }
     }
 
     public DomainObject getCurrent() {
@@ -167,6 +217,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject, true, null);
+        editor.activate();
         setName(editor.getName());
     }
 
@@ -179,49 +230,5 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     public static boolean isSupported(DomainObject domainObject) {
         return getEditorClass(domainObject)!=null;
-    }
-
-    void writeProperties(java.util.Properties p) {
-        p.setProperty("version", TC_VERSION);
-        DomainObject current = getCurrent();
-        if (current!=null) {
-            String objectRef = Reference.createFor(current).toString();
-            log.info("Writing state: {}",objectRef);
-            p.setProperty("objectRef", objectRef);
-        }
-        else {
-            p.remove("objectRef");
-        }
-    }
-
-    void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        final String objectStrRef = p.getProperty("objectRef");
-        log.info("Reading state: {}",objectStrRef);
-        if (TC_VERSION.equals(version) && objectStrRef!=null) {
-
-            SimpleWorker worker = new SimpleWorker() {
-                DomainObject object;
-                
-                @Override
-                protected void doStuff() throws Exception {
-                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    if (object!=null) {
-                        loadDomainObject(object);
-                    }
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            worker.execute();
-            
-        }
     }
 }

@@ -19,9 +19,11 @@ import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInToolAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -66,6 +68,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getVerificationMovieItem());
+        
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
         
     }
     
@@ -149,8 +154,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         if (path==null) return null;
         ObjectiveSample objectiveSample = result.getParentRun().getParent();
         Sample sample = objectiveSample.getParent();
-        String resultKey = objectiveSample.getObjective()+" "+result.getName();
-        ResultDescriptor descriptor = new ResultDescriptor(resultKey);
+        ResultDescriptor descriptor = ClientDomainUtils.getResultDescriptor(result);
         FileDownloadAction action = new FileDownloadAction(Arrays.asList(sample), descriptor);
         return action.getPopupPresenter();
     }
@@ -179,4 +183,18 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return movieItem;
     }
 
+    protected JMenuItem getHudMenuItem() {
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { 
+                ObjectiveSample objectiveSample = result.getParentRun().getParent();
+                Sample sample = objectiveSample.getParent();
+                ResultDescriptor descriptor = ClientDomainUtils.getResultDescriptor(result);
+                Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString());
+            }
+        });
+
+        return toggleHudMI;
+    }
 }

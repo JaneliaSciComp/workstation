@@ -82,9 +82,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
     protected DomainObjectSelectionModel selectionModel;
     protected SearchProvider searchProvider;
     	
-    // Hud dialog
-//    protected Hud hud;
-    
     public PaginatedResultsPanel(DomainObjectSelectionModel selectionModel, SearchProvider searchProvider) {
                 
         this.selectionModel = selectionModel;
@@ -234,6 +231,14 @@ public abstract class PaginatedResultsPanel extends JPanel {
         
     }
 
+    public void activate() {
+        resultsView.activate();
+    }
+
+    public void deactivate() {
+        resultsView.deactivate();
+    }
+    
     public AnnotatedDomainObjectListViewer getViewer() {
         return resultsView;
     }

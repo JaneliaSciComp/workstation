@@ -114,6 +114,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (DomainExplorerTopComponent.getInstance()!=null && domainObject!=null) {
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
+        if (editor!=null) {
+            editor.activate();
+        }
     }
     
     @Override
@@ -121,6 +124,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+        }
+        if (editor!=null) {
+            editor.deactivate();
         }
     }
 
@@ -238,10 +244,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject, true, null);
+        editor.activate();
         setName(editor.getName());
     }
 
-    private Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
+    private static Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Filter) {
             return FilterEditorPanel.class;
         }
@@ -249,5 +256,9 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             return ObjectSetEditorPanel.class;
         }
         return null;
+    }
+    
+    public static boolean isSupported(DomainObject domainObject) {
+        return getEditorClass(domainObject)!=null;
     }
 }

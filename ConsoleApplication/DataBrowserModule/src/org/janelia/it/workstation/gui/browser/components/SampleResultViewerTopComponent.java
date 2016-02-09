@@ -105,6 +105,9 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         if (findContext!=null) {
             FindContextManager.getInstance().activateContext((FindContext)findContext);
         }
+        if (editor!=null) {
+            editor.activate();
+        }
     }
     
     @Override
@@ -112,6 +115,9 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         this.active = false;
         if (findContext!=null) {
             FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+        }
+        if (editor!=null) {
+            editor.deactivate();
         }
     }
 
@@ -188,6 +194,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
         
         editor.loadSampleResult(result, isUserDriven, success);
+        editor.activate();
         setName("Neurons for "+StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18));
     }
 }

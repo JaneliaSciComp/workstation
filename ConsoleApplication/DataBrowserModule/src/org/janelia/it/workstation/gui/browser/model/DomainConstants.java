@@ -20,8 +20,8 @@ public class DomainConstants {
     public static final String VALUE_COMPRESSION_VISUALLY_LOSSLESS_AND_PBD = "Visually Lossless and PBD";
     public static final String VALUE_COMPRESSION_VISUALLY_LOSSLESS = "Visually Lossless";
 
-    public static final String PREFERENCE_CATEGORY_DEFAULT_SAMPLE_RESULT = "DefaultSampleResult";
-    public static final String PREFERENCE_CATEGORY_DEFAULT_IMAGE_TYPE = "DefaultImageType";
+    public static final String PREFERENCE_CATEGORY_SAMPLE_RESULT = "SampleResult";
+    public static final String PREFERENCE_CATEGORY_IMAGE_TYPE = "ImageType";
     public static final String PREFERENCE_VALUE_LATEST = "Latest";
     public static final String PREFERENCE_CATEGORY_TABLE_COLUMNS = "TableColumns";
 

@@ -36,6 +36,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopCo
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.model.DomainConstants;
@@ -61,13 +62,15 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected DomainObject domainObject;
     protected boolean multiple;
     protected ResultDescriptor resultDescriptor;
+    protected String typeName;
 
-    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ResultDescriptor resultDescriptor) {
+    public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ResultDescriptor resultDescriptor, String typeName) {
         this.contextObject = contextObject;
         this.domainObjectList = domainObjectList;
         this.domainObject = domainObjectList.size() == 1 ? domainObjectList.get(0) : null;
         this.multiple = domainObjectList.size() > 1;
         this.resultDescriptor = resultDescriptor;
+        this.typeName = typeName;
     }
     
     public void runDefaultAction() {
@@ -123,8 +126,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        add(getMergeItem());
 //        add(getImportItem());
 //
-//        setNextAddRequiresSeparator(true);
-//        add(getHudMenuItem());
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
 //        for ( JComponent item: getOpenForContextItems() ) {
 //            add(item);
 //        }
@@ -155,8 +158,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
         
-        JMenuItem copyMenuItem = new JMenuItem("  Open "+domainObject.getType()+" In New Viewer");
-        copyMenuItem.addActionListener(new ActionListener() {
+        JMenuItem openItem = new JMenuItem("  Open "+domainObject.getType()+" In New Viewer");
+        openItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
@@ -164,7 +167,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 viewer.loadDomainObject(domainObject);
             }
         });
-        return copyMenuItem;
+        return openItem;
     }
 
     protected JMenuItem getOpenSampleInNewEditorItem() {
@@ -273,24 +276,17 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return detailsMenuItem;
     }
 
-//    protected JMenuItem getHudMenuItem() {
-//        JMenuItem toggleHudMI = null;
-//        if (rootedEntity != null && rootedEntity.getEntity() != null) {
-//            Entity entity = rootedEntity.getEntity();
-//            if (!entity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
-//                toggleHudMI = new JMenuItem("  Show in Lightbox");
-//                toggleHudMI.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//                        Entity entity = rootedEntity.getEntity();
-//                        Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
-//                    }
-//                });
-//            }
-//        }
-//
-//        return toggleHudMI;
-//    }
+    protected JMenuItem getHudMenuItem() {
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { 
+                Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName);
+            }
+        });
+
+        return toggleHudMI;
+    }
 
     public JMenuItem getPasteAnnotationItem() {
         if (null == StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation()) {
@@ -680,7 +676,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //    }
 //
     private JMenuItem getSpecialAnnotationSession() {
-        if (!this.multiple) return null;
+        if (this.multiple) return null;
+        if (!SessionMgr.getSubjectKey().equals("user:simpsonj") && !SessionMgr.getSubjectKey().equals("group:simpsonlab")) {
+                return null;
+        }
         JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
@@ -690,10 +689,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",
                             JOptionPane.WARNING_MESSAGE);
                 } else {
-                    if (!SpecialAnnotationChooserDialog.getDialog().isVisible()) {
-                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
+                    SpecialAnnotationChooserDialog dialog = SpecialAnnotationChooserDialog.getDialog();
+                    if (!dialog.isVisible()) {
+                        dialog.setVisible(true);
                     } else {
-                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
+                        dialog.transferFocus();
                     }
                 }
             }

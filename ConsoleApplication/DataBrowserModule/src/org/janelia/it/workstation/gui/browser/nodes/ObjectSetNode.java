@@ -9,11 +9,10 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -53,10 +52,10 @@ public class ObjectSetNode extends DomainObjectNode {
     public Image getIcon(int type) {
         if (!getObjectSet().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             // TODO: add a blue version of this icon
-            return Icons.getIcon("folder_blue.png").getImage();
+            return Icons.getIcon("set.png").getImage();
         }
         else {
-            return Icons.getIcon("folder_image.png").getImage();
+            return Icons.getIcon("set.png").getImage();
         }
     }
     

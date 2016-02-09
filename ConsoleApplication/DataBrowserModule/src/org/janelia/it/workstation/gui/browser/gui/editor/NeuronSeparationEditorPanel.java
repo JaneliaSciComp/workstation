@@ -343,6 +343,16 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     public Object getEventBusListener() {
         return resultsPanel;
     }
+
+    @Override
+    public void activate() {
+        resultsPanel.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        resultsPanel.deactivate();
+    }
     
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
