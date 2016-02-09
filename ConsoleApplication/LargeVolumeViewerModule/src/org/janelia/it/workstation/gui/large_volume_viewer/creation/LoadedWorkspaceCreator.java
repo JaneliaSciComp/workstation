@@ -67,7 +67,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 pathTextField.setToolTipText("Backslashes will be converted to /.");
                 final JLabel workspaceNameLabel = new JLabel("Workspace Name");
                 final JTextField workspaceNameTextField = new JTextField();
-                inputDialog.setTitle("Input Folder");
+                inputDialog.setTitle("SWC Load-to-Workspace Parameters");
                 inputDialog.setLayout(new GridLayout(6, 1));
                 inputDialog.add(workspaceNameLabel);
                 inputDialog.add(workspaceNameTextField);
@@ -125,7 +125,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 });
                 buttonPanel.add(okButton, SystemInfo.isMac ? BorderLayout.LINE_END : BorderLayout.LINE_START);
                 
-                inputDialog.setSize(500, 180);
+                inputDialog.setSize(500, 280);
                 inputDialog.setLocationRelativeTo(mainFrame);
                 inputDialog.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 inputDialog.setVisible(true);
