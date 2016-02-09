@@ -162,19 +162,12 @@ public class SampleResultContextMenu extends PopupContextMenu {
     private JMenuItem getVerificationMovieItem() {
         
         if (!OpenWithDefaultAppAction.isSupported()) return null;
+        final String path = DomainUtils.getFilepath(result,FileType.AlignmentVerificationMovie);
+        if (path==null) return null;
         
         JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
         movieItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-
-                String path = DomainUtils.getFilepath(result,FileType.AlignmentVerificationMovie);
-                
-                if (path == null) {
-                    JOptionPane.showMessageDialog(mainFrame, "Could not locate verification movie",
-                            "Not Found", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
                 OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path);
                 action.doAction();
             }
