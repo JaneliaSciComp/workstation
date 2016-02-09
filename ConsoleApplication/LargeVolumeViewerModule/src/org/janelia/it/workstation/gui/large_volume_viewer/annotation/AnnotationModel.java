@@ -582,11 +582,11 @@ called from a  SimpleWorker thread.
         // at the same time, delete the paths out of the local neuron object, too
         TmGeoAnnotation parent = neuron.getParentOf(annotation);
         if (parent != null) {
-            removeAnchoredPath(annotation, parent);
+            removeAnchoredPath(neuron, annotation, parent);
             neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), parent.getId()));
         }
         for (TmGeoAnnotation neighbor: neuron.getChildrenOf(annotation)) {
-            removeAnchoredPath(annotation, neighbor);
+            removeAnchoredPath(neuron, annotation, neighbor);
             neuron.getAnchoredPathMap().remove(new TmAnchoredPathEndpoints(annotation.getId(), neighbor.getId()));
         }
 
@@ -811,11 +811,11 @@ called from a  SimpleWorker thread.
             neuronManager.reparentGeometricAnnotation(child, parent.getId(), neuron);
 
             // if segment to child had a traced path, remove it
-            removeAnchoredPath(link, child);
+            removeAnchoredPath(neuron, link, child);
         }
 
         // if segment to parent had a trace, remove it
-        removeAnchoredPath(link, parent);
+        removeAnchoredPath(neuron, link, parent);
 
         // if the link had a note, delete it:
         if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {            
@@ -898,7 +898,7 @@ called from a  SimpleWorker thread.
             // for each annotation, delete any paths traced to its children;
             //  do before the deletion!
             for (TmGeoAnnotation child: neuron.getChildrenOf(annotation)) {
-                removeAnchoredPath(annotation, child);
+                removeAnchoredPath(neuron, annotation, child);
             }
 
             note = neuron.getStructuredTextAnnotationMap().get(annotation.getId());
@@ -1000,7 +1000,7 @@ called from a  SimpleWorker thread.
         neuronManager.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
 
         // if that segment had a trace, remove it
-        removeAnchoredPath(annotation1, annotation2);
+        removeAnchoredPath(neuron, annotation1, annotation2);
         neuronManager.saveNeuronData(neuron);
 
         // updates:
@@ -1066,7 +1066,7 @@ called from a  SimpleWorker thread.
         TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
         TmNeuron neuron = getNeuronFromAnnotationID(newRootID);
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
-        removeAnchoredPath(newRoot, newRootParent);
+        removeAnchoredPath(neuron, newRoot, newRootParent);
         neuronManager.splitNeurite(neuron, newRoot);
 
         // update domain objects and database, and notify
@@ -1127,9 +1127,6 @@ called from a  SimpleWorker thread.
         final TmAnchoredPath path = neuronManager.addAnchoredPath(neuron1, endpoints.getFirstAnnotationID(),
                 endpoints.getSecondAnnotationID(), points);
 
-        // update local domain object - now redundant.  Serialized above.
-        //TmNeuron neuron = getNeuronFromAnnotationID(ann1.getId());
-        //neuron.getAnchoredPathMap().put(endpoints, path);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1153,10 +1150,11 @@ called from a  SimpleWorker thread.
     /**
      * remove an anchored path between two annotations, if one exists;
      * should only be called within AnnotationModel, and it does not
-     * update neurons or do any other cleanup
+     * persist neuron or do any other cleanup
      */
     private void removeAnchoredPath(TmNeuron neuron, TmAnchoredPath path) throws  Exception {
-        neuronManager.deleteAnchoredPath(neuron, path);
+        // Remove the anchor path from its containing neuron
+        neuron.getAnchoredPathMap().remove(path.getEndpoints());
 
         final ArrayList<TmAnchoredPath> pathList = new ArrayList<>();
         pathList.add(path);
@@ -1167,23 +1165,6 @@ called from a  SimpleWorker thread.
                 fireAnchoredPathsRemoved(pathList);
             }
         });
-    }
-
-    /**
-     * remove an anchored path between two annotations, if one exists;
-     * should only be called within AnnotationModel, and it does not
-     * update neurons or do any other cleanup
-     */
-    private void removeAnchoredPath(TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
-        throws Exception {
-        if (eitherIsNull(annotation1, annotation2)) {
-            return;
-        }
-
-        // we assume second annotation is in same neuron; if it's not, there's no path
-        //  to remove anyway
-        TmNeuron neuron1 = getNeuronFromAnnotationID(annotation1.getId());
-        removeAnchoredPath(neuron1, annotation1, annotation2);
     }
 
     private void removeAnchoredPath(TmNeuron neuron, TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
