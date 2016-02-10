@@ -1331,9 +1331,16 @@ called from a  SimpleWorker thread.
     public Map<Long, NeuronStyle> getNeuronStyleMap() {
         Map<Long, NeuronStyle> neuronStyleMap = new HashMap<>();
 
-        String stylePref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
-        if (stylePref == null) {
-            // no such preference
+        TmPreferences preferences = getCurrentWorkspace().getPreferences();
+        String stylePref = null;
+        if (preferences != null) {
+            stylePref = preferences.getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
+            if (stylePref == null) {
+                // no such preference
+                return neuronStyleMap;
+            }
+        }
+        else {
             return neuronStyleMap;
         }
 
