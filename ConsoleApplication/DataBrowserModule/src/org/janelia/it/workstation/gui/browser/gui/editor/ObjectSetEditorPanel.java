@@ -151,6 +151,16 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
         return resultsPanel;
     }
 
+    @Override
+    public void activate() {
+        resultsPanel.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        resultsPanel.deactivate();
+    }
+    
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {

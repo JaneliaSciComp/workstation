@@ -13,7 +13,6 @@ import java.util.TreeMap;
 import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -25,8 +24,13 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.shared.solr.*;
+import org.janelia.it.jacs.shared.solr.FacetValue;
+import org.janelia.it.jacs.shared.solr.SolrJsonResults;
+import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -38,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -331,7 +334,7 @@ public class SearchConfiguration {
         for(SolrDocument doc : results.getResults()) {
             Long id = new Long(doc.get("id").toString());
             String type = (String)doc.getFieldValue(SOLR_TYPE_FIELD);
-            String className = ClientDomainUtils.getClassNameForSearchType(type);
+            String className = DomainUtils.getClassNameForSearchType(type);
             if (className!=null) {
                 refs.add(new Reference(className, id));
             }

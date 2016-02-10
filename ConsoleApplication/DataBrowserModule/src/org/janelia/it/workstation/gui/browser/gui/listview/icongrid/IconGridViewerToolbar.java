@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
@@ -12,9 +13,6 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.workstation.gui.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.util.Icons;
-
-import de.javasoft.swing.JYPopupMenu;
-import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  * Tool bar for icon panels.
@@ -25,12 +23,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
     protected JToggleButton showTagsButton;
-    protected SimpleDropDownButton defaultResultButton;
-    protected SimpleDropDownButton defaultTypeButton;
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
-
+    protected int customComponentIndex;
+    
     public IconGridViewerToolbar() {
         super();
 
@@ -64,26 +61,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
         toolbar.addSeparator();
 
-        defaultResultButton = new SimpleDropDownButton();
-        JYPopupMenu popupMenu = new JYPopupMenu();
-        popupMenu.setVisibleElements(20);
-        defaultResultButton.setPopupMenu(popupMenu);
-        defaultResultButton.setIcon(Icons.getIcon("folder_open_page.png"));
-        defaultResultButton.setFocusable(false);
-        defaultResultButton.setToolTipText("Select the result to display");
-        // For some reason, this seems to break the mouse interaction with this button. Why?
-//        defaultResultButton.addMouseListener(new MouseForwarder(toolbar, "DefaultResultButton->JToolBar"));
-        toolbar.add(defaultResultButton);
-
-        defaultTypeButton = new SimpleDropDownButton();
-        JYPopupMenu popupMenu2 = new JYPopupMenu();
-        popupMenu2.setVisibleElements(20);
-        defaultTypeButton.setPopupMenu(popupMenu2);
-        defaultTypeButton.setIcon(Icons.getIcon("page.png"));
-        defaultTypeButton.setFocusable(false);
-        defaultTypeButton.setToolTipText("Select the result type to display");
-//        defaultTypeButton.addMouseListener(new MouseForwarder(toolbar, "DefaultTypeButton->JToolBar"));
-        toolbar.add(defaultTypeButton);
+        customComponentIndex = toolbar.getComponentCount();
                 
         toolbar.addSeparator();
 
@@ -131,19 +109,15 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         return showTagsButton;
     }
 
-    public SimpleDropDownButton getDefaultResultButton() {
-        return defaultResultButton;
-    }
-
-    public SimpleDropDownButton getDefaultTypeButton() {
-        return defaultTypeButton;
-    }
-    
     public JSlider getImageSizeSlider() {
         return imageSizeSlider;
     }
 
     public int getCurrImageSize() {
         return currImageSize;
+    }
+    
+    public void addCustomComponent(JComponent component) {
+        toolbar.add(component, null, customComponentIndex++);
     }
 }

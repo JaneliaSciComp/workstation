@@ -59,5 +59,14 @@ public interface AnnotatedDomainObjectListViewer {
      * @param domainObject updated domain object
      */
     public void refreshDomainObject(DomainObject domainObject);
+
+    /**
+     * Called when the viewer acquires focus.
+     */
+    public void activate();
     
+    /**
+     * Called when the viewer loses focus.
+     */
+    public void deactivate();
 }

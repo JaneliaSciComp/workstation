@@ -120,6 +120,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                         }
                     }
                 }
+                updateHud(false);
             }
         });
         
@@ -188,30 +189,27 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
 
             KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
             if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
-
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
                     selectRange(0, objectList.size()-1);
-                    return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    // TODO: notify our hud container
-//                    updateHud(true);
+                    updateHud(true);
                     e.consume();
-                    return;
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     enterKeyPressed();
-                    return;
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
                     deleteKeyPressed();
                     e.consume();
-                    return;
+                }
+                if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    updateHud(false);
                 }
             }
-
+            
             revalidate();
             repaint();
         }
@@ -221,6 +219,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     
     protected void deleteKeyPressed() {}
 
+    protected void updateHud(boolean toggle) {}
+    
     protected void selectObject(T object, boolean clearAll) {
         selectObjects(Arrays.asList(object), true, clearAll);
         selectionModel.select(object, clearAll);

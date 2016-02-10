@@ -36,6 +36,8 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
+ * TODO: This probably doesn't work as it should anymore (after the port to NG), but it's not used by anyone. Maybe someday we can resurrect it. 
+ * 
  * Created with IntelliJ IDEA.
  * User: kimmelr
  * Date: 6/12/12
@@ -43,13 +45,12 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  */
 public class SpecialAnnotationChooserDialog extends JFrame{
 
-    private static JPanel annotationPanel = new JPanel();
-    private Ontology ontology;
+    private static final JPanel annotationPanel = new JPanel();
     private List<OntologyTerm> OntologyTerms = new ArrayList<>();
     private DefaultTableModel model;
     private JComboBox comboBox;
-    private static SpecialAnnotationChooserDialog  dialog = new SpecialAnnotationChooserDialog();
     private TableModelListener tableModelListener=null;
+    private Ontology ontology;
 
     private SpecialAnnotationChooserDialog() {
         super("Special Annotation Session");
@@ -235,12 +236,12 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         this.setVisible(true);
     }
 
-    private void iterateAndAddRows(List<OntologyTerm> list, int recursionLevel){
+    private void iterateAndAddRows(List<OntologyTerm> list, int recursionLevel) {
+
         StringBuilder tabString = new StringBuilder("");
         for(int i = 0; i<recursionLevel; i++){
             tabString.append("   ");
         }
-
 
         for(OntologyTerm element : list){
             
@@ -272,12 +273,13 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                 iterateAndAddRows(element.getTerms(), recursionLevel+1);
             }
         }
-
+        
+        if (comboBox==null) {
+            comboBox = new JComboBox();
+        }
     }
 
     public static SpecialAnnotationChooserDialog getDialog(){
-        return dialog;
+        return new SpecialAnnotationChooserDialog();
     }
-
-
 }

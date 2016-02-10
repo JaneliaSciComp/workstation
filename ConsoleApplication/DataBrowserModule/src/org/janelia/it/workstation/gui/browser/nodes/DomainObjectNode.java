@@ -25,8 +25,9 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
+import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
@@ -34,7 +35,6 @@ import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -317,19 +317,14 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            DomainListViewTopComponent browser = new DomainListViewTopComponent();
-            browser.open();
-            browser.requestActive();
-            DomainExplorerTopComponent explorer = (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-            // Deselect it first, so that this generates another selection event, since the browser didn't exist when the first one was generated
-            explorer.getSelectionModel().deselect(DomainObjectNode.this);
-            explorer.getSelectionModel().select(DomainObjectNode.this, true);
+            DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
+            viewer.requestActive();
+            viewer.loadDomainObject(getDomainObject());
         }
 
         @Override
         public boolean isEnabled() {
-            DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            return ClientDomainUtils.hasWriteAccess(domainObject);
+            return DomainListViewTopComponent.isSupported(getDomainObject());
         }
     }
     

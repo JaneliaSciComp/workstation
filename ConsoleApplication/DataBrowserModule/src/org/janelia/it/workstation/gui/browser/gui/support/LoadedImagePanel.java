@@ -10,12 +10,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import loci.formats.FormatException;
-
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.LoadImageWorker;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import loci.formats.FormatException;
 
 /**
  * An image that is loaded asynchronously from a standard filename. The panel may be scaled as needed, 
@@ -69,8 +69,6 @@ public class LoadedImagePanel extends JPanel {
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.CENTER);
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-               
-//        setBorder(BorderFactory.createLineBorder(Color.ORANGE));
         
         if (imageFilename!=null) {
             load();
@@ -155,7 +153,7 @@ public class LoadedImagePanel extends JPanel {
         else {
             h = (int) Math.round(w / aspectRatio);
         }
-//        log.info("setPreferredSize({},{}) "+imageFilename, w, h);
+
         setPreferredSize(new Dimension(w, h));
     }
 }

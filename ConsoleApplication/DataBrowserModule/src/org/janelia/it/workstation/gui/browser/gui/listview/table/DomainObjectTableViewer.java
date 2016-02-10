@@ -26,6 +26,7 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.TableViewerConfigDialog;
+import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -184,6 +185,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     public void refreshDomainObject(DomainObject domainObject) {
         // TODO: refresh the table
+        throw new UnsupportedOperationException("refreshDomainObject is not yet supported");
     }
 
     @Override
@@ -192,7 +194,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
         // TODO: should this use the same result as the icon grid viewer?
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, ResultDescriptor.LATEST);
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -225,6 +227,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 action.doAction();
             }
         }
+    }
+
+    @Override
+    public void activate() {
+        Hud.getSingletonInstance().setKeyListener(keyListener);
+    }
+
+    @Override
+    public void deactivate() {
     }
     
     @Override
@@ -260,14 +271,38 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void updateTableModel() {
         super.updateTableModel();
-        getTable().setRowSorter(new SolrRowSorter());
+        getTable().setRowSorter(new DomainObjectRowSorter());
+    }
+
+    @Override
+    protected void updateHud(boolean toggle) {
+
+        Hud hud = Hud.getSingletonInstance();
+        List<DomainObject> selected = getSelectedObjects();
+        
+        if (selected.size() != 1) {
+            hud.hideDialog();
+            return;
+        }
+        
+        DomainObject domainObject = selected.get(0);
+        if (toggle) {
+            hud.setObjectAndToggleDialog(domainObject, null, null);
+        }
+        else {
+            hud.setObject(domainObject, null, null);
+        }
     }
     
-    protected class SolrRowSorter extends RowSorter<TableModel> {
+    private List<DomainObject> getSelectedObjects() {
+        return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+    }
+    
+    protected class DomainObjectRowSorter extends RowSorter<TableModel> {
 
         private List<SortKey> sortKeys = new ArrayList<>();
 
-        public SolrRowSorter() {
+        public DomainObjectRowSorter() {
             List<DynamicColumn> columns = getDynamicTable().getDisplayedColumns();
             for (int i = 0; i < columns.size(); i++) {
                 if (columns.get(i).getName().equals(sortField)) {

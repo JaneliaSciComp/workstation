@@ -231,7 +231,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         ButtonGroup typeGroup = new ButtonGroup();
         
-        for (final Class<? extends DomainObject> searchClass : ClientDomainUtils.getSearchClasses()) {
+        for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String label = searchClass.getAnnotation(SearchType.class).label();
             JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(DEFAULT_SEARCH_CLASS));
             menuItem.addActionListener(new ActionListener() {
@@ -346,6 +346,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         return resultsPanel;
     }
 
+    @Override
+    public void activate() {
+        resultsPanel.activate();
+    }
+
+    @Override
+    public void deactivate() {
+        resultsPanel.deactivate();
+    }
+    
     private String getInputFieldValue() {
         return (String)inputField.getSelectedItem();
     }
