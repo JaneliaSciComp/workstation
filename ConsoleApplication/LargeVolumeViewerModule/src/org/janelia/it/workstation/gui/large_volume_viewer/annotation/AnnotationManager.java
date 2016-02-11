@@ -255,6 +255,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     progress.setDisplayName("Loading annotations");
                     progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
+                    if (workspace.getNeuronList() != null  &&  workspace.getNeuronList().size() > 0) {
+                        // Retro-adaptation: this workspace was just, or is being, converted to protobuf.
+                        // Must ensure that any future reference to the workspace receives the latest.
+                        ModelMgr.getModelMgr().invalidateCache(initialEntity, true);
+                    }
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
                 }
