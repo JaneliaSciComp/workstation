@@ -26,6 +26,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Encoder;
@@ -41,6 +42,10 @@ import sun.misc.BASE64Encoder;
 public class ModelManagerTmModelAdapter implements TmModelAdapter {
     public static final int DESERIALIZATION_THREAD_COUNT = 10;
     public static final int MAX_WAIT_MIN = 120;
+    // Very large initial work unit estimate; just need to work out the
+    // conversion factor between this and the true number, once that is
+    // learned.
+    public static final int EXXAGERATED_WORKUNITS = 10000000;
     
     private final Map<Long,Entity> wsIdToEntity = new HashMap<>();
 
@@ -53,9 +58,9 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
         try {
             // Obtain the serialized version of the data as raw byte buffers.
-            progressHandle.start();
+            progressHandle.start(EXXAGERATED_WORKUNITS);
             progressHandle.setDisplayName("Loading annotations...");
-            progressHandle.switchToIndeterminate();
+            //progressHandle.switchToIndeterminate();
             progressHandle.progress("Fetching raw data from database.");
             List<byte[]> rawBytes
                     = ModelMgr.getModelMgr().getB64DecodedEntityDataValues(
@@ -63,6 +68,8 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                             EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
                     );
 
+            final double workUnitMultiplier = EXXAGERATED_WORKUNITS / rawBytes.size();
+            
             // Turn those buffers into model objects.
             ExecutorService executor = ThreadUtils.establishExecutor(
                     DESERIALIZATION_THREAD_COUNT,
@@ -73,19 +80,14 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             //progressHandle.switchToIndeterminate();
             //progressHandle.progress("Submitting neuron loads.");
             progressHandle.progress("Building neurons");
-            final AtomicInteger counter = new AtomicInteger(0);
             List<Future<Void>> fates = new ArrayList<>();
+            final Progressor progressor = new Progressor(progressHandle, workUnitMultiplier, rawBytes.size());
             for (final byte[] rawBuffer : rawBytes) {
                 Callable<Void> callable = new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        try {
-                            progressHandle.progress("Building neuron " + counter.incrementAndGet());
-                        } catch (IllegalArgumentException ex) {
-                            // Eat this.
-                            log.info("Failed to progress count.");
-                        }
                         neurons.add(exchanger.deserializeNeuron(rawBuffer));
+                        progressor.exec();
                         return null;
                     }
                 };
@@ -95,6 +97,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             // Await completion.
             ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
             workspace.setNeuronList(neurons);
+            progressor.report();
         } catch (Exception ex) {
             throw ex;
         } finally {
@@ -197,5 +200,42 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         }
         
         return workspaceEntity;
+    }
+    
+    private class Progressor {
+        private ProgressHandle progressHandle;
+        private double workUnitMultiplier;
+        private int failedStatusUpdateCount;
+        private int max;
+        private AtomicInteger counter;
+        private int highestCount = 0;
+        
+        public Progressor(ProgressHandle progressHandle, double workUnitMultiplier, int max) {
+            this.progressHandle = progressHandle;
+            this.workUnitMultiplier = workUnitMultiplier;
+            this.counter = new AtomicInteger(0);
+            this.max = max;
+        }
+        public synchronized void exec() {
+            try {
+                int count = counter.incrementAndGet();
+                if (count % 100 == 0) {
+                    progressHandle.progress(
+                            getProgressValue(count)
+                    );
+                }
+            } catch (Exception ex) {
+                // Eat this.
+                failedStatusUpdateCount++;
+            }
+        }
+        public void report() {
+            log.info("Failed to update status " + 100.0 * ((double) failedStatusUpdateCount / (double) max) + "% of time.");
+        }
+        
+        private int getProgressValue(int count) {
+            int rtnVal = (int) (workUnitMultiplier * count);
+            return rtnVal;
+        }
     }
 }
