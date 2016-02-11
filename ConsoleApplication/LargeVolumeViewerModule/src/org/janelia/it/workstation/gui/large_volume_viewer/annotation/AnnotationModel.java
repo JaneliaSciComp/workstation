@@ -35,6 +35,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredP
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +80,7 @@ called from a  SimpleWorker thread.
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
     private SWCDataConverter swcDataConverter;
+    private final ModelManagerTmModelAdapter modelAdapter;
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
@@ -112,9 +115,8 @@ called from a  SimpleWorker thread.
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
-        neuronManager = new TmModelManipulator(
-                new ModelManagerTmModelAdapter()
-        );
+        modelAdapter = new ModelManagerTmModelAdapter();
+        neuronManager = new TmModelManipulator(modelAdapter);
 
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {

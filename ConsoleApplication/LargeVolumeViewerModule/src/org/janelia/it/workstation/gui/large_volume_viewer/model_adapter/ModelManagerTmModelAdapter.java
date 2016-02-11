@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -23,6 +24,8 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufE
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Encoder;
@@ -37,7 +40,7 @@ import sun.misc.BASE64Encoder;
  */
 public class ModelManagerTmModelAdapter implements TmModelAdapter {
     public static final int DESERIALIZATION_THREAD_COUNT = 10;
-    public static final int MAX_WAIT_MIN = 20;
+    public static final int MAX_WAIT_MIN = 120;
     
     private final Map<Long,Entity> wsIdToEntity = new HashMap<>();
 
@@ -47,34 +50,56 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     
     @Override
     public void loadNeurons(TmWorkspace workspace) throws Exception {
-        // Obtain the serialized version of the data as raw byte buffers.
-        List<byte[]> rawBytes = 
-                ModelMgr.getModelMgr().getB64DecodedEntityDataValues(
-                        workspace.getId(),
-                        EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
-                );
-        
-        // Turn those buffers into model objects.
-        ExecutorService executor = ThreadUtils.establishExecutor(
-                DESERIALIZATION_THREAD_COUNT, 
-                new CustomNamedThreadFactory("Client-Deserialize-Neuron")
-        );
-        final List<TmNeuron> neurons = Collections.synchronizedList(new ArrayList<TmNeuron>(rawBytes.size()));
-        List<Future<Void>> fates = new ArrayList<>();
-        for (final byte[] rawBuffer: rawBytes) {
-            Callable<Void> callable = new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    neurons.add(exchanger.deserializeNeuron(rawBuffer));
-                    return null;
-                }
-            };
-            fates.add( executor.submit(callable) );
+        final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
+        try {
+            // Obtain the serialized version of the data as raw byte buffers.
+            progressHandle.start();
+            progressHandle.setDisplayName("Loading annotations...");
+            progressHandle.switchToIndeterminate();
+            progressHandle.progress("Fetching raw data from database.");
+            List<byte[]> rawBytes
+                    = ModelMgr.getModelMgr().getB64DecodedEntityDataValues(
+                            workspace.getId(),
+                            EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
+                    );
+
+            // Turn those buffers into model objects.
+            ExecutorService executor = ThreadUtils.establishExecutor(
+                    DESERIALIZATION_THREAD_COUNT,
+                    new CustomNamedThreadFactory("Client-Deserialize-Neuron")
+            );
+            final List<TmNeuron> neurons = Collections.synchronizedList(new ArrayList<TmNeuron>(rawBytes.size()));            
+            //progressHandle.switchToDeterminate(0);
+            //progressHandle.switchToIndeterminate();
+            //progressHandle.progress("Submitting neuron loads.");
+            progressHandle.progress("Building neurons");
+            final AtomicInteger counter = new AtomicInteger(0);
+            List<Future<Void>> fates = new ArrayList<>();
+            for (final byte[] rawBuffer : rawBytes) {
+                Callable<Void> callable = new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        try {
+                            progressHandle.progress("Building neuron " + counter.incrementAndGet());
+                        } catch (IllegalArgumentException ex) {
+                            // Eat this.
+                            log.info("Failed to progress count.");
+                        }
+                        neurons.add(exchanger.deserializeNeuron(rawBuffer));
+                        return null;
+                    }
+                };
+                fates.add(executor.submit(callable));
+            }
+
+            // Await completion.
+            ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
+            workspace.setNeuronList(neurons);
+        } catch (Exception ex) {
+            throw ex;
+        } finally {
+            progressHandle.finish();
         }
-        
-        // Await completion.
-        ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
-		workspace.setNeuronList(neurons);
     }
 
     /**

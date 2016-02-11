@@ -245,14 +245,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if it's a bare sample, we don't have anything to do
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
+            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
                     // Must make known to user that things are happening,
                     // even if slowly.
                     progress.start();
-                    progress.setDisplayName("Loading annotations");
+                    progress.setDisplayName("Loading workspace container");
                     progress.switchToIndeterminate();
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     if (workspace.getNeuronList() != null  &&  workspace.getNeuronList().size() > 0) {
@@ -260,6 +260,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                         // Must ensure that any future reference to the workspace receives the latest.
                         ModelMgr.getModelMgr().invalidateCache(initialEntity, true);
                     }
+                    progress.finish();
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
                 }
@@ -267,7 +268,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 @Override
                 protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
-                    progress.finish();
                 }
 
                 @Override
