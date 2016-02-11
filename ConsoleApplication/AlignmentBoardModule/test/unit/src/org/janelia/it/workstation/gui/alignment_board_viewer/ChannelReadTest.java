@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
  */
 public class ChannelReadTest {
 
-    // copied to test/resources from /nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate
+    // copied to test/resources from /nrs/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate
     private static final String MASK_FILE_NAME = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.mask";
     private static final String CHAN_FILE_NAME = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.chan";
 

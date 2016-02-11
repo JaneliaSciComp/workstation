@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
  */
 public class MaskReadTest {
 
-    // copied to test/resources from /nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask
+    // copied to test/resources from /nrs/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask
     private static final String TEST_FILE_NAME = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
 
     private Logger logger = LoggerFactory.getLogger( MaskReadTest.class );

@@ -256,7 +256,7 @@ public class WebDavUploader {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
 
-    // TODO: this should be parameterized by the build environment (e.g. /nobackup/jacs/jacsDev/devstore/upload when building for dev)
-    private static final String JACS_ROOT_UPLOAD_PATH = "/nobackup/jacs/jacsData/filestore/upload";
+    // TODO: this should be parameterized by the build environment (e.g. /nrs/jacs/jacsDev/devstore/upload when building for dev)
+    private static final String JACS_ROOT_UPLOAD_PATH = "/nrs/jacs/jacsData/filestore/upload";
 
 }
