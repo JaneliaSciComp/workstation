@@ -79,6 +79,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             progressHandle.progress("Building neurons");
             List<Future<Void>> fates = new ArrayList<>();
             final Progressor progressor = new Progressor(progressHandle, workUnitMultiplier, rawBytes.size());
+            log.info("Starting the neuron exchange.");
             for (final byte[] rawBuffer : rawBytes) {
                 Callable<Void> callable = new Callable<Void>() {
                     @Override
@@ -93,12 +94,21 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
             // Await completion.
             ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
+            log.info("Neuron exchange complete.");
+            progressHandle.finish();
+            
+            ProgressHandle viewerProgressHandle = ProgressHandleFactory.createHandle("Populating Viewer...");
+            viewerProgressHandle.switchToIndeterminate();
+            viewerProgressHandle.setInitialDelay(0);
+            viewerProgressHandle.start();
             workspace.setNeuronList(neurons);
+            viewerProgressHandle.finish();                        
+
             progressor.report();
         } catch (Exception ex) {
+            progressHandle.finish();
             throw ex;
         } finally {
-            progressHandle.finish();
         }
     }
 
@@ -216,14 +226,20 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         }
         public synchronized void exec() {
             try {
-                int count = counter.incrementAndGet();
+                final int count = counter.incrementAndGet();
                 // Update the progress one time per second.
                 Date currentDate = new Date();
                 if (currentDate.getTime() - 100 > latestUpdateTime.getTime()) {
-                    progressHandle.progress(
-                            getProgressValue(count)
-                    );
-                    //log.info("Updating at count " + count);
+                    Runnable r = new Runnable() {
+                        public void run() {
+                            progressHandle.progress(
+                                    getProgressValue(count)
+                            );
+                        }
+                    };
+                    //WindowManager.getDefault().invokeWhenUIReady(r);
+                    r.run();
+                    log.info("Updating at count " + count);
                     //Thread.currentThread().sleep(10); // Respite for progress.
                     latestUpdateTime = currentDate;
                 }
