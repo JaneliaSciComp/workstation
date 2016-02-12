@@ -45,7 +45,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     // Very large initial work unit estimate; just need to work out the
     // conversion factor between this and the true number, once that is
     // learned.
-    public static final int EXXAGERATED_WORKUNITS = 10000000;
+    public static final int TOTAL_WORKUNITS = 3;
     
     private final Map<Long,Entity> wsIdToEntity = new HashMap<>();
 
@@ -58,17 +58,20 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
         try {
             // Obtain the serialized version of the data as raw byte buffers.
-            progressHandle.start(EXXAGERATED_WORKUNITS);
+            progressHandle.start(TOTAL_WORKUNITS);
+            progressHandle.setInitialDelay(0);            
+            progressHandle.progress(0);
             progressHandle.setDisplayName("Loading annotations...");
             //progressHandle.switchToIndeterminate();
-            progressHandle.progress("Fetching raw data from database.");
+            progressHandle.setDisplayName("Fetching raw data from database.");
             List<byte[]> rawBytes
                     = ModelMgr.getModelMgr().getB64DecodedEntityDataValues(
                             workspace.getId(),
                             EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
                     );
 
-            final double workUnitMultiplier = EXXAGERATED_WORKUNITS / rawBytes.size();
+            progressHandle.progress(1);
+            //final double workUnitMultiplier = TOTAL_WORKUNITS / rawBytes.size();
             
             // Turn those buffers into model objects.
             ExecutorService executor = ThreadUtils.establishExecutor(
@@ -76,39 +79,32 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                     new CustomNamedThreadFactory("Client-Deserialize-Neuron")
             );
             final List<TmNeuron> neurons = Collections.synchronizedList(new ArrayList<TmNeuron>(rawBytes.size()));            
-            progressHandle.progress("Building neurons");
+            progressHandle.setDisplayName("Building neurons...");
             List<Future<Void>> fates = new ArrayList<>();
-            final Progressor progressor = new Progressor(progressHandle, workUnitMultiplier, rawBytes.size());
+            //final Progressor progressor = new Progressor(progressHandle, workUnitMultiplier, rawBytes.size());
             log.info("Starting the neuron exchange.");
             for (final byte[] rawBuffer : rawBytes) {
                 Callable<Void> callable = new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
                         neurons.add(exchanger.deserializeNeuron(rawBuffer));
-                        progressor.exec();
                         return null;
                     }
                 };
                 fates.add(executor.submit(callable));
             }
+            progressHandle.progress(2);
 
             // Await completion.
             ThreadUtils.followUpExecution(executor, fates, MAX_WAIT_MIN);
             log.info("Neuron exchange complete.");
-            progressHandle.finish();
-            
-            ProgressHandle viewerProgressHandle = ProgressHandleFactory.createHandle("Populating Viewer...");
-            viewerProgressHandle.switchToIndeterminate();
-            viewerProgressHandle.setInitialDelay(0);
-            viewerProgressHandle.start();
+            progressHandle.setDisplayName("Populating viewer...");
             workspace.setNeuronList(neurons);
-            viewerProgressHandle.finish();                        
-
-            progressor.report();
+            progressHandle.progress(3);
+            progressHandle.finish();
         } catch (Exception ex) {
             progressHandle.finish();
             throw ex;
-        } finally {
         }
     }
 
@@ -209,6 +205,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         return workspaceEntity;
     }
     
+    /*
     private class Progressor {
         private ProgressHandle progressHandle;
         private double workUnitMultiplier;
@@ -258,4 +255,5 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             return rtnVal;
         }
     }
+    */
 }
