@@ -76,9 +76,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                     new CustomNamedThreadFactory("Client-Deserialize-Neuron")
             );
             final List<TmNeuron> neurons = Collections.synchronizedList(new ArrayList<TmNeuron>(rawBytes.size()));            
-            //progressHandle.switchToDeterminate(0);
-            //progressHandle.switchToIndeterminate();
-            //progressHandle.progress("Submitting neuron loads.");
             progressHandle.progress("Building neurons");
             List<Future<Void>> fates = new ArrayList<>();
             final Progressor progressor = new Progressor(progressHandle, workUnitMultiplier, rawBytes.size());
@@ -209,6 +206,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         private int max;
         private AtomicInteger counter;
         private int highestCount = 0;
+        private Date latestUpdateTime = new Date();  // Seed at construction.
         
         public Progressor(ProgressHandle progressHandle, double workUnitMultiplier, int max) {
             this.progressHandle = progressHandle;
@@ -219,11 +217,17 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         public synchronized void exec() {
             try {
                 int count = counter.incrementAndGet();
-                if (count % 100 == 0) {
+                // Update the progress one time per second.
+                Date currentDate = new Date();
+                if (currentDate.getTime() - 100 > latestUpdateTime.getTime()) {
                     progressHandle.progress(
                             getProgressValue(count)
                     );
+                    //log.info("Updating at count " + count);
+                    //Thread.currentThread().sleep(10); // Respite for progress.
+                    latestUpdateTime = currentDate;
                 }
+                
             } catch (Exception ex) {
                 // Eat this.
                 failedStatusUpdateCount++;

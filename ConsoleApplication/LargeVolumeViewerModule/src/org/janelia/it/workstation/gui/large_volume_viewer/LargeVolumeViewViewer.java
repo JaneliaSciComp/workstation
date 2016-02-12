@@ -68,15 +68,16 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                // don't reload if user tries to reload the same entity (is that a
-                //  good idea?  not clear)
-                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        public void run() {
-                            deleteAll();
-                        }
-                    });
-                }
+                //  I have found that with very large numbers of
+                //  neurons in the neurons table, not reloading
+                //  causes GUI lockup.
+                //                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                        deleteAll();
+                    }
+                });
+                //                }
                 initialEntity = rootedEntity.getEntity();
 
                 // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
