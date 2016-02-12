@@ -9,28 +9,32 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.DataSetDialog;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.janelia.it.workstation.gui.browser.model.DomainConstants;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.browser.model.DomainConstants;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle;
-import org.openide.util.actions.Presenter;
 
 /**
  * A port of data sets management dialog to use domain objects
@@ -45,7 +49,6 @@ public class DataSetListDialog extends ModalDialog {
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
     private final DataSetDialog dataSetDialog;
-    private static final String DATA_SETS_ITEM = "Data Sets";
 
     public DataSetListDialog() {
         setTitle("My Data Sets");
