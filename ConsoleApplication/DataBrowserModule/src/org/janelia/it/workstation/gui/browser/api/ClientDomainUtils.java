@@ -89,10 +89,4 @@ public class ClientDomainUtils {
 
         return attrs;
     }
-    
-    public static ResultDescriptor getResultDescriptor(PipelineResult result) {
-        String objective = result.getParentRun().getParent().getObjective();
-        String key = objective+" "+result.getName();
-        return new ResultDescriptor(key);
-    }   
 }

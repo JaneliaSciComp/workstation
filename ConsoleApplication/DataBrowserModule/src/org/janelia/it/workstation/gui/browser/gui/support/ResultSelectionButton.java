@@ -36,8 +36,15 @@ public class ResultSelectionButton extends SimpleDropDownButton {
 
     private JYPopupMenu popupMenu;
     private ResultDescriptor currResult;
+    private boolean showTitle;
     
     public ResultSelectionButton() {
+        this(false);
+    }
+    
+    public ResultSelectionButton(boolean showTitle) {
+        
+        this.showTitle = showTitle;
         
         popupMenu = new JYPopupMenu();
         popupMenu.setVisibleElements(20);
@@ -50,13 +57,20 @@ public class ResultSelectionButton extends SimpleDropDownButton {
 
     public void setResultDescriptor(ResultDescriptor currResult) {
         this.currResult = currResult;
+        if (showTitle) {
+            setText(currResult.toString());
+        }
     }
 
     public void populate(DomainObject domainObject) {
         populate(Arrays.asList(domainObject));
     }
-    
+
     public void populate(Collection<DomainObject> domainObjects) {
+        populate(domainObjects, false);
+    }
+    
+    public void populate(Collection<DomainObject> domainObjects, boolean includeLSMItem) {
 
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
@@ -93,21 +107,30 @@ public class ResultSelectionButton extends SimpleDropDownButton {
         
         // Sort in alphanumeric order, with Latest first
         List<String> sortedResultNames = new ArrayList<>(countedResultNames.elementSet());
-        sortedResultNames.remove(ResultDescriptor.LATEST.toString());
         Collections.sort(sortedResultNames);
-        sortedResultNames.add(0, ResultDescriptor.LATEST.toString());
         
-        for(final String resultName : sortedResultNames) {
+        List<ResultDescriptor> sortedResults = new ArrayList<>();
+        for(String resultName : sortedResultNames)  {
             if (countedResultNames.count(resultName)>1 || domainObjects.size()==1) {
-                JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.getResultKey()));
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        currResult = new ResultDescriptor(resultName);
-                        resultChanged(currResult);
-                    }
-                });
-                popupMenu.add(menuItem);
+                sortedResults.add(new ResultDescriptor(resultName));
             }
+        }
+
+        sortedResults.add(0, ResultDescriptor.LATEST);
+        if (includeLSMItem) {
+            sortedResults.add(0, ResultDescriptor.LSMS);    
+        }
+        
+        for(final ResultDescriptor resultDescriptor : sortedResults) {
+            String resultName = resultDescriptor.getResultKey();
+            JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.getResultKey()));
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    setResultDescriptor(resultDescriptor);
+                    resultChanged(currResult);
+                }
+            });
+            popupMenu.add(menuItem);
         }        
     }
     

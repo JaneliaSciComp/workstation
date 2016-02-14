@@ -19,6 +19,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -140,6 +141,8 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
+        actions.add(null);
+        actions.add(DownloadAction.get());
         return actions.toArray(new Action[0]);
     }
 

@@ -21,6 +21,8 @@ import org.janelia.it.workstation.shared.util.Utils;
 /**
  * Menu system for downloading files.
  * 
+ * @deprecated Use FileExportDialog instead
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FileDownloadAction implements NamedAction {
@@ -87,8 +89,8 @@ public class FileDownloadAction implements NamedAction {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     for(DomainObject domainObject : domainObjectList) {
-                        FileDownloadWorker worker = new FileDownloadWorker(domainObject, resultDescriptor, extension, splitChannels, copyFileLock);
-                        worker.execute();
+//                        FileDownloadWorker worker = new FileDownloadWorker(null, domainObject, resultDescriptor, extension, splitChannels, "[Name]/[File Name]", copyFileLock);
+//                        worker.execute();
                     }
                 } 
                 catch (Exception e) {

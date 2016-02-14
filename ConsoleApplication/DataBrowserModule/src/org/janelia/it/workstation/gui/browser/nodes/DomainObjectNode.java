@@ -30,6 +30,7 @@ import org.janelia.it.workstation.gui.browser.components.DomainListViewTopCompon
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
@@ -202,13 +203,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
-//        actions.add(CutAction.get(CutAction.class));
-//        actions.add(CopyAction.get(CopyAction.class));
-//        actions.add(PasteAction.get(PasteAction.class));
-//        actions.add(DeleteAction.get(DeleteAction.class));
-//        actions.add(MoveUpAction.get(MoveUpAction.class));
-//        actions.add(MoveDownAction.get(MoveDownAction.class));
-        actions.add(null);
+        actions.add(DownloadAction.get());
         return actions.toArray(new Action[actions.size()]);
     }
 

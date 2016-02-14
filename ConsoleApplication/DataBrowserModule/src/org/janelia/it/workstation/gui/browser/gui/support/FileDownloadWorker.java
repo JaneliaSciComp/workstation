@@ -10,25 +10,20 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DesktopApi;
-import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,152 +33,78 @@ import org.slf4j.LoggerFactory;
  * The specified extension is used to determine whether conversion is necessary and when necessary,
  * if conversion can be managed locally or remotely (via task submission).
  */
-public class FileDownloadWorker extends SimpleWorker {
+public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
 
-    // Download directories
-    private static final File WS_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    private static final File SPLIT_CHANNEL_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Split Channel Images");
-
-    private final File rootDownloadDir;
-    private final DomainObject domainObject;
-    private final ResultDescriptor resultDescriptor;
-    private final String extension;
-    private final boolean splitChannels;
+    private DownloadItem downloadItem;
     private final Lock copyFileLock;
-
-    private String objectName;
+    private final String objectName;
+    private final String extension;
     private String sourceFilePath;
     private File targetDir;
-    private String localFilePrefix;
 
-    public FileDownloadWorker(DomainObject domainObject, ResultDescriptor resultDescriptor, String extension, boolean splitChannels, Lock copyFileLock) {
-        this.domainObject = domainObject;
-        this.resultDescriptor = resultDescriptor;
-        this.extension = extension;
-        this.splitChannels = splitChannels;
+    public FileDownloadWorker(DownloadItem downloadItem, Lock copyFileLock) {
+        this.downloadItem = downloadItem;
         this.copyFileLock = copyFileLock;
-        this.rootDownloadDir = splitChannels ? SPLIT_CHANNEL_IMAGES_DIR : WS_IMAGES_DIR;
+        this.objectName = downloadItem.getDomainObject().getName();
+        this.extension = downloadItem.getTargetExtension();
+        this.sourceFilePath = downloadItem.getSourceFile().getAbsolutePath();
+        this.targetDir = downloadItem.getTargetFile().getParentFile();
     }
     
-    @Override
-    protected void doStuff() throws Exception {
+    public void startDownload() {
+
+        log.info("Starting download of {} to {}",downloadItem.getSourceExtension(),downloadItem.getTargetExtension());
         
-        HasFiles fileProvider = null;
-        if (domainObject instanceof Sample) {
-            Sample sample = (Sample)domainObject;
-            fileProvider = DomainModelViewUtils.getResult(sample, resultDescriptor);
-        }
-        else if (domainObject instanceof HasFiles) {
-            fileProvider = (HasFiles)domainObject;
-        }
-
-        objectName = domainObject.getName();
-        
-        if (domainObject instanceof Sample) {
-            targetDir = new File(rootDownloadDir, objectName);
-            localFilePrefix = objectName + "-";
-            if (resultDescriptor!=null) localFilePrefix += resultDescriptor.toString().replaceAll("\\W+", "_")+"-";
-        }
-        else if (domainObject instanceof HasFiles) {
-            targetDir = new File(rootDownloadDir, "Images");
-            localFilePrefix = "";
-        }
-        else {
-            throw new IllegalStateException("FileDownloadWorker only works with Samples and HasFiles instances");
-        }
-
-        sourceFilePath = DomainUtils.getDefault3dImageFilePath(fileProvider);
-    }
-
-    @Override
-    protected void hadSuccess() {
         try {
-            startDownload();
-        }
-        catch (Exception e) {
-            hadError(e);
-        }
-    }
-
-    @Override
-    protected void hadError(Throwable error) {
-        SessionMgr.getSessionMgr().handleException(error);
-    }
-
-    private void startDownload() throws Exception {
-
-        log.info("startDownload: entry, extension={}, sourceFilePath={}", extension, sourceFilePath);
-
-        File sourceFile = null;
-        String localFileName = null;
-
-        if (!splitChannels) {
-            if (sourceFilePath.endsWith(extension)) {
-                // no conversion needed, simply transfer the file
-                sourceFile = new File(sourceFilePath);
-                localFileName = localFilePrefix + sourceFile.getName();
-            } 
-            else if (Utils.EXTENSION_LSM.equals(extension)) {
-                // need to convert bz2 to lsm
-                sourceFile = new File(sourceFilePath);
-                final String compressedSourceName = sourceFile.getName();
-                final String uncompressedSourceName =
-                        compressedSourceName.substring(0, compressedSourceName.lastIndexOf('.'));
-                localFileName = localFilePrefix + uncompressedSourceName;
-            } // else leave sourceFile and localFileName null for server side conversions
-        }
-        
-        if (checkForAlreadyDownloadedFiles(localFileName)) {
-            if (sourceFile == null) {
-                convertOnServer(localFilePrefix);
-            } 
-            else {
-                transferAndConvertLocallyAsNeeded(sourceFilePath, localFileName);
+            boolean convertOnServer = true;
+            
+            if (!downloadItem.isSplitChannels()) {
+                if (sourceFilePath.endsWith(extension)) {
+                    // no conversion needed, simply transfer the file
+                    convertOnServer = false;
+                } 
+                else if (Utils.EXTENSION_LSM.equals(extension)) {
+                    // Just need to convert bz2 to lsm, which we can do locally
+                    convertOnServer = false;
+                }
+            }
+            
+            if (checkForAlreadyDownloadedFiles()) {
+                if (convertOnServer) {
+                    convertOnServer();
+                } 
+                else {
+                    transferAndConvertLocallyAsNeeded();
+                }
             }
         }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 
-    private boolean checkForAlreadyDownloadedFiles(final String localFileName) {
+    private boolean checkForAlreadyDownloadedFiles() {
 
         boolean continueWithDownload = true;
 
-        final boolean checkForExactFileNames = (localFileName != null);
-
-        if (checkForExactFileNames) {
-            log.info("checkForAlreadyDownloadedFiles: checking for {}", localFileName);
-        } else {
-            log.info("checkForAlreadyDownloadedFiles: checking {} for files that start with {} and end with {}",
-                    targetDir, localFilePrefix, extension);
-        }
+        final String targetName = downloadItem.getTargetFile().getName();
+        final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
+        final String extension = FileUtil.getExtension(targetName);
 
         File[] files = targetDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                boolean accept;
-                if (checkForExactFileNames) {
-                    accept = localFileName.equals(name);
-                } else {
-                    accept = name.startsWith(localFilePrefix) && name.endsWith(extension);
-                }
-                return accept;
+                return name.startsWith(basename) && name.endsWith(extension);
             }
         });
 
         if ((files != null) && (files.length > 0)) {
 
-            String msg;
+            String msg = "The file " + files[0].getName() + " was";
             String titlePrefix = "File";
-            if (checkForExactFileNames) {
-                msg = "The file " + files[0].getName() + " was";
-            } else if (files.length == 1) {
-                msg = "One " + extension + " file for " + objectName + " was";
-            } else {
-                msg = "Multiple " + extension + " files for " + objectName + " were";
-                titlePrefix = titlePrefix + "s";
-            }
-
+                
             final String[] options = { "Open Folder", "Run Download", "Cancel" };
             final Component mainFrame = SessionMgr.getMainFrame();
             final int chosenOptionIndex = JOptionPane.showOptionDialog(
@@ -214,18 +135,18 @@ public class FileDownloadWorker extends SimpleWorker {
         try {
             worker.setStatus("Downloading " + remoteFile.getName());
             Utils.copyURLToFile(remoteFile.getPath(), localFile, worker);
-        } finally {
+        } 
+        finally {
             copyFileLock.unlock();
         }
     }
 
-    private void convertOnServer(final String localFilePrefix) throws Exception {
+    private void convertOnServer() throws Exception {
 
-        log.info("convertOnServer: entry, extension={}, localFilePrefix={}, sampleTargetDir={}",
-                 extension, localFilePrefix, targetDir);
-
+        log.info("Converting {} to {} (splitChannels={})",downloadItem.getSourceExtension(),extension,downloadItem.isSplitChannels());
+        
         Task task;
-        if (splitChannels) {
+        if (downloadItem.isSplitChannels()) {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
             taskParameters.add(new TaskParameter("output extension", extension, null));
@@ -258,7 +179,7 @@ public class FileDownloadWorker extends SimpleWorker {
                 setStatus("Parse result");
 
                 // Since there is no way to log task output vars, we use a convention where the last message
-                // will contain the output directory path.
+                // will contain the output files.
                 String resultFiles = null;
                 final Task task = getTask();
                 List<TaskMessage> messages = new ArrayList<>(task.getMessages());
@@ -282,16 +203,21 @@ public class FileDownloadWorker extends SimpleWorker {
                 String[] pathAndFiles = resultFiles.split(":");
                 String path = pathAndFiles[0];
                 String[] filePaths = pathAndFiles[1].split(",");
-                File remoteFile;
-                File localFile;
                 for(String filePath : filePaths) {
-                    remoteFile = new File(path + "/" + filePath);
-                    localFile = new File(targetDir, localFilePrefix + remoteFile.getName());
+                    File remoteFile = new File(path + "/" + filePath);
+                    
+                    String targetFile = downloadItem.getTargetFile().getAbsolutePath();
+                    
+                    String channelSuffix = getChannelSuffix(filePath);
+                    if (channelSuffix!=null) {
+                        targetFile = targetFile.replaceAll("#",channelSuffix);    
+                    }
+                    
+                    File localFile = new File(targetFile);
                     copyFile(remoteFile, localFile, this);
                 }
 
                 throwExceptionIfCancelled();
-
                 setFinalStatus("Done");
             }
 
@@ -304,15 +230,22 @@ public class FileDownloadWorker extends SimpleWorker {
         taskWorker.executeWithEvents();
     }
 
-    private void transferAndConvertLocallyAsNeeded(final String remoteFilePath,
-                                                   final String localFileName) {
+    private String getChannelSuffix(String filepath) {
+        Pattern p = Pattern.compile("(.*)(_(c\\d))(.*)");
+        Matcher m = p.matcher(filepath);
+        if (m.matches()) {
+            return m.group(3);
+        }
+        return null;
+    }
+    
+    private void transferAndConvertLocallyAsNeeded() {
 
-        log.info("transferAndConvertLocallyAsNeeded: entry, remoteFilePath={}, localFileName={}, sampleTargetDir={}",
-                 remoteFilePath, localFileName, targetDir);
+        final File remoteFile = downloadItem.getSourceFile();
+        final File localFile = downloadItem.getTargetFile();
 
-        final File remoteFile = new File(remoteFilePath);
-        final File localFile = new File(targetDir, localFileName);
-
+        log.info("Transferring {} to {}",remoteFile,localFile);
+        
         final BackgroundWorker transferWorker = new BackgroundWorker() {
 
             @Override
@@ -347,5 +280,4 @@ public class FileDownloadWorker extends SimpleWorker {
             }
         };
     }
-
 }

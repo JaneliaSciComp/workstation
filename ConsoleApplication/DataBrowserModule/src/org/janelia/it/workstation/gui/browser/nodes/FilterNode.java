@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
+
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
@@ -41,6 +41,5 @@ public class FilterNode extends DomainObjectNode {
     @Override
     public boolean canDestroy() {
         return true;
-    }
-    
+    }   
 }

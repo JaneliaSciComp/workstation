@@ -84,6 +84,28 @@ public class DomainModelViewUtils {
         
         return chosenResult;
     }
+
+    public static ResultDescriptor getLatestResultDescriptor(Sample sample) {
+        
+        List<String> objectives = sample.getOrderedObjectives();
+        if (objectives==null || objectives.isEmpty()) return null;
+    
+        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
+        if (objSample==null) return null;
+        SamplePipelineRun run = objSample.getLatestRun();
+        if (run==null) return null;
+        PipelineResult chosenResult = run.getLatestResult();
+
+        if (chosenResult instanceof HasFileGroups) {
+            HasFileGroups hasGroups = (HasFileGroups)chosenResult;
+            // Pick the first group, since there is no way to tell which is latest
+            for(String groupKey : hasGroups.getGroupKeys()) {
+                return new ResultDescriptor(objSample.getObjective(), chosenResult.getName(), groupKey);
+            }
+        }
+        
+        return new ResultDescriptor(objSample.getObjective(), chosenResult.getName(), null);
+    }
     
     public static NeuronSeparation getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
         if (neuronFragment==null) return null;

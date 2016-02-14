@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.util.Arrays;
 
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -154,7 +153,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         if (path==null) return null;
         ObjectiveSample objectiveSample = result.getParentRun().getParent();
         Sample sample = objectiveSample.getParent();
-        ResultDescriptor descriptor = ClientDomainUtils.getResultDescriptor(result);
+        ResultDescriptor descriptor = new ResultDescriptor(result);
         FileDownloadAction action = new FileDownloadAction(Arrays.asList(sample), descriptor);
         return action.getPopupPresenter();
     }
@@ -183,7 +182,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent e) { 
                 ObjectiveSample objectiveSample = result.getParentRun().getParent();
                 Sample sample = objectiveSample.getParent();
-                ResultDescriptor descriptor = ClientDomainUtils.getResultDescriptor(result);
+                ResultDescriptor descriptor = new ResultDescriptor(result);
                 Hud.getSingletonInstance().setObjectAndToggleDialog(sample, descriptor, FileType.SignalMip.toString());
             }
         });

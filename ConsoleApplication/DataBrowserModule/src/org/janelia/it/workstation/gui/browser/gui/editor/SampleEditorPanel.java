@@ -704,7 +704,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
             if (result!=null) {
-                this.resultDescriptor = ClientDomainUtils.getResultDescriptor(result);
+                this.resultDescriptor = new ResultDescriptor(result);
                 if (result instanceof SampleAlignmentResult) {
                     SampleAlignmentResult sar = (SampleAlignmentResult)result;
                     label.setText(resultDescriptor+" ("+sar.getAlignmentSpace()+")");

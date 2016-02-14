@@ -25,7 +25,7 @@ import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
 
 /**
- * Drop-down button for selecting the image type to display.
+ * Drop-down button for selecting the image type to display. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -34,8 +34,13 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
     private JYPopupMenu popupMenu;
     private ResultDescriptor currResult;
     private String currImageType;
-    
+    private boolean showTitle;
+
     public ImageTypeSelectionButton() {
+        this(false);
+    }
+    
+    public ImageTypeSelectionButton(boolean showTitle) {
 
         popupMenu = new JYPopupMenu();
         popupMenu.setVisibleElements(20);
@@ -51,6 +56,9 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
     
     public void setImageType(String currImageType) {
         this.currImageType = currImageType;
+        if (showTitle) {
+            setText(currImageType);
+        }
     }
 
     public void populate(DomainObject domainObject) {
