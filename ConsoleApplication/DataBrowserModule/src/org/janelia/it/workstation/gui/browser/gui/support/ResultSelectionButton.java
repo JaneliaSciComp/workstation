@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
@@ -65,12 +66,8 @@ public class ResultSelectionButton extends SimpleDropDownButton {
     public void populate(DomainObject domainObject) {
         populate(Arrays.asList(domainObject));
     }
-
-    public void populate(Collection<DomainObject> domainObjects) {
-        populate(domainObjects, false);
-    }
     
-    public void populate(Collection<DomainObject> domainObjects, boolean includeLSMItem) {
+    public void populate(Collection<DomainObject> domainObjects) {
 
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
@@ -117,9 +114,8 @@ public class ResultSelectionButton extends SimpleDropDownButton {
         }
 
         sortedResults.add(0, ResultDescriptor.LATEST);
-        if (includeLSMItem) {
-            sortedResults.add(0, ResultDescriptor.LSMS);    
-        }
+        
+        ButtonGroup group = new ButtonGroup();
         
         for(final ResultDescriptor resultDescriptor : sortedResults) {
             String resultName = resultDescriptor.getResultKey();
@@ -131,6 +127,7 @@ public class ResultSelectionButton extends SimpleDropDownButton {
                 }
             });
             popupMenu.add(menuItem);
+            group.add(menuItem);
         }        
     }
     

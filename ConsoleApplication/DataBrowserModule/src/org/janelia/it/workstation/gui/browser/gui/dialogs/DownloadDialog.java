@@ -53,25 +53,34 @@ import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import javax.swing.JOptionPane;
 
 import net.miginfocom.swing.MigLayout;
 
 /**
  * A dialog for exporting data. Supports exporting hierarchies of files in various ways. 
  *
+ * TODO: keep track of user's favorite file naming patterns
+ * TODO: better progress indication for loading large file sets
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FileExportDialog extends ModalDialog {
+public class DownloadDialog extends ModalDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
+    private static final Logger log = LoggerFactory.getLogger(DownloadDialog.class);
     
     // Constants
+    private static final String FILE_PATTERN_HELP = 
+            "<html>The naming pattern can use any attribute on the items being downloaded.<br>"
+            + "It may also use the following special attributes:<br>"
+            + "Sample Name, File Name, Result Name, Extension</html>";
     private static final Lock COPY_FILE_LOCK = new ReentrantLock();
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
     private static final String ITEM_TYPE_SELF = "Selected Items";
@@ -88,7 +97,7 @@ public class FileExportDialog extends ModalDialog {
     };
     
     private static final String[] STANDARD_FILE_PATTERNS = {
-            "{Sample Name}/{Result Name}-{File Name}", 
+            "{Sample Name}/{Result Name|\"Image\"}-{File Name}", 
             "{Line}/{Sample Name}.{Extension}"
     };
 
@@ -109,12 +118,14 @@ public class FileExportDialog extends ModalDialog {
     // State
     private String currItemsToExport = ITEM_TYPE_SELF;
     private ResultDescriptor defaultResultDescriptor;
-    private List<DomainObject> inputObjects;
-    boolean onlySampleInputs = true;
+    private List<? extends DomainObject> inputObjects;
+    boolean onlySampleInputs;
     private List<DomainObject> expandedObjects;
     private List<DownloadItem> downloadItems;
+    private boolean listening;
     
-    public FileExportDialog() {
+    public DownloadDialog() {
+    	super(SessionMgr.getMainFrame());
         setTitle("File Download");
         
         loadingLabel = new JLabel(Icons.getLoadingIcon());
@@ -152,8 +163,8 @@ public class FileExportDialog extends ModalDialog {
     private void addSeparator(JPanel panel, String text) {
         JLabel label = new JLabel(text);
         label.setFont(SEPARATOR_FONT);
-        panel.add(label, "split 2, span, gaptop 10lp, aligny top");
-        panel.add(new JSeparator(SwingConstants.HORIZONTAL), "gaptop 10lp, grow, wrap");
+        panel.add(label, "split 2, span, gaptop 10lp, ay top");
+        panel.add(new JSeparator(SwingConstants.HORIZONTAL), "wrap, gaptop 22lp, grow");
     }
 
     private void addField(String label, JComponent component) {
@@ -163,19 +174,19 @@ public class FileExportDialog extends ModalDialog {
     private void addField(String label, JComponent component, String constraints) {
         JLabel attrLabel = new JLabel(label);
         attrLabel.setLabelFor(component);
-        attrPanel.add(attrLabel,"gap para, aligny top");
-        String compConstraints = "gap para, aligny top";
+        attrPanel.add(attrLabel,"gap para, ay top");
+        String compConstraints = "gap para, ay top";
         if (!StringUtils.isEmpty(constraints)) {
             compConstraints += ", "+constraints;
         }
         attrPanel.add(component,compConstraints);
     }
     
-    public void showDialog(final List<DomainObject> domainObjects, final ResultDescriptor defaultResultDescriptor) {
+    public void showDialog(final List<? extends DomainObject> domainObjects, final ResultDescriptor defaultResultDescriptor) {
 
         this.inputObjects = domainObjects;
-        this.expandedObjects = new ArrayList<>();
         this.defaultResultDescriptor = defaultResultDescriptor;
+        this.expandedObjects = new ArrayList<>();
         this.downloadItems = new ArrayList<>();
         findObjectsToExport(new Callable<Void>() {
             @Override
@@ -192,12 +203,21 @@ public class FileExportDialog extends ModalDialog {
     
     private void findObjectsToExport(final Callable<Void> success) {
 
+        log.info("findObjectsToExport(inputObjects.size={})",inputObjects.size());
+
+        Utils.setWaitingCursor(DownloadDialog.this);
+        
+    	// Reset state that will be populated below
+    	onlySampleInputs = true;
+    	downloadItems.clear();
+    	expandedObjects.clear();
+    	
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 for(DomainObject domainObject : inputObjects) {
-                    addObjectsToExport(domainObject, new ArrayList<String>());
+                    addObjectsToExport(new ArrayList<String>(), domainObject);
                 }
                 for(DownloadItem downloadItem : downloadItems) {
                     expandedObjects.add(downloadItem.getDomainObject());
@@ -207,11 +227,13 @@ public class FileExportDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
+            	Utils.setDefaultCursor(DownloadDialog.this);
                 ConcurrentUtils.invokeAndHandleExceptions(success);
             }
 
             @Override
             protected void hadError(Throwable error) {
+            	Utils.setDefaultCursor(DownloadDialog.this);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -219,8 +241,9 @@ public class FileExportDialog extends ModalDialog {
         worker.execute();
     }
     
-    private void addObjectsToExport(DomainObject domainObject, List<String> path) {
+    private void addObjectsToExport(List<String> path, DomainObject domainObject) {
         // TODO: this should update some kind of label so the user knows what's going on during a long load
+        log.info("addObjectsToExport({},{})",path,domainObject.getName());
         if (domainObject instanceof TreeNode) {
             TreeNode treeNode = (TreeNode)domainObject;
             if (treeNode.hasChildren()) {
@@ -229,7 +252,7 @@ public class FileExportDialog extends ModalDialog {
                 List<String> childPath = new ArrayList<>(path);
                 childPath.add(domainObject.getName());
                 for(DomainObject child : children) {
-                    addObjectsToExport(child, childPath);
+                    addObjectsToExport(childPath, child);
                 }
             }
         }
@@ -239,7 +262,7 @@ public class FileExportDialog extends ModalDialog {
             List<String> childPath = new ArrayList<>(path);
             childPath.add(domainObject.getName());
             for(DomainObject child : children) {
-                addObjectsToExport(child, childPath);
+                addObjectsToExport(childPath, child);
             }
         }
         else if (domainObject instanceof Filter) {
@@ -252,7 +275,7 @@ public class FileExportDialog extends ModalDialog {
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
                     for(DomainObject resultObject : page.getDomainObjects()) {
-                        addObjectsToExport(resultObject, childPath);
+                        addObjectsToExport(childPath, resultObject);
                     }
                 }
             }
@@ -264,15 +287,18 @@ public class FileExportDialog extends ModalDialog {
             if (domainObject instanceof Sample) {
                 if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
                     for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample(domainObject.getId())) {
+                        log.info("Adding expanded LSM: "+lsm.getName());
                         downloadItems.add(new DownloadItem(path, lsm));
                     }
                 }
                 else {
+                    log.info("Adding Sample: "+domainObject.getName());
                     downloadItems.add(new DownloadItem(path, domainObject));
                 }
             }
             else {
                 onlySampleInputs = false;
+                log.info("Not just Samples. Adding "+domainObject.getName());
                 downloadItems.add(new DownloadItem(path, domainObject));
             }
         }
@@ -295,23 +321,26 @@ public class FileExportDialog extends ModalDialog {
         exportTypeCombo.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                currItemsToExport = (String)exportTypeCombo.getSelectedItem();
-                findObjectsToExport(new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        populateExpandedObjectList();
-                        return null;
-                    }
-                });
+                if (e.getStateChange()==ItemEvent.SELECTED) {
+                    currItemsToExport = (String)exportTypeCombo.getSelectedItem();
+                    findObjectsToExport(new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            updateResultCombo();
+                            populateExpandedObjectList();
+                            return null;
+                        }
+                    });
+                }
             }
         });
         
-        addField("What To Export?", new JScrollPane(exportTypeCombo), "width 100:150:200, grow");
+        addField("Select type:", exportTypeCombo, "width 100:150:200, grow");
         
         expandedObjectList = new JList<>(new DefaultListModel<String>());
         expandedObjectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         expandedObjectList.setLayoutOrientation(JList.VERTICAL);
-        addField("Items To Export", new JScrollPane(expandedObjectList), "width 200:300:600, height 30:100:200, grow");
+        addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:300:600, height 30:100:200, grow");
         
         resultButton = new ResultSelectionButton(onlySampleInputs) {
             protected void resultChanged(ResultDescriptor resultDescriptor) {
@@ -321,117 +350,150 @@ public class FileExportDialog extends ModalDialog {
         };
         resultButton.setResultDescriptor(defaultResultDescriptor);
         resultButton.populate(expandedObjects);
-        addField("Result", resultButton);
+        resultButton.setVisible(true); // Show even if there is nothing to select. We'll just make it disabled.
+        addField("Select result:", resultButton);
         
-        addSeparator(attrPanel, "Format");
+        updateResultCombo();
         
+        addSeparator(attrPanel, "File Processing");
         
         formatCombo = new JComboBox<>();
         formatCombo.setEditable(false);
         formatCombo.setToolTipText("Choose an export format");
-        addField("File Format", formatCombo);      
+        addField("File format:", formatCombo);      
         
         splitChannelCheckbox = new JCheckBox();
-        addField("Split Channels", splitChannelCheckbox);
+        addField("Split channels?", splitChannelCheckbox);
+        
+        addSeparator(attrPanel, "File Naming");
         
         flattenStructureCheckbox = new JCheckBox();
-        addField("Flatten Folder Structure", flattenStructureCheckbox);
-        
-        addSeparator(attrPanel, "File Names");
+        addField("Flatten folder structure?", flattenStructureCheckbox);
 
         filePatternCombo = new JComboBox<>();
         filePatternCombo.setEditable(true);
-        filePatternCombo.setToolTipText("Substitution pattern for file naming");
+        filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel) filePatternCombo.getModel();
         for (String pattern : STANDARD_FILE_PATTERNS) {
             fpmodel.addElement(pattern);
         }
         
-        addField("File Name Pattern", filePatternCombo, "width 200:300:600, grow");
-
-        addSeparator(attrPanel, "Files To Export");
+        addField("Naming pattern:", filePatternCombo, "width 200:300:600, grow");
         
+        attrPanel.add(new JLabel(""), "gap para, aligny top");
+        attrPanel.add(new JLabel(FILE_PATTERN_HELP), "gap para, width 200:600:1000, grow, ay top");
+       
         downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        addField("File Paths", new JScrollPane(downloadItemList), "width 600:800:1000, height 100:150:200, grow");
+        addField("Preview downloads:", new JScrollPane(downloadItemList), "width 200:600:1000, height 80:100:200, grow");
         
         populateDownloadItemList();
-        addListeners();
+
+        // Add change listeners
+        formatCombo.addItemListener(changeListener);
+        splitChannelCheckbox.addItemListener(changeListener);
+        flattenStructureCheckbox.addItemListener(changeListener);
+        filePatternCombo.addItemListener(changeListener);
         
         remove(loadingLabel);
         add(attrPanel, BorderLayout.CENTER);
         
         okButton.setEnabled(true);
         setPreferredSize(null);
-        pack();
+        packAndShow();
     }
 
+    private void updateResultCombo() {
+    	resultButton.setEnabled(onlySampleInputs && currItemsToExport.equals(ITEM_TYPE_SELF));
+    }
+    
     // If anything changes, we need to recalculate the file download list
     ItemListener changeListener = new ItemListener() {
         @Override
         public void itemStateChanged(ItemEvent e) {
-            populateDownloadItemList();
+            if (listening) {
+                if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
+                    log.info("Item state changed: {}", e);
+                    populateDownloadItemList();
+                }
+            }
+            else {
+                log.trace("Ignoring item state change: {}", e);
+            }
         }
     };
     
-    private void addListeners() {
-        formatCombo.addItemListener(changeListener);
-        splitChannelCheckbox.addItemListener(changeListener);
-        flattenStructureCheckbox.addItemListener(changeListener);
-        filePatternCombo.addItemListener(changeListener);
-        
+    private void resumeListeners() {
+    	listening = true;
     }
     
-    private void removeListeners() {
-        formatCombo.removeItemListener(changeListener);
-        splitChannelCheckbox.removeItemListener(changeListener);
-        flattenStructureCheckbox.removeItemListener(changeListener);
-        filePatternCombo.removeItemListener(changeListener);
+    private void stopListeners() {
+    	listening = false;
     }
     
     private void populateExpandedObjectList() {
 
-        removeListeners();
+        stopListeners();
         
         DefaultListModel<String> eolm = (DefaultListModel)expandedObjectList.getModel();
         eolm.removeAllElements();
         for(DomainObject domainObject : expandedObjects) {
+            log.info("Adding expanded object to list: "+domainObject.getName());
             eolm.addElement(domainObject.getName());
         }
 
-        addListeners();
+        resumeListeners();
         populateDownloadItemList();
     }
     
     private void populateDownloadItemList() {
 
-        removeListeners();
+        stopListeners();
         
-        ResultDescriptor resultDescriptor = resultButton.getResultDescriptor();
-        Format format = (Format)formatCombo.getSelectedItem();
-        String extension = format==null?null:format.getExtension();
-        boolean splitChannels = splitChannelCheckbox.isSelected();
-        boolean flattenStructure = flattenStructureCheckbox.isSelected();
-        String filenamePattern = (String)filePatternCombo.getSelectedItem();
+        final ResultDescriptor resultDescriptor = resultButton.getResultDescriptor();
+        final Format format = (Format)formatCombo.getSelectedItem();
+        final String extension = format==null?null:format.getExtension();
+        final boolean splitChannels = splitChannelCheckbox.isSelected();
+        final boolean flattenStructure = flattenStructureCheckbox.isSelected();
+        final String filenamePattern = (String)filePatternCombo.getSelectedItem();
         
-        for(DownloadItem downloadItem : downloadItems) {
-            downloadItem.init(resultDescriptor, extension, splitChannels, flattenStructure, filenamePattern);
-        }
-        
-        DefaultListModel<DownloadItem> dlm = (DefaultListModel)downloadItemList.getModel();
-        dlm.removeAllElements();
-        for(DownloadItem downloadItem : downloadItems) {
-            dlm.addElement(downloadItem);
-        }
+        SimpleWorker worker = new SimpleWorker() {
 
-        addListeners();
-        populateExtensions();
+            @Override
+            protected void doStuff() throws Exception {
+                for (DownloadItem downloadItem : downloadItems) {
+                    downloadItem.init(resultDescriptor, extension, splitChannels, flattenStructure, filenamePattern);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+                DefaultListModel<DownloadItem> dlm = (DefaultListModel) downloadItemList.getModel();
+                dlm.removeAllElements();
+                for (DownloadItem downloadItem : downloadItems) {
+                    dlm.addElement(downloadItem);
+                }
+
+                resumeListeners();
+                populateExtensions();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                resumeListeners();
+                populateExtensions();
+            }
+        };
+
+        worker.execute();
     }
     
     private void populateExtensions() {
         
-        removeListeners();
+        stopListeners();
         
         boolean allLsms = true;
         final Multiset<String> countedExtensions = LinkedHashMultiset.create();
@@ -456,9 +518,9 @@ public class FileExportDialog extends ModalDialog {
         String maxCountExtension = sortedExtensions.get(0);
 
         DefaultComboBoxModel<Format> model = (DefaultComboBoxModel) formatCombo.getModel();
-        model.removeAllElements();
         Format currValue = (Format)model.getSelectedItem();
-                
+        
+        model.removeAllElements();
         for (String extension : FORMAT_EXTENSIONS) {
             if (!allLsms && extension.startsWith("lsm")) {
                 continue;
@@ -475,17 +537,26 @@ public class FileExportDialog extends ModalDialog {
             model.setSelectedItem(currValue);
         }
         
-        addListeners();
+        resumeListeners();
     }
     
     private void saveAndClose() {
         
+        boolean started = false;
         for(final DownloadItem downloadItem : downloadItems) {
-            FileDownloadWorker worker = new FileDownloadWorker(downloadItem, COPY_FILE_LOCK);
-            worker.startDownload();
+            if (downloadItem.getSourceFile()!=null) {
+                FileDownloadWorker worker = new FileDownloadWorker(downloadItem, COPY_FILE_LOCK);
+                worker.startDownload();
+                started = true;
+            }
         }
 
-        setVisible(false);
+        if (!started) {
+            JOptionPane.showMessageDialog(this, "There are no downloads to start.", "Nothing to do", JOptionPane.PLAIN_MESSAGE);
+        }
+        else {
+            setVisible(false);
+        }
     }
     
     private class Format {
@@ -504,7 +575,7 @@ public class FileExportDialog extends ModalDialog {
 
         @Override
         public String toString() {
-            return extension+" "+(isNative?"":" (Convert)");
+            return extension+(isNative?"":" (Convert)");
         }
     }
     

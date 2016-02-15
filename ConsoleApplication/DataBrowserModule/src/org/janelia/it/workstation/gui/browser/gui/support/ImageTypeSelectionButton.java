@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Collection;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
@@ -92,6 +93,8 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
         setVisible(!countedTypeNames.isEmpty());
         popupMenu.removeAll();
         
+        ButtonGroup group = new ButtonGroup();
+        
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
             if (countedTypeNames.count(typeName)>1 || (countedTypeNames.count(typeName)==1 && domainObjects.size()==1)) {
@@ -106,6 +109,7 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
                     }
                 });
                 popupMenu.add(menuItem);
+                group.add(menuItem);
             }
         }
         

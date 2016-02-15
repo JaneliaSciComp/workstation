@@ -9,10 +9,12 @@ import java.util.regex.Pattern;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
@@ -41,6 +43,7 @@ public class DownloadItem {
     private boolean splitChannels = false;
     
     // Derived state
+    private String errorMessage;
     private String resultName;
     private File sourceFile;
     private File targetFile;
@@ -58,6 +61,7 @@ public class DownloadItem {
         this.splitChannels = splitChannels;
         
         // Reset derived state
+        errorMessage = null;
         resultName = null;
         sourceFile = null;
         targetFile = null;
@@ -85,7 +89,7 @@ public class DownloadItem {
 
         String sourceFilePath = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (sourceFilePath==null) {
-            log.warn("Cannot download item with no default 3d image: "+domainObject.getName());
+            errorMessage = "Cannot find result file for: "+domainObject.getName();
             return;
         }
             
@@ -121,67 +125,74 @@ public class DownloadItem {
             attributeMap.put(attr.getLabel(), attr);
         }
 
-        log.info("Source filepath:"+sourceFile);
-        log.info("File pattern:"+filePattern);
+        log.info("Source filepath: {}", sourceFile);
+        log.info("File pattern: {}", filePattern);
         
-        StringBuilder sb = new StringBuilder();
-        for(String namePattern : filePattern.split("/")) {
-            
-            Pattern pattern = Pattern.compile("\\{(.+?)\\}");
-            Matcher matcher = pattern.matcher(namePattern);
-            StringBuffer buffer = new StringBuffer();
-            log.debug("    Building name:");
-            while (matcher.find()) {
-                String tmpGroup = matcher.group(1);
-                String[] replacementPieces = tmpGroup.split("\\|");
-                String replacement = null;
-                log.debug("      Got group:"+tmpGroup);
-                for (String tmpPiece:replacementPieces) {
-                    String attrLabel = tmpPiece.trim();
-                    if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
-                        replacement = resultName==null ? "" : resultName;
-                    }
-                    else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
-                        replacement = sourceFile.getName();
-                    } 
-                    else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
-                        replacement = domainObject.getName();
-                    } 
-                    else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
-                        replacement = targetExtension;
-                    } 
-                    else {
-                        DomainObjectAttribute attr = attributeMap.get(attrLabel);
-                        if (attr==null) {
-                            throw new IllegalArgumentException(domainObject.getType()+" has no such attribute: "+tmpPiece.trim());
-                        }
-                        replacement = getStringAttributeValue(attr);
-                    }
-                    
-                    if (replacement != null) {
-                        matcher.appendReplacement(buffer, "");
-                        buffer.append(replacement);
-                        break;
-                    }
-                    log.debug("          " + replacement+" -> "+buffer);
+        Pattern pattern = Pattern.compile("\\{(.+?)\\}");
+        Matcher matcher = pattern.matcher(filePattern);
+        StringBuffer buffer = new StringBuffer();
+        while (matcher.find()) {
+            String template = matcher.group(1);
+            String replacement = null;
+            log.info("  Matched: {}",template);
+            for (String templatePart : template.split("\\|")) {
+                String attrLabel = templatePart.trim();
+                if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
+                    replacement = resultName==null ? null : resultName;
                 }
-                if (null==replacement) {
-                    log.warn("Cannot find a property replacement for Naming Pattern element " + tmpGroup);
+                else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
+                    replacement = sourceFile.getName();
+                } 
+                else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
+                    if (domainObject instanceof Sample) {
+                        replacement = domainObject.getName();
+                    }
+                    else if (domainObject instanceof LSMImage) {
+                        LSMImage lsm = (LSMImage)domainObject;
+                        Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
+                        if (sample!=null) {
+                            replacement = sample.getName();
+                        }
+                    }
+                } 
+                else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
+                    replacement = targetExtension;
+                } 
+                else if (attrLabel.matches("\"(.*?)\"")) {
+                	replacement = attrLabel.substring(1, attrLabel.length()-1);
+                }
+                else {
+                    DomainObjectAttribute attr = attributeMap.get(attrLabel);
+                    if (attr!=null) {
+                        replacement = getStringAttributeValue(attr);    
+                    }
+                }
+
+                if (replacement != null) {
+                    matcher.appendReplacement(buffer, replacement);
+                    log.info("    '{}'->'{}' = '{}'",template,replacement,buffer);
+                    break;
                 }
             }
-            matcher.appendTail(buffer);
-            if (sb.length()>0) sb.append("/");
-            sb.append(buffer);
+
+            if (replacement==null) {
+                log.warn("      Cannot find a replacement for: {}",template);
+            }
         }
+        matcher.appendTail(buffer);
+        
+        log.info("Final buffer: {}",buffer);
         
         // Strip extension, if any. We'll re-add it at the end.
-        String filepath = FileUtil.getBasename(sb.toString());
+        StringBuilder filepath = new StringBuilder(FileUtil.getBasename(buffer.toString()));
         
         if (splitChannels) {
-            filepath += "_#";
+            filepath.append("_#");
         }
         
-        return filepath + "." + targetExtension;
+        filepath.append(".").append(targetExtension);
+        log.info("Final file path: {}",filepath);
+        return filepath.toString();
     }
 
     private String getStringAttributeValue(DomainObjectAttribute attr) {
@@ -231,6 +242,12 @@ public class DownloadItem {
 
     @Override
     public String toString() {
-        return targetFile==null?domainObject.getName():targetFile.getAbsolutePath();//.replace(WS_IMAGES_DIR.getAbsolutePath(), "");
+    	if (errorMessage!=null) {
+			return errorMessage;
+		}
+    	if (targetFile==null) {
+    		return "Error getting file for "+domainObject.getName();
+    	}
+        return targetFile.getAbsolutePath();
     }
 }

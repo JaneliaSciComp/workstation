@@ -13,7 +13,6 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.gui.browser.actions.FileDownloadAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInToolAction;
@@ -22,6 +21,7 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
@@ -63,7 +63,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
-        add(getDownloadMenu());
+        add(getDownloadItem());
         
         setNextAddRequiresSeparator(true);
         add(getVerificationMovieItem());
@@ -147,15 +147,28 @@ public class SampleResultContextMenu extends PopupContextMenu {
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
-    
-    protected JMenuItem getDownloadMenu() {
+
+    protected JMenuItem getDownloadItem() {
+
         String path = DomainUtils.getDefault3dImageFilePath(result);
-        if (path==null) return null;
         ObjectiveSample objectiveSample = result.getParentRun().getParent();
-        Sample sample = objectiveSample.getParent();
-        ResultDescriptor descriptor = new ResultDescriptor(result);
-        FileDownloadAction action = new FileDownloadAction(Arrays.asList(sample), descriptor);
-        return action.getPopupPresenter();
+        final Sample sample = objectiveSample.getParent();
+        final ResultDescriptor descriptor = new ResultDescriptor(result);
+        
+        JMenuItem downloadItem = new JMenuItem("  Download...");
+        downloadItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) { 
+                DownloadDialog dialog = new DownloadDialog();
+                dialog.showDialog(Arrays.asList(sample), descriptor);
+            }
+        });
+        
+        if (path==null) {
+        	downloadItem.setEnabled(false);
+        }
+
+        return downloadItem;
     }
     
     private JMenuItem getVerificationMovieItem() {

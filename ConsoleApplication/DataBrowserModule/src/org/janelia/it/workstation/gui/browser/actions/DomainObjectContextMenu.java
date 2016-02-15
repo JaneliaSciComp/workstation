@@ -35,7 +35,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManag
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.FileExportDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
@@ -116,7 +116,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
-//        add(getDownloadMenu());
         add(getDownloadItem());
         
         setNextAddRequiresSeparator(true);
@@ -552,18 +551,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (path==null) return null;
         return getNamedActionItem(new OpenInToolAction(ToolMgr.TOOL_FIJI, path, null));
     }
-    
-//    protected JMenuItem getDownloadMenu() {
-//        FileDownloadAction action = new FileDownloadAction(domainObjectList, resultDescriptor);
-//        return action.getPopupPresenter();
-//    }    
 
     protected JMenuItem getDownloadItem() {
-        JMenuItem toggleHudMI = new JMenuItem("  Download...");
+
+        String label = domainObjectList.size() > 1 ? "Download \"" + domainObjectList.size() + "\" Items..." : "Download...";
+        
+        JMenuItem toggleHudMI = new JMenuItem("  "+label);
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) { 
-                FileExportDialog dialog = new FileExportDialog();
+                DownloadDialog dialog = new DownloadDialog();
                 dialog.showDialog(domainObjectList, resultDescriptor);
             }
         });

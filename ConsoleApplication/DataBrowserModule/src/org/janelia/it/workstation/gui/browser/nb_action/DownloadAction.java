@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.FileExportDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
@@ -63,7 +63,7 @@ public final class DownloadAction extends NodeAction {
         List<DomainObject> domainObjectList = new ArrayList<>();
         for(Node node : toDownload) {
             if (node instanceof DomainObjectNode) {
-                DomainObjectNode domainObjectNode = (TreeNodeNode)node;
+                DomainObjectNode domainObjectNode = (DomainObjectNode)node;
                 domainObjectList.add(domainObjectNode.getDomainObject());
             }
             else {
@@ -71,7 +71,7 @@ public final class DownloadAction extends NodeAction {
             }
         }
 
-        FileExportDialog dialog = new FileExportDialog();
+        DownloadDialog dialog = new DownloadDialog();
         dialog.showDialog(domainObjectList, ResultDescriptor.LATEST);
     }
 }

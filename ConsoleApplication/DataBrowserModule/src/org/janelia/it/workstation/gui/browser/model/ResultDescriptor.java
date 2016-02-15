@@ -29,10 +29,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 public class ResultDescriptor {
 
     public static final String KEY_LATEST = "Latest";
-    public static final String KEY_LSMS = "LSMs";
     
     public static final ResultDescriptor LATEST = new ResultDescriptor(KEY_LATEST);
-    public static final ResultDescriptor LSMS = new ResultDescriptor(KEY_LSMS);
     
     private final String resultKey;
     private final String objective;
@@ -60,7 +58,7 @@ public class ResultDescriptor {
 
     public ResultDescriptor(String resultKey) {
         this.resultKey = resultKey;
-        if (!KEY_LATEST.equals(resultKey) && !KEY_LSMS.equals(resultKey) ) {
+        if (!KEY_LATEST.equals(resultKey)) {
             String[] parts = resultKey.split(" ", 2);
             this.objective = parts[0];
             this.resultName = parts[1];

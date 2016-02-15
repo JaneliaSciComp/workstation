@@ -37,18 +37,18 @@ public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
 
-    private DownloadItem downloadItem;
+    private final DownloadItem downloadItem;
     private final Lock copyFileLock;
     private final String objectName;
-    private final String extension;
-    private String sourceFilePath;
-    private File targetDir;
+    private final String targetExtension;
+    private final String sourceFilePath;
+    private final File targetDir;
 
     public FileDownloadWorker(DownloadItem downloadItem, Lock copyFileLock) {
         this.downloadItem = downloadItem;
         this.copyFileLock = copyFileLock;
         this.objectName = downloadItem.getDomainObject().getName();
-        this.extension = downloadItem.getTargetExtension();
+        this.targetExtension = downloadItem.getTargetExtension();
         this.sourceFilePath = downloadItem.getSourceFile().getAbsolutePath();
         this.targetDir = downloadItem.getTargetFile().getParentFile();
     }
@@ -61,11 +61,11 @@ public class FileDownloadWorker {
             boolean convertOnServer = true;
             
             if (!downloadItem.isSplitChannels()) {
-                if (sourceFilePath.endsWith(extension)) {
+                if (sourceFilePath.endsWith(targetExtension)) {
                     // no conversion needed, simply transfer the file
                     convertOnServer = false;
                 } 
-                else if (Utils.EXTENSION_LSM.equals(extension)) {
+                else if (Utils.EXTENSION_LSM.equals(targetExtension)) {
                     // Just need to convert bz2 to lsm, which we can do locally
                     convertOnServer = false;
                 }
@@ -91,12 +91,11 @@ public class FileDownloadWorker {
 
         final String targetName = downloadItem.getTargetFile().getName();
         final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
-        final String extension = FileUtil.getExtension(targetName);
 
         File[] files = targetDir.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return name.startsWith(basename) && name.endsWith(extension);
+                return name.startsWith(basename) && name.endsWith(targetExtension);
             }
         });
 
@@ -143,19 +142,19 @@ public class FileDownloadWorker {
 
     private void convertOnServer() throws Exception {
 
-        log.info("Converting {} to {} (splitChannels={})",downloadItem.getSourceExtension(),extension,downloadItem.isSplitChannels());
+        log.info("Converting {} to {} (splitChannels={})",downloadItem.getSourceExtension(),targetExtension,downloadItem.isSplitChannels());
         
         Task task;
         if (downloadItem.isSplitChannels()) {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-            taskParameters.add(new TaskParameter("output extension", extension, null));
+            taskParameters.add(new TaskParameter("output extension", targetExtension, null));
             task = ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
         }
         else {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
-            taskParameters.add(new TaskParameter("output extension", extension, null));
+            taskParameters.add(new TaskParameter("output extension", targetExtension, null));
             task = ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
         }
 
