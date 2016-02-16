@@ -87,6 +87,10 @@ public class DownloadItem {
             fileProvider = (HasFiles)domainObject;
         }
 
+        log.info("Domain object type: {}",domainObject.getType());
+        log.info("Domain object id: {}",domainObject.getId());
+        log.info("File provider: {}",fileProvider);
+        
         String sourceFilePath = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (sourceFilePath==null) {
             errorMessage = "Cannot find result file for: "+domainObject.getName();
@@ -96,6 +100,9 @@ public class DownloadItem {
         sourceFile = new File(sourceFilePath);
         sourceExtension = FileUtil.getExtension(sourceFilePath);
 
+        log.info("Source path: {}",sourceFilePath);
+        log.info("Source extension: {}",sourceExtension);
+        
         if (this.targetExtension==null) {
             this.targetExtension = sourceExtension;
         }
@@ -115,6 +122,9 @@ public class DownloadItem {
         }
 
         targetFile = new File(itemDir, constructFilePath(filenamePattern));
+        
+        log.info("Target path: {}",targetFile.getAbsolutePath());
+        log.info("Target extension: {}",targetExtension);
     }
 
     private String constructFilePath(String filePattern) {

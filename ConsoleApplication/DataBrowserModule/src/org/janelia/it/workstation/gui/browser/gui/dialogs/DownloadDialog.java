@@ -77,14 +77,19 @@ public class DownloadDialog extends ModalDialog {
     private static final Logger log = LoggerFactory.getLogger(DownloadDialog.class);
     
     // Constants
-    private static final String FILE_PATTERN_HELP = 
-            "<html>The naming pattern can use any attribute on the items being downloaded.<br>"
-            + "It may also use the following special attributes:<br>"
-            + "Sample Name, File Name, Result Name, Extension</html>";
     private static final Lock COPY_FILE_LOCK = new ReentrantLock();
+    
     private static final Font SEPARATOR_FONT = new Font("Sans Serif", Font.BOLD, 12);
+    
     private static final String ITEM_TYPE_SELF = "Selected Items";
+    
     private static final String ITEM_TYPE_LSM = "LSMs";
+
+    private static final String FILE_PATTERN_HELP =
+            "<html><font color='#959595' size='-1'>The naming pattern can use any attribute on the items being downloaded.<br>"
+            + "It may also use the following special attributes: {Sample Name}, {Result Name}, {File Name}, {Extension}<br>"
+            + "Each attribute may include multiple names as a fallback, e.g.: {Fly Core Alias|Line}"
+            + "</font></html>";
     
     private static final String[] FORMAT_EXTENSIONS = {
             "lsm.bz2", 
@@ -108,11 +113,13 @@ public class DownloadDialog extends ModalDialog {
     private final JPanel buttonPane;
     private JPanel attrPanel;
     private JList<String> expandedObjectList;
+    private JLabel expandedObjectCountLabel;
     private ResultSelectionButton resultButton;
     private JComboBox<Format> formatCombo;
     private JCheckBox splitChannelCheckbox;
     private JCheckBox flattenStructureCheckbox;
     private JComboBox<String> filePatternCombo;
+    private JLabel downloadItemCountLabel;
     private JList<DownloadItem> downloadItemList;
 
     // State
@@ -337,6 +344,9 @@ public class DownloadDialog extends ModalDialog {
         
         addField("Select type:", exportTypeCombo, "width 100:150:200, grow");
         
+        expandedObjectCountLabel = new JLabel();
+        addField("Item count:", expandedObjectCountLabel);
+        
         expandedObjectList = new JList<>(new DefaultListModel<String>());
         expandedObjectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         expandedObjectList.setLayoutOrientation(JList.VERTICAL);
@@ -381,12 +391,15 @@ public class DownloadDialog extends ModalDialog {
         addField("Naming pattern:", filePatternCombo, "width 200:300:600, grow");
         
         attrPanel.add(new JLabel(""), "gap para, aligny top");
-        attrPanel.add(new JLabel(FILE_PATTERN_HELP), "gap para, width 200:600:1000, grow, ay top");
-       
+        attrPanel.add(new JLabel(FILE_PATTERN_HELP), "gap para, width 200:800:1000, grow, ay top");
+
+        downloadItemCountLabel = new JLabel();
+        addField("File count:", downloadItemCountLabel);
+        
         downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview downloads:", new JScrollPane(downloadItemList), "width 200:600:1000, height 80:100:200, grow");
+        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:800:1000, height 80:100:200, grow");
         
         populateDownloadItemList();
 
@@ -443,6 +456,8 @@ public class DownloadDialog extends ModalDialog {
             eolm.addElement(domainObject.getName());
         }
 
+        expandedObjectCountLabel.setText(expandedObjects.size()+" items");
+        
         resumeListeners();
         populateDownloadItemList();
     }
@@ -470,12 +485,16 @@ public class DownloadDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
 
+                int count = 0;
                 DefaultListModel<DownloadItem> dlm = (DefaultListModel) downloadItemList.getModel();
                 dlm.removeAllElements();
                 for (DownloadItem downloadItem : downloadItems) {
+                    count += downloadItem.getSourceFile()!=null ? 1 : 0;
                     dlm.addElement(downloadItem);
                 }
-
+                
+                downloadItemCountLabel.setText(count+" files");
+                
                 resumeListeners();
                 populateExtensions();
             }
@@ -514,6 +533,10 @@ public class DownloadDialog extends ModalDialog {
                 return i2.compareTo(i1);
             }
         });
+        
+        for(String extension : sortedExtensions) {
+            log.info("{}, count={}", extension, countedExtensions.count(extension));
+        }
         
         String maxCountExtension = sortedExtensions.get(0);
 
