@@ -134,6 +134,8 @@ implements NeuronSet, LookupListener
     private boolean setWorkspace(TmWorkspace workspace) {
         if (this.workspace == workspace)
             return false;
+        if (workspace == null)
+            return false;
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
