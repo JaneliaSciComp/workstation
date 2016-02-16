@@ -13,6 +13,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.solr.common.SolrDocumentList;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -98,11 +99,6 @@ public class RESTDomainFacade implements DomainFacade {
         }
         return null;
     }
-    
-    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
-        // TODO: implement
-        return null;
-    }
 
     public DomainObject getDomainObject(Reference reference) {
         List<Reference> refList = new ArrayList<Reference>();
@@ -148,10 +144,39 @@ public class RESTDomainFacade implements DomainFacade {
         return domainObjs;
     }
 
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
+        Response response = serviceEndpoints.get("domainobject")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("name", name)
+                .queryParam("domainClass", domainClass.getName())
+                .path("name")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using name " + name)) {
+            return null;
+        }
+        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
+        });
+        return (List<T>)domainObjs;
+    }
+
     @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Response response = serviceEndpoints.get("domainobject")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("referenceId", reference.getReferenceId())
+                .queryParam("referenceAttr", reference.getReferenceAttr())
+                .queryParam("count", reference.getCount())
+                .queryParam("referenceClass", reference.getReferringClassName())
+                .path("reverseLookup")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using reverser reference" + reference)) {
+            return null;
+        }
+        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
+        });
+        return domainObjs;
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
@@ -258,9 +283,8 @@ public class RESTDomainFacade implements DomainFacade {
             return null;
         }
 
-        Collection<Workspace> foo = response.readEntity(new GenericType<List<Workspace>>() {});
-        System.out.println (foo);
-        return foo;
+        Collection<Workspace> workspace = response.readEntity(new GenericType<List<Workspace>>() {});
+        return workspace;
     }
 
     public Collection<DataSet> getDataSets() {
@@ -276,8 +300,17 @@ public class RESTDomainFacade implements DomainFacade {
 
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) {
-        // TODO: implement
-        throw new UnsupportedOperationException();
+        Response response = serviceEndpoints.get("sample")
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("sampleId", sampleId)
+                .path("lsms")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to get Lsm For Sample: " + sampleId)) {
+            return null;
+        }
+        List<LSMImage> lsms = response.readEntity((new GenericType<List<LSMImage>>() {}));
+        return lsms;
     }
     
     public DataSet create(DataSet dataSet) throws Exception {
@@ -667,7 +700,6 @@ public class RESTDomainFacade implements DomainFacade {
 
         String REST_SERVER_URL = "http://schauderd-ws1.janelia.priv:8080/compute/";
         RESTDomainFacade testclient = new RESTDomainFacade(REST_SERVER_URL);
-        System.out.println("ASDFASDF");
         Sample test = (Sample)testclient.getDomainObject(org.janelia.it.jacs.model.domain.sample.Sample.class, new Long("1734424924644180066"));
         System.out.println (test.getLine());
         test = (Sample)testclient.getDomainObject(new Reference("org.janelia.it.jacs.model.domain.sample.Sample", new Long("1714569876758069346")));
