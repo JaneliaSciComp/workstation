@@ -43,6 +43,18 @@ public class LargeVolumeViewViewer extends JPanel {
     private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
+    public static TmWorkspace.Version getWorkspaceVersion(Entity workspaceEntity) {
+        String versionNameValue = workspaceEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
+        TmWorkspace.Version version = null;
+        if (versionNameValue != null) {
+            String[] nameValue = versionNameValue.split("=");
+            if (nameValue.length >= 2 && TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
+                version = TmWorkspace.Version.valueOf(nameValue[1]);
+            }
+        }
+        return version;
+    }
+
     public LargeVolumeViewViewer() {
         super();
         setLayout(new BorderLayout());
@@ -87,15 +99,9 @@ public class LargeVolumeViewViewer extends JPanel {
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                     // Which version of workspace?  Can it be handled, here?
                     boolean usableVersion = false;
-                    String versionNameValue = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
-                    if (versionNameValue != null) {
-                        String[] nameValue = versionNameValue.split("=");
-                        if (nameValue.length >= 2  &&  TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
-                            TmWorkspace.Version version = TmWorkspace.Version.valueOf(nameValue[1]);
-                            if (version == TmWorkspace.Version.PB_1) {
-                                usableVersion = true;
-                            }
-                        }
+                    TmWorkspace.Version version = getWorkspaceVersion(initialEntity);
+                    if (version == TmWorkspace.Version.PB_1) {
+                        usableVersion = true;
                     }
                     
                     if (! usableVersion) {
