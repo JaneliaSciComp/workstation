@@ -617,7 +617,7 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public SolrJsonResults search(SolrParams query) throws Exception {
+    public SolrJsonResults search(String query) throws Exception {
         return facade.performSearch(query);
     }
 

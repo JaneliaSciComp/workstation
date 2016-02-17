@@ -475,7 +475,7 @@ public class RESTDomainFacade implements DomainFacade {
      * @return the search results
      * @throws Exception something went wrong
      */
-    public SolrJsonResults performSearch(SolrParams query) {
+    public SolrJsonResults performSearch(String query) {
         Response response = serviceEndpoints.get("search")
                 .request("application/json")
                 .post(Entity.json(query));

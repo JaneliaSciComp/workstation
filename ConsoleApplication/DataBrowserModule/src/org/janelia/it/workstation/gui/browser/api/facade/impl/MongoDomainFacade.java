@@ -112,8 +112,10 @@ public class MongoDomainFacade implements DomainFacade {
 
     @Override
     // return null since SolrConnector is in compute module
-    public SolrJsonResults performSearch(SolrParams queryParams) throws Exception {
-        SolrQuery query = SolrQueryBuilder.deSerializeSolrQuery(queryParams);
+    public SolrJsonResults performSearch(String queryParams) throws Exception {
+     //   SolrQuery query = SolrQueryBuilder.deSerializeSolrQuery(queryParams);
+        SolrQuery query = new SolrQuery();
+        query.setQuery(queryParams);
         SolrResults sr = ModelMgr.getModelMgr().searchSolr(query, false);
         SolrJsonResults sjr = new SolrJsonResults();
         Map<String,List<FacetValue>> facetValues = new HashMap<>();
