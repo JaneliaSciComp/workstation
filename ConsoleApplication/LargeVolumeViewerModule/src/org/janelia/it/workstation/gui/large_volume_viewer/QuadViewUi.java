@@ -1243,8 +1243,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
             // the last, middle piece can be nothing or one of these
             //  mounts names (nothing = enclosing dir is mounted directly
-            String [] mountNames = {"", "mousebrainmicro", "mousebrainmicro-nb",
-                    "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
+            String [] mountNames = {"", "mousebrainmicro",
+                    "mousebrainmicro-nb", "mouselight",
+                    "nobackup/mousebrainmicro", "nobackup2/mouselight",
+                    "mousebrainmicro/mousebrainmicro"};
+
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
