@@ -182,20 +182,22 @@ called from a  SimpleWorker thread.
         updateCurrentWorkspace();
         // we can refresh the neuron object from the workspace:
         if (getCurrentNeuron() != null) {
-            try {
-                if (getCurrentNeuron().getId() == null) {
-                    log.warn("Null ID in neuron {}.", getCurrentNeuron());
-                }
-                else {
-                    // Cannot refresh a neuron, without its ID.
-                    currentWorkspace.getNeuronList().remove(currentNeuron);
-                    currentNeuron = neuronManager.refreshFromData(currentNeuron);
-                    currentWorkspace.getNeuronList().add(currentNeuron);
-                }
-            } catch (Exception ex) {
-                log.error(ex.getMessage());
-                SessionMgr.getSessionMgr().handleException(ex);
+            refreshNeuronInWorkspace(getCurrentNeuron());
+        }
+    }
+
+    private void refreshNeuronInWorkspace(TmNeuron neuron) {
+        try {
+            if (neuron.getId() == null) {
+                log.warn("Null ID in neuron {}.", getCurrentNeuron());
+            } else {
+                currentWorkspace.getNeuronList().remove(neuron);
+                neuron = neuronManager.refreshFromData(neuron);
+                currentWorkspace.getNeuronList().add(neuron);
             }
+        } catch (Exception ex) {
+            log.error(ex.getMessage());
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
@@ -747,15 +749,17 @@ called from a  SimpleWorker thread.
     /**
      * move the neurite containing the input annotation to the given neuron
      */
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron neuron) throws Exception {
-        if (eitherIsNull(annotation, neuron)) {
+    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron destNeuron) throws Exception {
+        if (eitherIsNull(annotation, destNeuron)) {
             return;
         }
-        TmNeuron oldNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
-        neuronManager.moveNeurite(annotation, oldNeuron, neuron);
+        TmNeuron sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
+        neuronManager.moveNeurite(annotation, sourceNeuron, destNeuron);
 
         // updates
-        updateCurrentWorkspaceAndNeuron();
+        refreshNeuronInWorkspace(sourceNeuron);
+        refreshNeuronInWorkspace(destNeuron);
+
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron currentNeuron = getCurrentNeuron();
 
