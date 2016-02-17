@@ -20,6 +20,7 @@ import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -42,18 +43,6 @@ public class LargeVolumeViewViewer extends JPanel {
     private ModelMgrObserver modelMgrObserver;
     private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
-
-    public static TmWorkspace.Version getWorkspaceVersion(Entity workspaceEntity) {
-        String versionNameValue = workspaceEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
-        TmWorkspace.Version version = null;
-        if (versionNameValue != null) {
-            String[] nameValue = versionNameValue.split("=");
-            if (nameValue.length >= 2 && TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
-                version = TmWorkspace.Version.valueOf(nameValue[1]);
-            }
-        }
-        return version;
-    }
 
     public LargeVolumeViewViewer() {
         super();
@@ -99,7 +88,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                     // Which version of workspace?  Can it be handled, here?
                     boolean usableVersion = false;
-                    TmWorkspace.Version version = getWorkspaceVersion(initialEntity);
+                    TmWorkspace.Version version = AnnotationManager.getWorkspaceVersion(initialEntity);
                     if (version == TmWorkspace.Version.PB_1) {
                         usableVersion = true;
                     }

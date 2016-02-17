@@ -81,6 +81,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
+    public static TmWorkspace.Version getWorkspaceVersion(Entity workspaceEntity) {
+        String versionNameValue = workspaceEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
+        TmWorkspace.Version version = null;
+        if (versionNameValue != null) {
+            String[] nameValue = versionNameValue.split("=");
+            if (nameValue.length >= 2 && TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
+                version = TmWorkspace.Version.valueOf(nameValue[1]);
+            }
+        }
+        return version;
+    }
+
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
@@ -254,6 +266,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     progress.start();
                     progress.setDisplayName("Loading workspace container");
                     progress.switchToIndeterminate();
+                    TmWorkspace.Version version = getWorkspaceVersion(initialEntity);
+                    if (version != TmWorkspace.Version.PB_1) {
+                        // Force, and await, a full conversion.
+                    }
+
+                    // By the time this is triggered, any required conversion
+                    // will already have been accomplished.
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     if (workspace.getNeuronList() != null  &&  workspace.getNeuronList().size() > 0) {
                         // Retro-adaptation: this workspace was just, or is being, converted to protobuf.
