@@ -77,11 +77,15 @@ public class TracingInteractor extends MouseAdapter
     // Larger yellow overlay over an existing vertex under the mouse pointer.
     private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
     private NeuronVertex cachedHighlightVertex = null;
+    private NeuronModel cachedHighlightNeuron = null;
     
     // For Tracing
     // Larger blueish vertex with a "P" for current selected persisted parent
+    // first model is an ephemeral single vertex neuron model for display of "P"
     private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
     private NeuronVertex cachedParentVertex = null;
+    // second model is the actual associated in-memory full parent neuron domain model
+    private NeuronModel cachedParentNeuronModel = null;
     
     // White ghost vertex for potential new vertex under cursor 
     // TODO: design this.
@@ -160,13 +164,24 @@ public class TracingInteractor extends MouseAdapter
                 if (parentIsSelected()) {
                     // TODO: add vertex to existing model
                     // System.out.println("append neuron vertex (TODO)");
-                    NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-                    NeuronModel neuron = vix.neuronForVertex(cachedParentVertex);
+                    NeuronModel neuron = cachedParentNeuronModel;
+                    if (neuron == null) {
+                        // TODO: should not happen
+                        System.out.println("Unexpected null parent neuron");
+                    }
                     NeuronVertex templateVertex = densityCursorModel.getVertexes().iterator().next();
-                    NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
-                    if (addedVertex != null) {
-                        vix.addNeuronVertex(neuron, addedVertex); // update index, before select parent
-                        selectParentVertex(addedVertex);
+                    if (templateVertex == null) {
+                        // TODO should not happen
+                        System.out.println("Unexpected null density vertex");
+                    }
+                    if (neuron != null) {
+                        NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        if (addedVertex != null) {
+                            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+                            // TODO: is this needed?
+                            // vix.addNeuronVertex(neuron, addedVertex); // update index, before select parent
+                            selectParentVertex(addedVertex, neuron);
+                        }
                     }
                 }
                 else {
@@ -178,7 +193,7 @@ public class TracingInteractor extends MouseAdapter
                 // Click on highlighted vertex to make it the next parent
                 if (volumeProjection.isNeuronModelAt(event.getPoint())) {
                     if (cachedHighlightVertex != null)
-                        selectParentVertex(cachedHighlightVertex);
+                        selectParentVertex(cachedHighlightVertex, cachedHighlightNeuron);
                 }
                 // Click away from existing neurons to clear parent point
                 else {
@@ -207,20 +222,21 @@ public class TracingInteractor extends MouseAdapter
 
     }
 
-    private boolean selectParentVertex(NeuronVertex vertex)
+    private boolean selectParentVertex(NeuronVertex vertex, NeuronModel neuron)
     {
         if (vertex == null) return false;
         
         if (cachedParentVertex == vertex)
             return false;
         cachedParentVertex = vertex;
+        cachedParentNeuronModel = neuron;
         
         // Remove any previous vertex
         parentVertexModel.getVertexes().clear();
         parentVertexModel.getEdges().clear();
 
-        NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-        NeuronModel neuron = vix.neuronForVertex(vertex);
+        // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+        // NeuronModel neuron = vix.neuronForVertex(vertex);
         float loc[] = vertex.getLocation();
 
         // Create a modified vertex to represent the enlarged, highlighted actor
@@ -247,10 +263,14 @@ public class TracingInteractor extends MouseAdapter
                 );
         parentVertexModel.setVisible(true);
         parentVertexModel.setColor(blendedColor);
+        
+        parentVertexModel.getVertexes().add(parentVertex);
+        
         // parentVertexModel.setColor(Color.MAGENTA); // for debugging
         NeuronVertexAdditionObservable addedSignal = parentVertexModel.getMembersAddedObservable();
         addedSignal.setChanged();
-        addedSignal.notifyObservers(new VertexWithNeuron(vertex, neuron));     
+        addedSignal.notifyObservers(new VertexWithNeuron(parentVertex, neuron));
+
         parentVertexModel.getColorChangeObservable().notifyObservers();
         
         return true; 
@@ -280,6 +300,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getEdges().clear();
         parentVertexModel.getMembersRemovedObservable().setChanged();
         cachedParentVertex = null;
+        cachedParentNeuronModel = null;
         return true;
     }
     
@@ -329,16 +350,17 @@ public class TracingInteractor extends MouseAdapter
     
     // GUI feedback for hovering existing vertex under cursor
     // returns true if a previously unhighlighted vertex is highlighted
-    private boolean highlightHoverVertex(NeuronVertex vertex) 
+    private boolean highlightHoverVertex(NeuronVertex vertex, NeuronModel neuron) 
     {
         if (vertex == null) return false;
         
         if (cachedHighlightVertex == vertex)
             return false; // No change
         cachedHighlightVertex = vertex;
+        cachedHighlightNeuron = neuron;
         
-        NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-        NeuronModel neuron = vix.neuronForVertex(vertex);
+        // NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+        // NeuronModel neuron = vix.neuronForVertex(vertex);
         float loc[] = vertex.getLocation();
         
         boolean doShowStatusMessage = true;
@@ -406,6 +428,7 @@ public class TracingInteractor extends MouseAdapter
         highlightHoverModel.getMembersRemovedObservable().setChanged();
         previousHoverPoint = null;
         cachedHighlightVertex = null;
+        cachedHighlightNeuron = null;
         return true;
     }
     
@@ -432,6 +455,7 @@ public class TracingInteractor extends MouseAdapter
         Point hoverPoint = screenPoint;
         boolean foundGoodHighlightVertex = true; // start optimistic...
         NeuronVertex nearestVertex = null;
+        NeuronModel neuronModel = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
             NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
@@ -439,6 +463,11 @@ public class TracingInteractor extends MouseAdapter
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
             else {
+                neuronModel = vix.neuronForVertex(nearestVertex);
+                if (neuronModel == null) {
+                    // TODO: Should not happen
+                    System.out.println("Unexpected null neuron");
+                }
                 // Is cursor too far from closest vertex?
                 Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
                 float dist = vertexXyz.distance(cursorXyz);
@@ -452,8 +481,11 @@ public class TracingInteractor extends MouseAdapter
         }
         if (nearestVertex == null)
             foundGoodHighlightVertex = false;
+        // Make sure we can find the parent neuron, to avoid mysterious NPEs
+        if (neuronModel == null)
+            foundGoodHighlightVertex = false;
         if (foundGoodHighlightVertex) {
-            highlightHoverVertex(nearestVertex);
+            highlightHoverVertex(nearestVertex, neuronModel);
         }
         else {
             if (clearHighlightHoverVertex())
