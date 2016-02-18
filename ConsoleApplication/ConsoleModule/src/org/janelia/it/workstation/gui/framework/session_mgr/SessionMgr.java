@@ -588,8 +588,7 @@ public final class SessionMgr {
         systemExit(0);
     }
 
-    public void systemExit(int errorlevel) {
-        log.info("Exiting with code "+errorlevel);
+    public void systemWillExit() {
         sessionModel.systemWillExit();
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
@@ -601,6 +600,11 @@ public final class SessionMgr {
         // System-exit is now handled by NetBeans framework.
         //  System.exit(errorlevel);
         findAndRemoveWindowsSplashFile();
+    }
+    
+    public void systemExit(int errorlevel) {
+        log.info("Exiting with code "+errorlevel);
+        systemWillExit();
         System.exit(errorlevel);
     }
 
