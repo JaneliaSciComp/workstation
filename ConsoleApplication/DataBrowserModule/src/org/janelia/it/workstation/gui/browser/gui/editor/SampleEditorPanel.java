@@ -47,7 +47,6 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -320,9 +319,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (sample==null) {
             return "Sample Editor";
         }
-        else {
-            return "Sample: "+StringUtils.abbreviate(sample.getName(), 15);
-        }
+        return "Sample: "+StringUtils.abbreviate(sample.getName(), 15);
     }
     
     @Override
@@ -456,8 +453,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     area = ((HasAnatomicalArea)result).getAnatomicalArea();
                 }
                 
-                if (area==null) area = "";
-                areaSet.add(area);
+                if (area==null) {
+                	log.info("Skipping result with no anatomical area: "+result.getName());
+                	continue;
+                }
+            	areaSet.add(area);
             }
         }
         
@@ -533,7 +533,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     area = ((HasAnatomicalArea)result).getAnatomicalArea();
                 }
                 
-                if (area==null) area = "";
+                if (area==null) {
+                	continue;
+                }
                 
                 boolean display = diplayObjective;
                 if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
