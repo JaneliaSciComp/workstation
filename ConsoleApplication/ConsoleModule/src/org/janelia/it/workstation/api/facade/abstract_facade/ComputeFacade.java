@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 /**
  * Created by IntelliJ IDEA.

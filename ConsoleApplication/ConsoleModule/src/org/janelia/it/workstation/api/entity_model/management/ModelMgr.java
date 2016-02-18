@@ -270,21 +270,24 @@ public final class ModelMgr {
     }
 
     public String getSortCriteria(Long entityId) {
-        Subject subject = null;
-        //SessionMgr.getSessionMgr().getSubject();
-        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-        String entityIdStr = entityId.toString();
-        for (SubjectPreference pref : prefs.values()) {
-            if (pref.getName().equals(entityIdStr)) {
-                return pref.getValue();
+        try {
+            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
+            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+            String entityIdStr = entityId.toString();
+            for (SubjectPreference pref : prefs.values()) {
+                if (pref.getName().equals(entityIdStr)) {
+                    return pref.getValue();
+                }
             }
+        }
+        catch (Exception e) {
+            log.error("Error loading sort criteria for {}", entityId,e);
         }
         return null;
     }
 
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-        Subject subject = null;
-        //ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
         if (StringUtils.isEmpty(sortCriteria)) {
             subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
             log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);

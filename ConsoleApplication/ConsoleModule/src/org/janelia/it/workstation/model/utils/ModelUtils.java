@@ -43,12 +43,7 @@ public class ModelUtils {
 
         String sortCriteria = null;
         if (entity.getId()!=null) {
-            try {
-                sortCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
-            }
-            catch (Exception e) {
-                log.error("Error loading sort criteria for {}", entity.getName());
-            }
+            sortCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
         }
         
         List<EntityData> eds = ModelMgrUtils.getAccessibleEntityDatas(entity);
