@@ -38,11 +38,15 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.swing.JPopupMenu;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.DensityCursorActor;
@@ -156,7 +160,7 @@ public class TracingInteractor extends MouseAdapter
                 if (parentIsSelected()) {
                     // TODO: add vertex to existing model
                     // System.out.println("append neuron vertex (TODO)");
-                    NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+                    NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
                     NeuronModel neuron = vix.neuronForVertex(cachedParentVertex);
                     NeuronVertex templateVertex = densityCursorModel.getVertexes().iterator().next();
                     NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
@@ -215,7 +219,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getVertexes().clear();
         parentVertexModel.getEdges().clear();
 
-        NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+        NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
         NeuronModel neuron = vix.neuronForVertex(vertex);
         float loc[] = vertex.getLocation();
 
@@ -244,11 +248,9 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.setVisible(true);
         parentVertexModel.setColor(blendedColor);
         // parentVertexModel.setColor(Color.MAGENTA); // for debugging
-
-        parentVertexModel.getVertexes().add(parentVertex);
-        parentVertexModel.getMembersAddedObservable().setChanged();
-
-        parentVertexModel.getMembersAddedObservable().notifyObservers();     
+        NeuronVertexAdditionObservable addedSignal = parentVertexModel.getMembersAddedObservable();
+        addedSignal.setChanged();
+        addedSignal.notifyObservers(new VertexWithNeuron(vertex, neuron));     
         parentVertexModel.getColorChangeObservable().notifyObservers();
         
         return true; 
@@ -306,7 +308,7 @@ public class TracingInteractor extends MouseAdapter
         densityCursorModel.getVertexes().add(densityVertex);
         densityCursorModel.getMembersAddedObservable().setChanged();
 
-        densityCursorModel.getMembersAddedObservable().notifyObservers();     
+        densityCursorModel.getMembersAddedObservable().notifyObservers(new VertexWithNeuron(densityVertex, null));     
         densityCursorModel.getColorChangeObservable().notifyObservers();
         
         return true; 
@@ -335,7 +337,7 @@ public class TracingInteractor extends MouseAdapter
             return false; // No change
         cachedHighlightVertex = vertex;
         
-        NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+        NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
         NeuronModel neuron = vix.neuronForVertex(vertex);
         float loc[] = vertex.getLocation();
         
@@ -386,7 +388,7 @@ public class TracingInteractor extends MouseAdapter
             highlightHoverModel.getVertexes().add(highlightVertex);
             highlightHoverModel.getMembersAddedObservable().setChanged();
             
-            highlightHoverModel.getMembersAddedObservable().notifyObservers();     
+            highlightHoverModel.getMembersAddedObservable().notifyObservers(new VertexWithNeuron(highlightVertex, neuron));     
             highlightHoverModel.getColorChangeObservable().notifyObservers();
         }
         
@@ -432,7 +434,7 @@ public class TracingInteractor extends MouseAdapter
         NeuronVertex nearestVertex = null;
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
-            NeuronVertexIndex vix = volumeProjection.getVertexIndex();
+            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
             nearestVertex = vix.getNearest(cursorXyz);
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;

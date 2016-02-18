@@ -41,9 +41,11 @@ import java.util.Objects;
 import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -67,7 +69,8 @@ public class NeuronModelAdapter implements NeuronModel
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
-    private final ObservableInterface membersAddedObservable = new ComposableObservable();
+    private final NeuronVertexAdditionObservable membersAddedObservable = 
+            new BasicNeuronVertexAdditionObservable();
     private final ObservableInterface membersRemovedObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -128,20 +131,22 @@ public class NeuronModelAdapter implements NeuronModel
         return result;
     }
     
-    void addVertex(TmGeoAnnotation annotation)
+    NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
         assert(vertexes.containsKey(vertexId));
         Long parentId = annotation.getParentId();
+        NeuronVertex newVertex = vertexes.getVertexByGuid(vertexId);
         // Add edge
         if (vertexId.equals(parentId)) 
-            return; // Self parent, so no edge. TODO: maybe this never happens
+            return newVertex; // Self parent, so no edge. TODO: maybe this never happens
         // comment from TmGeoAnnotation.java: "parentID is the neuron (if root annotation) or another TmGeoAnn"
         if (annotation.getNeuronId().equals(parentId))
-            return; // It appears parentId==neuronId for (parentless) root/seed points
+            return newVertex; // It appears parentId==neuronId for (parentless) root/seed points
         assert(vertexes.containsKey(parentId));
-        edges.add(new NeuronEdgeAdapter(vertexes.getVertexByGuid(vertexId), vertexes.getVertexByGuid(parentId)));
+        edges.add(new NeuronEdgeAdapter(newVertex, vertexes.getVertexByGuid(parentId)));
         getGeometryChangeObservable().setChanged(); // mark dirty, but don't sweep (notifyObservers) yet
+        return newVertex;
     }
     
     public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
@@ -220,7 +225,7 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
-    public ObservableInterface getMembersAddedObservable()
+    public NeuronVertexAdditionObservable getMembersAddedObservable()
     {
         return membersAddedObservable;
     }

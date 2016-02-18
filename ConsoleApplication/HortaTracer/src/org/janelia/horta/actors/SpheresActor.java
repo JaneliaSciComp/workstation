@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
@@ -43,6 +44,8 @@ import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
 import org.openide.util.Exceptions;
@@ -104,9 +107,9 @@ public class SpheresActor extends BasicGL3Actor
                 updateGeometry();
             }
         });
-        neuron.getMembersAddedObservable().addObserver(new Observer() {
+        neuron.getMembersAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
             @Override
-            public void update(Observable o, Object arg)
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
             {
                 updateGeometry();
             }

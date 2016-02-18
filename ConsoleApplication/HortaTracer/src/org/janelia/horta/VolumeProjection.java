@@ -45,5 +45,5 @@ public interface VolumeProjection {
     public float getPixelsPerSceneUnit();
     public boolean isNeuronModelAt(Point2D xy);
     public boolean isVolumeDensityAt(Point2D xy);
-    public NeuronVertexIndex getVertexIndex();
+    public NeuronVertexSpatialIndex getVertexIndex();
 }

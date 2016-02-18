@@ -81,6 +81,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -107,6 +108,9 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
@@ -168,7 +172,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaWorkspace workspace;
-    private final NeuronVertexIndex neuronVertexIndex;
+    private final NeuronVertexSpatialIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
     // private VolumeMipMaterial volumeMipMaterial;
@@ -218,7 +222,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         setupDragAndDropYml();
 
         neuronManager = new NeuronManager(workspace);
-        neuronVertexIndex = new NeuronVertexIndex(workspace);
+        neuronVertexIndex = new NeuronVertexSpatialIndex(workspace);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -356,9 +360,9 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
-                spheresActor.getNeuron().getMembersAddedObservable().addObserver(new Observer() {
+                spheresActor.getNeuron().getMembersAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
                     @Override
-                    public void update(Observable o, Object arg) {
+                    public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg) {
                         redrawNow();
                     }
                 });
@@ -1256,7 +1260,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public NeuronVertexIndex getVertexIndex()
+    public NeuronVertexSpatialIndex getVertexIndex()
     {
         return neuronVertexIndex;
     }

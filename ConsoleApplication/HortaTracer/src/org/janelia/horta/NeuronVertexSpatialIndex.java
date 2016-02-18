@@ -42,29 +42,32 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
-import org.openide.util.Exceptions;
 
 /**
  * NeuronVertexIndex is intended to permit rapid access to a NeuronVertex, given XYZ.
  * First use is intended to be mouse selection of neuron vertices.
  * @author Christopher Bruns
  */
-public class NeuronVertexIndex implements Collection<NeuronVertex>
+public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
     private final HortaWorkspace workspace;
     private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
+    private final NeuronVertexAdditionObserver neuronModelObserver = new NeuronModelObserver();
     
     private final Observer workspaceUpdater;
 
-    public NeuronVertexIndex(HortaWorkspace workspace) {
+    public NeuronVertexSpatialIndex(HortaWorkspace workspace) {
         this.workspace = workspace;
         this.workspaceUpdater = new WorkspaceUpdater(workspace);
         rebuildIndex(this.workspace);
@@ -116,7 +119,8 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
         for (NeuronVertex vertex : neuron.getVertexes()) {
             addNeuronVertex(neuron, vertex);
         }
-        // TODO: observe neuron changes
+        // Observe neuron changes
+        neuron.getMembersAddedObservable().addObserver(neuronModelObserver);
     }
     
     public void addNeuronVertex(NeuronModel neuron, NeuronVertex vertex) {
@@ -126,6 +130,7 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
     }
     
     private void addNeuronSet(NeuronSet set) {
+        // TODO: add vertexes in clever median order, to balance the tree
         currentNeuronSets.add(set);
         for (NeuronModel neuron : set) {
             addNeuronModel(neuron);
@@ -239,6 +244,15 @@ public class NeuronVertexIndex implements Collection<NeuronVertex>
         currentNeuronSets.clear();
         currentNeuronModels.clear();
         vertexNeurons.clear();
+    }
+
+    private class NeuronModelObserver implements NeuronVertexAdditionObserver 
+    {
+        @Override
+        public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+            addNeuronVertex(data.neuron, data.vertex);
+            System.out.println("vertex added");
+        }
     }
 
     private class WorkspaceUpdater implements Observer {

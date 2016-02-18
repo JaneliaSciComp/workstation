@@ -231,7 +231,7 @@ public class NeuronSetNode extends AbstractNode
             for (NeuronModel neuron : neurons) {
                 neuron.getGeometryChangeObservable().notifyObservers();
                 neuron.getMembersRemovedObservable().notifyObservers();
-                neuron.getMembersAddedObservable().notifyObservers();
+                // neuron.getMembersAddedObservable().notifyObservers();
                 neuron.getVisibilityChangeObservable().notifyObservers();
                 neuron.getColorChangeObservable().notifyObservers();
             }

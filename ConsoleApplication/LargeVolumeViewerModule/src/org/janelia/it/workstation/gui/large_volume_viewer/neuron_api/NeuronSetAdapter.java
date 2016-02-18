@@ -43,6 +43,8 @@ import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -172,7 +174,7 @@ implements NeuronSet, LookupListener
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
-                    neuron.addVertex(annotation);
+                    NeuronVertex newVertex = neuron.addVertex(annotation);
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
                     // Trigger a Horta repaint  for instant GUI feedback
                     // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
@@ -182,20 +184,20 @@ implements NeuronSet, LookupListener
                         if (doRecenterHorta) 
                         {
                             // 1) recenter on annotation location in Horta, just like in LVV
-                            // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
-                            NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
-                            float recenter[] = nv.getLocation();
+                            float recenter[] = newVertex.getLocation();
                             cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
                             cachedHortaWorkspace.getVantage().setChanged();
                             cachedHortaWorkspace.getVantage().notifyObservers();
                         }
 
                         // 2) repaint Horta now, to update view without further user interaction
+                        // Below is the way to trigger a repaint, without changing the viewpoint
                         cachedHortaWorkspace.setChanged();
                         cachedHortaWorkspace.notifyObservers();
-                        // Below is the way to trigger a repaint, without changing the viewpoint
-                        // cachedHortaWorkspace.setChanged();
-                        // cachedHortaWorkspace.notifyObservers();
+                        // TODO - emit annotation added signal, to update Horta spatial index
+                        NeuronVertexAdditionObservable addedSignal = neuron.getMembersAddedObservable();
+                        addedSignal.setChanged();
+                        addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron0));
                     }
                     break;
                 }
