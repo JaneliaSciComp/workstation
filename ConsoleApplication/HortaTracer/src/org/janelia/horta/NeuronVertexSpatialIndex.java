@@ -251,7 +251,7 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
         @Override
         public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
             addNeuronVertex(data.neuron, data.vertex);
-            System.out.println("vertex added");
+            // System.out.println("vertex added");
         }
     }
 
