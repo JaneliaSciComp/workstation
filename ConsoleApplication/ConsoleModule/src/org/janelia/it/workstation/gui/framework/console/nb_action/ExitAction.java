@@ -12,7 +12,8 @@ import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.openide.awt.ActionID;
+/*
+ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
@@ -26,6 +27,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReference(path = "Menu/File", position = 3333)
 @Messages("CTL_ExitAction=Exit")
+*/
 public final class ExitAction implements ActionListener {
 
     @Override
