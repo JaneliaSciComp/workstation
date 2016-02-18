@@ -29,14 +29,14 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "OntologyViewerTopComponent")
-@ActionReference(path = "Menu/Window", position = 40)
+@ActionReference(path = "Menu/Window", position = 403)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyViewerAction",
         preferredID = OntologyViewerTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_OntologyViewerAction=Ontology Editor",
-    "CTL_OntologyViewerTopComponent=Ontology Editor",
+    "CTL_OntologyViewerAction=Legacy Ontology Editor",
+    "CTL_OntologyViewerTopComponent=Legacy Ontology Editor",
     "HINT_OntologyViewerTopComponent=Browse, edit and create ontologies"
 })
 public final class OntologyViewerTopComponent extends TopComponent {

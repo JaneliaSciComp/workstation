@@ -25,7 +25,7 @@ import org.openide.windows.TopComponent;
 )
 @TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=30)
 @ActionID(category = "Window", id = "ProgressTopComponent")
-@ActionReference(path = "Menu/Window", position = 30)
+@ActionReference(path = "Menu/Window", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ProgressTopComponentAction",
         preferredID = ProgressTopComponent.PREFERRED_ID
@@ -43,19 +43,8 @@ public final class ProgressTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_ProgressTopComponent());
         setToolTipText(Bundle.HINT_ProgressTopComponentTopComponent());
-//        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, true);
-//        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, false);
-//        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, true);
-//        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, true);
-//        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, true);
-//        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, false);
         add(ProgressMeterPanel.getSingletonInstance(), BorderLayout.CENTER);
     }
-    
-//    @Override
-//    public boolean canClose() { 
-//        return false; 
-//    }
     
     /**
      * This method is called from within the constructor to initialize the form.

@@ -29,14 +29,14 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false, position = 10)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityExplorerTopComponent")
-@ActionReference(path = "Menu/Window", position = 10)
+@ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityExplorerAction",
         preferredID = EntityExplorerTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_EntityExplorerAction=Data Explorer",
-    "CTL_EntityExplorerTopComponent=Data Explorer",
+    "CTL_EntityExplorerAction=Legacy Data Explorer",
+    "CTL_EntityExplorerTopComponent=Legacy Data Explorer",
     "HINT_EntityExplorerTopComponent=Browse the data"
 })
 public final class EntityExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {

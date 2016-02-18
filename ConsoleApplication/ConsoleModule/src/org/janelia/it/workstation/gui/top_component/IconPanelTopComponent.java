@@ -28,14 +28,14 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.IconPanelTopComponent")
-@ActionReference(path = "Menu/Window", position = 0)
+@ActionReference(path = "Menu/Window", position = 402)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_IconPanelAction",
         preferredID = IconPanelTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_IconPanelAction=Browser",
-    "CTL_IconPanelTopComponent=Browser",
+    "CTL_IconPanelAction=Legacy Browser",
+    "CTL_IconPanelTopComponent=Legacy Browser",
     "HINT_IconPanelTopComponent=Data shown as an array of graphical icons"
 })
 public final class IconPanelTopComponent extends TopComponent {
