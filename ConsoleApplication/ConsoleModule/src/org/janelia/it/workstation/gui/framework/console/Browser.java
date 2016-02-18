@@ -341,8 +341,6 @@ public class Browser implements Cloneable {
     public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
         toolsMenuModifier.rebuildMenu();
-        FileMenuModifier fileMenuModifier = new FileMenuModifier();
-        fileMenuModifier.rebuildMenu();
         new CredentialSynchronizer().synchronize(this);
     }
 
