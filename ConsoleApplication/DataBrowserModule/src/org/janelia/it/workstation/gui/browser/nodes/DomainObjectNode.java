@@ -109,7 +109,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     }
 
     public String getSecondaryLabel() {
-        return getDomainObject().getOwnerKey();
+    	return DomainUtils.getNameFromSubjectKey(getDomainObject().getOwnerKey());
     }
 
     public String getExtraLabel() {
