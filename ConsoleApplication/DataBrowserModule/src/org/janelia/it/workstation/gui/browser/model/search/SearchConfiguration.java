@@ -326,9 +326,8 @@ public class SearchConfiguration {
         query.setStart(pageSize * page);
         query.setRows(pageSize);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-       // SolrParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
-        String solrquery = query.toString();
-        SolrJsonResults results = model.search(solrquery);
+        SolrParams queryParams = SolrQueryBuilder.serializeSolrQuery(query);
+        SolrJsonResults results = model.search(queryParams);
 
         List<Reference> refs = new ArrayList<>();
 
@@ -349,11 +348,11 @@ public class SearchConfiguration {
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
         
-        int numFound = (int)results.getResults().getNumFound();
+        int numFound = results.getNumFound().intValue();
         
         log.info("Search found {} objects", numFound);
         log.info("Page contains {} objects and {} annotations", domainObjects.size(), annotations.size());
-        
+
         facetValues.clear();
         if (results.getFacetValues()!=null) {
             facetValues.putAll(results.getFacetValues());

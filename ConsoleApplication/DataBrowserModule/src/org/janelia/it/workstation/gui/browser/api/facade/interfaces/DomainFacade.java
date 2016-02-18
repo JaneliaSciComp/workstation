@@ -269,7 +269,7 @@ public interface DomainFacade {
      * @return the search results
      * @throws Exception something went wrong
      */
-    public SolrJsonResults performSearch(String query) throws Exception;
+    public SolrJsonResults performSearch(SolrParams query) throws Exception;
 
     /**
      * Create and return a new tree node. 
