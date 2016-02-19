@@ -225,8 +225,19 @@ implements NeuronSet, LookupListener
         @Override
         public void annotationReparented(TmGeoAnnotation annotation)
         {
+            sanityCheckWorkspace(); // beware of shifting sands beneath us...
+            Long neuronId = annotation.getNeuronId();
+            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
+                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuron().getId().equals(neuronId)) {
+                    NeuronVertex activeVertex = neuron.getVertexForAnnotation(annotation);
+                    if (activeVertex == null) 
+                        return;
+                    getActiveVertexObservable().setChanged();
+                    getActiveVertexObservable().notifyObservers(new VertexWithNeuron(activeVertex, neuron));
+                }
+            }
             logger.info("annotationReparented");
-            updateEdges();
         }
 
         @Override

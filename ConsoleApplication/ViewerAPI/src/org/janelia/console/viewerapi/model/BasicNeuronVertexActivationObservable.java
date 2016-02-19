@@ -28,68 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.command;
+package org.janelia.console.viewerapi.model;
 
-import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.UndoableEdit;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.BasicGenericObservable;
 
 /**
  *
  * @author brunsc
  */
-public class AppendNeuronVertexCommand 
-extends AbstractUndoableEdit
-implements UndoableEdit, Command
+public class BasicNeuronVertexActivationObservable 
+extends BasicGenericObservable<VertexWithNeuron>
+implements NeuronVertexActivationObservable
 {
-    private final NeuronModel neuron;
-    private final NeuronVertex parentVertex;
-    private NeuronVertex newVertex = null;
-    private final float[] coordinates;
-    private final float radius;
-    
-    public AppendNeuronVertexCommand(
-            NeuronModel neuron, 
-            NeuronVertex parentVertex,
-            float[] micronXyz,
-            float radius) 
-    {
-        this.neuron = neuron;
-        this.parentVertex = parentVertex;
-        this.coordinates = micronXyz;
-        this.radius = radius;
-    }
-    
-    // Command-like semantics execute is a synonym for redo()
-    @Override
-    public boolean execute() {
-        newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
-        if (newVertex == null)
-            return false;
-        return true;
-    }
-    
-    public NeuronVertex getAppendedVertex() {
-        return newVertex;
-    }
-    
-    @Override
-    public String getPresentationName() {
-        return "Append Neuron Vertex";
-    }
-    
-    @Override
-    public void redo() {
-        super.redo(); // raises exception if canRedo() is false
-        execute();
-    }
-    
-    @Override
-    public void undo() {
-        super.undo(); // raises exception if canUndo() is false
-        neuron.deleteVertex(newVertex);
-        newVertex = null;
-    }
-
 }

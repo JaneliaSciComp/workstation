@@ -48,8 +48,11 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
+import org.openide.util.Exceptions;
 
 /**
  * NeuronVertexIndex is intended to permit rapid access to a NeuronVertex, given XYZ.
@@ -63,7 +66,8 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
     private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
-    private final NeuronVertexAdditionObserver neuronModelObserver = new NeuronModelObserver();
+    private final NeuronVertexAdditionObserver vertexAdditionObserver = new VertexAdditionObserver();
+    private final NeuronVertexDeletionObserver vertexDeletionObserver = new VertexDeletionObserver();
     
     private final Observer workspaceUpdater;
 
@@ -120,7 +124,8 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
             addNeuronVertex(neuron, vertex);
         }
         // Observe neuron changes
-        neuron.getVertexAddedObservable().addObserver(neuronModelObserver);
+        neuron.getVertexAddedObservable().addObserver(vertexAdditionObserver);
+        neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
     }
     
     public void addNeuronVertex(NeuronModel neuron, NeuronVertex vertex) {
@@ -203,10 +208,8 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
             NeuronVertex v = (NeuronVertex) o;
             double[] k = keyForVertex(v);
             index.delete(k);
-        } catch (KeySizeException ex) {
-            // Exceptions.printStackTrace(ex);
-            return false;
-        } catch (KeyMissingException ex) {
+            vertexNeurons.remove(v);
+        } catch (KeySizeException | KeyMissingException ex) {
             // Exceptions.printStackTrace(ex);
             return false;
         }
@@ -246,15 +249,24 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
         vertexNeurons.clear();
     }
 
-    private class NeuronModelObserver implements NeuronVertexAdditionObserver 
+    private class VertexAdditionObserver 
+    implements NeuronVertexAdditionObserver
     {
         @Override
         public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
             addNeuronVertex(data.neuron, data.vertex);
-            // System.out.println("vertex added");
         }
     }
-
+    
+    private class VertexDeletionObserver 
+    implements NeuronVertexDeletionObserver
+    {
+        @Override
+        public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+            for (NeuronVertex vertex : data.vertexes)
+                remove(vertex);
+        }
+    }
     private class WorkspaceUpdater implements Observer {
         private final HortaWorkspace workspace;
         

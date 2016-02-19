@@ -96,6 +96,10 @@ public class NeuronModelAdapter implements NeuronModel
         this.workspace = workspace;
     }
 
+    public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
+        return vertexes.getVertexByGuid(annotation.getId());
+    }
+    
     // Special method for adding annotations from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
@@ -148,7 +152,6 @@ public class NeuronModelAdapter implements NeuronModel
             return false;
         }
     }
-
 
     
     NeuronVertex addVertex(TmGeoAnnotation annotation)
@@ -313,7 +316,7 @@ public class NeuronModelAdapter implements NeuronModel
     {
         return neuron;
     }
-    
+
     // TODO: - implement Edges correctly
     private static class EdgeList 
     implements Collection<NeuronEdge>
