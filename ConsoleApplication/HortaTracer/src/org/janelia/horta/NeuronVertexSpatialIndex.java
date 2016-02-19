@@ -120,7 +120,7 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
             addNeuronVertex(neuron, vertex);
         }
         // Observe neuron changes
-        neuron.getMembersAddedObservable().addObserver(neuronModelObserver);
+        neuron.getVertexAddedObservable().addObserver(neuronModelObserver);
     }
     
     public void addNeuronVertex(NeuronModel neuron, NeuronVertex vertex) {

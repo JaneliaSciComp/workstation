@@ -114,6 +114,8 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
@@ -141,6 +143,7 @@ import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -332,76 +335,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         return undoRedoManager;
     }
     
-    private UndoAction undoAction = new UndoAction();
-    private RedoAction redoAction = new RedoAction();
-    private void setupUndoRedo() {
-        UndoableEdit testEdit = new UndoableEdit() {
-            @Override
-            public void undo() throws CannotUndoException {
-                System.out.println("Undo test event");
-            }
-
-            @Override
-            public boolean canUndo() {
-                return true;
-            }
-
-            @Override
-            public void redo() throws CannotRedoException {
-                System.out.println("Redo test event");
-            }
-
-            @Override
-            public boolean canRedo() {
-                return true;
-            }
-
-            @Override
-            public void die() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public boolean addEdit(UndoableEdit anEdit) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public boolean replaceEdit(UndoableEdit anEdit) {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public boolean isSignificant() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-
-            @Override
-            public String getPresentationName() {
-                return "Test Edit";
-            }
-
-            @Override
-            public String getUndoPresentationName() {
-                return "Undo Test Edit";
-            }
-
-            @Override
-            public String getRedoPresentationName() {
-                return "Redo Test Edit";
-            }
-        };
-        
-        new UndoableEditListener() {
-            @Override
-            public void undoableEditHappened(UndoableEditEvent e) {
-                undoRedoManager.addEdit(e.getEdit());
-                // undoAction.updateUndoState();
-                // redoAction.updateRedoState();
-            }
-        };
-    }
-    
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
     }
@@ -445,15 +378,15 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
-                spheresActor.getNeuron().getMembersAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
+                spheresActor.getNeuron().getVertexAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
                     @Override
                     public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg) {
                         redrawNow();
                     }
                 });
-                spheresActor.getNeuron().getMembersRemovedObservable().addObserver(new Observer() {
+                spheresActor.getNeuron().getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
                     @Override
-                    public void update(Observable o, Object arg) {
+                    public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
                         redrawNow();
                     }
                 });
@@ -511,7 +444,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private void setupMouseNavigation() {
         // 1) Delegate tracing interaction to customized class
-        tracingInteractor = new TracingInteractor(this);
+        tracingInteractor = new TracingInteractor(this, undoRedoManager);
 
         // 2) Setup 3D viewer mouse interaction
         interactor = new OrbitPanZoomInteractor(
@@ -1102,25 +1035,13 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 // SECTION: Undo/redo
                 
-                // menu.add();
-                
                 if (undoRedoManager.canUndoOrRedo()) {
                     menu.add(new JPopupMenu.Separator());                
                     if (undoRedoManager.canUndo()) {
-                        menu.add(new AbstractAction(undoRedoManager.getUndoPresentationName()) {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                undoRedoManager.undo();
-                            }
-                        });
+                        menu.add(SystemAction.get(UndoAction.class));
                     }
                     if (undoRedoManager.canRedo()) {
-                        menu.add(new AbstractAction(undoRedoManager.getRedoPresentationName()) {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                undoRedoManager.redo();
-                            }
-                        });
+                        menu.add(SystemAction.get(RedoAction.class));
                     }
                 }
                 

@@ -220,8 +220,8 @@ public class NeuronSetNode extends AbstractNode
             // 1) Mark everything dirty in depth-first order
             for (NeuronModel neuron : neurons) {
                 neuron.getGeometryChangeObservable().setChanged();
-                neuron.getMembersRemovedObservable().setChanged();
-                neuron.getMembersAddedObservable().setChanged();
+                neuron.getVertexesRemovedObservable().setChanged();
+                neuron.getVertexAddedObservable().setChanged();
                 neuron.getVisibilityChangeObservable().setChanged();
                 neuron.getColorChangeObservable().setChanged();
             }
@@ -230,7 +230,7 @@ public class NeuronSetNode extends AbstractNode
             // 2) Notify observers in depth-first order
             for (NeuronModel neuron : neurons) {
                 neuron.getGeometryChangeObservable().notifyObservers();
-                neuron.getMembersRemovedObservable().notifyObservers();
+                // neuron.getVertexesRemovedObservable().notifyObservers();
                 // neuron.getMembersAddedObservable().notifyObservers();
                 neuron.getVisibilityChangeObservable().notifyObservers();
                 neuron.getColorChangeObservable().notifyObservers();

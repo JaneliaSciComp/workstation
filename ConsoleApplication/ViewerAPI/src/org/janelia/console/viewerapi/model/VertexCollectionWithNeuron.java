@@ -28,68 +28,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.command;
+package org.janelia.console.viewerapi.model;
 
-import javax.swing.undo.AbstractUndoableEdit;
-import javax.swing.undo.UndoableEdit;
-import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertex;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  *
  * @author brunsc
  */
-public class AppendNeuronVertexCommand 
-extends AbstractUndoableEdit
-implements UndoableEdit, Command
-{
-    private final NeuronModel neuron;
-    private final NeuronVertex parentVertex;
-    private NeuronVertex newVertex = null;
-    private final float[] coordinates;
-    private final float radius;
+public class VertexCollectionWithNeuron {
+    public Collection<NeuronVertex> vertexes;
+    public NeuronModel neuron;
     
-    public AppendNeuronVertexCommand(
-            NeuronModel neuron, 
-            NeuronVertex parentVertex,
-            float[] micronXyz,
-            float radius) 
-    {
-        this.neuron = neuron;
-        this.parentVertex = parentVertex;
-        this.coordinates = micronXyz;
-        this.radius = radius;
+    public VertexCollectionWithNeuron(Collection<NeuronVertex> vertexes, NeuronModel neuronModel) {
+        this.vertexes = vertexes;
+        this.neuron = neuronModel;
     }
     
-    // Command-like semantics execute is a synonym for redo()
-    @Override
-    public boolean execute() {
-        newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
-        if (newVertex == null)
-            return false;
-        return true;
+    public VertexCollectionWithNeuron(NeuronVertex vertex, NeuronModel neuronModel) {
+        this.vertexes = new ArrayList<>(Arrays.asList(vertex));
+        this.neuron = neuronModel;
     }
-    
-    public NeuronVertex getAppendedVertex() {
-        return newVertex;
-    }
-    
-    @Override
-    public String getPresentationName() {
-        return "Append Neuron Vertex";
-    }
-    
-    @Override
-    public void redo() {
-        super.redo(); // raises exception if canRedo() is false
-        execute();
-    }
-    
-    @Override
-    public void undo() {
-        super.undo(); // raises exception if canUndo() is false
-        neuron.deleteVertex(newVertex);
-        newVertex = null;
-    }
-
 }

@@ -42,10 +42,12 @@ import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -71,7 +73,8 @@ public class NeuronModelAdapter implements NeuronModel
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
     private final NeuronVertexAdditionObservable membersAddedObservable = 
             new BasicNeuronVertexAdditionObservable();
-    private final ObservableInterface membersRemovedObservable = new ComposableObservable();
+    private final NeuronVertexDeletionObservable membersRemovedObservable = 
+            new BasicNeuronVertexDeletionObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
@@ -130,6 +133,23 @@ public class NeuronModelAdapter implements NeuronModel
         }
         return result;
     }
+    
+    @Override
+    public boolean deleteVertex(NeuronVertex doomedVertex) {
+        try {
+            if (! (doomedVertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            annotationModel.deleteLink(annotation);
+            return true;
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+
     
     NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
@@ -225,13 +245,13 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
-    public NeuronVertexAdditionObservable getMembersAddedObservable()
+    public NeuronVertexAdditionObservable getVertexAddedObservable()
     {
         return membersAddedObservable;
     }
 
     @Override
-    public ObservableInterface getMembersRemovedObservable()
+    public NeuronVertexDeletionObservable getVertexesRemovedObservable()
     {
         return membersRemovedObservable;
     }
@@ -293,7 +313,6 @@ public class NeuronModelAdapter implements NeuronModel
     {
         return neuron;
     }
-
     
     // TODO: - implement Edges correctly
     private static class EdgeList 

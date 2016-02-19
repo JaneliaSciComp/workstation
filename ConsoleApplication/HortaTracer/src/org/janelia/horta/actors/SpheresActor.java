@@ -45,6 +45,8 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
@@ -107,17 +109,16 @@ public class SpheresActor extends BasicGL3Actor
                 updateGeometry();
             }
         });
-        neuron.getMembersAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
+        neuron.getVertexAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
             @Override
             public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
             {
                 updateGeometry();
             }
         });
-        neuron.getMembersRemovedObservable().addObserver(new Observer() {
+        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
             @Override
-            public void update(Observable o, Object arg)
-            {
+            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
                 updateGeometry();
             }
         });

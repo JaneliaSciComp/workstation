@@ -195,7 +195,7 @@ implements NeuronSet, LookupListener
                         cachedHortaWorkspace.setChanged();
                         cachedHortaWorkspace.notifyObservers();
                         // TODO - emit annotation added signal, to update Horta spatial index
-                        NeuronVertexAdditionObservable addedSignal = neuron.getMembersAddedObservable();
+                        NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
                         addedSignal.setChanged();
                         addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron0));
                     }
