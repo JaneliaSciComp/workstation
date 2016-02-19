@@ -53,6 +53,7 @@ import org.janelia.horta.actors.DensityCursorActor;
 import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
+import org.janelia.horta.command.AppendNeuronVertexCommand;
 import org.janelia.horta.nodes.BasicNeuronEdge;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
@@ -175,11 +176,11 @@ public class TracingInteractor extends MouseAdapter
                         System.out.println("Unexpected null density vertex");
                     }
                     if (neuron != null) {
-                        NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        // NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(neuron, cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        appendCmd.execute();
+                        NeuronVertex addedVertex = appendCmd.getAppendedVertex();
                         if (addedVertex != null) {
-                            NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-                            // TODO: is this needed?
-                            // vix.addNeuronVertex(neuron, addedVertex); // update index, before select parent
                             selectParentVertex(addedVertex, neuron);
                         }
                     }
