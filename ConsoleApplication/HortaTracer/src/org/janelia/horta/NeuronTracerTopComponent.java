@@ -81,6 +81,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -108,7 +113,6 @@ import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.horta.actors.SpheresActor;
@@ -127,10 +131,13 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.actions.RedoAction;
+import org.openide.actions.UndoAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
+import org.openide.awt.UndoRedo;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
@@ -202,6 +209,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     private final NeuronManager neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+    
+    private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
     
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
@@ -316,7 +325,83 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         workspace.notifyObservers();
     }
+    
+    // UNDO
+    @Override
+    public UndoRedo getUndoRedo() {
+        return undoRedoManager;
+    }
+    
+    private UndoAction undoAction = new UndoAction();
+    private RedoAction redoAction = new RedoAction();
+    private void setupUndoRedo() {
+        UndoableEdit testEdit = new UndoableEdit() {
+            @Override
+            public void undo() throws CannotUndoException {
+                System.out.println("Undo test event");
+            }
 
+            @Override
+            public boolean canUndo() {
+                return true;
+            }
+
+            @Override
+            public void redo() throws CannotRedoException {
+                System.out.println("Redo test event");
+            }
+
+            @Override
+            public boolean canRedo() {
+                return true;
+            }
+
+            @Override
+            public void die() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public boolean addEdit(UndoableEdit anEdit) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public boolean replaceEdit(UndoableEdit anEdit) {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public boolean isSignificant() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+
+            @Override
+            public String getPresentationName() {
+                return "Test Edit";
+            }
+
+            @Override
+            public String getUndoPresentationName() {
+                return "Undo Test Edit";
+            }
+
+            @Override
+            public String getRedoPresentationName() {
+                return "Redo Test Edit";
+            }
+        };
+        
+        new UndoableEditListener() {
+            @Override
+            public void undoableEditHappened(UndoableEditEvent e) {
+                undoRedoManager.addEdit(e.getEdit());
+                // undoAction.updateUndoState();
+                // redoAction.updateRedoState();
+            }
+        };
+    }
+    
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
     }
@@ -758,6 +843,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
                 menu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
+
+                // SECTION: View options
                 menu.add(new JPopupMenu.Separator());
 
                 if (mouseStageLocation != null) {
@@ -1013,7 +1100,31 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                // Tracing options
+                // SECTION: Undo/redo
+                
+                // menu.add();
+                
+                if (undoRedoManager.canUndoOrRedo()) {
+                    menu.add(new JPopupMenu.Separator());                
+                    if (undoRedoManager.canUndo()) {
+                        menu.add(new AbstractAction(undoRedoManager.getUndoPresentationName()) {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                undoRedoManager.undo();
+                            }
+                        });
+                    }
+                    if (undoRedoManager.canRedo()) {
+                        menu.add(new AbstractAction(undoRedoManager.getRedoPresentationName()) {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                undoRedoManager.redo();
+                            }
+                        });
+                    }
+                }
+                
+                // SECTION: Tracing options
                 menu.add(new JPopupMenu.Separator());
                 // Fetch anchor location before popping menu, because menu causes
                 // hover location to clear
