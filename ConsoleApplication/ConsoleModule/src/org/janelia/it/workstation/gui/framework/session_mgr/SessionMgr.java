@@ -65,7 +65,8 @@ public final class SessionMgr implements ActivityLogging {
     private static final int MAX_PORT_TRIES = 20;
     private static final int PORT_INCREMENT = 1000;
     
-    private static final int LOG_GRANULARITY = 100;
+    //private static final int LOG_GRANULARITY = 100;
+    private static final int LOG_GRANULARITY = 1;
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
