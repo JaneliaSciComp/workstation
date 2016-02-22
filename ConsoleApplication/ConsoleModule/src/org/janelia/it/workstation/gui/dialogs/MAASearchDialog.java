@@ -515,7 +515,6 @@ public class MAASearchDialog extends ModalDialog implements ActionListener {
     }
 
     public static boolean isAccessible() {
-        return false;
-        //"user:jenetta".equals(SessionMgr.getSubjectKey());
+        return "user:jenetta".equals(SessionMgr.getSubjectKey());
     }
 }

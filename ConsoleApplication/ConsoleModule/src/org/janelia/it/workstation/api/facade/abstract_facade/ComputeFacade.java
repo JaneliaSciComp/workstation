@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,4 +36,12 @@ public interface ComputeFacade {
 
     public void stopContinuousExecution(Long taskId) throws Exception;
 
+    // temporarily restoring this to support legacy code. Old stuff to remove
+    public Subject getSubject() throws Exception;
+    public Subject getSubject(String nameOrKey) throws Exception;
+    public List<Subject> getSubjects() throws Exception;
+    public Subject loginSubject(String username, String password) throws Exception;
+    public void beginSession();
+    public void addEventToSession(UserToolEvent event);
+    public void endSession();
 }

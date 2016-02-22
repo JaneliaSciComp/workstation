@@ -265,9 +265,9 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 
         this.searchString = getSearchString();
 
-        /*for (String subjectKey : SessionMgr.getSubjects()) {
+        for (String subjectKey : SessionMgr.getSubjectKeys()) {
             builder.addOwnerKey(subjectKey);
-        }*/
+        }
 
         builder.setSearchString(searchString);
 

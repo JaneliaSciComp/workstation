@@ -85,6 +85,7 @@ public class MaskSearchDialog extends ModalDialog {
             folderField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME));
         }
         else {
+            folderField.setText(SessionMgr.getUsername()+TOP_LEVEL_FOLDER_NAME);
             //folderField.setText(SessionMgr-UserName+TOP_LEVEL_FOLDER_NAME);
         }
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
@@ -303,8 +304,7 @@ public class MaskSearchDialog extends ModalDialog {
     private void startMaskSearch(String path, String topLevelFolderName, String matrixValue, String queryChannel,
                                  String maxHits, String skipZeroes) {
         try {
-            String owner = null;
-            //SessionMgr.getSubjectKey();
+            String owner = SessionMgr.getSubjectKey();
             String process = "MaskSearch";
             Task task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<Event>(),
                     new HashSet<TaskParameter>(), path, topLevelFolderName, matrixValue, queryChannel, maxHits, skipZeroes);

@@ -90,14 +90,14 @@ public class ConsoleApp {
                 LoginDialog loginDialog = new LoginDialog();
                 loginDialog.showDialog();
             }
-            
+
             email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 log.warn("User closed login window without successfully logging in, exiting program.");
                 LifecycleManager.getDefault().exit(0);
             }
-            
+
             log.info("Successfully logged in user " + AccessManager.getUsername());
 
             try {
@@ -106,6 +106,7 @@ public class ConsoleApp {
             catch (Exception e) {
                 sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
                 SessionMgr.getSessionMgr().handleException(e);
+                SessionMgr.getSessionMgr().loginSubject(username, password);
             }
             
             sessionMgr.newBrowser();

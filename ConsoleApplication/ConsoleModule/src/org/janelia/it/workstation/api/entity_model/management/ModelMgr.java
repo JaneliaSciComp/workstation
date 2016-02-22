@@ -142,7 +142,27 @@ public final class ModelMgr {
     }
     
     public void init() throws Exception {
+        log.info("Preloading subjects");
+        List<Subject> subjects = getSubjects();
+        for(Subject subject : subjects) {
+            subjectByKey.put(subject.getKey(), subject);
+        }
+    }
 
+    /**
+     * This adds a session event.  It is best to use the method in the
+     * Session Manager instead, as that has more convenient 'finding' of various
+     * parts of the event.
+     *
+     * @param event to log.
+     */
+    public void addEventToSession(UserToolEvent event) {
+        try {
+            FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
+        } catch (Exception ex) {
+            log.warn("Failed to log userevent " + event);
+            ex.printStackTrace();
+        }
     }
     
     public void addModelMgrObserver(ModelMgrObserver mml) {
@@ -1018,10 +1038,25 @@ public final class ModelMgr {
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName);
     }
-    
+
+    public Subject getSubject() throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
+    }
+
+    public Subject getSubjectByKey(String key) throws Exception {
+        Subject subject = subjectByKey.get(key);
+        if (subject!=null) return subject;
+        subject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(key);
+        subjectByKey.put(subject.getKey(), subject);
+        return subject;
+    }
+
     public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
-       return null;
-        //return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
+    }
+
+    public List<Subject> getSubjects() throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
     }
 
     public Subject saveOrUpdateSubject(Subject subject) throws Exception {

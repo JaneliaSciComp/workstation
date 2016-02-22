@@ -448,8 +448,7 @@ public class ImportDialog extends ModalDialog {
             uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
         }
 
-        final String owner = null;
-        //SessionMgr.getSubjectKey();
+        final String owner = SessionMgr.getSubjectKey();
         final String process = "FileTreeLoader";
         final boolean filesUploadedFlag = true;
         Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),

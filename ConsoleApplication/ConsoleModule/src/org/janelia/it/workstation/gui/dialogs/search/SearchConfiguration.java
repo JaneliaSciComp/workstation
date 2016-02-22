@@ -268,7 +268,7 @@ public class SearchConfiguration {
         else if (doc != null) {
             if ("annotations".equals(fieldName)) {
                 StringBuffer sb = new StringBuffer();
-               /* for (String subjectKey : SessionMgr.getSubjects()) {
+                for (String subjectKey : SessionMgr.getSubjectKeys()) {
                     String owner = EntityUtils.getNameFromSubjectKey(subjectKey);
                     Object v = doc.getFieldValues(owner + "_annotations");
                     if (v != null) {
@@ -277,7 +277,7 @@ public class SearchConfiguration {
                         }
                         sb.append(getFormattedFieldValue(v, fieldName));
                     }
-                }*/
+                }
                 value = sb.toString();
             }
             else {

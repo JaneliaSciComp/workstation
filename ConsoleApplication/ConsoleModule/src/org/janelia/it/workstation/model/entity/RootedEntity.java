@@ -99,7 +99,7 @@ public class RootedEntity {
     }
 
     public RootedEntity getOwnedChildByName(String childName) {
-        return getChild(EntityUtils.findChildEntityDataWithNameAndOwner(getEntity(), childName, "essionMgr.getSubjectKey()"));
+        return getChild(EntityUtils.findChildEntityDataWithNameAndOwner(getEntity(), childName, SessionMgr.getSubjectKey()));
     }
     
     public RootedEntity getChildById(long childId) {

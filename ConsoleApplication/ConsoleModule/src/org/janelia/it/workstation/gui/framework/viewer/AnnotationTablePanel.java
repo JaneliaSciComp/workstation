@@ -258,7 +258,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             });
             popupMenu.add(copyMenuItem);
 
-            if (EntityUtils.hasWriteAccess(annotation.getEntity(), null)) { // SessionMgr.getSubjects()
+            if (EntityUtils.hasWriteAccess(annotation.getEntity(), SessionMgr.getSubjectKeys())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                 @Override
@@ -321,7 +321,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                 toDeleteList.add(annotations.get(mi));
             }
 
-           // if (SessionMgr.equals(annotation.getOwner())) {
+            if (SessionMgr.getUsername().equals(annotation.getOwner())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotations");
                 deleteItem.addActionListener(new ActionListener() {
                     @Override
@@ -330,7 +330,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                     }
                 });
                 popupMenu.add(deleteItem);
-           // }
+            }
         }
 
         return popupMenu;

@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.janelia.it.jacs.model.user_data.Group;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.SubjectRelationship;
+import org.janelia.it.jacs.model.user_data.User;
+
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -27,7 +32,10 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.workstation.api.stub.data.FatalCommError;
+import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
@@ -66,6 +74,8 @@ public final class SessionMgr {
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
     public static String JACS_INTERACTIVE_SERVER_PROPERTY = "SessionMgr.JacsInteractiveServerProperty";
     public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
+    public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
+    public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String REMEMBER_PASSWORD = LoginProperties.REMEMBER_PASSWORD;
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
@@ -89,6 +99,10 @@ public final class SessionMgr {
     private String prefsFile = prefsDir + ".JW_Settings";
     private Browser activeBrowser;
     private String appName, appVersion;
+    private boolean isLoggedIn;
+    private Subject loggedInSubject;
+    private Subject authenticatedSubject;
+    private Long currentSessionId;
     private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
 
@@ -215,6 +229,12 @@ public final class SessionMgr {
             handleException(ex);
         }
 
+        String tempLogin = (String) getModelProperty(USER_NAME);
+        String tempPassword = (String) getModelProperty(USER_PASSWORD);
+        if (tempLogin != null && tempPassword != null) {
+            PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
+            PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
+        }
         Integer tmpCache = (Integer) getModelProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null != tmpCache) {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
@@ -780,7 +800,8 @@ public final class SessionMgr {
         }
     }
 
-    // TODO: this is a temporary hack to inject the subject key from the AccessManager back into the ConsoleModule, for the older stuff to use. It should go away. 
+    // TODO: this is a temporary hack to restore all the permissions stuff back from the AccessManager
+    // until we can remove all the legacy stuff. It should go away.
     private static String subjectKey;
     
     public static void setSubjectKey(String s) {
@@ -789,5 +810,171 @@ public final class SessionMgr {
 
     public static String getSubjectKey() {
         return subjectKey;
+    }
+
+    public static List<String> getSubjectKeys() {
+        List<String> subjectKeys = new ArrayList<>();
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        if (subject != null) {
+            subjectKeys.add(subject.getKey());
+            if (subject instanceof User) {
+                for (SubjectRelationship relation : ((User) subject).getGroupRelationships()) {
+                    subjectKeys.add(relation.getGroup().getKey());
+                }
+            }
+        }
+        return subjectKeys;
+    }
+
+    public Subject getSubject() {
+        return loggedInSubject;
+    }
+
+    public Subject getAuthenticatedSubject() {
+        return authenticatedSubject;
+    }
+
+
+    public static String getUsername() {
+        Subject subject = getSessionMgr().getSubject();
+        if (subject == null) {
+            throw new SystemError("Not logged in");
+        }
+        return subject.getName();
+    }
+
+    public static String getUserEmail() {
+        Subject subject = getSessionMgr().getSubject();
+        if (subject == null) {
+            throw new SystemError("Not logged in");
+        }
+        return subject.getEmail();
+    }
+
+    public static boolean authenticatedSubjectIsInGroup(String groupName) {
+        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
+        return subject instanceof User && isUserInGroup((User) subject, groupName);
+    }
+
+    public static boolean currentUserIsInGroup(String groupName) {
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        return subject instanceof User && isUserInGroup((User) subject, groupName);
+    }
+
+    private static boolean isUserInGroup(User targetUser, String targetGroup) {
+        if (null == targetUser) {
+            return false;
+        }
+        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
+            if (relation.getGroup().getName().equals(targetGroup)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    public boolean loginSubject(String username, String password) {
+        try {
+            boolean relogin = false;
+
+            if (isLoggedIn()) {
+                logoutUser();
+                log.info("RELOGIN");
+                relogin = true;
+            }
+
+            findAndRemoveWindowsSplashFile();
+            // Login and start the session
+            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
+            if (null != authenticatedSubject) {
+                isLoggedIn = true;
+                loggedInSubject = authenticatedSubject;
+                log.info("Authenticated as {}", authenticatedSubject.getKey());
+
+                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
+                if (relogin) {
+                    resetSession();
+                }
+            }
+
+            return isLoggedIn;
+        }
+        catch (Exception e) {
+            isLoggedIn = false;
+            log.error("Error logging in", e);
+            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+                    "Cannot authenticate login. The server may be down. Please try again later.");
+        }
+    }
+
+    public boolean setRunAsUser(String runAsUser) {
+
+        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
+            throw new IllegalStateException("Non-admin user cannot run as another user");
+        }
+
+        try {
+            if (!StringUtils.isEmpty(runAsUser)) {
+                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
+                if (runAsSubject==null) {
+                    return false;
+                }
+                loggedInSubject = runAsSubject;
+            }
+            else {
+                loggedInSubject = authenticatedSubject;
+            }
+
+            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
+                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
+            }
+
+            resetSession();
+            return true;
+        }
+        catch (Exception e) {
+            loggedInSubject = authenticatedSubject;
+            handleException(e);
+            return false;
+        }
+    }
+
+    private void resetSession() {
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser != null) {
+            log.info("Refreshing all views");
+            browser.resetView();
+        }
+        log.info("Clearing entity model");
+        ModelMgr.getModelMgr().reset();
+        FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+    }
+
+    public void logoutUser() {
+        try {
+            if (loggedInSubject != null) {
+                FacadeManager.getFacadeManager().getComputeFacade().endSession();
+                log.info("Logged out with: {}", loggedInSubject.getKey());
+            }
+            isLoggedIn = false;
+            loggedInSubject = null;
+            authenticatedSubject = null;
+        }
+        catch (Exception e) {
+            log.error("Error logging out", e);
+        }
+    }
+
+    public boolean isLoggedIn() {
+        return isLoggedIn;
+    }
+
+    public Long getCurrentSessionId() {
+        return currentSessionId;
+    }
+
+    public void setCurrentSessionId(Long currentSessionId) {
+        this.currentSessionId = currentSessionId;
     }
 }

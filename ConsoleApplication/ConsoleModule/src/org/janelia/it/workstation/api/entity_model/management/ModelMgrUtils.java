@@ -40,8 +40,7 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean hasReadAccess(Entity entity) {
-        return true;
-        //return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjects());
+        return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjectKeys());
     }
 
     /**
@@ -52,8 +51,7 @@ public class ModelMgrUtils {
      * @return
      */
     public static boolean hasWriteAccess(Entity entity) {
-       return true;
-       // return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjects());
+        return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjectKeys());
     }
 
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
