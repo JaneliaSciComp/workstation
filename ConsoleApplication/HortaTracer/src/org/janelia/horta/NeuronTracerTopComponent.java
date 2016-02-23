@@ -67,6 +67,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
@@ -140,9 +141,11 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
+import org.openide.modules.OnStop;
 import org.openide.util.Exceptions;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.NbPreferences;
 import org.openide.util.actions.SystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
@@ -326,7 +329,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Default to compressed voxels, per user request February 2016
         setCubifyVoxels(true);
         
+        loadStartupPreferences();
+
         workspace.notifyObservers();
+
     }
     
     // UNDO
@@ -612,6 +618,24 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     private final BrightnessModel brightnessModel = new BrightnessModel();
+    
+    private void loadStartupPreferences() 
+    {
+        Preferences prefs = NbPreferences.forModule(getClass());
+        brightnessModel.setMinimum(
+                prefs.getFloat("startupMinIntensityChan0", brightnessModel.getMinimum()) );
+        brightnessModel.setMaximum(
+                prefs.getFloat("startupMaxIntensityChan0", brightnessModel.getMaximum()) );
+        volumeState.projectionMode = 
+                prefs.getInt("startupProjectionMode", volumeState.projectionMode);
+    }
+    
+    private void saveStartupPreferences() {
+        Preferences prefs = NbPreferences.forModule(getClass());
+        prefs.putFloat("startupMinIntensityChan0", brightnessModel.getMinimum());
+        prefs.putFloat("startupMaxIntensityChan0", brightnessModel.getMaximum());
+        prefs.putInt("startupProjectionMode", volumeState.projectionMode);
+    }
 
     private void initialize3DViewer() {
 
@@ -1032,6 +1056,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     }
                 });
+                
+                // I could not figure out how to save the settings every time the application closes,
+                // so make the user save the settings on demand.
+                menu.add(new AbstractAction("Save Viewer Settings") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        saveStartupPreferences();
+                    }
+                });
 
                 // SECTION: Undo/redo
                 
@@ -1269,11 +1302,17 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public void componentOpened() {
+        // logger.info("Horta opened");
         neuronManager.onOpened();
+        // loadStartupPreferences();
     }
     
+    // NOTE: componentClosed() is only called when just the Horta window is closed, not
+    // when the whole application closes.
     @Override
     public void componentClosed() {
+        // logger.info("Horta closed");
+        // saveStartupPreferences(); // not called at application close...
         neuronManager.onClosed();
     }
 
@@ -1296,5 +1335,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     {
         return neuronVertexIndex;
     }
+
     
 }
