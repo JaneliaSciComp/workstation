@@ -400,7 +400,7 @@ public class TracingInteractor extends MouseAdapter
             if (vertex.hasRadius())
                 startRadius = vertex.getRadius();
             float highlightRadius = startRadius * 1.30f;
-            // plus at least 2 pixels bigger - this is handled in actor creation time
+            // we add at least 2 pixels to glyph size - this is handled in actor creation time
             highlightVertex.setRadius(highlightRadius);
             // blend neuron color with pale yellow highlight color
             float highlightColor[] = {1.0f, 1.0f, 0.6f, 0.5f}; // pale yellow and transparent
@@ -486,8 +486,11 @@ public class TracingInteractor extends MouseAdapter
                 float radius = 1.0f;
                 if (nearestVertex.hasRadius())
                     radius = nearestVertex.getRadius();
+                float absoluteHoverRadius = 2.50f * radius; // look this far away, relative to absolute vertex size
+                // Also look a certain distance away in pixels, in case the view is way zoomed out.
+                float screenHoverRadius = 10 / volumeProjection.getPixelsPerSceneUnit(); // look within at least 10 pixels
                 // TODO: accept vertices within a certain number of pixels too
-                if (dist > 2.5f * radius)
+                if (dist > (absoluteHoverRadius + screenHoverRadius))
                     foundGoodHighlightVertex = false;
             }
         }
