@@ -12,6 +12,7 @@ ConsoleApplication/SharedModelComputeWrapper/src/jacs.properties
 buildprocess/intellij-make/
 ConsoleApplication/SharedModelComputeWrapper/release
 .metadata
+.recommenders
 ConsoleApplication/HortaTracer/*.log
 .idea
 *.iws
