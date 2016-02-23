@@ -59,6 +59,8 @@ public class DataSetDialog extends ModalDialog {
     private JTextField nameInput;
     private JTextField identifierInput;
     private JTextField sampleNamePatternInput;
+    private JTextField sageConfigPathInput;
+    private JTextField sageGrammarPathInput;
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String, JCheckBox> processCheckboxes = new LinkedHashMap<>();
@@ -168,6 +170,18 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sampleNamePatternLabel, "gap para");
         attrPanel.add(sampleNamePatternInput);
 
+        final JLabel sageConfigPathLabel = new JLabel("SAGE Config Path: ");
+        sageConfigPathInput = new JTextField(80);
+        sageConfigPathLabel.setLabelFor(sageConfigPathInput);
+        attrPanel.add(sageConfigPathLabel, "gap para");
+        attrPanel.add(sageConfigPathInput);
+
+        final JLabel sageGrammarPathLabel = new JLabel("SAGE Grammar Path: ");
+        sageGrammarPathInput = new JTextField(80);
+        sageGrammarPathLabel.setLabelFor(sageGrammarPathInput);
+        attrPanel.add(sageGrammarPathLabel, "gap para");
+        attrPanel.add(sageGrammarPathInput);
+
         final JLabel sampleImageLabel = new JLabel("Sample Image: ");
         sampleImageInput = new JComboBox<>(SampleImageType.values());
         sampleImageLabel.setLabelFor(sampleImageInput);
@@ -225,6 +239,8 @@ public class DataSetDialog extends ModalDialog {
             return;
         }
 
+        final String sageConfigPath = sageConfigPathInput.getText();
+        final String sageGrammarPath = sageGrammarPathInput.getText();
         final String sampleImageType = ((SampleImageType) sampleImageInput.getSelectedItem()).name();
 
         SimpleWorker worker = new SimpleWorker() {

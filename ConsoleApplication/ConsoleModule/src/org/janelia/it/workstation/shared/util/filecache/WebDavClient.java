@@ -140,7 +140,7 @@ public class WebDavClient {
 
     /**
      * @param  rootUploadPath  root path for all uploads
-     *                         (e.g. '/nobackup/jacs/jacsData/filestore/upload').
+     *                         (e.g. '/nrs/jacs/jacsData/filestore/upload').
      *
      * @return a "very-likely" unique path under the specified root upload path.
      */

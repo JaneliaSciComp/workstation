@@ -1,11 +1,3 @@
-package org.janelia.horta;
-
-
-import org.janelia.geometry3d.BasicVector;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector3;
-
 /*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
@@ -36,45 +28,16 @@ import org.janelia.geometry3d.Vector3;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+package org.janelia.horta.loader;
+
+import java.io.IOException;
+
 /**
  *
  * @author Christopher Bruns
  */
-public class NeuriteAnchor implements ImmutableNeuriteAnchor 
+public interface FileTypeLoader
 {
-    private final Vector3 xyzUm;
-    private final double intensity;
-    private float radiusUm;
-    
-    public NeuriteAnchor(Vector3 locationUm, double intensity, float radiusUm) {
-        this.xyzUm = locationUm;
-        this.intensity = intensity;
-        this.radiusUm = radiusUm;
-    }
-
-    @Override
-    public Vector3 getLocationUm() {
-        return xyzUm;
-    }
-
-    @Override
-    public double getIntensity() {
-        return intensity;
-    }
-
-    @Override
-    public float getRadiusUm() {
-        return radiusUm;
-    }
-
-    public void setRadiusUm(float radiusUm) {
-        this.radiusUm = radiusUm;
-    }
-
-    @Override
-    public float distanceSquared(ConstVector3 rhs)
-    {
-        return xyzUm.distanceSquared(rhs);
-    }
-    
+    public boolean supports(DataSource source);
+    public boolean load(DataSource source, FileHandler handler) throws IOException;
 }

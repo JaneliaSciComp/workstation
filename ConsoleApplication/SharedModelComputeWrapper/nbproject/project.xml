@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.23</specification-version>
+                        <specification-version>1.25</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -102,6 +102,7 @@
                 <package>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</package>
                 <package>org.janelia.it.jacs.shared.node</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
+                <package>org.janelia.it.jacs.shared.sample_discovery</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
                 <package>org.janelia.it.jacs.shared.security</package>
                 <package>org.janelia.it.jacs.shared.solr</package>

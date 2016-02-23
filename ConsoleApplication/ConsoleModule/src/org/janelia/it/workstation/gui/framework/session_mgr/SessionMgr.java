@@ -30,6 +30,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -57,7 +58,7 @@ import org.slf4j.LoggerFactory;
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 import org.openide.LifecycleManager;
 
-public final class SessionMgr {
+public final class SessionMgr implements ActivityLogging {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -494,6 +495,130 @@ public final class SessionMgr {
         }
     }
 
+    /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 2. allow-to-log if the count of attempts for category==granularity.
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     */
+    @Override
+    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    Long count = categoryInstanceCount.get(category);
+                    if (count == null) {
+                        count = new Long(0);
+                    }
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    } else if (count % LOG_GRANULARITY == 0) {
+                        shouldLog = true;
+                    }
+                    categoryInstanceCount.put(category, ++count);
+
+                    if (shouldLog) {
+                        ModelMgr.getModelMgr().addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, action, timestamp
+            );
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     * @todo see about reusing code between this and non-threshold.
+     */
+    @Override
+    public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    }
+
+                    if (shouldLog) {
+                        ModelMgr.getModelMgr().addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, action, timestamp
+            );
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Log a tool event, always.  No criteria will be checked.
+     * 
+     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
+     */
+    @Override
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
+        // Force logging, by setting elapsed > threshold.
+        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
+    }
+
+    /**
+     * Log-tool-event override, which includes elapsed/threshold comparison
+     * values.  If the elapsed time (expected milliseconds) exceeds the
+     * threshold, definitely log.  Also, will check number-of-issues against
+     * a granularity map.  Only issue the message at a preset
+     * granularity.
+     * 
+     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double) 
+     * @param elapsedMs
+     * @param thresholdMs 
+     */
+    @Override
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
+        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
+    }
+    
     public void handleException(Throwable throwable) {
         modelManager.handleException(throwable);
     }

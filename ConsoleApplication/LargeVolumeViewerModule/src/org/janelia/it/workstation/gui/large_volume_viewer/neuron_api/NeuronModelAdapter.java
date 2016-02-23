@@ -30,6 +30,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
+import Jama.Matrix;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,14 +41,18 @@ import java.util.Objects;
 import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +69,8 @@ public class NeuronModelAdapter implements NeuronModel
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
-    private final ObservableInterface membersAddedObservable = new ComposableObservable();
+    private final NeuronVertexAdditionObservable membersAddedObservable = 
+            new BasicNeuronVertexAdditionObservable();
     private final ObservableInterface membersRemovedObservable = new ComposableObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -74,6 +80,7 @@ public class NeuronModelAdapter implements NeuronModel
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
+    private TmWorkspace workspace;
 
     public NeuronModelAdapter(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) 
     {
@@ -83,22 +90,63 @@ public class NeuronModelAdapter implements NeuronModel
         bIsVisible = true; // TODO: 
         vertexes = new VertexList(neuron.getGeoAnnotationMap(), workspace);
         edges = new EdgeList(vertexes);
+        this.workspace = workspace;
+    }
+
+    // Special method for adding annotations from the Horta side
+    @Override
+    public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
+    {
+        if (! (parent instanceof NeuronVertexAdapter))
+            return null; // TODO: error?
+        NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
+        TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
+        
+        // Convert micron coordinates to voxel coordinates
+        Matrix m2v = workspace.getMicronToVoxMatrix();
+                // Convert from image voxel coordinates to Cartesian micrometers
+        // TmGeoAnnotation is in voxel coordinates
+        Jama.Matrix micLoc = new Jama.Matrix(new double[][] {
+            {micronXyz[0], }, 
+            {micronXyz[1], }, 
+            {micronXyz[2], },
+            {1.0, },
+        });
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix voxLoc = m2v.times(micLoc);
+        Vec3 voxelXyz = new Vec3(
+            (float) voxLoc.get(0, 0), 
+            (float) voxLoc.get(1, 0), 
+            (float) voxLoc.get(2, 0) );
+        NeuronVertex result = null;
+        try {
+            // TODO: radius
+            TmGeoAnnotation ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+            if (ann != null) {
+                NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
+                result = vertex;
+            }
+        } catch (Exception ex) {
+        }
+        return result;
     }
     
-    void addVertex(TmGeoAnnotation annotation)
+    NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
         assert(vertexes.containsKey(vertexId));
         Long parentId = annotation.getParentId();
+        NeuronVertex newVertex = vertexes.getVertexByGuid(vertexId);
         // Add edge
         if (vertexId.equals(parentId)) 
-            return; // Self parent, so no edge. TODO: maybe this never happens
+            return newVertex; // Self parent, so no edge. TODO: maybe this never happens
         // comment from TmGeoAnnotation.java: "parentID is the neuron (if root annotation) or another TmGeoAnn"
         if (annotation.getNeuronId().equals(parentId))
-            return; // It appears parentId==neuronId for (parentless) root/seed points
+            return newVertex; // It appears parentId==neuronId for (parentless) root/seed points
         assert(vertexes.containsKey(parentId));
-        edges.add(new NeuronEdgeAdapter(vertexes.getVertexByGuid(vertexId), vertexes.getVertexByGuid(parentId)));
+        edges.add(new NeuronEdgeAdapter(newVertex, vertexes.getVertexByGuid(parentId)));
         getGeometryChangeObservable().setChanged(); // mark dirty, but don't sweep (notifyObservers) yet
+        return newVertex;
     }
     
     public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
@@ -108,6 +156,7 @@ public class NeuronModelAdapter implements NeuronModel
         }
         assert this.annotationModel == annotationModel; // We are not willing to update THAT far
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap(), workspace);
+        this.workspace = workspace;
     }
 
     public boolean updateEdges() {
@@ -176,7 +225,7 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
-    public ObservableInterface getMembersAddedObservable()
+    public NeuronVertexAdditionObservable getMembersAddedObservable()
     {
         return membersAddedObservable;
     }

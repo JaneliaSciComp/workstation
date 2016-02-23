@@ -28,20 +28,53 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi;
+package org.janelia.horta.loader;
 
-import java.util.Observer;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
- *
+ * Helper class used when user drags-and-drops a file onto HortaWorkspaceNode or 
+ * onto NeuronTracerTopComponent.
+ * 
  * @author Christopher Bruns
- * Intended for use as a decorator pattern, to make certain instances observable
  */
-public interface ObservableDecorator<E>
+public class DroppedFileHandler implements FileHandler
 {
-    E getValue();
-    boolean setValue(E value);
-    void addObserver(Observer o);
-    void deleteObserver(Observer o);
-    void notifyObservers();
+    private final Collection<FileTypeLoader> typeLoaders = new ArrayList<>();
+    
+    public void addLoader(FileTypeLoader loader) {
+        typeLoaders.add(loader);
+    }
+    
+    public boolean handleFile(File f) 
+            throws FileNotFoundException, IOException 
+    {
+        DataSource source = new FileDataSource(f);
+        return handleDataSource(source);
+    }
+    
+    public boolean handleStream(InputStream stream, String fileName) 
+            throws IOException 
+    {
+        DataSource source = new BasicDataSource(stream, fileName);
+        return handleDataSource(source);
+    }
+    
+    @Override
+    public boolean handleDataSource(DataSource source) 
+            throws IOException 
+    {
+        for (FileTypeLoader loader : typeLoaders) {
+            if (loader.supports(source)) {
+                if (loader.load(source, this))
+                    return true;
+            }
+        }
+        return false;
+    }
 }

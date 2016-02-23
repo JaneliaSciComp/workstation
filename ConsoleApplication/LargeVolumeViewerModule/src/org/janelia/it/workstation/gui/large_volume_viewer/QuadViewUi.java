@@ -82,13 +82,16 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
+    public static final String VOLUME_CACHE_DISPLAY_NAME = "Volume Cache";
+
     private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
     private static final String IMAGES_GREEN_CHECK = "Green_check.png";
     private static final String IMAGES_SPINNER = "spinner.gif";
     private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
     private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
     
-    private static final int MINIMUM_MEMORY_REQUIRED_GB = 8;
+    private static final int MINIMUM_LVV_MEMORY_REQUIRED_GB = 8;
+    private static final int MINIMUM_VOLUME_CACHE_MEMORY_REQUIRED_GB = 48;
 
     public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
@@ -278,7 +281,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
-        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+        new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_LVV_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);
@@ -796,7 +799,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 		
 		buttonsPanel.add(loadStatusLabel);
 
-        final JCheckBox volumeCacheCheckbox = new JCheckBox("Volume Cache");
+        final JCheckBox volumeCacheCheckbox = new JCheckBox(VOLUME_CACHE_DISPLAY_NAME);
         volumeCacheCheckbox.setSelected(VolumeCache.useVolumeCache());
         volumeCacheCheckbox.addItemListener(new ItemListener() {
             @Override
@@ -805,6 +808,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     volumeCacheCheckbox.setSelected(false);
                     VolumeCache.setVolumeCache(false);
                 } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    new MemoryCheckDialog().warnOfInsufficientMemory(VOLUME_CACHE_DISPLAY_NAME, MINIMUM_VOLUME_CACHE_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
                     volumeCacheCheckbox.setSelected(true);
                     VolumeCache.setVolumeCache(true);
                 }
@@ -850,7 +854,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             }
         });
 	}
-
 	private void interceptModifierKeyPresses() 
 	{ 
         // Intercept Shift key strokes at the highest level JComponent we can find.
@@ -1210,6 +1213,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mbmPrefixes = {
                     "/groups/mousebrainmicro/mousebrainmicro/",
                     "/nobackup/mousebrainmicro/",
+                    "/nobackup2/mouselight/",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
                     "/tier2/mousebrainmicro-nb/"
             };
@@ -1242,8 +1246,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
             // the last, middle piece can be nothing or one of these
             //  mounts names (nothing = enclosing dir is mounted directly
-            String [] mountNames = {"", "mousebrainmicro", "mousebrainmicro-nb",
-                    "nobackup/mousebrainmicro", "mousebrainmicro/mousebrainmicro"};
+            String [] mountNames = {"", "mousebrainmicro",
+                    "mousebrainmicro-nb", "mouselight",
+                    "nobackup/mousebrainmicro", "nobackup2/mouselight", 
+                    "mousebrainmicro/mousebrainmicro"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {

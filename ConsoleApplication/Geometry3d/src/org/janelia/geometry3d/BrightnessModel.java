@@ -105,5 +105,11 @@ implements Copyable<BrightnessModel>, ObservableInterface
     public void deleteObservers() {
         changeObservable.deleteObservers();
     }
+
+    @Override
+    public boolean hasChanged()
+    {
+        return changeObservable.hasChanged();
+    }
     
 }

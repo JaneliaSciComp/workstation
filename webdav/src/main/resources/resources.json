@@ -57,7 +57,7 @@
     },
     "resources": {
         "Cluster Temp": {
-            "mapping": "/nobackup/jacs/jacsData/filestore/upload",
+            "mapping": "/nrs/jacs/jacsData/filestore/upload",
             "type": "block",
             "path": "mirror",
             "permissions": [
@@ -65,7 +65,7 @@
             ]
         },
         "Cluster Data": {
-            "mapping": "/nobackup/jacs/jacsData",
+            "mapping": "/nrs/jacs/jacsData",
             "type": "block",
             "path": "mirror",
             "authorizer": "jacsdata",
