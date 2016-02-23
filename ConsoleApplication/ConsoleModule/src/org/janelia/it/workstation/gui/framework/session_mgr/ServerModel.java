@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  * @author Leslie L Foster
  */
 public class ServerModel {
-	public static final String OWNER_OF_SERVER_MODEL = "user:saffordt";
+	public static final String OWNER_OF_SERVER_MODEL = "group:workstation_users";
 	public static final String ACTIVITY_LOG_GRANULARITY_PROP = "Activity Log Granularity";
 
 	private static final int UPDATE_INTERVAL_MS = 1000 * 60 * 10; // Ten Min.
