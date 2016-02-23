@@ -10,17 +10,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.*;
+import java.net.BindException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.janelia.it.jacs.model.user_data.Group;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.SubjectRelationship;
-import org.janelia.it.jacs.model.user_data.User;
+import java.util.concurrent.Callable;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -29,8 +29,16 @@ import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
+import org.janelia.it.jacs.model.user_data.Group;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.SubjectRelationship;
+import org.janelia.it.jacs.model.user_data.User;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -50,13 +58,11 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.web.EmbeddedWebServer;
-import org.janelia.it.workstation.ws.EmbeddedAxisServer;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
-import org.openide.LifecycleManager;
 
 public final class SessionMgr implements ActivityLogging {
 
@@ -67,6 +73,8 @@ public final class SessionMgr implements ActivityLogging {
 
     private static final int MAX_PORT_TRIES = 20;
     private static final int PORT_INCREMENT = 1000;
+    private static final int LOG_GRANULARITY = 100;
+    
     public static String USER_EMAIL = "UserEmail";
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
@@ -105,7 +113,8 @@ public final class SessionMgr implements ActivityLogging {
     private Subject authenticatedSubject;
     private Long currentSessionId;
     private WebDavClient webDavClient;
-    private LocalFileCache localFileCache;
+    private LocalFileCache localFileCache;    
+    private Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
 
     private SessionMgr() {
         log.info("Initializing Session Manager");

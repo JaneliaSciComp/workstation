@@ -41,6 +41,7 @@
                 <package>org.janelia.it.jacs.model.entity.cv</package>
                 <package>org.janelia.it.jacs.model.entity.json</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
+                <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
                 <package>org.janelia.it.jacs.model.sage</package>

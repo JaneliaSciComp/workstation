@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.ProtectionDomain;
-import javax.swing.ToolTipManager;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
@@ -138,7 +137,6 @@ public class ConsoleApp {
             worker.execute();
         }
         catch (Exception ex) {
-            ex.printStackTrace();
             SessionMgr.getSessionMgr().handleException(ex);
             LifecycleManager.getDefault().exit(0);
         }

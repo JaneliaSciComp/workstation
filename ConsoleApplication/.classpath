@@ -4,6 +4,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/compute"/>
 	<classpathentry kind="src" path="DataBrowserModule/src"/>
+	<classpathentry kind="src" path="IntegrationAPIs/src"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
