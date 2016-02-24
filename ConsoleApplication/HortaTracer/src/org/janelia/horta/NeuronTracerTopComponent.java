@@ -628,6 +628,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 prefs.getFloat("startupMaxIntensityChan0", brightnessModel.getMaximum()) );
         volumeState.projectionMode = 
                 prefs.getInt("startupProjectionMode", volumeState.projectionMode);
+        volumeState.filteringOrder = 
+                prefs.getInt("startupRenderFilter", volumeState.filteringOrder);
+        setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
     }
     
     private void saveStartupPreferences() {
@@ -635,6 +638,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putFloat("startupMinIntensityChan0", brightnessModel.getMinimum());
         prefs.putFloat("startupMaxIntensityChan0", brightnessModel.getMaximum());
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
+        prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
+        prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
     }
 
     private void initialize3DViewer() {
