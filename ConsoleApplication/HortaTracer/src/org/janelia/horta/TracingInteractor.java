@@ -234,7 +234,7 @@ public class TracingInteractor extends MouseAdapter
 
     }
 
-    private boolean selectParentVertex(NeuronVertex vertex, NeuronModel neuron)
+    public boolean selectParentVertex(NeuronVertex vertex, NeuronModel neuron)
     {
         if (vertex == null) return false;
         

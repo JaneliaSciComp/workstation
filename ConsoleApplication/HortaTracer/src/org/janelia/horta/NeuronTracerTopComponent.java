@@ -42,6 +42,7 @@ import java.awt.Component;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -52,6 +53,7 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -82,11 +84,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
-import javax.swing.undo.CannotRedoException;
-import javax.swing.undo.CannotUndoException;
-import javax.swing.undo.UndoableEdit;
+import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -141,8 +139,8 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
-import org.openide.modules.OnStop;
 import org.openide.util.Exceptions;
+import org.openide.util.Lookup;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
@@ -1076,10 +1074,41 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (undoRedoManager.canUndoOrRedo()) {
                     menu.add(new JPopupMenu.Separator());                
                     if (undoRedoManager.canUndo()) {
-                        menu.add(SystemAction.get(UndoAction.class));
+                        UndoAction undoAction = SystemAction.get(UndoAction.class);
+                        JMenuItem undoItem = undoAction.getPopupPresenter();
+                        KeyStroke shortcut = undoItem.getAccelerator();
+                        // For some reason, getPopupPresenter() does not include a keyboard shortcut
+                        if (shortcut == null) {
+                            // Sadly, this attempt to access the global keymap does not work.
+                            Keymap keymap = Lookup.getDefault().lookup(Keymap.class);
+                            if (keymap != null) {
+                                KeyStroke[] keyStrokes = keymap.getKeyStrokesForAction(undoAction);
+                                if (keyStrokes.length > 0)
+                                    shortcut = keyStrokes[0];
+                            }
+                            // KeyStroke undoKey2 = (KeyStroke)undoAction.getProperty(Action.ACCELERATOR_KEY); // Nope, protected
+                            if (shortcut == null) {
+                                shortcut = KeyStroke.getKeyStroke(
+                                        KeyEvent.VK_Z,
+                                        Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() // CTRL on Win/Linux, flower on Mac
+                                );
+                            }
+                            undoItem.setAccelerator(shortcut);
+                        }
+                        menu.add(undoItem);
                     }
                     if (undoRedoManager.canRedo()) {
-                        menu.add(SystemAction.get(RedoAction.class));
+                        RedoAction redoAction = SystemAction.get(RedoAction.class);
+                        JMenuItem redoItem = redoAction.getPopupPresenter();
+                        // For some reason, getPopupPresenter() does not include a keyboard shortcut
+                        KeyStroke shortcut = redoItem.getAccelerator();
+                        if (shortcut == null) {
+                            redoItem.setAccelerator(KeyStroke.getKeyStroke(
+                                    KeyEvent.VK_Y, // TODO: Shift-flower-Z on Mac
+                                    Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() // CTRL on Win/Linux, flower on Mac
+                            ));
+                        }
+                        menu.add(redoItem);
                     }
                 }
                 

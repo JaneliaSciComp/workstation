@@ -42,6 +42,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
     ObservableInterface getMembershipChangeObservable();
     ObservableInterface getNameChangeObservable();
-    NeuronVertexActivationObservable getActiveVertexObservable();
     String getName();
 }

@@ -47,8 +47,6 @@ implements NeuronSet
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
     private final ComposableObservable nameChangeObservable = new ComposableObservable();
-    private final NeuronVertexActivationObservable activeVertexObservable = 
-            new BasicNeuronVertexActivationObservable();
     protected final Collection<NeuronModel> neurons;
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
@@ -168,11 +166,6 @@ implements NeuronSet
     public ObservableInterface getNameChangeObservable()
     {
         return nameChangeObservable;
-    }
-
-    @Override
-    public NeuronVertexActivationObservable getActiveVertexObservable() {
-        return activeVertexObservable;
     }
     
 }

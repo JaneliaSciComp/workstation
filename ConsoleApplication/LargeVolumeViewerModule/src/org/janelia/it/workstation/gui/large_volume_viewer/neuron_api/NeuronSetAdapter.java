@@ -230,11 +230,10 @@ implements NeuronSet, LookupListener
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
-                    NeuronVertex activeVertex = neuron.getVertexForAnnotation(annotation);
-                    if (activeVertex == null) 
+                    NeuronVertex parentVertex = neuron.getVertexForAnnotation(annotation);
+                    if (parentVertex == null) 
                         return;
-                    getActiveVertexObservable().setChanged();
-                    getActiveVertexObservable().notifyObservers(new VertexWithNeuron(activeVertex, neuron));
+                    // TODO: - react somehow to the reparenting
                 }
             }
             logger.info("annotationReparented");
