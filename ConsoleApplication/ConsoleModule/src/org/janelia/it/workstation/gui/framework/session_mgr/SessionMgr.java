@@ -65,7 +65,8 @@ public final class SessionMgr implements ActivityLogging {
     private static final int MAX_PORT_TRIES = 20;
     private static final int PORT_INCREMENT = 1000;
     
-    private static final int LOG_GRANULARITY = 100;
+    //private static final int LOG_GRANULARITY = 100;
+    //private static final int LOG_GRANULARITY = 1;
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
@@ -526,8 +527,15 @@ public final class SessionMgr implements ActivityLogging {
                     boolean shouldLog = false;
                     if (elapsedMs > thresholdMs) {
                         shouldLog = true;
-                    } else if (count % LOG_GRANULARITY == 0) {
-                        shouldLog = true;
+                    } else {
+						final int logGranularitySetting =
+								ServerModel.getServerModel().getIntSetting(
+										ServerModel.ACTIVITY_LOG_GRANULARITY_PROP, 
+										100
+								);
+						if (count % logGranularitySetting == 0) {
+	                        shouldLog = true;
+						}
                     }
                     categoryInstanceCount.put(category, ++count);
 
