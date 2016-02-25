@@ -43,19 +43,22 @@ extends AbstractUndoableEdit
 implements UndoableEdit, Command
 {
     private final NeuronModel neuron;
-    private final NeuronVertex parentVertex;
+    private NeuronVertex parentVertex;
     private NeuronVertex newVertex = null;
     private final float[] coordinates;
     private final float radius;
+    private final AppendNeuronVertexCommand parentCommand;
     
     public AppendNeuronVertexCommand(
             NeuronModel neuron, 
             NeuronVertex parentVertex,
+            AppendNeuronVertexCommand parentCommand, // to help unravel serial undo/redo, with replaced parent vertices, in case parentVertex is stale
             float[] micronXyz,
             float radius) 
     {
         this.neuron = neuron;
         this.parentVertex = parentVertex;
+        this.parentCommand = parentCommand;
         this.coordinates = micronXyz;
         this.radius = radius;
     }
@@ -63,6 +66,11 @@ implements UndoableEdit, Command
     // Command-like semantics execute is a synonym for redo()
     @Override
     public boolean execute() {
+        if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale
+            NeuronVertex updatedParent = parentCommand.getAppendedVertex();
+            if (updatedParent != parentVertex)
+                parentVertex = updatedParent; // update link
+        }
         newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
         if (newVertex == null)
             return false;

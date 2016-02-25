@@ -39,7 +39,9 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -53,6 +55,7 @@ import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -94,6 +97,9 @@ public class TracingInteractor extends MouseAdapter
     private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
     private Vector3 cachedDensityCursorXyz = null;
     private final UndoRedo.Manager undoRedoManager;
+    
+    // Data structure to help unravel serial undo/redo appendVertex commands
+    Map<NeuronVertex, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
             new TwoDimensionalRadiusEstimator();
@@ -178,14 +184,22 @@ public class TracingInteractor extends MouseAdapter
                         System.out.println("Unexpected null density vertex");
                     }
                     if (neuron != null) {
-                        // NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
-                        AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(neuron, cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
+                        // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
+                        AppendNeuronVertexCommand parentAppendCmd = appendCommandForVertex.get(cachedParentVertex);
+                        AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(
+                                neuron, 
+                                cachedParentVertex, 
+                                parentAppendCmd,
+                                templateVertex.getLocation(), 
+                                templateVertex.getRadius());
                         if (appendCmd.execute()) {
                             NeuronVertex addedVertex = appendCmd.getAppendedVertex();
                             if (addedVertex != null) {
                                 selectParentVertex(addedVertex, neuron);
                                 // undoRedoManager.addEdit(appendCmd);
                                 undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
+                                appendCommandForVertex.put(addedVertex, appendCmd);
                             }
                         }
                     }
@@ -254,7 +268,7 @@ public class TracingInteractor extends MouseAdapter
         // Create a modified vertex to represent the enlarged, highlighted actor
         BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
         // Set parent actor radius X% larger than true vertex radius, and at least 2 pixels larger
-        float startRadius = 1.0f;
+        float startRadius = DefaultNeuron.radius;
         if (vertex.hasRadius())
             startRadius = vertex.getRadius();
         float parentRadius = startRadius * 1.15f;
@@ -396,7 +410,7 @@ public class TracingInteractor extends MouseAdapter
             // Create a modified vertex to represent the enlarged, highlighted actor
             BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
             // Set highlight actor radius X% larger than true vertex radius, and at least 2 pixels larger
-            float startRadius = 1.0f;
+            float startRadius = DefaultNeuron.radius;
             if (vertex.hasRadius())
                 startRadius = vertex.getRadius();
             float highlightRadius = startRadius * 1.30f;
@@ -483,7 +497,7 @@ public class TracingInteractor extends MouseAdapter
                 // Is cursor too far from closest vertex?
                 Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
                 float dist = vertexXyz.distance(cursorXyz);
-                float radius = 1.0f;
+                float radius = DefaultNeuron.radius;
                 if (nearestVertex.hasRadius())
                     radius = nearestVertex.getRadius();
                 float absoluteHoverRadius = 2.50f * radius; // look this far away, relative to absolute vertex size
