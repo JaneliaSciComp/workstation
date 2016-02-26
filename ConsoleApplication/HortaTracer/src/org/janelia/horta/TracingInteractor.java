@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
@@ -56,6 +57,7 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -66,13 +68,10 @@ import org.openide.awt.UndoRedo;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseListener, MouseMotionListener, KeyListener
+        implements MouseListener, MouseMotionListener, KeyListener, NeuronVertexDeletionObserver
 {
 
     private final VolumeProjection volumeProjection;
-    // private NeuriteAnchor sourceAnchor; // origin of series of provisional anchors
-    // private final Stack<NeuriteAnchor> provisionalModel = new Stack<>();
-    // private final List<NeuriteAnchor> persistedModel = new ArrayList<>();
     private final int max_tol = 5; // pixels
         
     // For selection affordance
@@ -91,18 +90,18 @@ public class TracingInteractor extends MouseAdapter
     private NeuronModel cachedParentNeuronModel = null;
     
     // White ghost vertex for potential new vertex under cursor 
-    // TODO: design this.
-    // Maybe color RED until a good path from parent is found
+    // TODO: Maybe color RED until a good path from parent is found
     // This is the new neuron cursor
     private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
     private Vector3 cachedDensityCursorXyz = null;
+    
     private final UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
     Map<NeuronVertex, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
-            new TwoDimensionalRadiusEstimator();
+            new TwoDimensionalRadiusEstimator(); // TODO: Use this again
             // new ConstantRadiusEstimator(5.0f);
     private StatusDisplayer.Message previousHoverMessage;
     
@@ -611,6 +610,18 @@ public class TracingInteractor extends MouseAdapter
             return point;
         } else {
             return new Point(point.x + best_t * dx, point.y + best_t * dy);
+        }
+    }
+
+    @Override // Neuron vertex deletion observer
+    public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron doomed) {
+        // Possibly remove parent glyph, if vertex is deleted
+        if (cachedParentVertex == null) return; // no sense checking 
+        for (NeuronVertex doomedVertex : doomed.vertexes) {
+            if (doomedVertex == cachedParentVertex) {
+                clearParentVertex();
+                return;
+            }
         }
     }
 

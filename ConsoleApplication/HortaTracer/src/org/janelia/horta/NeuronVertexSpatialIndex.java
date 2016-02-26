@@ -52,6 +52,8 @@ import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.console.viewerapi.listener.NeuronCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.openide.util.Exceptions;
 
 /**
@@ -59,23 +61,28 @@ import org.openide.util.Exceptions;
  * First use is intended to be mouse selection of neuron vertices.
  * @author Christopher Bruns
  */
-public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
+public class NeuronVertexSpatialIndex 
+implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreationListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
+    
     private final HortaWorkspace workspace;
     private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
-    private final NeuronVertexAdditionObserver vertexAdditionObserver = new VertexAdditionObserver();
+
+    // private final NeuronVertexAdditionObserver vertexAdditionObserver = new VertexAdditionObserver();
     private final NeuronVertexDeletionObserver vertexDeletionObserver = new VertexDeletionObserver();
     
     private final Observer workspaceUpdater;
 
-    public NeuronVertexSpatialIndex(HortaWorkspace workspace) {
-        this.workspace = workspace;
+    public NeuronVertexSpatialIndex(NeuronManager neuronManager) {
+        this.workspace = neuronManager.getWorkspace();
         this.workspaceUpdater = new WorkspaceUpdater(workspace);
         rebuildIndex(this.workspace);
         this.workspace.addObserver(workspaceUpdater);
+        neuronManager.addNeuronCreationListener(this);
+        neuronManager.addNeuronVertexCreationListener(this);
     }
     
     public NeuronModel neuronForVertex(NeuronVertex vertex)
@@ -124,7 +131,7 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
             addNeuronVertex(neuron, vertex);
         }
         // Observe neuron changes
-        neuron.getVertexAddedObservable().addObserver(vertexAdditionObserver);
+        // neuron.getVertexAddedObservable().addObserver(vertexAdditionObserver);
         neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
     }
     
@@ -249,6 +256,19 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
         vertexNeurons.clear();
     }
 
+    @Override
+    public void neuronsCreated(Collection<NeuronModel> createdNeurons) {
+        for (NeuronModel neuron : createdNeurons) {
+            addNeuronModel(neuron);
+        }
+    }
+
+    @Override
+    public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
+        if (addPrivately(vertexWithNeuron.vertex))
+            vertexNeurons.put(vertexWithNeuron.vertex, vertexWithNeuron.neuron);
+    }
+
     private class VertexAdditionObserver 
     implements NeuronVertexAdditionObserver
     {
@@ -267,6 +287,7 @@ public class NeuronVertexSpatialIndex implements Collection<NeuronVertex>
                 remove(vertex);
         }
     }
+    
     private class WorkspaceUpdater implements Observer {
         private final HortaWorkspace workspace;
         

@@ -35,7 +35,7 @@ import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 
 /**
- *
+ * Applies Command design pattern to the act of manually adding one vertex to a neuron
  * @author brunsc
  */
 public class AppendNeuronVertexCommand 
@@ -44,10 +44,10 @@ implements UndoableEdit, Command
 {
     private final NeuronModel neuron;
     private NeuronVertex parentVertex;
-    private NeuronVertex newVertex = null;
+    private NeuronVertex newVertex = null; // caches the newly added vertex
     private final float[] coordinates;
     private final float radius;
-    private final AppendNeuronVertexCommand parentCommand;
+    private final AppendNeuronVertexCommand parentCommand; // maintains a linked list, to help resolve stale parent vertices after serial undo/redo
     
     public AppendNeuronVertexCommand(
             NeuronModel neuron, 
@@ -63,7 +63,7 @@ implements UndoableEdit, Command
         this.radius = radius;
     }
     
-    // Command-like semantics execute is a synonym for redo()
+    // Command-like semantics execute is almost a synonym for redo()
     @Override
     public boolean execute() {
         if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale

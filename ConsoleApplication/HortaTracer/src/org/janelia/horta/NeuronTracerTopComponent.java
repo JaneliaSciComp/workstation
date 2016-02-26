@@ -235,7 +235,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         setupDragAndDropYml();
 
         neuronManager = new NeuronManager(workspace);
-        neuronVertexIndex = new NeuronVertexSpatialIndex(workspace);
+        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
