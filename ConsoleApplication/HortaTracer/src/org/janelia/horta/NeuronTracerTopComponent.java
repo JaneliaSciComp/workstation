@@ -236,6 +236,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronManager = new NeuronManager(workspace);
         neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
+        
 
         // Change default rotation to Y-down, like large-volume viewer
         sceneWindow.getVantage().setDefaultRotation(new Rotation().setFromAxisAngle(
@@ -243,6 +244,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         sceneWindow.getVantage().resetRotation();
 
         setupMouseNavigation();
+        
+        neuronManager.addNeuronVertexCreationListener(tracingInteractor);
+        neuronManager.addNeuronVertexDeletionListener(tracingInteractor);
 
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());

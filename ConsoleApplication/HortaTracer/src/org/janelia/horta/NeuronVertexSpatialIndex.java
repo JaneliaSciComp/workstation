@@ -65,6 +65,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         rebuildIndex(neuronManager.getWorkspace());
         neuronManager.addNeuronCreationListener(this);
         neuronManager.addNeuronVertexCreationListener(this);
+        neuronManager.addNeuronVertexDeletionListener(this);
     }
     
     public NeuronModel neuronForVertex(NeuronVertex vertex)

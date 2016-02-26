@@ -38,12 +38,17 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
@@ -68,7 +73,8 @@ import org.openide.awt.UndoRedo;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseListener, MouseMotionListener, KeyListener, NeuronVertexDeletionObserver
+        implements MouseListener, MouseMotionListener, KeyListener, 
+        NeuronVertexDeletionListener, NeuronVertexCreationListener
 {
 
     private final VolumeProjection volumeProjection;
@@ -98,7 +104,7 @@ public class TracingInteractor extends MouseAdapter
     private final UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
-    Map<NeuronVertex, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
+    Map<List<Float>, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
             new TwoDimensionalRadiusEstimator(); // TODO: Use this again
@@ -159,6 +165,12 @@ public class TracingInteractor extends MouseAdapter
         return result;
     }
     
+    // List<Float> for comparing vertex locations, even if the underlying vertex object has changed identity.
+    private static List<Float> vtxKey(NeuronVertex vtx) {
+        float[] v = vtx.getLocation();
+        return Arrays.asList(v[0], v[1], v[2]);
+    }
+    
     // Mouse clicking for recentering, selection, and tracing
     @Override
     public void mouseClicked(MouseEvent event) {
@@ -185,7 +197,7 @@ public class TracingInteractor extends MouseAdapter
                     if (neuron != null) {
                         // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(cachedParentVertex, templateVertex.getLocation(), templateVertex.getRadius());
                         // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
-                        AppendNeuronVertexCommand parentAppendCmd = appendCommandForVertex.get(cachedParentVertex);
+                        AppendNeuronVertexCommand parentAppendCmd = appendCommandForVertex.get(vtxKey(cachedParentVertex));
                         AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(
                                 neuron, 
                                 cachedParentVertex, 
@@ -198,7 +210,7 @@ public class TracingInteractor extends MouseAdapter
                                 selectParentVertex(addedVertex, neuron);
                                 // undoRedoManager.addEdit(appendCmd);
                                 undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
-                                appendCommandForVertex.put(addedVertex, appendCmd);
+                                appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
                             }
                         }
                     }
@@ -613,16 +625,38 @@ public class TracingInteractor extends MouseAdapter
         }
     }
 
-    @Override // Neuron vertex deletion observer
-    public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron doomed) {
+    @Override
+    public void neuronVertexesDeleted(VertexCollectionWithNeuron doomed) {
         // Possibly remove parent glyph, if vertex is deleted
-        if (cachedParentVertex == null) return; // no sense checking 
+        if (cachedParentVertex == null) 
+            return; // no sense checking 
+        NeuronModel neuron = cachedParentNeuronModel; // In case we want to select a different parent below
+        NeuronVertex removedParent = null;
+        Set<NeuronVertex> allDoomedVertexes = new HashSet<>(); // remember them efficiently, for later checking reparent
+        List<Float> pvXyz = vtxKey(cachedParentVertex);
         for (NeuronVertex doomedVertex : doomed.vertexes) {
-            if (doomedVertex == cachedParentVertex) {
+            allDoomedVertexes.add(doomedVertex);
+            if (vtxKey(doomedVertex).equals(pvXyz)) {
+                removedParent = doomedVertex;
                 clearParentVertex();
-                return;
+                break;
             }
         }
+        // Maybe set parent to previous parent
+        if (removedParent != null) {
+            AppendNeuronVertexCommand removedParentAppendCommand = appendCommandForVertex.get(vtxKey(removedParent));
+            if (removedParentAppendCommand != null) {
+                NeuronVertex previousParent = removedParentAppendCommand.getParentVertex();
+                if (previousParent != null) {
+                    selectParentVertex(previousParent, neuron);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
+        selectParentVertex(vertexWithNeuron.vertex, vertexWithNeuron.neuron);
     }
 
 }

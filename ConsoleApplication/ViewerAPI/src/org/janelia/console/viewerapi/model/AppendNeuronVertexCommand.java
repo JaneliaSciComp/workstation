@@ -66,11 +66,7 @@ implements UndoableEdit, Command
     // Command-like semantics execute is almost a synonym for redo()
     @Override
     public boolean execute() {
-        if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale
-            NeuronVertex updatedParent = parentCommand.getAppendedVertex();
-            if (updatedParent != parentVertex)
-                parentVertex = updatedParent; // update link
-        }
+        refreshParent();
         newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
         if (newVertex == null)
             return false;
@@ -79,6 +75,19 @@ implements UndoableEdit, Command
     
     public NeuronVertex getAppendedVertex() {
         return newVertex;
+    }
+    
+    private void refreshParent() {
+        if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale
+            NeuronVertex updatedParent = parentCommand.getAppendedVertex();
+            if (updatedParent != parentVertex)
+                parentVertex = updatedParent; // update link
+        }        
+    }
+    
+    public NeuronVertex getParentVertex() {
+        refreshParent();
+        return parentVertex;
     }
     
     @Override

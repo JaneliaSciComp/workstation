@@ -96,6 +96,10 @@ public class NeuronModelAdapter implements NeuronModel
         this.workspace = workspace;
     }
 
+    public boolean hasCachedVertex(Long vertexId) {
+        return vertexes.hasCachedVertex(vertexId);
+    }
+        
     public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
         return vertexes.getVertexByGuid(annotation.getId());
     }
@@ -459,6 +463,10 @@ public class NeuronModelAdapter implements NeuronModel
         {
             this.vertices = vertices;
             this.workspace = workspace;
+        }
+        
+        public boolean hasCachedVertex(Long vertexId) {
+            return cachedVertices.containsKey(vertexId);
         }
         
         private void updateWrapping(Map<Long, TmGeoAnnotation> geoAnnotationMap, TmWorkspace workspace)

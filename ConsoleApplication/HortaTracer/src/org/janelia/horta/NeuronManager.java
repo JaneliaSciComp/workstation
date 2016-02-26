@@ -114,6 +114,10 @@ public class NeuronManager implements LookupListener
         neuronVertexCreationObservable.addNeuronVertexCreationListener(listener);
     }
     
+    public void addNeuronVertexDeletionListener(NeuronVertexDeletionListener listener) {
+        neuronVertexDeletionObservable.addNeuronVertexDeletionListener(listener);
+    }
+    
     public NeuronModel neuronForVertex(NeuronVertex vertex)
     {
         return vertexNeurons.get(vertex);
