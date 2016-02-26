@@ -30,8 +30,7 @@
 
 package org.janelia.console.viewerapi.listener;
 
-import java.util.Collection;
-import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 
 /**
  *
@@ -39,6 +38,6 @@ import org.janelia.console.viewerapi.model.VertexWithNeuron;
  */
 public interface NeuronVertexDeletionListener {
 
-    void neuronVertexesDeleted(Collection<VertexWithNeuron> vertexesWithNeurons);
+    void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons);
     
 }

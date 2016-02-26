@@ -42,6 +42,7 @@ import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -72,14 +73,33 @@ public class NeuronManager implements LookupListener
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
         
-    private final NeuronVertexAdditionObserver vertexAdditionObserver = new VertexAdditionObserver();
-    private final NeuronVertexDeletionObserver vertexDeletionObserver = new VertexDeletionObserver();
+    private final NeuronVertexAdditionObserver vertexAdditionObserver = 
+            new NeuronVertexAdditionObserver() {
+                @Override
+                public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                    if (vertexNeurons.containsKey(data.vertex)) 
+                        return; // We already saw this vertex
+                    vertexNeurons.put(data.vertex, data.neuron);
+                    neuronVertexCreationObservable.setChangedAndNotifyObservers(data);
+                }
+            };
+    private final NeuronVertexDeletionObserver vertexDeletionObserver = 
+            new NeuronVertexDeletionObserver() {
+                @Override
+                public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                    for (NeuronVertex vertex : data.vertexes)
+                        vertexNeurons.remove(vertex);
+                    neuronVertexDeletionObservable.deleteAndNotify(data);
+                }
+            };
     
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final NeuronCreationObservable neuronCreationObservable = new NeuronCreationObservable();
     private final NeuronVertexCreationObservable neuronVertexCreationObservable =
             new NeuronVertexCreationObservable();
+    private final NeuronVertexDeletionObservable neuronVertexDeletionObservable =
+            new NeuronVertexDeletionObservable();
     
     public NeuronManager(HortaWorkspace workspace) {
         this.workspace = workspace;
@@ -93,6 +113,11 @@ public class NeuronManager implements LookupListener
         neuronVertexCreationObservable.addNeuronVertexCreationListener(listener);
     }
     
+    public NeuronModel neuronForVertex(NeuronVertex vertex)
+    {
+        return vertexNeurons.get(vertex);
+    }
+
     // When Horta TopComponent opens
     public void onOpened() {
         neuronsLookupResult = Utilities.actionsGlobalContext().lookupResult(NeuronSet.class);
@@ -188,7 +213,7 @@ public class NeuronManager implements LookupListener
         private final GenericObservable<VertexWithNeuron> observable = new BasicGenericObservable<>();
 
         public void addNeuronVertexCreationListener(NeuronVertexCreationListener listener) {
-            observable.addObserver(new NeuronVertexCreationListenderAdapter(listener));
+            observable.addObserver(new NeuronVertexCreationListenerAdapter(listener));
         }
         
         public void setChangedAndNotifyObservers(VertexWithNeuron vertexWithNeuron) {
@@ -196,12 +221,12 @@ public class NeuronManager implements LookupListener
             observable.notifyObservers(vertexWithNeuron);
         }
 
-        private static class NeuronVertexCreationListenderAdapter 
+        private static class NeuronVertexCreationListenerAdapter 
         implements GenericObserver<VertexWithNeuron>
         {
             private final NeuronVertexCreationListener listener;
 
-            private NeuronVertexCreationListenderAdapter(NeuronVertexCreationListener listener) {
+            private NeuronVertexCreationListenerAdapter(NeuronVertexCreationListener listener) {
                 this.listener = listener;
             }
 
@@ -212,6 +237,37 @@ public class NeuronManager implements LookupListener
             
         }
     }
+    
+    // Watches NeuronModel signal, and rebroadcasts to NeuronVertexDeletionListeners
+    private static class NeuronVertexDeletionObservable {
+        private final GenericObservable<VertexCollectionWithNeuron> observable = new BasicGenericObservable<>();
+
+        public void addNeuronVertexDeletionListener(NeuronVertexDeletionListener listener) {
+            observable.addObserver(new NeuronVertexDeletionListenerAdapter(listener));
+        }
+        
+        public void deleteAndNotify(VertexCollectionWithNeuron vertexesWithNeuron) {
+            observable.setChanged();
+            observable.notifyObservers(vertexesWithNeuron);
+        }
+
+        private static class NeuronVertexDeletionListenerAdapter 
+        implements GenericObserver<VertexCollectionWithNeuron>
+        {
+            private final NeuronVertexDeletionListener listener;
+
+            private NeuronVertexDeletionListenerAdapter(NeuronVertexDeletionListener listener) {
+                this.listener = listener;
+            }
+
+            @Override
+            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                listener.neuronVertexesDeleted(data);
+            }
+            
+        }
+    }
+    
     
     private class NeuronCreationObservable
     {
@@ -252,26 +308,5 @@ public class NeuronManager implements LookupListener
 
     }
 
-    private class VertexAdditionObserver 
-    implements NeuronVertexAdditionObserver
-    {
-        @Override
-        public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
-            if (vertexNeurons.containsKey(data.vertex)) 
-                return; // We already saw this vertex
-            vertexNeurons.put(data.vertex, data.neuron);
-            neuronVertexCreationObservable.setChangedAndNotifyObservers(data);
-        }
-    }
-    
-    private class VertexDeletionObserver 
-    implements NeuronVertexDeletionObserver
-    {
-        @Override
-        public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-            for (NeuronVertex vertex : data.vertexes)
-                vertexNeurons.remove(vertex);
-        }
-    }
     
 }

@@ -54,6 +54,7 @@ import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.openide.util.Exceptions;
 
 /**
@@ -62,21 +63,21 @@ import org.openide.util.Exceptions;
  * @author Christopher Bruns
  */
 public class NeuronVertexSpatialIndex 
-implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreationListener
+implements Collection<NeuronVertex>, NeuronCreationListener, 
+        NeuronVertexCreationListener, NeuronVertexDeletionListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
     
+    private final NeuronManager neuronManager;
     private final HortaWorkspace workspace;
     private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
-    private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
+    // private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
 
-    // private final NeuronVertexAdditionObserver vertexAdditionObserver = new VertexAdditionObserver();
-    private final NeuronVertexDeletionObserver vertexDeletionObserver = new VertexDeletionObserver();
-    
     private final Observer workspaceUpdater;
 
     public NeuronVertexSpatialIndex(NeuronManager neuronManager) {
+        this.neuronManager = neuronManager;
         this.workspace = neuronManager.getWorkspace();
         this.workspaceUpdater = new WorkspaceUpdater(workspace);
         rebuildIndex(this.workspace);
@@ -87,7 +88,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreatio
     
     public NeuronModel neuronForVertex(NeuronVertex vertex)
     {
-        return vertexNeurons.get(vertex);
+        return neuronManager.neuronForVertex(vertex);
     }
 
 
@@ -128,16 +129,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreatio
     private void addNeuronModel(NeuronModel neuron) {
         currentNeuronModels.add(neuron);
         for (NeuronVertex vertex : neuron.getVertexes()) {
-            addNeuronVertex(neuron, vertex);
-        }
-        // Observe neuron changes
-        // neuron.getVertexAddedObservable().addObserver(vertexAdditionObserver);
-        neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
-    }
-    
-    public void addNeuronVertex(NeuronModel neuron, NeuronVertex vertex) {
-        if (addPrivately(vertex)) {
-            vertexNeurons.put(vertex, neuron);
+            addPrivately(vertex);
         }
     }
     
@@ -215,7 +207,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreatio
             NeuronVertex v = (NeuronVertex) o;
             double[] k = keyForVertex(v);
             index.delete(k);
-            vertexNeurons.remove(v);
         } catch (KeySizeException | KeyMissingException ex) {
             // Exceptions.printStackTrace(ex);
             return false;
@@ -253,7 +244,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreatio
         index = new KDTree<>(3);
         currentNeuronSets.clear();
         currentNeuronModels.clear();
-        vertexNeurons.clear();
     }
 
     @Override
@@ -265,26 +255,13 @@ implements Collection<NeuronVertex>, NeuronCreationListener, NeuronVertexCreatio
 
     @Override
     public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
-        if (addPrivately(vertexWithNeuron.vertex))
-            vertexNeurons.put(vertexWithNeuron.vertex, vertexWithNeuron.neuron);
+        addPrivately(vertexWithNeuron.vertex);
     }
 
-    private class VertexAdditionObserver 
-    implements NeuronVertexAdditionObserver
-    {
-        @Override
-        public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
-            addNeuronVertex(data.neuron, data.vertex);
-        }
-    }
-    
-    private class VertexDeletionObserver 
-    implements NeuronVertexDeletionObserver
-    {
-        @Override
-        public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
-            for (NeuronVertex vertex : data.vertexes)
-                remove(vertex);
+    @Override
+    public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
+        for (NeuronVertex vertex : vertexesWithNeurons.vertexes) {
+            remove(vertex);
         }
     }
     
