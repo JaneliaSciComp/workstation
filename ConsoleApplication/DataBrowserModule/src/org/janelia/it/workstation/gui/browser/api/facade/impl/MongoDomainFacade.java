@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.support.DomainDAO;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -128,6 +129,7 @@ public class MongoDomainFacade implements DomainFacade {
         }
         sjr.setFacetValues(facetValues);
         sjr.setResults(sr.getResponse().getResults());
+        sjr.setNumFound(sr.getResponse().getResults().getNumFound());
         return sjr;
     }
 
@@ -155,82 +157,91 @@ public class MongoDomainFacade implements DomainFacade {
     public Collection<LSMImage> getLsmsForSample(Long sampleId) {
         return dao.getLsmsBySampleId(AccessManager.getSubjectKey(), sampleId);
     }
-    
+
+    @Override
+    public List<Reference> getContainerReferences(DomainObject object) throws Exception {
+        return dao.getContainerReferences(object);
+    }
+
     @Override
     public Ontology create(Ontology ontology) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), ontology);
+        return (Ontology)updateIndex(dao.save(AccessManager.getSubjectKey(), ontology));
     }
 
     @Override
     public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
-        return dao.reorderTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, order);
+        return (Ontology)updateIndex(dao.reorderTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, order));
     }
 
     @Override
     public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
-        return dao.addTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, terms, index);
+        return (Ontology)updateIndex(dao.addTerms(AccessManager.getSubjectKey(), ontologyId, parentTermId, terms, index));
     }
 
     @Override
     public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
-        return dao.removeTerm(AccessManager.getSubjectKey(), ontologyId, parentTermId, termId);
+        return (Ontology)updateIndex(dao.removeTerm(AccessManager.getSubjectKey(), ontologyId, parentTermId, termId));
     }
 
     @Override
     public void removeOntology(Long ontologyId) throws Exception {
         Ontology ontology = dao.getDomainObject(AccessManager.getSubjectKey(), Ontology.class, ontologyId);
+        removeFromIndex(ontology.getId());
         dao.remove(AccessManager.getSubjectKey(), ontology);
     }
 
     @Override
     public Annotation create(Annotation annotation) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), annotation);
+        return (Annotation)updateIndex (dao.save(AccessManager.getSubjectKey(), annotation));
     }
 
     @Override
     public Annotation update(Annotation annotation) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), annotation);
+        return (Annotation)updateIndex(dao.save(AccessManager.getSubjectKey(), annotation));
     }
 
     @Override
     public void remove(Annotation annotation) throws Exception {
+        removeFromIndex(annotation.getId());
         dao.remove(AccessManager.getSubjectKey(), annotation);
     }
 
     @Override
     public void remove(DataSet dataSet) throws Exception {
+        removeFromIndex(dataSet.getId());
         dao.remove(AccessManager.getSubjectKey(), dataSet);
     }
 
 
     @Override
     public ObjectSet create(ObjectSet objectSet) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), objectSet);
+        return (ObjectSet) updateIndex(dao.save(AccessManager.getSubjectKey(), objectSet));
     }
 
     @Override
     public DataSet create(DataSet dataSet) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), dataSet);
+        return (DataSet) updateIndex(dao.save(AccessManager.getSubjectKey(), dataSet));
     }
 
     @Override
     public DataSet update(DataSet dataSet) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), dataSet);
+        return (DataSet) updateIndex(dao.save(AccessManager.getSubjectKey(), dataSet));
     }
 
     @Override
     public Filter create(Filter filter) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), filter);
+        return (Filter) updateIndex(dao.save(AccessManager.getSubjectKey(), filter));
     }
 
     @Override
     public Filter update(Filter filter) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), filter);
+        return (Filter) updateIndex(dao.save(AccessManager.getSubjectKey(), filter));
     }
 
     @Override
     public TreeNode create(TreeNode treeNode) throws Exception {
-        return dao.save(AccessManager.getSubjectKey(), treeNode);
+        return (TreeNode) updateIndex (dao.save(AccessManager.getSubjectKey(), treeNode));
+
     }
 
     @Override
@@ -240,32 +251,79 @@ public class MongoDomainFacade implements DomainFacade {
 
     @Override
     public TreeNode addChildren(TreeNode treeNode, Collection<Reference> references, Integer index) throws Exception {
-        return dao.addChildren(AccessManager.getSubjectKey(), treeNode, references, index);
+        TreeNode updatedNode = dao.addChildren(AccessManager.getSubjectKey(), treeNode, references, index);
+        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
+        for (DomainObject child: children) {
+            ModelMgr.getModelMgr().addAncestorToIndex(child.getId(), updatedNode.getId());
+        }
+        return updatedNode;
     }
 
     @Override
     public TreeNode removeChildren(TreeNode treeNode, Collection<Reference> references) throws Exception {
-        return dao.removeChildren(AccessManager.getSubjectKey(), treeNode, references);
+        TreeNode updatedNode = dao.removeChildren(AccessManager.getSubjectKey(), treeNode, references);
+        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
+        for (DomainObject child: children) {
+            updateIndex(child);
+        }
+        return updatedNode;
     }
 
     @Override
     public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        return dao.addMembers(AccessManager.getSubjectKey(), objectSet, references);
+        ObjectSet updatedNode = dao.addMembers(AccessManager.getSubjectKey(), objectSet, references);
+        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
+        for (DomainObject child: children) {
+            ModelMgr.getModelMgr().addAncestorToIndex(child.getId(), updatedNode.getId());
+        }
+        return updatedNode;
     }
 
     @Override
     public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        return dao.removeMembers(AccessManager.getSubjectKey(), objectSet, references);
+        ObjectSet updatedNode = dao.removeMembers(AccessManager.getSubjectKey(), objectSet, references);
+        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
+        for (DomainObject child: children) {
+            updateIndex(child);
+        }
+        return updatedNode;
     }
 
     @Override
-    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
-        return dao.updateProperty(AccessManager.getSubjectKey(), domainObject.getClass().getName(), domainObject.getId(), propName, propValue);
+    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) throws Exception {
+        return updateIndex(dao.updateProperty(AccessManager.getSubjectKey(), domainObject.getClass().getName(),
+                    domainObject.getId(), propName, propValue));
     }
 
     @Override
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
         dao.changePermissions(AccessManager.getSubjectKey(), domainObject.getClass().getName(), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
         return dao.getDomainObject(AccessManager.getSubjectKey(), domainObject);
+    }
+
+    private DomainObject updateIndex(DomainObject obj) throws Exception {
+        ModelMgr.getModelMgr().updateIndex(obj);
+        return obj;
+    }
+
+    private void removeFromIndex(Long domainObjId) throws Exception {
+        ModelMgr.getModelMgr().removeFromIndex(domainObjId);
+    }
+
+    @Override
+    public void remove(List<Reference> deleteObjectRefs) throws Exception {
+        for (Reference objectRef : deleteObjectRefs) {
+            // first check that it is an objectset or treeNode
+            Class<? extends DomainObject> objClass = DomainUtils.getObjectClassByName(objectRef.getTargetClassName());
+            if (objClass.equals("org.janelia.it.jacs.model.domain.workspace.TreeNode") ||
+                    objClass.equals("org.janelia.it.jacs.model.domain.workspace.ObjectSet")) {
+                String subjectKey = AccessManager.getSubjectKey();
+                DomainObject domainObj = dao.getDomainObject(subjectKey, objectRef);
+                // check whether this subject has permissions to write to this object
+                if (domainObj.getWriters().contains(subjectKey)) {
+                    dao.remove(subjectKey, domainObj);
+                }
+            }
+        }
     }
 }

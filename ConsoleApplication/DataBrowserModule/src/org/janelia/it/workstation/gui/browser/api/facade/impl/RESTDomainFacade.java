@@ -13,8 +13,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.solr.common.SolrDocumentList;
 import org.glassfish.jersey.internal.util.Base64;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -365,6 +363,33 @@ public class RESTDomainFacade implements DomainFacade {
         }
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
+    }
+
+    @Override
+    public List<Reference> getContainerReferences(DomainObject object) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(object);
+        Response response = serviceEndpoints.get("domainobject")
+                .path("references")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request to get Ancestors from server for " + object.getId())) {
+            return null;
+        }
+        List<Reference> references = response.readEntity(new GenericType<List<Reference>>() {});
+        return references;
+    }
+
+    public void remove(List<Reference> deleteObjectRefs) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setReferences(deleteObjectRefs);
+        Response response = serviceEndpoints.get("domainobject")
+                .path("remove")
+                .request("application/json")
+                .post(Entity.json(query));
+        checkBadResponse(response.getStatus(), "problem making request to remove objectList " + deleteObjectRefs);
     }
 
     @Override

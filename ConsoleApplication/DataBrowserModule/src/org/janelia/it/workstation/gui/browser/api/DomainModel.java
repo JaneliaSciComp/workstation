@@ -12,10 +12,6 @@ import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
 
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.params.ModifiableSolrParams;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -27,7 +23,6 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -187,7 +182,6 @@ public class DomainModel {
      * Invalidate the domain object in the cache, so that it will be reloaded on the next request.
      *
      * @param domainObject
-     * @param recurse
      */
     public void invalidate(DomainObject domainObject) {
         List<DomainObject> objects = new ArrayList<>();
@@ -199,7 +193,6 @@ public class DomainModel {
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request.
      *
      * @param objects
-     * @param recurse
      */
     public void invalidate(Collection<? extends DomainObject> objects) {
         log.debug("Invalidating {} objects", objects.size());
@@ -237,7 +230,7 @@ public class DomainModel {
 
     /**
      * Load an object from the database. 
-     * @param id
+     * @param ref
      * @return
      */
     private DomainObject loadDomainObject(Reference ref) {
@@ -284,7 +277,6 @@ public class DomainModel {
     /**
      * Reload all the entities in the given collection, and update the cache.
      *
-     * @param Reference
      * @return canonical domain object instances
      * @throws Exception
      */
@@ -491,6 +483,25 @@ public class DomainModel {
             images.add(putOrUpdate(image));
         }
         return images;
+    }
+
+    public List<Reference> getContainerReferences(DomainObject object) {
+        try {
+            return facade.getContainerReferences(object);
+        }
+        catch (Exception e) {
+            log.error("Problems checking references to object " + object.getId(),e);
+        }
+        return null;
+    }
+
+    public void remove(List<Reference> deleteObjectRefs) {
+        try {
+            facade.remove(deleteObjectRefs);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -739,7 +750,7 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) {
+    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) throws Exception {
         DomainObject canonicalObject = null;
         synchronized (this) {
             canonicalObject = putOrUpdate(facade.updateProperty(domainObject, propName, propValue));
@@ -808,4 +819,5 @@ public class DomainModel {
         invalidated.add(domainObject);
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
+
 }

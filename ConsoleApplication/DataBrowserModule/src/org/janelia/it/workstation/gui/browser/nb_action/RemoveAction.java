@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.ConfirmRemoveDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -96,10 +99,10 @@ public final class RemoveAction extends NodeAction {
     @Override
     protected void performAction (Node[] activatedNodes) {
         Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.<TreeNode,DomainObject>create();
+        List<Reference> listToDelete = new ArrayList<>();
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
         for(Node node : toRemove) {
             if (node instanceof DomainObjectNode) {
-                // TODO: check number of references
-                // TODO: delete the object if there are no more references
                 TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
                 if (parentNode==null) {
                     log.warn("Node has no parent, so it cannot be deleted: "+node.getDisplayName());
@@ -107,6 +110,12 @@ public final class RemoveAction extends NodeAction {
                 else {
                     TreeNode treeNode = parentNode.getTreeNode();
                     DomainObject domainObject = ((DomainObjectNode)node).getDomainObject();
+
+                    // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
+                    List<Reference> refList = model.getContainerReferences (domainObject);
+                    if (refList==null || refList.size()<=1) {
+                        listToDelete.add(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+                    }
                     removeFromFolders.put(treeNode,domainObject);
                 }
             }
@@ -114,16 +123,24 @@ public final class RemoveAction extends NodeAction {
                 throw new IllegalStateException("Remove can only be called on DomainObjectNodes");
             }
         }
-        
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        for(TreeNode treeNode : removeFromFolders.keySet()) {
-            try {
-                for(DomainObject domainObject: removeFromFolders.get(treeNode)) {
-                    model.removeChild(treeNode, domainObject);
+
+        if (listToDelete.size()>0) {
+            // pop up confirm dialog
+            ConfirmRemoveDialog confirmRemoveDialog = new ConfirmRemoveDialog();
+            confirmRemoveDialog.setDeleteObjectList(listToDelete);
+            confirmRemoveDialog.setRemoveFromFolders(removeFromFolders);
+            confirmRemoveDialog.showDialog();
+        } else {
+            // go ahead and remove references since no objects need to be deleted
+            for (TreeNode treeNode : removeFromFolders.keySet()) {
+                try {
+                    for (DomainObject domainObject: removeFromFolders.get(treeNode)) {
+                         model.removeChild(treeNode, domainObject);
+                    }
                 }
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
             }
         }
     }

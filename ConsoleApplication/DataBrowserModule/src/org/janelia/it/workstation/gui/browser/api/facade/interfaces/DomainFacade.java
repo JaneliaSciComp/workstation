@@ -318,6 +318,14 @@ public interface DomainFacade {
     public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
 
     /**
+     * Checks whether there are any TreeNode or ObjectSet references to this object
+     * @param object the object set\
+     * @return the updated object set
+     * @throws Exception something went wrong
+     */
+    public List<Reference> getContainerReferences(DomainObject object) throws Exception;
+
+    /**
      * Remove the specified domain objects from the given object set. 
      * @param objectSet the object set
      * @param references collection of references to domain objects
@@ -333,7 +341,7 @@ public interface DomainFacade {
      * @param propValue new property value
      * @return the updated domain object
      */
-    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue);
+    public DomainObject updateProperty(DomainObject domainObject, String propName, String propValue) throws Exception;
 
     /**
      * Update the permissions on the given domain object to grant or revoke rights to some subject. 
@@ -345,4 +353,5 @@ public interface DomainFacade {
      */
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
 
+    public void remove(List<Reference> deleteObjectRefs) throws Exception;
 }

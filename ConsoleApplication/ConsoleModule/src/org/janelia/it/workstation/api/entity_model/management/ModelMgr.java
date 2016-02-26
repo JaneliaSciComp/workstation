@@ -17,6 +17,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.jacs.compute.api.support.MappedId;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -1079,6 +1080,18 @@ public final class ModelMgr {
     public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
         log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
+    }
+
+    public void updateIndex(DomainObject domainObj) throws Exception {
+        FacadeManager.getFacadeManager().getSolrFacade().updateIndex(domainObj);
+    }
+
+    public void removeFromIndex(Long domainObjId) throws Exception {
+         FacadeManager.getFacadeManager().getSolrFacade().removeFromIndex(domainObjId);
+    }
+
+    public void addAncestorToIndex(Long domainObjId, Long ancestorId) throws Exception {
+        FacadeManager.getFacadeManager().getSolrFacade().addAncestorToIndex(domainObjId, ancestorId);
     }
     
     public Map<String, SageTerm> getImageVocabulary() throws Exception {
