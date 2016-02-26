@@ -70,7 +70,7 @@ public class NeuronModelAdapter implements NeuronModel
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
-    private final AnnotationModel annotationModel;
+    private AnnotationModel annotationModel;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
@@ -106,7 +106,10 @@ public class NeuronModelAdapter implements NeuronModel
             this.neuron = neuron;
             assert this.neuronId.equals(neuron.getId()); // Must use .equals() friggin java...
         }
-        assert this.annotationModel == annotationModel; // We are not willing to update THAT far
+        if (this.annotationModel != annotationModel) {
+            this.annotationModel = annotationModel; // annotationModel gets reinstantiated on workspace reload
+            // TODO: is more cleanup needed here? The vertex cache will get cleared below in vertexes.updateWrapping, assuming getGeoAnnotationMap has changed.
+        }
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap(), workspace);
     }
 
