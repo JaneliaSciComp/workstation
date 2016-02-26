@@ -110,6 +110,8 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
@@ -247,6 +249,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         neuronManager.addNeuronVertexCreationListener(tracingInteractor);
         neuronManager.addNeuronVertexDeletionListener(tracingInteractor);
+        
+        // Redraw the density when annotations are added
+        neuronManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
+            @Override
+            public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
+                neuronMPRenderer.setIntensityBufferDirty();
+            }
+        });
+        neuronManager.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
+            @Override
+            public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
+                neuronMPRenderer.setIntensityBufferDirty();
+            }
+        });
 
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
