@@ -30,6 +30,7 @@
 
 package org.janelia.horta;
 
+import java.util.ArrayList;
 import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import java.util.Collection;
 import java.util.HashMap;
@@ -144,6 +145,10 @@ public class NeuronManager implements LookupListener
             addNeuronModel(neuron);
         }
         set.getMembershipChangeObservable().addObserver(new NeuronSetUpdater(set));
+        if (set.size() > 0) {
+            neuronCreationObservable.addNewNeurons(set);
+            neuronCreationObservable.notifyObservers();
+        }
     }
     
     private void addNeuronModel(NeuronModel neuron) {
@@ -199,10 +204,16 @@ public class NeuronManager implements LookupListener
         @Override
         public void update(Observable o, Object arg)
         {
+            Collection<NeuronModel> newModels = new ArrayList<>();
             for (NeuronModel model : neuronSet) {
                 if (currentNeuronModels.contains(model))
                     continue;
+                newModels.add(model);
                 addNeuronModel(model);
+            }
+            if (newModels.size() > 0) {
+                neuronCreationObservable.addNewNeurons(newModels);
+                neuronCreationObservable.notifyObservers();
             }
         }
         
@@ -287,7 +298,7 @@ public class NeuronManager implements LookupListener
         
         public void notifyObservers() {
             if (recentlyAddedNeurons.isEmpty()) return; // nothing to see here
-            observable.notifyObservers(recentlyAddedNeurons);
+            observable.notifyObservers(new ArrayList<>(recentlyAddedNeurons));
             recentlyAddedNeurons.clear();
         }
         

@@ -35,27 +35,17 @@ import edu.wlu.cs.levy.CG.KeyDuplicateException;
 import edu.wlu.cs.levy.CG.KeyMissingException;
 import edu.wlu.cs.levy.CG.KeySizeException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Set;
-import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
-import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
-import org.openide.util.Exceptions;
 
 /**
  * NeuronVertexIndex is intended to permit rapid access to a NeuronVertex, given XYZ.
@@ -67,21 +57,12 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         NeuronVertexCreationListener, NeuronVertexDeletionListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
-    
     private final NeuronManager neuronManager;
-    private final HortaWorkspace workspace;
-    private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
-    private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
-    // private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
 
-    private final Observer workspaceUpdater;
 
     public NeuronVertexSpatialIndex(NeuronManager neuronManager) {
         this.neuronManager = neuronManager;
-        this.workspace = neuronManager.getWorkspace();
-        this.workspaceUpdater = new WorkspaceUpdater(workspace);
-        rebuildIndex(this.workspace);
-        this.workspace.addObserver(workspaceUpdater);
+        rebuildIndex(neuronManager.getWorkspace());
         neuronManager.addNeuronCreationListener(this);
         neuronManager.addNeuronVertexCreationListener(this);
     }
@@ -90,7 +71,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     {
         return neuronManager.neuronForVertex(vertex);
     }
-
 
     public NeuronVertex getNearest(double location[]) throws KeySizeException 
     {
@@ -127,7 +107,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     }
     
     private void addNeuronModel(NeuronModel neuron) {
-        currentNeuronModels.add(neuron);
         for (NeuronVertex vertex : neuron.getVertexes()) {
             addPrivately(vertex);
         }
@@ -135,11 +114,9 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     
     private void addNeuronSet(NeuronSet set) {
         // TODO: add vertexes in clever median order, to balance the tree
-        currentNeuronSets.add(set);
         for (NeuronModel neuron : set) {
             addNeuronModel(neuron);
         }
-        set.getMembershipChangeObservable().addObserver(new NeuronSetUpdater(set));
     }
     
     /// Collection interface below
@@ -242,8 +219,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     public void clear()
     {
         index = new KDTree<>(3);
-        currentNeuronSets.clear();
-        currentNeuronModels.clear();
     }
 
     @Override
@@ -263,45 +238,6 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         for (NeuronVertex vertex : vertexesWithNeurons.vertexes) {
             remove(vertex);
         }
-    }
-    
-    private class WorkspaceUpdater implements Observer {
-        private final HortaWorkspace workspace;
-        
-        public WorkspaceUpdater(HortaWorkspace workspace) {
-            this.workspace = workspace;
-        }
-
-        @Override
-        public void update(Observable o, Object arg)
-        {
-            for (NeuronSet set : workspace.getNeuronSets()) {
-                if (currentNeuronSets.contains(set))
-                    continue; // We already know this set
-                addNeuronSet(set);
-            }
-        }
-    
-    };
-    
-    private class NeuronSetUpdater implements Observer 
-    {
-        private final NeuronSet neuronSet;
-        
-        public NeuronSetUpdater(NeuronSet neuronSet) {
-            this.neuronSet = neuronSet;
-        }
-
-        @Override
-        public void update(Observable o, Object arg)
-        {
-            for (NeuronModel model : neuronSet) {
-                if (currentNeuronModels.contains(model))
-                    continue;
-                addNeuronModel(model);
-            }
-        }
-        
     }
 
 }
