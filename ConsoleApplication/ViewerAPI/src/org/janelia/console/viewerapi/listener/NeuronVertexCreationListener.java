@@ -28,44 +28,14 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.listener;
 
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 
-/**
- *
- * @author Christopher Bruns
- */
-public interface NeuronModel 
-extends Hideable
-{
-    String getName();
-    void setName(String name);
-    
-    Color getColor();
-    void setColor(Color color);
-    // Signals when the color of this neuron is toggled on or off
-    ObservableInterface getColorChangeObservable();
-    
-    Collection<NeuronVertex> getVertexes();
-    Collection<NeuronEdge> getEdges();
-    
-    // Adding a vertex is so common that it gets its own signal
-    NeuronVertexAdditionObservable getVertexAddedObservable(); // vertices added to neuron
-    
-    NeuronVertexDeletionObservable getVertexesRemovedObservable(); // vertices removed from neuron
-    
-    // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
-    // at the neuron level.
-    ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
-    
-    // Signals when the visibility of this neuron is toggled on or off
-    ObservableInterface getVisibilityChangeObservable();
+// Signals that one vertex was added manually. Not to be used for bulk loading.
 
-    // Custom method to help hook into LVV model from Horta
-    NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
+public interface NeuronVertexCreationListener {
+
+    void neuronVertexCreated(VertexWithNeuron vertexWithNeuron);
     
-    boolean deleteVertex(NeuronVertex doomedVertex);
 }

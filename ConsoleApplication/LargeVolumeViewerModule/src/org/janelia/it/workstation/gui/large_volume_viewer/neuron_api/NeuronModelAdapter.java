@@ -42,10 +42,12 @@ import java.util.Set;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -71,12 +73,13 @@ public class NeuronModelAdapter implements NeuronModel
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
     private final NeuronVertexAdditionObservable membersAddedObservable = 
             new BasicNeuronVertexAdditionObservable();
-    private final ObservableInterface membersRemovedObservable = new ComposableObservable();
+    private final NeuronVertexDeletionObservable membersRemovedObservable = 
+            new BasicNeuronVertexDeletionObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     // private NeuronStyle neuronStyle;
     // TODO: Stop using locally cached color and visibility, in favor of proper syncing with underlying Style
-    private final AnnotationModel annotationModel;
+    private AnnotationModel annotationModel;
     private boolean bIsVisible; // TODO: sync visibility with LVV eventually. For now, we want fast toggle from Horta.
     private Color defaultColor = Color.GRAY;
     private Color cachedColor = null;
@@ -93,6 +96,14 @@ public class NeuronModelAdapter implements NeuronModel
         this.workspace = workspace;
     }
 
+    public boolean hasCachedVertex(Long vertexId) {
+        return vertexes.hasCachedVertex(vertexId);
+    }
+        
+    public NeuronVertex getVertexForAnnotation(TmGeoAnnotation annotation) {
+        return vertexes.getVertexByGuid(annotation.getId());
+    }
+    
     // Special method for adding annotations from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
@@ -131,6 +142,22 @@ public class NeuronModelAdapter implements NeuronModel
         return result;
     }
     
+    @Override
+    public boolean deleteVertex(NeuronVertex doomedVertex) {
+        try {
+            if (! (doomedVertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            annotationModel.deleteLink(annotation);
+            return true;
+        } catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+    
     NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
@@ -154,7 +181,10 @@ public class NeuronModelAdapter implements NeuronModel
             this.neuron = neuron;
             assert this.neuronId.equals(neuron.getId()); // Must use .equals() friggin java...
         }
-        assert this.annotationModel == annotationModel; // We are not willing to update THAT far
+        if (this.annotationModel != annotationModel) {
+            this.annotationModel = annotationModel; // annotationModel gets reinstantiated on workspace reload
+            // TODO: is more cleanup needed here? The vertex cache will get cleared below in vertexes.updateWrapping, assuming getGeoAnnotationMap has changed.
+        }
         this.vertexes.updateWrapping(neuron.getGeoAnnotationMap(), workspace);
         this.workspace = workspace;
     }
@@ -225,13 +255,13 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
-    public NeuronVertexAdditionObservable getMembersAddedObservable()
+    public NeuronVertexAdditionObservable getVertexAddedObservable()
     {
         return membersAddedObservable;
     }
 
     @Override
-    public ObservableInterface getMembersRemovedObservable()
+    public NeuronVertexDeletionObservable getVertexesRemovedObservable()
     {
         return membersRemovedObservable;
     }
@@ -294,7 +324,6 @@ public class NeuronModelAdapter implements NeuronModel
         return neuron;
     }
 
-    
     // TODO: - implement Edges correctly
     private static class EdgeList 
     implements Collection<NeuronEdge>
@@ -434,6 +463,10 @@ public class NeuronModelAdapter implements NeuronModel
         {
             this.vertices = vertices;
             this.workspace = workspace;
+        }
+        
+        public boolean hasCachedVertex(Long vertexId) {
+            return cachedVertices.containsKey(vertexId);
         }
         
         private void updateWrapping(Map<Long, TmGeoAnnotation> geoAnnotationMap, TmWorkspace workspace)
