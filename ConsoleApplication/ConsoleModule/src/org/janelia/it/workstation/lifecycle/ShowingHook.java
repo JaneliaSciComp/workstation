@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.lifecycle;
 
+import java.awt.Toolkit;
 import javax.swing.JFrame;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -20,6 +21,10 @@ public class ShowingHook implements Runnable {
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle( title );
         SessionMgr.getBrowser().supportMenuProcessing();
+        
+        // Log events.
+        Toolkit.getDefaultToolkit().getSystemEventQueue().push(
+                new InterceptingEventQueue());
     }
 
 }
