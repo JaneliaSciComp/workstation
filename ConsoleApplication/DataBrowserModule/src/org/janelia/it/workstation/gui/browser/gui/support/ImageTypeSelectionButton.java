@@ -22,17 +22,13 @@ import org.janelia.it.workstation.gui.util.Icons;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
-import de.javasoft.swing.JYPopupMenu;
-import de.javasoft.swing.SimpleDropDownButton;
-
 /**
  * Drop-down button for selecting the image type to display. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ImageTypeSelectionButton extends SimpleDropDownButton {
+public class ImageTypeSelectionButton extends DropDownButton {
 
-    private JYPopupMenu popupMenu;
     private ResultDescriptor currResult;
     private String currImageType;
     private boolean showTitle;
@@ -42,10 +38,6 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
     }
     
     public ImageTypeSelectionButton(boolean showTitle) {
-
-        popupMenu = new JYPopupMenu();
-        popupMenu.setVisibleElements(20);
-        setPopupMenu(popupMenu);
         setIcon(Icons.getIcon("page.png"));
         setFocusable(false);
         setToolTipText("Select the result type to display");
@@ -91,7 +83,7 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
         }
         
         setVisible(!countedTypeNames.isEmpty());
-        popupMenu.removeAll();
+        getPopupMenu().removeAll();
         
         ButtonGroup group = new ButtonGroup();
         
@@ -108,7 +100,7 @@ public class ImageTypeSelectionButton extends SimpleDropDownButton {
                         imageTypeChanged(currImageType);
                     }
                 });
-                popupMenu.add(menuItem);
+                getPopupMenu().add(menuItem);
                 group.add(menuItem);
             }
         }

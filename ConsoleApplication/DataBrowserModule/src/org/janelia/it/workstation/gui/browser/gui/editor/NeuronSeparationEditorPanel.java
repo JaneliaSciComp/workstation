@@ -35,6 +35,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
@@ -51,7 +52,6 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
-import de.javasoft.swing.SimpleDropDownButton;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -66,7 +66,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private final JPanel separationPanel;
     private final JLabel titleLabel;
     private final JLabel historyLabel;
-    private final SimpleDropDownButton resultButton;
+    private final DropDownButton resultButton;
     private final JToggleButton editModeButton;
     private final JButton openInNAButton;
     private final PaginatedResultsPanel resultsPanel;
@@ -95,7 +95,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         titleLabel = new JLabel("");
         historyLabel = new JLabel("History:");
 
-        resultButton = new SimpleDropDownButton("Choose version...");
+        resultButton = new DropDownButton("Choose version...");
         resultButton.setFocusable(false);
         
         editModeButton = new JToggleButton();
@@ -145,11 +145,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         action.doAction();
     }
     
-    private JPopupMenu getResultPopupMenu(PipelineResult pipelineResult) {
-
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-        
+    private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {        
         if (pipelineResult.hasResults()) {
             for(final PipelineResult result : pipelineResult.getResults()) {
                 if (result instanceof NeuronSeparation) {
@@ -198,9 +194,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         Sample sample = parentResult.getParentRun().getParent().getParent();
         selectionModel.setParentObject(sample);
         
-        JPopupMenu popupMenu = getResultPopupMenu(result);
+        JPopupMenu popupMenu = populateResultPopupMenu(resultButton.getPopupMenu(), result);
         historyLabel.setText("History ("+popupMenu.getComponentCount()+"):");
-        resultButton.setPopupMenu(popupMenu);
         
         if (separation==null) {
             showNothing();

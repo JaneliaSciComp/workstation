@@ -8,7 +8,7 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 import javax.swing.UIManager;
 
-import de.javasoft.swing.SimpleDropDownButton;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 
 /**
  * Tool bar for the sample editor panel.
@@ -20,9 +20,9 @@ import de.javasoft.swing.SimpleDropDownButton;
 public class SampleEditorToolbar extends JPanel {
 
     protected JToolBar toolbar;
-    private final SimpleDropDownButton viewButton;
-    private final SimpleDropDownButton objectiveButton;
-    private final SimpleDropDownButton areaButton;
+    private final DropDownButton viewButton;
+    private final DropDownButton objectiveButton;
+    private final DropDownButton areaButton;
 
     public SampleEditorToolbar() {
         super(new BorderLayout());
@@ -33,25 +33,25 @@ public class SampleEditorToolbar extends JPanel {
         toolbar.setRollover(true);
         add(toolbar);
 
-        viewButton = new SimpleDropDownButton("View: ");
+        viewButton = new DropDownButton("View: ");
         toolbar.add(viewButton);
         
-        objectiveButton = new SimpleDropDownButton("Objective: ");
+        objectiveButton = new DropDownButton("Objective: ");
         toolbar.add(objectiveButton);
         
-        areaButton = new SimpleDropDownButton("Area: ");
+        areaButton = new DropDownButton("Area: ");
         toolbar.add(areaButton);
     }
 
-    public SimpleDropDownButton getViewButton() {
+    public DropDownButton getViewButton() {
         return viewButton;
     }
     
-    public SimpleDropDownButton getObjectiveButton() {
+    public DropDownButton getObjectiveButton() {
         return objectiveButton;
     }
 
-    public SimpleDropDownButton getAreaButton() {
+    public DropDownButton getAreaButton() {
         return areaButton;
     }
     

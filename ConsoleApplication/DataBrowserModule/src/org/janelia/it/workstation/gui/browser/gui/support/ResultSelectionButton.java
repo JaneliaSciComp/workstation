@@ -25,7 +25,6 @@ import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
 import de.javasoft.swing.JYPopupMenu;
-import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,
@@ -33,9 +32,8 @@ import de.javasoft.swing.SimpleDropDownButton;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultSelectionButton extends SimpleDropDownButton {
+public class ResultSelectionButton extends DropDownButton {
 
-    private JYPopupMenu popupMenu;
     private ResultDescriptor currResult;
     private boolean showTitle;
     
@@ -44,13 +42,7 @@ public class ResultSelectionButton extends SimpleDropDownButton {
     }
     
     public ResultSelectionButton(boolean showTitle) {
-        
         this.showTitle = showTitle;
-        
-        popupMenu = new JYPopupMenu();
-        popupMenu.setVisibleElements(20);
-
-        setPopupMenu(popupMenu);
         setIcon(Icons.getIcon("folder_open_page.png"));
         setFocusable(false);
         setToolTipText("Select the result to display");
@@ -100,7 +92,7 @@ public class ResultSelectionButton extends SimpleDropDownButton {
         }
         
         setVisible(!countedResultNames.isEmpty());
-        popupMenu.removeAll();
+        getPopupMenu().removeAll();
         
         // Sort in alphanumeric order, with Latest first
         List<String> sortedResultNames = new ArrayList<>(countedResultNames.elementSet());
@@ -126,7 +118,7 @@ public class ResultSelectionButton extends SimpleDropDownButton {
                     resultChanged(currResult);
                 }
             });
-            popupMenu.add(menuItem);
+            getPopupMenu().add(menuItem);
             group.add(menuItem);
         }        
     }

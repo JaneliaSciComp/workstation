@@ -58,9 +58,9 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -71,10 +71,10 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
-import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
@@ -89,8 +89,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
-import de.javasoft.swing.JYPopupMenu;
-import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -122,8 +120,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private JButton saveAsButton;
     private JPanel criteriaPanel;
     private final PaginatedResultsPanel resultsPanel;
-    private SimpleDropDownButton typeCriteriaButton;
-    private SimpleDropDownButton addCriteriaButton;
+    private DropDownButton typeCriteriaButton;
+    private DropDownButton addCriteriaButton;
     private JComboBox inputField;    
     
     // State
@@ -227,7 +225,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.criteriaPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
         criteriaPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
         
-        this.typeCriteriaButton = new SimpleDropDownButton("Type: Sample");
+        this.typeCriteriaButton = new DropDownButton("Type: Sample");
         
         ButtonGroup typeGroup = new ButtonGroup();
         
@@ -246,10 +244,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             typeCriteriaButton.getPopupMenu().add(menuItem);
         }
         
-        this.addCriteriaButton = new SimpleDropDownButton("Add Criteria...");
-        JYPopupMenu popupMenu = new JYPopupMenu();
-        popupMenu.setVisibleElements(10);
-        addCriteriaButton.setPopupMenu(popupMenu);
+        this.addCriteriaButton = new DropDownButton("Add Criteria...");
         
         this.inputField = new JComboBox();
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
@@ -429,7 +424,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     label.append(StringUtils.getCommaDelimited(values, MAX_VALUES_STRING_LENGTH));
                     label.append(")");
                 }
-                SimpleDropDownButton facetButton = new SimpleDropDownButton(label.toString());
+                DropDownButton facetButton = new DropDownButton(label.toString());
                 populateFacetMenu(attr, facetButton.getPopupMenu());
                 criteriaPanel.add(facetButton);
             }
@@ -438,7 +433,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         if (filter.hasCriteria()) {
             for (Criteria criteria : filter.getCriteriaList()) {
                 if (criteria instanceof AttributeCriteria) {
-                    SimpleDropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
+                    DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
                     if (customCriteriaButton!=null) {
                         criteriaPanel.add(customCriteriaButton);
                     }
@@ -497,7 +492,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         criteriaPanel.updateUI();
     }
     
-    private SimpleDropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
+    private DropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
         String label = null;
         final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
@@ -514,7 +509,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             return null;
         }
         
-        SimpleDropDownButton facetButton = new SimpleDropDownButton(label);
+        DropDownButton facetButton = new DropDownButton(label);
 
         JPopupMenu popupMenu = facetButton.getPopupMenu();
         popupMenu.removeAll();
@@ -545,8 +540,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     private void populateFacetMenu(final DomainObjectAttribute attr, JPopupMenu popupMenu) {
-
-        popupMenu.removeAll();
 
         Set<String> selectedValues = getSelectedFacetValues(attr.getName());
 

@@ -29,6 +29,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -42,8 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-
-import de.javasoft.swing.SimpleDropDownButton;
 
 /**
  * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
@@ -67,7 +66,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private final JButton startPageButton;
     private final JButton selectAllButton;
     private final JLabel pagingStatusLabel;
-    private final SimpleDropDownButton viewTypeButton;
+    private final DropDownButton viewTypeButton;
     
     // Result view
     private AnnotatedDomainObjectListViewer resultsView;
@@ -92,8 +91,8 @@ public abstract class PaginatedResultsPanel extends JPanel {
         splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
         
-        viewTypeButton = new SimpleDropDownButton("Choose Viewer...");
-        viewTypeButton.setPopupMenu(getViewerPopupMenu());
+        viewTypeButton = new DropDownButton("Choose Viewer...");
+        populateViewerPopupMenu(viewTypeButton.getPopupMenu());
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back a page");
@@ -174,11 +173,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         setViewerType(ListViewerType.IconViewer);
     }
     
-    private JPopupMenu getViewerPopupMenu() {
-
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-        
+    private void populateViewerPopupMenu(JPopupMenu popupMenu) {
         for(final ListViewerType type : ListViewerType.values()) {
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
@@ -188,8 +183,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
             });
             popupMenu.add(viewItem);
         }
-
-        return popupMenu;
     }
     
     private void setViewerType(final ListViewerType viewerType) {
