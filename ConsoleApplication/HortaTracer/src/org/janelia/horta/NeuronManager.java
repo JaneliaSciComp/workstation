@@ -139,12 +139,13 @@ public class NeuronManager implements LookupListener
     }
     
     private void addNeuronSet(NeuronSet set) {
-        // TODO: add vertexes in clever median order, to balance the tree
-        currentNeuronSets.add(set);
+        currentNeuronSets.add(set); // TODO: is this accounting needed?
         for (NeuronModel neuron : set) {
             addNeuronModel(neuron);
         }
+        // Prepare to emit finer-grained signals in the future
         set.getMembershipChangeObservable().addObserver(new NeuronSetUpdater(set));
+        // Notify observers now about the newly found neurons
         if (set.size() > 0) {
             neuronCreationObservable.addNewNeurons(set);
             neuronCreationObservable.notifyObservers();
