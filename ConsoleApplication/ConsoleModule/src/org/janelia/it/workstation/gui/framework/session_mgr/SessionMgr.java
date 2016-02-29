@@ -15,6 +15,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
@@ -38,6 +41,7 @@ import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
@@ -57,10 +61,14 @@ import org.janelia.it.workstation.shared.util.RendererType2D;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.web.EmbeddedWebServer;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
@@ -940,6 +948,26 @@ public final class SessionMgr implements ActivityLogging {
     
     public static void setSubjectKey(String s) {
         subjectKey = s;
+
+        SimpleWorker worker = new SimpleWorker() {
+        
+            @Override
+            protected void doStuff() throws Exception {
+                getSessionMgr().loginSubject(subjectKey);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                log.info("Done init on legacy track");
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        
+        worker.execute();
     }
 
     public static String getSubjectKey() {
@@ -1007,6 +1035,40 @@ public final class SessionMgr implements ActivityLogging {
         return false;
     }
 
+    /**
+     * Subverts the whole security system. This is used by NG to inject an already authenticated user back into the legacy code.
+     */
+    public boolean loginSubject(String username) {
+        try {
+            boolean relogin = false;
+
+            if (isLoggedIn()) {
+                logoutUser();
+                log.info("RELOGIN");
+                relogin = true;
+            }
+
+            findAndRemoveWindowsSplashFile();
+            // Login and start the session
+            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(username);
+            if (null != authenticatedSubject) {
+                isLoggedIn = true;
+                loggedInSubject = authenticatedSubject;
+                log.info("Authenticated as {}", authenticatedSubject.getKey());
+                if (relogin) {
+                    resetSession();
+                }
+            }
+
+            return isLoggedIn;
+        }
+        catch (Exception e) {
+            isLoggedIn = false;
+            log.error("Error logging in", e);
+            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+                    "Cannot authenticate login. The server may be down. Please try again later.");
+        }
+    }
 
     public boolean loginSubject(String username, String password) {
         try {
@@ -1088,7 +1150,6 @@ public final class SessionMgr implements ActivityLogging {
     public void logoutUser() {
         try {
             if (loggedInSubject != null) {
-                FacadeManager.getFacadeManager().getComputeFacade().endSession();
                 log.info("Logged out with: {}", loggedInSubject.getKey());
             }
             isLoggedIn = false;
