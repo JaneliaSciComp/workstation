@@ -29,7 +29,7 @@ public class InterceptingEventQueue extends EventQueue {
     private static final String MOUSE_EVENT_DISCRIMINATOR = "MOUSE_CLICKED";
     private static final CategoryString CATEGORY_STRING = new CategoryString("CLIK");
 
-    private List<Long> eventTimes = new ArrayList<>();
+    private List<String> messages = new ArrayList<>();
 
     public InterceptingEventQueue() {
         Thread t = new Thread(new ReportRunner(this));
@@ -40,22 +40,24 @@ public class InterceptingEventQueue extends EventQueue {
     @Override
     protected void dispatchEvent(AWTEvent event) {
         if (event instanceof MouseEvent) {
-            MouseEvent me = (MouseEvent)event;
+            MouseEvent me = (MouseEvent)event;            
             if (me.paramString().startsWith(MOUSE_EVENT_DISCRIMINATOR)) {
+                // Assumption: these relative X,Y coords are relative to the overall JFrame, since no other semantic data is yet available.
+                String message = me.getX() + "," + me.getY() + ":" + me.getXOnScreen() + "," + me.getYOnScreen() + ":" + new Date().getTime();
                 synchronized (this) {
-                    getEventTimes().add(new Date().getTime());
+                    getEventTimes().add(message);
                 }
             }
         }
         super.dispatchEvent(event);
     }
     
-    private void setEventTimes(List<Long> eventTimes) {
-        this.eventTimes = eventTimes;
+    private void setMessages(List<String> messages) {
+        this.messages = messages;
     }
     
-    private List<Long> getEventTimes() {
-        return eventTimes;
+    private List<String> getEventTimes() {
+        return messages;
     }
 
     public static class ReportRunner implements Runnable {
@@ -69,22 +71,19 @@ public class InterceptingEventQueue extends EventQueue {
             while (true) {
 
                 // Get rid of the sensitive stuff.
-                List<Long> latest = null;
+                List<String> latest = null;
                 synchronized (this) {
-                    // Avoid entanglement with event queue, with sync block.
-                    latest = new ArrayList<>(queue.getEventTimes());
-                    queue.setEventTimes(new ArrayList<Long>());
+                    // Avoid entanglement with event queue, via sync block.
+                    latest = queue.getEventTimes();
+                    queue.setMessages(new ArrayList<String>());
                 }
 
                 try {
                     Thread.sleep(SLEEP_INTERVAL_S);
 
-                    for (Long eventTime: latest) {
-                        // Log as little as possible about the event.
-                        //String paramStr = ae.paramString();
-                        ActionString as = new ActionString(MOUSE_EVENT_DISCRIMINATOR + ":" + eventTime);
-                        sessionMgr.logToolEvent(TOOL_STRING, CATEGORY_STRING, as);
-                    }
+                    // Make a fairly brief action string.
+                    //String paramStr = ae.paramString();
+                    sessionMgr.logBatchToolEvent(TOOL_STRING, CATEGORY_STRING, MOUSE_EVENT_DISCRIMINATOR, latest);
 
                 } catch (Exception ex) {
                     ex.printStackTrace();
