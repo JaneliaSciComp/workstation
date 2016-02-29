@@ -446,7 +446,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             ObjectiveSample objSample = sample.getObjectiveSample(objective);
             if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null || run.getResults()==null) continue;
             
             for(PipelineResult result : run.getResults()) {
@@ -525,7 +525,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             ObjectiveSample objSample = sample.getObjectiveSample(objective);
             if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null || run.getResults()==null) continue;
             
             for(PipelineResult result : run.getResults()) {

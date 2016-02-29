@@ -70,7 +70,7 @@ public class ResultSelectionButton extends DropDownButton {
                 Sample sample = (Sample)domainObject;
                 for(String objective : sample.getOrderedObjectives()) {
                     ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-                    SamplePipelineRun run = objectiveSample.getLatestRun();
+                    SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
                     if (run==null || run.getResults()==null) continue;
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups) {

@@ -49,7 +49,7 @@ public class DomainModelViewUtils {
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
             ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
             if (objSample==null) return null;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null) return null;
             chosenResult = run.getLatestResult();
 
@@ -67,7 +67,7 @@ public class DomainModelViewUtils {
                 if (!objective.equals(result.getObjective())) continue;
                 ObjectiveSample objSample = sample.getObjectiveSample(objective);
                 if (objSample==null) continue;
-                SamplePipelineRun run = objSample.getLatestRun();
+                SamplePipelineRun run = objSample.getLatestSuccessfulRun();
                 if (run==null || run.getResults()==null) continue;
                 
                 for(PipelineResult pipelineResult : run.getResults()) {
@@ -100,7 +100,7 @@ public class DomainModelViewUtils {
     
         ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size() - 1));
         if (objSample==null) return null;
-        SamplePipelineRun run = objSample.getLatestRun();
+        SamplePipelineRun run = objSample.getLatestSuccessfulRun();
         if (run==null) return null;
         PipelineResult chosenResult = run.getLatestResult();
 
