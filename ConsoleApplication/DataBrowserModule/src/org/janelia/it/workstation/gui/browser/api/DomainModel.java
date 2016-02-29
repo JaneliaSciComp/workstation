@@ -14,8 +14,8 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -36,6 +36,8 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEve
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,8 @@ import com.google.common.cache.RemovalNotification;
 public class DomainModel {
 
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
-
+    private static final boolean TIMER = true;//log.isDebugEnabled();
+    
     private final DomainFacade facade;
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
@@ -307,7 +310,7 @@ public class DomainModel {
      * @throws Exception
      */
     public DomainObject getDomainObject(Reference ref) {
-        log.debug("getDomainObjectByReference({})",ref);
+        log.debug("getDomainObject({})",ref);
         DomainObject domainObject = objectCache.getIfPresent(ref);
         if (domainObject != null) {
             log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
@@ -323,7 +326,9 @@ public class DomainModel {
         if (references==null) return new ArrayList<>();
 
         log.debug("getDomainObjects(references.size={})",references.size());
-
+        
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        
         Map<Reference,DomainObject> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
 
@@ -336,7 +341,7 @@ public class DomainModel {
                 unsatisfiedRefs.add(ref);
             }
         }
-
+                
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = facade.getDomainObjects(unsatisfiedRefs);
             map.putAll(DomainUtils.getMapByReference(objects));
@@ -355,7 +360,8 @@ public class DomainModel {
             }
         }
 
-        log.debug("getDomainObjectsByReference: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
+        if (TIMER) if (TIMER) w.stop("getDomainObjects(references)");
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
         return domainObjects;
     }
 
@@ -379,18 +385,21 @@ public class DomainModel {
 
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
         List<T> objects = new ArrayList<>();
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for(DomainObject domainObject : facade.getDomainObjects(domainClass, name)) {
             objects.add((T)domainObject);
         }
+        if (TIMER) w.stop("getDomainObjects(Class,objectName)");
         return objects;
     }
     
     public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
 
         if (className==null || ids==null) return new ArrayList<>();
-
         log.debug("getDomainObjects(ids.size={})",ids.size());
 
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        
         Map<Reference,DomainObject> map = new HashMap<>();
         List<Long> unsatisfiedIds = new ArrayList<>();
 
@@ -424,6 +433,7 @@ public class DomainModel {
             }
         }
 
+        if (TIMER) w.stop("getDomainObjects(className,ids)");
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
         return domainObjects;
     }
@@ -444,18 +454,23 @@ public class DomainModel {
     
     public List<Annotation> getAnnotations(Collection<Reference> references) {
         if (references==null) return new ArrayList<>();
-        // TODO: cache these?
-        return facade.getAnnotations(references);
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        List<Annotation> annotations = facade.getAnnotations(references); 
+        // TODO: cache the annotations?
+        if (TIMER) w.stop("getAnnotations(references)");
+        return annotations;
     }
 
     public List<Workspace> getWorkspaces() {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
+                StopWatch w = TIMER ? new LoggingStopWatch() : null;
                 for (Workspace workspace : facade.getWorkspaces()) {
                     Workspace cachedRoot = putOrUpdate(workspace);
                     workspaceCache.put(Reference.createFor(cachedRoot), cachedRoot);
                 }
+                if (TIMER) w.stop("getWorkspaces");
             }
         }
         List<Workspace> workspaces = new ArrayList<>(workspaceCache.values());
@@ -470,24 +485,31 @@ public class DomainModel {
 
     public List<DataSet> getDataSets() throws Exception {
         List<DataSet> dataSets = new ArrayList<>();
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (DataSet dataSet : facade.getDataSets()) {
             dataSets.add(putOrUpdate(dataSet));
         }
         Collections.sort(dataSets, new DomainObjectComparator());
+        if (TIMER) w.stop("getDataSets");
         return dataSets;
     }
     
     public List<LSMImage> getLsmsForSample(Long sampleId) {
         List<LSMImage> images = new ArrayList<>();
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for(LSMImage image : facade.getLsmsForSample(sampleId)) {
             images.add(putOrUpdate(image));
         }
+        if (TIMER) w.stop("getLsmsForSample");
         return images;
     }
 
     public List<Reference> getContainerReferences(DomainObject object) {
         try {
-            return facade.getContainerReferences(object);
+            StopWatch w = TIMER ? new LoggingStopWatch() : null;
+            List<Reference> references = facade.getContainerReferences(object);
+            if (TIMER) w.stop("getContainerReferences");
+            return references;
         }
         catch (Exception e) {
             log.error("Problems checking references to object " + object.getId(),e);
@@ -511,10 +533,12 @@ public class DomainModel {
      */
     public List<Ontology> getOntologies() throws Exception {
         List<Ontology> ontologies = new ArrayList<>();
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (Ontology ontology : facade.getOntologies()) {
             ontologies.add(putOrUpdate(ontology));
         }
         Collections.sort(ontologies, new DomainObjectComparator());
+        if (TIMER) w.stop("getOntologies");
         return ontologies;
     }
 
@@ -629,7 +653,10 @@ public class DomainModel {
     }
 
     public SolrJsonResults search(SolrParams query) throws Exception {
-        return facade.performSearch(query);
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        SolrJsonResults results = facade.performSearch(query);
+        if (TIMER) w.stop("search(query)");
+        return results;
     }
 
     public DataSet save(DataSet dataSet) throws Exception {

@@ -63,7 +63,7 @@ public class ResultDescriptor {
             this.objective = parts[0];
             this.resultName = parts[1];
 
-            Pattern p = Pattern.compile("(.*?)\\s*(- \\((.*?)\\))?");
+            Pattern p = Pattern.compile("^(.*?)(\\s+\\(([^()]+)\\))?$");
             Matcher m = p.matcher(resultName);
             if (!m.matches()) {
                 throw new IllegalStateException("Result name cannot be parsed: " + parts[1]);

@@ -24,8 +24,6 @@ import org.janelia.it.workstation.gui.util.Icons;
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
 
-import de.javasoft.swing.JYPopupMenu;
-
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,
  * but it can be easily extended to support other types in the future.
@@ -60,7 +58,7 @@ public class ResultSelectionButton extends DropDownButton {
     }
     
     public void populate(Collection<DomainObject> domainObjects) {
-
+        
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
         }
@@ -120,7 +118,7 @@ public class ResultSelectionButton extends DropDownButton {
             });
             getPopupMenu().add(menuItem);
             group.add(menuItem);
-        }        
+        }
     }
     
     protected void resultChanged(ResultDescriptor resultDescriptor) {}

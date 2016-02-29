@@ -26,7 +26,9 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
@@ -257,7 +259,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected void moreAnnotationsButtonDoubleClicked(DomainObject domainObject) {
-        // TODO: popup dialog with annotation details
+        new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_ANNOTATIONS);
     }
     
     @Override
