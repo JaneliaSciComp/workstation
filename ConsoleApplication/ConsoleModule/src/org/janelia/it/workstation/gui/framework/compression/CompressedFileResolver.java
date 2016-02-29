@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.compression;
+package org.janelia.it.workstation.gui.framework.compression;
 
 import com.sun.media.jai.codec.ByteArraySeekableStream;
 import com.sun.media.jai.codec.SeekableStream;

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.compression;
+package org.janelia.it.workstation.gui.framework.compression;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.large_volume_viewer.compression;
+package org.janelia.it.workstation.gui.framework.compression;
 
 import java.io.File;
 
