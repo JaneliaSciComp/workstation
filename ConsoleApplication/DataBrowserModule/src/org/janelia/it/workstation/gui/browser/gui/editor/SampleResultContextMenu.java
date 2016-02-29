@@ -17,7 +17,6 @@ import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInToolAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
@@ -74,6 +73,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
+        if (result.getLatestSeparationResult()==null) return;
         SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
         if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), result)) {
             viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
@@ -98,6 +98,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem getOpenSeparationInNewViewer() {
+        if (result.getLatestSeparationResult()==null) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
