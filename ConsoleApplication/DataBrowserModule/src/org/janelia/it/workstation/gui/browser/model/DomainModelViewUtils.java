@@ -90,7 +90,7 @@ public class DomainModelViewUtils {
         List<String> objectives = sample.getOrderedObjectives();
         if (objectives==null || objectives.isEmpty()) return null;
     
-        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
+        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size() - 1));
         if (objSample==null) return null;
         SamplePipelineRun run = objSample.getLatestRun();
         if (run==null) return null;
@@ -103,8 +103,10 @@ public class DomainModelViewUtils {
                 return new ResultDescriptor(objSample.getObjective(), chosenResult.getName(), groupKey);
             }
         }
-        
-        return new ResultDescriptor(objSample.getObjective(), chosenResult.getName(), null);
+
+        String name = (chosenResult==null)?null:chosenResult.getName();
+        return new ResultDescriptor(objSample.getObjective(), name, null);
+
     }
     
     public static NeuronSeparation getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {

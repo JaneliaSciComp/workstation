@@ -216,7 +216,9 @@ public class DataSetDialog extends ModalDialog {
             if (dataSet.getSageSync() != null) {
                 sageSyncCheckbox.setSelected(dataSet.getSageSync().booleanValue());
             }
-            applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
+            if (dataSet.getPipelineProcesses()!=null) {
+                applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
+            }
         } else {
             nameInput.setText("");
             applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());

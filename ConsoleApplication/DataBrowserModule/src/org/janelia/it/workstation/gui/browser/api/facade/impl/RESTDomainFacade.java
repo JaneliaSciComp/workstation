@@ -85,6 +85,7 @@ public class RESTDomainFacade implements DomainFacade {
         serviceEndpoints.put("dataset", client.target(serverUrl + "dataset"));
         serviceEndpoints.put("login", client.target(serverUrl + "login"));
         serviceEndpoints.put("search", client.target(serverUrl + "search"));
+        serviceEndpoints.put("sample", client.target(serverUrl + "sample"));
     }
 
     // general CRUD for all domain object hierarchies
@@ -298,6 +299,7 @@ public class RESTDomainFacade implements DomainFacade {
 
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) {
+
         Response response = serviceEndpoints.get("sample")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("sampleId", sampleId)
