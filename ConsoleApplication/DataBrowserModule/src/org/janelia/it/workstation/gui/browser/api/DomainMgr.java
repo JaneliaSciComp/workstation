@@ -7,16 +7,16 @@ import java.util.Map;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.*;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Singleton for managing the Domain Model and related data access. 
@@ -32,8 +32,13 @@ public class DomainMgr {
     private static final String DOMAIN_FACADE_CLASS_NAME = ConsoleProperties.getInstance().getProperty("domain.facade.class");
     
     // Singleton
-    private static final DomainMgr instance = new DomainMgr();
+    private static DomainMgr instance;
+    
     public static DomainMgr getDomainMgr() {
+        if (instance==null) {
+            instance = new DomainMgr();
+            Events.getInstance().registerOnEventBus(instance);
+        }
         return instance;
     }
     
@@ -47,19 +52,12 @@ public class DomainMgr {
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
-
-        SessionModelListener sessionModelListener = new SessionModelAdapter() {
-            @Override
-            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                if (key == "RunAs" || key == "console.serverLogin") {
-                    log.info("User changed, resetting model");
-                    model.invalidateAll();
-                }
-            }
-        };
-        
-        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
-        
+    }
+    
+    @Subscribe
+    public void runAsUserChanged(RunAsEvent event) {
+        log.info("User changed, resetting model");
+        model.invalidateAll();
     }
     
     /**

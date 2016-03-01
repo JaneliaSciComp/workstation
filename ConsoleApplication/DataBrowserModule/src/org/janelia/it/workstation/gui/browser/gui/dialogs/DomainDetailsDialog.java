@@ -73,7 +73,7 @@ public class DomainDetailsDialog extends ModalDialog {
         detailsPanel.loadDomainObject(domainObject, defaultTab);
         setTitle("Details: "+domainObject.getName());
         Component mainFrame = SessionMgr.getMainFrame();
-        setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.5),(int)(mainFrame.getHeight()*0.8)));
+        setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
         // Show dialog and wait
         packAndShow();
         

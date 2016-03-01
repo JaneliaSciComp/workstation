@@ -410,6 +410,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     lsms = model.getLsmsForSample(sample.getId());
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
                 }
+                else if (MODE_RESULTS.equals(currMode))  {
+                    // Everything is already in memory
+                }
             }
             
             @Override
@@ -443,7 +446,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             ObjectiveSample objSample = sample.getObjectiveSample(objective);
             if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null || run.getResults()==null) continue;
             
             for(PipelineResult result : run.getResults()) {
@@ -454,8 +457,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 if (area==null) {
-                	log.info("Skipping result with no anatomical area: "+result.getName());
-                	continue;
+                    area = "Unknown";
                 }
             	areaSet.add(area);
             }
@@ -523,7 +525,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             ObjectiveSample objSample = sample.getObjectiveSample(objective);
             if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null || run.getResults()==null) continue;
             
             for(PipelineResult result : run.getResults()) {
@@ -534,7 +536,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 if (area==null) {
-                	continue;
+                    area = "Unknown";
                 }
                 
                 boolean display = diplayObjective;
@@ -717,8 +719,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
                 String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);
+                if (signalMip==null) {
+                    signalMip = DomainUtils.getFilepath(result, FileType.AllMip);
+                }
+                if (signalMip==null) {
+                    signalMip = DomainUtils.getFilepath(result, FileType.Signal1Mip);
+                }
+                
                 String refMip = DomainUtils.getFilepath(result, FileType.ReferenceMip);
-    
+                
                 imagePanel.add(getImagePanel(signalMip));
                 imagePanel.add(getImagePanel(refMip));
     

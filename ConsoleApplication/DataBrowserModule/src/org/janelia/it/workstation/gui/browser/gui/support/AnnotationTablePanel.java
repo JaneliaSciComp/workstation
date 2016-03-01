@@ -8,8 +8,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -159,13 +157,15 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             }
         };
 
-        dynamicTable.getScrollPane().setWheelScrollingEnabled(false);
-        dynamicTable.getScrollPane().addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                getParent().dispatchEvent(e);
-            }
-        });
+        // This was probably in here for some reason, but I can't think of it. I'm disabling it now, 
+        // because it's annoying to have the mouse wheel disabled on long lists of annotations.
+//        dynamicTable.getScrollPane().setWheelScrollingEnabled(false);
+//        dynamicTable.getScrollPane().addMouseWheelListener(new MouseWheelListener() {
+//            @Override
+//            public void mouseWheelMoved(MouseWheelEvent e) {
+//                getParent().dispatchEvent(e);
+//            }
+//        });
 
         dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
 

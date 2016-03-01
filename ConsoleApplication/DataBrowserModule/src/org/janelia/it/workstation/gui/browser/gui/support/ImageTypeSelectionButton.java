@@ -18,6 +18,8 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
@@ -29,6 +31,8 @@ import com.google.common.collect.Multiset;
  */
 public class ImageTypeSelectionButton extends DropDownButton {
 
+    private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
+    
     private ResultDescriptor currResult;
     private String currImageType;
     private boolean showTitle;
@@ -59,7 +63,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     }
     
     public void populate(Collection<DomainObject> domainObjects) {
-
+        
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
         }
@@ -87,9 +91,11 @@ public class ImageTypeSelectionButton extends DropDownButton {
         
         ButtonGroup group = new ButtonGroup();
         
+        log.debug("{} domain objects have {} type names",domainObjects.size(),countedTypeNames.elementSet().size());
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
             if (countedTypeNames.count(typeName)>1 || (countedTypeNames.count(typeName)==1 && domainObjects.size()==1)) {
+                log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
                 if (currImageType == null || !countedTypeNames.contains(currImageType)) {
                     this.currImageType = typeName;
                 }

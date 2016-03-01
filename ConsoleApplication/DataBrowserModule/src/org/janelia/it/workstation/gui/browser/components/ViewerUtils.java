@@ -17,7 +17,7 @@ public class ViewerUtils {
 
     public static <T extends TopComponent> T getViewer(ViewerManager<T> manager) {
 
-        log.debug("Getting viewer: {}",manager.getViewerName());
+        log.info("Getting viewer: {}",manager.getViewerName());
         
         T targetViewer = manager.getActiveViewer();
         if (targetViewer!=null) {
@@ -32,7 +32,7 @@ public class ViewerUtils {
 
     public static <T extends TopComponent> T createNewViewer(ViewerManager<T> manager, final String modeName) {
 
-        log.debug("Creating viewer: {}",manager.getViewerName());
+        log.info("Creating viewer: {}",manager.getViewerName());
 
         T viewer;
         try {
@@ -42,7 +42,7 @@ public class ViewerUtils {
             throw new IllegalStateException("Viewer instantiation failed",e);
         }
         
-        log.info("Docking new instance of {} into {}",viewer.getName(),modeName);
+        log.debug("Docking new instance of {} into {}",viewer.getName(),modeName);
 
         Mode mode = WindowManager.getDefault().findMode(modeName);
         if (mode!=null) {
@@ -77,11 +77,11 @@ public class ViewerUtils {
         
         T targetViewer = manager.getActiveViewer();
         if (targetViewer==null || !targetViewer.isVisible() || !targetViewer.isOpened()) {
-            log.info("Visible active viewer not found, creating...");
+            log.debug("Visible active viewer not found, creating...");
             targetViewer = createNewViewer(manager, modeName);
         }
         else {
-            log.info("Found active viewer");
+            log.debug("Found active viewer");
             if (!targetViewer.isOpened()) {
                 targetViewer.open();
             }

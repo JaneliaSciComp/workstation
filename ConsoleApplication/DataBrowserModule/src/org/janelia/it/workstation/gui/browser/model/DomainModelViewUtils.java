@@ -13,6 +13,8 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for extracting information from the domain model for view purposes.
@@ -21,6 +23,8 @@ import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
  */
 public class DomainModelViewUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(DomainModelViewUtils.class);
+    
     private final static DateFormat dateFormatter = new SimpleDateFormat("yyyy/MM/dd hh:mma");
     
     public static String getLabel(PipelineResult result) {
@@ -33,6 +37,10 @@ public class DomainModelViewUtils {
 
     public static HasFiles getResult(Sample sample, ResultDescriptor result) {
         
+        log.debug("Getting result '{}' from {}",result,sample.getName());
+        log.debug("  Result name prefix: {}",result.getResultNamePrefix());
+        log.debug("  Group name: {}",result.getGroupName());
+        
         List<String> objectives = sample.getOrderedObjectives();
         if (objectives==null || objectives.isEmpty()) return null;
         
@@ -41,7 +49,7 @@ public class DomainModelViewUtils {
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
             ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
             if (objSample==null) return null;
-            SamplePipelineRun run = objSample.getLatestRun();
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null) return null;
             chosenResult = run.getLatestResult();
 
@@ -59,7 +67,7 @@ public class DomainModelViewUtils {
                 if (!objective.equals(result.getObjective())) continue;
                 ObjectiveSample objSample = sample.getObjectiveSample(objective);
                 if (objSample==null) continue;
-                SamplePipelineRun run = objSample.getLatestRun();
+                SamplePipelineRun run = objSample.getLatestSuccessfulRun();
                 if (run==null || run.getResults()==null) continue;
                 
                 for(PipelineResult pipelineResult : run.getResults()) {
@@ -92,7 +100,7 @@ public class DomainModelViewUtils {
     
         ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size() - 1));
         if (objSample==null) return null;
-        SamplePipelineRun run = objSample.getLatestRun();
+        SamplePipelineRun run = objSample.getLatestSuccessfulRun();
         if (run==null) return null;
         PipelineResult chosenResult = run.getLatestResult();
 

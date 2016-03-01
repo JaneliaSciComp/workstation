@@ -13,8 +13,6 @@ import java.util.TreeMap;
 import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -29,7 +27,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.shared.solr.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -350,8 +347,7 @@ public class SearchConfiguration {
         
         int numFound = results.getNumFound().intValue();
         
-        log.info("Search found {} objects", numFound);
-        log.info("Page contains {} objects and {} annotations", domainObjects.size(), annotations.size());
+        log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
 
         facetValues.clear();
         if (results.getFacetValues()!=null) {

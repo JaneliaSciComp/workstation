@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.api;
 
 import java.net.BindException;
 
+import org.janelia.it.workstation.gui.browser.web.EmbeddedWebServer;
 import org.janelia.it.workstation.gui.browser.ws.EmbeddedAxisServer;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -28,6 +29,7 @@ public class ServiceMgr {
     private static final int PORT_INCREMENT = 1000;
     
     private EmbeddedAxisServer axisServer;
+    private EmbeddedWebServer webServer;
     
     public int startAxisServer(int startingPort) {
         int port = startingPort;
@@ -67,11 +69,53 @@ public class ServiceMgr {
         }
     }
 
+    public int startWebServer(int startingPort) {
+        int port = startingPort;
+        try {
+            if (webServer == null) {
+                webServer = new EmbeddedWebServer();
+            }
+            int tries = 0;
+            while (true) {
+                try {
+                    webServer.start(port);
+                    log.info("Started web server on port " + port);
+                    break;
+                } 
+                catch (Exception e) {
+                    if (e instanceof BindException || e.getCause() instanceof BindException) {
+                        log.info("Could not start web server on port: " + port);
+                        port += PORT_INCREMENT;
+                        tries++;
+                        if (tries >= MAX_PORT_TRIES) {
+                            log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
+                            return -1;
+                        }
+                    } 
+                    else {
+                        log.error("Could not start web server on port: " + port);
+                        throw e;
+                    }
+                }
+            }
+            return port;
+        } 
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return -1;
+        }
+    }
+    
     public void initServices() {
         int axisServerPort = startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
         // TODO: this is temporary. we need to inject the port number back into the ConsoleModule for the ToolMgr to use.
         // We will remove this hack once the ToolMgr is ported over.
         SessionMgr.getSessionMgr().setAxisServerPort(axisServerPort);
+        
+        int webServerPort = startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
+        // TODO: this is temporary. we need to inject the port number back into the ConsoleModule for the ToolMgr to use.
+        // We will remove this hack once the ToolMgr is ported over.
+        SessionMgr.getSessionMgr().setWebServerPort(webServerPort);   
     }
     
     

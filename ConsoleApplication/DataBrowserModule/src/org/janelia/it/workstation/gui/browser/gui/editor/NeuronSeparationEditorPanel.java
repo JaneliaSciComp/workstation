@@ -123,7 +123,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         separationPanel.add(titleLabel, "span, wrap");
         separationPanel.add(historyLabel);
         separationPanel.add(resultButton, "gapx 0 5");
-        separationPanel.add(editModeButton, "width 40:40:40");
+        // TODO: make this visible once it's implemented  
+        // separationPanel.add(editModeButton, "width 40:40:40");
         separationPanel.add(openInNAButton, "width 40:40:40");
         separationPanel.add(Box.createHorizontalGlue());
         
@@ -145,7 +146,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         action.doAction();
     }
     
-    private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {        
+    private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {
+        popupMenu.removeAll();
         if (pipelineResult.hasResults()) {
             for(final PipelineResult result : pipelineResult.getResults()) {
                 if (result instanceof NeuronSeparation) {
@@ -206,6 +208,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             titleLabel.setText(title);
             setResult(separation, isUserDriven, success);
         }
+        
+        updateUI();
     }
     
     private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final Callable<Void> success) {

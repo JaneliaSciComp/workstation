@@ -159,10 +159,9 @@ public class LoginDialog extends ModalDialog {
             }
         }
         
-        boolean loginSuccess = true;
         AccessManager.getAccessManager().loginSubject(username, password);
         
-        if (!loginSuccess) {
+        if (!AccessManager.getAccessManager().isLoggedIn()) {
             Object[] options = { "Fix Login", "Exit Program" };
             final int answer = JOptionPane.showOptionDialog(null, 
                     "Please correct your login information.", "Login Information Invalid",
@@ -172,6 +171,17 @@ public class LoginDialog extends ModalDialog {
             }
         }
         else {
+
+            // Reinstate the run-as user
+            try {
+                String runAsUser = (String) getModelProperty(AccessManager.RUN_AS_USER, "");
+                AccessManager.getAccessManager().setRunAsUser(runAsUser);
+            }
+            catch (Exception e) {
+                sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+            
             setVisible(false);
         }
     }
