@@ -21,8 +21,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import sun.misc.BASE64Decoder;
 
 /**
  * Test the TmNeuronPanel component.
