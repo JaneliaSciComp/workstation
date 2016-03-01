@@ -91,11 +91,11 @@ public class ImageTypeSelectionButton extends DropDownButton {
         
         ButtonGroup group = new ButtonGroup();
         
-        log.info("{} domain objects have {} type names",domainObjects.size(),countedTypeNames.elementSet().size());
+        log.debug("{} domain objects have {} type names",domainObjects.size(),countedTypeNames.elementSet().size());
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
             if (countedTypeNames.count(typeName)>1 || (countedTypeNames.count(typeName)==1 && domainObjects.size()==1)) {
-                log.info("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+                log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
                 if (currImageType == null || !countedTypeNames.contains(currImageType)) {
                     this.currImageType = typeName;
                 }

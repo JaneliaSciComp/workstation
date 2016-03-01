@@ -78,7 +78,7 @@ public class RunAsUserDialog extends ModalDialog {
 
     public void showDialog() {
        String runAsUser = (String) getModelProperty(AccessManager.RUN_AS_USER, "");
-       // usernameField.setText(runAsUser);
+        usernameField.setText(runAsUser);
         packAndShow();
     }
 
@@ -91,7 +91,7 @@ public class RunAsUserDialog extends ModalDialog {
         
         boolean runAsSuccess = AccessManager.getAccessManager().setRunAsUser(runAsUser);
         
-        if (false) {
+        if (!runAsSuccess) {
             Object[] options = { "Fix username", "Cancel" };
             final int answer = JOptionPane.showOptionDialog(null, 
                     "User does not exist.", "Username Invalid",

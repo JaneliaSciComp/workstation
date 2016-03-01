@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.web;
+package org.janelia.it.workstation.gui.browser.web;
 
 import org.eclipse.jetty.server.Server;
 

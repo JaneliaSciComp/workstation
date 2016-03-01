@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.web;
+package org.janelia.it.workstation.gui.browser.web;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;

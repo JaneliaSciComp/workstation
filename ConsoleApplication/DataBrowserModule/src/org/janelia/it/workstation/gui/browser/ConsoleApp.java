@@ -37,7 +37,7 @@ public class ConsoleApp {
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
         
-        log.info("Java version: "+System.getProperty("java.version"));
+        log.debug("Java version: "+System.getProperty("java.version"));
         
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
@@ -97,15 +97,12 @@ public class ConsoleApp {
                 LifecycleManager.getDefault().exit(0);
             }
 
-            log.info("Successfully logged in user " + AccessManager.getUsername());
-
             try {
                 AccessManager.getAccessManager().setRunAsUser(runAsUser);
             }
             catch (Exception e) {
                 sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
                 SessionMgr.getSessionMgr().handleException(e);
-                SessionMgr.getSessionMgr().loginSubject(username, password);
             }
             
             sessionMgr.newBrowser();
@@ -113,15 +110,12 @@ public class ConsoleApp {
             SessionMgr.getMainFrame().setVisible(true);
 
 
-            // Once the main frame is visible, we can do some things in the background
+            // TODO: remove this legacy code later
             SimpleWorker worker = new SimpleWorker() {
 
                 @Override
                 protected void doStuff() throws Exception {
                     modelMgr.initErrorOntology();
-//                    sessionMgr.startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
-                    sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
-//                    modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                 }
 
                 @Override

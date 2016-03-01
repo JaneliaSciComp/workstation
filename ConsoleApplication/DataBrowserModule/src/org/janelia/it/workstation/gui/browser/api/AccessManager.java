@@ -8,10 +8,11 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.api.stub.data.SystemError;
-import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.LoginEvent;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
@@ -28,15 +29,13 @@ public final class AccessManager {
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
 
     private static final AccessManager accessManager = new AccessManager();
+    
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
 
-    private Long currentSessionId;
-
     private AccessManager() {
         log.info("Initializing Access Manager");
-
         String tempLogin = (String) SessionMgr.getSessionMgr().getModelProperty(USER_NAME);
         String tempPassword = (String) SessionMgr.getSessionMgr().getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
@@ -51,27 +50,18 @@ public final class AccessManager {
 
     public boolean loginSubject(String username, String password) {
         try {
-            boolean relogin = false;
-
             if (isLoggedIn()) {
                 logoutUser();
-                log.info("RELOGIN");
-                relogin = true;
             }
 
-            //findAndRemoveWindowsSplashFile();
             // Login and start the session
             authenticatedSubject = authenticateSubject(username, password);
-
             if (null != authenticatedSubject) {
                 isLoggedIn = true;                
                 setSubject(authenticatedSubject);
                 log.info("Authenticated as {}", authenticatedSubject.getKey());
-
+                Events.getInstance().postOnEventBus(new LoginEvent(authenticatedSubject));
                 beginSession();
-                if (relogin) {
-                    resetSession();
-                }
             }
 
             return isLoggedIn;
@@ -91,7 +81,7 @@ public final class AccessManager {
             Subject authenticatedSubject = DomainMgr.getDomainMgr().getModel().loginSubject(username, password);
 
             if (authenticatedSubject!=null) {
-                log.info("Setting default authenticator");
+                log.debug("Setting default authenticator");
                 Authenticator.setDefault(new Authenticator() {
                     @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
@@ -101,17 +91,18 @@ public final class AccessManager {
                 SessionMgr.getSessionMgr().getWebDavClient().setCredentialsUsingAuthenticator();
             }
             return authenticatedSubject;
-        } catch (Exception e) {
+        } 
+        catch (Exception e) {
             log.error("Problem getting the subject using key " + username, e);
         }
         return null;
     }
 
-    private void beginSession () {
+    private void beginSession() {
         // TO DO: add to eventBus server logging
     }
 
-    private void endSession () {
+    private void endSession() {
         // TO DO: add to eventBus server logging
     }
 
@@ -142,11 +133,9 @@ public final class AccessManager {
                 setSubject(authenticatedSubject);
             }
 
-            if (!authenticatedSubject.getId().equals(getSubject().getId())) {
-                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), getSubject().getId());
-            }
+            Events.getInstance().postOnEventBus(new RunAsEvent(authenticatedSubject));
+            log.info("Running as {}", getSubject().getKey());
                 
-            resetSession();
             return true;
         }
         catch (Exception e) {
@@ -156,17 +145,6 @@ public final class AccessManager {
         }
     }
     
-    private void resetSession() {
-        final Browser browser = SessionMgr.getBrowser();
-        if (browser != null) {
-            log.info("Refreshing all views");
-            browser.resetView();
-        }
-        log.info("Resetting model");
-        ModelMgr.getModelMgr().reset();
-        SessionMgr.getSessionMgr().getSessionModel().removeAllBrowserModels();
-    }
-    
     public void logoutUser() {
         try {
             if (getSubject() != null) {
@@ -174,7 +152,7 @@ public final class AccessManager {
                 log.info("Logged out with: {}", getSubject().getKey());
             }
             isLoggedIn = false;
-            setSubject(null);
+            loggedInSubject = null;
             authenticatedSubject = null;
         }
         catch (Exception e) {
@@ -205,7 +183,7 @@ public final class AccessManager {
             return DomainMgr.getDomainMgr().getModel().getSubjectByKey(key);
         } 
         catch (Exception e) {
-            log.error("Error getting Subject Key: " + key + ", ", e);
+            log.error("Error getting subject with key: " + key, e);
         }
         return null;
     }
@@ -252,13 +230,5 @@ public final class AccessManager {
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();
-    }
-
-    public Long getCurrentSessionId() {
-        return currentSessionId;
-    }
-
-    public void setCurrentSessionId(Long currentSessionId) {
-        this.currentSessionId = currentSessionId;
     }
 }

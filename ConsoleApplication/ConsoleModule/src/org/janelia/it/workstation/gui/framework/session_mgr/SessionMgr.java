@@ -10,30 +10,28 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.BindException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.LookAndFeel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
@@ -41,13 +39,10 @@ import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
-import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
@@ -62,13 +57,9 @@ import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.web.EmbeddedWebServer;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
@@ -110,7 +101,7 @@ public final class SessionMgr implements ActivityLogging {
     private ImageIcon browserImageIcon;
     private ExternalListener externalHttpListener;
 //    private EmbeddedAxisServer axisServer;
-    private EmbeddedWebServer webServer;
+//    private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
@@ -758,7 +749,16 @@ public final class SessionMgr implements ActivityLogging {
     public void setAxisServerPort(int axisServerPort) {
         this.axisServerPort = axisServerPort;
     }
-    
+
+    private int webServerPort;
+
+    public int getWebServerPort() {
+        return webServerPort;
+    }
+
+    public void setWebServerPort(int webServerPort) {
+        this.webServerPort = webServerPort;
+    }
 
 //    public int startAxisServer(int startingPort) {
 //        int port = startingPort;
@@ -802,46 +802,42 @@ public final class SessionMgr implements ActivityLogging {
 //        return axisServer;
 //    }
 
-    public int startWebServer(int startingPort) {
-        int port = startingPort;
-        try {
-            if (webServer == null) {
-                webServer = new EmbeddedWebServer();
-            }
-            int tries = 0;
-            while (true) {
-                try {
-                    webServer.start(port);
-                    log.info("Started web server on port " + port);
-                    break;
-                } 
-                catch (Exception e) {
-                    if (e instanceof BindException || e.getCause() instanceof BindException) {
-                        log.info("Could not start web server on port: " + port);
-                        port += PORT_INCREMENT;
-                        tries++;
-                        if (tries >= MAX_PORT_TRIES) {
-                            log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
-                            return -1;
-                        }
-                    } 
-                    else {
-                        log.error("Could not start web server on port: " + port);
-                        throw e;
-                    }
-                }
-            }
-            return port;
-        } 
-        catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
-            return -1;
-        }
-    }
-
-    public EmbeddedWebServer getWebServer() {
-        return webServer;
-    }
+//    public int startWebServer(int startingPort) {
+//        int port = startingPort;
+//        try {
+//            if (webServer == null) {
+//                webServer = new EmbeddedWebServer();
+//            }
+//            int tries = 0;
+//            while (true) {
+//                try {
+//                    webServer.start(port);
+//                    log.info("Started web server on port " + port);
+//                    break;
+//                } 
+//                catch (Exception e) {
+//                    if (e instanceof BindException || e.getCause() instanceof BindException) {
+//                        log.info("Could not start web server on port: " + port);
+//                        port += PORT_INCREMENT;
+//                        tries++;
+//                        if (tries >= MAX_PORT_TRIES) {
+//                            log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
+//                            return -1;
+//                        }
+//                    } 
+//                    else {
+//                        log.error("Could not start web server on port: " + port);
+//                        throw e;
+//                    }
+//                }
+//            }
+//            return port;
+//        } 
+//        catch (Exception e) {
+//            SessionMgr.getSessionMgr().handleException(e);
+//            return -1;
+//        }
+//    }
     
     public void saveUserSettings() {
         writeSettings();
@@ -942,36 +938,31 @@ public final class SessionMgr implements ActivityLogging {
         }
     }
 
-    // TODO: this is a temporary hack to restore all the permissions stuff back from the AccessManager
-    // until we can remove all the legacy stuff. It should go away.
-    private static String subjectKey;
-    
-    public static void setSubjectKey(String s) {
-        subjectKey = s;
-
-        SimpleWorker worker = new SimpleWorker() {
-        
-            @Override
-            protected void doStuff() throws Exception {
-                getSessionMgr().loginSubject(subjectKey);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                log.info("Done init on legacy track");
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        
-        worker.execute();
+    /**
+     * This is a hack to inject the run-as subject key from an already-authenticated user in the NG world. 
+     * It ties the legacy SessionMgr to the new AccessManager.
+     */
+    public static void setSubjectKey(final String subjectKey) {
+        try {
+            Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(subjectKey);
+            getSessionMgr().setSubject(subject);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 
+    private void setSubject(Subject subject) {
+        loggedInSubject = authenticatedSubject = subject;
+        if (loggedInSubject!=null) {
+            isLoggedIn = true;
+        }
+        resetSession();
+        log.info("Completed legacy track init with user "+subject.getKey());
+    }
+    
     public static String getSubjectKey() {
-        return subjectKey;
+        return getSessionMgr().getSubject().getKey();
     }
 
     public static List<String> getSubjectKeys() {
@@ -1013,153 +1004,118 @@ public final class SessionMgr implements ActivityLogging {
         return subject.getEmail();
     }
 
-    public static boolean authenticatedSubjectIsInGroup(String groupName) {
-        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-        return subject instanceof User && isUserInGroup((User) subject, groupName);
-    }
+//    public static boolean authenticatedSubjectIsInGroup(String groupName) {
+//        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
+//        return subject instanceof User && isUserInGroup((User) subject, groupName);
+//    }
+//
+//    public static boolean currentUserIsInGroup(String groupName) {
+//        Subject subject = SessionMgr.getSessionMgr().getSubject();
+//        return subject instanceof User && isUserInGroup((User) subject, groupName);
+//    }
+//
+//    private static boolean isUserInGroup(User targetUser, String targetGroup) {
+//        if (null == targetUser) {
+//            return false;
+//        }
+//        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
+//            if (relation.getGroup().getName().equals(targetGroup)) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
-    public static boolean currentUserIsInGroup(String groupName) {
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
-        return subject instanceof User && isUserInGroup((User) subject, groupName);
-    }
+//    public boolean loginSubject(String username, String password) {
+//        try {
+//            boolean relogin = false;
+//
+//            if (isLoggedIn()) {
+//                logoutUser();
+//                log.info("RELOGIN");
+//                relogin = true;
+//            }
+//
+//            findAndRemoveWindowsSplashFile();
+//            // Login and start the session
+//            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
+//            if (null != authenticatedSubject) {
+//                isLoggedIn = true;
+//                loggedInSubject = authenticatedSubject;
+//                log.info("Authenticated as {}", authenticatedSubject.getKey());
+//
+//                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
+//                if (relogin) {
+//                    resetSession();
+//                }
+//            }
+//
+//            return isLoggedIn;
+//        }
+//        catch (Exception e) {
+//            isLoggedIn = false;
+//            log.error("Error logging in", e);
+//            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
+//                    "Cannot authenticate login. The server may be down. Please try again later.");
+//        }
+//    }
 
-    private static boolean isUserInGroup(User targetUser, String targetGroup) {
-        if (null == targetUser) {
-            return false;
-        }
-        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
-            if (relation.getGroup().getName().equals(targetGroup)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Subverts the whole security system. This is used by NG to inject an already authenticated user back into the legacy code.
-     */
-    public boolean loginSubject(String username) {
-        try {
-            boolean relogin = false;
-
-            if (isLoggedIn()) {
-                logoutUser();
-                log.info("RELOGIN");
-                relogin = true;
-            }
-
-            findAndRemoveWindowsSplashFile();
-            // Login and start the session
-            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().getSubject(username);
-            if (null != authenticatedSubject) {
-                isLoggedIn = true;
-                loggedInSubject = authenticatedSubject;
-                log.info("Authenticated as {}", authenticatedSubject.getKey());
-                if (relogin) {
-                    resetSession();
-                }
-            }
-
-            return isLoggedIn;
-        }
-        catch (Exception e) {
-            isLoggedIn = false;
-            log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
-                    "Cannot authenticate login. The server may be down. Please try again later.");
-        }
-    }
-
-    public boolean loginSubject(String username, String password) {
-        try {
-            boolean relogin = false;
-
-            if (isLoggedIn()) {
-                logoutUser();
-                log.info("RELOGIN");
-                relogin = true;
-            }
-
-            findAndRemoveWindowsSplashFile();
-            // Login and start the session
-            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
-            if (null != authenticatedSubject) {
-                isLoggedIn = true;
-                loggedInSubject = authenticatedSubject;
-                log.info("Authenticated as {}", authenticatedSubject.getKey());
-
-                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-                if (relogin) {
-                    resetSession();
-                }
-            }
-
-            return isLoggedIn;
-        }
-        catch (Exception e) {
-            isLoggedIn = false;
-            log.error("Error logging in", e);
-            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
-                    "Cannot authenticate login. The server may be down. Please try again later.");
-        }
-    }
-
-    public boolean setRunAsUser(String runAsUser) {
-
-        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
-            throw new IllegalStateException("Non-admin user cannot run as another user");
-        }
-
-        try {
-            if (!StringUtils.isEmpty(runAsUser)) {
-                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
-                if (runAsSubject==null) {
-                    return false;
-                }
-                loggedInSubject = runAsSubject;
-            }
-            else {
-                loggedInSubject = authenticatedSubject;
-            }
-
-            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
-            }
-
-            resetSession();
-            return true;
-        }
-        catch (Exception e) {
-            loggedInSubject = authenticatedSubject;
-            handleException(e);
-            return false;
-        }
-    }
+//    public boolean setRunAsUser(String runAsUser) {
+//
+//        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
+//            throw new IllegalStateException("Non-admin user cannot run as another user");
+//        }
+//
+//        try {
+//            if (!StringUtils.isEmpty(runAsUser)) {
+//                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
+//                if (runAsSubject==null) {
+//                    return false;
+//                }
+//                loggedInSubject = runAsSubject;
+//            }
+//            else {
+//                loggedInSubject = authenticatedSubject;
+//            }
+//
+//            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
+//                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
+//            }
+//
+//            resetSession();
+//            return true;
+//        }
+//        catch (Exception e) {
+//            loggedInSubject = authenticatedSubject;
+//            handleException(e);
+//            return false;
+//        }
+//    }
 
     private void resetSession() {
         final Browser browser = SessionMgr.getBrowser();
         if (browser != null) {
-            log.info("Refreshing all views");
+            log.debug("Refreshing all views");
             browser.resetView();
         }
-        log.info("Clearing entity model");
+        log.debug("Clearing entity model");
         ModelMgr.getModelMgr().reset();
         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
     }
 
-    public void logoutUser() {
-        try {
-            if (loggedInSubject != null) {
-                log.info("Logged out with: {}", loggedInSubject.getKey());
-            }
-            isLoggedIn = false;
-            loggedInSubject = null;
-            authenticatedSubject = null;
-        }
-        catch (Exception e) {
-            log.error("Error logging out", e);
-        }
-    }
+//    public void logoutUser() {
+//        try {
+//            if (loggedInSubject != null) {
+//                log.info("Logged out with: {}", loggedInSubject.getKey());
+//            }
+//            isLoggedIn = false;
+//            loggedInSubject = null;
+//            authenticatedSubject = null;
+//        }
+//        catch (Exception e) {
+//            log.error("Error logging out", e);
+//        }
+//    }
 
     public boolean isLoggedIn() {
         return isLoggedIn;
