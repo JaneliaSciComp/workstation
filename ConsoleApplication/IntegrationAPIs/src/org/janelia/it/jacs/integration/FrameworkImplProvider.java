@@ -7,6 +7,7 @@
 package org.janelia.it.jacs.integration;
 
 import java.util.Collection;
+import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.openide.util.lookup.Lookups;
 
@@ -16,11 +17,22 @@ import org.openide.util.lookup.Lookups;
  * @author fosterl
  */
 public class FrameworkImplProvider {
-    public static ActivityLogging getSessonSupport() {
+    public static ActivityLogging getSessionSupport() {
         Collection<? extends ActivityLogging> candidates
                 = Lookups.forPath(ActivityLogging.LOOKUP_PATH).lookupAll(ActivityLogging.class);
         if (candidates.size() > 0) {
             return candidates.iterator().next();
+        }
+        else {
+            return null;
+        }
+    }
+    
+    public static CompressedFileResolverI getCompressedFileResolver() {
+        Collection<? extends CompressedFileResolverI> candidates
+                = Lookups.forPath(CompressedFileResolverI.LOOKUP_PATH).lookupAll(CompressedFileResolverI.class);
+        if (candidates.size() > 0) {
+            return candidates.iterator().next();            
         }
         else {
             return null;

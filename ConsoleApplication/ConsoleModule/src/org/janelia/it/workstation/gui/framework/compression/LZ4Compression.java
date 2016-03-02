@@ -5,6 +5,8 @@
  */
 package org.janelia.it.workstation.gui.framework.compression;
 
+import org.janelia.it.jacs.integration.framework.compression.CompressionException;
+import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
 import java.util.Date;
 import net.jpountz.lz4.LZ4Factory;
@@ -22,25 +24,25 @@ public class LZ4Compression implements CompressionAlgorithm {
     private Logger log = LoggerFactory.getLogger(LZ4Compression.class);
 
     @Override
-    public boolean canUncompress(File infile) {
+    public boolean canDecompress(File infile) {
         return infile.getName().endsWith(TARGET_EXTENSION);
     }
     
     @Override
-    public File compressedVersion(File infile) {
+    public File getCompressedNameForFile(File infile) {
         return new File(infile.getParentFile(), infile.getName() + TARGET_EXTENSION);
     }
     
     /**
      * Checks to see if the "compressed file" has the target extension of this
      * LZ4 algorithm.  If it does, return the 'root' version of the file name.
-     * Otherwise, return null--indicating this algorithm will not uncompress.
+     * Otherwise, return null--indicating this algorithm will not decompress.
      * 
      * @param compressedFile final result of having run LZ4
-     * @return original file name, uncompressed by LZ4, or null
+     * @return original file name, decompressAsBytesed by LZ4, or null
      */
     @Override
-    public File uncompressedVersion(File compressedFile) {
+    public File getDecompressedNameForFile(File compressedFile) {
         File rtnVal = null;
         final String fileName = compressedFile.getName();
         if (fileName.endsWith(TARGET_EXTENSION)) {
@@ -50,16 +52,16 @@ public class LZ4Compression implements CompressionAlgorithm {
     }
 
     /**
-     * Given the input file, of appropriate extension and contents, uncompress
+     * Given the input file, of appropriate extension and contents, decompress
      * it into original version, and return file handle to that.
      * 
-     * @param infile what to uncompress
-     * @return uncompressed blob.
+     * @param infile what to decompressAsBytes
+     * @return decompressAsBytesed blob.
      * @throws CompressionException if invalid extension, or anything goes wrong
      */
     @Override
-    public byte[] uncompress(File infile) throws CompressionException {
-        if (canUncompress(infile)) {
+    public byte[] decompressAsBytes(File infile) throws CompressionException {
+        if (canDecompress(infile)) {
             try {
                 Date startTime = new Date();
                 byte[] b = collectBytes(infile);
@@ -67,7 +69,7 @@ public class LZ4Compression implements CompressionAlgorithm {
                 
                 log.info("Time required for file-read: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
                 
-                return uncompress(b);
+                return decompressAsBytes(b);
 
             } catch (Exception ex) {
                 throw new CompressionException(ex);
@@ -79,14 +81,35 @@ public class LZ4Compression implements CompressionAlgorithm {
         }
     }
 
+    @Override
+    public File decompressAsFile(File infile) throws CompressionException {
+        if (canDecompress(infile)) {
+            try {
+                byte[] b = decompressAsBytes(infile);
+
+                // Not efficient at all, but satisfies the requirement.
+                b = decompressAsBytes(b);
+                
+                File tempFile = File.createTempFile("LZ4_ConsoleApp", this.getDecompressedNameForFile(infile).getName());
+                return tempFile;
+
+            } catch (Exception ex) {
+                throw new CompressionException(ex);
+            }
+
+        } else {
+            throw new CompressionException("Cannot uncompress file without extens " + TARGET_EXTENSION);
+        }
+    }
+
     /**
-     * Given a pre-digested byte array, uncompress it.
+     * Given a pre-digested byte array, decompress it.
      * @param inbytes some compressed blob.
-     * @return uncompressed blob.
+     * @return decompressAsBytesed blob.
      * @throws CompressionException 
      */
     @Override
-    public byte[] uncompress(byte[] inbytes) throws CompressionException {
+    public byte[] decompressAsBytes(byte[] inbytes) throws CompressionException {
         
         Date startTime = new Date();
         final int fileLen = (int) inbytes.length;
@@ -104,8 +127,8 @@ public class LZ4Compression implements CompressionAlgorithm {
     }
 
     @Override
-    public byte[] uncompress(File infile, byte[] outbytes) throws CompressionException {
-        if (canUncompress(infile)) {
+    public byte[] decompressIntoByteBuf(File infile, byte[] outbytes) throws CompressionException {
+        if (canDecompress(infile)) {
             try {
                 Date startTime = new Date();
                 byte[] b = collectBytes(infile);
@@ -113,7 +136,7 @@ public class LZ4Compression implements CompressionAlgorithm {
 
                 log.info("Time required for file-read: {}s.", (endFileRead.getTime() - startTime.getTime()) / 1000);
 
-                return uncompress(b, outbytes);
+                return decompressIntoByteBuf(b, outbytes);
 
             } catch (Exception ex) {
                 throw new CompressionException(ex);
@@ -132,7 +155,7 @@ public class LZ4Compression implements CompressionAlgorithm {
     }
 
     @Override
-    public byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException {
+    public byte[] decompressIntoByteBuf(byte[] inbytes, byte[] outbytes) throws CompressionException {
         Date startTime = new Date();
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
         LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();

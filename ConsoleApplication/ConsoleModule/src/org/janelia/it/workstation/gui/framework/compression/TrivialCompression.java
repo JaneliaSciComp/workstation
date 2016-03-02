@@ -5,6 +5,8 @@
  */
 package org.janelia.it.workstation.gui.framework.compression;
 
+import org.janelia.it.jacs.integration.framework.compression.CompressionException;
+import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
 
 /**
@@ -16,26 +18,31 @@ public class TrivialCompression implements CompressionAlgorithm {
 
     /** We can ALWAYS do nothing to an input file. */
     @Override
-    public boolean canUncompress(File infile) {
+    public boolean canDecompress(File infile) {
         return true;
     }
 
-    /** The compressed and uncompressed files are one and the same. */
+    /** The compressed and decompressed files are one and the same. */
     @Override
-    public File compressedVersion(File infile) {
+    public File getCompressedNameForFile(File infile) {
         return infile;
     }
 
     /**
-     * The compressed and uncompressed files are one and the same.
+     * The compressed and decompressed files are one and the same.
      */
     @Override
-    public File uncompressedVersion(File compressedFile) {
+    public File getDecompressedNameForFile(File compressedFile) {
         return compressedFile;
+    }
+    
+    @Override
+    public File decompressAsFile(File infile) throws CompressionException {
+        return infile;
     }
 
     @Override
-    public byte[] uncompress(File infile) throws CompressionException {
+    public byte[] decompressAsBytes(File infile) throws CompressionException {
         try {
             FileCollector collector = new FileCollector();
             collector.collectFile(infile);
@@ -46,12 +53,12 @@ public class TrivialCompression implements CompressionAlgorithm {
     }
 
     @Override
-    public byte[] uncompress(byte[] inbytes) throws CompressionException {
+    public byte[] decompressAsBytes(byte[] inbytes) throws CompressionException {
         return inbytes;
     }
 
     @Override
-    public byte[] uncompress(File infile, byte[] outbytes) throws CompressionException {        
+    public byte[] decompressIntoByteBuf(File infile, byte[] outbytes) throws CompressionException {        
         try {
             FileCollector collector = new FileCollector();
             collector.collectFile(infile, outbytes);
@@ -70,7 +77,7 @@ public class TrivialCompression implements CompressionAlgorithm {
      * @throws CompressionException 
      */
     @Override
-    public byte[] uncompress(byte[] inbytes, byte[] outbytes) throws CompressionException {
+    public byte[] decompressIntoByteBuf(byte[] inbytes, byte[] outbytes) throws CompressionException {
         return inbytes;
     }
 

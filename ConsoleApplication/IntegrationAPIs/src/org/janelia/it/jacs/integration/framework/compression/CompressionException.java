@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.framework.compression;
+package org.janelia.it.jacs.integration.framework.compression;
 
 /**
  * Throw this in event compression fails in either a predictable way,
