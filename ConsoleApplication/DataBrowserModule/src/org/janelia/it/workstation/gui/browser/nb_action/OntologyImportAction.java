@@ -1,36 +1,34 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.InputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JMenuItem;
-import javax.swing.JFileChooser;
 
-import javax.swing.*;
+import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.domain.ontology.EnumText;
+import org.janelia.it.jacs.model.domain.ontology.Interval;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.ontology.OntologyElementType;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.YamlFileFilter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.yaml.snakeyaml.Yaml;
 import org.openide.nodes.Node;
-
-import org.janelia.it.jacs.model.domain.ontology.*;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * Imports an ontology into YAML format.

@@ -7,7 +7,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;

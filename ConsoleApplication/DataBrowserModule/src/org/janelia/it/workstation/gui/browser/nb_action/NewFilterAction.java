@@ -14,8 +14,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
