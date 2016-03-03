@@ -222,8 +222,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         if (parent instanceof ObjectSet) {
             ObjectSet objectSet = (ObjectSet)parent; 
             if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
-                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
+                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, getSelectedObjects());
                 action.doAction();
             }
         }

@@ -164,6 +164,9 @@ public class Hud extends ModalDialog {
     }
 
     public void setObjectAndToggleDialog(final DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, final boolean toggle) {
+        if (this.domainObject!=null && this.domainObject.getId().equals(domainObject.getId())) {
+            return;
+        }
         this.domainObject = domainObject;
         if (domainObject == null) {
             dirtyEntityFor3D = false;

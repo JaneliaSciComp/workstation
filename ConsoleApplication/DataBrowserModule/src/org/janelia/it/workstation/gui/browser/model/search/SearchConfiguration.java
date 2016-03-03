@@ -345,7 +345,7 @@ public class SearchConfiguration {
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
         
-        int numFound = results.getNumFound().intValue();
+        long numFound = results.getNumFound();
         
         log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
 

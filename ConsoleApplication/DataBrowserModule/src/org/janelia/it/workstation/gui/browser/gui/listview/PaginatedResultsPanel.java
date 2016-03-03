@@ -344,9 +344,8 @@ public abstract class PaginatedResultsPanel extends JPanel {
             selectionButtonContainer.setVisible(false);
         }
         else {
-            int pn = resultPage.getNumPageResults();
-            int tn = resultPage.getNumTotalResults();
-            int total = s>pn?tn:pn;
+            long pn = resultPage.getNumPageResults();
+            long tn = resultPage.getNumTotalResults();
             statusLabel.setText(s + " of " + tn + " selected");
             selectionButtonContainer.setVisible(s==pn && tn>pn);
         }

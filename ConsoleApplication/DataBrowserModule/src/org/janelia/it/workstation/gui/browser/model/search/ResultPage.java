@@ -21,11 +21,11 @@ public class ResultPage implements AnnotatedDomainObjectList {
 
     private final List<DomainObject> domainObjects = new ArrayList<>();
     private final ListMultimap<Long,Annotation> annotationsByDomainObjectId;
-    private final int numTotalResults;
+    private final long numTotalResults;
     
     private Map<Long, DomainObject> domainObjectById;
     
-    public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, int totalNumResults) {
+    public ResultPage(List<DomainObject> domainObjects, List<Annotation> annotations, long totalNumResults) {
         
         for(DomainObject domainObject : domainObjects) {
             // Filter out null objects, in case some references could not be resolved
@@ -38,11 +38,11 @@ public class ResultPage implements AnnotatedDomainObjectList {
         this.numTotalResults = totalNumResults;
     }
 
-    public int getNumTotalResults() {
+    public long getNumTotalResults() {
         return numTotalResults;
     }
     
-    public int getNumPageResults() {
+    public long getNumPageResults() {
         return domainObjects.size();
     }
 

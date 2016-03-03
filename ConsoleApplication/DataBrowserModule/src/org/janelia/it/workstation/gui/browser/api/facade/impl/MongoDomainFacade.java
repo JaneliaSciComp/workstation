@@ -116,7 +116,6 @@ public class MongoDomainFacade implements DomainFacade {
     public SolrJsonResults performSearch(SolrParams queryParams) throws Exception {
         SolrQuery query = SolrQueryBuilder.deSerializeSolrQuery(queryParams);
         SolrResults sr = ModelMgr.getModelMgr().searchSolr(query, false);
-        SolrJsonResults sjr = new SolrJsonResults();
         Map<String,List<FacetValue>> facetValues = new HashMap<>();
         for (final FacetField ff : sr.getResponse().getFacetFields()) {
             List<FacetValue> favetValues = new ArrayList<>();
@@ -127,10 +126,7 @@ public class MongoDomainFacade implements DomainFacade {
             }
             facetValues.put(ff.getName(), favetValues);
         }
-        sjr.setFacetValues(facetValues);
-        sjr.setResults(sr.getResponse().getResults());
-        sjr.setNumFound(sr.getResponse().getResults().getNumFound());
-        return sjr;
+        return new SolrJsonResults(sr.getResponse().getResults(), facetValues, sr.getResponse().getResults().getNumFound());
     }
 
     @Override

@@ -81,8 +81,8 @@ public class SearchResults {
     
     protected final List<ResultPage> pages = new ArrayList<>();
     protected Set<Integer> loadedPages = new HashSet<>();
-    protected int numTotalResults = 0;
-    protected int numLoadedResults = 0;
+    protected long numTotalResults = 0;
+    protected long numLoadedResults = 0;
 
     public SearchResults(ResultPage firstPage) {
         addPage(firstPage);
@@ -96,11 +96,11 @@ public class SearchResults {
         return (int)Math.ceil((double)numTotalResults / (double)PAGE_SIZE);
     }
     
-    public int getNumLoadedResults() {
+    public long getNumLoadedResults() {
         return numLoadedResults;
     }
 
-    public int getNumTotalResults() {
+    public long getNumTotalResults() {
         return numTotalResults;
     }
 

@@ -243,20 +243,26 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         
         Set<T> domainObjectSet = new HashSet<>(domainObjects);
         int i = 0;
-        Integer start = 0;
+        Integer start = null;
         for(DynamicRow row : getRows()) {
-            DomainObject rowObject = (DomainObject)row.getUserObject();
+            T rowObject = (T)row.getUserObject();
             if (domainObjectSet.contains(rowObject)) {
                 if (select) {
-                    model.addSelectionInterval(i, i);
+                    if (!model.isSelectedIndex(i)) {
+                        model.addSelectionInterval(i, i);
+                    }
                     if (start==null) start = i;
                 }
                 else {
-                    model.removeSelectionInterval(i, i);
+                    if (model.isSelectedIndex(i)) {
+                        model.removeSelectionInterval(i, i);
+                    }
                 }
             }
             else if (clearAll) {
-                model.removeSelectionInterval(i, i);
+                if (model.isSelectedIndex(i)) {
+                    model.removeSelectionInterval(i, i);
+                }
             }
             i++;
         }
