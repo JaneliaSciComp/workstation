@@ -9,6 +9,7 @@ package org.janelia.it.workstation.gui.framework.compression;
 import org.janelia.it.jacs.integration.framework.compression.CompressionException;
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
@@ -22,14 +23,15 @@ import org.slf4j.Logger;
  * @author fosterl
  */
 public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
+//    public static final String DECOMPRESSION_BINARY = "R:\\decompress_forLes\\decompressForLes.exe";
     public static final String DECOMPRESSION_BINARY = "C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
-    public static final File RAMDISK_ROOT = new File("R:\\");
+    public static final File RAMDISK_ROOT = new File("R:\\data\\");
     public static final String TARGET_EXTENSION = ".mj2";
     private static final String FILE_MID_STR = "_comp-";
     private final Logger log = LoggerFactory.getLogger(Mj2ExecutableCompressionAlgorithm.class);
     
     private int compressionLevel = 10;
-    private int zDepth = 200;
+    private int zDepth = 251;
     
     /**
      * This setting is the percentage of the original file size, that will result from compression.
@@ -86,8 +88,13 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
             // Must run the operation in its own process, and use the output
             // file name.
             try {
+                if (! RAMDISK_ROOT.exists()) {
+                    if (! RAMDISK_ROOT.mkdirs()) {
+                        throw new IOException("Non-existent, and failed to create " + RAMDISK_ROOT);
+                    }
+                }
                 if (! RAMDISK_ROOT.canWrite()) {
-                    throw new Exception("Ram Disk not yet created.");
+                    throw new Exception("Ram disk/root not writable or not yet created " + RAMDISK_ROOT);
                 }
                 FileUtils.cleanDirectory(RAMDISK_ROOT);
                 File tempFile = new File(RAMDISK_ROOT, getDecompressedNameForFile(infile).getName());
@@ -96,6 +103,7 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
                 SystemCall sysCall = new SystemCall();
                 final String commandLine = DECOMPRESSION_BINARY + " " + infile.getAbsolutePath() + " " + tempFile.getAbsolutePath() + " " + zDepth;
                 // Win-only version.
+                System.out.println(commandLine);
                 int cmdRtn = sysCall.emulateCommandLine(commandLine, false);
                 if (cmdRtn == 0) {
                     rtnVal = tempFile;

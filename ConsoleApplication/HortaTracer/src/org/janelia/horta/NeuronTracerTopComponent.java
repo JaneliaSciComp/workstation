@@ -212,6 +212,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private String currentSource;
     private NeuronTraceLoader loader;
     
+    private boolean leverageCompressedFiles = false;
+    
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     private final NeuronManager neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -372,6 +374,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public void setSampleLocation(SampleLocation sampleLocation) {
         try {
+            leverageCompressedFiles = sampleLocation.isCompressed();
             ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
                     currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
             );
@@ -462,7 +465,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException, ParseException
     {
-        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, progress);
+        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress);
         return volumeSource;
     }
 

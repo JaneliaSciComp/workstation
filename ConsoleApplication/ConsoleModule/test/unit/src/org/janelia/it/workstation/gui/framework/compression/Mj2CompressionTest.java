@@ -42,8 +42,10 @@ public class Mj2CompressionTest {
     
     @Test
     public void decompressAsFile() throws Exception {
+        System.out.println("Starting decompression at " + new java.util.Date());
         File compressed = mj2.decompressAsFile(MOCK_COMPRESSED);
         Assert.assertNotNull("Decompression resulted in null.", compressed);
+        System.out.println("Ending decompression at " + new java.util.Date());
     }
 
 }

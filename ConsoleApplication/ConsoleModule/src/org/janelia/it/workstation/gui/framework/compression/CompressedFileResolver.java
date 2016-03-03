@@ -3,8 +3,6 @@ package org.janelia.it.workstation.gui.framework.compression;
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
 import org.openide.util.lookup.ServiceProvider;
-import com.sun.media.jai.codec.ByteArraySeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +16,7 @@ import java.util.List;
  * @author fosterl
  */
 @ServiceProvider(service = CompressedFileResolverI.class, path = CompressedFileResolverI.LOOKUP_PATH)
-public class CompressedFileResolver implements CompressedFileResolverI {
+public class CompressedFileResolver implements CompressedFileResolverI {    
     private List<CompressionAlgorithm> chain;
     public CompressedFileResolver() {
         chain = new ArrayList<>();
@@ -27,44 +25,6 @@ public class CompressedFileResolver implements CompressedFileResolverI {
         //chain.add( new LZ4Compression() );
     }
     
-    /**
-     * Uses chain-of-responsibility to work out who will decompress stuff.
-     * This way, a prioritization can be established.
-     * 
-     * @param infile what to degetCompressedNameForFileBytes/fetch.
-     * @return something usable by client, directly.
-     * @throws Exception thrown by called methods.
-     */
-//    @Override
-//    public SeekableStream resolve(File infile) throws Exception {
-//        for (CompressionAlgorithm algorithm: chain) {
-//            if (algorithm.canDecompress(infile)) {
-//                return new ByteArraySeekableStream(algorithm.decompressAsBytes(infile));
-//            }
-//        }
-//        return null;
-//    }
-
-    /**
-     * Resolves to seekable stream, and stores intermediate bytes into the
-     * provided destination--which must be the correct size for output.
-     * 
-     * @see #resolve(java.io.File) 
-     * @param infile what to degetCompressedNameForFileBytes.
-     * @param dest where to place degetCompressedNameForFileBytesed bytes.
-     * @return stream wrapped around byte array.
-     * @throws Exception 
-     */
-//    @Override
-//    public SeekableStream resolve(File infile, byte[] dest) throws Exception {
-//        for (CompressionAlgorithm algorithm : chain) {
-//            if (algorithm.canDecompress(infile)) {
-//                return new ByteArraySeekableStream(algorithm.decompressIntoByteBuf(infile, dest));
-//            }
-//        }
-//        return null;
-//    }
-
     /**
      * Uses chain-of-responsibility to decide how to decompress, and then
      * decompress, returning the decompressed bytes.
@@ -81,6 +41,22 @@ public class CompressedFileResolver implements CompressedFileResolverI {
             }
         }
         return null;
+    }
+    
+    /**
+     * Tells if this resolver has a means of expanding the file whose name
+     * was given.
+     * 
+     * @param infile file to test.
+     * @return T=can uncompress; F=otherwise
+     */
+    @Override
+    public boolean canDecompress(File infile) {
+        if (chain.isEmpty()) {
+            return false;
+        }
+        File tgtFile = getDecompressedNameForFile(infile);
+        return (! tgtFile.equals(infile));
     }
 
     /**
@@ -120,45 +96,6 @@ public class CompressedFileResolver implements CompressedFileResolverI {
         return null;
     }
     
-    /**
-     * Given a bunch of bytes that came-from the infile, use the infile's name
-     * to decide how to decompress the bytes.  THen invoke the algorithm for
-     * the decompression.
-     * 
-     * @param inbytes bytes in compressed format.
-     * @param infile name of file from which compressed bytes came, originally.
-     * @return stream into the decompressed version of the inbytes.
-     * @throws Exception for any called methods.
-     */
-//    public SeekableStream resolve(byte[] inbytes, File infile) throws Exception {
-//        for (CompressionAlgorithm algorithm : chain) {
-//            if (algorithm.canDecompress(infile)) {
-//                return new ByteArraySeekableStream(algorithm.decompressAsBytes(inbytes));
-//            }
-//        }
-//        return null;
-//    }
-    
-    /**
-     * Like above, but throw decompressed bytes into a supplied buffer which
-     * must be the right size.
-     * 
-     * @see #resolve(byte[], java.io.File) 
-     * @param inbytes
-     * @param dest
-     * @param infile
-     * @return
-     * @throws Exception 
-     */
-//    public SeekableStream resolve(byte[] inbytes, byte[] dest, File infile) throws Exception {
-//        for (CompressionAlgorithm algorithm : chain) {
-//            if (algorithm.canDecompress(infile)) {
-//                return new ByteArraySeekableStream(algorithm.decompressIntoByteBuf(inbytes, dest));
-//            }
-//        }
-//        return null;
-//    }
-
     /**
      * This resolver can decompress the input file either with an
      * algorithm or trivially with no action.  This method will find

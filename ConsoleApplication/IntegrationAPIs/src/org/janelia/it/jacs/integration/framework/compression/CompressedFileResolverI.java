@@ -36,6 +36,14 @@ public interface CompressedFileResolverI {
      * @see #getCompressedNameForFile(java.io.File)
      */
     File getDecompressedNameForFile(File compressedFile);
+    
+    /**
+     * The resolver tells if it has a means of decompressing this.
+     * 
+     * @param file candidate compressed file.
+     * @return T=can decompress; F=otherwise
+     */
+    boolean canDecompress(File file);
 
     /**
      * Given an example file name, return an object which can pick the name
@@ -46,53 +54,6 @@ public interface CompressedFileResolverI {
      * @return something which can apply names to all like it.
      */
     CompressedFileNamer getNamer(File decompressedFile);
-
-    /**
-     * Uses chain-of-responsibility to work out who will decompress stuff.
-     * This way, a prioritization can be established.
-     *
-     * @param infile what to uncompress/fetch.
-     * @return something usable by client, directly.
-     * @throws Exception thrown by called methods.
-     */
-    //SeekableStream resolve(File infile) throws Exception;
-
-    /**
-     * Resolves to seekable stream, and stores intermediate bytes into the
-     * provided destination--which must be the correct size for output.
-     *
-     * @see #resolve(java.io.File)
-     * @param infile what to uncompress.
-     * @param dest where to place uncompressed bytes.
-     * @return stream wrapped around byte array.
-     * @throws Exception
-     */
-    //SeekableStream resolve(File infile, byte[] dest) throws Exception;
-
-    /**
-     * Given a bunch of bytes that came-from the infile, use the infile's name
-     * to decide how to decompress the bytes.  THen invoke the algorithm for
-     * the decompression.
-     *
-     * @param inbytes bytes in compressed format.
-     * @param infile name of file from which compressed bytes came, originally.
-     * @return stream into the decompressed version of the inbytes.
-     * @throws Exception for any called methods.
-     */
-    //SeekableStream resolve(byte[] inbytes, File infile) throws Exception;
-
-    /**
-     * Like above, but throw uncompressed bytes into a supplied buffer which
-     * must be the right side.
-     *
-     * @see #resolve(byte[], java.io.File)
-     * @param inbytes
-     * @param dest
-     * @param infile
-     * @return
-     * @throws Exception
-     */
-    //SeekableStream resolve(byte[] inbytes, byte[] dest, File infile) throws Exception;
 
     /**
      * Uses chain-of-responsibility to decide how to decompress, and then
