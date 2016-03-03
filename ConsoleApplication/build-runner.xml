@@ -184,7 +184,7 @@ of adapter.
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
             <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
             <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
-            <arg value="-Dsuite.nbi.product.uid=janeliaworkstation"/>
+            <arg value="-Dsuite.nbi.product.uid=janeliawsng"/>
             <arg value="-Dsuite.location=${basedir}"/>
             <arg value="-Dpack200.enabled=false"/>
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
