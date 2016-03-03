@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.framework.compression.CompressionExceptio
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
 import java.util.Date;
+import org.apache.commons.io.FileUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ import org.slf4j.Logger;
  */
 public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
     public static final String DECOMPRESSION_BINARY = "C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
+    public static final File RAMDISK_ROOT = new File("R:\\");
     public static final String TARGET_EXTENSION = ".mj2";
     private static final String FILE_MID_STR = "_comp-";
     private final Logger log = LoggerFactory.getLogger(Mj2ExecutableCompressionAlgorithm.class);
@@ -84,7 +86,12 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
             // Must run the operation in its own process, and use the output
             // file name.
             try {
-                File tempFile = File.createTempFile("JPEG2KMJ2", getDecompressedNameForFile(infile).getName());
+                if (! RAMDISK_ROOT.canWrite()) {
+                    throw new Exception("Ram Disk not yet created.");
+                }
+                FileUtils.cleanDirectory(RAMDISK_ROOT);
+                File tempFile = new File(RAMDISK_ROOT, getDecompressedNameForFile(infile).getName());
+                //File tempFile = File.createTempFile("JPEG2KMJ2", getDecompressedNameForFile(infile).getName(), RAMDISK_ROOT);
                 // Form a command line.
                 SystemCall sysCall = new SystemCall();
                 final String commandLine = DECOMPRESSION_BINARY + " " + infile.getAbsolutePath() + " " + tempFile.getAbsolutePath() + " " + zDepth;
