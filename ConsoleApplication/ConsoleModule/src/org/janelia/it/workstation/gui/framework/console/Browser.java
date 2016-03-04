@@ -103,12 +103,12 @@ public class Browser implements Cloneable {
     private OntologyOutline ontologyOutline;
 
     private ImportDialog importDialog;
-    private SearchConfiguration generalSearchConfig;
-    private GeneralSearchDialog generalSearchDialog;
+//    private SearchConfiguration generalSearchConfig;
+//    private GeneralSearchDialog generalSearchDialog;
     private PatternSearchDialog patternSearchDialog;
     private GiantFiberSearchDialog giantFiberSearchDialog;
-    private ScreenEvaluationDialog screenEvaluationDialog;
-    private MAASearchDialog maaSearchDialog;
+//    private ScreenEvaluationDialog screenEvaluationDialog;
+//    private MAASearchDialog maaSearchDialog;
     private FlyLineReleaseListDialog flyLineReleaseListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
@@ -215,19 +215,19 @@ public class Browser implements Cloneable {
 
             @Override
             protected void doStuff() throws Exception {
-                generalSearchConfig = new SearchConfiguration();
-                generalSearchConfig.load();
+//                generalSearchConfig = new SearchConfiguration();
+//                generalSearchConfig.load();
             }
 
             @Override
             protected void hadSuccess() {
-                generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
+//                generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
                 importDialog = new ImportDialog("Import Files");
                 patternSearchDialog = new PatternSearchDialog();
                 giantFiberSearchDialog = new GiantFiberSearchDialog();
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
-                screenEvaluationDialog = new ScreenEvaluationDialog();
-                maaSearchDialog = new MAASearchDialog();
+//                screenEvaluationDialog = new ScreenEvaluationDialog();
+//                maaSearchDialog = new MAASearchDialog();
                 flyLineReleaseListDialog = new FlyLineReleaseListDialog();
             }
 
