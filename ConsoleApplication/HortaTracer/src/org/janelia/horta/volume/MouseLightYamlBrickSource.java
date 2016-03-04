@@ -82,7 +82,7 @@ implements StaticVolumeBrickSource
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             
-            BrickInfo tileInfo = new BrainTileInfo(tile, tilebasePath, leverageCompressedFiles);
+            BrickInfo tileInfo = new BrainTileInfo(tile, tilebasePath);//, leverageCompressedFiles);
 
             // Update bounding box
             boundingBox.include(tileInfo.getBoundingBox());
