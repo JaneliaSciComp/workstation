@@ -50,5 +50,7 @@ public interface ComputeFacade {
     
     public void addEventToSession(UserToolEvent event);
     
+    public void addEventsToSession(UserToolEvent[] events);
+    
     public void endSession();
 }

@@ -165,6 +165,22 @@ public final class ModelMgr {
         }
     }
     
+    /**
+     * This adds a session event. It is best to use the method in the Session
+     * Manager instead, as that has more convenient 'finding' of various parts
+     * of the event.
+     *
+     * @param event to log.
+     */
+    public void addEventsToSession(UserToolEvent[] events) {
+        try {
+            FacadeManager.getFacadeManager().getComputeFacade().addEventsToSession(events);
+        } catch (Exception ex) {
+            log.warn("Failed to log batch of " + events.length + " user events.");
+            ex.printStackTrace();
+        }
+    }
+
     public void addModelMgrObserver(ModelMgrObserver mml) {
         if (null != mml && !modelMgrObservers.contains(mml)) {
             modelMgrObservers.add(mml);

@@ -28,20 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi;
+package org.janelia.console.viewerapi.listener;
 
-import java.util.Observer;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 
 /**
  *
- * @author Christopher Bruns
- * Intended for use as a decorator pattern, to make certain instances observable
+ * @author brunsc
  */
-public interface ObservableDecorator<E>
-{
-    E getValue();
-    boolean setValue(E value);
-    void addObserver(Observer o);
-    void deleteObserver(Observer o);
-    void notifyObservers();
+public interface NeuronVertexDeletionListener {
+
+    void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons);
+    
 }

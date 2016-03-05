@@ -26,6 +26,7 @@
             </module-dependencies>
             <public-packages>
                 <package>org.janelia.it.jacs.integration</package>
+                <package>org.janelia.it.jacs.integration.framework.compression</package>
                 <package>org.janelia.it.jacs.integration.framework.session_mgr</package>
             </public-packages>
         </data>

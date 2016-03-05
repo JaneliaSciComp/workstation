@@ -38,7 +38,8 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author Christopher Bruns
  */
-public interface NeuronModel extends Hideable
+public interface NeuronModel 
+extends Hideable
 {
     String getName();
     void setName(String name);
@@ -52,8 +53,10 @@ public interface NeuronModel extends Hideable
     Collection<NeuronEdge> getEdges();
     
     // Adding a vertex is so common that it gets its own signal
-    ObservableInterface getMembersAddedObservable(); // vertices added to neuron
-    ObservableInterface getMembersRemovedObservable(); // vertices removed from neuron
+    NeuronVertexAdditionObservable getVertexAddedObservable(); // vertices added to neuron
+    
+    NeuronVertexDeletionObservable getVertexesRemovedObservable(); // vertices removed from neuron
+    
     // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
     // at the neuron level.
     ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
@@ -63,4 +66,6 @@ public interface NeuronModel extends Hideable
 
     // Custom method to help hook into LVV model from Horta
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
+    
+    boolean deleteVertex(NeuronVertex doomedVertex);
 }
