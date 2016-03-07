@@ -2,12 +2,15 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
@@ -70,6 +73,16 @@ public final class DomainInspectorTopComponent extends TopComponent {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
+    
+    @Override
+    protected void componentActivated() {
+        log.info("Activating domain inspector");
+    }
+    
+    @Override
+    protected void componentDeactivated() {
+    }
+
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);
@@ -79,6 +92,14 @@ public final class DomainInspectorTopComponent extends TopComponent {
     public void componentClosed() {
         Events.getInstance().unregisterOnEventBus(this);
     }
+    
+    void writeProperties(java.util.Properties p) {
+    }
+
+    void readProperties(java.util.Properties p) {
+    }
+    
+    // Custom methods
 
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
@@ -87,24 +108,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
             log.debug("Event is not selection: {}",event);
             return;
         }
-
-//        if (!event.isClearAll()) {
-//            log.debug("Event is not clear all: {}",event);
-//            return;
-//        }
         
         detailsPanel.loadDomainObject(event.getDomainObject());
-    }
-    
-    void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
-    }
-
-    void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
     }
 }

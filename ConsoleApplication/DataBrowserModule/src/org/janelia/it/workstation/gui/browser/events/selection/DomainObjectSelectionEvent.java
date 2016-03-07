@@ -15,21 +15,24 @@ public class DomainObjectSelectionEvent {
     private final DomainObject domainObject;
     private final boolean select;
     private final boolean clearAll;
+    private final boolean isUserDriven;
 
-    public DomainObjectSelectionEvent(Object source, DomainObjectNode domainObjectNode, boolean select, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObjectNode domainObjectNode, boolean select, boolean clearAll, boolean isUserDriven) {
         this.source = source;
         this.domainObjectNode = domainObjectNode;
         this.domainObject = domainObjectNode.getDomainObject();
         this.select = select;
         this.clearAll = clearAll;
+        this.isUserDriven = isUserDriven;
     }
     
-    public DomainObjectSelectionEvent(Object source, DomainObject domainObject, boolean select, boolean clearAll) {
+    public DomainObjectSelectionEvent(Object source, DomainObject domainObject, boolean select, boolean clearAll, boolean isUserDriven) {
         this.source = source;
         this.domainObjectNode = null;
         this.domainObject = domainObject;
         this.select = select;
         this.clearAll = clearAll;
+        this.isUserDriven = isUserDriven;
     }
 
     public Object getSource() {
@@ -52,8 +55,13 @@ public class DomainObjectSelectionEvent {
         return clearAll;
     }
 
+    public boolean isUserDriven() {
+        return isUserDriven;
+    }
+
     @Override
     public String toString() {
-        return "DomainObjectSelectionEvent[" + "source=" + source + ", domainObjectNode=" + domainObjectNode + ", domainObject=" + domainObject + ", select=" + select + ", clearAll=" + clearAll + ']';
+        return "DomainObjectSelectionEvent [source=" + source + ", domainObjectNode=" + domainObjectNode + ", domainObject=" + domainObject
+                + ", select=" + select + ", clearAll=" + clearAll + ", isUserDriven=" + isUserDriven + "]";
     }
 }

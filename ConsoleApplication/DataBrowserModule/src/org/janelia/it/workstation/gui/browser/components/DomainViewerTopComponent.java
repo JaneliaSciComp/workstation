@@ -98,6 +98,7 @@ public final class DomainViewerTopComponent extends TopComponent {
     
     @Override
     protected void componentActivated() {
+        log.info("Activating domain viewer");
         DomainViewerManager.getInstance().activate(this);
         if (editor!=null) {
             editor.activate();
@@ -141,7 +142,7 @@ public final class DomainViewerTopComponent extends TopComponent {
                 @Override
                 protected void hadSuccess() {
                     if (object!=null) {
-                        loadDomainObject(object);
+                        loadDomainObject(object, false);
                     }
                 }
 
@@ -193,7 +194,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         return editor;
     }
         
-    public void loadDomainObject(DomainObject domainObject) {
+    public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         
         if (domainObject instanceof NeuronFragment) {
             NeuronFragment fragment = (NeuronFragment)domainObject;
@@ -216,8 +217,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        editor.loadDomainObject(domainObject, true, null);
-        editor.activate();
+        editor.loadDomainObject(domainObject, isUserDriven, null);
         setName(editor.getName());
     }
 

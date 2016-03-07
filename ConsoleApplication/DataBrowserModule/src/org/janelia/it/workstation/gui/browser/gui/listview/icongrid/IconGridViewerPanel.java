@@ -100,7 +100,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         };
 
         imagesPanel.setButtonKeyListener(keyListener);
-        addKeyListener(keyListener);
+//        addKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(mouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
         
@@ -386,6 +386,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         }
                         if (selecting) {
                             log.trace("  End selecting");
+                            button.requestFocus();
                             return; // We already selected, this is the end
                         }
                         log.trace("  Begin selecting");
@@ -420,14 +421,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         if (object==null) return;
         S id = getImageModel().getImageUniqueId(object);
         imagesPanel.setSelectionByUniqueId(id, true, clearAll);
-        selectionModel.select(object, clearAll);
+        selectionModel.select(object, clearAll, true);
     }
 
     protected void deselectObject(T object) {
         if (object==null) return;
         S id = getImageModel().getImageUniqueId(object);
         imagesPanel.setSelectionByUniqueId(id, false, false);
-        selectionModel.deselect(object);
+        selectionModel.deselect(object, true);
     }
 
     private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
@@ -444,11 +445,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
      */
     protected void updateHud(boolean toggle) {
     }
-    
-//    public void showImageObjects(List<T> imageObjects) {
-//        showImageObjects(imageObjects, null);
-//    }
-    
+        
     public void showObjects(final List<T> objects, final Callable<Void> success) {
         
         log.debug("showObjects(objects.size={})",objects.size());

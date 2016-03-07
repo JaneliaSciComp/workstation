@@ -233,6 +233,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     @Override
     protected void componentActivated() {
+        log.info("Activating domain explorer");
         ExplorerUtils.activateActions(mgr, true);
         FindContextManager.getInstance().activateContext(this);
     }
@@ -416,7 +417,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         final Node node = allNodes.iterator().next();
         if (node instanceof DomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode)node, true);
+            selectionModel.select((DomainObjectNode)node, true, true);
         }
     }
 

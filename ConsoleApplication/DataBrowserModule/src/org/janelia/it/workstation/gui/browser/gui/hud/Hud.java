@@ -155,18 +155,15 @@ public class Hud extends ModalDialog {
 
     public void setObjectAndToggleDialog(DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName) {
         log.debug("setObjectAndToggleDialog({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true);
+        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, true, true);
     }
 
-    public void setObject(DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName) {
+    public void setObject(DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, boolean overrideSettings) {
         log.debug("setObject({})",domainObject);
-        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, false);
+        setObjectAndToggleDialog(domainObject, resultDescriptor, typeName, false, overrideSettings);
     }
 
-    public void setObjectAndToggleDialog(final DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, final boolean toggle) {
-        if (this.domainObject!=null && this.domainObject.getId().equals(domainObject.getId())) {
-            return;
-        }
+    public void setObjectAndToggleDialog(final DomainObject domainObject, ResultDescriptor resultDescriptor, String typeName, final boolean toggle, boolean overrideSettings) {
         this.domainObject = domainObject;
         if (domainObject == null) {
             dirtyEntityFor3D = false;
@@ -179,11 +176,12 @@ public class Hud extends ModalDialog {
             log.debug("HUD: entity type is {}", domainObject.getType());
         }
 
-        boolean starting = toggle && !isVisible();
+        log.info("setObjectAndToggleDialog - name:{}, toggle:{}",domainObject.getName(),toggle);
         
-        ResultDescriptor currResult = starting?resultDescriptor:resultButton.getResultDescriptor();
-        String currImageType  = starting?typeName:typeButton.getImageType();
-                
+        ResultDescriptor currResult = overrideSettings?resultDescriptor:resultButton.getResultDescriptor();
+        String currImageType  = overrideSettings?typeName:typeButton.getImageType();
+        log.info("setObjectAndToggleDialog - currResult:{}, currImageType:{}",currResult,currImageType);
+        
         if (currResult==null) {
             currResult = ResultDescriptor.LATEST;
         }
@@ -211,7 +209,7 @@ public class Hud extends ModalDialog {
         
         final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageType());
         if (imagePath == null) {
-            log.info("No image path for {}:{}", domainObject.getName(), domainObject.getId());
+            log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageType());
             previewLabel.setIcon(new MissingIcon());
             setTitle(domainObject.getName());
         }
@@ -428,13 +426,13 @@ public class Hud extends ModalDialog {
             resultButton = new ResultSelectionButton() {
                 @Override
                 protected void resultChanged(ResultDescriptor resultDescriptor) {
-                    setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageType(), false);
+                    setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageType(), false, true);
                 }
             };
             typeButton = new ImageTypeSelectionButton() {
                 @Override
                 protected void imageTypeChanged(String typeName) {
-                    setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeName, false);
+                    setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeName, false, true);
                 }
             };
 

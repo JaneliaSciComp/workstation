@@ -19,18 +19,18 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
     private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
     
     @Override
-    protected void selectionChanged(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll, boolean isUserDriven) {
         log.debug((select?"select":"deselect")+" {}, clearAll={}",id,clearAll);
         if (domainObjectNode instanceof ObjectSetNode) {
             ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode));
+            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode, isUserDriven));
         }
         else if (domainObjectNode instanceof FilterNode) {
             FilterNode filterNode = (FilterNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode));
+            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode, isUserDriven));
         }
         else {
-            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll));
+            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll, isUserDriven));
         }
     }
     

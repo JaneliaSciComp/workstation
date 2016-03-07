@@ -29,14 +29,14 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
     }
 
     @Override
-    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll, boolean isUserDriven) {
         log.debug((select?"select":"deselect")+" {}, clearAll={}",id,clearAll);
         if (domainObject instanceof ObjectSet) {
             ObjectSet objectSet = (ObjectSet)domainObject;
-            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSet));
+            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSet, isUserDriven));
         }
         else {
-            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObject, select, clearAll));
+            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObject, select, clearAll, isUserDriven));
         }
     }
     

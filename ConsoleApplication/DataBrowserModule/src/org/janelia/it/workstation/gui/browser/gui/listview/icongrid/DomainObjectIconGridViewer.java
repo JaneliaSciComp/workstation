@@ -231,7 +231,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     public void activate() {
-        Hud.getSingletonInstance().setKeyListener(keyListener);
     }
 
     @Override
@@ -284,6 +283,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     protected void updateHud(boolean toggle) {
 
         Hud hud = Hud.getSingletonInstance();
+        hud.setKeyListener(keyListener);
+        
         List<DomainObject> selected = getSelectedObjects();
         
         if (selected.size() != 1) {
@@ -296,7 +297,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType());
         }
         else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType());
+            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType(), false);
         }
     }
     

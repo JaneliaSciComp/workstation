@@ -9,12 +9,12 @@ import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
  */
 public class FilterSelectionEvent extends DomainObjectSelectionEvent {
 
-    public FilterSelectionEvent(Object source, boolean select, Filter filter) {
-        super(source, filter, select, true);
+    public FilterSelectionEvent(Object source, boolean select, Filter filter, boolean isUserDriven) {
+        super(source, filter, select, true, isUserDriven);
     }
     
-    public FilterSelectionEvent(Object source, boolean select, FilterNode filter) {
-        super(source, filter, select, true);
+    public FilterSelectionEvent(Object source, boolean select, FilterNode filter, boolean isUserDriven) {
+        super(source, filter, select, true, isUserDriven);
     }
     
     public FilterNode getFilterNode() {

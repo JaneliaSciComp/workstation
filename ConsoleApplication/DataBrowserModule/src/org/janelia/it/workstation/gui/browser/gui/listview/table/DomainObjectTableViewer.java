@@ -51,7 +51,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
     
-    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,false,true,false,null);
+    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,false,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
@@ -289,7 +289,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             hud.setObjectAndToggleDialog(domainObject, null, null);
         }
         else {
-            hud.setObject(domainObject, null, null);
+            hud.setObject(domainObject, null, null, false);
         }
     }
     

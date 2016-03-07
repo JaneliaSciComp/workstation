@@ -295,7 +295,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             }
         }
         if (!isSelected() && !keyDown) {
-            selectionModel.select(imageObject, true);
+            selectionModel.select(imageObject, true, true);
         }
         getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
     }

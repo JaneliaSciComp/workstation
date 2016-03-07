@@ -62,7 +62,7 @@ public class SampleResultViewerManager implements ViewerManager<SampleResultView
         SampleResultViewerTopComponent viewer = SampleResultViewerManager.getInstance().getActiveViewer();
         
         if (viewer!=null) {   
-            viewer.loadSampleResult(event.getPipelineResult(), event.isUserDriven(), null);
+            viewer.loadSampleResult(event.getPipelineResult(), false, null);
         }
     }
 }
