@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.browser.model;
 
 import java.lang.reflect.Method;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
+
 /**
  * An indexed attribute on a domain object. 
  *
@@ -12,16 +14,16 @@ public class DomainObjectAttribute {
     private final String name;
     private final String label;
     private final String searchKey;
-    private final boolean facet;
+    private final String facetKey;
     private final boolean display;
     private final boolean sortable;
     private final Method getter;
     
-    public DomainObjectAttribute(String name, String label, String searchKey, boolean facet, boolean display, boolean sortable, Method getter) {
+    public DomainObjectAttribute(String name, String label, String searchKey, String facetKey, boolean display, boolean sortable, Method getter) {
         this.name = name;
         this.label = label;
         this.searchKey = searchKey;
-        this.facet = facet;
+        this.facetKey = facetKey;
         this.display = display;
         this.sortable = sortable;
         this.getter = getter;
@@ -36,11 +38,11 @@ public class DomainObjectAttribute {
     }
     
     public String getSearchKey() {
-        return searchKey;
+        return StringUtils.isEmpty(searchKey)?null:searchKey;
     }
 
-    public boolean isFacet() {
-        return facet;
+    public String getFacetKey() {
+        return StringUtils.isEmpty(facetKey)?null:facetKey;
     }
 
     public boolean isDisplay() {

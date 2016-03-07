@@ -90,8 +90,9 @@ public class SearchConfiguration {
  
         for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
             if (attr.isDisplay()) {
-                if (attr.isFacet()) {
-                    facets.add(attr.getSearchKey());
+                String facetKey = attr.getFacetKey();
+                if (facetKey!=null) {
+                    facets.add(facetKey);
                 }
                 searchAttrs.put(attr.getName(),attr);
             }
@@ -127,8 +128,8 @@ public class SearchConfiguration {
         return searchAttrs.get(name);
     }
     
-    public List<FacetValue> getFacetValues(String searchKey) {
-        return facetValues.get(searchKey);
+    public List<FacetValue> getFacetValues(String facetKey) {
+        return facetValues.get(facetKey);
     }
 
 	public String getDisplayQueryString() {
@@ -167,7 +168,7 @@ public class SearchConfiguration {
                 if (criteria instanceof FacetCriteria) {
                     FacetCriteria fc = (FacetCriteria) criteria;
                     DomainObjectAttribute attr = searchAttrs.get(fc.getAttributeName());
-                    filters.put(attr.getSearchKey(), fc.getValues());
+                    filters.put(attr.getFacetKey(), fc.getValues());
                 }
                 else if (criteria instanceof AttributeCriteria) {
                     AttributeCriteria ac = (AttributeCriteria) criteria;
