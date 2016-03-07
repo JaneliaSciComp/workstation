@@ -1515,7 +1515,8 @@ called from a  SimpleWorker thread.
         if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
-        final TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(getCurrentWorkspace(), neuronName);
+        TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(getCurrentWorkspace(), neuronName);
+
 
         // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
@@ -1548,6 +1549,7 @@ called from a  SimpleWorker thread.
                     internalPoint[0], internalPoint[1], internalPoint[2],
                     null, new Date()
             );
+            unserializedAnnotation.setRadius(node.getRadius());
             unserializedAnnotation.setNeuronId(neuron.getId());
             annotations.put(node.getIndex(), unserializedAnnotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {
@@ -1559,7 +1561,14 @@ called from a  SimpleWorker thread.
 
         // Fire off the bulk update.  The "un-serialized" or
         // db-unknown annotations could be swapped for "blessed" versions.
-        modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+        // modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
+        // modelMgr.addPersistLinkedGeometricAnnotations(nodeParentLinkage, annotations, neuron);
+        neuronManager.addLinkedGeometricAnnotationsInMemory(nodeParentLinkage, annotations, neuron);
+        neuronManager.saveNeuronData(neuron);
+
+        // need fresh copy, and add it to the workspace
+        // neuron = neuronManager.refreshFromData(neuron);
+        getCurrentWorkspace().getNeuronList().add(neuron);
 
         updateNeuronColor(swcData, neuron);
 
@@ -1567,6 +1576,7 @@ called from a  SimpleWorker thread.
             // update workspace; update and select new neuron; this will draw points as well
             updateCurrentWorkspace();
             final TmWorkspace workspace = getCurrentWorkspace();
+            neuronManager.loadWorkspaceNeurons(workspace);
 
             setCurrentNeuron(neuron);
             final TmNeuron updateNeuron = getCurrentNeuron();
