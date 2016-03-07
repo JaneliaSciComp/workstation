@@ -15,6 +15,7 @@ import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEven
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
@@ -1377,7 +1378,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         TopComponent tc = getLanesTopComponent();
         tc = getTopComponent(SplitPickingTopComponent.PREFERRED_ID);
         tc.requestActive();
-        return SessionMgr.getBrowser().getPatternSearchDialog();
+        return ConsoleApp.getPatternSearchDialog();
     }
 
     private SplitPickingLanesTopComponent getLanesTopComponent() {

@@ -1,27 +1,32 @@
-package org.janelia.it.workstation.gui.dialogs;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.jacs.shared.annotation.*;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
 
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.utils.FolderUtils;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.annotation.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 
 /**
  * Created by IntelliJ IDEA.
@@ -41,7 +46,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     final Color DARK_GREEN = new Color(0,120,0);
 
-    private RootedEntity outputFolder;
+    private Workspace outputFolder;
     
     DefaultTableModel tableModel;
     
@@ -85,7 +90,7 @@ public class PatternSearchDialog extends ModalDialog {
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     FilterResult filterResult;
     
-    private RootedEntity saveFolder;
+    private ObjectSet saveFolder;
 	private boolean returnInsteadOfSaving = false;
 	private boolean saveClicked = false;
 
@@ -381,16 +386,16 @@ public class PatternSearchDialog extends ModalDialog {
 
     public void showDialog() {
 		this.returnInsteadOfSaving = false;
-    	showDialog(null);
-    }
+    	try {
+            this.outputFolder = DomainMgr.getDomainMgr().getModel().getDefaultWorkspace();
+            this.saveFolder = null;
+            this.returnInsteadOfSaving = false;
+            quantifierLoaderWorker.execute();
+            packAndShow();
+        } catch (Exception e) {
+            log.error("Problem getting workspace for adding Pattern Search Save Folder", e);
+        }
 
-    public RootedEntity showDialog(RootedEntity outputFolder) {
-    	this.outputFolder = outputFolder;
-    	this.saveFolder = null;
-		this.returnInsteadOfSaving = false;
-        quantifierLoaderWorker.execute();
-        packAndShow();
-    	return saveFolder;
     }
 	
 	public List<Long> showDialog(boolean returnInsteadOfSaving) {
@@ -601,7 +606,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                Utils.setWaitingCursor(PatternSearchDialog.this);
+                //Utils.setWaitingCursor(PatternSearchDialog.this);
                 setStatusMessage("Loading quantifier maps...", Color.RED);
                 loadPatternAnnotationQuantifierMapsFromSummary();
                 refreshCompartmentTable();
@@ -615,7 +620,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(PatternSearchDialog.this);
+                //Utils.setDefaultCursor(PatternSearchDialog.this);
                 SessionMgr.getSessionMgr().handleException(error);
                 setStatusMessage("Error during quantifier load", Color.RED);
             }
@@ -687,7 +692,7 @@ public class PatternSearchDialog extends ModalDialog {
         }
 
         FilterResult filterResult= ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
-        setStatusMessage("Result has " + filterResult.getSampleList().size()+" members", Color.GREEN);
+        setStatusMessage("Result has " + filterResult.getSampleList().size() + " members", Color.GREEN);
 
         return filterResult;
     }
@@ -717,7 +722,7 @@ public class PatternSearchDialog extends ModalDialog {
 		}
 
 		if (filterResult.getSampleList().size()>MAX_ENTITIES_IN_FOLDER) {
-            JOptionPane.showMessageDialog(PatternSearchDialog.this, "You can save a maximum of "+MAX_ENTITIES_IN_FOLDER+" results into a single folder. Please adjust your search criteria.", 
+            JOptionPane.showMessageDialog(PatternSearchDialog.this, "You can save a maximum of "+MAX_ENTITIES_IN_FOLDER+" results into a single folder. Please adjust your search criteria.",
                     "Result set has too many members", JOptionPane.ERROR_MESSAGE);
             return;
 		}
@@ -726,17 +731,26 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-            	List<Long> samples = new ArrayList<Long>(new LinkedHashSet<Long>(filterResult.getSampleList()));
-				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder==null?null:outputFolder, 
-						currentSetTextField.getText(), samples);
+                // copy the results to an ObjectSet
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                saveFolder = new ObjectSet();
+                saveFolder.setName(currentSetTextField.getText());
+                saveFolder.setClassName(Sample.class.getName());
+                saveFolder.setMembers(filterResult.getSampleList());
+                saveFolder = model.create(saveFolder);
+                if (saveFolder.getId()!=null) {
+                    model.addChild(outputFolder,saveFolder);
+                }
             }
 
             @Override
             protected void hadSuccess() {
+                final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+                final Long[] idPath = NodeUtils.createIdPath(outputFolder, saveFolder);
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
+                        explorer.selectNodeByPath(idPath);
                         setVisible(false);
                         resetSearchState();
                     }

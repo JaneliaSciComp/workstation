@@ -21,7 +21,7 @@ public class Startup implements Runnable {
         java.util.logging.Logger.getLogger("").addHandler(new NBExceptionHandler());
         
         // Create the main console app frame
-        ConsoleApp.newBrowser();
+        ConsoleApp.getConsoleApp();
         
         // Once the main frame is visible, we can do some things in the background
         SimpleWorker worker = new SimpleWorker() {

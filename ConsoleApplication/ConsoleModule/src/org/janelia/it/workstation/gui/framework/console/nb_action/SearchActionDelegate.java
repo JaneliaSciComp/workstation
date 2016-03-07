@@ -15,18 +15,9 @@ public class SearchActionDelegate {
         getBrowser().getGeneralSearchDialog().showDialog();
     }
 
-    public void patternSearch() {
-        getBrowser().getPatternSearchDialog().showDialog();
-
-    }
 
     public void maskSearch() {
         getBrowser().getMaskSearchDialog().showDialog();
-
-    }
-
-    public void giantFiberSearch() {
-        getBrowser().getGiantFiberSearchDialog().showDialog();
 
     }
 

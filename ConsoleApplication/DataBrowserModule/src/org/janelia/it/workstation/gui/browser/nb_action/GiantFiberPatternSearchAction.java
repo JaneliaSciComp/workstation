@@ -3,14 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.framework.console.nb_action;
+package org.janelia.it.workstation.gui.browser.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 @ActionID(
         category = "Search",
@@ -25,6 +27,6 @@ public final class GiantFiberPatternSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        new SearchActionDelegate().giantFiberSearch();
+        ConsoleApp.getConsoleApp().getGiantFiberSearchDialog().showDialog();
     }
 }

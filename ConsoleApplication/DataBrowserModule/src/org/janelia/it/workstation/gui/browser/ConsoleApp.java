@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.browser;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.GiantFiberSearchDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -21,6 +23,8 @@ import java.security.ProtectionDomain;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
+import javax.swing.*;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -29,15 +33,22 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * This is the main class for the workstation client. 
  */
 public class ConsoleApp {
-	
-    private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
+    static ConsoleApp consoleApp = new ConsoleApp();
 
-    public static void newBrowser() {
-        
+    public static synchronized ConsoleApp getConsoleApp() {
+        return consoleApp;
+    }
+	
+    private static PatternSearchDialog patternSearchDialog;
+    private static GiantFiberSearchDialog fiberSearchDialog;
+
+    public ConsoleApp() {
+        Logger log = LoggerFactory.getLogger(ConsoleApp.class);
+
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
         
-        log.debug("Java version: "+System.getProperty("java.version"));
+        log.debug("Java version: " + System.getProperty("java.version"));
         
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
@@ -109,6 +120,13 @@ public class ConsoleApp {
             log.debug("Displaying main frame");
             SessionMgr.getMainFrame().setVisible(true);
 
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    patternSearchDialog = new PatternSearchDialog();
+                    fiberSearchDialog = new GiantFiberSearchDialog();
+                }
+            });
 
             // TODO: remove this legacy code later
             SimpleWorker worker = new SimpleWorker() {
@@ -134,5 +152,13 @@ public class ConsoleApp {
             SessionMgr.getSessionMgr().handleException(ex);
             LifecycleManager.getDefault().exit(0);
         }
+    }
+
+    public static PatternSearchDialog getPatternSearchDialog() {
+        return patternSearchDialog;
+    }
+
+    public static GiantFiberSearchDialog getGiantFiberSearchDialog() {
+        return fiberSearchDialog;
     }
 }

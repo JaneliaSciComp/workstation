@@ -24,11 +24,9 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
-import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.ImportDialog;
 import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -105,8 +103,6 @@ public class Browser implements Cloneable {
     private ImportDialog importDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
-    private PatternSearchDialog patternSearchDialog;
-    private GiantFiberSearchDialog giantFiberSearchDialog;
     private ScreenEvaluationDialog screenEvaluationDialog;
     private MAASearchDialog maaSearchDialog;
     private FlyLineReleaseListDialog flyLineReleaseListDialog;
@@ -223,8 +219,6 @@ public class Browser implements Cloneable {
             protected void hadSuccess() {
                 generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
                 importDialog = new ImportDialog("Import Files");
-                patternSearchDialog = new PatternSearchDialog();
-                giantFiberSearchDialog = new GiantFiberSearchDialog();
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
                 screenEvaluationDialog = new ScreenEvaluationDialog();
                 maaSearchDialog = new MAASearchDialog();
@@ -419,14 +413,6 @@ public class Browser implements Cloneable {
 
     public ImportDialog getImportDialog() {
         return importDialog;
-    }
-
-    public PatternSearchDialog getPatternSearchDialog() {
-        return patternSearchDialog;
-    }
-
-    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
-        return giantFiberSearchDialog;
     }
 
     public ScreenEvaluationDialog getScreenEvaluationDialog() {
