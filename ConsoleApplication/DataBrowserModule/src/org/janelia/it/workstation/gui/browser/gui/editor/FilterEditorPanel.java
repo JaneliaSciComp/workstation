@@ -148,13 +148,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             public void actionPerformed(ActionEvent e) {
                 SimpleWorker worker = new SimpleWorker() {
                         
+                    private Filter savedFilter;
+                    
                     @Override
                     protected void doStuff() throws Exception {
-                        filter = DomainMgr.getDomainMgr().getModel().save(filter);
+                        savedFilter = DomainMgr.getDomainMgr().getModel().save(filter);
                     }
 
                     @Override
                     protected void hadSuccess() {
+                        setFilter(savedFilter);
                         saveButton.setVisible(false);
                     }
 
@@ -187,15 +190,16 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                     @Override
                     protected void doStuff() throws Exception {
                         
+                        Filter savedFilter = filter;
                         if (!isNewFilter) {
                             // This filter is already saved, duplicate it so that we don't overwrite the existing one
-                            filter = DomainUtils.cloneFilter(filter);
+                            savedFilter = DomainUtils.cloneFilter(filter);
                         }
-                                
-                        filter.setName(newName);
+                        savedFilter.setName(newName);
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
-                        filter = model.save(filter);
-                        model.addChild(model.getDefaultWorkspace(), filter);
+                        savedFilter = model.save(savedFilter);
+                        model.addChild(model.getDefaultWorkspace(), savedFilter);
+                        setFilter(savedFilter);
                     }
 
                     @Override
@@ -284,6 +288,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         dt.setActive(true);
     }
     
+    private void setFilter(Filter filter) {
+        this.filter = filter;
+        this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
+    }
+    
     public void loadNewFilter() {
         Filter newFilter = new Filter();
         newFilter.setName(DEFAULT_FILTER_NAME);
@@ -305,8 +314,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         selectionModel.setParentObject(filter);
         
         this.dirty = false;
-        this.filter = filter;
-        this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
+        setFilter(filter);
         
         try {
             updateView();
