@@ -51,11 +51,10 @@ public class ObjectSetNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (!getObjectSet().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            // TODO: add a blue version of this icon
-            return Icons.getIcon("set.png").getImage();
+            return Icons.getIcon("folder-gray-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("set.png").getImage();
+            return Icons.getIcon("folder-gray-icon.png").getImage();
         }
     }
     

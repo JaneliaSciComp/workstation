@@ -10,6 +10,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -65,6 +68,8 @@ import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
+import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -114,7 +119,67 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
-    private int currResultIndex;
+    private int currResultIndex = -1;
+
+    // Listen for key strokes and execute the appropriate key bindings
+    protected KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+            if (KeymapUtil.isModifier(e)) {
+                return;
+            }
+            if (e.getID() != KeyEvent.KEY_PRESSED) {
+                return;
+            }
+            
+            // No keybinds matched, use the default behavior
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                updateHud(true);
+                e.consume();
+                return;
+            }
+            else if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                enterKeyPressed();
+                return;
+            }
+            else if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                deleteKeyPressed();
+                e.consume();
+                return;
+            }
+
+            PipelineResultPanel object = null;
+            if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                if (e.isShiftDown()) {
+                    object = getPreviousObject();
+                }
+                else {
+                    object = getNextObject();
+                }
+            }
+            else {
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    object = getPreviousObject();
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    object = getNextObject();
+                }
+            }
+
+            if (object != null) {
+                resultPanelSelection(object, true);
+                updateHud(false);
+            }
+
+            revalidate();
+            repaint();
+        }
+    };
+    
+    protected void enterKeyPressed() {}
+    
+    protected void deleteKeyPressed() {}
     
     // Listener for clicking on result panels
     protected MouseListener resultMouseListener = new MouseHandler() {
@@ -158,8 +223,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     };
     
     public SampleEditorPanel() {
-        
+
+        setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
+        setFocusable(true);
         
         toolbar = new SampleEditorToolbar();
         populateViewButton();
@@ -182,6 +249,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         scrollPane = new JScrollPane(); 
         scrollPane.setViewportView(mainPanel);
+
+        addKeyListener(keyListener);
         
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -201,8 +270,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 otherResultPanel.setSelected(false);
             }
         }
+        currResultIndex = resultPanels.indexOf(resultPanel);
         resultPanel.setSelected(true);
         Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel.getResult(), isUserDriven));
+        
+        if (isUserDriven) {
+            // Only make this the focused component if the user actually clicked on it. The main thing this does is change the 
+            // active key listener, which we don't want to do if the selection is the result of some selection cascade. 
+            resultPanel.requestFocus();
+        }
     }
     
     private PipelineResultPanel getResultPanelAncestor(Component component) {
@@ -231,7 +307,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (resultPanels == null) {
             return null;
         }
-        int i = resultPanels.indexOf(currResultIndex);
+        int i = currResultIndex;
         if (i < 1) {
             // Already at the beginning
             return null;
@@ -243,7 +319,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         if (resultPanels == null) {
             return null;
         }
-        int i = resultPanels.indexOf(currResultIndex);
+        int i = currResultIndex;
         if (i > resultPanels.size() - 2) {
             // Already at the end
             return null;
@@ -286,7 +362,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             @Override
             protected void hadSuccess() {
-                    showResults();
+                showResults();
             }
 
             @Override
@@ -334,10 +410,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     @Override
     public void deactivate() {
     }
-
+    
     protected void updateHud(boolean toggle) {
 
         Hud hud = Hud.getSingletonInstance();
+        hud.setKeyListener(keyListener);
                 
         PipelineResultPanel pipelineResultPanel = resultPanels.get(currResultIndex);
         ResultDescriptor resultDescriptor = pipelineResultPanel.getResultDescriptor();
@@ -346,7 +423,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
         }
         else {
-            hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString());
+            hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString(), true);
         }
     }
     
@@ -395,7 +472,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             return;
         }
         
-        log.info("loadDomainObject({})",sample.getName());
+        log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
         selectionModel.setParentObject(sample);
         
         this.sample = sample;
@@ -418,6 +495,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             @Override
             protected void hadSuccess() {
                 showResults();
+                
+                if (MODE_RESULTS.equals(currMode))  {
+                    if (!resultPanels.isEmpty()) {
+                        resultPanelSelection(resultPanels.get(0), isUserDriven);
+                    }
+                }
+                
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
             }
@@ -556,10 +640,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     dataPanel.add(resultPanel);
                 }
             }
-        }
-        
-        if (!resultPanels.isEmpty()) {
-            resultPanelSelection(resultPanels.get(0), false);
         }
 
         removeAll();
@@ -703,7 +783,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             int b = SelectablePanel.BORDER_WIDTH;
             setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
             setLayout(new BorderLayout());
-
+            
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
@@ -737,7 +817,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 
                 add(titlePanel, BorderLayout.NORTH);
                 add(imagePanel, BorderLayout.CENTER);
-    
+
+                setFocusTraversalKeysEnabled(false);
+                addKeyListener(keyListener);
                 addMouseListener(resultMouseListener);
             }
             else {

@@ -108,7 +108,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                     S id = imageModel.getImageUniqueId(obj);
                     selectedIds.add(id);
                     if (!selectionModel.isSelected(id)) {
-                        selectionModel.select(obj, false);
+                        selectionModel.select(obj, false, true);
                     }
                 }
                 // Clear out everything that was not selected above
@@ -116,7 +116,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                     if (!selectedIds.contains(selectedId)) {
                         T object = imageModel.getImageByUniqueId(selectedId);
                         if (selectionModel.isSelected(selectedId)) {
-                            selectionModel.deselect(object);
+                            selectionModel.deselect(object, true);
                         }
                     }
                 }
@@ -223,12 +223,12 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     
     protected void selectObject(T object, boolean clearAll) {
         selectObjects(Arrays.asList(object), true, clearAll);
-        selectionModel.select(object, clearAll);
+        selectionModel.select(object, clearAll, true);
     }
 
     protected void deselectObject(T object) {
         selectObjects(Arrays.asList(object), false, false);
-        selectionModel.deselect(object);
+        selectionModel.deselect(object, true);
     }
     
     public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {

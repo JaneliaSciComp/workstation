@@ -80,7 +80,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
             viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
             viewer.requestActive();
-            viewer.loadDomainObject(domainObject);
+            viewer.loadDomainObject(domainObject, true);
         }
     }
     
@@ -165,7 +165,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             public void actionPerformed(ActionEvent e) {
                 DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                 viewer.requestActive();
-                viewer.loadDomainObject(domainObject);
+                viewer.loadDomainObject(domainObject, true);
             }
         });
         return openItem;
@@ -193,7 +193,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void hadSuccess() {
                         viewer.requestActive();
-                        viewer.loadDomainObject(sample);
+                        viewer.loadDomainObject(sample, true);
                     }
 
                     @Override

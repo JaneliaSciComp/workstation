@@ -117,10 +117,10 @@ public class TreeNodeNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            return Icons.getIcon("folder_blue.png").getImage();
+            return Icons.getIcon("folder-blue-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("folder.png").getImage();    
+            return Icons.getIcon("folder-blue-icon.png").getImage();    
         }
     }
     

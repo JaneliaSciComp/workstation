@@ -9,12 +9,12 @@ import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
  */
 public class ObjectSetSelectionEvent extends DomainObjectSelectionEvent {
 
-    public ObjectSetSelectionEvent(Object source, boolean select, ObjectSet objectSet) {
-        super(source, objectSet, select, true);
+    public ObjectSetSelectionEvent(Object source, boolean select, ObjectSet objectSet, boolean isUserDriven) {
+        super(source, objectSet, select, true, isUserDriven);
     }
     
-    public ObjectSetSelectionEvent(Object source, boolean select, ObjectSetNode objectSetNode) {
-        super(source, objectSetNode, select, true);
+    public ObjectSetSelectionEvent(Object source, boolean select, ObjectSetNode objectSetNode, boolean isUserDriven) {
+        super(source, objectSetNode, select, true, isUserDriven);
     }
     
     public ObjectSetNode getObjectSetNode() {

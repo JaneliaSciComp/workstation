@@ -3,16 +3,14 @@ package org.janelia.it.workstation.gui.browser.nodes;
 import java.awt.Image;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 
@@ -21,9 +19,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class WorkspaceNode extends TreeNodeNode {
-    
-    private final static Logger log = LoggerFactory.getLogger(WorkspaceNode.class);
-    
+        
     public WorkspaceNode(Workspace workspace) {
         super(null, workspace);
     }
@@ -40,10 +36,10 @@ public class WorkspaceNode extends TreeNodeNode {
     @Override
     public Image getIcon(int type) {
         if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            return Icons.getIcon("folder_blue.png").getImage();
+            return Icons.getIcon("user-folder-blue-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("folder.png").getImage();    
+            return Icons.getIcon("user-folder-blue-icon.png").getImage();    
         }
     }
     

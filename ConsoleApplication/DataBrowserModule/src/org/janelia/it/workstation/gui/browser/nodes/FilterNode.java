@@ -7,13 +7,9 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FilterNode extends DomainObjectNode {
-    
-    private final static Logger log = LoggerFactory.getLogger(FilterNode.class);
-    
+        
     public FilterNode(ChildFactory parentChildFactory, Filter filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
     }
@@ -30,11 +26,10 @@ public class FilterNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (!getFilter().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            // TODO: add a blue version of this icon
-            return Icons.getIcon("database.png").getImage();
+            return Icons.getIcon("search-blue-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("database.png").getImage();
+            return Icons.getIcon("search-blue-icon.png").getImage();
         }
     }
     

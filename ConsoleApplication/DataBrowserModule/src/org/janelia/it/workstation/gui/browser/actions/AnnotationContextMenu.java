@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -58,7 +59,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
         add(getCopyAnnotationItem());
         add(getRemoveAnnotationItem());
         add(getEditAnnotationItem(keyTerm)); 
-//        add(getViewDetailsItem()); 
+        add(getViewDetailsItem()); 
     }
 
     protected JMenuItem getTitleItem() {
@@ -124,15 +125,14 @@ public class AnnotationContextMenu extends PopupContextMenu {
         return null;
     }
 
-    // TODO: port this
-//    protected JMenuItem getViewDetailsItem() {
-//        if (multiple) return null;
-//        JMenuItem detailsItem = new JMenuItem("  View Details");
-//        detailsItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                OntologyOutline.viewAnnotationDetails(tag);
-//            }
-//        });
-//        return detailsItem;
-//    }
+    protected JMenuItem getViewDetailsItem() {
+        if (multiple) return null;
+        JMenuItem detailsItem = new JMenuItem("  View Details");
+        detailsItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                new DomainDetailsDialog().showForDomainObject(annotation);
+            }
+        });
+        return detailsItem;
+    }
 }

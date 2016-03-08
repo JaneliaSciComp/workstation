@@ -39,7 +39,7 @@ public abstract class SelectionModel<T,S> {
      * @param object
      * @param clearAll
      */
-    public final void select(T object, boolean clearAll) {
+    public final void select(T object, boolean clearAll, boolean isUserDriven) {
         S id = getId(object);
         log.trace("select {}, clearAll={}",id,clearAll);
         if (!isCorrectlySelected(id, clearAll)) {
@@ -48,7 +48,7 @@ public abstract class SelectionModel<T,S> {
             }
             selected.add(id);
         }
-        selectionChanged(object, id, true, clearAll);
+        selectionChanged(object, id, true, clearAll, isUserDriven);
     }
     
     private boolean isCorrectlySelected(S id, boolean clearAll) {
@@ -76,14 +76,14 @@ public abstract class SelectionModel<T,S> {
      * De-select the given object.
      * @param object
      */
-    public final void deselect(T object) {
+    public final void deselect(T object, boolean isUserDriven) {
         S id = getId(object);
         log.trace("deselect {}",id);
         if (!selected.contains(id)) {
             return;
         }
         selected.remove(id);
-        selectionChanged(object, id, false, false);
+        selectionChanged(object, id, false, false, isUserDriven);
     }
 
     /**
@@ -101,7 +101,7 @@ public abstract class SelectionModel<T,S> {
      * @param select
      * @param clearAll
      */
-    protected abstract void selectionChanged(T object, S id, boolean select, boolean clearAll);
+    protected abstract void selectionChanged(T object, S id, boolean select, boolean clearAll, boolean isUserDriven);
     
     /**
      * Sub-classes must implement this method to return an identifier for the given object.

@@ -98,6 +98,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     
     @Override
     protected void componentActivated() {
+        log.info("Activating sample result viewer");
         this.active = true;
         // Make this the active sample result viewer
         SampleResultViewerManager.getInstance().activate(this);
@@ -122,15 +123,9 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     }
 
     void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
     }
 
     void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
     }
     
     // Custom methods
@@ -194,7 +189,6 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
         
         editor.loadSampleResult(result, isUserDriven, success);
-        editor.activate();
         setName("Neurons for "+StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18));
     }
 }

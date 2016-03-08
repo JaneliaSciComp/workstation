@@ -102,6 +102,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @Override
     protected void componentActivated() {
+        log.info("Activating domain browser");
         this.active = true;
         // Make this the active list viewer
         DomainListViewManager.getInstance().activate(this);
@@ -160,7 +161,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                 @Override
                 protected void hadSuccess() {
                     if (object!=null) {
-                        loadDomainObject(object);
+                        loadDomainObject(object, false);
                     }
                 }
 
@@ -227,7 +228,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         return editor;
     }
     
-    public void loadDomainObject(DomainObject domainObject) {
+    public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         
         // Can view display this object?
         final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
@@ -243,8 +244,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        editor.loadDomainObject(domainObject, true, null);
-        editor.activate();
+        editor.loadDomainObject(domainObject, isUserDriven, null);
+//        editor.activate();
         setName(editor.getName());
     }
 

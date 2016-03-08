@@ -166,9 +166,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
         statusBar.add(prevPageButton);
         statusBar.add(nextPageButton);
         statusBar.add(endPageButton);
-
-//        hud = Hud.getSingletonInstance();
-//        hud.addKeyListener(keyListener);
         
         setViewerType(ListViewerType.IconViewer);
     }
@@ -253,7 +250,6 @@ public abstract class PaginatedResultsPanel extends JPanel {
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.getSource()!=resultsView) return;
         updateStatusBar();
-//        updateHud(false);
     }
     
     @Subscribe
@@ -331,7 +327,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         for(ResultPage page : searchResults.getPages()) {
             if (page==null) continue; // Page not yet loaded
             for(DomainObject domainObject : page.getDomainObjects()) {
-                selectionModel.select(domainObject, clearAll);
+                selectionModel.select(domainObject, clearAll, true);
                 clearAll = false;
             }
         }

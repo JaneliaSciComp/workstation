@@ -539,7 +539,7 @@ public class RESTDomainFacade implements DomainFacade {
         Response response = serviceEndpoints.get("treenode")
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request createTreeNode to server" + treeNode)) {
+        if (checkBadResponse(response.getStatus(), "problem making request createTreeNode to server: " + treeNode)) {
             return null;
         }
         TreeNode newTreeNode = response.readEntity(TreeNode.class);
@@ -560,7 +560,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("reorder")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInTreeNode to server" + treeNode + "," + order)) {
+        if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInTreeNode to server: " + treeNode + "," + order)) {
             return null;
         }
         TreeNode sortedTreeNode = response.readEntity(TreeNode.class);
@@ -577,7 +577,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("children")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromTreeNode to server" + treeNode + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromTreeNode to server: " + treeNode + "," + references)) {
             return null;
         }
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
@@ -595,7 +595,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .request("application/json")
                 .put(Entity.json(query));
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
-        if (checkBadResponse(response.getStatus(), "problem making request addChildrenToTreeNode to server" + treeNode + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request addChildrenToTreeNode to server: " + treeNode + "," + references)) {
             return null;
         }
         return updatedTreeNode;
@@ -625,7 +625,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("member")
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request addMembersToObjectSet to server" + objectSet + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request addMembersToObjectSet to server: " + objectSet + "," + references)) {
             return null;
         }
         ObjectSet updatedObjectSet = response.readEntity(ObjectSet.class);
@@ -642,7 +642,7 @@ public class RESTDomainFacade implements DomainFacade {
                 .path("member")
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request removeMembersFromObjectSet to server" + objectSet + "," + references)) {
+        if (checkBadResponse(response.getStatus(), "problem making request removeMembersFromObjectSet to server: " + objectSet + "," + references)) {
             return null;
         }
         ObjectSet updatedObjectSet = response.readEntity(ObjectSet.class);

@@ -1,12 +1,19 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -21,6 +28,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -722,7 +730,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                Utils.setWaitingCursor(GiantFiberSearchDialog.this);
+                //Utils.setWaitingCursor(GiantFiberSearchDialog.this);
                 setStatusMessage("Loading quantifier maps...");
                 loadPatternAnnotationQuantifierMapsFromSummary();
                 setStatusMessage("Computing scores...");
@@ -740,7 +748,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                //Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                 SessionMgr.getSessionMgr().handleException(error);
                 setStatusMessage("Error during quantifier load");
             }
@@ -968,37 +976,36 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private RootedEntity newRootedFolder;
+            private Workspace outputFolder;
+            private ObjectSet saveFolder;
 
             @Override
             protected void doStuff() throws Exception {
-            	
-            	Entity newFolder = null;
-                if (outputFolder!=null) {
-                	newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
-                    EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(outputFolder.getEntity(), newFolder, outputFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
-                    newRootedFolder = outputFolder.getChild(childEd);
+                // copy the results to an ObjectSet
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                outputFolder = model.getDefaultWorkspace();
+                saveFolder = new ObjectSet();
+                saveFolder.setName(currentSetTextField.getText());
+                saveFolder.setClassName(Sample.class.getName());
+                List<Long> membershipSampleList = new ArrayList<>();
+                membershipSampleList.addAll(membershipSampleSet);
+                saveFolder.setMembers(membershipSampleList);
+                saveFolder = model.create(saveFolder);
+                if (saveFolder.getId()!=null) {
+                    model.addChild(outputFolder,saveFolder);
                 }
-                else {
-                	newFolder = ModelMgr.getModelMgr().createCommonRoot(currentSetTextField.getText());
-                    newRootedFolder = new RootedEntity(newFolder);
-                }
-
-                ModelMgr.getModelMgr().addChildren(newFolder.getId(),
-                        new ArrayList<>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
             }
 
             @Override
             protected void hadSuccess() {
-                final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-                entityOutline.totalRefresh(true, new Callable<Void>() {
+                final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+                final Long[] idPath = NodeUtils.createIdPath(outputFolder, saveFolder);
+                SwingUtilities.invokeLater(new Runnable() {
                     @Override
-                    public Void call() throws Exception {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, newRootedFolder.getUniqueId(), true);
-                        Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                    public void run() {
+                        explorer.selectNodeByPath(idPath);
                         setVisible(false);
                         resetSearchState();
-                        return null;
                     }
                 });
             }

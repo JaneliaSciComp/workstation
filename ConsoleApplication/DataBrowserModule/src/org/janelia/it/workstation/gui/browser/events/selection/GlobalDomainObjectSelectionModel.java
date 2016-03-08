@@ -29,15 +29,15 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.isSelect()) {
-            select(event.getDomainObject(), event.isClearAll());
+            select(event.getDomainObject(), event.isClearAll(), event.isUserDriven());
         }
         else {
-            deselect(event.getDomainObject());
+            deselect(event.getDomainObject(), event.isUserDriven());
         }
     }
     
     @Override
-    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll) {
+    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll, boolean isUserDriven) {
         // Since this is a meta-model, the relevant events were already on the bus, so this method 
         // does not need to do any additional work.
     }
