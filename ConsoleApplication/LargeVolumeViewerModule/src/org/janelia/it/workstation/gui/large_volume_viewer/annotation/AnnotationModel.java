@@ -172,14 +172,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void updateCurrentWorkspaceAndNeuron() {
-        updateCurrentWorkspace();
-        // we can refresh the neuron object from the workspace:
-        if (getCurrentNeuron() != null) {
-            refreshNeuronInWorkspace(getCurrentNeuron());
-        }
-    }
-
     private void refreshNeuronInWorkspace(TmNeuron neuron) {
         try {
             if (neuron.getId() == null) {
@@ -915,8 +907,8 @@ called from a  SimpleWorker thread.
         
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
+        refreshNeuronInWorkspace(neuron);
 
-        updateCurrentWorkspaceAndNeuron();
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
 
@@ -997,10 +989,8 @@ called from a  SimpleWorker thread.
         // if that segment had a trace, remove it
         removeAnchoredPath(neuron, annotation1, annotation2);
         neuronManager.saveNeuronData(neuron);
+        refreshNeuronInWorkspace(neuron);
 
-        // updates:
-        // Q: redundant?
-        updateCurrentWorkspaceAndNeuron();
 
         // retrace
         if (automatedTracingEnabled()) {
