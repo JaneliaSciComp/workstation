@@ -106,62 +106,13 @@ public interface EntityFacade {
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception;
 
-    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception;
-    
-    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
-
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception;
-
-    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
-            double x, double y, double z, String comment) throws Exception;
-    
-    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception;
-
-    public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
-            TmNeuron neuron) throws Exception;
-
-    public void rerootNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception;
-
-    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception;
-
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception;
-
-    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
-            int index, double x, double y, double z, String comment) throws Exception;
-
-    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception;
-
-    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception;
 
     public void removeWorkspacePreference(Long workspaceId, String key) throws Exception;
 
     public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception;
 
-    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception;
-
-    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception;
-
-    public void deleteGeometricAnnotation(Long geoId) throws Exception;
-
     public TmWorkspace loadWorkspace(Long workspaceId) throws Exception;
-
-    public TmNeuron loadNeuron(Long neuronId) throws Exception;
-
-    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
-            List<List<Integer>> pointlist) throws Exception;
-
-    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
-            List<List<Integer>> pointList) throws Exception;
-
-    public void deleteAnchoredPath(Long pathID) throws Exception;
-
-    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
-        Long parentID, int parentType, int formatVersion, String Data) throws Exception;
-
-    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation, String data)
-        throws Exception;
-
-    public void deleteStructuredTextAnnotation(Long annID) throws Exception;
 
     CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception;
 
