@@ -46,21 +46,15 @@ public class AnnotationModel
 
 this class is responsible for handling requests from the AnnotationManager.  those
 requests are ready-to-execute; the AnnotationManager has taken care of validation.
-the requests may map one-to-one onto atomic operations in the TiledMicroscopeDAO,
-or they may package up several of those actions.
 
 public methods in this class that throw exceptions are the ones that involve db calls, and
 they should all be called from worker threads.  the others, typically getters of
 various info, do not.  private methods don't necessarily follow that pattern.
 
-a note on entities: in general, we want to only work with the domain objects in 
-this class.  use "updateCurrentWorkspace(AndNeuron)" to keep the local copies of
-those objects in sync with the back end.  other components will limit themselves
-to accessing those two objects in general.
-
-it turns out that it's expensive to update the domain objects from the db when
-there's a lot of data, so we started updating the objects locally instead;
-after more complicated operations (typically rarer), we'll still update from db
+a note on entities: as of the early 2016 update, we act almost exclusively
+on domain objects and then persist them rather than calling through a DAO
+to make changes on entities.  be careful that the workspace and neuron objects
+are kept up to date locally!
 
 this class does not interact directly with the UI.  it observes 
 UI elements that select, and its events are connected with a variety of UI
@@ -402,9 +396,8 @@ called from a  SimpleWorker thread.
      */
     public void createNeuron(String name) throws Exception {
         final TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-        //final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
-        // update domain object
+        // update local workspace
         final TmWorkspace workspace = getCurrentWorkspace();
         workspace.getNeuronList().add(neuron);
         setCurrentNeuron(neuron);
@@ -909,10 +902,8 @@ called from a  SimpleWorker thread.
             if (note != null) {
                 // don't use removeNote(); it triggers updates we don't want yet
                 neuron.getStructuredTextAnnotationMap().remove(annotation.getId());
-                //modelMgr.deleteStructuredTextAnnotation(note.getId());
             }
             neuron.getGeoAnnotationMap().remove(annotation.getId());
-            //modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
         // for the root annotation, also delete any traced paths to the parent, 
         // if it exists and eliminate the root annotation as a child of the
@@ -1561,8 +1552,6 @@ called from a  SimpleWorker thread.
 
         // Fire off the bulk update.  The "un-serialized" or
         // db-unknown annotations could be swapped for "blessed" versions.
-        // modelMgr.addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
-        // modelMgr.addPersistLinkedGeometricAnnotations(nodeParentLinkage, annotations, neuron);
         neuronManager.addLinkedGeometricAnnotationsInMemory(nodeParentLinkage, annotations, neuron);
         neuronManager.saveNeuronData(neuron);
 
