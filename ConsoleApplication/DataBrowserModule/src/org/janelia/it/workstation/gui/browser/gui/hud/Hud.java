@@ -176,11 +176,9 @@ public class Hud extends ModalDialog {
             log.debug("HUD: entity type is {}", domainObject.getType());
         }
 
-        log.info("setObjectAndToggleDialog - name:{}, toggle:{}",domainObject.getName(),toggle);
-        
         ResultDescriptor currResult = overrideSettings?resultDescriptor:resultButton.getResultDescriptor();
         String currImageType  = overrideSettings?typeName:typeButton.getImageType();
-        log.info("setObjectAndToggleDialog - currResult:{}, currImageType:{}",currResult,currImageType);
+        log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
         if (currResult==null) {
             currResult = ResultDescriptor.LATEST;
