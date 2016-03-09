@@ -1231,24 +1231,6 @@ called from a  SimpleWorker thread.
             }
         }
 
-		/*
-        // update domain object; similar logic to above
-        // if it's empty string, delete note object from neuron
-        if (noteString.length() == 0) {
-            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
-                neuron.getStructuredTextAnnotationMap().remove(geoAnnotation.getId());
-            }
-        } else {
-            // if it's not empty and in neuron, update string in note object
-            // if it's not empty and not in neuron, add new note object to neuron
-            if (neuron.getStructuredTextAnnotationMap().containsKey(geoAnnotation.getId())) {
-                neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId()).setDataString(jsonString);
-            } else {
-                neuron.getStructuredTextAnnotationMap().put(geoAnnotation.getId(), textAnnotation);
-            }
-        }
-		*/
-		
 		// Send the data back to the server to save.
 		neuronManager.saveNeuronData(neuron);
 
