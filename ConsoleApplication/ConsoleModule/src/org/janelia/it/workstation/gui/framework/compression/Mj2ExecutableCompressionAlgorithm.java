@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.framework.compression.CompressionExceptio
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
@@ -24,14 +25,47 @@ import org.slf4j.Logger;
  */
 public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
 //    public static final String DECOMPRESSION_BINARY = "R:\\decompress_forLes\\decompressForLes.exe";
-    public static final String DECOMPRESSION_BINARY = "C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
+    public static final String DECOMPRESSION_BINARY = "\"C:\\Program Files\\JaneliaWorkstation\\bin\\decompressForLes.exe\"";
+            //"C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
+    public static final String BUILD_RAMDISK_COMMAND = "C:\\Windows\\system32\\imdisk.exe -a -t vm -s 1G -p \"/fs:ntfs /q /y\" -m R:";
+    //public static final File RAMDISK_ROOT = new File("C:\\data\\for_mj2\\"); //new File("R:\\data\\");
     public static final File RAMDISK_ROOT = new File("R:\\data\\");
     public static final String TARGET_EXTENSION = ".mj2";
+    private static final String FILE_PROTOCOL = "file:/";
     private static final String FILE_MID_STR = "_comp-";
     private final Logger log = LoggerFactory.getLogger(Mj2ExecutableCompressionAlgorithm.class);
     
     private int compressionLevel = 10;
     private int zDepth = 251;
+    
+    private String decompBinaryLocation = DECOMPRESSION_BINARY;
+    
+    public Mj2ExecutableCompressionAlgorithm() {
+        File rDrive = new File("R:\\");
+        if (! rDrive.exists()) {
+            try {
+                SystemCall sysCall = new SystemCall();
+                int cmdRtn = sysCall.emulateCommandLine(BUILD_RAMDISK_COMMAND, false);
+                if (cmdRtn != 0) {
+                    log.error(BUILD_RAMDISK_COMMAND + " failed with error " + cmdRtn);
+                }
+            } catch (Exception ex) {
+                log.error("Exception on create RAM Disk, using the command: " + BUILD_RAMDISK_COMMAND);
+                ex.printStackTrace();
+                throw new RuntimeException(ex);
+            }
+        }
+
+        /*
+        URL binUrl = this.getClass().getClassLoader().getResource("resources/binaries/decompressForLes.exe");
+        if (binUrl != null  &&  (! binUrl.getFile().contains(".jar!"))) {
+            decompBinaryLocation = binUrl.getFile();
+            if (decompBinaryLocation.startsWith(FILE_PROTOCOL)) {
+                decompBinaryLocation = decompBinaryLocation.substring(FILE_PROTOCOL.length());
+            }
+        }
+        */
+    }
     
     /**
      * This setting is the percentage of the original file size, that will result from compression.
@@ -101,7 +135,7 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
                 //File tempFile = File.createTempFile("JPEG2KMJ2", getDecompressedNameForFile(infile).getName(), RAMDISK_ROOT);
                 // Form a command line.
                 SystemCall sysCall = new SystemCall();
-                final String commandLine = DECOMPRESSION_BINARY + " " + infile.getAbsolutePath() + " " + tempFile.getAbsolutePath() + " " + zDepth;
+                final String commandLine = decompBinaryLocation + " " + infile.getAbsolutePath() + " " + tempFile.getAbsolutePath() + " " + zDepth;
                 // Win-only version.
                 System.out.println(commandLine);
                 int cmdRtn = sysCall.emulateCommandLine(commandLine, false);

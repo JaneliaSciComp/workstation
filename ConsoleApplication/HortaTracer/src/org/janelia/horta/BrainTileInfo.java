@@ -44,6 +44,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents Mouse Brain tile information entry from tilebase.cache.yml file.
@@ -76,10 +80,13 @@ implements BrickInfo
     
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
     private int colorChannelIndex = 0;
+    private boolean leverageCompressedFiles;
+    private Logger log = LoggerFactory.getLogger(BrainTileInfo.class);
     
-    public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath) throws ParseException 
+    public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath, boolean leverageCompressedFiles) throws ParseException 
     {
         this.parentPath = parentPath;
+        this.leverageCompressedFiles = leverageCompressedFiles;
         Map<String, Object> aabb = (Map<String, Object>)yamlFragment.get("aabb");
         List<Integer> ori = (List<Integer>)aabb.get("ori");
         List<Integer> bbshape = (List<Integer>)aabb.get("shape");
@@ -268,23 +275,48 @@ implements BrickInfo
     {
         // OS specific path should have already been translated in MouseLightYamlBrickSource
         File folderPath = new File(parentPath, localPath);
-        System.out.println(folderPath.getAbsolutePath());
+        //System.out.println(folderPath.getAbsolutePath());
         if (! folderExists())
             throw new IOException("no such tile folder "+folderPath.getAbsolutePath());
+        
+        CompressedFileResolverI resolver = FrameworkImplProvider.getCompressedFileResolver();
+        
+        if (leverageCompressedFiles  &&  resolver == null) {
+            throw new IOException("Failed to find compression resolver.");
+        }
         
         // That path is just a folder. Now find the actual files.
         // TODO - this just loads the first channel.
         String imageSuffix = "." + Integer.toString(colorChannelIndex) + ".tif";
+        File compressedTileFile = null;
         File tileFile = null;
         for (File file : folderPath.listFiles()) {
+            if (leverageCompressedFiles  &&  file.getName().contains(imageSuffix)  &&  resolver.canDecompress(file)) {
+                File decompressedName = resolver.getDecompressedNameForFile(file);
+                if (decompressedName != null  &&  decompressedName.getName().endsWith(imageSuffix)) {
+                    log.info("Starting with compressed version of file {}.", file);
+                    compressedTileFile = file;
+                    break;
+                }
+            }
             // Use the first channel file
             if (file.getName().endsWith(imageSuffix)) {
+                log.info("Using never-compressed version of file {}.", file);
                 tileFile = file;
                 break;
             }
         }
+        if (compressedTileFile != null) {
+            try {
+                log.info("Decompressing...");
+                tileFile = resolver.decompressToFile(compressedTileFile);
+                log.info("Decompressed as {}.", tileFile);
+            } catch (Exception ex) {
+                throw new IOException("Decompression step failed. " + compressedTileFile, ex);
+            }
+        }
         if (tileFile == null)
-            throw new IOException("No channel tiff files found");
+            throw new IOException("No channel tiff file found");
         Texture3d texture = new Texture3d();
         texture.loadTiffStack(tileFile);
         return texture;
