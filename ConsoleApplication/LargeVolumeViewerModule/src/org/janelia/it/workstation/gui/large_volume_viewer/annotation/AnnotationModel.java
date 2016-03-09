@@ -1470,10 +1470,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-	/**
-	 * @todo decide if this needs to exist. 
-	 * @deprecated may not implement on client in future.
-	 */
     public void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
@@ -1591,9 +1587,10 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public void postWorkspaceUpdate() {
+    public void postWorkspaceUpdate() throws Exception {
         updateCurrentWorkspace();
-        final TmWorkspace workspace = getCurrentWorkspace();        
+        final TmWorkspace workspace = getCurrentWorkspace();
+        neuronManager.loadWorkspaceNeurons(workspace);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

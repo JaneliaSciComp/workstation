@@ -1578,7 +1578,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadSuccess() {
                         int latestValue = countDownSemaphor.decrementAndGet();
                         if (latestValue == 0) {
-                            annotationModel.postWorkspaceUpdate();
+                            // last file is loaded, so trigger update; needs another
+                            //  layer of threading, ugh:
+                            SimpleWorker updater = new SimpleWorker() {
+                                @Override
+                                protected void doStuff() throws Exception {
+                                    annotationModel.postWorkspaceUpdate();
+                                }
+
+                                @Override
+                                protected void hadSuccess() {
+                                    // nothing here
+                                }
+
+                                @Override
+                                protected void hadError(Throwable error) {
+                                    SessionMgr.getSessionMgr().handleException(error);
+                                }
+                            };
+                            updater.execute();
                         }
                     }
 
