@@ -1214,7 +1214,7 @@ called from a  SimpleWorker thread.
                     // otherwise, there's something left, so persist it (note: as of this
                     //  writing, there aren't any other structured text annotations besides
                     //  note, but no need to get sloppy!)
-                    neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getId());
+                    neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
                 }
             }
 
