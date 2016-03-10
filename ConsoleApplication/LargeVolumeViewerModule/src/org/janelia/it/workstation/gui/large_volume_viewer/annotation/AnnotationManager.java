@@ -1461,11 +1461,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationModel.getCurrentWorkspace() != null) {
             int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
             int nannotations = 0;
+            int maxannotations = 0;
             for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
                 nannotations += neuron.getGeoAnnotationMap().size();
+                maxannotations = Math.max(maxannotations, neuron.getGeoAnnotationMap().size());
             }
             JOptionPane.showMessageDialog(quadViewUi,
-                    "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                    "# neurons = " + nneurons + "\n" +
+                    "# annotations (total) = " + nannotations + "\n" +
+                    "# annotations (largest neuron) = " + maxannotations + "\n",
                     "Info",
                     JOptionPane.PLAIN_MESSAGE);
         }
