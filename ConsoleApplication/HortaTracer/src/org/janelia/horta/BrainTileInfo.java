@@ -287,7 +287,7 @@ implements BrickInfo
         
         // That path is just a folder. Now find the actual files.
         // TODO - this just loads the first channel.
-        String imageSuffix = "." + Integer.toString(colorChannelIndex) + ".tif";
+        String imageSuffix = "." + Integer.toString(colorChannelIndex); // + ".tif";
         File compressedTileFile = null;
         File tileFile = null;
         for (File file : folderPath.listFiles()) {
@@ -312,6 +312,7 @@ implements BrickInfo
                 tileFile = resolver.decompressToFile(compressedTileFile);
                 log.info("Decompressed as {}.", tileFile);
             } catch (Exception ex) {
+                ex.printStackTrace();
                 throw new IOException("Decompression step failed. " + compressedTileFile, ex);
             }
         }

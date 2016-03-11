@@ -25,6 +25,7 @@ import org.slf4j.Logger;
  */
 public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
 //    public static final String DECOMPRESSION_BINARY = "R:\\decompress_forLes\\decompressForLes.exe";
+    public static final String ASSUMED_OUTPUT_TYPE_EXT = ".tif";
     public static final String DECOMPRESSION_BINARY = "\"C:\\Program Files\\JaneliaWorkstation\\bin\\decompressForLes.exe\"";
             //"C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
     public static final String BUILD_RAMDISK_COMMAND = "C:\\Windows\\system32\\imdisk.exe -a -t vm -s 1G -p \"/fs:ntfs /q /y\" -m R:";
@@ -131,7 +132,11 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
                     throw new Exception("Ram disk/root not writable or not yet created " + RAMDISK_ROOT);
                 }
                 FileUtils.cleanDirectory(RAMDISK_ROOT);
-                File tempFile = new File(RAMDISK_ROOT, getDecompressedNameForFile(infile).getName());
+                String targetFileName = getDecompressedNameForFile(infile).getName();
+                if (! targetFileName.toLowerCase().endsWith(ASSUMED_OUTPUT_TYPE_EXT)) {
+                    targetFileName += ASSUMED_OUTPUT_TYPE_EXT;
+                }
+                File tempFile = new File(RAMDISK_ROOT, targetFileName);
                 //File tempFile = File.createTempFile("JPEG2KMJ2", getDecompressedNameForFile(infile).getName(), RAMDISK_ROOT);
                 // Form a command line.
                 SystemCall sysCall = new SystemCall();
