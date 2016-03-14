@@ -300,7 +300,7 @@ implements BrickInfo
                 }
             }
             // Use the first channel file
-            if (file.getName().endsWith(imageSuffix)) {
+            if (file.getName().endsWith(imageSuffix + ".tif")) {
                 log.info("Using never-compressed version of file {}.", file);
                 tileFile = file;
                 break;
