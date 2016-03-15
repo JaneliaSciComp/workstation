@@ -197,7 +197,7 @@ called from a  SimpleWorker thread.
                 log.error(ex.getMessage());
                 SessionMgr.getSessionMgr().handleException(ex);
 			}
-			
+
         } else {
             currentWorkspace = null;
         }
@@ -413,8 +413,8 @@ called from a  SimpleWorker thread.
         final TmNeuron operationCurrentNeuron = getCurrentNeuron();
         operationCurrentNeuron.setName(name);
         this.neuronManager.saveNeuronData(operationCurrentNeuron);
-        
-        Long currentNeuronID = operationCurrentNeuron.getId();        
+
+        Long currentNeuronID = operationCurrentNeuron.getId();
 
         // update & notify
         final TmNeuron neuron = getNeuronFromNeuronID(currentNeuronID);
@@ -495,7 +495,7 @@ called from a  SimpleWorker thread.
      */
     public void addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
-        //  be the parent).  Updates to neuron's collections are done in the 
+        //  be the parent).  Updates to neuron's collections are done in the
         //  as well.
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, neuron.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
@@ -635,7 +635,7 @@ called from a  SimpleWorker thread.
         log.info("beginning mergeNeurite()");
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
-         
+
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
@@ -654,7 +654,7 @@ called from a  SimpleWorker thread.
         else {
             sourceNeuron = targetNeuron;
         }
-        
+
         // Re-grab the source annotation, to ensure it is the one contained
         // in the source neuron of reference.
         sourceAnnotation = sourceNeuron.getGeoAnnotationMap().get(sourceAnnotationID);
@@ -807,7 +807,7 @@ called from a  SimpleWorker thread.
         removeAnchoredPath(neuron, link, parent);
 
         // if the link had a note, delete it:
-        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {            
+        if (neuron.getStructuredTextAnnotationMap().containsKey(link.getId())) {
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
         }
 
@@ -819,7 +819,7 @@ called from a  SimpleWorker thread.
         // remove link from its parent
         parent.getChildIds().remove(link.getId());
 
-        // ...and finally get rid of the link itself; then, we're done, and 
+        // ...and finally get rid of the link itself; then, we're done, and
         //  the neuron can be serialized
         neuron.getGeoAnnotationMap().remove(link.getId());
         neuronManager.saveNeuronData(neuron);
@@ -897,14 +897,14 @@ called from a  SimpleWorker thread.
             }
             neuron.getGeoAnnotationMap().remove(annotation.getId());
         }
-        // for the root annotation, also delete any traced paths to the parent, 
+        // for the root annotation, also delete any traced paths to the parent,
         // if it exists and eliminate the root annotation as a child of the
         // root-parent.
         if (rootParent != null) {
             removeAnchoredPath(neuron, rootAnnotation, rootParent);
             rootParent.getChildIds().remove(rootAnnotation.getId());
         }
-        
+
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
         refreshNeuronInWorkspace(neuron);

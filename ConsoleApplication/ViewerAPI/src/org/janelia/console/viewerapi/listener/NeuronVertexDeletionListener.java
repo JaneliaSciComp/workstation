@@ -28,18 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.console.viewerapi.listener;
 
-import java.awt.Point;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 
 /**
  *
- * @author Christopher Bruns
+ * @author brunsc
  */
-public interface PathExtender {
-    NeuriteAnchor extendPath(
-            NeuriteAnchor previousAnchor, // can be null
-            NeuriteAnchor sourceAnchor, // must NOT be null
-            Point targetPoint, // in window coordinates
-            VolumeProjection image);
+public interface NeuronVertexDeletionListener {
+
+    void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons);
+    
 }

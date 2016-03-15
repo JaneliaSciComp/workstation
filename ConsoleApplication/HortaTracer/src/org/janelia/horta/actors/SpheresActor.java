@@ -31,9 +31,12 @@
 package org.janelia.horta.actors;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
@@ -42,8 +45,13 @@ import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +63,16 @@ public class SpheresActor extends BasicGL3Actor
 {
     private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
-    private final SpheresMaterial material;
+    protected final SpheresMaterial material;
     private final NeuronModel neuron;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
+    // Simpler constructor creates its own image and shader resources
+    public SpheresActor(NeuronModel neuron) {
+        this(neuron, null, new SpheresMaterial.SpheresShader());
+    }
+    
+    // For scaling efficiency, alternate constructor takes shared resources as argument
     public SpheresActor(
             final NeuronModel neuron, 
             Texture2d lightProbeTexture,
@@ -96,6 +110,19 @@ public class SpheresActor extends BasicGL3Actor
                 updateGeometry();
             }
         });
+        neuron.getVertexAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
+            {
+                updateGeometry();
+            }
+        });
+        neuron.getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
+            @Override
+            public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                updateGeometry();
+            }
+        });
     }
     
     private void updateGeometry() {
@@ -103,7 +130,7 @@ public class SpheresActor extends BasicGL3Actor
         meshGeometry.clear();
         for (NeuronVertex neuronVertex : neuron.getVertexes()) {
             Vertex vertex = meshGeometry.addVertex(neuronVertex.getLocation());
-            float radius = 1.0f; // TODO: - adjustable default value?
+            float radius = DefaultNeuron.radius;
             if (neuronVertex.hasRadius())
                 radius = (float) neuronVertex.getRadius();
             vertex.setAttribute("radius", radius);
@@ -122,8 +149,10 @@ public class SpheresActor extends BasicGL3Actor
             neuron.getColorChangeObservable().notifyObservers();
             neuron.getGeometryChangeObservable().notifyObservers();
         }
+
         // if (meshGeometry.size() < 1) return;
         // gl.glDisable(GL3.GL_DEPTH_TEST);
+
         super.display(gl, camera, parentModelViewMatrix);       
     }
 
@@ -131,7 +160,7 @@ public class SpheresActor extends BasicGL3Actor
         material.setColor(color);
     }
 
-    void setMinPixelRadius(float radius)
+    public void setMinPixelRadius(float radius)
     {
         material.setMinPixelRadius(radius);
     }
@@ -145,4 +174,9 @@ public class SpheresActor extends BasicGL3Actor
     {
         return material.getMinPixelRadius();
     }
+
+    public NeuronModel getNeuron() {
+        return neuron;
+    }
+
 }

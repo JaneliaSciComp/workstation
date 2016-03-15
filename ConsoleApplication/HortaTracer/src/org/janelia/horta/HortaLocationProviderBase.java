@@ -1,11 +1,3 @@
-package org.janelia.horta;
-
-
-import org.janelia.geometry3d.BasicVector;
-import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Vector3;
-
 /*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
@@ -35,46 +27,52 @@ import org.janelia.geometry3d.Vector3;
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.janelia.horta;
+
+import java.net.URL;
+import org.janelia.console.viewerapi.BasicSampleLocation;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * Base class for horta location providers.  All are very similar.
  *
- * @author Christopher Bruns
+ * @author fosterl
  */
-public class NeuriteAnchor implements ImmutableNeuriteAnchor 
-{
-    private final Vector3 xyzUm;
-    private final double intensity;
-    private float radiusUm;
+public abstract class HortaLocationProviderBase implements Tiled3dSampleLocationProviderAcceptor {
+    private final Logger logger = LoggerFactory.getLogger(HortaLocationProviderBase.class);
     
-    public NeuriteAnchor(Vector3 locationUm, double intensity, float radiusUm) {
-        this.xyzUm = locationUm;
-        this.intensity = intensity;
-        this.radiusUm = radiusUm;
+    @Override
+    public SampleLocation getSampleLocation() {
+        NeuronTracerTopComponent nttc = getNeuronTracer();
+        if (nttc == null) {
+            logger.info("No neuron tracer component found.");
+            return null;
+        }
+        BasicSampleLocation result = new BasicSampleLocation();
+        URL url = null;
+        try {
+            url = nttc.getCurrentSourceURL();
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            Exceptions.printStackTrace(ex);
+        }
+        result.setSampleUrl(url);
+        double[] focus = nttc.getStageLocation();
+        result.setFocusUm(focus[0], focus[1], focus[2]);
+        return result;
+    }
+
+    protected NeuronTracerTopComponent getNeuronTracer() {
+        return NeuronTracerTopComponent.findThisComponent();
     }
 
     @Override
-    public Vector3 getLocationUm() {
-        return xyzUm;
+    public ParticipantType getParticipantType() {
+        return ParticipantType.both;
     }
 
-    @Override
-    public double getIntensity() {
-        return intensity;
-    }
-
-    @Override
-    public float getRadiusUm() {
-        return radiusUm;
-    }
-
-    public void setRadiusUm(float radiusUm) {
-        this.radiusUm = radiusUm;
-    }
-
-    @Override
-    public float distanceSquared(ConstVector3 rhs)
-    {
-        return xyzUm.distanceSquared(rhs);
-    }
-    
 }

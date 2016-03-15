@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -54,7 +55,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 
-public final class SessionMgr {
+public final class SessionMgr implements ActivityLogging {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
@@ -508,6 +509,7 @@ public final class SessionMgr {
      * @param elapsedMs how much time passed to carry this out?
      * @param thresholdMs beyond this time, force log issue.
      */
+    @Override
     public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
         String userLogin = null;
 
@@ -547,13 +549,106 @@ public final class SessionMgr {
     }
 
     /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     * @todo see about reusing code between this and non-threshold.
+     */
+    @Override
+    public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    }
+
+                    if (shouldLog) {
+                        ModelMgr.getModelMgr().addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, action, timestamp
+            );
+            ex.printStackTrace();
+        }
+    }
+
+    /**
      * Log a tool event, always.  No criteria will be checked.
      * 
      * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
      */
+    @Override
     public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
         // Force logging, by setting elapsed > threshold.
         logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
+    }
+    
+    /**
+     * Log a whole list of tool events, in one server-pump.
+     * 
+     * @param toolName tool, like LVV or Console
+     * @param category type of event
+     * @param batchPrefix distinguish action/optional, may be null.
+     * @param actions explicit action information.
+     */
+    public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
+        String userLogin = null;
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent[] events = new UserToolEvent[actions.size()];
+            int evtNum = 0;
+            for (String action: actions) {                
+                Date eventDate = null;
+                int pos = action.lastIndexOf(":");
+                if (pos > -1  &&  pos < action.length()) {
+                    eventDate = new Date(Long.parseLong(action.substring(pos + 1)));
+                    action = action.substring(0, pos); // Trim away redundant info.
+                }
+                else {
+                    eventDate = new Date();
+                }
+                if (batchPrefix != null)
+                    action = batchPrefix + ":" + action;
+                UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin, toolName.toString(), category.toString(), action, eventDate);
+                events[evtNum++] = event;
+            }
+            
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    ModelMgr.getModelMgr().addEventsToSession(events);
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, batchPrefix, new Date().getTime()
+            );
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -567,6 +662,7 @@ public final class SessionMgr {
      * @param elapsedMs
      * @param thresholdMs 
      */
+    @Override
     public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
         logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
     }

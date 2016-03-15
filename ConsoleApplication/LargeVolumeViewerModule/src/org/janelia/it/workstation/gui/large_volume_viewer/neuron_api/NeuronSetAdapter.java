@@ -43,6 +43,10 @@ import org.janelia.console.viewerapi.model.HortaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
+import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -134,6 +138,8 @@ implements NeuronSet, LookupListener
     private boolean setWorkspace(TmWorkspace workspace) {
         if (this.workspace == workspace)
             return false;
+        if (workspace == null)
+            return false;
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
@@ -170,7 +176,7 @@ implements NeuronSet, LookupListener
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
-                    neuron.addVertex(annotation);
+                    NeuronVertex newVertex = neuron.addVertex(annotation);
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
                     // Trigger a Horta repaint  for instant GUI feedback
                     // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
@@ -180,20 +186,20 @@ implements NeuronSet, LookupListener
                         if (doRecenterHorta) 
                         {
                             // 1) recenter on annotation location in Horta, just like in LVV
-                            // Use a temporary NeuronVertexAdapter, just to get the location in micrometer units
-                            NeuronVertex nv = new NeuronVertexAdapter(annotation, workspace);
-                            float recenter[] = nv.getLocation();
+                            float recenter[] = newVertex.getLocation();
                             cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
                             cachedHortaWorkspace.getVantage().setChanged();
                             cachedHortaWorkspace.getVantage().notifyObservers();
                         }
 
                         // 2) repaint Horta now, to update view without further user interaction
+                        // Below is the way to trigger a repaint, without changing the viewpoint
                         cachedHortaWorkspace.setChanged();
                         cachedHortaWorkspace.notifyObservers();
-                        // Below is the way to trigger a repaint, without changing the viewpoint
-                        // cachedHortaWorkspace.setChanged();
-                        // cachedHortaWorkspace.notifyObservers();
+                        // Emit annotation added signal, to update Horta spatial index
+                        NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
+                        addedSignal.setChanged();
+                        addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron0));
                     }
                     break;
                 }
@@ -211,18 +217,55 @@ implements NeuronSet, LookupListener
             
             if (cachedHortaWorkspace != null) 
             {
+                // Create an optimized container of deleted vertices
+                Map<NeuronModel, Collection<NeuronVertex>> deletedVerticesByNeuron =
+                        new HashMap<>();
+                for (TmGeoAnnotation deletedAnnotation : annotations) 
+                {
+                    NeuronList nl = (NeuronList) neurons;
+                    Long neuronId = deletedAnnotation.getNeuronId();
+                    if (! nl.hasCachedNeuronId(neuronId))
+                        continue; // Never had that neuron instantiated, so ignore
+                    NeuronModelAdapter neuron = nl.getCachedNeuron(neuronId);
+                    Long vertexId = deletedAnnotation.getId();
+                    if (! neuron.hasCachedVertex(vertexId))
+                        continue; // Optimization to ignore vertices that were never instantiated
+                    NeuronVertex vertex = neuron.getVertexForAnnotation(deletedAnnotation);
+                    // Create container for this neuron vertices, if necessary
+                    if (! deletedVerticesByNeuron.containsKey(neuron))
+                        deletedVerticesByNeuron.put(neuron, new ArrayList<NeuronVertex>());
+                    deletedVerticesByNeuron.get(neuron).add(vertex);
+                }
+                // Send out one signal per neuron
+                for (NeuronModel neuron : deletedVerticesByNeuron.keySet()) {
+                    neuron.getVertexesRemovedObservable().setChanged();
+                    Collection<NeuronVertex> deletedVertices = deletedVerticesByNeuron.get(neuron);
+                    neuron.getVertexesRemovedObservable().notifyObservers(
+                            new VertexCollectionWithNeuron(deletedVertices, neuron));
+                }
+                
                 // Repaint Horta now, to update view without further user interaction
                 // (but do not recenter, as LVV does not recenter in this situation either)
                 cachedHortaWorkspace.setChanged();
-                cachedHortaWorkspace.notifyObservers();
+                cachedHortaWorkspace.notifyObservers();                
             }
         }
 
         @Override
         public void annotationReparented(TmGeoAnnotation annotation)
         {
+            sanityCheckWorkspace(); // beware of shifting sands beneath us...
+            Long neuronId = annotation.getNeuronId();
+            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
+                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuron().getId().equals(neuronId)) {
+                    NeuronVertex parentVertex = neuron.getVertexForAnnotation(annotation);
+                    if (parentVertex == null) 
+                        return;
+                    // TODO: - react somehow to the reparenting
+                }
+            }
             logger.info("annotationReparented");
-            updateEdges();
         }
 
         @Override
@@ -263,6 +306,14 @@ implements NeuronSet, LookupListener
         private TmWorkspace workspace;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
+        
+        public boolean hasCachedNeuronId(Long neuronId) {
+            return cachedNeurons.containsKey(neuronId);
+        }
+        
+        public NeuronModelAdapter getCachedNeuron(Long neuronId) {
+            return cachedNeurons.get(neuronId);
+        }
         
         @Override
         public int size()

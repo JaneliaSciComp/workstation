@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -185,7 +186,8 @@ extends MultipassRenderer
             return result;
         }
         
-        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 0);
+        // Neurite core tracing intensity is located in the third channel
+        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 2);
         if (result <= 0) {
             return -1;
         }
@@ -229,7 +231,8 @@ extends MultipassRenderer
             return false; // far clip value means no geometry there
         double opacity = opacityForScreenXy(xy, camera);
         // TODO: threshold might need to be tuned
-        final double opacityThreshold = 0.5; // Always use transparent material, if it's dense enough
+        // 0.5 seems too small, I want to select that vertex!
+        final double opacityThreshold = 0.7; // Always use transparent material, if it's dense enough
         if (opacity >= opacityThreshold)
             return false; // transparent geometry is strong here, so no, not well visible
         return true; // I see a neuron model at this spot
@@ -339,6 +342,16 @@ extends MultipassRenderer
         }
         return result;
     }
+
+    public boolean isNeuronModelAt(Point2D xy, AbstractCamera camera)
+    {
+        return isVisibleOpaqueAtScreenXy(xy, camera);
+    }
+
+    public boolean isVolumeDensityAt(Point2D xy, AbstractCamera camera)
+    {
+        return isVisibleTransparentAtScreenXy(xy, camera);
+    }
     
     private class VolumeLayerExpirer implements Observer
     {
@@ -351,35 +364,14 @@ extends MultipassRenderer
         
     }
     
-    public void bulkAddNeuronActors(Collection<NeuronModel> neurons) {
-        if (neurons.isEmpty())
+    public void addNeuronActors(NeuronModel neuron) {
+        if (allSwcActor.contains(neuron)) 
             return;
-        ExecutorService pool = Executors.newFixedThreadPool(10);
-        for (final NeuronModel neuron : neurons) {
-            if (allSwcActor.contains(neuron)) 
-                continue;
-            Runnable actorsJob = new Runnable() {
-                @Override
-                public void run()
-                {
-                    SpheresActor sa = allSwcActor.createSpheresActor(neuron);
-                    ConesActor ca = allSwcActor.createConesActor(neuron);
-                    // this next step is synchronized but fast
-                    allSwcActor.setActors(neuron, sa, ca);
-                    neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
-                }
-            };
-            pool.submit(actorsJob);
-            // actorsJob.run();
-        }
-        pool.shutdown();
-        try {
-            if (! pool.awaitTermination(60, TimeUnit.SECONDS))
-                pool.shutdownNow();
-        } catch (InterruptedException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        setOpaqueBufferDirty();
+        SpheresActor sa = allSwcActor.createSpheresActor(neuron);
+        ConesActor ca = allSwcActor.createConesActor(neuron);
+        // this next step is synchronized but fast
+        allSwcActor.setActors(neuron, sa, ca);
+        neuron.getVisibilityChangeObservable().addObserver(volumeLayerExpirer);
     }
     
     private class NeuronListRefresher implements Observer 
@@ -437,8 +429,8 @@ extends MultipassRenderer
     {
         // For performance efficiency, render similar primitives all at once
         // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();
-        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new HashMap<>();
-        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new HashMap<>();
+        private final Map<NeuronModel, ConesActor> currentNeuronConeActors = new ConcurrentHashMap<>();
+        private final Map<NeuronModel, SpheresActor> currentNeuronSphereActors = new ConcurrentHashMap<>();
 
         // private final Collection<SpheresActor> sphereActors = new HashSet<>();
         // private final Collection<ConesActor> coneActors = new HashSet<>();

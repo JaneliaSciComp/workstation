@@ -54,7 +54,7 @@ implements StaticVolumeBrickSource
     private final Map<Double, BrickInfoSet> resMap = new HashMap<>();
     private final Box3 boundingBox = new Box3();
     
-    public MouseLightYamlBrickSource(InputStream yamlStream, ProgressHandle progress) throws ParseException {
+    public MouseLightYamlBrickSource(InputStream yamlStream, boolean leverageCompressedFiles, ProgressHandle progress) throws ParseException {
         progress.switchToDeterminate(100);
         progress.progress(5);
         Yaml yaml = new Yaml();
@@ -82,7 +82,7 @@ implements StaticVolumeBrickSource
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             
-            BrickInfo tileInfo = new BrainTileInfo(tile, tilebasePath);
+            BrickInfo tileInfo = new BrainTileInfo(tile, tilebasePath, leverageCompressedFiles);
 
             // Update bounding box
             boundingBox.include(tileInfo.getBoundingBox());
