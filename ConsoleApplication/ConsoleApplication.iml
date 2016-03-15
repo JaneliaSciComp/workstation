@@ -43,7 +43,6 @@
       <excludeFolder url="file://$MODULE_DIR$/SlideView/build" />
       <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build" />
-      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
       <excludeFolder url="file://$MODULE_DIR$/generated" />
     </content>
     <orderEntry type="inheritedJdk" />
