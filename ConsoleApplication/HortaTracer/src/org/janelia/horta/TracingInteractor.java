@@ -31,6 +31,7 @@ package org.janelia.horta;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -45,6 +46,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.AbstractAction;
+import javax.swing.JPopupMenu;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
@@ -228,11 +231,8 @@ public class TracingInteractor extends MouseAdapter
                 }
                 // Click away from existing neurons to clear parent point
                 else {
-                    Collection<NeuronVertex> parentVertexes = parentVertexModel.getVertexes();
-                    if (clearParentVertex())
-                        parentVertexModel.getVertexesRemovedObservable().notifyObservers(
-                                new VertexCollectionWithNeuron(parentVertexes, cachedParentNeuronModel)
-                        );
+                    // User requested not to unselect parent March 2016
+                    // clearParentVertexAndNotify();
                 }
             }
         }
@@ -339,6 +339,17 @@ public class TracingInteractor extends MouseAdapter
         cachedParentVertex = null;
         cachedParentNeuronModel = null;
         return true;
+    }
+    
+    private boolean clearParentVertexAndNotify() {
+        Collection<NeuronVertex> parentVertexes = parentVertexModel.getVertexes();
+        if (clearParentVertex()) {
+             parentVertexModel.getVertexesRemovedObservable().notifyObservers(
+                     new VertexCollectionWithNeuron(parentVertexes, cachedParentNeuronModel)
+             );
+             return true;
+        }
+        return false;
     }
     
     private boolean setDensityCursor(Vector3 xyz)
@@ -657,6 +668,17 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
         selectParentVertex(vertexWithNeuron.vertex, vertexWithNeuron.neuron);
+    }
+
+    void loadMenuItems(JPopupMenu menu) {
+        if (parentIsSelected()) {
+            menu.add(new AbstractAction("Clear Current Parent Anchor") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    clearParentVertexAndNotify();
+                }
+            });
+        }
     }
 
 }
