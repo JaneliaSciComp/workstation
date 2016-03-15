@@ -9,7 +9,6 @@ import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
 import java.util.List;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 
 /**
  * Created with IntelliJ IDEA.
