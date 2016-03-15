@@ -134,7 +134,9 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages/>
+            <public-packages>
+                <package>org.janelia.it.workstation.gui.browser.api</package>
+            </public-packages>
         </data>
     </configuration>
 </project>
