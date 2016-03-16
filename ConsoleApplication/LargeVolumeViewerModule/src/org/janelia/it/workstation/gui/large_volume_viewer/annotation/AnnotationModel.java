@@ -813,17 +813,22 @@ called from a  SimpleWorker thread.
             neuron.getStructuredTextAnnotationMap().remove(link.getId());
         }
 
-        // if link had a child, remove it
+        // if link had a child, remove link
         if (child != null) {
             link.getChildIds().remove(child.getId());
         }
 
         // remove link from its parent
-        parent.getChildIds().remove(link.getId());
+        if (!link.isRoot()) {
+            parent.getChildIds().remove(link.getId());
+        }
 
         // ...and finally get rid of the link itself; then, we're done, and
         //  the neuron can be serialized
         neuron.getGeoAnnotationMap().remove(link.getId());
+        if (link.isRoot()) {
+            neuron.removeRootAnnotation(link);
+        }
         neuronManager.saveNeuronData(neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
