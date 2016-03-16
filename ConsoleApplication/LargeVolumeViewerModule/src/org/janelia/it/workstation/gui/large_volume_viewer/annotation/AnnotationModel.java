@@ -634,7 +634,7 @@ called from a  SimpleWorker thread.
     public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
         // temporary logging for Jayaram:
-        log.info("beginning mergeNeurite()");
+        // log.info("beginning mergeNeurite()");
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
 
@@ -663,25 +663,25 @@ called from a  SimpleWorker thread.
 
         // reroot source neurite to source ann
         if (!sourceAnnotation.isRoot()) {
-            log.info("Handling non-root case.");
+            // log.info("Handling non-root case.");
             neuronManager.rerootNeurite(sourceNeuron, sourceAnnotation);
         }
 
         // if source neurite not in same neuron as dest neurite: move it; don't
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
-            log.info("Two different neurons.");
+            // log.info("Two different neurons.");
             neuronManager.moveNeuriteInMem(sourceAnnotation, sourceNeuron, targetNeuron);
         }
 
 
         // reparent source annotation to dest annotation:
-        log.info("Reparenting annotations.");
+        // log.info("Reparenting annotations.");
         neuronManager.reparentGeometricAnnotation(sourceAnnotation, targetAnnotationID, targetNeuron);
 
 
         // Establish p/c linkage between target and source.
-        log.info("Parent/child linkages target and source.");
+        // log.info("Parent/child linkages target and source.");
         sourceAnnotation.setParentId(targetAnnotationID);
 
         final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
@@ -689,25 +689,25 @@ called from a  SimpleWorker thread.
 
         // trace new path:
         if (automatedTracingEnabled()) {
-            log.info("Tracing paths.");
+            // log.info("Tracing paths.");
             viewStateListener.pathTraceRequested(sourceAnnotationID);
         }
 
         // see note in addChildAnnotations re: predef notes
         // for merge, two linked annotations are affected; fortunately, the
         //  neuron has just been refreshed
-        log.info("Stripping predef notes.");
+        // log.info("Stripping predef notes.");
         stripPredefNotes(updateTargetNeuron, targetAnnotationID);
         stripPredefNotes(updateTargetNeuron, sourceAnnotationID);
 
         // Save the target neuron.
-        log.info("Saving target neuron.");
+        // log.info("Saving target neuron.");
         workspace.getNeuronList().remove(targetNeuron);
         neuronManager.saveNeuronData(updateTargetNeuron);
         workspace.getNeuronList().add(updateTargetNeuron);
         // Save the source neuron, empty or not.
         if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
-            log.info("Saving source neuron.");
+            // log.info("Saving source neuron.");
             neuronManager.saveNeuronData(sourceNeuron);
         }
 
@@ -715,19 +715,19 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                log.info("beginning UI update for mergeNeurite()");
+                // log.info("beginning UI update for mergeNeurite()");
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
                 fireNotesUpdated(workspace);
                 fireNeuronSelected(updateTargetNeuron);
                 fireWorkspaceLoaded(workspace);
                 fireAnnotationReparented(updateSourceAnnotation);
-                log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+                // log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
                 stopwatch.stop();
             }
         });
 
-        log.info("ending mergeNeurite(); elapsed = " + stopwatch);
+        // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
         stopwatch.stop();
 
     }
@@ -981,7 +981,7 @@ called from a  SimpleWorker thread.
         }
         Vec3 newPoint = pLine.getPoint(t);
 
-        // create the new annotation, child of original parent; then
+        // create the new annotation, child of original parent
         final TmGeoAnnotation newAnnotation = neuronManager.addGeometricAnnotation(neuron,
                 annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
 
@@ -1057,10 +1057,6 @@ called from a  SimpleWorker thread.
         neuronManager.splitNeurite(neuron, newRoot);
 
         // update domain objects and database, and notify
-        // Now down in the neuron manager.
-        //newRoot.setParentId(newRoot.getNeuronId());
-        //newRootParent.getChildIds().remove(newRootID);
-        //neuron.getRootAnnotations().add(newRoot);
         neuronManager.saveNeuronData(neuron);
 
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
