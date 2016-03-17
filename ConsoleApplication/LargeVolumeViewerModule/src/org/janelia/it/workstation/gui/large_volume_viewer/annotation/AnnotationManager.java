@@ -1148,6 +1148,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             sampleID = initialEntity.getId();
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             sampleID = getSampleID();
+            if (sampleID == null) {
+                presentError("Sample ID is null; did the previous sample or workspace finish loading?\n\nCould not create workspace!",
+                        "Null sample ID");
+                return;
+            }
         } else {
             presentError(
                     "You must load a brain sample before creating a workspace!",
@@ -1654,7 +1659,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     private Long getSampleID() {
-        return annotationModel.getCurrentWorkspace().getSampleID();
+        if (annotationModel.getCurrentWorkspace() != null) {
+            return annotationModel.getCurrentWorkspace().getSampleID();
+        } else {
+            return null;
+        }
     }
     
     private Long getWorkspaceID() {
