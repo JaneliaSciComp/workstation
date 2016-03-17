@@ -143,6 +143,24 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     @Override
+    public boolean mergeNeurite(NeuronVertex source, NeuronVertex target) {
+        if (! (source instanceof NeuronVertexAdapter))
+            return false;
+        NeuronVertexAdapter sourceNVA = (NeuronVertexAdapter)source;
+        if (! (target instanceof NeuronVertexAdapter))
+            return false;
+        NeuronVertexAdapter targetNVA = (NeuronVertexAdapter)target;
+        Long sourceID = sourceNVA.getTmGeoAnnotation().getId();
+        Long targetID = targetNVA.getTmGeoAnnotation().getId();
+        try {
+            annotationModel.mergeNeurite(sourceID, targetID);
+        } catch (Exception ex) {
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
     public boolean deleteVertex(NeuronVertex doomedVertex) {
         try {
             if (! (doomedVertex instanceof NeuronVertexAdapter) )
