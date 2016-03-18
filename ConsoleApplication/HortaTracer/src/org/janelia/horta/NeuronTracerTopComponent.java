@@ -1092,6 +1092,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                // SECTION: Anchors
+                tracingInteractor.loadMenuItems(menu);
+                
                 // SECTION: Undo/redo
                 
                 if (undoRedoManager.canUndoOrRedo()) {

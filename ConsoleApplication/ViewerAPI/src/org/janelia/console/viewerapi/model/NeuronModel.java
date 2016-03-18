@@ -64,8 +64,9 @@ extends Hideable
     // Signals when the visibility of this neuron is toggled on or off
     ObservableInterface getVisibilityChangeObservable();
 
-    // Custom method to help hook into LVV model from Horta
+    // Custom methods to help hook into LVV model from Horta
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
+    boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
     
     boolean deleteVertex(NeuronVertex doomedVertex);
 }

@@ -92,7 +92,7 @@ implements UndoableEdit, Command
     
     @Override
     public String getPresentationName() {
-        return "Append Neuron Vertex";
+        return "Append Neuron Anchor";
     }
     
     @Override

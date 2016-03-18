@@ -290,5 +290,10 @@ public class BasicNeuronModel implements NeuronModel
     public boolean deleteVertex(NeuronVertex doomedVertex) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public boolean mergeNeurite(NeuronVertex source, NeuronVertex target) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }
