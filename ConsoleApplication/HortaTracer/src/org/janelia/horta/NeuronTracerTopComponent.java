@@ -1091,9 +1091,29 @@ public final class NeuronTracerTopComponent extends TopComponent
                         saveStartupPreferences();
                     }
                 });
-
+                
                 // SECTION: Anchors
-                tracingInteractor.loadMenuItems(menu);
+                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
+
+                if (interactorContext.canClearParent()) {
+                    menu.add(new AbstractAction("Clear Current Parent Actor") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        interactorContext.clearParent();
+                    }
+                });
+                }
+                
+                if (interactorContext.getCurrentParentAnchor() != null) {
+                    menu.add(new AbstractAction("Center on Current Parent Actor") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                        Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                        loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                    }
+                });
+                }
                 
                 // SECTION: Undo/redo
                 
