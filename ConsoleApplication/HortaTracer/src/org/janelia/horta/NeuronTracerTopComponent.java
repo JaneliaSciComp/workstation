@@ -85,6 +85,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.text.Keymap;
+import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -223,6 +224,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static NeuronTracerTopComponent findThisComponent() {
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
+    private int defaultColorChannel = 0;
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -380,6 +382,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             );
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
+            defaultColorChannel = sampleLocation.getDefaultColorChannel();
             FrameworkImplProvider.getSessionSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta"), new ActionString(sampleLocation.getSampleUrl().toString()));
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
@@ -816,6 +819,29 @@ public final class NeuronTracerTopComponent extends TopComponent
         }));
     }
     
+    // Reimplementing internal load tile method, after Les refactored SampleLocation etc.
+    private boolean loadTileAtCurrentFocusAsynchronous() 
+    {
+        if (currentSource == null) 
+            return false;
+        SampleLocation location = new BasicSampleLocation();
+        location.setCompressed(false);
+        location.setDefaultColorChannel(defaultColorChannel);
+        Vantage vantage = sceneWindow.getCamera().getVantage();
+        Vector3 focus = new Vector3(vantage.getFocusPosition());
+        location.setFocusUm(focus.getX(), focus.getY(), focus.getZ());
+        try {
+            location.setSampleUrl(new URL(currentSource));
+        } catch (MalformedURLException ex) {
+            return false;
+        }
+        location.setMicrometersPerWindowHeight(
+                vantage.getSceneUnitsPerViewportHeight());
+        
+        setSampleLocation(location);
+        return true;
+    }
+    
     private void setupContextMenu(Component innerComponent) {
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
@@ -860,6 +886,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                if (currentSource != null) {
+                    menu.add(new AbstractAction("Load Volume Brick Here") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            loadTileAtCurrentFocusAsynchronous();
+                        }
+                    });
+                }
+                
                 if (volumeState != null) {
                     JMenu projectionMenu = new JMenu("Projection");
                     
@@ -1091,9 +1126,30 @@ public final class NeuronTracerTopComponent extends TopComponent
                         saveStartupPreferences();
                     }
                 });
-
+                
                 // SECTION: Anchors
-                tracingInteractor.loadMenuItems(menu);
+                menu.add(new JPopupMenu.Separator());
+                final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
+
+                if (interactorContext.canClearParent()) {
+                    menu.add(new AbstractAction("Clear Current Parent Anchor") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        interactorContext.clearParent();
+                    }
+                });
+                }
+                
+                if (interactorContext.getCurrentParentAnchor() != null) {
+                    menu.add(new AbstractAction("Center on Current Parent Anchor") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                        Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                        loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                    }
+                });
+                }
                 
                 // SECTION: Undo/redo
                 
