@@ -10,7 +10,6 @@
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/generated" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Geometry3d/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
@@ -21,6 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/DataViewModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/IntegrationAPIs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Geometry3d/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build" />
@@ -29,7 +29,6 @@
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
       <excludeFolder url="file://$MODULE_DIR$/GeometricSearchModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/Geometry3d/build" />
-      <excludeFolder url="file://$MODULE_DIR$/Geometry3d/src" />
       <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build" />
       <excludeFolder url="file://$MODULE_DIR$/HortaTracer/src" />
       <excludeFolder url="file://$MODULE_DIR$/Jogl213/build" />
