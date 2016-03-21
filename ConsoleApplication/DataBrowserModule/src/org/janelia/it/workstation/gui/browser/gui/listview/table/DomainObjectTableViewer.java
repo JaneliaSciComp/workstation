@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.table.TableModel;
@@ -19,6 +18,8 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
@@ -32,7 +33,6 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -51,7 +51,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
     
-    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,false,null);
+    private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
@@ -136,7 +136,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 
                 if (domainClass!=null) {
                     attrs.add(annotationAttr);
-                    for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainClass)) {
+                    for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
                         if (attr.isDisplay()) {
                             attrs.add(attr);
                         }

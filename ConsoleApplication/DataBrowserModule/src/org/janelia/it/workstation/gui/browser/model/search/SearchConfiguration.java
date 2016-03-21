@@ -24,20 +24,23 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.shared.solr.*;
+import org.janelia.it.jacs.shared.solr.FacetValue;
+import org.janelia.it.jacs.shared.solr.SolrJsonResults;
+import org.janelia.it.jacs.shared.solr.SolrParams;
+import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -88,7 +91,7 @@ public class SearchConfiguration {
                
         filter.setSearchClass(searchClass.getName());
  
-        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(searchClass)) {
+        for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(searchClass)) {
             if (attr.isDisplay()) {
                 String facetKey = attr.getFacetKey();
                 if (facetKey!=null) {
