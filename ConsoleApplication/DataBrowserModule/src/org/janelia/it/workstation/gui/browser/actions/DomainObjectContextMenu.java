@@ -13,6 +13,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -40,7 +41,6 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChoos
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
@@ -321,8 +321,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                         protected void doStuff() throws Exception {
                             action.doAnnotation(domainObject, term, value);
                             String annotationValue = "";
-                            List<Annotation> annotationEntities = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
-                            for (Annotation annotation : annotationEntities) {
+                            List<Annotation> annotations = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
+                            for (Annotation annotation : annotations) {
                                 if (annotation.getKeyTerm().getOntologyTermId().equals(term.getId())) {
                                     annotationValue = annotation.getName();
                                 }

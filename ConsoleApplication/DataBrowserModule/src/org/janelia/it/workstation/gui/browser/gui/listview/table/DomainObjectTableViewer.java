@@ -163,7 +163,8 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 getDynamicTable().clearColumns();
                 for(DomainObjectAttribute attr : attrs) {
                     attributeMap.put(attr.getName(), attr);
-                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), true, false, true, attr.isSortable());
+                    boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
+                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), true, false, true, sortable);
                 }
                 
                 updateViewerConfig();

@@ -23,13 +23,12 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
-import org.janelia.it.workstation.gui.browser.model.DomainConstants;
+import org.janelia.it.workstation.gui.browser.model.DomainModelViewConstants;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -71,17 +70,14 @@ public class DataSetListDialog extends ModalDialog {
             public Object getValue(Object userObject, DynamicColumn column) {
                 DataSet dataSet = (DataSet) userObject;
                 if (dataSet != null) {
-                    if (DomainConstants.DATASET_NAME.equals(column.getName())) {
+                    if (DomainModelViewConstants.DATASET_NAME.equals(column.getName())) {
                         return dataSet.getName();
-                    } else if ((DomainConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
+                    } else if ((DomainModelViewConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
                         return dataSet.getPipelineProcesses()==null?null:dataSet.getPipelineProcesses().get(0);
-                    } else if ((DomainConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
+                    } else if ((DomainModelViewConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
                         return dataSet.getSampleNamePattern();
-                    } else if ((DomainConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
-                        if (dataSet.getSageSync()==null) {
-                            return Boolean.FALSE;
-                        }
-                        return dataSet.getSageSync();
+                    } else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
+                        return dataSet.isSageSync();
                     }
                 }
                 return null;
@@ -162,7 +158,7 @@ public class DataSetListDialog extends ModalDialog {
             @Override
             public Class<?> getColumnClass(int column) {
                 DynamicColumn dc = getColumns().get(column);
-                if (dc.getName().equals(DomainConstants.DATASET_SAGE_SYNC)) {
+                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
                     return Boolean.class;
                 }
                 return super.getColumnClass(column);
@@ -170,7 +166,7 @@ public class DataSetListDialog extends ModalDialog {
 
             @Override
             protected void valueChanged(DynamicColumn dc, int row, Object data) {
-                if (dc.getName().equals(DomainConstants.DATASET_SAGE_SYNC)) {
+                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
                     final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
                     DynamicRow dr = getRows().get(row);
                     final DataSet dataSet = (DataSet) dr.getUserObject();
@@ -178,9 +174,8 @@ public class DataSetListDialog extends ModalDialog {
 
                         @Override
                         protected void doStuff() throws Exception {
-                            DomainModel model = DomainMgr.getDomainMgr().getModel();
                             dataSet.setSageSync(selected);
-                            model.save(dataSet);
+                            DomainMgr.getDomainMgr().getModel().save(dataSet);
                         }
 
                         @Override
@@ -197,10 +192,10 @@ public class DataSetListDialog extends ModalDialog {
             }
         };
 
-        dynamicTable.addColumn(DomainConstants.DATASET_NAME);
-        dynamicTable.addColumn(DomainConstants.DATASET_PIPELINE_PROCESS);
-        dynamicTable.addColumn(DomainConstants.DATASET_SAMPLE_NAME);
-        dynamicTable.addColumn(DomainConstants.DATASET_SAGE_SYNC).setEditable(true);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NAME);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
@@ -281,27 +276,7 @@ public class DataSetListDialog extends ModalDialog {
         };
         worker.execute();
     }
-
-    private String decodeEnumList(Class enumType, String list) {
-
-        StringBuffer buf = new StringBuffer();
-        for (String key : list.split(",")) {
-            if (key.isEmpty()) {
-                continue;
-            }
-            try {
-                String value = ((NamedEnum) Enum.valueOf(enumType, key)).getName();
-                if (buf.length() > 0) {
-                    buf.append(", ");
-                }
-                buf.append(value);
-            } catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(new Exception("Unrecognized enumerated value: " + key));
-            }
-        }
-        return buf.toString();
-    }
-
+    
     public void refresh() {
         loadDataSets();
     }

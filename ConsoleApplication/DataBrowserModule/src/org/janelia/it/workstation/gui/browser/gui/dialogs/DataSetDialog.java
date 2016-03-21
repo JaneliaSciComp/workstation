@@ -213,9 +213,7 @@ public class DataSetDialog extends ModalDialog {
             if (sampleImageType != null) {
                 sampleImageInput.setSelectedItem(sampleImageType);
             }
-            if (dataSet.getSageSync() != null) {
-                sageSyncCheckbox.setSelected(dataSet.getSageSync().booleanValue());
-            }
+            sageSyncCheckbox.setSelected(dataSet.isSageSync());
             if (dataSet.getPipelineProcesses()!=null) {
                 applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
