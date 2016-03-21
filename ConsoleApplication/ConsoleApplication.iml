@@ -20,6 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/SlideView/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DataViewModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/IntegrationAPIs/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build" />
@@ -42,7 +43,6 @@
       <excludeFolder url="file://$MODULE_DIR$/SlideView/build" />
       <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build" />
-      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
       <excludeFolder url="file://$MODULE_DIR$/generated" />
     </content>
     <orderEntry type="inheritedJdk" />

@@ -9,7 +9,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
-import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,7 +36,17 @@ public class EJBEntityFacade implements EntityFacade {
     public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntitiesById(SessionMgr.getSubjectKey(), entityIds);
     }
+
+    @Override
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception {
+        return EJBFactory.getRemoteEntityBean().getB64DecodedEntityDataValues(entityId, entityDataType);
+    }
     
+    @Override
+    public byte[] getB64DecodedEntityDataValue(Long entityId, Long entityDataId, String entityDataType) throws Exception {
+        return EJBFactory.getRemoteEntityBean().getB64DecodedEntityDataValue(entityId, entityDataId, entityDataType);
+    }
+
     @Override
     public Entity getEntityTree(Long entityId) throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntityTree(SessionMgr.getSubjectKey(), entityId);
@@ -241,66 +250,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeNeuron(workspaceId, name);
-    }
-
-    @Override
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
-    }
-
-    @Override
-    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, sampleId, workspaceName);
-    }
-    
-    @Override
-    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
-                                                  double x, double y, double z, String comment) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
-    }
-
-    @Override
-    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
-    }
-            
-    @Override
-    public void reparentGeometricAnnotation(TmGeoAnnotation annotation,
-                                            Long newParentAnnotationID, TmNeuron neuron) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
-    }
-
-    @Override
-    public void rerootNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().rerootNeurite(neuron, newRoot);
-    }
-
-    @Override
-    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().splitNeurite(neuron, newRoot);
-    }
-
-    @Override
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().moveNeurite(annotation, newNeuron);
-    }
-
-    @Override
-    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
-                                          int index, double x, double y, double z, String comment) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
-    }
-
-    @Override
-    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().getWorkspacesForBrainSample(brainSampleId, ownerKey);
-    }
-
-    @Override
-    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().getNeuronsForWorkspace(workspaceId, ownerKey);
     }
 
     @Override
@@ -314,65 +265,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().deleteNeuron(ownerKey, neuronId);
-    }
-
-    @Override
-    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().deleteWorkspace(ownerKey, workspaceId);
-    }
-
-    @Override
-    public void deleteGeometricAnnotation(Long geoId) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().deleteGeometricAnnotation(geoId);
-    }
-
-    @Override
     public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().loadWorkspace(workspaceId);
-    }
-
-    @Override
-    public TmNeuron loadNeuron(Long neuronId) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().loadNeuron(neuronId);
-    }
-
-    @Override
-    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
-    List<List<Integer>> pointlist) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().addAnchoredPath(neuronID, annotationID1,
-                annotationID2, pointlist);
-    }
-
-    @Override
-    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
-    List<List<Integer>> pointlist) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().updateAnchoredPath(anchoredPath, annotationID1,
-                annotationID2, pointlist);
-    }
-
-    @Override
-    public void deleteAnchoredPath(Long pathID) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().deleteAnchoredPath(pathID);
-    }
-
-    @Override
-    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
-        Long parentID, int parentType, int formatVersion, String data) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().addStructuredTextAnnotation(neuronID,
-            parentID, parentType, formatVersion, data);
-    }
-
-    @Override
-    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation,
-        String data) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().updateStructuredTextAnnotation(textAnnotation, data);
-    }
-
-    @Override
-    public void deleteStructuredTextAnnotation(Long annID) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().deleteStructuredTextAnnotation(annID);
     }
 
     @Override
