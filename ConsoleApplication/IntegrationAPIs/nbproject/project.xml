@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.25</specification-version>
+                        <specification-version>1.27</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -26,6 +26,7 @@
             </module-dependencies>
             <public-packages>
                 <package>org.janelia.it.jacs.integration</package>
+                <package>org.janelia.it.jacs.integration.framework.compression</package>
                 <package>org.janelia.it.jacs.integration.framework.session_mgr</package>
             </public-packages>
         </data>

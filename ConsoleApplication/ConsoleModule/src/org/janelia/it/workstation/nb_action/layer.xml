@@ -15,9 +15,10 @@
             <file name="org-openide-actions-DeleteAction.instance_hidden"/>
             <file name="org-openide-actions-FindAction.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.instance_hidden"/>
-            <file name="org-openide-actions-RedoAction.instance_hidden"/>
+            <file name="org-openide-actions-PasteAction.instance_hidden"/>
+            <file name="org-openide-actions-RedoAction.instance"/>
             <file name="org-openide-actions-ReplaceAction.instance_hidden"/>
-            <file name="org-openide-actions-UndoAction.instance_hidden"/>
+            <file name="org-openide-actions-UndoAction.instance"/>
         </folder>
         <folder name="File">
             <file name="org-netbeans-modules-print-action-PageSetupAction.instance_hidden"/>
@@ -54,9 +55,9 @@
             <file name="org-netbeans-modules-search-FindInFilesAction.shadow_hidden"/>
             <file name="org-netbeans-modules-search-ReplaceInFilesAction.shadow_hidden"/>
             <file name="org-openide-actions-FindAction.shadow_hidden"/>
-            <file name="org-openide-actions-RedoAction.shadow_hidden"/>
+            <file name="org-openide-actions-RedoAction.shadow"/>
             <file name="org-openide-actions-ReplaceAction.shadow_hidden"/>
-            <file name="org-openide-actions-UndoAction.shadow_hidden"/>
+            <file name="org-openide-actions-UndoAction.shadow"/>
         </folder>
         <folder name="GoTo_hidden">
             <file name="SeparatorBeforeGoToLine.instance_hidden"/>

@@ -242,7 +242,12 @@ public class EntityDataPane extends JPanel {
         for (EntityData entityData : datas) {
             Vector<String> rowData = new Vector<>();
             rowData.add((entityData.getEntityAttrName() == null) ? "" : entityData.getEntityAttrName());
-            rowData.add(entityData.getId().toString());
+            if (entityData.getId() == null) {
+                rowData.add("--NO ID SET--");
+            }
+            else {
+                rowData.add(entityData.getId().toString());
+            }
             rowData.add((entityData.getOwnerKey() == null) ? "" : entityData.getOwnerKey());
             rowData.add((entityData.getUpdatedDate() == null) ? "" : entityData.getUpdatedDate().toString());
             rowData.add((entityData.getOrderIndex() == null) ? "" : entityData.getOrderIndex().toString());

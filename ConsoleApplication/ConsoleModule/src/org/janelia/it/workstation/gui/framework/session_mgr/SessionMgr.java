@@ -610,6 +610,53 @@ public final class SessionMgr implements ActivityLogging {
         // Force logging, by setting elapsed > threshold.
         logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
     }
+    
+    /**
+     * Log a whole list of tool events, in one server-pump.
+     * 
+     * @param toolName tool, like LVV or Console
+     * @param category type of event
+     * @param batchPrefix distinguish action/optional, may be null.
+     * @param actions explicit action information.
+     */
+    public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
+        String userLogin = null;
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent[] events = new UserToolEvent[actions.size()];
+            int evtNum = 0;
+            for (String action: actions) {                
+                Date eventDate = null;
+                int pos = action.lastIndexOf(":");
+                if (pos > -1  &&  pos < action.length()) {
+                    eventDate = new Date(Long.parseLong(action.substring(pos + 1)));
+                    action = action.substring(0, pos); // Trim away redundant info.
+                }
+                else {
+                    eventDate = new Date();
+                }
+                if (batchPrefix != null)
+                    action = batchPrefix + ":" + action;
+                UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin, toolName.toString(), category.toString(), action, eventDate);
+                events[evtNum++] = event;
+            }
+            
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    ModelMgr.getModelMgr().addEventsToSession(events);
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
+                    getCurrentSessionId(), userLogin, toolName, category, batchPrefix, new Date().getTime()
+            );
+            ex.printStackTrace();
+        }
+    }
 
     /**
      * Log-tool-event override, which includes elapsed/threshold comparison
@@ -644,8 +691,7 @@ public final class SessionMgr implements ActivityLogging {
         systemExit(0);
     }
 
-    public void systemExit(int errorlevel) {
-        log.info("Exiting with code "+errorlevel);
+    public void systemWillExit() {
         sessionModel.systemWillExit();
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
@@ -655,6 +701,13 @@ public final class SessionMgr implements ActivityLogging {
 
         modelManager.prepareForSystemExit();
         findAndRemoveWindowsSplashFile();
+    }
+    
+    public void systemExit(int errorlevel) {
+        log.info("Exiting with code "+errorlevel);
+        systemWillExit();
+     // System-exit is now handled by NetBeans framework.
+//        System.exit(errorlevel);
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {

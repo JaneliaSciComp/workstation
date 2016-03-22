@@ -53,9 +53,10 @@ import org.slf4j.LoggerFactory;
 public class NeuronTraceLoader {
     private Logger logger = LoggerFactory.getLogger(NeuronTraceLoader.class);
     
-    private NeuronTracerTopComponent nttc;
-    private NeuronMPRenderer neuronMPRenderer;
-    private SceneWindow sceneWindow;
+    private final NeuronTracerTopComponent nttc;
+    private final NeuronMPRenderer neuronMPRenderer;
+    private final SceneWindow sceneWindow;
+    private int defaultColorChannel = 0;
     // private TracingInteractor tracingInteractor;
     
     public NeuronTraceLoader(
@@ -118,7 +119,7 @@ public class NeuronTraceLoader {
     }
 
     public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource ) throws IOException {
-        return loadTileAtCurrentFocus( volumeSource, 0);
+        return loadTileAtCurrentFocus( volumeSource, defaultColorChannel );
     }
     
     /**
@@ -126,6 +127,9 @@ public class NeuronTraceLoader {
      */
     public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
+        
+        // Remember most recently loaded color channel for next time
+        defaultColorChannel = colorChannel;
 
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
 

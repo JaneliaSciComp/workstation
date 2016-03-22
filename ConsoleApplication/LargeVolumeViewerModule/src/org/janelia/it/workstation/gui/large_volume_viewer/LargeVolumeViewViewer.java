@@ -15,11 +15,12 @@ import org.slf4j.Logger;
 
 import javax.swing.*;
 import java.awt.*;
-import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -68,15 +69,16 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                // don't reload if user tries to reload the same entity (is that a
-                //  good idea?  not clear)
-                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        public void run() {
-                            deleteAll();
-                        }
-                    });
-                }
+                //  I have found that with very large numbers of
+                //  neurons in the neurons table, not reloading
+                //  causes GUI lockup.
+                //                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                        deleteAll();
+                    }
+                });
+                //                }
                 initialEntity = rootedEntity.getEntity();
 
                 // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
@@ -84,6 +86,27 @@ public class LargeVolumeViewViewer extends JPanel {
                 if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     sliceSample = initialEntity;
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+                    // Which version of workspace?  Can it be handled, here?
+                    boolean usableVersion = false;
+                    TmWorkspace.Version version = AnnotationManager.getWorkspaceVersion(initialEntity);
+                    if (version == TmWorkspace.Version.PB_1) {
+                        usableVersion = true;
+                    }
+                    
+                    if (! usableVersion) {
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                JOptionPane.showMessageDialog(
+                                    LargeVolumeViewViewer.this,
+                                    "The workspace version is being converted for this version of Large Volume Viewer.  Several minutes' delay may ensue.",
+                                    "Must Convert Workspace",
+                                    JOptionPane.INFORMATION_MESSAGE
+                                );
+                            }
+                        });
+                    }
+                    
                     String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
                     try {
                         sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);

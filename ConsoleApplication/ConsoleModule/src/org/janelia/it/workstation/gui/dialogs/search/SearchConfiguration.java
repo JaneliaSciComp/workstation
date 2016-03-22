@@ -51,7 +51,7 @@ public class SearchConfiguration {
     /**
      * Number of characters before cell values are truncated
      */
-    protected static final int MAX_CELL_LENGTH = 50;
+    protected static final int MAX_CELL_LENGTH = 500;
 
     /**
      * Fields to use as columns
