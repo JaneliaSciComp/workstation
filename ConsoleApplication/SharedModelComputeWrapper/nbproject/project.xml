@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.25</specification-version>
+                        <specification-version>1.27</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -67,6 +67,8 @@
                 <package>org.janelia.it.jacs.model.user_data.search</package>
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
+                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_builder</package>
+                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
                 <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.util</package>

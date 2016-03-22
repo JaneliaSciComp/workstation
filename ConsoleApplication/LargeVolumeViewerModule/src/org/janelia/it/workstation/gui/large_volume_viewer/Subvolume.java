@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.janelia.it.jacs.shared.utils.ThreadUtils;
+import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;

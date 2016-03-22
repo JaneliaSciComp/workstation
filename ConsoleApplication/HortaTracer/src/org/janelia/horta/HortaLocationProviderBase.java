@@ -27,46 +27,52 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.janelia.horta;
 
-package org.janelia.console.viewerapi.model;
-
-import java.awt.Color;
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+import java.net.URL;
+import org.janelia.console.viewerapi.BasicSampleLocation;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
+import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
+ * Base class for horta location providers.  All are very similar.
  *
- * @author Christopher Bruns
+ * @author fosterl
  */
-public interface NeuronModel 
-extends Hideable
-{
-    String getName();
-    void setName(String name);
+public abstract class HortaLocationProviderBase implements Tiled3dSampleLocationProviderAcceptor {
+    private final Logger logger = LoggerFactory.getLogger(HortaLocationProviderBase.class);
     
-    Color getColor();
-    void setColor(Color color);
-    // Signals when the color of this neuron is toggled on or off
-    ObservableInterface getColorChangeObservable();
-    
-    Collection<NeuronVertex> getVertexes();
-    Collection<NeuronEdge> getEdges();
-    
-    // Adding a vertex is so common that it gets its own signal
-    NeuronVertexAdditionObservable getVertexAddedObservable(); // vertices added to neuron
-    
-    NeuronVertexDeletionObservable getVertexesRemovedObservable(); // vertices removed from neuron
-    
-    // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
-    // at the neuron level.
-    ObservableInterface getGeometryChangeObservable(); // vertices changed location or radius
-    
-    // Signals when the visibility of this neuron is toggled on or off
-    ObservableInterface getVisibilityChangeObservable();
+    @Override
+    public SampleLocation getSampleLocation() {
+        NeuronTracerTopComponent nttc = getNeuronTracer();
+        if (nttc == null) {
+            logger.info("No neuron tracer component found.");
+            return null;
+        }
+        BasicSampleLocation result = new BasicSampleLocation();
+        URL url = null;
+        try {
+            url = nttc.getCurrentSourceURL();
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            Exceptions.printStackTrace(ex);
+        }
+        result.setSampleUrl(url);
+        double[] focus = nttc.getStageLocation();
+        result.setFocusUm(focus[0], focus[1], focus[2]);
+        return result;
+    }
 
-    // Custom methods to help hook into LVV model from Horta
-    NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
-    boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
-    
-    boolean deleteVertex(NeuronVertex doomedVertex);
+    protected NeuronTracerTopComponent getNeuronTracer() {
+        return NeuronTracerTopComponent.findThisComponent();
+    }
+
+    @Override
+    public ParticipantType getParticipantType() {
+        return ParticipantType.both;
+    }
+
 }

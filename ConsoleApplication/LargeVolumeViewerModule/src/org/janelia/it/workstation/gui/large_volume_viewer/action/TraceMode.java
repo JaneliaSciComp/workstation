@@ -13,6 +13,9 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
@@ -44,6 +47,7 @@ implements MouseMode, KeyListener
 	private BoundingBox3d boundingBox;
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
+    private Logger logger = LoggerFactory.getLogger(TraceMode.class);
 	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
@@ -372,57 +376,102 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Delete subtree rooted at this anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.deleteSubtreeRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+                                    skeleton.deleteSubtreeRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting delete subtree.");
+                                }
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Delete link") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-								skeleton.deleteLinkRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+    								skeleton.deleteLinkRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting delete link.");
+                                }
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Move neurite...") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-								skeleton.moveNeuriteRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+    								skeleton.moveNeuriteRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting move neurite.");
+                                }
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-								skeleton.splitAnchorRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+                                    skeleton.splitAnchorRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting split anchor.");
+                                }
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split neurite") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-								skeleton.splitNeuriteRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+                                    skeleton.splitNeuriteRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting split neurite.");
+                                }
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Set anchor as root") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
-								skeleton.rerootNeuriteRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+    								skeleton.rerootNeuriteRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting set anchor as root.");
+                                }
                             }
                         }));
                         result.add(null); // separator
                         result.add(new JMenuItem(new AbstractAction("Add, edit, delete note...") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.addEditNoteRequest(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+                                    skeleton.addEditNoteRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting note change.");
+                                }
                             }
                         }));
                         result.add(null); // separator
 						result.add(new JMenuItem(new AbstractAction("Change neuron style...") {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								skeleton.changeNeuronStyle(getHoverAnchor());
+                                if (getHoverAnchor() != null) {
+    								skeleton.changeNeuronStyle(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting neuron style change.");
+                                }
 							}
 						}));
 						result.add(new JMenuItem(new AbstractAction("Hide neuron") {
 							@Override
 							public void actionPerformed(ActionEvent e) {
-								skeleton.setNeuronVisitility(getHoverAnchor(), false);
+                                if (getHoverAnchor() != null) {
+    								skeleton.setNeuronVisitility(getHoverAnchor(), false);
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting hide neuron.");
+                                }
 							}
 						}));
                         result.add(null); // separator

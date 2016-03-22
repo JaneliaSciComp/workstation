@@ -256,6 +256,8 @@ implements NeuronSet, LookupListener
         {
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             Long neuronId = annotation.getNeuronId();
+            updateEdges(); // updateEdges() is required for post-merge update in Horta. TODO: is performance optimization needed here?
+            // TODO: is this linear search really the best way to get the neuron that goes with this annotation?
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
