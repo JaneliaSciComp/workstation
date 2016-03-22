@@ -255,59 +255,6 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void importSWCFolder(String swcFolderLoc, String ownerKey, Long sampleId, String workspaceName) throws Exception {
-      //  EJBFactory.getRemoteTiledMicroscopeBean().importSWCFolder(swcFolderLoc, ownerKey, sampleId, workspaceName);
-    }
-    
-    @Override
-    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
-                                                  double x, double y, double z, String comment) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
-    }
-
-    @Override
-    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
-    }
-            
-    @Override
-    public void reparentGeometricAnnotation(TmGeoAnnotation annotation,
-                                            Long newParentAnnotationID, TmNeuron neuron) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
-    }
-
-    @Override
-    public void rerootNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().rerootNeurite(neuron, newRoot);
-    }
-
-    @Override
-    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().splitNeurite(neuron, newRoot);
-    }
-
-    @Override
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().moveNeurite(annotation, newNeuron);
-    }
-
-    @Override
-    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
-                                          int index, double x, double y, double z, String comment) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
-    }
-
-    @Override
-    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().getWorkspacesForBrainSample(brainSampleId, ownerKey);
-    }
-
-    @Override
-    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().getNeuronsForWorkspace(workspaceId, ownerKey);
-    }
-
-    @Override
     public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().removeWorkspacePreference(workspaceId, key);
     }

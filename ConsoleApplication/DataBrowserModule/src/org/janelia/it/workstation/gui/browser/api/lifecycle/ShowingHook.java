@@ -1,13 +1,18 @@
 package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
-import java.awt.Toolkit;
-import javax.swing.JFrame;
-import java.util.List;
-import java.util.ArrayList;
 import java.awt.AWTEvent;
+import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JFrame;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.lifecycle.InterceptingEventQueue;
+import org.janelia.it.workstation.lifecycle.LoggingEventListener;
+import org.janelia.it.workstation.lifecycle.MessageSource;
+import org.janelia.it.workstation.lifecycle.ReportRunner;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
 
