@@ -150,6 +150,10 @@ public class ApplyAnnotationAction extends NodeAction {
     
     public void doAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
         
+        // TODO: after domainModel.createAnnotation is implemented in the web service, we can use it instead, like this:
+//        DomainModel model = DomainMgr.getDomainMgr().getModel();
+//        model.createAnnotation(Reference.createFor(target), OntologyTermReference.createFor(ontologyTerm), value);
+        
         Ontology ontology = ontologyTerm.getOntology();
         
         // Save the annotation
@@ -175,7 +179,6 @@ public class ApplyAnnotationAction extends NodeAction {
             annotation.setValueTerm(new OntologyTermReference(ontology, valueTerm));
         }
         
-        // TODO: move this business logic to the DAO
         String tag = (annotation.getValue()==null ? annotation.getKey() : 
                      annotation.getKey() + " = " + annotation.getValue());
         annotation.setName(tag);

@@ -219,7 +219,13 @@ public class RESTDomainFacade implements DomainFacade {
         });
         return annotations;
     }
-
+    
+    @Override
+    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception {
+        // TODO: implement
+        throw new UnsupportedOperationException("This is not yet implemented in the web service");
+    }
+    
     @Override
     public Annotation create(Annotation annotation) throws Exception {
         DomainQuery query = new DomainQuery();

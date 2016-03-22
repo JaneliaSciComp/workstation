@@ -13,6 +13,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.support.DomainDAO;
@@ -186,6 +187,11 @@ public class MongoDomainFacade implements DomainFacade {
         dao.remove(AccessManager.getSubjectKey(), ontology);
     }
 
+    @Override
+    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception {
+        return dao.createAnnotation(AccessManager.getSubjectKey(), target, ontologyTermReference, value);
+    }
+    
     @Override
     public Annotation create(Annotation annotation) throws Exception {
         return (Annotation)updateIndex (dao.save(AccessManager.getSubjectKey(), annotation));

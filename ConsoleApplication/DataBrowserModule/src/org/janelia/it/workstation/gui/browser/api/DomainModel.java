@@ -676,7 +676,16 @@ public class DomainModel {
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
     }
-
+    
+    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception {
+        Annotation canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(facade.createAnnotation(target, ontologyTermReference, value));
+        }
+        notifyAnnotationsChanged(getDomainObject(canonicalObject.getTarget()));
+        return canonicalObject;
+    }
+    
     public Annotation create(Annotation annotation) throws Exception {
         Annotation canonicalObject;
         synchronized (this) {

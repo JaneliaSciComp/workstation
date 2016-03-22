@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
@@ -191,6 +192,16 @@ public interface DomainFacade {
      */
     public void removeOntology(Long ontologyId) throws Exception;
 
+    /**
+     * Create an annotation against the given target object.
+     * @param target
+     * @param ontologyTermReference
+     * @param value
+     * @return
+     * @throws Exception
+     */
+    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception;
+    
     /**
      * Create and return a new annotation.
      * @param annotation annotation to create, with null GUID
