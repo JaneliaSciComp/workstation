@@ -28,10 +28,10 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -644,7 +644,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         if (template!=null) {
                             JOptionPane.showMessageDialog(mainFrame,
                                 "Auto-sharing annotation with "+
-                                EntityUtils.getNameFromSubjectKey(template.getSubjectKey()), 
+                               DomainUtils.getNameFromSubjectKey(template.getSubjectKey()), 
                                 "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                         }
                     }
