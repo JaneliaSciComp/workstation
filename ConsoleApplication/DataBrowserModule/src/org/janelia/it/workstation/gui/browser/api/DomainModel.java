@@ -79,7 +79,7 @@ import com.google.common.cache.RemovalNotification;
 public class DomainModel {
 
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
-    private static final boolean TIMER = true;//log.isDebugEnabled();
+    private static final boolean TIMER = log.isDebugEnabled();
 
     private DomainFacade domainFacade;
     private OntologyFacade ontologyFacade;

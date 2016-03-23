@@ -15,10 +15,6 @@ public class DomainDAOManager {
 
     private static final Logger logger = Logger.getLogger(DomainDAOManager.class);
     
-//    private static String MONGO_SERVER_URL = SystemConfigurationProperties.getString("MongoDB.ServerURL");
-//    private static String MONGO_DATABASE = SystemConfigurationProperties.getString("MongoDB.Database");
-//    private static String MONGO_USERNAME = SystemConfigurationProperties.getString("MongoDB.Username");
-//    private static String MONGO_PASSWORD = SystemConfigurationProperties.getString("MongoDB.Password");
     protected static final String MONGO_SERVER_URL = "dev-mongodb";
     protected static final String MONGO_DATABASE = "jacs";
     protected static final String MONGO_USERNAME = "";

@@ -59,7 +59,7 @@ public class SampleFacadeImpl implements SampleFacade {
 
     @Override
     public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception {
-        return dao.createLineRelease(name, releaseDate, lagTimeMonths, dataSets);
+        return dao.createLineRelease(AccessManager.getSubjectKey(), name, releaseDate, lagTimeMonths, dataSets);
     }
 
     @Override

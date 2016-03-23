@@ -7,7 +7,12 @@ import java.util.Map;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.*;
+import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
@@ -31,7 +36,6 @@ public class DomainMgr {
     private static final Logger log = LoggerFactory.getLogger(DomainMgr.class);
 
     private static final String DOMAIN_FACADE_PACKAGE_NAME = ConsoleProperties.getInstance().getProperty("domain.facade.package");
-    private static final String DOMAIN_FACADE_CLASS_NAME = ConsoleProperties.getInstance().getProperty("domain.facade.class");
     
     // Singleton
     private static DomainMgr instance;
@@ -55,13 +59,12 @@ public class DomainMgr {
     
     private DomainMgr() {
         try {
-            Reflections reflections = new Reflections(DOMAIN_FACADE_PACKAGE_NAME);
+            final Reflections reflections = ReflectionsHelper.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
             ontologyFacade = getNewInstance(reflections, OntologyFacade.class);
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
-            this.domainFacade = (DomainFacade)Class.forName(DOMAIN_FACADE_CLASS_NAME).newInstance();
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
