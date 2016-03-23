@@ -17,13 +17,12 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import net.miginfocom.swing.MigLayout;
-
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.LifecycleManager;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * A dialog for entering username and password, with some additional options.

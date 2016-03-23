@@ -43,7 +43,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * Date: 6/12/12
  * Time: 10:28 AM
  */
-public class SpecialAnnotationChooserDialog extends JFrame{
+public class SpecialAnnotationChooserDialog extends JFrame {
 
     private static final JPanel annotationPanel = new JPanel();
     private List<OntologyTerm> OntologyTerms = new ArrayList<>();

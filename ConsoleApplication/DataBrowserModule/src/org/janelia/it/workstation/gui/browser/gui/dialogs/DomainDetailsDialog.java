@@ -16,7 +16,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 

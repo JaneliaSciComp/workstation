@@ -26,7 +26,6 @@ import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.TableViewerConfiguration;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.workstation.shared.util.Utils;

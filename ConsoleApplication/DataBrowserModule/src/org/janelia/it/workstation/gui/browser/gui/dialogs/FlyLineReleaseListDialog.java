@@ -6,7 +6,10 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -22,36 +25,47 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewConstants;
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A port of data sets management dialog to use domain objects
+ * A dialog for viewing all the fly line releases that a user has access to.
  *
- * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable {
 
+    private static final Logger log = LoggerFactory.getLogger(FlyLineReleaseListDialog.class);
+    
+    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
-public class DataSetListDialog extends ModalDialog {
+    private static final String COLUMN_NAME = "Name";
+    private static final String COLUMN_RELEASE_DATE = "Release Date";
+    private static final String COLUMN_DATA_SETS = "Data Sets";
+    private static final String COLUMN_SAGE_SYNC = "SAGE Sync";
 
     private final JLabel loadingLabel;
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
-    private final DataSetDialog dataSetDialog;
+    private final FlyLineReleaseDialog releaseDialog;
+    private List<LineRelease> releases;
 
-    public DataSetListDialog() {
-        setTitle("My Data Sets");
+    public FlyLineReleaseListDialog() {
 
-        dataSetDialog = new DataSetDialog(this);
+        setTitle("My Fly Line Releases");
+
+        releaseDialog = new FlyLineReleaseDialog(this);
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
@@ -67,16 +81,24 @@ public class DataSetListDialog extends ModalDialog {
         dynamicTable = new DynamicTable(true, false) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
-                DataSet dataSet = (DataSet) userObject;
-                if (dataSet != null) {
-                    if (DomainModelViewConstants.DATASET_NAME.equals(column.getName())) {
-                        return dataSet.getName();
-                    } else if ((DomainModelViewConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
-                        return dataSet.getPipelineProcesses()==null?null:dataSet.getPipelineProcesses().get(0);
-                    } else if ((DomainModelViewConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
-                        return dataSet.getSampleNamePattern();
-                    } else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
-                        return dataSet.isSageSync();
+                LineRelease release = (LineRelease) userObject;
+                if (release != null) {
+                    if (COLUMN_NAME.equals(column.getName())) {
+                        return release.getName();
+                    }
+                    else if (COLUMN_RELEASE_DATE.equals(column.getName())) {
+                        Date date = release.getReleaseDate();
+                        return date == null ? null : df.format(date);
+                    }
+                    else if (COLUMN_DATA_SETS.equals(column.getName())) {
+                        List<String> value = release.getDataSets();
+                        return value == null ? null : Task.csvStringFromCollection(value).replaceAll(",", ", ");
+                    }
+                    else if (COLUMN_SAGE_SYNC.equals(column.getName())) {
+                        return release.isSageSync();
+                    }
+                    else {
+                        throw new IllegalStateException("No such column: "+column.getName());
                     }
                 }
                 return null;
@@ -93,13 +115,13 @@ public class DataSetListDialog extends ModalDialog {
                         return menu;
                     }
 
-                    final DataSet dataSet = (DataSet) getRows().get(table.getSelectedRow()).getUserObject();
+                    final LineRelease release = (LineRelease) getRows().get(table.getSelectedRow()).getUserObject();
 
                     JMenuItem editItem = new JMenuItem("  Edit");
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            dataSetDialog.showForDataSet(dataSet);
+                            releaseDialog.showForRelease(release);
                         }
                     });
                     menu.add(editItem);
@@ -109,34 +131,33 @@ public class DataSetListDialog extends ModalDialog {
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete data set '" + dataSet.getName()
-                                            + "'? This will not delete the images associated with the data set.",
-                                    "Delete Data Set", JOptionPane.OK_CANCEL_OPTION);
+                            int result = JOptionPane.showConfirmDialog(FlyLineReleaseListDialog.this, "Are you sure you want to delete release '"
+                                    + release.getName() + "'? This will not remove anything already published to the web.",
+                                    "Delete Release", JOptionPane.OK_CANCEL_OPTION);
                             if (result != 0) {
                                 return;
                             }
 
-                            Utils.setWaitingCursor(DataSetListDialog.this);
+                            Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
 
                                 @Override
                                 protected void doStuff() throws Exception {
-                                    final DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                    model.remove(dataSet);
+                                    DomainMgr.getDomainMgr().getModel().remove(release);
                                 }
 
                                 @Override
                                 protected void hadSuccess() {
-                                    Utils.setDefaultCursor(DataSetListDialog.this);
-                                    loadDataSets();
+                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    loadReleases();
                                 }
 
                                 @Override
                                 protected void hadError(Throwable error) {
                                     SessionMgr.getSessionMgr().handleException(error);
-                                    Utils.setDefaultCursor(DataSetListDialog.this);
-                                    loadDataSets();
+                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    loadReleases();
                                 }
                             };
                             worker.execute();
@@ -150,14 +171,14 @@ public class DataSetListDialog extends ModalDialog {
 
             @Override
             protected void rowDoubleClicked(int row) {
-                final DataSet dataSet = (DataSet) getRows().get(row).getUserObject();
-                dataSetDialog.showForDataSet(dataSet);
+                final LineRelease release = (LineRelease) getRows().get(row).getUserObject();
+                releaseDialog.showForRelease(release);
             }
 
             @Override
             public Class<?> getColumnClass(int column) {
                 DynamicColumn dc = getColumns().get(column);
-                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+                if (dc.getName().equals(COLUMN_SAGE_SYNC)) {
                     return Boolean.class;
                 }
                 return super.getColumnClass(column);
@@ -165,16 +186,16 @@ public class DataSetListDialog extends ModalDialog {
 
             @Override
             protected void valueChanged(DynamicColumn dc, int row, Object data) {
-                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+                if (dc.getName().equals(COLUMN_SAGE_SYNC)) {
                     final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
                     DynamicRow dr = getRows().get(row);
-                    final DataSet dataSet = (DataSet) dr.getUserObject();
+                    final LineRelease release = (LineRelease) dr.getUserObject();
                     SimpleWorker worker = new SimpleWorker() {
 
                         @Override
                         protected void doStuff() throws Exception {
-                            dataSet.setSageSync(selected);
-                            DomainMgr.getDomainMgr().getModel().save(dataSet);
+                            release.setSageSync(selected);
+                            DomainMgr.getDomainMgr().getModel().update(release);
                         }
 
                         @Override
@@ -191,17 +212,17 @@ public class DataSetListDialog extends ModalDialog {
             }
         };
 
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NAME);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
+        dynamicTable.addColumn(COLUMN_NAME);
+        dynamicTable.addColumn(COLUMN_RELEASE_DATE);
+        dynamicTable.addColumn(COLUMN_DATA_SETS);
+        dynamicTable.addColumn(COLUMN_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
-        addButton.setToolTipText("Add a new data set definition");
+        addButton.setToolTipText("Add a new fly line release definition");
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dataSetDialog.showForNewDataSet();
+                releaseDialog.showForNewRelease();
             }
         });
 
@@ -225,7 +246,8 @@ public class DataSetListDialog extends ModalDialog {
     }
 
     public void showDialog() {
-        loadDataSets();
+
+        loadReleases();
 
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
@@ -234,19 +256,19 @@ public class DataSetListDialog extends ModalDialog {
         packAndShow();
     }
 
-    private void loadDataSets() {
+    private void loadReleases() {
 
         mainPanel.removeAll();
         mainPanel.add(loadingLabel, BorderLayout.CENTER);
 
-        SimpleWorker worker = new SimpleWorker() {
+        this.releases = new ArrayList<>();
 
-            private List<DataSet> dataSetList = new ArrayList<>();
+        SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                for (DataSet dataSet : DomainMgr.getDomainMgr().getModel().getDataSets()) {
-                    dataSetList.add(dataSet);
+                for (LineRelease releaseEntity : DomainMgr.getDomainMgr().getModel().getLineReleases()) {
+                    releases.add(releaseEntity);
                 }
             }
 
@@ -255,8 +277,8 @@ public class DataSetListDialog extends ModalDialog {
 
                 // Update the attribute table
                 dynamicTable.removeAllRows();
-                for (DataSet dataSet : dataSetList) {
-                    dynamicTable.addRow(dataSet);
+                for (LineRelease releaseEntity : releases) {
+                    dynamicTable.addRow(releaseEntity);
                 }
 
                 dynamicTable.updateTableModel();
@@ -275,12 +297,17 @@ public class DataSetListDialog extends ModalDialog {
         };
         worker.execute();
     }
-    
+
     public void refresh() {
-        loadDataSets();
+        loadReleases();
     }
 
     public void totalRefresh() {
         throw new UnsupportedOperationException();
     }
+
+    List<LineRelease> getReleases() {
+        return releases;
+    }
+
 }
