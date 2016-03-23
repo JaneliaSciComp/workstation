@@ -38,6 +38,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.support.DataSetComboBoxRenderer;
@@ -57,11 +58,11 @@ import net.miginfocom.swing.MigLayout;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FlyLineReleaseDialog extends ModalDialog {
+public class LineReleaseDialog extends ModalDialog {
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
 
-    private final FlyLineReleaseListDialog parentDialog;
+    private final LineReleaseListDialog parentDialog;
 
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
@@ -75,7 +76,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
     private LineRelease releaseEntity;
 
-    public FlyLineReleaseDialog(FlyLineReleaseListDialog parentDialog) {
+    public LineReleaseDialog(LineReleaseListDialog parentDialog) {
 
         super(parentDialog);
         this.parentDialog = parentDialog;
@@ -205,7 +206,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
         attrPanel.add(bottomPanel, "span 2");
 
-        Utils.setWaitingCursor(FlyLineReleaseDialog.this);
+        Utils.setWaitingCursor(LineReleaseDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -218,6 +219,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
             protected void doStuff() throws Exception {
 
                 for (DataSet dataSet : DomainMgr.getDomainMgr().getModel().getDataSets()) {
+                    if (!ClientDomainUtils.isOwner(dataSet)) continue;
                     dataSets.add(dataSet);
                     String identifier = dataSet.getIdentifier();
                     dataSetMap.put(identifier, dataSet);
@@ -323,10 +325,10 @@ public class FlyLineReleaseDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(FlyLineReleaseDialog.this);
+        Utils.setWaitingCursor(LineReleaseDialog.this);
 
         if (StringUtils.isEmpty(nameInput.getText().trim())) {
-            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(LineReleaseDialog.this, "The release name cannot be blank", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -337,14 +339,14 @@ public class FlyLineReleaseDialog extends ModalDialog {
                 lagTime = Integer.parseInt(lagTimeStr);
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "Lag time must be a number", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(LineReleaseDialog.this, "Lag time must be a number", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (releaseEntity==null) {
             for (LineRelease release : parentDialog.getReleases()) {
                 if (release.getName().equals(nameInput.getText())) {
-                    JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LineReleaseDialog.this, "A release with this name already exists", "Cannot save release", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
@@ -357,7 +359,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         }
 
         if (dataSets.isEmpty()) {
-            JOptionPane.showMessageDialog(FlyLineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(LineReleaseDialog.this, "A release must include at least one data set", "Cannot save release", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -400,14 +402,14 @@ public class FlyLineReleaseDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 parentDialog.refresh();
-                Utils.setDefaultCursor(FlyLineReleaseDialog.this);
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
-                Utils.setDefaultCursor(FlyLineReleaseDialog.this);
+                Utils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
         };

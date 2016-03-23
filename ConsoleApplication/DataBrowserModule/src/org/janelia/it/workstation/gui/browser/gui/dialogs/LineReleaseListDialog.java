@@ -44,9 +44,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable {
+public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
-    private static final Logger log = LoggerFactory.getLogger(FlyLineReleaseListDialog.class);
+    private static final Logger log = LoggerFactory.getLogger(LineReleaseListDialog.class);
     
     private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
@@ -58,14 +58,14 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
     private final JLabel loadingLabel;
     private final JPanel mainPanel;
     private final DynamicTable dynamicTable;
-    private final FlyLineReleaseDialog releaseDialog;
+    private final LineReleaseDialog releaseDialog;
     private List<LineRelease> releases;
 
-    public FlyLineReleaseListDialog() {
+    public LineReleaseListDialog() {
 
         setTitle("My Fly Line Releases");
 
-        releaseDialog = new FlyLineReleaseDialog(this);
+        releaseDialog = new LineReleaseDialog(this);
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
@@ -131,14 +131,14 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(FlyLineReleaseListDialog.this, "Are you sure you want to delete release '"
+                            int result = JOptionPane.showConfirmDialog(LineReleaseListDialog.this, "Are you sure you want to delete release '"
                                     + release.getName() + "'? This will not remove anything already published to the web.",
                                     "Delete Release", JOptionPane.OK_CANCEL_OPTION);
                             if (result != 0) {
                                 return;
                             }
 
-                            Utils.setWaitingCursor(FlyLineReleaseListDialog.this);
+                            Utils.setWaitingCursor(LineReleaseListDialog.this);
 
                             SimpleWorker worker = new SimpleWorker() {
 
@@ -149,14 +149,14 @@ public class FlyLineReleaseListDialog extends ModalDialog implements Refreshable
 
                                 @Override
                                 protected void hadSuccess() {
-                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    Utils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
 
                                 @Override
                                 protected void hadError(Throwable error) {
                                     SessionMgr.getSessionMgr().handleException(error);
-                                    Utils.setDefaultCursor(FlyLineReleaseListDialog.this);
+                                    Utils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
                             };

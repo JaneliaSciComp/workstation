@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
-import org.janelia.it.workstation.gui.browser.gui.dialogs.FlyLineReleaseListDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.LineReleaseListDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -36,7 +36,7 @@ public final class FlyLineReleasesMenuAction extends AbstractAction implements P
         JMenuItem menuItem = new JMenuItem(RELEASES_ITEM);
         menuItem.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
-                FlyLineReleaseListDialog dialog = new FlyLineReleaseListDialog();
+                LineReleaseListDialog dialog = new LineReleaseListDialog();
                 dialog.showDialog();
             }
         });
