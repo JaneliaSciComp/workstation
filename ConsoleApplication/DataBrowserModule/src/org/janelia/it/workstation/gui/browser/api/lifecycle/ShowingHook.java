@@ -1,9 +1,18 @@
 package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
+import java.awt.AWTEvent;
+import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JFrame;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.lifecycle.InterceptingEventQueue;
+import org.janelia.it.workstation.lifecycle.LoggingEventListener;
+import org.janelia.it.workstation.lifecycle.MessageSource;
+import org.janelia.it.workstation.lifecycle.ReportRunner;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
 
@@ -20,6 +29,21 @@ public class ShowingHook implements Runnable {
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle( title );
         SessionMgr.getBrowser().supportMenuProcessing();
+        
+        // Log events.
+        final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
+        Toolkit.getDefaultToolkit().getSystemEventQueue().push(
+                interceptingEventQueue);
+        final LoggingEventListener loggingEventListener = new LoggingEventListener();
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                loggingEventListener, AWTEvent.MOUSE_EVENT_MASK);
+        
+        List<String> discriminators = new ArrayList<>();
+        List<MessageSource> sources = new ArrayList<>();
+        sources.add(interceptingEventQueue);
+        discriminators.add(ReportRunner.MOUSE_EVENT_DISCRIMINATOR);
+        //sources.add(loggingEventListener);
+        //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
+        ReportRunner rptRunner = new ReportRunner(sources, discriminators);
     }
-
 }

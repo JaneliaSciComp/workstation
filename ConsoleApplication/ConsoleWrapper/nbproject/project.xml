@@ -188,6 +188,7 @@
                 <package>com.fasterxml.jackson.annotation</package>
                 <package>com.fasterxml.jackson.core</package>
                 <package>com.fasterxml.jackson.core.base</package>
+                <package>com.fasterxml.jackson.core.format</package>
                 <package>com.fasterxml.jackson.core.io</package>
                 <package>com.fasterxml.jackson.core.json</package>
                 <package>com.fasterxml.jackson.core.sym</package>
@@ -213,9 +214,15 @@
                 <package>com.fasterxml.jackson.databind.ser.std</package>
                 <package>com.fasterxml.jackson.databind.type</package>
                 <package>com.fasterxml.jackson.databind.util</package>
-                <package>com.fasterxml.jackson.jaxrs.json</package>
+                <package>com.fasterxml.jackson.jaxrs.annotation</package>
                 <package>com.fasterxml.jackson.jaxrs.base</package>
+                <package>com.fasterxml.jackson.jaxrs.cfg</package>
+                <package>com.fasterxml.jackson.jaxrs.json</package>
+                <package>com.fasterxml.jackson.jaxrs.json.annotation</package>
+                <package>com.fasterxml.jackson.jaxrs.util</package>
                 <package>com.fasterxml.jackson.module.jaxb</package>
+                <package>com.fasterxml.jackson.module.jaxb.deser</package>
+                <package>com.fasterxml.jackson.module.jaxb.ser</package>
                 <package>com.google.common.annotations</package>
                 <package>com.google.common.base</package>
                 <package>com.google.common.base.internal</package>
@@ -302,14 +309,8 @@
                 <package>com.mongodb.util</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
-                <package>com.sun.codemodel</package>
-                <package>com.sun.codemodel.fmt</package>
-                <package>com.sun.codemodel.util</package>
-                <package>com.sun.codemodel.writer</package>
-                <package>com.sun.dtdparser</package>
                 <package>com.sun.istack</package>
                 <package>com.sun.istack.localization</package>
-                <package>com.sun.istack.tools</package>
                 <package>com.sun.jna</package>
                 <package>com.sun.jna.platform</package>
                 <package>com.sun.jna.platform.dnd</package>
@@ -338,45 +339,6 @@
                 <package>com.sun.media.jai.tilecodec</package>
                 <package>com.sun.media.jai.util</package>
                 <package>com.sun.media.jai.widget</package>
-                <package>com.sun.org.apache.xml.internal.resolver</package>
-                <package>com.sun.org.apache.xml.internal.resolver.helpers</package>
-                <package>com.sun.org.apache.xml.internal.resolver.readers</package>
-                <package>com.sun.org.apache.xml.internal.resolver.tools</package>
-                <package>com.sun.tools.jxc</package>
-                <package>com.sun.tools.jxc.apt</package>
-                <package>com.sun.tools.jxc.gen.config</package>
-                <package>com.sun.tools.jxc.model.nav</package>
-                <package>com.sun.tools.xjc</package>
-                <package>com.sun.tools.xjc.addon.at_generated</package>
-                <package>com.sun.tools.xjc.addon.code_injector</package>
-                <package>com.sun.tools.xjc.addon.episode</package>
-                <package>com.sun.tools.xjc.addon.locator</package>
-                <package>com.sun.tools.xjc.addon.sync</package>
-                <package>com.sun.tools.xjc.api</package>
-                <package>com.sun.tools.xjc.api.impl.j2s</package>
-                <package>com.sun.tools.xjc.api.impl.s2j</package>
-                <package>com.sun.tools.xjc.api.util</package>
-                <package>com.sun.tools.xjc.generator.annotation.ri</package>
-                <package>com.sun.tools.xjc.generator.annotation.spec</package>
-                <package>com.sun.tools.xjc.generator.bean</package>
-                <package>com.sun.tools.xjc.generator.bean.field</package>
-                <package>com.sun.tools.xjc.generator.util</package>
-                <package>com.sun.tools.xjc.model</package>
-                <package>com.sun.tools.xjc.model.nav</package>
-                <package>com.sun.tools.xjc.outline</package>
-                <package>com.sun.tools.xjc.reader</package>
-                <package>com.sun.tools.xjc.reader.dtd</package>
-                <package>com.sun.tools.xjc.reader.dtd.bindinfo</package>
-                <package>com.sun.tools.xjc.reader.gbind</package>
-                <package>com.sun.tools.xjc.reader.internalizer</package>
-                <package>com.sun.tools.xjc.reader.relaxng</package>
-                <package>com.sun.tools.xjc.reader.xmlschema</package>
-                <package>com.sun.tools.xjc.reader.xmlschema.bindinfo</package>
-                <package>com.sun.tools.xjc.reader.xmlschema.ct</package>
-                <package>com.sun.tools.xjc.reader.xmlschema.parser</package>
-                <package>com.sun.tools.xjc.runtime</package>
-                <package>com.sun.tools.xjc.util</package>
-                <package>com.sun.tools.xjc.writer</package>
                 <package>com.sun.xml.bind</package>
                 <package>com.sun.xml.bind.annotation</package>
                 <package>com.sun.xml.bind.api</package>
@@ -401,7 +363,6 @@
                 <package>com.sun.xml.bind.v2.schemagen.episode</package>
                 <package>com.sun.xml.bind.v2.schemagen.xmlschema</package>
                 <package>com.sun.xml.bind.v2.util</package>
-                <package>com.sun.xml.dtdparser</package>
                 <package>com.sun.xml.messaging.saaj</package>
                 <package>com.sun.xml.messaging.saaj.client.p2p</package>
                 <package>com.sun.xml.messaging.saaj.packaging.mime</package>
@@ -418,15 +379,6 @@
                 <package>com.sun.xml.txw2</package>
                 <package>com.sun.xml.txw2.annotation</package>
                 <package>com.sun.xml.txw2.output</package>
-                <package>com.sun.xml.xsom</package>
-                <package>com.sun.xml.xsom.impl</package>
-                <package>com.sun.xml.xsom.impl.parser</package>
-                <package>com.sun.xml.xsom.impl.parser.state</package>
-                <package>com.sun.xml.xsom.impl.scd</package>
-                <package>com.sun.xml.xsom.impl.util</package>
-                <package>com.sun.xml.xsom.parser</package>
-                <package>com.sun.xml.xsom.util</package>
-                <package>com.sun.xml.xsom.visitor</package>
                 <package>com.xhaus.modjy</package>
                 <package>com.xuggle.ferry</package>
                 <package>com.xuggle.mediatool</package>
@@ -603,7 +555,8 @@
                 <package>javax.annotation.concurrent</package>
                 <package>javax.annotation.meta</package>
                 <package>javax.annotation.security</package>
-                <package>javax.inject.Singleton</package>
+                <package>javax.annotation.sql</package>
+                <package>javax.inject</package>
                 <package>javax.jws</package>
                 <package>javax.jws.soap</package>
                 <package>javax.mail</package>
@@ -660,6 +613,14 @@
                 <package>javax.xml.ws.spi</package>
                 <package>javax.xml.ws.wsaddressing</package>
                 <package>jersey.repackaged.com.google.common.base</package>
+                <package>jersey.repackaged.com.google.common.cache</package>
+                <package>jersey.repackaged.com.google.common.collect</package>
+                <package>jersey.repackaged.com.google.common.hash</package>
+                <package>jersey.repackaged.com.google.common.io</package>
+                <package>jersey.repackaged.com.google.common.math</package>
+                <package>jersey.repackaged.com.google.common.net</package>
+                <package>jersey.repackaged.com.google.common.primitives</package>
+                <package>jersey.repackaged.com.google.common.util.concurrent</package>
                 <package>jline</package>
                 <package>jnr.netdb</package>
                 <package>jogamp.common</package>
@@ -1463,8 +1424,17 @@
                 <package>org.eclipse.jetty.util.ssl</package>
                 <package>org.eclipse.jetty.util.statistic</package>
                 <package>org.eclipse.jetty.util.thread</package>
+                <package>org.glassfish.hk2.api</package>
+                <package>org.glassfish.hk2.api.messaging</package>
+                <package>org.glassfish.hk2.extension</package>
+                <package>org.glassfish.hk2.internal</package>
+                <package>org.glassfish.hk2.utilities</package>
                 <package>org.glassfish.hk2.utilities.binding</package>
+                <package>org.glassfish.hk2.utilities.cache</package>
+                <package>org.glassfish.hk2.utilities.cache.internal</package>
+                <package>org.glassfish.hk2.utilities.general</package>
                 <package>org.glassfish.hk2.utilities.reflection</package>
+                <package>org.glassfish.hk2.utilities.reflection.internal</package>
                 <package>org.glassfish.jersey</package>
                 <package>org.glassfish.jersey.client</package>
                 <package>org.glassfish.jersey.client.authentication</package>
@@ -1483,6 +1453,8 @@
                 <package>org.glassfish.jersey.jaxb.internal</package>
                 <package>org.glassfish.jersey.message</package>
                 <package>org.glassfish.jersey.message.filtering</package>
+                <package>org.glassfish.jersey.message.filtering.internal</package>
+                <package>org.glassfish.jersey.message.filtering.spi</package>
                 <package>org.glassfish.jersey.message.internal</package>
                 <package>org.glassfish.jersey.model</package>
                 <package>org.glassfish.jersey.model.internal</package>
@@ -1693,22 +1665,12 @@
                 <package>org.jongo.marshall.jackson.configuration</package>
                 <package>org.jongo.marshall.jackson.oid</package>
                 <package>org.jongo.query</package>
-                <package>org.kohsuke.rngom.ast.builder</package>
-                <package>org.kohsuke.rngom.ast.om</package>
-                <package>org.kohsuke.rngom.ast.util</package>
-                <package>org.kohsuke.rngom.binary</package>
-                <package>org.kohsuke.rngom.binary.visitor</package>
-                <package>org.kohsuke.rngom.digested</package>
-                <package>org.kohsuke.rngom.dt</package>
-                <package>org.kohsuke.rngom.dt.builtin</package>
-                <package>org.kohsuke.rngom.nc</package>
-                <package>org.kohsuke.rngom.parse</package>
-                <package>org.kohsuke.rngom.parse.compact</package>
-                <package>org.kohsuke.rngom.parse.host</package>
-                <package>org.kohsuke.rngom.parse.xml</package>
-                <package>org.kohsuke.rngom.util</package>
-                <package>org.kohsuke.rngom.xml.sax</package>
-                <package>org.kohsuke.rngom.xml.util</package>
+                <package>org.jvnet.hk2.annotations</package>
+                <package>org.jvnet.hk2.component</package>
+                <package>org.jvnet.hk2.external.generator</package>
+                <package>org.jvnet.hk2.external.runtime</package>
+                <package>org.jvnet.hk2.internal</package>
+                <package>org.jvnet.tiger_types</package>
                 <package>org.netbeans.swing.etable</package>
                 <package>org.netbeans.swing.outline</package>
                 <package>org.objectweb.asm</package>
@@ -1830,8 +1792,6 @@
                 <package>org.reflections.serializers</package>
                 <package>org.reflections.util</package>
                 <package>org.reflections.vfs</package>
-                <package>org.relaxng.datatype</package>
-                <package>org.relaxng.datatype.helpers</package>
                 <package>org.semanticweb.owlapi</package>
                 <package>org.semanticweb.owlapi.apibinding</package>
                 <package>org.semanticweb.owlapi.debugging</package>

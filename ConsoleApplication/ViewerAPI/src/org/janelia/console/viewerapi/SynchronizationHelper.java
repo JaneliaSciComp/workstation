@@ -45,7 +45,7 @@ public class SynchronizationHelper {
      * the location acceptor, who will not wish to synchronize with itself.
      * 
      * @param excludedName do not return a provider by this name.  May be null.
-     * @return all providers who wish to advertize their locations/samples.
+     * @return all providers who wish to advertise their locations/samples.
      */
     public Collection<Tiled3dSampleLocationProviderAcceptor> getSampleLocationProviders(String excludedName) {
         Lookup lookup = Lookups.forPath(Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH);

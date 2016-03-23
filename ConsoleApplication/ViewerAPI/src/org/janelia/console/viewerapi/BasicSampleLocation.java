@@ -47,6 +47,7 @@ public class BasicSampleLocation implements SampleLocation
     private double focusZUm = 0;
     private double micrometersPerWindowHeight = 100;
     private int defaultColorChannel = 0;
+    private boolean compressed = false;
 
     public BasicSampleLocation()
     {
@@ -127,5 +128,15 @@ public class BasicSampleLocation implements SampleLocation
     public void setDefaultColorChannel(int channelIndex)
     {
         defaultColorChannel = channelIndex;
+    }
+
+    @Override
+    public boolean isCompressed() {
+        return compressed;
+    }
+
+    @Override
+    public void setCompressed(boolean compressed) {
+        this.compressed = compressed;
     }
 }

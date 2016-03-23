@@ -43,5 +43,6 @@ public interface ComputeFacade {
     public Subject loginSubject(String username, String password) throws Exception;
     public void beginSession();
     public void addEventToSession(UserToolEvent event);
+    public void addEventsToSession(UserToolEvent[] events);
     public void endSession();
 }

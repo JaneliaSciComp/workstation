@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
@@ -117,8 +118,8 @@ public class ConesActor extends BasicGL3Actor
 
             Vector3 c1 = new Vector3(neuronVertex.getLocation()); // center of first sphere
             Vector3 c2 = new Vector3(parent.getLocation()); // center of second sphere
-            double r1 = 1.0; // TODO: configurable default radius
-            double r2 = 1.0; // TODO: configurable default radius
+            double r1 = DefaultNeuron.radius;
+            double r2 = DefaultNeuron.radius;
             if (neuronVertex.hasRadius())
                 r1 = neuronVertex.getRadius();
             if (parent.hasRadius())

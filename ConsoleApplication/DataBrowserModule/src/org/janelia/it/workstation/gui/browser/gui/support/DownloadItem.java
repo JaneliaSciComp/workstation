@@ -11,12 +11,11 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
@@ -130,7 +129,7 @@ public class DownloadItem {
     private String constructFilePath(String filePattern) {
         
         Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
-        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
+        for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
             log.debug("Adding attribute: "+attr.getLabel());
             attributeMap.put(attr.getLabel(), attr);
         }
