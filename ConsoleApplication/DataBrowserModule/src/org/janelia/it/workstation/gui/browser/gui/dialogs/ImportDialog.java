@@ -1,8 +1,35 @@
-package org.janelia.it.workstation.gui.dialogs;
+package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
+import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.jdesktop.swingx.VerticalLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -14,28 +41,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
-
-import javax.swing.*;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.user_data.Node;
-import org.jdesktop.swingx.VerticalLayout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -58,8 +63,8 @@ public class ImportDialog extends ModalDialog {
             "Directory of the tree that should be loaded into the database.";
 
     private JTextField folderField;
-    private RootedEntity rootedEntity;
-    private Long folderEntityId;
+    private TreeNode rootFolder;
+    private Long folderObjectId;
     private JTextField pathTextField;
     private FilenameFilter selectedChildrenFilter;
 
@@ -189,39 +194,34 @@ public class ImportDialog extends ModalDialog {
         };
     }
 
-    public void showDialog(RootedEntity rootedEntity) {
-
-        this.rootedEntity = rootedEntity;
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-
-        String folderName;
-        if (rootedEntity == null) {
-            folderField.setEnabled(true);
-            folderEntityId = null;
-            final String modelName = (String)
-                    sessionMgr.getModelProperty(IMPORT_TARGET_FOLDER);
-            if ((modelName != null) && (modelName.trim().length() > 0)) {
-                folderName = modelName;
+    public void showDialog() {
+        String folderName = null;
+        try {
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+            if (explorer.getSelectionModel().getSelectedIds().size()==0) {
+                rootFolder = model.getDefaultWorkspace();
             } else {
-                folderName = null;
-                //folderName = SessionMgrUSERNAME + " " + DEFAULT_FOLDER_NAME;
+                List<Reference> selectedNodes = explorer.getSelectionModel().getSelectedIds();
+                DomainObject selNode = model.getDomainObject(selectedNodes.get(0));
+                folderName = DEFAULT_FOLDER_NAME;
+                if (selNode instanceof TreeNode) {
+                    rootFolder = (TreeNode)selNode;
+                } else {
+                    List<Reference> parents = model.getContainerReferences(selNode);
+                    for (Reference parent: parents) {
+                        if (parent.getTargetClassName().equals(TreeNode.class.getCanonicalName())) {
+                            rootFolder = (TreeNode) model.getDomainObject(parent);
+                            break;
+                        }
+                    }
+                }
             }
-        } else {
-            
-
-            String rootEntityType = rootedEntity.getEntity().getEntityTypeName();
-            if (EntityConstants.TYPE_SAMPLE.equals(rootEntityType)) {                
-                folderField.setEnabled(false);
-                folderName = rootedEntity.getName()+"/"+DEFAULT_FOLDER_NAME;
-                folderEntityId = rootedEntity.getEntityId();
-            }
-            else {
-                folderField.setEnabled(false);
-                folderName = rootedEntity.getName();
-                folderEntityId = rootedEntity.getEntityId();
-            }
+        } catch (Exception e) {
+            log.error("Problem determining selected nodes",e);
+            throw new RuntimeException("Problems determining selected nodes.", e);
         }
-
+        folderObjectId = null;
         folderField.setText(folderName);
 
         packAndShow();
@@ -320,7 +320,7 @@ public class ImportDialog extends ModalDialog {
         if (continueWithImport) {
             // close import dialog and run import in background thread
             this.setVisible(false);
-            runImport(selectedFile, selectedChildren, folderName, folderEntityId);
+            runImport(selectedFile, selectedChildren, folderName, rootFolder.getId());
         }
     }
 
@@ -385,25 +385,41 @@ public class ImportDialog extends ModalDialog {
                         public Void call() throws Exception {
                             final Browser browser = SessionMgr.getBrowser();
                             final EntityOutline entityOutline = browser.getEntityOutline();
+                            final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
                             entityOutline.totalRefresh(true, new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
                                     
-                                    if (rootedEntity!=null) {
+                                    if (rootFolder!=null) {
                                     
                                         SimpleWorker worker = new SimpleWorker() {
                                             
                                             @Override
                                             protected void doStuff() throws Exception {
-                                                ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
+                                                explorer.refresh();
                                             }
                                             
                                             @Override
                                             protected void hadSuccess() {
-                                                RootedEntity importFolder = rootedEntity.getChildByName(importFolderName);
-                                                if (importFolder!=null) {
-                                                    SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(importFolder.getUniqueId());
+                                                log.info("AYEYEYEYEYEYEYEYEY");
+                                                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                                rootFolder = (TreeNode)model.getDomainObject(new Reference(rootFolder.getClass().getCanonicalName(), rootFolder.getId()));
+                                                List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
+                                                DomainObject importFolder = null;
+                                                for (DomainObject child: children) {
+                                                    if (child.getName().equals(importFolderName)) {
+                                                        importFolder = child;
+                                                        break;
+                                                    }
                                                 }
+                                                final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
+                                                SwingUtilities.invokeLater(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        explorer.selectNodeByPath(idPath);
+                                                        setVisible(false);
+                                                    }
+                                                });
                                             }
                                             
                                             @Override

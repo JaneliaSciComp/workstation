@@ -3,17 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.workstation.gui.framework.console.nb_action;
+package org.janelia.it.workstation.gui.browser.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.ImportDialog;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 @ActionID(
         category = "File",
@@ -35,7 +35,8 @@ public final class ImportAction implements ActionListener {
     }
     
     private void menuFileImport_actionPerformed() {
-        SessionMgr.getBrowser().getImportDialog().showDialog(null);
+        ImportDialog importDialog = new ImportDialog("Import Files");
+        importDialog.showDialog();
     }
 
 }

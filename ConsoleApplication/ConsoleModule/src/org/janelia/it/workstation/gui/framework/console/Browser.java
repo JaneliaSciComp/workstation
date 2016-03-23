@@ -24,7 +24,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
-import org.janelia.it.workstation.gui.dialogs.ImportDialog;
 import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
@@ -100,7 +99,6 @@ public class Browser implements Cloneable {
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
 
-    private ImportDialog importDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
     private ScreenEvaluationDialog screenEvaluationDialog;
@@ -218,7 +216,6 @@ public class Browser implements Cloneable {
             @Override
             protected void hadSuccess() {
                 generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
-                importDialog = new ImportDialog("Import Files");
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
                 screenEvaluationDialog = new ScreenEvaluationDialog();
                 maaSearchDialog = new MAASearchDialog();
@@ -409,10 +406,6 @@ public class Browser implements Cloneable {
 
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
-    }
-
-    public ImportDialog getImportDialog() {
-        return importDialog;
     }
 
     public ScreenEvaluationDialog getScreenEvaluationDialog() {
