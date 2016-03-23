@@ -467,7 +467,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         if (messageListener != null) {
             String msg = micronCoordsFormatter.formatForPresentation(mouseLocation);
             messageListener.message(msg);
-            log.info("Message to status {}.", msg);
+            log.trace("Message to status {}.", msg);
         }
     }
 

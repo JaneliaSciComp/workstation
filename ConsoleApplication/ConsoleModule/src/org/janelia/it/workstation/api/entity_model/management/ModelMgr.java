@@ -832,6 +832,14 @@ public final class ModelMgr {
     public Entity getEntityAndChildren(long entityId) throws Exception {
         return entityModel.getEntityAndChildren(entityId);
     }
+    
+    public List<byte[]> getB64DecodedEntityDataValues(Long entityId, String entityDataType) throws Exception {
+        return entityModel.getB64DecodedEntityDataValues(entityId, entityDataType);
+    }
+
+    public byte[] getB64DecodedEntityDataValue(Long entityId, Long entityDataId, String entityDataType) throws Exception {
+        return entityModel.getB64DecodedEntityDataValue(entityId, entityDataId, entityDataType);
+    }
 
     public Entity getEntityTree(long entityId) throws Exception {
         return entityModel.getEntityTree(entityId);
@@ -1219,53 +1227,10 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
     
-    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
-    }
-
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
         TmSample sample = FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
         notifyEntityChanged(sample.getId());
         return sample;
-    }
-
-    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
-            double x, double y, double z, String comment) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
-    }
-    
-    public void addLinkedGeometricAnnotations(Map<Integer, Integer> nodeParentLinkage, Map<Integer, TmGeoAnnotation> annotations) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().addLinkedGeometricAnnotations(nodeParentLinkage, annotations);
-    }
-
-    public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
-            TmNeuron neuron) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
-    }
-
-    public void rerootNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().rerootNeurite(neuron, newRoot);
-    }
-
-    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().splitNeurite(neuron, newRoot);
-    }
-
-    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().moveNeurite(annotation, newNeuron);
-    }
-
-    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
-            int index, double x, double y, double z, String comment) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
-    }
-
-    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getWorkspacesForBrainSample(brainSampleId, ownerKey);
-    }
-
-    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getNeuronsForWorkspace(workspaceId, ownerKey);
     }
 
     public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
@@ -1276,55 +1241,8 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().createOrUpdateWorkspacePreference(workspaceId, key, value);
     }
 
-    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().deleteNeuron(ownerKey, neuronId);
-    }
-
-    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().deleteWorkspace(ownerKey, workspaceId);
-    }
-
-    public void deleteGeometricAnnotation(Long geoId) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().deleteGeometricAnnotation(geoId);
-    }
-
     public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().loadWorkspace(workspaceId);
-    }
-
-    public TmNeuron loadNeuron(Long neuronId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().loadNeuron(neuronId);
-    }
-
-    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
-            List<List<Integer>> pointlist) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().addAnchoredPath(neuronID, annotationID1,
-                annotationID2, pointlist);
-    }
-
-    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
-            List<List<Integer>> pointList) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().updateAnchoredPath(anchoredPath, annotationID1,
-                annotationID2, pointList);
-    }
-
-    public void deleteAnchoredPath(Long pathID) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
-    }
-
-    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
-        Long parentID, int parentType, int formatVersion, String data) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().addStructuredTextAnnotation(neuronID,
-            parentID, parentType, formatVersion, data);
-    }
-
-    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation,
-        String data) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().updateStructuredTextAnnotation(textAnnotation, data);
-    }
-
-    public void deleteStructuredTextAnnotation(Long annID) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().deleteStructuredTextAnnotation(annID);
     }
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {

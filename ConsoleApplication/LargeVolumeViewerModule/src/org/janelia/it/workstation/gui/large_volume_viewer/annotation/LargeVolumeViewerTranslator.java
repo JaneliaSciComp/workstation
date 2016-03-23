@@ -322,7 +322,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
         // find some annotation in selected neuron and select it, too
         // let's select the first endpoint we find:
-        TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
+        TmGeoAnnotation firstRoot = neuron.getFirstRoot();
         for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
             if (link.getChildIds().size() == 0) {
                 fireNextParentEvent(link.getId());
@@ -432,8 +432,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
         // prepare the data:
         TmAnchoredPathEndpoints endpoints = path.getEndpoints();
-        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
-                endpoints.getAnnotationID2());
+        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getFirstAnnotationID(),
+                endpoints.getSecondAnnotationID());
 
         final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
         final CoordinateAxis axis = CoordinateAxis.Z;
