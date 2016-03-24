@@ -12,7 +12,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -259,7 +258,7 @@ public class MoveToFolderAction extends NodePresenterAction {
             DomainObjectNode selectedNode = (DomainObjectNode)node;
             TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
             DomainObject domainObject = selectedNode.getDomainObject();
-            if (DomainUtils.hasChild(folder, domainObject)) {
+            if (folder.hasChild(domainObject)) {
                 log.debug("Folder {} already has child {}",folder.getId(),domainObject.getId());
             }
             else {

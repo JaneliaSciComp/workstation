@@ -80,7 +80,7 @@ public class StateMgr {
             List<Ontology> ontologies = DomainMgr.getDomainMgr().getModel().getDomainObjects(Ontology.class, DomainConstants.ERROR_ONTOLOGY_NAME);
             for (Ontology ontology : ontologies) {
                 if (DomainConstants.GENERAL_USER_GROUP_KEY.equals(ontology.getOwnerKey())) {
-                    OntologyTerm term = DomainUtils.findTerm(ontology, DomainConstants.ERROR_ONTOLOGY_CATEGORY);
+                    OntologyTerm term = ontology.findTerm(DomainConstants.ERROR_ONTOLOGY_CATEGORY);
                     if (term instanceof Category) {
                         errorOntology = term;
                         break;

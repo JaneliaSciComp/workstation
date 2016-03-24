@@ -368,13 +368,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 if (domainObject.getId().equals(sample.getId())) {
                     log.info("Sample invalidated, reloading...");
                     Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                    PipelineResult result = updatedSample.findResultById(separation.getId());
-                    if (result==null) {
+                    List<NeuronSeparation> separations = updatedSample.getResultsById(NeuronSeparation.class, separation.getId());
+                    if (separations.isEmpty()) {
                         log.info("Sample no longer has result with id: "+separation.getId());
                         showNothing();
                         return;
                     }
-                    loadSampleResult(result, false, new Callable<Void>() {
+                    NeuronSeparation separation = separations.get(separations.size()-1);
+                    loadSampleResult(separation.getParentResult(), false, new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
                             // TODO: reselect the selected neurons
