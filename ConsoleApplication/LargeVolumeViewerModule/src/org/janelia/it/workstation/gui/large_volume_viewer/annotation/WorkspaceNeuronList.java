@@ -238,6 +238,7 @@ public class WorkspaceNeuronList extends JPanel {
             int neuronTableRow = neuronTable.convertRowIndexToView(neuronModelRow);
             if (neuronTableRow >= 0) {
                 neuronTable.setRowSelectionInterval(neuronTableRow, neuronTableRow);
+                neuronTable.scrollRectToVisible(new Rectangle(neuronTable.getCellRect(neuronTableRow, 0, true)));
             } else {
                 // the row is in the model but not the table; clear the selection,
                 //  which unfortunately won't return if the filter is cleared
