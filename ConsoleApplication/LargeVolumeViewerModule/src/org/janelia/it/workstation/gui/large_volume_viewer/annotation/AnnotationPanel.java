@@ -214,13 +214,13 @@ public class AnnotationPanel extends JPanel
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
         ImportSWCAction importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
-        importSWCAction.putValue(Action.NAME, "Import SWC Data as Single Neuron...");
+        importSWCAction.putValue(Action.NAME, "Import SWC file as one neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
         ImportSWCAction importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
-        importSWCActionMulti.putValue(Action.NAME, "Import SWC Data as Neuron-per-Root...");
+        importSWCActionMulti.putValue(Action.NAME, "Import SWC file as separate neurons...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
