@@ -5,21 +5,65 @@
 
 <div ng-app="myApp" ng-controller="myCtrl">
 
-    <p>Today's welcome message is:</p>
+    <h1>Workspaces</h1>
 
-    <h1>{{myWelcome}}</h1>
+    <table>
+        <tr ng-repeat="x in workspaces | orderBy:'createTimestamp'">
+            <td>{{x.ownerName}}</td>
+            <td>{{x.name}}</td>
+            <td>{{x.createTimeString}}</td>
+            <td><button ng-click="analyzeWorkspace(x)">Analyze</button></td>
+            <td>{{x.dataType}}</td>
+            <td>{{x.neuronCount}}</td>
+            <td ng-if="isOwnedByDeveloper(x)"><button ng-click="addArtificialNeurons(x)">Add</button></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>Number<input type="text" ng-model="addNumber"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>Points<input type="text" ng-model="addPoints"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>BranchProb<input type="text" ng-model="addBranchProb"></form></td>
+        </tr>
+    </table>
 
 </div>
 
-<p>The $http service requests a page on the server, and the response is set as the value of the "myWelcome" variable.</p>
 
 <script>
     var app = angular.module('myApp', []);
     app.controller('myCtrl', function($scope, $http) {
-        $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight")
+
+        $scope.addNumber=1;
+        $scope.addPoints=10;
+        $scope.addBranchProb=0.0;
+
+        $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaces")
             .then(function(response) {
-                $scope.myWelcome = response.data.message;
+                $scope.workspaces = response.data;
             });
+
+        $scope.analyzeWorkspace = function(x) {
+            $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaceInfo?id="+ x.idString)
+                .then(function(response) {
+                    x.dataType=response.data.dataType;
+                    x.neuronCount=response.data.neuronCount;
+                })
+        }
+
+        $scope.addArtificialNeurons = function(x) {
+            $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaceAddArtificialNeurons?id="+
+                x.idString+"&number="+$scope.addNumber+"&points="+$scope.addPoints+"&brprob="+$scope.addBranchProb)
+                .then(function(response) {
+                    x.neuronCount=response.data.neuronCount;
+                })
+        }
+
+        $scope.isOwnedByDeveloper = function(x) {
+            if (x.ownerName == 'user:murphys' ||
+                x.ownerName == 'user:fosterl' ||
+                x.ownerName == 'user:olbrisd' ||
+                x.ownerName == 'user:brunsc') {
+                return true;
+            } else {
+                return false;
+            }
+        }
     });
 </script>
 
