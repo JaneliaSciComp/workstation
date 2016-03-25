@@ -21,7 +21,7 @@ import org.janelia.it.workstation.gui.util.WrapLayout;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TagCloudPanel<T> extends JPanel {
-
+    
     private static final int DEFAULT_MAX_TAG_LENGTH = 200;
     private static final int DEFAULT_MAX_NUM_TAGS = 30;
 
@@ -66,8 +66,12 @@ public class TagCloudPanel<T> extends JPanel {
         return BorderFactory.createCompoundBorder(getLineBorder(tag), PADDING_BORDER);
     }
 
+    protected String getTagTitle(T tag) {
+        return tag.toString();
+    }
+    
     protected JLabel createTagLabel(T tag) {
-        JLabel tagLabel = new JLabel(tag.toString());
+        JLabel tagLabel = new JLabel(getTagTitle(tag));
         tagLabel.setBorder(getBorder(tag));
         tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
         tagLabel.setOpaque(true);
@@ -97,7 +101,7 @@ public class TagCloudPanel<T> extends JPanel {
         int c = 0;
         for (int i = 0; i<displayedTags.size(); i++) {
             T tag = displayedTags.get(i);
-            c += tag.toString().length()+5; // every tag adds a constant to account for overhead (padding, border, etc)
+            c += getTagTitle(tag).length()+5; // every tag adds a constant to account for overhead (padding, border, etc)
             if (c>DEFAULT_MAX_TAG_LENGTH) {
                 maxNumTags = i-1;
                 break;

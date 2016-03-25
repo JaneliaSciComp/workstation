@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
@@ -34,7 +35,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -49,16 +49,16 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     protected final JPanel mainPanel;
     protected final JPanel buttonPanel;
     protected final JLabel loadingLabel;
+    protected final JPanel annotationPanel;
     protected boolean viewable = false;
     protected AnnotationView annotationView;
-    protected boolean annotationsLoaded = false;
     protected DragSource source;
     protected double aspectRatio;
     protected final ImagesPanel<T,S> imagesPanel;
     protected final ImageModel<T,S> imageModel;
     protected final SelectionModel<T,S> selectionModel;
     protected final T imageObject;
-    protected SimpleWorker annotationLoadingWorker;
+    protected List<Annotation> annotations;
     protected final JComponent innerComponent;
     
     /**
@@ -144,6 +144,16 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         c.weighty = 0;
         buttonPanel.add(mainPanel, c);
 
+        annotationPanel = new JPanel(new BorderLayout());
+        
+        c.gridx = 0;
+        c.gridy = 3;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        buttonPanel.add(annotationPanel, c);
+        
+        
         // Remove all default mouse listeners except drag gesture recognizer
         for (MouseListener mouseListener : getMouseListeners()) {
             if (!(mouseListener instanceof MouseDragGestureRecognizer)) {
@@ -174,7 +184,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             tsb.append(imageObject.toString());
         }
         setTitle(tsb.toString(), 100);
-        showAnnotations(imageModel.getAnnotations(imageObject));
+        setAnnotations(imageModel.getAnnotations(imageObject));
     }
 
     public void setTitle(String title, int maxWidth) {
@@ -210,46 +220,30 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     }
 
     public synchronized void setTagsVisible(boolean visible) {
-        if (annotationView == null) {
-            return;
-        }
         ((JPanel) annotationView).setVisible(visible);
-    }
-
-    public final synchronized void setAnnotationView(AnnotationView annotationView) {
-        this.annotationView = annotationView;
-        // Fix event dispatching so that user can click on the tags and still select the button
-        ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
-        if (annotationsLoaded) {
-            showAnnotations(annotationView.getAnnotations());
-        }
     }
 
     public synchronized AnnotationView getAnnotationView() {
         return annotationView;
     }
 
-    private void showAnnotations(List<Annotation> annotations) {
+    public final synchronized void setAnnotationView(AnnotationView annotationView) {
+        if (annotationView==null) throw new IllegalArgumentException("Annotation view cannot be null");
+        this.annotationView = annotationView;
+        // Fix event dispatching so that user can click on the tags and still select the button
+        ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
+        showAnnotations();
+    }
 
-        if (annotationView!=null) {
-            annotationView.setAnnotations(annotations);
-        }
-        
-        annotationsLoaded = true;
-
-        buttonPanel.remove(loadingLabel);
-        
-        if (annotationView != null) {
-            buttonPanel.remove((JPanel) annotationView);
-            GridBagConstraints c = new GridBagConstraints();
-            c.gridx = 0;
-            c.gridy = 3;
-            c.fill = GridBagConstraints.BOTH;
-            c.anchor = GridBagConstraints.PAGE_START;
-            c.weighty = 1;
-            buttonPanel.add((JPanel) annotationView, c);
-        }
-
+    private void setAnnotations(List<Annotation> annotations) {
+        this.annotations = annotations;
+        showAnnotations();
+    }
+    
+    private void showAnnotations() {
+        annotationView.setAnnotations(annotations);
+        annotationPanel.removeAll();
+        annotationPanel.add((JPanel)annotationView, BorderLayout.CENTER);
         buttonPanel.revalidate();
     }
 
