@@ -16,9 +16,10 @@
             <td>{{x.dataType}}</td>
             <td>{{x.neuronCount}}</td>
             <td ng-if="isOwnedByDeveloper(x)"><button ng-click="addArtificialNeurons(x)">Add</button></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>Number<input type="text" ng-model="addNumber"></form></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>Points<input type="text" ng-model="addPoints"></form></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>BranchProb<input type="text" ng-model="addBranchProb"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>Set Name<input type="text" ng-model="x.addName"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>Number<input type="text" ng-model="x.addNumber"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>Points<input type="text" ng-model="x.addPoints"></form></td>
+            <td ng-if="isOwnedByDeveloper(x)"><form>BranchProb<input type="text" value="0.0" ng-model="x.addBranchProb"></form></td>
         </tr>
     </table>
 
@@ -29,17 +30,13 @@
     var app = angular.module('myApp', []);
     app.controller('myCtrl', function($scope, $http) {
 
-        $scope.addNumber=1;
-        $scope.addPoints=10;
-        $scope.addBranchProb=0.0;
-
-        $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaces")
+        $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaces")
             .then(function(response) {
                 $scope.workspaces = response.data;
             });
 
         $scope.analyzeWorkspace = function(x) {
-            $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaceInfo?id="+ x.idString)
+            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaceInfo?id="+ x.idString)
                 .then(function(response) {
                     x.dataType=response.data.dataType;
                     x.neuronCount=response.data.neuronCount;
@@ -47,8 +44,8 @@
         }
 
         $scope.addArtificialNeurons = function(x) {
-            $http.get("http://h01u09.int.janelia.org:8180/rest-v1/mouselight/workspaceAddArtificialNeurons?id="+
-                x.idString+"&number="+$scope.addNumber+"&points="+$scope.addPoints+"&brprob="+$scope.addBranchProb)
+            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaceAddArtificialNeurons?id="+
+                x.idString+"&name="+x.addName+"&number="+x.addNumber+"&points="+x.addPoints+"&brprob="+x.addBranchProb)
                 .then(function(response) {
                     x.neuronCount=response.data.neuronCount;
                 })
