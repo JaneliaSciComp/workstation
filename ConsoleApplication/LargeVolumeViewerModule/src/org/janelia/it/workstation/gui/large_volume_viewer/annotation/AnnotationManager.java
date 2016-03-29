@@ -454,15 +454,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         } else {
 
-            // if more than a handful of nodes, ask the user if they are sure (we have
+            // if more than one point, ask the user if they are sure (we have
             //  no undo right now!)
             final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             activityLog.logDeleteSubTree(getSampleID(), getWorkspaceID(), annotation);
             int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
-            if (nAnnotations >= 5) {
+            if (nAnnotations > 1) {
                 int ans = JOptionPane.showConfirmDialog(
                         ComponentUtil.getLVVMainWindow(),
-                        String.format("Selected subtree has %d children; delete?", nAnnotations),
+                        String.format("Selected subtree has %d points; delete?", nAnnotations),
                         "Delete subtree?",
                         JOptionPane.OK_CANCEL_OPTION);
                 if (ans != JOptionPane.OK_OPTION) {
