@@ -71,11 +71,15 @@ public class DataSetListDialog extends ModalDialog {
                 if (dataSet != null) {
                     if (DomainModelViewConstants.DATASET_NAME.equals(column.getName())) {
                         return dataSet.getName();
-                    } else if ((DomainModelViewConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
-                        return dataSet.getPipelineProcesses()==null?null:dataSet.getPipelineProcesses().get(0);
-                    } else if ((DomainModelViewConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
+                    }
+                    else if ((DomainModelViewConstants.DATASET_PIPELINE_PROCESS).equals(column.getName())) {
+                        List<String> processes = dataSet.getPipelineProcesses();
+                        return processes == null || processes.isEmpty() ? null : dataSet.getPipelineProcesses().get(0);
+                    }
+                    else if ((DomainModelViewConstants.DATASET_SAMPLE_NAME).equals(column.getName())) {
                         return dataSet.getSampleNamePattern();
-                    } else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
+                    }
+                    else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
                         return dataSet.isSageSync();
                     }
                 }
@@ -195,7 +199,7 @@ public class DataSetListDialog extends ModalDialog {
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
-
+    
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
         addButton.addActionListener(new ActionListener() {
