@@ -126,6 +126,7 @@ public class DownloadItem {
         log.info("Target extension: {}",targetExtension);
     }
 
+    // TODO: rewrite this to use StringUtils.replaceVariablePattern 
     private String constructFilePath(String filePattern) {
         
         Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
