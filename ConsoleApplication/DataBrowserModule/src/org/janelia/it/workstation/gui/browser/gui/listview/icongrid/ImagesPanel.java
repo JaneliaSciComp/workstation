@@ -499,23 +499,15 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         }
     }
     
-    public void setSelectionByUniqueId(S selectedId, boolean selection, boolean clearAll) {
-        if (clearAll) {
-            for (AnnotatedImageButton<T,S> button : buttons.values()) {
-                T imageObject = button.getUserObject();
-                S imageId = imageModel.getImageUniqueId(imageObject);
-                if (imageId.equals(selectedId)) {
-                    setSelection(button, true);
-                }
-                else {
-                    setSelection(button, false);
-                }
-            }
-        }
-        else {
-            AnnotatedImageButton<T,S> button = buttons.get(selectedId);
-            if (button != null) {
+    public void setSelectionByUniqueIds(List<S> selectedIds, boolean selection, boolean clearAll) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
+            T imageObject = button.getUserObject();
+            S imageId = imageModel.getImageUniqueId(imageObject);
+            if (selectedIds.contains(imageId)) {
                 setSelection(button, selection);
+            }
+            else if (clearAll) {
+                setSelection(button, !selection);
             }
         }
     }

@@ -1,20 +1,21 @@
 package org.janelia.it.workstation.gui.browser.components;
 
-import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 
-import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
-import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerUtils;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Data Inspector, which shows details about a single
@@ -104,11 +105,18 @@ public final class DomainInspectorTopComponent extends TopComponent {
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         
+        // We only care about single selections
+        DomainObject domainObject = event.getObjectIfSingle();
+        if (domainObject==null) {
+            return;
+        }
+        
         if (!event.isSelect()) {
             log.debug("Event is not selection: {}",event);
             return;
         }
-        
-        detailsPanel.loadDomainObject(event.getDomainObject());
+
+        log.info("domainObjectSelected({})",Reference.createFor(domainObject));
+        detailsPanel.loadDomainObject(domainObject);
     }
 }

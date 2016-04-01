@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import java.util.List;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -29,15 +31,15 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
         if (event.isSelect()) {
-            select(event.getDomainObject(), event.isClearAll(), event.isUserDriven());
+            select(event.getDomainObjects(), event.isClearAll(), event.isUserDriven());
         }
         else {
-            deselect(event.getDomainObject(), event.isUserDriven());
+            deselect(event.getDomainObjects(), event.isUserDriven());
         }
     }
     
     @Override
-    protected void selectionChanged(DomainObject domainObject, Reference id, boolean select, boolean clearAll, boolean isUserDriven) {
+    protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
         // Since this is a meta-model, the relevant events were already on the bus, so this method 
         // does not need to do any additional work.
     }

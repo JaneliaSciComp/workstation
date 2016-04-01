@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import java.util.List;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -19,19 +21,23 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
     private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
     
     @Override
-    protected void selectionChanged(DomainObjectNode domainObjectNode, Reference id, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.debug((select?"select":"deselect")+" {}, clearAll={}",id,clearAll);
-        if (domainObjectNode instanceof ObjectSetNode) {
-            ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode, isUserDriven));
+    protected void selectionChanged(List<DomainObjectNode> domainObjectNodes, boolean select, boolean clearAll, boolean isUserDriven) {
+        log.debug((select?"select":"deselect")+" {}, clearAll={}",domainObjectNodes,clearAll);
+        if (domainObjectNodes.size()==1) {
+            DomainObjectNode domainObjectNode = domainObjectNodes.get(0);
+            if (domainObjectNode instanceof ObjectSetNode) {
+                ObjectSetNode objectSetNode = (ObjectSetNode)domainObjectNode;
+                Events.getInstance().postOnEventBus(new ObjectSetSelectionEvent(getSource(), select, objectSetNode, isUserDriven));
+            }
+            else if (domainObjectNode instanceof FilterNode) {
+                FilterNode filterNode = (FilterNode)domainObjectNode;
+                Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode, isUserDriven));
+            }
+            else {
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll, isUserDriven));
+            }
         }
-        else if (domainObjectNode instanceof FilterNode) {
-            FilterNode filterNode = (FilterNode)domainObjectNode;
-            Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode, isUserDriven));
-        }
-        else {
-            Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll, isUserDriven));
-        }
+        
     }
     
     @Override

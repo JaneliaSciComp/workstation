@@ -176,25 +176,32 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
 
         Set<Reference> selectedIds = new HashSet<>();
-        
-        boolean currClearAll = clearAll;
-        for(DomainObject domainObject : domainObjects) {
-            Reference id = getImageModel().getImageUniqueId(domainObject);
-            if (select && getObjectMap().get(id)!=null) {
-                selectObject(domainObject, currClearAll);
-                selectedIds.add(id);
-            }
-            currClearAll = false;
-        }
 
-        if (clearAll) {
-            // Clear out everything that was not selected above
-            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-                if (!selectedIds.contains(selectedId)) {
-                    deselectObject(imageModel.getImageByUniqueId(selectedId));
-                }
-            }
+        if (select) {
+            selectObjects(domainObjects, clearAll);
         }
+        else {
+            deselectObjects(domainObjects);
+        }
+        
+//        boolean currClearAll = clearAll;
+//        for(DomainObject domainObject : domainObjects) {
+//            Reference id = getImageModel().getImageUniqueId(domainObject);
+//            if (select && getObjectMap().get(id)!=null) {
+//                selectObject(domainObject, currClearAll);
+//                selectedIds.add(id);
+//            }
+//            currClearAll = false;
+//        }
+//
+//        if (clearAll) {
+//            // Clear out everything that was not selected above
+//            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+//                if (!selectedIds.contains(selectedId)) {
+//                    deselectObject(imageModel.getImageByUniqueId(selectedId));
+//                }
+//            }
+//        }
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override

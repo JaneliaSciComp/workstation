@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
+import java.util.Arrays;
+
 import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 
@@ -10,7 +12,7 @@ import org.janelia.it.workstation.gui.browser.nodes.ObjectSetNode;
 public class ObjectSetSelectionEvent extends DomainObjectSelectionEvent {
 
     public ObjectSetSelectionEvent(Object source, boolean select, ObjectSet objectSet, boolean isUserDriven) {
-        super(source, objectSet, select, true, isUserDriven);
+        super(source, Arrays.asList(objectSet), select, true, isUserDriven);
     }
     
     public ObjectSetSelectionEvent(Object source, boolean select, ObjectSetNode objectSetNode, boolean isUserDriven) {
@@ -22,6 +24,6 @@ public class ObjectSetSelectionEvent extends DomainObjectSelectionEvent {
     }
     
     public ObjectSet getObjectSet() {
-        return (ObjectSet)getDomainObject();
+        return (ObjectSet)getObjectIfSingle();
     }
 }
