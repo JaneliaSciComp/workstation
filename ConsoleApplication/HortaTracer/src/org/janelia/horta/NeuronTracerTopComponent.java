@@ -119,6 +119,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
@@ -129,10 +130,6 @@ import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -207,6 +204,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private StaticVolumeBrickSource volumeSource;
     private CenterCrossHairActor crossHairActor;
     private ScaleBar scaleBar = new ScaleBar();
+    private ActivityLogHelper activityLogger = ActivityLogHelper.getInstance();
         
     private final NeuronMPRenderer neuronMPRenderer;
     
@@ -383,7 +381,8 @@ public final class NeuronTracerTopComponent extends TopComponent
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
-            FrameworkImplProvider.getSessionSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta"), new ActionString(sampleLocation.getSampleUrl().toString()));
+            activityLogger.logHortaLaunch(sampleLocation);
+
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(

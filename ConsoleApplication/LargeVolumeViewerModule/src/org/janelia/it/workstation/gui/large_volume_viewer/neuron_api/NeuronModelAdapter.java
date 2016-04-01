@@ -52,6 +52,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.openide.util.Exceptions;
@@ -136,6 +137,7 @@ public class NeuronModelAdapter implements NeuronModel
             if (ann != null) {
                 NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
                 result = vertex;
+                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
             }
         } catch (Exception ex) {
         }
@@ -166,8 +168,9 @@ public class NeuronModelAdapter implements NeuronModel
             if (! (doomedVertex instanceof NeuronVertexAdapter) )
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
-            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();            
             annotationModel.deleteLink(annotation);
+            ActivityLogHelper.getInstance().logExternallyDeleteLink(workspace.getSampleID(), workspace.getId(), annotation);
             return true;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
