@@ -48,9 +48,6 @@ public final class IconPanelTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_IconPanelTopComponent());
         setToolTipText(Bundle.HINT_IconPanelTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
     }
 
     /**
