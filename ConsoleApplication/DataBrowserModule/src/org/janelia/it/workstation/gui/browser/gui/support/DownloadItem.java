@@ -30,8 +30,6 @@ public class DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadItem.class);
     
-    private static final File WS_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
     public static final String ATTR_LABEL_SAMPLE_NAME = "Sample Name";
@@ -106,6 +104,8 @@ public class DownloadItem {
             this.targetExtension = sourceExtension;
         }
         
+        File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+        
         // Build the path
         File itemDir = null;
         if (itemPath!=null && !flattenStructure) {
@@ -114,10 +114,10 @@ public class DownloadItem {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = new File(WS_IMAGES_DIR, pathBuilder.toString());
+            itemDir = new File(workstationImagesDir, pathBuilder.toString());
         }
         else {
-            itemDir = WS_IMAGES_DIR;
+            itemDir = workstationImagesDir;
         }
 
         targetFile = new File(itemDir, constructFilePath(filenamePattern));
