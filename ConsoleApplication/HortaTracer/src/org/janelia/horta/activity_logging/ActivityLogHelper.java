@@ -17,7 +17,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
  * @author fosterl
  */
 public class ActivityLogHelper {
-    public static final ToolString HORTA_TOOL_STRING = new ToolString("HORTA");
+    public static final ToolString HORTA_TOOL_STRING = new ToolString("Horta");
     private static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
     
     private static final ActivityLogHelper instance = new ActivityLogHelper();
