@@ -110,7 +110,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
-        configPanel = new ConfigPanel(false);
+        configPanel = new ConfigPanel(true);
         configPanel.addTitleComponent(openInNAButton, true, true);
         configPanel.addConfigComponent(resultButton);
         // TODO: make this visible once it's implemented  

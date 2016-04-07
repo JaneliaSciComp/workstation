@@ -550,8 +550,13 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 
         if (attrFacetValues!=null) {
             for (final FacetValue facetValue : attrFacetValues) {
+                boolean selected = selectedValues.contains(facetValue.getValue());
+                if (facetValue.getCount()==0 && !selected) {
+                    // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
+                    continue;
+                }
                 String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
-                final JMenuItem menuItem = new JCheckBoxMenuItem(label, false);
+                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (menuItem.isSelected()) {
@@ -564,7 +569,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                         refreshSearchResults(null, null);
                     }
                 });
-                menuItem.setSelected(selectedValues.contains(facetValue.getValue()));
                 popupMenu.add(menuItem);
             }
         }
