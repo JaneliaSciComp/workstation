@@ -6,10 +6,6 @@
 
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import javax.swing.JCheckBoxMenuItem;
-
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -38,20 +34,20 @@ public class ViewActionDelegate {
         changeModes(sourceMode, targetMode);
     }
     
-    /**
-     * Not called until/unless supported.  Preserving this code for future
-     * perusal.
-     */
-    public void linkLeftRightViewers() {
-        final JCheckBoxMenuItem linkViewersMenuItem = 
-                new JCheckBoxMenuItem("Link Left/Right Viewers", true);
-        Browser browser = SessionMgr.getBrowser();
-        browser.setIsViewersLinked(linkViewersMenuItem.isSelected());
-    }
+//    /**
+//     * Not called until/unless supported.  Preserving this code for future
+//     * perusal.
+//     */
+//    public void linkLeftRightViewers() {
+//        final JCheckBoxMenuItem linkViewersMenuItem = 
+//                new JCheckBoxMenuItem("Link Left/Right Viewers", true);
+//        Browser browser = SessionMgr.getBrowser();
+//        browser.setIsViewersLinked(linkViewersMenuItem.isSelected());
+//    }
     
-    public void resetWindow() {
-        SessionMgr.getBrowser().resetBrowserPosition();
-    }
+//    public void resetWindow() {
+//        SessionMgr.getBrowser().resetBrowserPosition();
+//    }
 
     private void changeModes(String sourceMode, String targetMode) {
         Mode oldMode = WindowManager.getDefault().findMode( sourceMode );
