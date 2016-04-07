@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -63,9 +64,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
     
-    private final JPanel separationPanel;
+    private final JPanel topPanel;
     private final JLabel titleLabel;
-    private final JLabel historyLabel;
     private final DropDownButton resultButton;
     private final JToggleButton editModeButton;
     private final JButton openInNAButton;
@@ -83,17 +83,17 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     public NeuronSeparationEditorPanel() {
         
+    	setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
+        setFocusable(true);
         
-        separationPanel = new JPanel();
-        separationPanel.setLayout(new MigLayout(
+        topPanel = new JPanel();
+        topPanel.setLayout(new MigLayout(
                 "ins 10 5 5 5, fillx", 
-                "[grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 100, growprio 100]"
+                "[grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 100, growprio 100]"
         ));
-        add(separationPanel);
         
         titleLabel = new JLabel("");
-        historyLabel = new JLabel("History:");
 
         resultButton = new DropDownButton("Choose version...");
         resultButton.setFocusable(false);
@@ -120,13 +120,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
-        separationPanel.add(titleLabel, "span, wrap");
-        separationPanel.add(historyLabel);
-        separationPanel.add(resultButton, "gapx 0 5");
+        topPanel.add(titleLabel, "span, wrap");
+        topPanel.add(resultButton, "gapx 0 5");
         // TODO: make this visible once it's implemented  
         // separationPanel.add(editModeButton, "width 40:40:40");
-        separationPanel.add(openInNAButton, "width 40:40:40");
-        separationPanel.add(Box.createHorizontalGlue());
+        topPanel.add(openInNAButton, "width 40:40:40");
+        topPanel.add(Box.createHorizontalGlue());
         
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
@@ -196,8 +195,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         Sample sample = parentResult.getParentRun().getParent().getParent();
         selectionModel.setParentObject(sample);
         
-        JPopupMenu popupMenu = populateResultPopupMenu(resultButton.getPopupMenu(), result);
-        historyLabel.setText("History ("+popupMenu.getComponentCount()+"):");
+        populateResultPopupMenu(resultButton.getPopupMenu(), result);
         
         if (separation==null) {
             showNothing();
@@ -307,7 +305,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     public void showResults(boolean isUserDriven) {
-        add(separationPanel, BorderLayout.NORTH);
+        add(topPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
