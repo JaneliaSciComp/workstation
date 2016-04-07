@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
+import java.awt.Insets;
+
 import de.javasoft.swing.JYPopupMenu;
 import de.javasoft.swing.SimpleDropDownButton;
 
@@ -9,7 +11,9 @@ import de.javasoft.swing.SimpleDropDownButton;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DropDownButton extends SimpleDropDownButton {
-
+	
+	private static final Insets BUTTON_INSETS = new Insets(0,2,0,2);
+	
     private JYPopupMenu popupMenu;
 
     public DropDownButton() {
@@ -18,6 +22,8 @@ public class DropDownButton extends SimpleDropDownButton {
     
     public DropDownButton(String label) {
         super(label);
+        setFocusable(false);
+        setMargin(BUTTON_INSETS);
         popupMenu = new JYPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
         popupMenu.setVisibleElements(20);

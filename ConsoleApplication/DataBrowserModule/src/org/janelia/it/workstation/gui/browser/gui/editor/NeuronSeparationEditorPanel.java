@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.Box;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -52,8 +52,6 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
-import net.miginfocom.swing.MigLayout;
-
 /**
  * An editor which can display the neuron separations for a given sample result. 
  * 
@@ -63,40 +61,32 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
     
-    private final JPanel separationPanel;
-    private final JLabel titleLabel;
-    private final JLabel historyLabel;
+    // Utilities
+    private final Debouncer debouncer = new Debouncer();
+    
+    // UI Elements
+    private final ConfigPanel configPanel;
     private final DropDownButton resultButton;
     private final JToggleButton editModeButton;
     private final JButton openInNAButton;
     private final PaginatedResultsPanel resultsPanel;
     
+    // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-
-    private SearchResults searchResults;
-    
     private NeuronSeparation separation;
+    
+    // Results
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
-    
-    private final Debouncer debouncer = new Debouncer();
-    
+    private SearchResults searchResults;
+   
     public NeuronSeparationEditorPanel() {
         
+    	setBorder(BorderFactory.createEmptyBorder());
         setLayout(new BorderLayout());
+        setFocusable(true);
         
-        separationPanel = new JPanel();
-        separationPanel.setLayout(new MigLayout(
-                "ins 10 5 5 5, fillx", 
-                "[grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 0, growprio 0][grow 100, growprio 100]"
-        ));
-        add(separationPanel);
-        
-        titleLabel = new JLabel("");
-        historyLabel = new JLabel("History:");
-
-        resultButton = new DropDownButton("Choose version...");
-        resultButton.setFocusable(false);
+        resultButton = new DropDownButton();
         
         editModeButton = new JToggleButton();
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
@@ -120,13 +110,11 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
-        separationPanel.add(titleLabel, "span, wrap");
-        separationPanel.add(historyLabel);
-        separationPanel.add(resultButton, "gapx 0 5");
+        configPanel = new ConfigPanel(true);
+        configPanel.addTitleComponent(openInNAButton, true, true);
+        configPanel.addConfigComponent(resultButton);
         // TODO: make this visible once it's implemented  
-        // separationPanel.add(editModeButton, "width 40:40:40");
-        separationPanel.add(openInNAButton, "width 40:40:40");
-        separationPanel.add(Box.createHorizontalGlue());
+        //topPanel.addConfigComponent(editModeButton);
         
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
@@ -196,16 +184,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         Sample sample = parentResult.getParentRun().getParent().getParent();
         selectionModel.setParentObject(sample);
         
-        JPopupMenu popupMenu = populateResultPopupMenu(resultButton.getPopupMenu(), result);
-        historyLabel.setText("History ("+popupMenu.getComponentCount()+"):");
+        populateResultPopupMenu(resultButton.getPopupMenu(), result);
         
         if (separation==null) {
             showNothing();
             debouncer.success();
         }
         else {
-            String title = sample.getName() + " - " + DomainModelViewUtils.getLabel(result);
-            titleLabel.setText(title);
+            String title = sample.getName();// + " - " + DomainModelViewUtils.getLabel(result);
+            configPanel.setTitle(title);
             setResult(separation, isUserDriven, success);
         }
         
@@ -307,7 +294,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
     
     public void showResults(boolean isUserDriven) {
-        add(separationPanel, BorderLayout.NORTH);
+        add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
         this.searchResults = SearchResults.paginate(domainObjects, annotations);

@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
 import java.awt.Point;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
@@ -29,19 +27,16 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
@@ -62,6 +57,7 @@ import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -79,8 +75,6 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.WrapLayout;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -107,31 +101,22 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     // UI Settings
     public static final String DEFAULT_FILTER_NAME = "Unsaved Filter";
     public static final Class<?> DEFAULT_SEARCH_CLASS = Sample.class;
-    private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
     private static final int MAX_VALUES_STRING_LENGTH = 20;
-    private static final Font FILTER_NAME_FONT = new Font("Sans Serif", Font.BOLD, 15);
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     
     // UI Elements
-    private final JPanel topPanel;
-    private final JButton showCriteriaButton;
-    private final JButton hideCriteriaButton;
-    private final JPanel filterReadonlyPanel;
-    private final JPanel filterPanel;
-    private final JLabel filterNameLabel;
-    private final JLabel smallFilterNameLabel;
+    private final ConfigPanel configPanel;
     private final JButton saveButton;
     private final JButton saveAsButton;
-    private final JPanel criteriaPanel;
     private final PaginatedResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
     private final JComboBox<String> inputField;    
     
     // State
-    private boolean criteriaPanelExpanded = true;
     private Filter filter;    
     private boolean dirty = false;
     private SearchConfiguration searchConfig;
@@ -141,32 +126,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     public FilterEditorPanel() {
-
-        showCriteriaButton = new JButton(Icons.getIcon("chevron-expand-icon.png"));
-        showCriteriaButton.setBorderPainted(false);
-        showCriteriaButton.setPreferredSize(new Dimension(16, 16));
-        showCriteriaButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        setCriteriaPanelState(!criteriaPanelExpanded);
-                    }
-                });
-
-        hideCriteriaButton = new JButton(Icons.getIcon("chevron-collapse-icon.png"));
-        hideCriteriaButton.setBorderPainted(false);
-        hideCriteriaButton.setPreferredSize(new Dimension(16, 16));
-        hideCriteriaButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        setCriteriaPanelState(!criteriaPanelExpanded);
-                    }
-                });
-        
-        this.filterNameLabel = new JLabel("");
-        filterNameLabel.setFont(FILTER_NAME_FONT);
-        
-        this.smallFilterNameLabel = new JLabel("");
-        smallFilterNameLabel.setFont(FILTER_NAME_FONT);
         
         this.saveButton = new JButton("Save");
         saveButton.addActionListener(new ActionListener() {
@@ -250,9 +209,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         });
         
-        this.criteriaPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
-        criteriaPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 8, 2));
-        
         this.typeCriteriaButton = new DropDownButton("Type: Sample");
         
         ButtonGroup typeGroup = new ButtonGroup();
@@ -275,6 +231,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         this.addCriteriaButton = new DropDownButton("Add Criteria...");
         
         this.inputField = new JComboBox<>();
+        inputField.setMinimumSize(new Dimension(100, Integer.MIN_VALUE));
         inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         inputField.setEditable(true);
         inputField.setToolTipText("Enter search terms...");
@@ -297,25 +254,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->FilterEditorPanel"));
 
-        this.filterReadonlyPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
-        filterReadonlyPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        filterReadonlyPanel.add(showCriteriaButton);
-        filterReadonlyPanel.add(smallFilterNameLabel);
-        
-        this.filterPanel = new JPanel(new WrapLayout(false, FlowLayout.LEFT));
-        filterPanel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        filterPanel.add(hideCriteriaButton);
-        filterPanel.add(filterNameLabel);
-        filterPanel.add(saveButton);
-        filterPanel.add(saveAsButton);
-        
-        topPanel = new JPanel(new BorderLayout());
-        topPanel.add(filterPanel, BorderLayout.NORTH);
-        topPanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
-        topPanel.add(criteriaPanel, BorderLayout.SOUTH);
+        configPanel = new ConfigPanel(true);
         
         setLayout(new BorderLayout());
-        add(topPanel, BorderLayout.NORTH);
+        add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
 
         MyDropTargetListener dtl = new MyDropTargetListener();
@@ -323,21 +265,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         dt.setDefaultActions(DnDConstants.ACTION_COPY);
         dt.setActive(true);
     }
-    
-    private void setCriteriaPanelState(boolean expanded) {
-        this.criteriaPanelExpanded = expanded;
-        topPanel.removeAll();
-        if (expanded) {
-            topPanel.add(filterPanel, BorderLayout.NORTH);
-            topPanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
-            topPanel.add(criteriaPanel, BorderLayout.SOUTH);
-        }
-        else {
-            topPanel.add(filterReadonlyPanel, BorderLayout.CENTER);
-        }
-        updateUI();
-    }
-    
+     
     private void setFilter(Filter filter) {
         this.filter = filter;
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
@@ -368,7 +296,14 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         try {
             updateView();
-            setCriteriaPanelState(filter.getId()==null);
+            
+            configPanel.removeAllTitleComponents();
+            if (ClientDomainUtils.hasWriteAccess(filter)) {
+	            configPanel.addTitleComponent(saveButton, false, true);
+	            configPanel.addTitleComponent(saveAsButton, false, true);
+            }
+            configPanel.setExpanded(filter.getId()==null);
+            
             refreshSearchResults();
         }
         catch (Exception e) {
@@ -385,9 +320,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         if (filter==null) {
             return "Filter Editor";
         }
-        else {
-            return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
-        }
+        return "Filter: "+StringUtils.abbreviate(filter.getName(), 15);
     }
     
     @Override
@@ -464,13 +397,12 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
         typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
         
-        filterNameLabel.setText(filter.getName());
-        smallFilterNameLabel.setText(filter.getName());
+        configPanel.setTitle(filter.getName());
         
         // Update filters
-        criteriaPanel.removeAll();
-        criteriaPanel.add(typeCriteriaButton);
-        criteriaPanel.add(inputField);
+        configPanel.removeAllConfigComponents();
+        configPanel.addConfigComponent(typeCriteriaButton);
+        configPanel.addConfigComponent(inputField);
         
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
@@ -486,7 +418,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 }
                 DropDownButton facetButton = new DropDownButton(label.toString());
                 populateFacetMenu(attr, facetButton.getPopupMenu());
-                criteriaPanel.add(facetButton);
+                configPanel.addConfigComponent(facetButton);
             }
         }
 
@@ -495,7 +427,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 if (criteria instanceof AttributeCriteria) {
                     DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
                     if (customCriteriaButton!=null) {
-                        criteriaPanel.add(customCriteriaButton);
+                    	configPanel.addConfigComponent(customCriteriaButton);
                     }
                 }
             }
@@ -547,9 +479,8 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             addCriteriaPopupMenu.add(menuItem);
         }
         
-        criteriaPanel.add(addCriteriaButton);
-        
-        criteriaPanel.updateUI();
+        configPanel.addConfigComponent(addCriteriaButton);
+        configPanel.updateUI();
     }
     
     private DropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
@@ -563,7 +494,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
         else if (criteria instanceof DateRangeCriteria) {
             DateRangeCriteria drc = (DateRangeCriteria)criteria;
-            label = attr.getLabel()+": "+df.format(drc.getStartDate())+" - "+df.format(drc.getEndDate());
+            label = attr.getLabel()+": "+DATE_FORMAT.format(drc.getStartDate())+" - "+DATE_FORMAT.format(drc.getEndDate());
         }
         else {
             return null;
@@ -619,8 +550,13 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 
         if (attrFacetValues!=null) {
             for (final FacetValue facetValue : attrFacetValues) {
+                boolean selected = selectedValues.contains(facetValue.getValue());
+                if (facetValue.getCount()==0 && !selected) {
+                    // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
+                    continue;
+                }
                 String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
-                final JMenuItem menuItem = new JCheckBoxMenuItem(label, false);
+                final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         if (menuItem.isSelected()) {
@@ -633,7 +569,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                         refreshSearchResults(null, null);
                     }
                 });
-                menuItem.setSelected(selectedValues.contains(facetValue.getValue()));
                 popupMenu.add(menuItem);
             }
         }
@@ -804,7 +739,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         public void drop(DropTargetDropEvent dtde) {
             
             Point point = dtde.getLocation();
-            if (!criteriaPanel.getBounds().contains(point)) {
+            if (!configPanel.getBounds().contains(point)) {
                 log.warn("Dropped outside of filter panel");
                 dtde.rejectDrop();
                 dtde.dropComplete(false);
