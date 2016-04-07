@@ -42,7 +42,6 @@ public class ResultSelectionButton extends DropDownButton {
     public ResultSelectionButton(boolean showTitle) {
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
-        setFocusable(false);
         setToolTipText("Select the result to display");
     }
 

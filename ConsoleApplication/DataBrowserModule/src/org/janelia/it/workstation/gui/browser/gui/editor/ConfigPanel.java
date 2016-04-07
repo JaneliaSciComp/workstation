@@ -28,7 +28,7 @@ import org.janelia.it.workstation.gui.util.WrapLayout;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ConfigPanel extends JPanel {
+public final class ConfigPanel extends JPanel {
 	
 	private static final Font TITLE_FONT = new Font("Sans Serif", Font.BOLD, 15);
 	private static final ImageIcon EXPAND_ICON = Icons.getIcon("chevron-expand-icon.png");
@@ -116,9 +116,13 @@ public class ConfigPanel extends JPanel {
 	public void setTitle(String title) {
 		titleLabel.setText(title);
 	}
-	
+
     private void toggleCriteriaPanelState() {
-    	configExpanded = !configExpanded;
+    	setExpanded(!configExpanded);
+    }
+    
+	public void setExpanded(boolean configExpanded) {
+		this.configExpanded = configExpanded;
     	refillTitleComponents();
         removeAll();
         if (configExpanded) {

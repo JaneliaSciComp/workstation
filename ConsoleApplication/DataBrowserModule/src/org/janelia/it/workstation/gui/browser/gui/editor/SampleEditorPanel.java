@@ -99,8 +99,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final static String MODE_RESULTS = "Results";
     private final static String ALL_VALUE = "all";
 
-	private static final Insets BUTTON_INSETS = new Insets(0,2,0,2);
-
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     
@@ -239,21 +237,13 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         setFocusable(true);
         
         viewButton = new DropDownButton("View: ");
-        viewButton.setFocusable(false);
-        viewButton.setMargin(BUTTON_INSETS);
         populateViewButton();
+        objectiveButton = new DropDownButton("Objective: "+currObjective);
+        areaButton = new DropDownButton("Area: "+currArea);
         
         configPanel = new ConfigPanel(false);
         configPanel.addTitleComponent(viewButton, true, true);
         
-        objectiveButton = new DropDownButton("Objective: "+currObjective);
-        objectiveButton.setFocusable(false);
-        objectiveButton.setMargin(BUTTON_INSETS);
-        
-        areaButton = new DropDownButton("Area: "+currArea);
-        areaButton.setFocusable(false);
-        areaButton.setMargin(BUTTON_INSETS);
-
         lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
@@ -494,6 +484,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
         
+        currRunMap.clear();
         configPanel.setTitle(sample.getName());
         selectionModel.setParentObject(sample);
         
@@ -612,19 +603,35 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
         
+        // Populate currRunMap
         for(String objective : objectiveSet) {
             
             ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
             if (objectiveSample==null) continue;
             
+            // Is there a run already selected?
             SamplePipelineRun run = currRunMap.get(objective);
             
             if (run==null) {
+            	// If not, pick one as the default
             	run = objectiveSample.getLatestSuccessfulRun();
-            	currRunMap.put(objective, run);
+            	if (run==null) {
+            		run = objectiveSample.getLatestRun();
+            	}
+            	if (run!=null) {
+            		currRunMap.put(objective, run);
+            	}
             }
-             
+        }
+        
+        // Populate drop down buttons
+        for(String objective : objectiveSet) {
+            
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample==null) continue;
+            SamplePipelineRun run = currRunMap.get(objective);
             if (run==null || run.getResults()==null) continue;
+
             for(PipelineResult result : run.getResults()) {
                 String area = null;
                 if (result instanceof HasAnatomicalArea) {
@@ -635,10 +642,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             	areaSet.add(area);
             }
-
+            
             DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
-            historyButton.setFocusable(false);
-            historyButton.setMargin(BUTTON_INSETS);
             populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
             historyButtonMap.put(objective, historyButton);
             configPanel.addConfigComponent(historyButton);
@@ -706,13 +711,16 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
 
     private void populateHistoryButton(JPopupMenu popupMenu, final ObjectiveSample objectiveSample) {
-        popupMenu.removeAll();
+    	final String objective = objectiveSample.getObjective();
+    	popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
+        log.info("currRunMap: "+currRunMap);
         for(final SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(getLabel(run));
+        	log.info("run: "+run);
+            JMenuItem menuItem = new JRadioButtonMenuItem(getLabel(run), currRunMap.get(objective)==run);
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                	currRunMap.put(objectiveSample.getObjective(), run);
+                	currRunMap.put(objective, run);
                 	showResults();
                 }
             });
