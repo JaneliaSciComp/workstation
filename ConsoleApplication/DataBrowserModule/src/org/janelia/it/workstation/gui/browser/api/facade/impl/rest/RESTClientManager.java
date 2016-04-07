@@ -17,7 +17,7 @@ public class RESTClientManager {
     private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
 
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-
+    private static final String REMOTE_DATA_PREFIX = ConsoleProperties.getInstance().getProperty("domain.facade.rest.data.prefix");
     private static RESTClientManager instance;
 
     private Client client;
@@ -38,19 +38,19 @@ public class RESTClientManager {
 
     private void registerRestUris() {
         serviceEndpoints = new HashMap<>();
-        serviceEndpoints.put("workspace", client.target(serverUrl + "workspace"));
-        serviceEndpoints.put("workspaces", client.target(serverUrl + "workspaces"));
-        serviceEndpoints.put("domainobject", client.target(serverUrl + "domainobject"));
-        serviceEndpoints.put("ontology", client.target(serverUrl + "ontology"));
-        serviceEndpoints.put("annotation", client.target(serverUrl + "annotation"));
-        serviceEndpoints.put("filter", client.target(serverUrl + "filter"));
-        serviceEndpoints.put("treenode", client.target(serverUrl + "treenode"));
-        serviceEndpoints.put("objectset", client.target(serverUrl + "objectset"));
-        serviceEndpoints.put("user", client.target(serverUrl + "user"));
-        serviceEndpoints.put("dataset", client.target(serverUrl + "dataset"));
-        serviceEndpoints.put("login", client.target(serverUrl + "login"));
-        serviceEndpoints.put("search", client.target(serverUrl + "search"));
-        serviceEndpoints.put("sample", client.target(serverUrl + "sample"));
+        serviceEndpoints.put("workspace", client.target(serverUrl + REMOTE_DATA_PREFIX + "/workspace"));
+        serviceEndpoints.put("workspaces", client.target(serverUrl + REMOTE_DATA_PREFIX + "/workspaces"));
+        serviceEndpoints.put("domainobject", client.target(serverUrl + REMOTE_DATA_PREFIX + "/domainobject"));
+        serviceEndpoints.put("ontology", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/ontology"));
+        serviceEndpoints.put("annotation", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/annotation"));
+        serviceEndpoints.put("filter", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/filter"));
+        serviceEndpoints.put("treenode", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/treenode"));
+        serviceEndpoints.put("objectset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/objectset"));
+        serviceEndpoints.put("user", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user"));
+        serviceEndpoints.put("dataset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/dataset"));
+        serviceEndpoints.put("login", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/login"));
+        serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
+        serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
     }
 
     public static RESTClientManager getInstance() {
