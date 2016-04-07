@@ -174,6 +174,7 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void mouseClicked(MouseEvent event) {
         // System.out.println("Mouse clicked in tracer");
+        long clickTime = System.nanoTime();
         
         // Cache the current state, in case subsequent asynchronous changes occur to hoveredDensity etc.
         InteractorContext context = createContext();
@@ -185,6 +186,9 @@ public class TracingInteractor extends MouseAdapter
             if (event.isShiftDown()) { // Hold down shift to build neurons
                 if (context.canAppendVertex()) {
                     context.appendVertex();
+                    long appendedTime = System.nanoTime();
+                    double elapsed = (appendedTime - clickTime) / 1.0e6;
+                    System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
                 }
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
                     context.mergeNeurite();
@@ -691,6 +695,7 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public boolean appendVertex() {
+            long beginAppendTime = System.nanoTime();
             if (! canAppendVertex())
                 return false;
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
@@ -702,13 +707,17 @@ public class TracingInteractor extends MouseAdapter
                     parentAppendCmd,
                     densityVertex.getLocation(), 
                     densityVertex.getRadius());
+            long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
+                long endExecuteTime = System.nanoTime();
+                System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
                 NeuronVertex addedVertex = appendCmd.getAppendedVertex();
                 if (addedVertex != null) {
                     selectParentVertex(addedVertex, parentNeuron);
                     // undoRedoManager.addEdit(appendCmd);
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
                     appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
+                    long endAppendTime = System.nanoTime();
                     return true;
                 }
             }
