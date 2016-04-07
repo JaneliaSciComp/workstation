@@ -42,7 +42,7 @@ extends AbstractTextureLoadAdapter
     private String remoteBasePath;
     // Metadata: different folders could be opened during a user's session.
     private Long folderOpenTimestamp = null;
-    private ActivityLogHelper activityLog = new ActivityLogHelper();    
+    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();    
 	public LoadTimer loadTimer = new LoadTimer();
     
 	public BlockTiffOctreeLoadAdapter()

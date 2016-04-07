@@ -1402,6 +1402,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         BasicSampleLocation result = new BasicSampleLocation();
         result.setSampleUrl(loadedUrl);
         
+        result.setSampleId(getSampleId());
+        result.setWorkspaceId(getWorkspaceId());
+        
         // Use the pointer location, not camera focus
         Vec3 focus = null;
         for (TileConsumer viewer : allSliceViewers) {
@@ -1425,7 +1428,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         
         return result;
     }
-    
+
     public void setSampleLocation(SampleLocation sampleLocation) {
         Vec3 focus = new Vec3(
                 sampleLocation.getFocusXUm(),
@@ -1449,6 +1452,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
      */
     public URL getLoadedUrl() {
         return loadedUrl;
+    }
+
+    private Long getWorkspaceId() {
+        return this.annotationModel.getCurrentWorkspace().getId();
+    }
+
+    private Long getSampleId() {
+        return this.annotationModel.getCurrentWorkspace().getSampleID();
     }
 
     /**

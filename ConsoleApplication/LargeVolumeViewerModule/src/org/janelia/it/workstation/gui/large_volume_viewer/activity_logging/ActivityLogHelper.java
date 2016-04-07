@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.activity_logging;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -18,10 +21,13 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
  * @author fosterl
  */
 public class ActivityLogHelper {
-    public static final String BOTH_COORDS_FMT = "%d:%d:%7.3f,%7.3f,%7.3f:%7.3f,%7.3f,%7.3f";
+    public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
+    
+    private static final ActivityLogHelper instance = new ActivityLogHelper();
 
     // These category strings are used similarly.  Lining them up spatially
     // makes it easier to see that they are all different.
+    private static final ToolString EXTERNAL_LVV_LOGSTAMP_ID                    = new ToolString("Horta");
     private static final CategoryString LIX_CATEGORY_STRING                     = new CategoryString("loadTileIndexToRam:elapsed");
     private static final CategoryString LONG_TILE_LOAD_CATEGORY_STRING          = new CategoryString("longRunningTileIndexLoad");
     private static final CategoryString LVV_SESSION_CATEGORY_STRING             = new CategoryString("openFolder");
@@ -38,10 +44,18 @@ public class ActivityLogHelper {
     
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
     
-    private TileFormat tileFormat;
+    private Map<Long,TileFormat> sampleToTileFormat = new HashMap<>();
     
-    public void setTileFormat(TileFormat tileFormat) {
-        this.tileFormat = tileFormat;
+    public static ActivityLogHelper getInstance() {
+        return instance;
+    }
+    
+    private ActivityLogHelper() {}
+    
+    public void setTileFormat(TileFormat tileFormat, Long sampleId) {
+        assert tileFormat != null : "Null tile format";
+        assert sampleId != null : "Null sample id";        
+        sampleToTileFormat.put(sampleId, tileFormat);
     }
 
     public void logTileLoad(int relativeSlice, TileIndex tileIndex, final double elapsedMs, long folderOpenTimestamp) {
@@ -84,6 +98,16 @@ public class ActivityLogHelper {
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
     
+    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, TmGeoAnnotation source, float[] micronXYZ) {        
+        //  Change Vec3 to double[] if inconvenient.
+        logExternalGeometricEvent(
+                sampleId,
+                workspaceId,
+                source.getX(), source.getY(), source.getZ(),
+                micronXYZ[0], micronXYZ[1], micronXYZ[2],
+                LVV_ADD_ANCHOR_CATEGORY_STRING);
+    }
+    
     public void logRerootNeurite(Long sampleID, Long workspaceID, Long neuronID) {
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID, 
@@ -110,6 +134,27 @@ public class ActivityLogHelper {
     
     public void logDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_LINK_CATEGORY_STRING);
+    }
+    
+    public void logExternallyDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
+        double muX = 0;
+        double muY = 0;
+        double muZ = 0;
+        TileFormat tileFormat = sampleToTileFormat.get(sampleID);
+        if (tileFormat != null) {
+            TileFormat.MicrometerXyz mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(source.getX().intValue(), source.getY().intValue(), source.getZ().intValue()),
+                    CoordinateAxis.Z);
+            muX = mxyz.getX();
+            muY = mxyz.getY();
+            muZ = mxyz.getZ();
+        }
+        this.logExternalGeometricEvent(
+                sampleID, workspaceID, 
+                source.getX(), source.getY(), source.getZ(),
+                (float)muX, (float)muY, (float)muZ,
+                LVV_DELETE_LINK_CATEGORY_STRING
+        );
     }
     
     public void logDeleteSubTree(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
@@ -147,6 +192,15 @@ public class ActivityLogHelper {
         );
     }
 
+    private void logExternalGeometricEvent(Long sampleID, Long workspaceID, Double x, Double y, Double z, float muX, float muY, float muZ, CategoryString category) {
+        String action = formatGeoAction(x, y, z, muX, muY, muZ, sampleID, workspaceID);
+        SessionMgr.getSessionMgr().logToolEvent(
+                EXTERNAL_LVV_LOGSTAMP_ID,   // For now: only Horta makes requests.
+                category,
+                new ActionString(action)
+        );
+    }
+
     private void logGeometricEvent(Long sampleID, Long workspaceID, TmGeoAnnotation anno, CategoryString category) {
         logGeometricEvent(
                 sampleID, workspaceID,
@@ -160,6 +214,7 @@ public class ActivityLogHelper {
         double muX = 0;
         double muY = 0;
         double muZ = 0;
+        TileFormat tileFormat = sampleToTileFormat.get(sampleID);
         if (tileFormat != null) {
             mxyz = tileFormat.micrometerXyzForVoxelXyz(
                     new TileFormat.VoxelXyz(x.intValue(), y.intValue(), z.intValue()),
@@ -168,6 +223,17 @@ public class ActivityLogHelper {
             muY = mxyz.getY();
             muZ = mxyz.getZ();
         }
+        action = String.format(
+                BOTH_COORDS_FMT,
+                sampleID, workspaceID,
+                muX, muY, muZ,
+                x, y, z
+        );
+        return action;
+    }
+
+    private String formatGeoAction(Double x, Double y, Double z, float muX, float muY, float muZ, Long sampleID, Long workspaceID) {
+        String action;
         action = String.format(
                 BOTH_COORDS_FMT,
                 sampleID, workspaceID,

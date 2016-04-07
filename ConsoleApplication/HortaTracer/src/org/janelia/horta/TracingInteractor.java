@@ -62,6 +62,7 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -773,6 +774,7 @@ public class TracingInteractor extends MouseAdapter
                     return false;
                 }
                 else {
+                    ActivityLogHelper.getInstance().logMergedNeurite(hoveredVertex);
                     return true;
                 }
             }

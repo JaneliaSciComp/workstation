@@ -64,7 +64,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     // annotation model object
     private AnnotationModel annotationModel;
     
-    private ActivityLogHelper activityLog;
+    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
     
     // quad view ui object
     private QuadViewUi quadViewUi;
@@ -101,7 +101,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
         modelMgr = ModelMgr.getModelMgr();
-        activityLog = new ActivityLogHelper();
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -261,7 +260,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             // if it's a bare sample, we don't have anything to do
-            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
+            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
             SimpleWorker loader = new SimpleWorker() {
@@ -288,7 +287,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     progress.finish();
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
-                    activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
+                    activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
                 }
 
                 @Override
