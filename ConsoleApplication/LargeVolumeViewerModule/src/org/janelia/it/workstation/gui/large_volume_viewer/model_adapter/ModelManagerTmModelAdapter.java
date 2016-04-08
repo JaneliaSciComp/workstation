@@ -147,7 +147,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         nullParent.setCreationDate(workspaceEntity.getCreationDate());
         nullParent.setName(workspaceEntity.getName());
         nullParent.setOwnerKey(workspaceEntity.getOwnerKey());
-        nullParent.getEntityData().add(entityData);
+        //nullParent.getEntityData().add(entityData);
         nullParent.setId(workspaceEntity.getId());
         entityData.setParentEntity(nullParent);
         
