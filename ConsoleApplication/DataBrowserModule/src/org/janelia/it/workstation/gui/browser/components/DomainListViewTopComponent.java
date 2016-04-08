@@ -171,7 +171,6 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                 }
             };
             worker.execute();
-            
         }
     }
     

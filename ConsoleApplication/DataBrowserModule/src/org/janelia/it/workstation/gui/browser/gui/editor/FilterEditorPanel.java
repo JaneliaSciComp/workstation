@@ -349,7 +349,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     
     public void dropDomainObject(DomainObject obj) {
 
-        Reference reference = new Reference(ObjectSet.class.getName(), obj.getId());
+        Reference reference = Reference.createFor(ObjectSet.class, obj.getId());
 
         ObjectSetCriteria criteria = new ObjectSetCriteria();
         criteria.setObjectSetName(obj.getName());

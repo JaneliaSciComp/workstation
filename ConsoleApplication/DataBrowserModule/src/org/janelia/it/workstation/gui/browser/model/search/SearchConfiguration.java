@@ -338,7 +338,7 @@ public class SearchConfiguration {
                 String type = (String) doc.getFieldValue(SOLR_TYPE_FIELD);
                 String className = DomainUtils.getClassNameForSearchType(type);
                 if (className != null) {
-                    refs.add(new Reference(className, id));
+                    refs.add(Reference.createFor(className, id));
                 } else {
                     log.warn("Unrecognized type has no collection mapping: " + type);
                 }

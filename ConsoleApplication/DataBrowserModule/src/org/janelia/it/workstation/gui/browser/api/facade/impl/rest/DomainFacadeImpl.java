@@ -163,7 +163,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights + "," + grant)) {
             return null;
         }
-        return this.getDomainObject(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+        return this.getDomainObject(Reference.createFor(domainObject));
     }
 
     @Override

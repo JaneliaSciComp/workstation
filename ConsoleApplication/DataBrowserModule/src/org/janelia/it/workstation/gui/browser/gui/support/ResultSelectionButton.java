@@ -67,20 +67,19 @@ public class ResultSelectionButton extends DropDownButton {
         for(DomainObject domainObject : domainObjects) {
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
-                for(String objective : sample.getOrderedObjectives()) {
-                    ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+                for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                     SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
                     if (run==null || run.getResults()==null) continue;
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
-                                String name = objective+" "+result.getName()+" ("+groupKey+")";
+                                String name = objectiveSample.getObjective()+" "+result.getName()+" ("+groupKey+")";
                                 countedResultNames.add(name);
                             }
                         }
                         else {
-                            String name = objective+" "+result.getName();
+                            String name = objectiveSample.getObjective()+" "+result.getName();
                             countedResultNames.add(name);
                         }
                     }
