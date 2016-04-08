@@ -141,7 +141,16 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         entityData.setOwnerKey(neuron.getOwnerKey());
         entityData.setCreationDate(neuron.getCreationDate());
         entityData.setId(neuron.getId());  // May have been seeded as null.
-        entityData.setParentEntity(workspaceEntity);
+        // Avoid transmitting siblings over the wire.
+        Entity nullParent = new Entity();
+        nullParent.setEntityTypeName(workspaceEntity.getEntityTypeName());
+        nullParent.setCreationDate(workspaceEntity.getCreationDate());
+        nullParent.setName(workspaceEntity.getName());
+        nullParent.setOwnerKey(workspaceEntity.getOwnerKey());
+        nullParent.getEntityData().add(entityData);
+        nullParent.setId(workspaceEntity.getId());
+        entityData.setParentEntity(nullParent);
+        
         // Encoding on the client side for convenience: the save-or-update
         // method already exists.  We expect to see this carried out one
         // neuron (or two) at a time, not wholesale.
@@ -150,7 +159,8 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         entityData.setValue(encoder.encode(serializableBytes));
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
         EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
-        if (preExistingEntityData != null) {
+        // Back-fill the corrected workspace entity.
+        savedEntityData.setParentEntity(workspaceEntity);        if (preExistingEntityData != null) {
             workspaceEntity.getEntityData().remove(preExistingEntityData);
         }
         workspaceEntity.getEntityData().add(savedEntityData);
