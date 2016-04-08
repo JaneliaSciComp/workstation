@@ -54,4 +54,7 @@ public interface SampleLocation
     // TODO - remove this temporary hack once Horta can show all channels
     int getDefaultColorChannel();
     void setDefaultColorChannel(int channelIndex);
+    
+    boolean isCompressed();
+    void setCompressed(boolean compressed);
 }

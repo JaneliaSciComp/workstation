@@ -519,7 +519,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                         log.info("Cannot move a node into itself: {}",ontologyTerm.getId());
                         continue;
                     }
-                    else if (DomainUtils.hasChild(newParent, ontologyTerm)) {
+                    else if (newParent.hasChild(ontologyTerm)) {
                         log.info("Child already exists: {}",ontologyTerm.getId());
                         continue;
                     }

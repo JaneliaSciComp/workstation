@@ -11,12 +11,11 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
@@ -30,8 +29,6 @@ import org.slf4j.LoggerFactory;
 public class DownloadItem {
 
     private static final Logger log = LoggerFactory.getLogger(DownloadItem.class);
-    
-    private static final File WS_IMAGES_DIR = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
     
     public static final String ATTR_LABEL_RESULT_NAME = "Result Name";
     public static final String ATTR_LABEL_FILE_NAME = "File Name";
@@ -107,6 +104,8 @@ public class DownloadItem {
             this.targetExtension = sourceExtension;
         }
         
+        File workstationImagesDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+        
         // Build the path
         File itemDir = null;
         if (itemPath!=null && !flattenStructure) {
@@ -115,10 +114,10 @@ public class DownloadItem {
                 if (pathBuilder.length()!=0) pathBuilder.append("/");
                 pathBuilder.append(item);
             }
-            itemDir = new File(WS_IMAGES_DIR, pathBuilder.toString());
+            itemDir = new File(workstationImagesDir, pathBuilder.toString());
         }
         else {
-            itemDir = WS_IMAGES_DIR;
+            itemDir = workstationImagesDir;
         }
 
         targetFile = new File(itemDir, constructFilePath(filenamePattern));
@@ -127,10 +126,11 @@ public class DownloadItem {
         log.info("Target extension: {}",targetExtension);
     }
 
+    // TODO: rewrite this to use StringUtils.replaceVariablePattern 
     private String constructFilePath(String filePattern) {
         
         Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
-        for(DomainObjectAttribute attr : ClientDomainUtils.getSearchAttributes(domainObject.getClass())) {
+        for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
             log.debug("Adding attribute: "+attr.getLabel());
             attributeMap.put(attr.getLabel(), attr);
         }

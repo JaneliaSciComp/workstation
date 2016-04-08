@@ -1,13 +1,21 @@
 package org.janelia.it.workstation.gui.browser;
 
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.security.ProtectionDomain;
+
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.GiantFiberSearchDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
@@ -15,15 +23,10 @@ import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.LifecycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.security.ProtectionDomain;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-
-import javax.swing.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -118,8 +121,19 @@ public class ConsoleApp {
             
             sessionMgr.newBrowser();
             log.debug("Displaying main frame");
-            SessionMgr.getMainFrame().setVisible(true);
 
+            Dimension currSize = SessionMgr.getMainFrame().getSize();
+            if (currSize.width==0 || currSize.height==0) {
+            	log.info("Frame is zero-sized, resetting to 80%");
+	            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+	            double width = screenSize.getWidth();
+	            double height = screenSize.getHeight();
+	            SessionMgr.getMainFrame().setLocation(new Point(0, 30));
+	            SessionMgr.getMainFrame().setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
+            }
+            
+            SessionMgr.getMainFrame().setVisible(true);
+            
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {

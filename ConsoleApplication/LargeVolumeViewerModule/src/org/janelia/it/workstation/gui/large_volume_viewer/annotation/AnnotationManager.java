@@ -84,6 +84,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
+    public static TmWorkspace.Version getWorkspaceVersion(Entity workspaceEntity) {
+        String versionNameValue = workspaceEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
+        TmWorkspace.Version version = null;
+        if (versionNameValue != null) {
+            String[] nameValue = versionNameValue.split("=");
+            if (nameValue.length >= 2 && TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
+                version = TmWorkspace.Version.valueOf(nameValue[1]);
+            }
+        }
+        return version;
+    }
+
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
@@ -251,16 +263,29 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             // if it's a bare sample, we don't have anything to do
             activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
+            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
                     // Must make known to user that things are happening,
                     // even if slowly.
                     progress.start();
-                    progress.setDisplayName("Loading annotations");
+                    progress.setDisplayName("Loading workspace container");
                     progress.switchToIndeterminate();
+                    TmWorkspace.Version version = getWorkspaceVersion(initialEntity);
+                    if (version != TmWorkspace.Version.PB_1) {
+                        // Force, and await, a full conversion.
+                    }
+
+                    // By the time this is triggered, any required conversion
+                    // will already have been accomplished.
                     TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
+                    if (workspace.getNeuronList() != null  &&  workspace.getNeuronList().size() > 0) {
+                        // Retro-adaptation: this workspace was just, or is being, converted to protobuf.
+                        // Must ensure that any future reference to the workspace receives the latest.
+                        ModelMgr.getModelMgr().invalidateCache(initialEntity, true);
+                    }
+                    progress.finish();
                     // at this point, we know the entity is a workspace, so:
                     annotationModel.loadWorkspace(workspace);
                     activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
@@ -269,7 +294,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 @Override
                 protected void hadSuccess() {
                     // no hadSuccess(); signals will be emitted in the loadWorkspace() call
-                    progress.finish();
                 }
 
                 @Override
@@ -860,7 +884,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void clearNote(Long annotationID) {
+    public void clearNote(final Long annotationID) {
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
@@ -1124,6 +1148,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             sampleID = initialEntity.getId();
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             sampleID = getSampleID();
+            if (sampleID == null) {
+                presentError("Sample ID is null; did the previous sample or workspace finish loading?\n\nCould not create workspace!",
+                        "Null sample ID");
+                return;
+            }
         } else {
             presentError(
                     "You must load a brain sample before creating a workspace!",
@@ -1451,11 +1480,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationModel.getCurrentWorkspace() != null) {
             int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
             int nannotations = 0;
+            int maxannotations = 0;
             for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
                 nannotations += neuron.getGeoAnnotationMap().size();
+                maxannotations = Math.max(maxannotations, neuron.getGeoAnnotationMap().size());
             }
             JOptionPane.showMessageDialog(quadViewUi,
-                    "# neurons = " + nneurons + "\n# annotations (total) = " + nannotations + "\n",
+                    "# neurons = " + nneurons + "\n" +
+                    "# annotations (total) = " + nannotations + "\n" +
+                    "# annotations (largest neuron) = " + maxannotations + "\n",
                     "Info",
                     JOptionPane.PLAIN_MESSAGE);
         }
@@ -1568,7 +1601,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadSuccess() {
                         int latestValue = countDownSemaphor.decrementAndGet();
                         if (latestValue == 0) {
-                            annotationModel.postWorkspaceUpdate();
+                            // last file is loaded, so trigger update; needs another
+                            //  layer of threading, ugh:
+                            SimpleWorker updater = new SimpleWorker() {
+                                @Override
+                                protected void doStuff() throws Exception {
+                                    annotationModel.postWorkspaceUpdate();
+                                }
+
+                                @Override
+                                protected void hadSuccess() {
+                                    // nothing here
+                                }
+
+                                @Override
+                                protected void hadError(Throwable error) {
+                                    SessionMgr.getSessionMgr().handleException(error);
+                                }
+                            };
+                            updater.execute();
                         }
                     }
 
@@ -1608,7 +1659,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     private Long getSampleID() {
-        return annotationModel.getCurrentWorkspace().getSampleID();
+        if (annotationModel.getCurrentWorkspace() != null) {
+            return annotationModel.getCurrentWorkspace().getSampleID();
+        } else {
+            return null;
+        }
     }
     
     private Long getWorkspaceID() {

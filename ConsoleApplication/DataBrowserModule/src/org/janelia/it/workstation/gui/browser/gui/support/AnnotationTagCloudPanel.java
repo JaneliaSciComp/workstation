@@ -29,9 +29,13 @@ public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> 
     protected abstract JPopupMenu getPopupMenu(Annotation tag);
 
     @Override
+    protected String getTagTitle(Annotation tag) {
+        return tag.getName();
+    }
+    
+    @Override
     protected JLabel createTagLabel(Annotation tag) {
         JLabel label = super.createTagLabel(tag);
-        label.setText(tag.getName());
         label.setBackground(StateMgr.getStateMgr().getUserColorMapping().getColor(tag.getOwnerKey()));
         String owner = DomainUtils.getNameFromSubjectKey(tag.getOwnerKey());
         label.setToolTipText("This annotation was made by "+owner);

@@ -1,33 +1,15 @@
 package org.janelia.it.workstation.domain;
 
-import java.util.ArrayList;
-import java.util.Collection;
 
 import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.NeuronSeparation;
 
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardEvent;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
-import org.janelia.it.workstation.model.domain.Neuron;
-import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

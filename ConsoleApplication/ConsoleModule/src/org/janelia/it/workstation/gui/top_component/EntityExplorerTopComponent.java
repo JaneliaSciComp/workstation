@@ -51,7 +51,6 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
         initComponents();
         setName(Bundle.CTL_EntityExplorerTopComponent());
         setToolTipText(Bundle.HINT_EntityExplorerTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);   
     }
     
     /**

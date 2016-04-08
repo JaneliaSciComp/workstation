@@ -109,10 +109,16 @@ public class ExternalClientMgr {
     
     @Subscribe
     public void ontologySelected(DomainObjectSelectionEvent event) {
-        DomainObject obj = event.getDomainObject();
-        if (obj instanceof Ontology) {
+
+        // We only care about single selections
+        DomainObject domainObject = event.getObjectIfSingle();
+        if (domainObject==null) {
+            return;
+        }
+        
+        if (domainObject instanceof Ontology) {
             Map<String, Object> parameters = new LinkedHashMap<>();
-            parameters.put("rootId", obj.getId());
+            parameters.put("rootId", domainObject.getId());
             ExternalClientMgr.getInstance().sendMessageToExternalClients("ontologySelected", parameters);   
         }
     }

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.events.selection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -33,22 +34,35 @@ public abstract class SelectionModel<T,S> {
     public final void setSource(Object source) {
         this.source = source;
     }
-    
+
     /**
      * Select the given object, optionally clearing all other selections first. 
      * @param object
      * @param clearAll
      */
     public final void select(T object, boolean clearAll, boolean isUserDriven) {
-        S id = getId(object);
-        log.trace("select {}, clearAll={}",id,clearAll);
-        if (!isCorrectlySelected(id, clearAll)) {
-            if (clearAll) {
-                selected.clear();
+        select(Arrays.asList(object), clearAll, isUserDriven);
+    }
+    
+    /**
+     * Select the given objects, optionally clearing all other selections first. 
+     * @param objects
+     * @param clearAll
+     */
+    public final void select(List<T> objects, boolean clearAll, boolean isUserDriven) {
+        log.trace("select {}, clearAll={}",objects,clearAll);
+        boolean clear = clearAll;
+        for(T object : objects) {
+            S id = getId(object);
+            if (!isCorrectlySelected(id, clear)) {
+                if (clear) {
+                    selected.clear();
+                }
+                selected.add(id);
             }
-            selected.add(id);
+            clear = false;
         }
-        selectionChanged(object, id, true, clearAll, isUserDriven);
+        selectionChanged(objects, true, clearAll, isUserDriven);
     }
     
     private boolean isCorrectlySelected(S id, boolean clearAll) {
@@ -77,13 +91,23 @@ public abstract class SelectionModel<T,S> {
      * @param object
      */
     public final void deselect(T object, boolean isUserDriven) {
-        S id = getId(object);
-        log.trace("deselect {}",id);
-        if (!selected.contains(id)) {
-            return;
+        deselect(Arrays.asList(object), isUserDriven);
+    }
+    
+    /**
+     * De-select the given objects.
+     * @param objects
+     */
+    public final void deselect(List<T> objects, boolean isUserDriven) {
+        for(T object : objects) {
+            S id = getId(object);
+            log.trace("deselect {}",id);
+            if (!selected.contains(id)) {
+                return;
+            }
+            selected.remove(id);
         }
-        selected.remove(id);
-        selectionChanged(object, id, false, false, isUserDriven);
+        selectionChanged(objects, false, false, isUserDriven);
     }
 
     /**
@@ -101,7 +125,7 @@ public abstract class SelectionModel<T,S> {
      * @param select
      * @param clearAll
      */
-    protected abstract void selectionChanged(T object, S id, boolean select, boolean clearAll, boolean isUserDriven);
+    protected abstract void selectionChanged(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven);
     
     /**
      * Sub-classes must implement this method to return an identifier for the given object.

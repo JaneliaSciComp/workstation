@@ -9,6 +9,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -197,11 +199,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    boolean clearAll = true;
-                    for (T object : objectList) {
-                        selectObject(object, clearAll);
-                        clearAll = false;
-                    }
+                    selectObjects(objectList, true);
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -416,19 +414,33 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     private void endRangeSelection() {
         selectionAnchorIndex = selectionCurrIndex = null;
     }
-    
+
     protected void selectObject(T object, boolean clearAll) {
-        if (object==null) return;
-        S id = getImageModel().getImageUniqueId(object);
-        imagesPanel.setSelectionByUniqueId(id, true, clearAll);
-        selectionModel.select(object, clearAll, true);
+        selectObjects(Arrays.asList(object), clearAll);
     }
 
     protected void deselectObject(T object) {
-        if (object==null) return;
-        S id = getImageModel().getImageUniqueId(object);
-        imagesPanel.setSelectionByUniqueId(id, false, false);
-        selectionModel.deselect(object, true);
+        deselectObjects(Arrays.asList(object));
+    }
+    
+    protected void selectObjects(List<T> objects, boolean clearAll) {
+        if (objects==null) return;
+        List<S> ids = new ArrayList<>();
+        for(T object : objects) {
+            ids.add(getImageModel().getImageUniqueId(object));
+        }
+        imagesPanel.setSelectionByUniqueIds(ids, true, clearAll);
+        selectionModel.select(objects, clearAll, true);
+    }
+    
+    protected void deselectObjects(List<T> objects) {
+        if (objects==null) return;
+        List<S> ids = new ArrayList<>();
+        for(T object : objects) {
+            ids.add(getImageModel().getImageUniqueId(object));
+        }
+        imagesPanel.setSelectionByUniqueIds(ids, false, false);
+        selectionModel.deselect(objects, true);
     }
 
     private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {

@@ -6,13 +6,22 @@ import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
-import net.miginfocom.swing.MigLayout;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import net.miginfocom.swing.MigLayout;
+
+
 /**
  * A dialog for entering a username to run as, for administrator use only. 
  *

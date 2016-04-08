@@ -24,7 +24,6 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**

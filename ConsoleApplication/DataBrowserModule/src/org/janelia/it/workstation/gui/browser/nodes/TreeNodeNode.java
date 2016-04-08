@@ -12,12 +12,11 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
@@ -253,7 +252,7 @@ public class TreeNodeNode extends DomainObjectNode {
                         log.info("Cannot move a node into itself: {}",domainObject.getId());
                         continue;
                     }
-                    else if (DomainUtils.hasChild(newParent, domainObject)) {
+                    else if (newParent.hasChild(domainObject)) {
                         log.info("Child already exists: {}",domainObject.getId());
                         continue;
                     }

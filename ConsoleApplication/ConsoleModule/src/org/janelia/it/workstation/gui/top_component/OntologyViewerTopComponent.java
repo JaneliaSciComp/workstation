@@ -49,8 +49,6 @@ public final class OntologyViewerTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_OntologyViewerTopComponent());
         setToolTipText(Bundle.HINT_OntologyViewerTopComponent());
-//        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
 
     }
 

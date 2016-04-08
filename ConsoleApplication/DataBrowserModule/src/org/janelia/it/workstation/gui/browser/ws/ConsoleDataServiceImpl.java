@@ -10,6 +10,7 @@ import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.interfaces.HasImageStack;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -170,7 +171,7 @@ public class ConsoleDataServiceImpl {
             opticalRes = sr.getOpticalResolution();
         }
         else if (result instanceof SampleAlignmentResult) {
-            SampleAlignmentResult sr = (SampleAlignmentResult)result;
+            HasImageStack sr = (HasImageStack)result;
             opticalRes = sr.getOpticalResolution();
         }
         

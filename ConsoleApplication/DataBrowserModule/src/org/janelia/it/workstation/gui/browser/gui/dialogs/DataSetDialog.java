@@ -33,7 +33,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -213,9 +212,7 @@ public class DataSetDialog extends ModalDialog {
             if (sampleImageType != null) {
                 sampleImageInput.setSelectedItem(sampleImageType);
             }
-            if (dataSet.getSageSync() != null) {
-                sageSyncCheckbox.setSelected(dataSet.getSageSync().booleanValue());
-            }
+            sageSyncCheckbox.setSelected(dataSet.isSageSync());
             if (dataSet.getPipelineProcesses()!=null) {
                 applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }

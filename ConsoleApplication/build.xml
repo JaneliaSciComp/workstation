@@ -23,4 +23,10 @@
             <replacefilter token="-J-Xms24m -J-Xmx64m" value="${run.args.extra}" />
         </replace>
     </target>
+    <target name="build" depends="suite.build"> 
+        <copy todir="build/cluster/update/download" > 
+            <fileset file="org-netbeans-modules-uihandler-interactive.nbm"/> 
+        </copy> 
+        <echo message="copied the interactive ui handler into cluster/update/download" /> 
+    </target><!-- - See more at: https://platform.netbeans.org/tutorials/nbm-gesture.html#sthash.jvwdq075.dpuf -->
 </project>

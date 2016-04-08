@@ -1,9 +1,9 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -19,15 +19,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -42,6 +45,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
@@ -60,6 +64,7 @@ import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.LoadedImagePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -68,9 +73,9 @@ import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -100,12 +105,16 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private final Debouncer debouncer = new Debouncer();
     
     // UI Components
-    private final SampleEditorToolbar toolbar;
+    private final ConfigPanel configPanel;
+    private final DropDownButton viewButton;
+    private final DropDownButton objectiveButton;
+    private final DropDownButton areaButton;
+    private final Map<String,DropDownButton> historyButtonMap = new HashMap<>();
     private final JPanel mainPanel;
     private final PaginatedResultsPanel lsmPanel;
     private final JScrollPane scrollPane;
     private final JPanel dataPanel;
-    private final List<PipelineResultPanel> resultPanels = new ArrayList<>();
+    private final List<SelectablePanel> resultPanels = new ArrayList<>();
     private final Set<LoadedImagePanel> lips = new HashSet<>();
     
     // Results
@@ -114,6 +123,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     
     // State
     private Sample sample;
+    private Map<String,SamplePipelineRun> currRunMap = new HashMap<>();
     private List<LSMImage> lsms;
     private List<Annotation> lsmAnnotations;
     private String currMode = MODE_RESULTS;
@@ -149,7 +159,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 return;
             }
 
-            PipelineResultPanel object = null;
+            SelectablePanel object = null;
             if (e.getKeyCode() == KeyEvent.VK_TAB) {
                 if (e.isShiftDown()) {
                     object = getPreviousObject();
@@ -168,7 +178,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
 
             if (object != null) {
-                resultPanelSelection(object, true);
+                panelSelection(object, true);
                 updateHud(false);
             }
 
@@ -189,10 +199,19 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (e.isConsumed()) {
                 return;
             }
-            PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
+            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
             // Select the button first
-            resultPanelSelection(resultPanel, true);
-            getButtonPopupMenu(resultPanel.getResult()).show(e.getComponent(), e.getX(), e.getY());
+            panelSelection(resultPanel, true);
+            if (resultPanel instanceof PipelineResultPanel) {
+                SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+                popupMenu.addMenuItems();
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
+            else if (resultPanel instanceof PipelineErrorPanel) {
+                SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                popupMenu.addMenuItems();
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+            }
             e.consume();
         }
 
@@ -201,10 +220,17 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (e.isConsumed()) {
                 return;
             }
-            PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
+            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
             // Select the button first
-            resultPanelSelection(resultPanel, true);
-            buttonDrillDown(resultPanel.getResult());
+            panelSelection(resultPanel, true);
+            if (resultPanel instanceof PipelineResultPanel) {
+                SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+                popupMenu.runDefaultAction();
+            }
+            else if (resultPanel instanceof PipelineErrorPanel) {
+                SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                popupMenu.runDefaultAction();
+            }
             e.consume();
         }
         
@@ -214,11 +240,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (e.isConsumed()) {
                 return;
             }
-            PipelineResultPanel resultPanel = getResultPanelAncestor(e.getComponent());
+            SelectablePanel resultPanel = getSelectablePanelAncestor(e.getComponent());
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
-            resultPanelSelection(resultPanel, true);
+            panelSelection(resultPanel, true);
         }
     };
     
@@ -228,12 +254,14 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         setLayout(new BorderLayout());
         setFocusable(true);
         
-        toolbar = new SampleEditorToolbar();
+        viewButton = new DropDownButton("View: ");
         populateViewButton();
-        // TODO: load from user prefs
-        toolbar.getObjectiveButton().setText("Objective: "+currObjective);
-        toolbar.getAreaButton().setText("Area: "+currArea);
-
+        objectiveButton = new DropDownButton("Objective: "+currObjective);
+        areaButton = new DropDownButton("Area: "+currArea);
+        
+        configPanel = new ConfigPanel(true);
+        configPanel.addTitleComponent(viewButton, true, true);
+        
         lsmPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
@@ -263,16 +291,20 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         });
     }
     
-    private void resultPanelSelection(PipelineResultPanel resultPanel, boolean isUserDriven) {
+    private void panelSelection(SelectablePanel resultPanel, boolean isUserDriven) {
         if (resultPanel==null) return;
-        for(PipelineResultPanel otherResultPanel : resultPanels) {
+        for(SelectablePanel otherResultPanel : resultPanels) {
             if (resultPanel != otherResultPanel) {
                 otherResultPanel.setSelected(false);
             }
         }
         currResultIndex = resultPanels.indexOf(resultPanel);
         resultPanel.setSelected(true);
-        Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel.getResult(), isUserDriven));
+
+        if (resultPanel instanceof PipelineResultPanel) {
+            PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
+            Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
+        }
         
         if (isUserDriven) {
             // Only make this the focused component if the user actually clicked on it. The main thing this does is change the 
@@ -281,29 +313,18 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
     }
     
-    private PipelineResultPanel getResultPanelAncestor(Component component) {
+    private SelectablePanel getSelectablePanelAncestor(Component component) {
         Component c = component;
         while (c!=null) {
-            if (c instanceof PipelineResultPanel) {
-                return (PipelineResultPanel)c;
+            if (c instanceof SelectablePanel) {
+                return (SelectablePanel)c;
             }
             c = c.getParent();
         }
         return null;
     }
-    
-    private JPopupMenu getButtonPopupMenu(PipelineResult result) {
-        SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
-        popupMenu.addMenuItems();
-        return popupMenu;
-    }
-    
-    private void buttonDrillDown(PipelineResult result) {
-        SampleResultContextMenu popupMenu = new SampleResultContextMenu(result);
-        popupMenu.runDefaultAction();
-    }
 
-    public PipelineResultPanel getPreviousObject() {
+    public SelectablePanel getPreviousObject() {
         if (resultPanels == null) {
             return null;
         }
@@ -315,7 +336,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         return resultPanels.get(i - 1);
     }
 
-    public PipelineResultPanel getNextObject() {
+    public SelectablePanel getNextObject() {
         if (resultPanels == null) {
             return null;
         }
@@ -416,14 +437,17 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         Hud hud = Hud.getSingletonInstance();
         hud.setKeyListener(keyListener);
                 
-        PipelineResultPanel pipelineResultPanel = resultPanels.get(currResultIndex);
-        ResultDescriptor resultDescriptor = pipelineResultPanel.getResultDescriptor();
+        SelectablePanel pipelineResultPanel = resultPanels.get(currResultIndex);
         
-        if (toggle) {
-            hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
-        }
-        else {
-            hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString(), true);
+        if (pipelineResultPanel instanceof PipelineResultPanel) {
+            ResultDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
+            
+            if (toggle) {
+                hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
+            }
+            else {
+                hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString(), true);
+            }
         }
     }
     
@@ -473,6 +497,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
+        
+        currRunMap.clear();
+        configPanel.setTitle(sample.getName());
         selectionModel.setParentObject(sample);
         
         this.sample = sample;
@@ -498,7 +525,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 
                 if (MODE_RESULTS.equals(currMode))  {
                     if (!resultPanels.isEmpty()) {
-                        resultPanelSelection(resultPanels.get(0), isUserDriven);
+                        panelSelection(resultPanels.get(0), isUserDriven);
                     }
                 }
                 
@@ -522,38 +549,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     public void showResults() {
-
-        List<String> objectives = new ArrayList<>(sample.getOrderedObjectives());
-        Set<String> areaSet = new LinkedHashSet<>();
-        
-        for(String objective : objectives) {
-            
-            ObjectiveSample objSample = sample.getObjectiveSample(objective);
-            if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
-            if (run==null || run.getResults()==null) continue;
-            
-            for(PipelineResult result : run.getResults()) {
-
-                String area = null;
-                if (result instanceof HasAnatomicalArea) {
-                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
-                }
-                
-                if (area==null) {
-                    area = "Unknown";
-                }
-            	areaSet.add(area);
-            }
-        }
-        
-        objectives.add(0, ALL_VALUE);
-        populateObjectiveButton(objectives);
-        
-        List<String> areas = new ArrayList<>(areaSet);
-        areas.add(0, ALL_VALUE);
-        populateAreaButton(areas);
-        
         if (MODE_LSMS.equals(currMode))  {
             showLsmView();
         }
@@ -562,9 +557,32 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         updateUI();
     }
-
+    
     private void showLsmView() {
 
+    	configPanel.removeAllConfigComponents();
+        configPanel.addConfigComponent(objectiveButton);
+        configPanel.addConfigComponent(areaButton);
+    	
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> areaSet = new LinkedHashSet<>();
+    	for(LSMImage lsm : lsms) {
+    		objectiveSet.add(lsm.getObjective());
+                String area = lsm.getAnatomicalArea();
+                if (area==null) {
+                    area = "Unknown";
+                }
+                areaSet.add(area);
+    	}
+    	
+    	List<String> objectives = new ArrayList<>(objectiveSet);
+        objectives.add(0, ALL_VALUE);
+        populateObjectiveButton(objectives);
+        
+        List<String> areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+        populateAreaButton(areas);
+        
         List<LSMImage> filteredLsms = new ArrayList<>();
         for(LSMImage lsm : lsms) {
 
@@ -585,8 +603,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         
         lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
         lsmPanel.showSearchResults(lsmSearchResults, true);
+        
         removeAll();
-        add(toolbar, BorderLayout.NORTH);
+        add(configPanel, BorderLayout.NORTH);
         add(lsmPanel, BorderLayout.CENTER);
     }
 
@@ -595,10 +614,67 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         lips.clear();
         resultPanels.clear();
         dataPanel.removeAll();
+        configPanel.removeAllConfigComponents();
+        configPanel.addConfigComponent(objectiveButton);
+        configPanel.addConfigComponent(areaButton);
         
-        GridBagConstraints c = new GridBagConstraints();
-        int y = 0;
-                
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> areaSet = new LinkedHashSet<>();
+        
+        // Populate currRunMap
+        for(String objective : objectiveSet) {
+            
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample==null) continue;
+            
+            // Is there a run already selected?
+            SamplePipelineRun run = currRunMap.get(objective);
+            
+            if (run==null) {
+            	// If not, pick one as the default
+            	run = objectiveSample.getLatestSuccessfulRun();
+            	if (run==null) {
+            		run = objectiveSample.getLatestRun();
+            	}
+            	if (run!=null) {
+            		currRunMap.put(objective, run);
+            	}
+            }
+        }
+        
+        // Populate drop down buttons
+        for(String objective : objectiveSet) {
+            
+            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+            if (objectiveSample==null) continue;
+            SamplePipelineRun run = currRunMap.get(objective);
+            if (run==null || run.getResults()==null) continue;
+
+            for(PipelineResult result : run.getResults()) {
+                String area = null;
+                if (result instanceof HasAnatomicalArea) {
+                    area = ((HasAnatomicalArea)result).getAnatomicalArea();
+                }
+                if (area==null) {
+                    area = "Unknown";
+                }
+            	areaSet.add(area);
+            }
+            
+            DropDownButton historyButton = new DropDownButton(objective+": "+getLabel(run));
+            populateHistoryButton(historyButton.getPopupMenu(), objectiveSample);
+            historyButtonMap.put(objective, historyButton);
+            configPanel.addConfigComponent(historyButton);
+        }
+
+    	List<String> objectives = new ArrayList<>(objectiveSet);
+        objectives.add(0, ALL_VALUE);
+        populateObjectiveButton(objectives);
+        
+        List<String> areas = new ArrayList<>(areaSet);
+        areas.add(0, ALL_VALUE);
+        populateAreaButton(areas);
+        
         for(String objective : sample.getOrderedObjectives()) {
             
             boolean diplayObjective = true;
@@ -606,10 +682,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {
                 diplayObjective = false;
             }
-            
-            ObjectiveSample objSample = sample.getObjectiveSample(objective);
-            if (objSample==null) continue;
-            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
+
+            SamplePipelineRun run = currRunMap.get(objective);
             if (run==null || run.getResults()==null) continue;
             
             for(PipelineResult result : run.getResults()) {
@@ -629,34 +703,57 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 if (display) {
-                    c.gridx = 0;
-                    c.gridy = y++;
-                    c.fill = GridBagConstraints.BOTH;
-                    c.anchor = GridBagConstraints.PAGE_START;
-                    c.weightx = 1;
-                    c.weighty = 0.9;
                     PipelineResultPanel resultPanel = new PipelineResultPanel(result);
                     resultPanels.add(resultPanel);
                     dataPanel.add(resultPanel);
                 }
             }
+            
+            if (run.hasError()) {
+                PipelineErrorPanel resultPanel = new PipelineErrorPanel(run);
+                resultPanels.add(resultPanel);
+                dataPanel.add(resultPanel);
+            }
+            
         }
 
         removeAll();
-        add(toolbar, BorderLayout.NORTH);
+        add(configPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
-    
+
+    private void populateHistoryButton(JPopupMenu popupMenu, final ObjectiveSample objectiveSample) {
+    	final String objective = objectiveSample.getObjective();
+    	popupMenu.removeAll();
+        ButtonGroup group = new ButtonGroup();
+        for(final SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
+            JMenuItem menuItem = new JRadioButtonMenuItem(getLabel(run), currRunMap.get(objective)==run);
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	currRunMap.put(objective, run);
+                	showResults();
+                }
+            });
+            group.add(menuItem);
+            popupMenu.add(menuItem);
+        }
+    }
+
+	private String getLabel(SamplePipelineRun run) {
+	    if (run==null) return "";
+	    return DomainModelViewUtils.getDateString(run.getCreationDate());
+	}	
+	
     private void populateViewButton() {
-        toolbar.getViewButton().setText(currMode);
-        JPopupMenu popupMenu = toolbar.getViewButton().getPopupMenu();
+        viewButton.setText(currMode);
+        JPopupMenu popupMenu = viewButton.getPopupMenu();
         popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String mode : Arrays.asList(MODE_LSMS, MODE_RESULTS)) {
             JMenuItem menuItem = new JMenuItem(mode);
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
-                    toolbar.getViewButton().setText(mode);
+                    viewButton.setText(mode);
                     setViewMode(mode);
                 }
             });
@@ -671,8 +768,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     private void populateObjectiveButton(List<String> objectives) {
-        toolbar.getObjectiveButton().setText("Objective: "+currObjective);
-        JPopupMenu popupMenu = toolbar.getObjectiveButton().getPopupMenu();
+        objectiveButton.setText("Objective: "+currObjective);
+        JPopupMenu popupMenu = objectiveButton.getPopupMenu();
         popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
@@ -693,8 +790,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
     
     private void populateAreaButton(List<String> areas) {
-        toolbar.getAreaButton().setText("Area: "+currArea);
-        JPopupMenu popupMenu = toolbar.getAreaButton().getPopupMenu();
+        areaButton.setText("Area: "+currArea);
+        JPopupMenu popupMenu = areaButton.getPopupMenu();
         popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
@@ -847,6 +944,49 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             lip.addMouseListener(new MouseForwarder(this, "LoadedImagePanel->PipelineResultPanel"));
             lips.add(lip);
             return lip;
+        }
+    }
+    
+    private static final ImageIcon ERROR_ICON = Icons.getIcon("error_large.png");
+    
+    private class PipelineErrorPanel extends SelectablePanel {
+        
+        private SamplePipelineRun run;
+        private JLabel label = new JLabel();
+        private JLabel subLabel = new JLabel();
+        
+        private PipelineErrorPanel(SamplePipelineRun run) {
+                        
+            this.run = run;
+            int b = SelectablePanel.BORDER_WIDTH;
+            setBorder(BorderFactory.createEmptyBorder(b, b, b, b));
+            setLayout(new BorderLayout());
+            
+            PipelineError error = run.getError();
+            if (error==null) throw new IllegalStateException("Cannot create a PipelineErrorPanel for non-error run");
+
+            String title = run.getParent().getObjective()+" "+StringUtils.splitCamelCase(error.getClassification());
+            label.setText(title);
+            subLabel.setText(error.getDescription());
+
+            JPanel titlePanel = new JPanel(new BorderLayout());
+            titlePanel.add(label, BorderLayout.PAGE_START);
+            titlePanel.add(subLabel, BorderLayout.PAGE_END);
+
+            JPanel imagePanel = new JPanel();
+            imagePanel.setLayout(new BorderLayout());
+            imagePanel.add(new JLabel(ERROR_ICON), BorderLayout.CENTER);
+            
+            add(titlePanel, BorderLayout.NORTH);
+            add(imagePanel, BorderLayout.CENTER);
+
+            setFocusTraversalKeysEnabled(false);
+            addKeyListener(keyListener);
+            addMouseListener(resultMouseListener);
+        }
+
+        public SamplePipelineRun getRun() {
+            return run;
         }
     }
 }

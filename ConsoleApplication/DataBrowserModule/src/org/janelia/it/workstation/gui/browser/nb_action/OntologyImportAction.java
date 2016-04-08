@@ -144,7 +144,7 @@ public class OntologyImportAction extends NodePresenterAction   {
         }
 
         Ontology updatedOntology = DomainMgr.getDomainMgr().getModel().addOntologyTerm(ontology.getId(), parentTerm.getId(), newTerm);
-        parentTerm = DomainUtils.findTerm(updatedOntology, parentTerm.getId());
+        parentTerm = updatedOntology.findTerm(parentTerm.getId());
         for (OntologyTerm childTerm: parentTerm.getTerms()) {
             if (childTerm.getName().equals(termName)) {
                 newTerm = childTerm;

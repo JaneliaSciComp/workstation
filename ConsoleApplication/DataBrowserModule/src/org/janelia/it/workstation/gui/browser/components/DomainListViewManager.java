@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.Component;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
@@ -59,8 +60,14 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
     }
 
     @Subscribe
-    public void domainObjectSelected(DomainObjectSelectionEvent event) {
+    public void domainObjectsSelected(DomainObjectSelectionEvent event) {
 
+        // We only care about single selections
+        DomainObject domainObject = event.getObjectIfSingle();
+        if (domainObject==null) {
+            return;
+        }
+        
         // We only care about selection events
         if (!event.isSelect()) {
             log.debug("Event is not selection: {}",event);
@@ -73,9 +80,10 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
             return;
         }
 
-        log.info("domainObjectSelected({})",Reference.createFor(event.getDomainObject()));
-
+        
+        log.info("domainObjectSelected({})",Reference.createFor(domainObject));
+        
         DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor"); 
-        targetViewer.loadDomainObject(event.getDomainObject(), false);
+        targetViewer.loadDomainObject(domainObject, false);
     }
 }

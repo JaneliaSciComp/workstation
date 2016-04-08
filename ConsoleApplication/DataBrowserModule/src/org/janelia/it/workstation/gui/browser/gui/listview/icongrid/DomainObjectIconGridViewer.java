@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -34,7 +35,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButt
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.gui.browser.model.DomainConstants;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -176,25 +176,32 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
 
         Set<Reference> selectedIds = new HashSet<>();
-        
-        boolean currClearAll = clearAll;
-        for(DomainObject domainObject : domainObjects) {
-            Reference id = getImageModel().getImageUniqueId(domainObject);
-            if (select && getObjectMap().get(id)!=null) {
-                selectObject(domainObject, currClearAll);
-                selectedIds.add(id);
-            }
-            currClearAll = false;
-        }
 
-        if (clearAll) {
-            // Clear out everything that was not selected above
-            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-                if (!selectedIds.contains(selectedId)) {
-                    deselectObject(imageModel.getImageByUniqueId(selectedId));
-                }
-            }
+        if (select) {
+            selectObjects(domainObjects, clearAll);
         }
+        else {
+            deselectObjects(domainObjects);
+        }
+        
+//        boolean currClearAll = clearAll;
+//        for(DomainObject domainObject : domainObjects) {
+//            Reference id = getImageModel().getImageUniqueId(domainObject);
+//            if (select && getObjectMap().get(id)!=null) {
+//                selectObject(domainObject, currClearAll);
+//                selectedIds.add(id);
+//            }
+//            currClearAll = false;
+//        }
+//
+//        if (clearAll) {
+//            // Clear out everything that was not selected above
+//            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+//                if (!selectedIds.contains(selectedId)) {
+//                    deselectObject(imageModel.getImageByUniqueId(selectedId));
+//                }
+//            }
+//        }
         
         SwingUtilities.invokeLater(new Runnable() {
             @Override

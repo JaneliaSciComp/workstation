@@ -324,13 +324,12 @@ public abstract class PaginatedResultsPanel extends JPanel {
     
     private void selectAll() {
         boolean clearAll = true;
+        List<DomainObject> domainObjects = new ArrayList<>();
         for(ResultPage page : searchResults.getPages()) {
             if (page==null) continue; // Page not yet loaded
-            for(DomainObject domainObject : page.getDomainObjects()) {
-                selectionModel.select(domainObject, clearAll, true);
-                clearAll = false;
-            }
+            domainObjects.addAll(page.getDomainObjects());
         }
+        selectionModel.select(domainObjects, clearAll, true);
     }
     
     private void updateStatusBar() {
