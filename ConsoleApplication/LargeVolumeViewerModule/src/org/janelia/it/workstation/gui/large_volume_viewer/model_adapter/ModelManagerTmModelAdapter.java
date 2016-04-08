@@ -160,7 +160,8 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
         EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
         // Back-fill the corrected workspace entity.
-        savedEntityData.setParentEntity(workspaceEntity);        if (preExistingEntityData != null) {
+        savedEntityData.setParentEntity(workspaceEntity);
+        if (preExistingEntityData != null) {
             workspaceEntity.getEntityData().remove(preExistingEntityData);
         }
         workspaceEntity.getEntityData().add(savedEntityData);
