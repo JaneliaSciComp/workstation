@@ -1,0 +1,2691 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AntConfiguration">
+    <buildFile url="file://$PROJECT_DIR$/buildprocess/build-all.xml">
+      <maximumHeapSize value="256" />
+      <maximumStackSize value="64" />
+    </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/jacs/build.xml">
+      <additionalClassPath>
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/orangevolt-ant-tasks-1.3.8.jar" />
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/roxes-win32forjava-1.1.1.jar" />
+      </additionalClassPath>
+      <maximumHeapSize value="256" />
+      <maximumStackSize value="64" />
+    </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/compute/build.xml">
+      <additionalClassPath>
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/orangevolt-ant-tasks-1.3.8.jar" />
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/roxes-win32forjava-1.1.1.jar" />
+      </additionalClassPath>
+      <maximumHeapSize value="256" />
+      <maximumStackSize value="64" />
+    </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/model/build.xml">
+      <additionalClassPath>
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/orangevolt-ant-tasks-1.3.8.jar" />
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/roxes-win32forjava-1.1.1.jar" />
+      </additionalClassPath>
+      <maximumHeapSize value="256" />
+      <maximumStackSize value="64" />
+    </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/shared/build.xml">
+      <additionalClassPath>
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/orangevolt-ant-tasks-1.3.8.jar" />
+        <entry path="file://$PROJECT_DIR$/buildprocess/lib/roxes-win32forjava-1.1.1.jar" />
+      </additionalClassPath>
+      <maximumHeapSize value="256" />
+      <maximumStackSize value="64" />
+    </buildFile>
+    <buildFile url="file://$PROJECT_DIR$/ConsoleApplication/build-runner.xml">
+      <maximumHeapSize value="512" />
+    </buildFile>
+  </component>
+  <component name="ArtifactManager">
+    <artifact type="war" name="Webdav:war">
+      <output-path>$PROJECT_DIR$/webdav/target</output-path>
+      <root id="archive" name="Webdav.war">
+        <element id="artifact" artifact-name="Webdav:war exploded" />
+      </root>
+    </artifact>
+    <artifact type="exploded-war" name="Webdav:war exploded">
+      <output-path>$PROJECT_DIR$/webdav/target/Webdav</output-path>
+      <root id="root">
+        <element id="directory" name="WEB-INF">
+          <element id="directory" name="classes">
+            <element id="module-output" name="Webdav" />
+          </element>
+          <element id="directory" name="lib">
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.containers:jersey-container-servlet:2.22" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.containers:jersey-container-servlet-core:2.22" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2.external:javax.inject:2.4.0-b31" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.core:jersey-common:2.22" />
+            <element id="library" level="project" name="Maven: javax.annotation:javax.annotation-api:1.2" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2:hk2-api:2.4.0-b31" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2:hk2-utils:2.4.0-b31" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b31" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2:hk2-locator:2.4.0-b31" />
+            <element id="library" level="project" name="Maven: org.javassist:javassist:3.18.1-GA" />
+            <element id="library" level="project" name="Maven: org.glassfish.hk2:osgi-resource-locator:1.0.1" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.core:jersey-server:2.22" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.core:jersey-client:2.22" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.media:jersey-media-jaxb:2.22" />
+            <element id="library" level="project" name="Maven: javax.validation:validation-api:1.1.0.Final" />
+            <element id="library" level="project" name="Maven: javax.ws.rs:javax.ws.rs-api:2.0.1" />
+            <element id="library" level="project" name="Maven: commons-httpclient:commons-httpclient:3.1" />
+            <element id="library" level="project" name="Maven: commons-logging:commons-logging:1.0.4" />
+            <element id="library" level="project" name="Maven: commons-codec:commons-codec:1.2" />
+            <element id="library" level="project" name="Maven: org.apache.directory.api:api-all:1.0.0-M30" />
+            <element id="library" level="project" name="Maven: org.slf4j:slf4j-api:1.7.10" />
+            <element id="library" level="project" name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.xpp3:1.1.4c_6" />
+            <element id="library" level="project" name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" />
+            <element id="library" level="project" name="Maven: xml-apis:xml-apis:1.0.b2" />
+            <element id="library" level="project" name="Maven: commons-pool:commons-pool:1.6" />
+            <element id="library" level="project" name="Maven: org.apache.mina:mina-core:2.0.9" />
+            <element id="library" level="project" name="Maven: commons-lang:commons-lang:2.6" />
+            <element id="library" level="project" name="Maven: commons-collections:commons-collections:3.2.1" />
+            <element id="library" level="project" name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" />
+            <element id="library" level="project" name="Maven: commons-io:commons-io:2.4" />
+            <element id="library" level="project" name="Maven: io.swagger:swagger-jersey2-jaxrs:1.5.0" />
+            <element id="library" level="project" name="Maven: io.swagger:swagger-jaxrs:1.5.0" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.4.2" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.2" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.4.2" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.0" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.4.2" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.4.2" />
+            <element id="library" level="project" name="Maven: org.codehaus.woodstox:stax2-api:3.1.4" />
+            <element id="library" level="project" name="Maven: io.swagger:swagger-core:1.5.0" />
+            <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.2.1" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2" />
+            <element id="library" level="project" name="Maven: joda-time:joda-time:2.2" />
+            <element id="library" level="project" name="Maven: io.swagger:swagger-models:1.5.0" />
+            <element id="library" level="project" name="Maven: io.swagger:swagger-annotations:1.5.0" />
+            <element id="library" level="project" name="Maven: org.reflections:reflections:0.9.9" />
+            <element id="library" level="project" name="Maven: com.google.guava:guava:15.0" />
+            <element id="library" level="project" name="Maven: com.google.code.findbugs:annotations:2.0.1" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.4.2" />
+            <element id="library" level="project" name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.4.2" />
+            <element id="library" level="project" name="Maven: org.glassfish.jersey.media:jersey-media-multipart:2.1" />
+            <element id="library" level="project" name="Maven: org.jvnet.mimepull:mimepull:1.8" />
+          </element>
+        </element>
+        <element id="directory" name="META-INF">
+          <element id="file-copy" path="$PROJECT_DIR$/webdav/target/Webdav/META-INF/MANIFEST.MF" />
+        </element>
+        <element id="javaee-facet-resources" facet="Webdav/web/Web" />
+      </root>
+    </artifact>
+  </component>
+  <component name="BuildJarProjectSettings">
+    <option name="BUILD_JARS_ON_MAKE" value="false" />
+  </component>
+  <component name="CVSRevisionGraphProjectComponent">
+    <option name="_useTwoTagConvention" value="true" />
+    <option name="_showTags" value="true" />
+    <option name="_tagNaming" value="TAG_$T_MERGE_$S_TO_$D" />
+    <option name="_tagFilter" value="" />
+    <option name="_branchFilter" />
+    <option name="_showRevisionFilter" value="false" />
+    <option name="_afterDateTimeFilter" value="false" />
+    <option name="_beforeDateTimeFilter" value="false" />
+    <option name="_afterDateTime" value="" />
+    <option name="_beforeDateTime" value="" />
+    <option name="_showTagFilter" value="false" />
+    <option name="_showBranchFilter" value="false" />
+  </component>
+  <component name="ClearCaseSharedConfig">
+    <option name="myUseUcmModel" value="true" />
+  </component>
+  <component name="CodeStyleProjectProfileManger">
+    <option name="PROJECT_PROFILE" />
+    <option name="USE_PROJECT_LEVEL_SETTINGS" value="false" />
+  </component>
+  <component name="CodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS">
+      <value>
+        <ADDITIONAL_INDENT_OPTIONS fileType="java">
+          <option name="INDENT_SIZE" value="4" />
+          <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          <option name="TAB_SIZE" value="4" />
+          <option name="USE_TAB_CHARACTER" value="false" />
+          <option name="SMART_TABS" value="false" />
+          <option name="LABEL_INDENT_SIZE" value="0" />
+          <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+          <option name="USE_RELATIVE_INDENTS" value="false" />
+        </ADDITIONAL_INDENT_OPTIONS>
+        <ADDITIONAL_INDENT_OPTIONS fileType="jsp">
+          <option name="INDENT_SIZE" value="4" />
+          <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          <option name="TAB_SIZE" value="4" />
+          <option name="USE_TAB_CHARACTER" value="false" />
+          <option name="SMART_TABS" value="false" />
+          <option name="LABEL_INDENT_SIZE" value="0" />
+          <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+          <option name="USE_RELATIVE_INDENTS" value="false" />
+        </ADDITIONAL_INDENT_OPTIONS>
+        <ADDITIONAL_INDENT_OPTIONS fileType="xml">
+          <option name="INDENT_SIZE" value="4" />
+          <option name="CONTINUATION_INDENT_SIZE" value="8" />
+          <option name="TAB_SIZE" value="4" />
+          <option name="USE_TAB_CHARACTER" value="false" />
+          <option name="SMART_TABS" value="false" />
+          <option name="LABEL_INDENT_SIZE" value="0" />
+          <option name="LABEL_INDENT_ABSOLUTE" value="false" />
+          <option name="USE_RELATIVE_INDENTS" value="false" />
+        </ADDITIONAL_INDENT_OPTIONS>
+      </value>
+    </option>
+  </component>
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <excludeFromCompile>
+      <directory url="file://$PROJECT_DIR$/console/target/generated-sources/annotations" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/console/target/generated-test-sources/test-annotations" includeSubdirectories="true" />
+    </excludeFromCompile>
+    <resourceExtensions>
+      <entry name=".+\.(properties|xml|html|dtd|tld)" />
+      <entry name=".+\.(gif|png|jpeg|jpg)" />
+    </resourceExtensions>
+    <wildcardResourcePatterns>
+      <entry name="?*.properties" />
+      <entry name="?*.xml" />
+      <entry name="?*.gif" />
+      <entry name="?*.png" />
+      <entry name="?*.jpeg" />
+      <entry name="?*.jpg" />
+      <entry name="?*.html" />
+      <entry name="?*.dtd" />
+      <entry name="?*.tld" />
+      <entry name="*.glsl" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="console" />
+      </profile>
+      <profile default="false" name="Annotation profile for Webdav" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="Webdav" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="Webdav" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="CopyrightManager" default="" />
+  <component name="CppTools.Loader" reportImplicitCastToBool="false" reportNameReferencedOnce="false" warnedAboutFileOutOfSourceRoot="true" version="3" compilerSelect="AUTO" />
+  <component name="DataSourceManagerImpl" format="xml" hash="3146058086">
+    <data-source source="LOCAL" name="FlyPortal DB" uuid="36a8a5cf-e8c3-4d85-ae1a-4aac271c843f">
+      <driver-ref>mysql</driver-ref>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://dev-db:3306/flyportal</jdbc-url>
+      <libraries>
+        <library>
+          <url>file://$PROJECT_DIR$/common/MySQL/mysql-connector-java-5.1.22-bin.jar</url>
+        </library>
+      </libraries>
+    </data-source>
+    <data-source source="LOCAL" name="Sage" uuid="393b6160-a5dc-414f-b482-05ed3eeac7a7">
+      <driver-ref>mysql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.mysql.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://sage-db:3306/sage</jdbc-url>
+      <driver-properties>
+        <property name="zeroDateTimeBehavior" value="convertToNull" />
+        <property name="tinyInt1isBit" value="false" />
+        <property name="characterEncoding" value="utf8" />
+        <property name="characterSetResults" value="utf8" />
+        <property name="yearIsDateType" value="false" />
+      </driver-properties>
+      <libraries />
+    </data-source>
+  </component>
+  <component name="DependencyValidationManager">
+    <option name="SKIP_IMPORT_STATEMENTS" value="false" />
+  </component>
+  <component name="EclipseCompilerSettings">
+    <option name="GENERATE_NO_WARNINGS" value="true" />
+    <option name="DEPRECATION" value="false" />
+  </component>
+  <component name="EclipseEmbeddedCompilerSettings">
+    <option name="DEBUGGING_INFO" value="true" />
+    <option name="GENERATE_NO_WARNINGS" value="true" />
+    <option name="DEPRECATION" value="false" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="" />
+    <option name="MAXIMUM_HEAP_SIZE" value="128" />
+  </component>
+  <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false">
+    <file url="file://$PROJECT_DIR$/compute/test/org/janelia/it/jacs/compute/access/SageDAOTest.java" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
+  </component>
+  <component name="EntryPointsManager">
+    <entry_points version="2.0" />
+    <list size="2">
+      <item index="0" class="java.lang.String" itemvalue="org.junit.After" />
+      <item index="1" class="java.lang.String" itemvalue="org.junit.Before" />
+    </list>
+  </component>
+  <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$" />
+    <type id="Spring" />
+  </component>
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <option name="distributionType" value="LOCAL" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleHome" value="$USER_HOME$/gradle-2.5" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+  <component name="IdProvider" IDEtalkID="B1B36B4D70CCA5A6FF873836AF99BC9E" />
+  <component name="InspectionProjectProfileManager">
+    <profile version="1.0">
+      <option name="myName" value="Project Default" />
+      <option name="myLocal" value="true" />
+      <inspection_tool class="LoggerInitializedWithForeignClass" enabled="false" level="WARNING" enabled_by_default="false">
+        <option name="loggerClassName" value="org.apache.log4j.Logger,org.slf4j.LoggerFactory,org.apache.commons.logging.LogFactory,java.util.logging.Logger" />
+        <option name="loggerFactoryMethodName" value="getLogger,getLogger,getLog,getLogger" />
+      </inspection_tool>
+      <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+        <option name="processCode" value="true" />
+        <option name="processLiterals" value="true" />
+        <option name="processComments" value="true" />
+      </inspection_tool>
+    </profile>
+    <option name="PROJECT_PROFILE" value="Project Default" />
+    <option name="USE_PROJECT_PROFILE" value="true" />
+    <version value="1.0" />
+    <list size="7">
+      <item index="0" class="java.lang.String" itemvalue="UNUSED ENTRY" />
+      <item index="1" class="java.lang.String" itemvalue="SERVER PROBLEM" />
+      <item index="2" class="java.lang.String" itemvalue="WEAK WARNING" />
+      <item index="3" class="java.lang.String" itemvalue="INFO" />
+      <item index="4" class="java.lang.String" itemvalue="TYPO" />
+      <item index="5" class="java.lang.String" itemvalue="WARNING" />
+      <item index="6" class="java.lang.String" itemvalue="ERROR" />
+    </list>
+  </component>
+  <component name="JavadocGenerationManager">
+    <option name="OUTPUT_DIRECTORY" />
+    <option name="OPTION_SCOPE" value="protected" />
+    <option name="OPTION_HIERARCHY" value="true" />
+    <option name="OPTION_NAVIGATOR" value="true" />
+    <option name="OPTION_INDEX" value="true" />
+    <option name="OPTION_SEPARATE_INDEX" value="true" />
+    <option name="OPTION_DOCUMENT_TAG_USE" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_AUTHOR" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_VERSION" value="false" />
+    <option name="OPTION_DOCUMENT_TAG_DEPRECATED" value="true" />
+    <option name="OPTION_DEPRECATED_LIST" value="true" />
+    <option name="OTHER_OPTIONS" value="" />
+    <option name="HEAP_SIZE" />
+    <option name="LOCALE" />
+    <option name="OPEN_IN_BROWSER" value="true" />
+  </component>
+  <component name="JspManager">
+    <option name="searchForPrefixedReferences" value="false" />
+  </component>
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/console/pom.xml" />
+        <option value="$PROJECT_DIR$/webdav/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="Palette2">
+    <group name="Swing">
+      <item class="com.intellij.uiDesigner.HSpacer" tooltip-text="Horizontal Spacer" icon="/com/intellij/uiDesigner/icons/hspacer.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="1" hsize-policy="6" anchor="0" fill="1" />
+      </item>
+      <item class="com.intellij.uiDesigner.VSpacer" tooltip-text="Vertical Spacer" icon="/com/intellij/uiDesigner/icons/vspacer.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="1" anchor="0" fill="2" />
+      </item>
+      <item class="javax.swing.JPanel" icon="/com/intellij/uiDesigner/icons/panel.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="3" />
+      </item>
+      <item class="javax.swing.JScrollPane" icon="/com/intellij/uiDesigner/icons/scrollPane.png" removable="false" auto-create-binding="false" can-attach-label="true">
+        <default-constraints vsize-policy="7" hsize-policy="7" anchor="0" fill="3" />
+      </item>
+      <item class="javax.swing.JButton" icon="/com/intellij/uiDesigner/icons/button.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="3" anchor="0" fill="1" />
+        <initial-values>
+          <property name="text" value="Button" />
+        </initial-values>
+      </item>
+      <item class="javax.swing.JRadioButton" icon="/com/intellij/uiDesigner/icons/radioButton.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="3" anchor="8" fill="0" />
+        <initial-values>
+          <property name="text" value="RadioButton" />
+        </initial-values>
+      </item>
+      <item class="javax.swing.JCheckBox" icon="/com/intellij/uiDesigner/icons/checkBox.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="3" anchor="8" fill="0" />
+        <initial-values>
+          <property name="text" value="CheckBox" />
+        </initial-values>
+      </item>
+      <item class="javax.swing.JLabel" icon="/com/intellij/uiDesigner/icons/label.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="0" anchor="8" fill="0" />
+        <initial-values>
+          <property name="text" value="Label" />
+        </initial-values>
+      </item>
+      <item class="javax.swing.JTextField" icon="/com/intellij/uiDesigner/icons/textField.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="8" fill="1">
+          <preferred-size width="150" height="-1" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JPasswordField" icon="/com/intellij/uiDesigner/icons/passwordField.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="8" fill="1">
+          <preferred-size width="150" height="-1" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JFormattedTextField" icon="/com/intellij/uiDesigner/icons/formattedTextField.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="8" fill="1">
+          <preferred-size width="150" height="-1" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JTextArea" icon="/com/intellij/uiDesigner/icons/textArea.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JTextPane" icon="/com/intellij/uiDesigner/icons/textPane.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JEditorPane" icon="/com/intellij/uiDesigner/icons/editorPane.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JComboBox" icon="/com/intellij/uiDesigner/icons/comboBox.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="0" hsize-policy="2" anchor="8" fill="1" />
+      </item>
+      <item class="javax.swing.JTable" icon="/com/intellij/uiDesigner/icons/table.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JList" icon="/com/intellij/uiDesigner/icons/list.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="2" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JTree" icon="/com/intellij/uiDesigner/icons/tree.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3">
+          <preferred-size width="150" height="50" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JTabbedPane" icon="/com/intellij/uiDesigner/icons/tabbedPane.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="3">
+          <preferred-size width="200" height="200" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JSplitPane" icon="/com/intellij/uiDesigner/icons/splitPane.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="3" hsize-policy="3" anchor="0" fill="3">
+          <preferred-size width="200" height="200" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JSpinner" icon="/com/intellij/uiDesigner/icons/spinner.png" removable="false" auto-create-binding="true" can-attach-label="true">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="8" fill="1" />
+      </item>
+      <item class="javax.swing.JSlider" icon="/com/intellij/uiDesigner/icons/slider.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="8" fill="1" />
+      </item>
+      <item class="javax.swing.JSeparator" icon="/com/intellij/uiDesigner/icons/separator.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="6" anchor="0" fill="3" />
+      </item>
+      <item class="javax.swing.JProgressBar" icon="/com/intellij/uiDesigner/icons/progressbar.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="0" fill="1" />
+      </item>
+      <item class="javax.swing.JToolBar" icon="/com/intellij/uiDesigner/icons/toolbar.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="6" anchor="0" fill="1">
+          <preferred-size width="-1" height="20" />
+        </default-constraints>
+      </item>
+      <item class="javax.swing.JToolBar$Separator" icon="/com/intellij/uiDesigner/icons/toolbarSeparator.png" removable="false" auto-create-binding="false" can-attach-label="false">
+        <default-constraints vsize-policy="0" hsize-policy="0" anchor="0" fill="1" />
+      </item>
+      <item class="javax.swing.JScrollBar" icon="/com/intellij/uiDesigner/icons/scrollbar.png" removable="false" auto-create-binding="true" can-attach-label="false">
+        <default-constraints vsize-policy="6" hsize-policy="0" anchor="0" fill="2" />
+      </item>
+    </group>
+  </component>
+  <component name="ProjectCodeStyleSettingsManager">
+    <option name="PER_PROJECT_SETTINGS">
+      <value>
+        <XML>
+          <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
+        </XML>
+        <codeStyleSettings language="JAVA">
+          <option name="CATCH_ON_NEW_LINE" value="true" />
+          <option name="FINALLY_ON_NEW_LINE" value="true" />
+          <option name="WHILE_BRACE_FORCE" value="3" />
+          <option name="FOR_BRACE_FORCE" value="3" />
+        </codeStyleSettings>
+      </value>
+    </option>
+    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+  </component>
+  <component name="ProjectDetails">
+    <option name="projectName" value="vics" />
+  </component>
+  <component name="ProjectDictionaryState">
+    <dictionary name="saffordt" />
+  </component>
+  <component name="ProjectKey">
+    <option name="state" value="http://svn/VICS/VICS/trunk/vics.ipr" />
+  </component>
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/compute/Compute.iml" filepath="$PROJECT_DIR$/compute/Compute.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ConsoleApplication/ConsoleApplication.iml" filepath="$PROJECT_DIR$/ConsoleApplication/ConsoleApplication.iml" />
+      <module fileurl="file://$PROJECT_DIR$/jacs/Jacs.iml" filepath="$PROJECT_DIR$/jacs/Jacs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/model/Model.iml" filepath="$PROJECT_DIR$/model/Model.iml" />
+      <module fileurl="file://$PROJECT_DIR$/shared/Shared.iml" filepath="$PROJECT_DIR$/shared/Shared.iml" />
+      <module fileurl="file://$PROJECT_DIR$/archive/archive.iml" filepath="$PROJECT_DIR$/archive/archive.iml" />
+      <module fileurl="file://$PROJECT_DIR$/buildprocess/buildprocess.iml" filepath="$PROJECT_DIR$/buildprocess/buildprocess.iml" />
+      <module fileurl="file://$PROJECT_DIR$/groovy/groovy.iml" filepath="$PROJECT_DIR$/groovy/groovy.iml" />
+      <module fileurl="file://$PROJECT_DIR$/reports/reports.iml" filepath="$PROJECT_DIR$/reports/reports.iml" />
+    </modules>
+  </component>
+  <component name="ProjectResources">
+    <default-html-doctype>http://www.w3.org/1999/xhtml</default-html-doctype>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.7" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/buildprocess/intellij-make" />
+  </component>
+  <component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="NetBeans Client" type="AntRunConfiguration" factoryName="Ant Target">
+      <RunnerSettings RunnerId="AntRunConfigurationRunner" />
+      <ConfigurationWrapper RunnerId="AntRunConfigurationRunner" />
+      <method>
+        <option name="Make" enabled="false" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/ConsoleApplication/build-runner.xml" target="run" />
+      </method>
+    </configuration>
+    <configuration default="false" name="ComputeModuleFastTestsSuite" type="JUnit" factoryName="JUnit">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="org.janelia.it.jacs.compute.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <module name="Compute" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="PACKAGE_NAME" value="org.janelia.it.jacs.compute" />
+      <option name="MAIN_CLASS_NAME" value="org.janelia.it.jacs.compute.ComputeModuleFastTestsSuite" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method>
+        <option name="Make" enabled="false" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/compute/build.xml" target="compile-tests" />
+      </method>
+    </configuration>
+    <configuration default="false" name="ComputeModuleIntegrationTestsSuite" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="org.janelia.it.jacs.compute.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <module name="Compute" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="PACKAGE_NAME" value="org.janelia.it.jacs.compute" />
+      <option name="MAIN_CLASS_NAME" value="org.janelia.it.jacs.compute.ComputeModuleIntegrationTestsSuite" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Cover" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Cover" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method>
+        <option name="Make" enabled="false" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/compute/build.xml" target="compile-tests" />
+      </method>
+    </configuration>
+    <configuration default="false" name="ConsoleModuleFastTestsSuite" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea">
+        <pattern>
+          <option name="PATTERN" value="org.janelia.it.FlyWorkstation.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="PACKAGE_NAME" value="org.janelia.it.FlyWorkstation" />
+      <option name="MAIN_CLASS_NAME" value="org.janelia.it.FlyWorkstation.ConsoleModuleFastTestsSuite" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method>
+        <option name="Make" enabled="false" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/model/build.xml" target="compile-tests" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/console/build.xml" target="compile-tests" />
+      </method>
+    </configuration>
+    <configuration default="false" name="ModelModuleFastTestsSuite" type="JUnit" factoryName="JUnit" show_console_on_std_out="true" show_console_on_std_err="true">
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <module name="Model" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="PACKAGE_NAME" value="org.janelia.it.jacs.model" />
+      <option name="MAIN_CLASS_NAME" value="org.janelia.it.jacs.model.ModelModuleFastTestsSuite" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <envs />
+      <dir value="$PROJECT_DIR$/model/test" />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method>
+        <option name="Make" enabled="false" />
+        <option name="AntTarget" enabled="true" antfile="file://$PROJECT_DIR$/model/build.xml" target="compile-tests" />
+      </method>
+    </configuration>
+    <configuration default="false" name="Tomcat - jacs" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 7" ALTERNATIVE_JRE_ENABLED="false" ALTERNATIVE_JRE_PATH="">
+      <option name="OPEN_IN_BROWSER_URL" value="http://jacs:8880/jacs/gwt/Home/Home.htm" />
+      <option name="COMMON_VM_ARGUMENTS" value="-Djava.security.auth.login.config=/groups/scicomp/jacsData/servers/saffordt-ws1/apache-tomcat-7.0.5/conf/jaas.config" />
+      <option name="UPDATING_POLICY" value="restart-server" />
+      <deployment />
+      <server-settings>
+        <option name="BASE_DIRECTORY_NAME" value="tomcat_Unnamed_vicsc63fa42b" />
+        <option name="HTTP_PORT" value="8080" />
+      </server-settings>
+      <log_file path="/Documents and Settings/tsafford/.IntelliJIdea8x/system/tomcat/tomcat_Unnamed_vicsc63fa42b/logs/localhost*" checked="true" skipped="true" show_all="false" alias="Tomcat Log" />
+      <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
+      <RunnerSettings RunnerId="Cover" />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="3348" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Profile CPU">
+        <option name="startFromMode" value="MAIN_CLASS" />
+        <option name="otherClassesToStartFrom" value="" />
+        <option name="profileNewRunnables" value="true" />
+        <option name="filteringMode" value="EXCLUDE" />
+        <option name="filterIncludeClasses" value="" />
+        <option name="filterExcludeClasses" value="java.*, javax.*,&#10;sun.*, sunw.*, com.sun.*" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Profile Memory">
+        <option name="profileAllocMode" value="ALLOC_AND_GC" />
+        <option name="profileAllocInterval" value="10" />
+        <option name="recordAllocTraces" value="false" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+        <EnvironmentVariables>
+          <option name="NAME" value="" />
+          <option name="VALUE" value="" />
+          <option name="IS_PREDEFINED" value="false" />
+        </EnvironmentVariables>
+        <EnvironmentVariables>
+          <option name="NAME" value="" />
+          <option name="VALUE" value="" />
+          <option name="IS_PREDEFINED" value="false" />
+        </EnvironmentVariables>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Profile CPU">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="/devtools/apache-tomcat-6.0.14/bin/catalina.bat" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value=" run" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="/devtools/apache-tomcat-6.0.14/bin/catalina.bat" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value=" stop" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Profile Memory">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="/devtools/apache-tomcat-6.0.14/bin/catalina.bat" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value=" run" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="/devtools/apache-tomcat-6.0.14/bin/catalina.bat" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value=" stop" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <method>
+        <option name="Make" enabled="false" />
+      </method>
+    </configuration>
+  </component>
+  <component name="RUBY_DOC_SETTINGS">
+    <RUBY_DOC NAME="DEFAULTS" VALUE="TRUE" />
+    <RUBY_DOC NAME="NUMBER" VALUE="0" />
+  </component>
+  <component name="ResourceManagerContainer">
+    <option name="myResourceBundles">
+      <value>
+        <list size="0" />
+      </value>
+    </option>
+  </component>
+  <component name="RubyDocSettings">
+    <RUBY_DOC NAME="DEFAULTS" VALUE="TRUE" />
+    <RUBY_DOC NAME="NUMBER" VALUE="0" />
+  </component>
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/ConsoleApplication" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/buildprocess" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/compute" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/groovy" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/jacs" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/model" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/reports" dialect="MySQL" />
+    <file url="file://$PROJECT_DIR$/shared" dialect="MySQL" />
+  </component>
+  <component name="SvnBranchConfigurationManager">
+    <option name="myConfigurationMap">
+      <map>
+        <entry key="$PROJECT_DIR$">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchUrls">
+                <list>
+                  <option value="http://isvn/CAMERA/camera/branches" />
+                  <option value="http://isvn/CAMERA/camera/hooks" />
+                  <option value="http://isvn/CAMERA/camera/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="http://isvn/CAMERA/camera/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/buildprocess">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://subversion.int.janelia.org/ScientificComputing/Projects/jacs/trunk/buildprocess" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/compute">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://subversion.int.janelia.org/ScientificComputing/Projects/jacs/trunk/compute" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/jacs">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://subversion.int.janelia.org/ScientificComputing/Projects/jacs/trunk/jacs" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/model">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://subversion.int.janelia.org/ScientificComputing/Projects/jacs/trunk/model" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/shared">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="trunkUrl" value="https://subversion.int.janelia.org/ScientificComputing/Projects/jacs/trunk/shared" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="myVersion" value="124" />
+    <option name="mySupportsUserInfoFilter" value="true" />
+  </component>
+  <component name="VcsDirectoryMappings">
+    <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+  </component>
+  <component name="WebServicesPlugin" addRequiredLibraries="true" />
+  <component name="dataSourceStorageLocal">
+    <data-source name="FlyPortal DB" uuid="36a8a5cf-e8c3-4d85-ae1a-4aac271c843f">
+      <user-name>flyportalApp</user-name>
+      <user-password>dfccdfc6dfd3dfdadfc5dfd8dfdedfcbdfc6dfebdfdadfda</user-password>
+      <schema-pattern>flyportal.*</schema-pattern>
+      <default-schemas>flyportal.*</default-schemas>
+    </data-source>
+    <data-source name="Sage" uuid="393b6160-a5dc-414f-b482-05ed3eeac7a7">
+      <secret-storage>master_key</secret-storage>
+      <user-name>sageRead</user-name>
+      <schema-pattern>sage.*</schema-pattern>
+      <default-schemas>sage.*</default-schemas>
+    </data-source>
+  </component>
+  <component name="libraryTable">
+    <library name="Apache Commons">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-codec-1.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-collections-2.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-fileupload-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-httpclient-3.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-logging-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-net-2.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/commons-vfs-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Apache-Commons/log4j-1.2.15.jar!/" />
+        <root url="file://$PROJECT_DIR$/common/Apache-Commons" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/Apache-Commons" recursive="false" />
+    </library>
+    <library name="Axis2">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/activation-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/antlr-2.7.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axiom-api-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axiom-dom-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axiom-impl-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-adb-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-adb-codegen-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-ant-plugin-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-clustering-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-codegen-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-corba-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-fastinfoset-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-java2wsdl-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-jaxbri-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-jaxws-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-jibx-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-json-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-kernel-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-metadata-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-mtompolicy-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-saaj-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-soapmonitor-servlet-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-spring-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-transport-http-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-transport-local-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/axis2-xmlbeans-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/bcel-5.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/commons-codec-1.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/commons-fileupload-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/commons-httpclient-3.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/commons-io-1.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/commons-logging-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-annotation_1.0_spec-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-jaxws_2.1_spec-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-jta_1.1_spec-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-saaj_1.3_spec-1.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-stax-api_1.0_spec-1.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/geronimo-ws-metadata_2.0_spec-1.1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/httpcore-4.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jalopy-1.5rc3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jaxb-api-2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jaxb-impl-2.1.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jaxb-xjc-2.1.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jaxen-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jettison-1.0-RC2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jibx-bind-1.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jibx-run-1.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/juli-6.0.16.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/log4j-1.2.15.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/mail-1.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/mex-1.5.5-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/neethi-2.0.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/regexp-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/tribes-6.0.16.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/woden-api-1.0M8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/woden-impl-dom-1.0M8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/wsdl4j-1.6.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/wstx-asl-3.2.9.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/xalan-2.7.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/xercesImpl-2.8.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/xml-resolver-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/xmlbeans-2.3.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/XmlSchema-1.4.3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/common/Axis2-1.5.5/jaxb-xjc-2.1.7.jar!/1.0" />
+      </SOURCES>
+    </library>
+    <library name="Common External Libraries">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/activation-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/antlr-2.7.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/apache-solr-solrj-3.5.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/asm.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axiom-api-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axiom-dom-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axiom-impl-1.2.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-adb-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-adb-codegen-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-ant-plugin-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-clustering-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-codegen-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-corba-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-fastinfoset-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-java2wsdl-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-jaxbri-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-jaxws-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-jibx-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-json-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-kernel-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-metadata-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-mtompolicy-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-saaj-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-soapmonitor-servlet-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-spring-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-transport-http-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-transport-local-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/axis2-xmlbeans-1.5.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/bcel-5.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/bio-formats.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/cglib-2.1.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/commons-codec-1.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/commons-fileupload-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/commons-httpclient-3.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/commons-logging-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/ehcache-core-2.5.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/forms-1.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-annotation_1.0_spec-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-jaxws_2.1_spec-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-jta_1.1_spec-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-stax-api_1.0_spec-1.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/groovy-all-1.8.6.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/gson-2.2.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/guava-13.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/gwt-serializable.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/hibernate-annotations.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/hibernate-entitymanager.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/hibernate3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/httpcore-4.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/ij-1.48c.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jackrabbit-webdav-2.5.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jai_codec.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jai_core.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jalopy-1.5rc3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/javassist.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jaxb-api-2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jaxb-impl-2.1.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jaxen-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jdatepicker-1.3.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jettison-1.0-RC2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-continuation-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-http-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-io-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-server-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-servlet-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jetty-util-8.1.8.v20121106.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jibx-bind-1.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jibx-run-1.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jktx-1.6.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jna.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/juli-6.0.16.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/jython.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/loci-common.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/loci_plugins.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/log4j-1.2.15.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/logback-access-1.0.13.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/logback-classic-1.0.13.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/logback-core-1.0.13.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/lz4-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/mac_widgets-0.9.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/MagicApplet.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/mail-1.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/metakit.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/mex-1.5.5-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/miglayout-4.0-swing.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/neethi-2.0.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/ome-io.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/ome-xml.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/ome_plugins.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/org-netbeans-swing-outline.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/owlapi-bin.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/pal-optimization.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/perf4j-0.9.16-logbackonly.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/platform.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/regexp-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/saaj-impl-1.3.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/scifio.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/servlet-api-3.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/slf4j-api-1.7.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/snappy-java-1.0.5-M3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/swingx-all-1.6.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/synthetica.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaAluOxide.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlackEye.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlackMoon.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlackStar.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlueIce.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlueLight.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlueMoon.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaBlueSteel.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaClassy.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaGreenDream.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaMauveMetallic.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaOrangeMetallic.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaSilverMoon.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaSimple2D.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaSkyMetallic.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/syntheticaWhiteVision.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/tribes-6.0.16.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/vecmath.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/VIB-lib-2.0.0-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/vlcj-1.3.0-b1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/woden-api-1.0M8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/woden-impl-dom-1.0M8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/wsdl4j-1.6.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/wstx-asl-3.2.7.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/wstx-asl-3.2.9.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/xalan-2.7.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/xercesImpl-2.8.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/xml-resolver-1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/xmlbeans-2.3.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/XmlSchema-1.4.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/xuggle-xuggler-5.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/kd.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-collectionschema-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT-jar-with-dependencies.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-compiler-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-core-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-parser-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-runtime-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-runtime-md-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-runtime-registry-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/protostuff-xml-1.3.9-SNAPSHOT.jar!/" />
+        <root url="file://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/lz4-1.1.1-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext/kd.jar!/" />
+        <root url="file://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext" />
+      </SOURCES>
+      <jarDirectory url="file://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext" recursive="false" />
+      <jarDirectory url="file://$PROJECT_DIR$/ConsoleApplication/ConsoleWrapper/release/modules/ext" recursive="false" type="SOURCES" />
+    </library>
+    <library name="core">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/core/core.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/core/org-openide-filesystems.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/lib/boot.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/lib/org-openide-modules.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/lib/org-openide-util-lookup.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/lib/org-openide-util.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/felix-4.0.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/jhall-2.0_05.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/jna-3.4.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/junit-4.10.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/org.eclipse.osgi_3.8.0.v20120529-1548.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/osgi.cmpn-4.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/platform-3.4.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/swing-layout-1.0.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/testng-6.8.1-dist.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/ext/updater.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-api-annotations-common.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-api-progress.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-api-search.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-api-visual.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-execution.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-io-ui.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-multitabs.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-multiview.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-nativeaccess.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-netigso.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-network.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-osgi.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-output2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-ui.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core-windows.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-core.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-lib-uihandler.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-libs-jna.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-libs-jsr223.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-applemenu.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-autoupdate-cli.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-autoupdate-services.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-autoupdate-ui.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-editor-mimelookup-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-editor-mimelookup.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-favorites.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-javahelp.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-keyring-fallback.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-keyring-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-keyring.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-masterfs-linux.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-masterfs-macosx.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-masterfs-solaris.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-masterfs-windows.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-masterfs.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-netbinox.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-options-api.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-options-keymap.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-print.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-progress-ui.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-queries.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-sampler.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-sendopts.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-settings.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-spi-actions.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-modules-uihandler.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-spi-quicksearch.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-swing-outline.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-swing-plaf.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-netbeans-swing-tabcontrol.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-actions.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-awt.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-compat.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-dialogs.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-execution.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-explorer.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-io.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-loaders.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-nodes.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-options.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-text.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-util-enumerations.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-openide-windows.jar!/" />
+        <root url="jar://$PROJECT_DIR$/ConsoleApplication/platform/modules/org-jdesktop-layout.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Directory">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/Directory" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/Directory" recursive="false" />
+    </library>
+    <library name="GoogleAnalytics">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/compute/lib/JGoogleAnalytics_0.4.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: antlr:antlr:2.7.7">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/antlr/antlr/2.7.7/83cd2cd674a217ade95a4bb83a8a14f351f48bd0/antlr-2.7.7.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: asm:asm-analysis:3.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm-analysis/3.2/c624956db93975b7197699dcd7de6145ca7cf2c8/asm-analysis-3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: asm:asm-commons:3.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm-commons/3.2/e7a19b8c60589499e35f5d2068d09013030b8891/asm-commons-3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: asm:asm-tree:3.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm-tree/3.2/cd792e29c79d170c5d0bdd05adf5807cf6875c90/asm-tree-3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: asm:asm-util:3.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm-util/3.2/37ebfdad34d5f1f45109981465f311bbfbe82dcf/asm-util-3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: asm:asm:3.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/asm/asm/3.2/9bc1511dec6adf302991ced13303e4140fdf9ab7/asm-3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Gradle: cglib:cglib-nodep:2.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/cglib/cglib-nodep/2.2/59afed7ab65e7ec6585d5bc60556c3cbd203532b/cglib-nodep-2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/cglib/cglib-nodep/2.2/962f2bbd66901a9d67b0bb3c8c4a64ce6de0a8c4/cglib-nodep-2.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.2.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.2.2/285cb9c666f0f0f3dd8a1be04e1f457eb7b15113/jackson-annotations-2.2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-annotations/2.2.2/a6017c0c873de183cf2ed3b419e52829af67fbea/jackson-annotations-2.2.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: com.fasterxml.jackson.core:jackson-core:2.2.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.2.2/d20be6a5ddd6f8cfd36ebf6dea329873a1c41f1b/jackson-core-2.2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-core/2.2.2/484301cc4a756b0c9f2d77448ec51d46d8905a25/jackson-core-2.2.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.2.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.2.2/3c8f6018eaa72d43b261181e801e6f8676c16ef6/jackson-databind-2.2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.fasterxml.jackson.core/jackson-databind/2.2.2/274324c17714564d64e566ebe8bdb0d225a67295/jackson-databind-2.2.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: javax.annotation:javax.annotation-api:1.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/479c1e06db31c432330183f5cae684163f186146/javax.annotation-api-1.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.annotation/javax.annotation-api/1.2/ad18a02db08eaee697f812e333f692fc51129e4a/javax.annotation-api-1.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: javax.inject:javax.inject:1">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/6975da39a7040257bd51d21a231b76c915872d38/javax.inject-1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.inject/javax.inject/1/a00123f261762a7c5e0ec916a2c7c8298d29c400/javax.inject-1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: javax.validation:validation-api:1.1.0.Final">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/8613ae82954779d518631e05daa73a6a954817d5/validation-api-1.1.0.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.validation/validation-api/1.1.0.Final/7d49b53caed9bd81d172807c3e096d24f3c57090/validation-api-1.1.0.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: javax.ws.rs:javax.ws.rs-api:2.0.1">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/104e9c2b5583cfcfeac0402316221648d6d8ea6b/javax.ws.rs-api-2.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/javax.ws.rs/javax.ws.rs-api/2.0.1/a20db7429fd8dfff74335ec867472b71c345049b/javax.ws.rs-api-2.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: junit:junit-dep:4.10">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit-dep/4.10/64417b3bafdecd366afa514bd5beeae6c1f85ece/junit-dep-4.10.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/junit/junit-dep/4.10/2c7dad0a5eb1602c6fe6b43abec8ea35805b3ae4/junit-dep-4.10-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.apache.httpcomponents:httpcore:4.4.1">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.1/f5aa318bda4c6c8d688c9d00b90681dcd82ce636/httpcore-4.4.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.1/9700be0d0a331691654a8e901943c9a74e33c5fc/httpcore-4.4.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.codehaus.groovy:groovy-all:1.8.8">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-all/1.8.8/98a489343d3c30da817d36cbea5de11ed07bef31/groovy-all-1.8.8.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy-all/1.8.8/5f847ed18009f8a034bad3906e39f771c01728c1/groovy-all-1.8.8-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.codehaus.groovy:groovy:1.8.6">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy/1.8.6/553ca93e0407c94c89b058c482a404427ac7fc72/groovy-1.8.6.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.codehaus.groovy/groovy/1.8.6/2ac423ad404db3e3d9053c626d4c15a84cd18b73/groovy-1.8.6-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b25">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.4.0-b25/3316675bccd4e0ca9e58c2bf150c6410bc98910a/aopalliance-repackaged-2.4.0-b25.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/aopalliance-repackaged/2.4.0-b25/34ce1e4e658691a18b7175b7ca137e290d438165/aopalliance-repackaged-2.4.0-b25-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2.external:javax.inject:2.4.0-b25">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.4.0-b25/e0ce2f6a86fcbec80acbf0d3aca9e348be74e950/javax.inject-2.4.0-b25.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2.external/javax.inject/2.4.0-b25/f9a0ec709db3d09e9b658d946ab71bb86ea0d997/javax.inject-2.4.0-b25-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2:hk2-api:2.4.0-b25">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.4.0-b25/be7693579fcb1184455e06238c8652a4c2645d95/hk2-api-2.4.0-b25.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-api/2.4.0-b25/1e166b5690c8a90e86a05a6f745ff9fbce98c416/hk2-api-2.4.0-b25-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2:hk2-locator:2.4.0-b25">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.4.0-b25/89ee38141b06c712f0f3caa1ca08590ce80c71f6/hk2-locator-2.4.0-b25.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-locator/2.4.0-b25/133a6efa8757e54e05c40612099e0edcc7a66c6b/hk2-locator-2.4.0-b25-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2:hk2-utils:2.4.0-b25">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.4.0-b25/da0631bf28e14381c117779bb3c518f366813481/hk2-utils-2.4.0-b25.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/hk2-utils/2.4.0-b25/d1033f5b42674a3d9e79e6ebfbe2a52c97335537/hk2-utils-2.4.0-b25-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.hk2:osgi-resource-locator:1.0.1">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/4ed2b2d4738aed5786cfa64cba5a332779c4c708/osgi-resource-locator-1.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.hk2/osgi-resource-locator/1.0.1/b5685f8eaa7d83351b185a82a92abcd1b8b87fc8/osgi-resource-locator-1.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.bundles.repackaged:jersey-guava:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.19/f0fd5ea29c2b6c614d9e7016a75fe7a01e4c9887/jersey-guava-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.bundles.repackaged/jersey-guava/2.19/f8cd62fbbe3b58ec92567831cdffd9c88fd6bc5c/jersey-guava-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.containers:jersey-container-servlet-core:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-servlet-core/2.19/4da2f11fa267f6f6d0a7d0625b8ad24acaf12209/jersey-container-servlet-core-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.containers/jersey-container-servlet-core/2.19/51655516a837480ebe6f85550f340ca28b9b7bbf/jersey-container-servlet-core-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.core:jersey-client:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.19/b6bf1e6991be31e1067c6ac9672330c0a946116d/jersey-client-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-client/2.19/f8edee7f1248fcb0343010537096fb2f21928701/jersey-client-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.core:jersey-common:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.19/8f9cbcfa71d324d9004134a86c15a124fc22fabb/jersey-common-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-common/2.19/a760a9c15c646bd3e8659bb7c430365a53ddfba2/jersey-common-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.core:jersey-server:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.19/e8be95119e9cee86f9ddbc95827a023b65351a87/jersey-server-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.core/jersey-server/2.19/99cf0e84354eb69b29e2cce46dedda9950915599/jersey-server-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.glassfish.jersey.media:jersey-media-jaxb:2.19">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.19/c4b4a3de6e6ae85473316c9395eb5913bfe90d1f/jersey-media-jaxb-2.19.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.glassfish.jersey.media/jersey-media-jaxb/2.19/b97fbd4e6ef8148b5db163b31b831588c84e3ec4/jersey-media-jaxb-2.19-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.hamcrest:hamcrest-core:1.3">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/42a25dc3219429f0e5d060061f71acb49bf010a0/hamcrest-core-1.3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.hamcrest/hamcrest-core/1.3/1dc37250fbc78e23a65a67fbbaf71d2e9cbc3c0b/hamcrest-core-1.3-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.javassist:javassist:3.18.1-GA">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.18.1-GA/d9a09f7732226af26bf99f19e2cffe0ae219db5b/javassist-3.18.1-GA.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.javassist/javassist/3.18.1-GA/d8d089f3a8845cce22d3006e02ab1403dd73b5b6/javassist-3.18.1-GA-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.objenesis:objenesis:1.2">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/1.2/bfcb0539a071a4c5a30690388903ac48c0667f2a/objenesis-1.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.objenesis/objenesis/1.2/71909ee0264af468fe26f0a2467d01bcb85f6fa9/objenesis-1.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Gradle: org.spockframework:spock-core:0.7-groovy-1.8">
+      <CLASSES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spockframework/spock-core/0.7-groovy-1.8/3a677d19e8d3acf3bd296c4023356256d55da5a3/spock-core-0.7-groovy-1.8.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.spockframework/spock-core/0.7-groovy-1.8/4af8952e6bed87f15cf6a5077c85d1e45b68cb7f/spock-core-0.7-groovy-1.8-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Groovy">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/groovy/lib/groovy-all-2.1.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Guava">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Guava/guava-13.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Guava/gson-2.2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="GWT">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-java-math-1.0.9.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-api-checker.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-user.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-soyc-vis.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-benchmark-viewer.war!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-dev.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-sl-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-servlet.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-dnd-3.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-servlet-deps.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-widgets-0.2.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-maps.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/gwt-widgets-server-0.1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/validation-api-1.0.0.GA.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/GWT/validation-api-1.0.0.GA-sources.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="GWT-Serializable">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/GWT-Serializable" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/GWT-Serializable" recursive="false" />
+    </library>
+    <library name="Hibernate">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Hibernate-3.2/antlr-2.7.6.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Hibernate-3.2/asm.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Hibernate-3.2/cglib-2.1.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Hibernate-3.2/commons-logging-1.0.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Hibernate-3.2/hibernate3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Jama-1.0.3">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/jama-1.0.1/Jama-1.0.3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="JAXB">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/activation.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jaxb-api.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jaxb-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jaxb-xjc.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jaxb1-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jsr173_1.0_api.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/common/JAXB-2.1.5/jaxb-xjc.jar!/1.0" />
+      </SOURCES>
+    </library>
+    <library name="JBoss">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/activation.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/antlr.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/avalon-framework.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/commons-codec.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/commons-httpclient.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/commons-logging.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/concurrent.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/ejb3-persistence.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/FastInfoset.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/getopt.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/hibernate-annotations.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/hibernate-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jacorb.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/javassist.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jaxb-api.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jaxb-impl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jaxb-xjc.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jaxws-rt.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jaxws-tools.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-annotations-ejb3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-aop-jdk50-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-aspect-jdk50-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-common-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-deployment.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-ejb3-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-ejb3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-ejb3x.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-iiop-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-j2ee.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-jaxrpc.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-jaxws-ext.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-jaxws.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-jsr77-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-remoting.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-saaj.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-serialization.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-srp-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-system-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-transaction-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-xml-binding.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossall-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbosscx-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossha-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossjmx-ant.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossmq-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbosssx-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossws-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossws-common.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossws-framework.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossws-jboss42.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jbossws-spi.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jettison.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jmx-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jmx-invoker-adaptor-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jnp-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/log4j.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/logkit.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/mail.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/policy.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/quartz.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/scout.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/servlet-api.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/stax-api.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/stax-ex.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/streambuffer.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/trove.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/wsdl4j.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/wstx.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/xmlsec.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JBoss-Server-4.2.3.GA/jboss-system.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Jetty">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/Jetty" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/Jetty" recursive="false" />
+    </library>
+    <library name="JKtx">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/JKtx" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/JKtx" recursive="false" />
+    </library>
+    <library name="JUnit-4.11">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/JUnit-Lib-4.11/junit-4.11.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/JUnit-Lib-4.11/hamcrest-core-1.3.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/common/JUnit-Lib-4.11/junit-4.11-src.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="LOCI">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/LOCI/bio-formats.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/loci-common.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/loci_plugins.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/metakit.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/ome-io.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/ome-xml.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/ome_plugins.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/LOCI/scifio.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Logging">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/Logging" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/Logging" recursive="false" />
+    </library>
+    <library name="Lucene">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Lucene-2.3.1/lucene-core-2.3.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="LZ4">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/LZ4" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="file://$PROJECT_DIR$/common/LZ4" />
+      </SOURCES>
+      <jarDirectory url="file://$PROJECT_DIR$/common/LZ4" recursive="false" />
+      <jarDirectory url="file://$PROJECT_DIR$/common/LZ4" recursive="false" type="SOURCES" />
+    </library>
+    <library name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.4.0/jackson-annotations-2.4.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.4.0/jackson-annotations-2.4.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.4.0/jackson-annotations-2.4.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.4.2/jackson-core-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.4.2/jackson-core-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.4.2/jackson-core-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.core:jackson-databind:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.4.2/jackson-databind-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.4.2/jackson-databind-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.4.2/jackson-databind-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/2.4.2/jackson-dataformat-xml-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/2.4.2/jackson-dataformat-xml-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/2.4.2/jackson-dataformat-xml-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.4.2/jackson-dataformat-yaml-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.4.2/jackson-dataformat-yaml-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.4.2/jackson-dataformat-yaml-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-joda:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/datatype/jackson-datatype-joda/2.4.2/jackson-datatype-joda-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/datatype/jackson-datatype-joda/2.4.2/jackson-datatype-joda-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/datatype/jackson-datatype-joda/2.4.2/jackson-datatype-joda-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-base/2.4.2/jackson-jaxrs-base-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-base/2.4.2/jackson-jaxrs-base-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-base/2.4.2/jackson-jaxrs-base-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-json-provider/2.4.2/jackson-jaxrs-json-provider-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-json-provider/2.4.2/jackson-jaxrs-json-provider-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/jaxrs/jackson-jaxrs-json-provider/2.4.2/jackson-jaxrs-json-provider-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.4.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.4.2/jackson-module-jaxb-annotations-2.4.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.4.2/jackson-module-jaxb-annotations-2.4.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.4.2/jackson-module-jaxb-annotations-2.4.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.google.code.findbugs:annotations:2.0.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.1/annotations-2.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.1/annotations-2.0.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.1/annotations-2.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: com.google.guava:guava:15.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/15.0/guava-15.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/15.0/guava-15.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/15.0/guava-15.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-codec:commons-codec:1.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.2/commons-codec-1.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.2/commons-codec-1.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-codec/commons-codec/1.2/commons-codec-1.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-collections:commons-collections:3.2.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-collections/commons-collections/3.2.1/commons-collections-3.2.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-httpclient:commons-httpclient:3.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-io:commons-io:2.4">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-lang:commons-lang:2.6">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-logging:commons-logging:1.0.4">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: commons-pool:commons-pool:1.6">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-pool/commons-pool/1.6/commons-pool-1.6.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-pool/commons-pool/1.6/commons-pool-1.6-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/commons-pool/commons-pool/1.6/commons-pool-1.6-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.swagger:swagger-annotations:1.5.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-annotations/1.5.0/swagger-annotations-1.5.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-annotations/1.5.0/swagger-annotations-1.5.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-annotations/1.5.0/swagger-annotations-1.5.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.swagger:swagger-core:1.5.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-core/1.5.0/swagger-core-1.5.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-core/1.5.0/swagger-core-1.5.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-core/1.5.0/swagger-core-1.5.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.swagger:swagger-jaxrs:1.5.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jaxrs/1.5.0/swagger-jaxrs-1.5.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jaxrs/1.5.0/swagger-jaxrs-1.5.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jaxrs/1.5.0/swagger-jaxrs-1.5.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.swagger:swagger-jersey2-jaxrs:1.5.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jersey2-jaxrs/1.5.0/swagger-jersey2-jaxrs-1.5.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jersey2-jaxrs/1.5.0/swagger-jersey2-jaxrs-1.5.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-jersey2-jaxrs/1.5.0/swagger-jersey2-jaxrs-1.5.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.swagger:swagger-models:1.5.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-models/1.5.0/swagger-models-1.5.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-models/1.5.0/swagger-models-1.5.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/swagger/swagger-models/1.5.0/swagger-models-1.5.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: javax.annotation:javax.annotation-api:1.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: javax.servlet:javax.servlet-api:3.0.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/servlet/javax.servlet-api/3.0.1/javax.servlet-api-3.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: javax.validation:validation-api:1.1.0.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/validation/validation-api/1.1.0.Final/validation-api-1.1.0.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: javax.ws.rs:javax.ws.rs-api:2.0.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: joda-time:joda-time:2.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/joda-time/joda-time/2.2/joda-time-2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/joda-time/joda-time/2.2/joda-time-2.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/joda-time/joda-time/2.2/joda-time-2.2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.commons:commons-lang3:3.2.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.2.1/commons-lang3-3.2.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.2.1/commons-lang3-3.2.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/commons/commons-lang3/3.2.1/commons-lang3-3.2.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.directory.api:api-all:1.0.0-M30">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/directory/api/api-all/1.0.0-M30/api-all-1.0.0-M30.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/directory/api/api-all/1.0.0-M30/api-all-1.0.0-M30-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/directory/api/api-all/1.0.0-M30/api-all-1.0.0-M30-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.mina:mina-core:2.0.9">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.9/mina-core-2.0.9.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.9/mina-core-2.0.9-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/mina/mina-core/2.0.9/mina-core-2.0.9-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.antlr/2.7.7_5/org.apache.servicemix.bundles.antlr-2.7.7_5.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.antlr/2.7.7_5/org.apache.servicemix.bundles.antlr-2.7.7_5-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.antlr/2.7.7_5/org.apache.servicemix.bundles.antlr-2.7.7_5-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5/org.apache.servicemix.bundles.dom4j-1.6.1_5.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5/org.apache.servicemix.bundles.dom4j-1.6.1_5-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5/org.apache.servicemix.bundles.dom4j-1.6.1_5-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.servicemix.bundles:org.apache.servicemix.bundles.xpp3:1.1.4c_6">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_6/org.apache.servicemix.bundles.xpp3-1.1.4c_6.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_6/org.apache.servicemix.bundles.xpp3-1.1.4c_6-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_6/org.apache.servicemix.bundles.xpp3-1.1.4c_6-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.codehaus.woodstox:stax2-api:3.1.4">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/woodstox/stax2-api/3.1.4/stax2-api-3.1.4.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/woodstox/stax2-api/3.1.4/stax2-api-3.1.4-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/codehaus/woodstox/stax2-api/3.1.4/stax2-api-3.1.4-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b31">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/aopalliance-repackaged/2.4.0-b31/aopalliance-repackaged-2.4.0-b31.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/aopalliance-repackaged/2.4.0-b31/aopalliance-repackaged-2.4.0-b31-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/aopalliance-repackaged/2.4.0-b31/aopalliance-repackaged-2.4.0-b31-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2.external:javax.inject:2.4.0-b31">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/javax.inject/2.4.0-b31/javax.inject-2.4.0-b31.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/javax.inject/2.4.0-b31/javax.inject-2.4.0-b31-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/external/javax.inject/2.4.0-b31/javax.inject-2.4.0-b31-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2:hk2-api:2.4.0-b31">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-api/2.4.0-b31/hk2-api-2.4.0-b31.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-api/2.4.0-b31/hk2-api-2.4.0-b31-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-api/2.4.0-b31/hk2-api-2.4.0-b31-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2:hk2-locator:2.4.0-b31">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-locator/2.4.0-b31/hk2-locator-2.4.0-b31.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-locator/2.4.0-b31/hk2-locator-2.4.0-b31-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-locator/2.4.0-b31/hk2-locator-2.4.0-b31-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2:hk2-utils:2.4.0-b31">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-utils/2.4.0-b31/hk2-utils-2.4.0-b31.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-utils/2.4.0-b31/hk2-utils-2.4.0-b31-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/hk2-utils/2.4.0-b31/hk2-utils-2.4.0-b31-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.hk2:osgi-resource-locator:1.0.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/osgi-resource-locator/1.0.1/osgi-resource-locator-1.0.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/osgi-resource-locator/1.0.1/osgi-resource-locator-1.0.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/hk2/osgi-resource-locator/1.0.1/osgi-resource-locator-1.0.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/bundles/repackaged/jersey-guava/2.22/jersey-guava-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/bundles/repackaged/jersey-guava/2.22/jersey-guava-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/bundles/repackaged/jersey-guava/2.22/jersey-guava-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.containers:jersey-container-servlet-core:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet-core/2.22/jersey-container-servlet-core-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet-core/2.22/jersey-container-servlet-core-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet-core/2.22/jersey-container-servlet-core-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.containers:jersey-container-servlet:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet/2.22/jersey-container-servlet-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet/2.22/jersey-container-servlet-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/containers/jersey-container-servlet/2.22/jersey-container-servlet-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.core:jersey-client:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-client/2.22/jersey-client-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-client/2.22/jersey-client-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-client/2.22/jersey-client-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.core:jersey-common:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-common/2.22/jersey-common-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-common/2.22/jersey-common-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-common/2.22/jersey-common-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.core:jersey-server:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-server/2.22/jersey-server-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-server/2.22/jersey-server-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/core/jersey-server/2.22/jersey-server-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.media:jersey-media-jaxb:2.22">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-jaxb/2.22/jersey-media-jaxb-2.22.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-jaxb/2.22/jersey-media-jaxb-2.22-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-jaxb/2.22/jersey-media-jaxb-2.22-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.glassfish.jersey.media:jersey-media-multipart:2.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-multipart/2.1/jersey-media-multipart-2.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-multipart/2.1/jersey-media-multipart-2.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jersey/media/jersey-media-multipart/2.1/jersey-media-multipart-2.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.javassist:javassist:3.18.1-GA">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/javassist/javassist/3.18.1-GA/javassist-3.18.1-GA.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/javassist/javassist/3.18.1-GA/javassist-3.18.1-GA-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/javassist/javassist/3.18.1-GA/javassist-3.18.1-GA-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.jvnet.mimepull:mimepull:1.8">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/jvnet/mimepull/mimepull/1.8/mimepull-1.8.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/jvnet/mimepull/mimepull/1.8/mimepull-1.8-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/jvnet/mimepull/mimepull/1.8/mimepull-1.8-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.reflections:reflections:0.9.9">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/reflections/reflections/0.9.9/reflections-0.9.9.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/reflections/reflections/0.9.9/reflections-0.9.9-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/reflections/reflections/0.9.9/reflections-0.9.9-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.slf4j:slf4j-api:1.7.10">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.10/slf4j-api-1.7.10.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.10/slf4j-api-1.7.10-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.10/slf4j-api-1.7.10-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: xml-apis:xml-apis:1.0.b2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/xml-apis/xml-apis/1.0.b2/xml-apis-1.0.b2-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="MongoDB">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/mongo-java-driver-2.11.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/bson4jackson-2.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jackson-annotations-2.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jackson-core-2.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jackson-databind-2.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jongo-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jsr305-1.3.9.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/jsr305-1.3.9.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/MongoDB/mongo-java-driver-2.11.3-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="protostuff-1.3">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/protostuff-1.3.9" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES>
+        <root url="file://$PROJECT_DIR$/common/protostuff-1.3.9" />
+      </SOURCES>
+      <jarDirectory url="file://$PROJECT_DIR$/common/protostuff-1.3.9" recursive="false" />
+      <jarDirectory url="file://$PROJECT_DIR$/common/protostuff-1.3.9" recursive="false" type="SOURCES" />
+    </library>
+    <library name="RESTEasy-2.3.4">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/activation-1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/commons-codec-1.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/commons-logging-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/httpclient-4.1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/httpcore-4.1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/javassist-3.12.1.GA.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/jaxb-api-2.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/jaxb-impl-2.2.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/jaxrs-api-2.3.4.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/jcip-annotations-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/jsr250-api-1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/resteasy-jaxb-provider-2.3.4.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/resteasy-jaxrs-2.3.4.Final.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/scannotation-1.0.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/compute/lib/resteasy-2.3.4/stax-api-1.0-2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="SAAJ">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/SAAJ/saaj-impl-1.3.2.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="SnakeYaml-11">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/snakeyaml-1.11/snakeyaml-1.11.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Snappy">
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/common/Snappy" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+      <jarDirectory url="file://$PROJECT_DIR$/common/Snappy" recursive="false" />
+    </library>
+    <library name="Solrj">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Solrj/apache-solr-solrj-3.5.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Solrj/commons-codec-1.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Solrj/commons-httpclient-3.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Solrj/commons-io-1.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Solrj/wstx-asl-3.2.7.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Spring">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Spring/c3p0-0.9.1.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/catalina.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/cglib.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/commons-beanutils.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/commons-collections-2.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/commons-fileupload.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/commons-httpclient-3.0.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/commons-logging.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/dom4j-1.6.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/ehcache-1.2.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/hibernate3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/jbossall-client.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/jdom1.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/jstl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/jta.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/jxl.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/log4j-1.2.14.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/spring-mock.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/spring.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring/standard.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="Spring-3">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/com.springsource.javax.validation-1.0.0.GA.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/com.springsource.org.aspectj.tools-1.6.8.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/com.springsource.org.codehaus.jackson-1.4.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/com.springsource.org.codehaus.jackson.mapper-1.4.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/com.springsource.org.jboss.util-2.0.4.GA.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/geronimo-jta_1.1_spec-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/jersey-bundle-1.12.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/jsr311-api-1.1.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.apache.servicemix.bundles.jline-0.9.94_1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.aop-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.asm-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.aspects-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.beans-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.context-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.core-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.expression-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.test-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/org.springframework.transaction-3.0.7.RELEASE.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/scala-library-2.9.0-1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/common/Spring-3/server-api-1.6.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+  </component>
+  <component name="org.twodividedbyzero.idea.findbugs">
+    <option name="annotationTypeSettings">
+      <map>
+        <entry key="ExpPriority" value="-16777216;-1;-8355712;WAVE_UNDERSCORE;0;" />
+        <entry key="HighPriority" value="-65536;-1;-65536;WAVE_UNDERSCORE;1;" />
+        <entry key="IgnorePriority" value="-16777216;-1;-8650628;WAVE_UNDERSCORE;0;" />
+        <entry key="LowPriority" value="-16777216;-1;-16711936;BOXED;0;" />
+        <entry key="NormalPriority" value="-16777216;-1;-5066240;WAVE_UNDERSCORE;2;" />
+      </map>
+    </option>
+    <option name="_basePreferences">
+      <map>
+        <entry key="property.analysisEffortLevel" value="default" />
+        <entry key="property.analyzeAfterCompile" value="false" />
+        <entry key="property.annotationGutterIconEnabled" value="true" />
+        <entry key="property.annotationSuppressWarningsClass" value="edu.umd.cs.findbugs.annotations.SuppressWarnings" />
+        <entry key="property.annotationTextRangeMarkupEnabled" value="true" />
+        <entry key="property.exportAsHtml" value="true" />
+        <entry key="property.exportAsXml" value="true" />
+        <entry key="property.exportBaseDir" value="" />
+        <entry key="property.exportCreateArchiveDir" value="false" />
+        <entry key="property.exportOpenBrowser" value="true" />
+        <entry key="property.minPriorityToReport" value="Medium" />
+        <entry key="property.runAnalysisInBackground" value="false" />
+        <entry key="property.showHiddenDetectors" value="false" />
+        <entry key="property.toolWindowEditorPreview" value="false" />
+        <entry key="property.toolWindowToFront" value="true" />
+      </map>
+    </option>
+    <option name="_detectors">
+      <map>
+        <entry key="AppendingToAnObjectOutputStream" value="true" />
+        <entry key="AtomicityProblem" value="true" />
+        <entry key="BadAppletConstructor" value="false" />
+        <entry key="BadResultSetAccess" value="true" />
+        <entry key="BadSyntaxForRegularExpression" value="true" />
+        <entry key="BadUseOfReturnValue" value="true" />
+        <entry key="BadlyOverriddenAdapter" value="true" />
+        <entry key="BooleanReturnNull" value="true" />
+        <entry key="BuildInterproceduralCallGraph" value="false" />
+        <entry key="BuildObligationPolicyDatabase" value="true" />
+        <entry key="CallToUnsupportedMethod" value="false" />
+        <entry key="CalledMethods" value="true" />
+        <entry key="CheckCalls" value="false" />
+        <entry key="CheckExpectedWarnings" value="false" />
+        <entry key="CheckImmutableAnnotation" value="true" />
+        <entry key="CheckTypeQualifiers" value="true" />
+        <entry key="CloneIdiom" value="true" />
+        <entry key="ComparatorIdiom" value="true" />
+        <entry key="ConfusedInheritance" value="true" />
+        <entry key="ConfusionBetweenInheritedAndOuterMethod" value="true" />
+        <entry key="CrossSiteScripting" value="true" />
+        <entry key="DefaultEncodingDetector" value="true" />
+        <entry key="DoInsideDoPrivileged" value="true" />
+        <entry key="DontCatchIllegalMonitorStateException" value="true" />
+        <entry key="DontIgnoreResultOfPutIfAbsent" value="true" />
+        <entry key="DontUseEnum" value="true" />
+        <entry key="DroppedException" value="true" />
+        <entry key="DumbMethodInvocations" value="true" />
+        <entry key="DumbMethods" value="true" />
+        <entry key="DuplicateBranches" value="true" />
+        <entry key="EmptyZipFileEntry" value="true" />
+        <entry key="EqualsOperandShouldHaveClassCompatibleWithThis" value="true" />
+        <entry key="ExplicitSerialization" value="true" />
+        <entry key="FieldItemSummary" value="true" />
+        <entry key="FinalizerNullsFields" value="true" />
+        <entry key="FindBadCast2" value="true" />
+        <entry key="FindBadForLoop" value="true" />
+        <entry key="FindBugsSummaryStats" value="true" />
+        <entry key="FindCircularDependencies" value="false" />
+        <entry key="FindDeadLocalStores" value="true" />
+        <entry key="FindDoubleCheck" value="true" />
+        <entry key="FindEmptySynchronizedBlock" value="true" />
+        <entry key="FindFieldSelfAssignment" value="true" />
+        <entry key="FindFinalizeInvocations" value="true" />
+        <entry key="FindFloatEquality" value="true" />
+        <entry key="FindFloatMath" value="false" />
+        <entry key="FindHEmismatch" value="true" />
+        <entry key="FindInconsistentSync2" value="true" />
+        <entry key="FindJSR166LockMonitorenter" value="true" />
+        <entry key="FindLocalSelfAssignment2" value="true" />
+        <entry key="FindMaskedFields" value="true" />
+        <entry key="FindMismatchedWaitOrNotify" value="true" />
+        <entry key="FindNakedNotify" value="true" />
+        <entry key="FindNonSerializableStoreIntoSession" value="true" />
+        <entry key="FindNonSerializableValuePassedToWriteObject" value="true" />
+        <entry key="FindNonShortCircuit" value="true" />
+        <entry key="FindNullDeref" value="true" />
+        <entry key="FindNullDerefsInvolvingNonShortCircuitEvaluation" value="true" />
+        <entry key="FindOpenStream" value="true" />
+        <entry key="FindPuzzlers" value="true" />
+        <entry key="FindRefComparison" value="true" />
+        <entry key="FindReturnRef" value="true" />
+        <entry key="FindRunInvocations" value="true" />
+        <entry key="FindSelfComparison" value="true" />
+        <entry key="FindSelfComparison2" value="true" />
+        <entry key="FindSleepWithLockHeld" value="true" />
+        <entry key="FindSpinLoop" value="true" />
+        <entry key="FindSqlInjection" value="true" />
+        <entry key="FindTwoLockWait" value="true" />
+        <entry key="FindUncalledPrivateMethods" value="true" />
+        <entry key="FindUnconditionalWait" value="true" />
+        <entry key="FindUninitializedGet" value="true" />
+        <entry key="FindUnrelatedTypesInGenericContainer" value="true" />
+        <entry key="FindUnreleasedLock" value="true" />
+        <entry key="FindUnsatisfiedObligation" value="true" />
+        <entry key="FindUnsyncGet" value="true" />
+        <entry key="FindUseOfNonSerializableValue" value="true" />
+        <entry key="FindUselessControlFlow" value="true" />
+        <entry key="FormatStringChecker" value="true" />
+        <entry key="FunctionsThatMightBeMistakenForProcedures" value="true" />
+        <entry key="HugeSharedStringConstants" value="true" />
+        <entry key="IDivResultCastToDouble" value="true" />
+        <entry key="IncompatMask" value="true" />
+        <entry key="InconsistentAnnotations" value="true" />
+        <entry key="InefficientMemberAccess" value="false" />
+        <entry key="InefficientToArray" value="true" />
+        <entry key="InfiniteLoop" value="true" />
+        <entry key="InfiniteRecursiveLoop" value="true" />
+        <entry key="InheritanceUnsafeGetResource" value="true" />
+        <entry key="InitializationChain" value="true" />
+        <entry key="InitializeNonnullFieldsInConstructor" value="true" />
+        <entry key="InstantiateStaticClass" value="true" />
+        <entry key="IntCast2LongAsInstant" value="true" />
+        <entry key="InvalidJUnitTest" value="true" />
+        <entry key="IteratorIdioms" value="true" />
+        <entry key="LazyInit" value="true" />
+        <entry key="LoadOfKnownNullValue" value="true" />
+        <entry key="LostLoggerDueToWeakReference" value="true" />
+        <entry key="MethodReturnCheck" value="true" />
+        <entry key="Methods" value="true" />
+        <entry key="MultithreadedInstanceAccess" value="true" />
+        <entry key="MutableLock" value="true" />
+        <entry key="MutableStaticFields" value="true" />
+        <entry key="Naming" value="true" />
+        <entry key="Noise" value="false" />
+        <entry key="NoiseNullDeref" value="false" />
+        <entry key="NoteAnnotationRetention" value="true" />
+        <entry key="NoteCheckReturnValueAnnotations" value="true" />
+        <entry key="NoteDirectlyRelevantTypeQualifiers" value="true" />
+        <entry key="NoteJCIPAnnotation" value="true" />
+        <entry key="NoteNonNullAnnotations" value="true" />
+        <entry key="NoteNonnullReturnValues" value="true" />
+        <entry key="NoteSuppressedWarnings" value="true" />
+        <entry key="NoteUnconditionalParamDerefs" value="true" />
+        <entry key="NumberConstructor" value="true" />
+        <entry key="OverridingEqualsNotSymmetrical" value="true" />
+        <entry key="PreferZeroLengthArrays" value="true" />
+        <entry key="PublicSemaphores" value="false" />
+        <entry key="QuestionableBooleanAssignment" value="true" />
+        <entry key="ReadOfInstanceFieldInMethodInvokedByConstructorInSuperclass" value="true" />
+        <entry key="ReadReturnShouldBeChecked" value="true" />
+        <entry key="RedundantInterfaces" value="true" />
+        <entry key="ReflectiveClasses" value="true" />
+        <entry key="RepeatedConditionals" value="true" />
+        <entry key="ResolveAllReferences" value="false" />
+        <entry key="RuntimeExceptionCapture" value="true" />
+        <entry key="SerializableIdiom" value="true" />
+        <entry key="StartInConstructor" value="true" />
+        <entry key="StaticCalendarDetector" value="true" />
+        <entry key="StringConcatenation" value="true" />
+        <entry key="SuperfluousInstanceOf" value="true" />
+        <entry key="SuspiciousThreadInterrupted" value="true" />
+        <entry key="SwitchFallthrough" value="true" />
+        <entry key="SynchronizationOnSharedBuiltinConstant" value="true" />
+        <entry key="SynchronizeAndNullCheckField" value="true" />
+        <entry key="SynchronizeOnClassLiteralNotGetClass" value="true" />
+        <entry key="SynchronizingOnContentsOfFieldToProtectField" value="true" />
+        <entry key="TestASM" value="false" />
+        <entry key="TestDataflowAnalysis" value="false" />
+        <entry key="TestingGround" value="false" />
+        <entry key="TestingGround2" value="false" />
+        <entry key="TrainFieldStoreTypes" value="true" />
+        <entry key="TrainLongInstantfParams" value="true" />
+        <entry key="TrainNonNullAnnotations" value="true" />
+        <entry key="TrainUnconditionalDerefParams" value="true" />
+        <entry key="URLProblems" value="true" />
+        <entry key="UncallableMethodOfAnonymousClass" value="true" />
+        <entry key="UnnecessaryMath" value="true" />
+        <entry key="UnreadFields" value="true" />
+        <entry key="UselessSubclassMethod" value="false" />
+        <entry key="VarArgsProblems" value="true" />
+        <entry key="VolatileUsage" value="true" />
+        <entry key="WaitInLoop" value="true" />
+        <entry key="WrongMapIterator" value="true" />
+        <entry key="XMLFactoryBypass" value="true" />
+      </map>
+    </option>
+    <option name="_reportCategories">
+      <map>
+        <entry key="BAD_PRACTICE" value="true" />
+        <entry key="CORRECTNESS" value="true" />
+        <entry key="EXPERIMENTAL" value="true" />
+        <entry key="I18N" value="true" />
+        <entry key="MALICIOUS_CODE" value="true" />
+        <entry key="MT_CORRECTNESS" value="true" />
+        <entry key="NOISE" value="false" />
+        <entry key="PERFORMANCE" value="true" />
+        <entry key="SECURITY" value="true" />
+        <entry key="STYLE" value="true" />
+      </map>
+    </option>
+    <option name="_annotationTypeSettings">
+      <map>
+        <entry key="ExpPriority" value="-16777216;-1;-8355712;WAVE_UNDERSCORE;0;" />
+        <entry key="HighPriority" value="-65536;-1;-65536;WAVE_UNDERSCORE;1;" />
+        <entry key="IgnorePriority" value="-16777216;-1;-8650628;WAVE_UNDERSCORE;0;" />
+        <entry key="LowPriority" value="-16777216;-1;-16711936;BOXED;0;" />
+        <entry key="NormalPriority" value="-16777216;-1;-5066240;WAVE_UNDERSCORE;2;" />
+      </map>
+    </option>
+  </component>
+</project>
