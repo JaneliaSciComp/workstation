@@ -13,7 +13,7 @@
 
     <div ng-show="isMode('workspaces')">
         <h1>Workspaces</h1>
-
+        <p>count={{workspaces.length}}</p>
         <table>
             <tr ng-repeat="x in workspaces | orderBy:'createTimestamp'">
                 <td>{{x.ownerName}}</td>
@@ -34,6 +34,7 @@
     </div>
 
     <div ng-show="isMode('neuronSummary')">
+        <p>Neuron List size={{neuronList.length}}</p>
         <table>
             <tr ng-repeat="neuron in neuronList | orderBy:'createTimestamp'">
                 <td>{{neuron.name}}</td>
@@ -47,6 +48,7 @@
     </div>
 
     <div ng-show="isMode('pointSummary')">
+        <p>Point List size={{pointList.lenth}}</p>
         <table>
             <tr ng-repeat="p in pointList | orderBy:'z' | orderBy:'y' | orderBy:'x'">
                 <td>Point</td>
@@ -117,7 +119,7 @@
         }
 
         $scope.displayNeuronSummaryForWorkspace = function(x) {
-            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/neuronSummaryForWorkspace?id="+ x.idString)
+            $http.get($scope.serverUrl+"/rest-v1/mouselight/neuronSummaryForWorkspace?id="+ x.idString)
                 .then(function(response) {
                     $scope.neuronList=response.data;
                     $scope.neuronListSize=$scope.neuronList.length;
@@ -127,7 +129,7 @@
         }
 
         $scope.displayPointsForNeuron = function(w, n) {
-            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/pointSummaryForNeuron?workspaceId="+ w.idString+"&neuronId="+ n.idString)
+            $http.get($scope.serverUrl+"/rest-v1/mouselight/pointSummaryForNeuron?workspaceId="+ w.idString+"&neuronId="+ n.idString)
                 .then(function(response) {
                     $scope.pointList=response.data;
                     $scope.currentNeuron=n;
