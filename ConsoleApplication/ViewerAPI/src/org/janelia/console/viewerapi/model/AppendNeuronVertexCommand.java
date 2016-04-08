@@ -68,8 +68,9 @@ implements UndoableEdit, Command
     public boolean execute() {
         refreshParent();
         newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
-        if (newVertex == null)
+        if (newVertex == null) {
             return false;
+        }
         return true;
     }
     
@@ -98,13 +99,19 @@ implements UndoableEdit, Command
     @Override
     public void redo() {
         super.redo(); // raises exception if canRedo() is false
-        execute();
+        if (! execute())
+            die(); // Something went wrong. This Command object is no longer useful.
     }
     
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        neuron.deleteVertex(newVertex);
+        try {
+            neuron.deleteVertex(newVertex);
+        } catch (Exception exc) {
+            // Something went wrong. Perhaps this anchor no longer exists
+            die(); // This Command object is no longer useful
+        }
         newVertex = null;
     }
 
