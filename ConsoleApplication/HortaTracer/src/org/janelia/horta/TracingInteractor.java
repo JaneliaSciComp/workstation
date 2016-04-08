@@ -189,7 +189,7 @@ public class TracingInteractor extends MouseAdapter
                     context.appendVertex();
                     long appendedTime = System.nanoTime();
                     double elapsed = (appendedTime - clickTime) / 1.0e6;
-                    // System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
+                    System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
                 }
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
                     context.mergeNeurite();
@@ -711,7 +711,7 @@ public class TracingInteractor extends MouseAdapter
             long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
                 long endExecuteTime = System.nanoTime();
-                // System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
+                System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
                 NeuronVertex addedVertex = appendCmd.getAppendedVertex();
                 if (addedVertex != null) {
                     selectParentVertex(addedVertex, parentNeuron);

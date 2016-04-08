@@ -124,6 +124,7 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.HortaSwcLoader;
+import org.janelia.horta.loader.HortaVolumeCache;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
@@ -224,6 +225,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
     private int defaultColorChannel = 0;
     
+    private final HortaVolumeCache volumeCache;
+    
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
         initComponents();
@@ -301,6 +304,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
+        
 
         // When the camera focus changes, consider updating the tiles displayed
         volumeLoadTrigger = new Observer() {
@@ -316,6 +320,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().getVantage().addObserver(volumeLoadTrigger);
         
+        // Load new volume data when the focus moves
+        volumeCache = new HortaVolumeCache((PerspectiveCamera)sceneWindow.getCamera());
+
         // Repaint when color map changes
         brightnessModel.addObserver(new Observer() {
             @Override
@@ -363,6 +370,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
+        this.volumeCache.setSource(volumeSource);
     }
     
     /** Tells caller what source we are examining. */
@@ -467,7 +475,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException, ParseException
     {
-        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress);
+        setVolumeSource(new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress));
         return volumeSource;
     }
 
@@ -722,7 +730,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void loadDroppedYaml(InputStream yamlStream) throws IOException, ParseException
     {
         // currentSource = Utilities.toURI(file).toURL().toString();
-        volumeSource = loadYaml(yamlStream, loader, null);
+        setVolumeSource(loadYaml(yamlStream, loader, null));
         loader.loadTileAtCurrentFocus(volumeSource);
     }
     
@@ -886,7 +894,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 });
 
                 if (currentSource != null) {
-                    menu.add(new AbstractAction("Load Volume Brick Here") {
+                    menu.add(new AbstractAction("Load Image Tile Here") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
