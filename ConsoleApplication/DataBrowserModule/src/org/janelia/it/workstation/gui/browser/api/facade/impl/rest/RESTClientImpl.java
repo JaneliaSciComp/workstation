@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 public class RESTClientImpl {
 
-    private static final Logger log = LoggerFactory.getLogger(TestHarness.class);
+    private static final Logger log = LoggerFactory.getLogger(RESTClientImpl.class);
     
     protected boolean checkBadResponse(int responseStatus, String failureError) {
         if (responseStatus<200 || responseStatus>=300) {
