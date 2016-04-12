@@ -33,16 +33,24 @@ package org.janelia.horta.loader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.swing.SwingUtilities;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.janelia.console.viewerapi.BasicGenericObservable;
+import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.GenericObserver;
+import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.NeuronTraceLoader;
+import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
@@ -64,7 +72,7 @@ import org.openide.util.RequestProcessor;
  */
 public class HortaVolumeCache
 {
-    private int ramTileCount = 2;
+    private int ramTileCount = 4;
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
@@ -77,7 +85,7 @@ public class HortaVolumeCache
     private final Collection<BrickInfo> queuedForLoad = new ConcurrentHashSet();
     
     // Fewer on GPU cache
-    private final Collection<BrickInfo> actualDisplayTiles = new ConcurrentHashSet<>();
+    private final Map<BrickInfo, BrickActor> actualDisplayTiles = new ConcurrentHashMap<>();
     private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentHashSet<>();
     
     // Cache camera data for early termination
@@ -86,9 +94,17 @@ public class HortaVolumeCache
     float cachedFocusZ = Float.NaN;
     float cachedZoom = Float.NaN;
     
-    private RequestProcessor loadProcessor = new RequestProcessor("for loading tiles", 10);
+    private final RequestProcessor loadProcessor = new RequestProcessor("for loading tiles", 10);
+    private final BrightnessModel brightnessModel;
+    private final VolumeMipMaterial.VolumeState volumeState;
+    private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
-    public HortaVolumeCache(PerspectiveCamera camera) {
+    public HortaVolumeCache(final PerspectiveCamera camera, 
+            final BrightnessModel brightnessModel,
+            final VolumeMipMaterial.VolumeState volumeState) 
+    {
+        this.brightnessModel = brightnessModel;
+        this.volumeState = volumeState;
         this.camera = camera;
         camera.addObserver(new CameraObserver());
     }
@@ -147,6 +163,9 @@ public class HortaVolumeCache
             desiredDisplayTiles.addAll(veryClosestBricks);
         }
         
+        // Just in case; should not be necessary
+        closestBricks.addAll(veryClosestBricks);
+        
         // Compare to cached list of tile metadata
         // Create list of new and obsolete tiles
         Collection<BrickInfo> obsoleteBricks = new ArrayList<>();
@@ -168,50 +187,27 @@ public class HortaVolumeCache
         // but don't update new tiles in ram until they are loaded
 
         // Upload closest tiles to GPU, if already loaded in RAM
-        for (BrickInfo brick : desiredDisplayTiles) {
-            if (actualDisplayTiles.contains(brick))
+        for (BrickInfo brick : desiredDisplayTiles) { // These are the tiles we want do display right now.
+            if (actualDisplayTiles.containsKey(brick)) // Is it already displayed?
                 continue; // already loaded
-            if (nearVolumeInRam.containsKey(brick)) {
-                uploadToGpu((BrainTileInfo)brick);
+            if (nearVolumeInRam.containsKey(brick)) { // Is the texture ready?
+                uploadToGpu((BrainTileInfo)brick); // then display it!
             }
         }
         
         // Begin loading the new tiles asynchronously to RAM
-        for (final BrickInfo brick : newBricks) {
-            final BrainTileInfo tile = (BrainTileInfo)brick;
-            if (queuedForLoad.contains(tile))
-                continue; // already loading
-            System.out.println("Horta Volume cache loading tile...");
-            Runnable loadTask = new Runnable() {
-                @Override
-                public void run() {
-                    queuedForLoad.add(tile);
-                    ProgressHandle progress
-                        = ProgressHandleFactory.createHandle("Loading Tile " + tile.getLocalPath() + " ...");
-                    progress.start();
-                    progress.setDisplayName("Loading Tile " + tile.getLocalPath() + " ...");
-                    progress.switchToIndeterminate();
-                    try {
-                        Texture3d tileTexture = tile.loadBrick(10);
-                        if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
-                            nearVolumeInRam.put(tile, tileTexture);
-                            // Trigger GPU upload, if appropriate
-                            if (desiredDisplayTiles.contains(tile)) {
-                                // Trigger GPU upload
-                                uploadToGpu(tile);
-                            }
-                        }
-                    } catch (IOException ex) {
-                        Exceptions.printStackTrace(ex);
-                    }
-                    finally {
-                        queuedForLoad.remove(tile);
-                        progress.finish();
-                    }
-                };
-            };
-            // Submit load task asynchronously
-            loadProcessor.post(loadTask);
+        // ...starting with the ones we want to display right now
+        for (final BrickInfo brick : desiredDisplayTiles) 
+        {
+            if (actualDisplayTiles.containsKey(brick)) // Is it already displayed?
+                continue; // already displayed           
+            if (nearVolumeInRam.containsKey(brick)) // Is the texture already loaded in RAM?
+                continue; // already loaded
+            queueLoad((BrainTileInfo)brick);
+        }
+        for (final BrickInfo brick : newBricks) 
+        {
+            queueLoad((BrainTileInfo)brick); // Don't worry; duplicates will be skipped
         }
 
         // Begin deleting the old tiles        
@@ -220,19 +216,79 @@ public class HortaVolumeCache
         }
     }
     
+    private void queueLoad(final BrainTileInfo tile) 
+    {
+        if (queuedForLoad.contains(tile))
+            return; // already loading
+        queuedForLoad.add(tile);
+        System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
+        Runnable loadTask = new Runnable() {
+            @Override
+            public void run() {
+                // Throttle to slow down loading of too many tiles if user is moving a lot
+                if (queuedForLoad.size() > 3) { // Hmm... Many things are already loading, so maybe I should play it cool...
+                    try {
+                        Thread.sleep(1000); // milliseconds to wait before starting load
+                    } catch (InterruptedException ex) {
+                    }
+                }
+                // Maybe after that wait, this tile is no longer needed
+                if (! nearVolumeMetadata.contains(tile)) {
+                    queuedForLoad.remove(tile);
+                    return;
+                }
+
+                ProgressHandle progress
+                    = ProgressHandleFactory.createHandle("Loading Tile " + tile.getLocalPath() + " ...");
+                progress.start();
+                progress.setDisplayName("Loading Tile " + tile.getLocalPath() + " ...");
+                progress.switchToIndeterminate();
+                try {
+                    Texture3d tileTexture = tile.loadBrick(10);
+                    if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
+                        nearVolumeInRam.put(tile, tileTexture);
+                        // Trigger GPU upload, if appropriate
+                        if (desiredDisplayTiles.contains(tile)) {
+                            // Trigger GPU upload
+                            uploadToGpu(tile);
+                        }
+                    }
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+                finally {
+                    queuedForLoad.remove(tile);
+                    progress.finish();
+                }
+            };
+        };
+        // Submit load task asynchronously
+        loadProcessor.post(loadTask);
+    }
+    
     private void uploadToGpu(BrainTileInfo brick) {
-        if (actualDisplayTiles.contains(brick))
+        if (actualDisplayTiles.containsKey(brick))
             return; // already displayed
         if (! desiredDisplayTiles.contains(brick))
             return; // not needed
+        
+        Texture3d texture3d = nearVolumeInRam.get(brick);
+        if (texture3d == null)
+            return; // Sorry, that volume is not loaded FIXME: error handling here
+        
+        // TODO:
+        System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
+        final BrickActor actor = new BrickActor(brick, texture3d, brightnessModel, volumeState);
+        actualDisplayTiles.put(brick, actor);
         
         // Hide obsolete displayed tiles
         int hideCount = actualDisplayTiles.size() - desiredDisplayTiles.size() + 1;
         if (hideCount > 0) {
             // Using iterator to avoid ConcurrentModificationException
-            Iterator<BrickInfo> iter = actualDisplayTiles.iterator();
+            Iterator<Map.Entry<BrickInfo, BrickActor>> iter = actualDisplayTiles.entrySet().iterator();
             while(iter.hasNext()) {
-                BrainTileInfo tile = (BrainTileInfo)iter.next();
+                Map.Entry<BrickInfo, BrickActor> entry = iter.next();
+                BrainTileInfo tile = (BrainTileInfo)entry.getKey();
                 if (! desiredDisplayTiles.contains(tile)) {
                     iter.remove();
                     // TODO:
@@ -244,9 +300,28 @@ public class HortaVolumeCache
             }
         }
         
-        // TODO:
-        System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
-        actualDisplayTiles.add(brick);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (TileDisplayObserver observer : observers) {
+                    observer.update(actor, actualDisplayTiles.keySet());
+                }
+            }
+        });
+    }
+
+    public void addObserver(TileDisplayObserver observer) {
+        if (observers.contains(observer))
+            return;
+        observers.add(observer);
+    }
+
+    public void deleteObserver(TileDisplayObserver observer) {
+        observers.remove(observer);
+    }
+
+    public void deleteObservers() {
+        observers.clear();
     }
 
     private class CameraObserver implements Observer
@@ -257,5 +332,9 @@ public class HortaVolumeCache
             float zoom = camera.getVantage().getSceneUnitsPerViewportHeight();
             updateLocation(focusXyz, zoom);
         }
+    }
+    
+    public static interface TileDisplayObserver {
+        public void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles);
     }
 }

@@ -66,7 +66,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.prefs.Preferences;
@@ -85,8 +87,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.text.Keymap;
+import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -131,6 +135,7 @@ import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
+import org.janelia.horta.volume.BrickInfo;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -320,15 +325,52 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().getVantage().addObserver(volumeLoadTrigger);
         
-        // Load new volume data when the focus moves
-        volumeCache = new HortaVolumeCache((PerspectiveCamera)sceneWindow.getCamera());
-
         // Repaint when color map changes
         brightnessModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 // logger.info("Camera changed");
                 redrawNow();
+            }
+        });
+
+        // Load new volume data when the focus moves
+        volumeCache = new HortaVolumeCache(
+                (PerspectiveCamera)sceneWindow.getCamera(),
+                brightnessModel,
+                volumeState
+        );
+        volumeCache.addObserver(new HortaVolumeCache.TileDisplayObserver() {
+            @Override
+            public void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles) {
+                if (! allTiles.contains(newTile.getBrainTile()))
+                    return; // Tile is stale, so don't load it
+                // System.out.println("Got "+allTiles.size()+" tile(s) to display from Volume Cache");
+                
+                // Undisplay stale tiles and upload to GPU
+                Iterator<GL3Actor> iter = neuronMPRenderer.getVolumeActors().iterator();
+                boolean tileAlreadyDisplayed = false;
+                while (iter.hasNext()) {
+                    GL3Actor actor = iter.next();
+                    if (!(actor instanceof BrickActor))
+                        continue;
+                    BrickActor brickActor = (BrickActor) actor;
+                    BrickInfo actorInfo = brickActor.getBrainTile();
+                    // Check whether maybe the new tile is already displayed somehow
+                    if (actorInfo.isSameBrick(newTile.getBrainTile())) {
+                        tileAlreadyDisplayed = true;
+                        continue;
+                    }
+                    // Remove displayed tiles that are no longer current
+                    if (! allTiles.contains(actorInfo)) {
+                        iter.remove(); // Safe member deletion via iterator
+                    }
+                }
+                // Upload up to one tile per update call
+                if (! tileAlreadyDisplayed) {
+                    System.out.println("Uploading tile "+ newTile.getBrainTile().getLocalPath() +" to GPU");
+                    neuronMPRenderer.addVolumeActor(newTile);
+                }
             }
         });
 
