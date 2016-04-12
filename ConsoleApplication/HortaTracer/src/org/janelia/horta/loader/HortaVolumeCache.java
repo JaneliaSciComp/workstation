@@ -225,7 +225,7 @@ public class HortaVolumeCache
         if (queuedForLoad.contains(tile))
             return; // already loading
         queuedForLoad.add(tile);
-        System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
+        // System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
         Runnable loadTask = new Runnable() {
             @Override
             public void run() {
@@ -280,8 +280,7 @@ public class HortaVolumeCache
         if (texture3d == null)
             return; // Sorry, that volume is not loaded FIXME: error handling here
         
-        // TODO:
-        System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
+        // System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
         final BrickActor actor = new BrickActor(brick, texture3d, brightnessModel, volumeState);
         actualDisplayTiles.put(brick, actor);
         
@@ -295,8 +294,7 @@ public class HortaVolumeCache
                 BrainTileInfo tile = (BrainTileInfo)entry.getKey();
                 if (! desiredDisplayTiles.contains(tile)) {
                     iter.remove();
-                    // TODO:
-                    System.out.println("I should be UNdisplaying tile " + tile.getLocalPath() + " now");        
+                    // System.out.println("I should be UNdisplaying tile " + tile.getLocalPath() + " now");        
                     hideCount --;
                     if (hideCount <= 0)
                         break;

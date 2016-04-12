@@ -353,7 +353,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 // Upload up to one tile per update call
                 if (! tileAlreadyDisplayed) {
-                    System.out.println("Uploading tile "+ newTile.getBrainTile().getLocalPath() +" to GPU");
+                    // System.out.println("Uploading tile "+ newTile.getBrainTile().getLocalPath() +" to GPU");
                     neuronMPRenderer.addVolumeActor(newTile);
                     redrawNow();
                 }
