@@ -5,7 +5,9 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 import javax.swing.*;
@@ -27,11 +29,18 @@ public class LVVDevPanel extends JPanel {
     private AnnotationModel annotationModel;
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
+    // 2016: new neuron persistance
+    private ModelManagerTmModelAdapter modelAdapter;
+    private TmModelManipulator neuronManager;
+
     public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
                        LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
+
+        modelAdapter = new ModelManagerTmModelAdapter();
+        neuronManager = new TmModelManipulator(modelAdapter);
 
         setupUI();
     }
@@ -46,62 +55,40 @@ public class LVVDevPanel extends JPanel {
 
         // remember, can't call modelMgr from GUI thread
 
-        // this is for testing the "fix connectivity" feature; it
-        //  grabs the current neuron and deletes one of its geo annotations
+        // for testing detection/repair of root ann not in ann map
         JButton testButton1 = new JButton("Test 1");
-        testButton1.setAction(new AbstractAction("Break connectivity") {
+        testButton1.setAction(new AbstractAction("Lose a root") {
             @Override
             public void actionPerformed(ActionEvent e) {
 
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        // since this is for debugging, it can be kind of sloppy;
-                        //  delete second annotation in first neurite; that's the
-                        //  first child of the root
+                        // remove the first root of the selected neurite from the annotation map
                         TmNeuron neuron = annotationModel.getCurrentNeuron();
                         if (neuron == null) {
                             System.out.println("no selected neuron");
                             return;
                         }
                         if (neuron.getRootAnnotationCount() == 0) {
-                            System.out.println("no annotations");
+                            System.out.printf("neuron has no roots");
                             return;
                         }
-                        TmGeoAnnotation root = neuron.getFirstRoot();
-                        if (root.getChildIds().size() == 0) {
-                            System.out.println("root has no children");
-                            return;
-                        }
-                        Long childID = root.getChildIds().get(0);
 
-                        // now we do surgery--horrific, brutal surgery that is an
-                        //  offense against man and God and the ethics board;
-                        //  I hope Entities and EntityDatas feel no pain...
-                        ModelMgr modelMgr = ModelMgr.getModelMgr();
-                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
-                        // avoid a concurrant modification error:
-                        EntityData found = null;
-                        for (EntityData ed : neuronEntity.getEntityData()) {
-                            if (ed.getId().equals(childID)) {
-                                found = ed;
-                            }
-                        }
-                        if (found != null) {
-                            modelMgr.removeEntityData(found);
-                        } else {
-                            System.out.println("couldn't find right entity data to remove");
-                        }
+                        neuron.getGeoAnnotationMap().remove(neuron.getRootAnnotations().get(0).getId());
+                        // at this point, the data should be internally INconsistent,
+                        //  which is what we want
+                        neuronManager.saveNeuronData(neuron);
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        System.out.println("break connectivity had no exceptions");
+                        System.out.println("lose a root had no exceptions");
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        System.out.println("connectivity breaking reported exception");
+                        System.out.println("lose a root reported exception");
                         error.printStackTrace();
                     }
                 };
@@ -109,78 +96,7 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        // disabled; testing is over
-        // add(testButton1);
-
-        // this is for testing the "fix connectivity" feature (again); this
-        //  variation takes the root annotation of the current neuron and
-        //  parents it to something other than the neuron
-        JButton testButton2 = new JButton("Test 2");
-        testButton2.setAction(new AbstractAction("Root wrong parent") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        // since this is for debugging, it can be kind of sloppy;
-                        //  delete second annotation in first neurite; that's the
-                        //  first child of the root
-                        TmNeuron neuron = annotationModel.getCurrentNeuron();
-                        if (neuron == null) {
-                            System.out.println("no selected neuron");
-                            return;
-                        }
-                        if (neuron.getRootAnnotationCount() == 0) {
-                            System.out.println("no annotations");
-                            return;
-                        }
-                        TmGeoAnnotation root = neuron.getFirstRoot();
-                        if (root.getChildIds().size() == 0) {
-                            System.out.println("root has no children");
-                            return;
-                        }
-
-                        // get the root entity data and change its value
-                        ModelMgr modelMgr = ModelMgr.getModelMgr();
-                        Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
-                        // avoid a concurrant modification error:
-                        EntityData found = null;
-                        for (EntityData ed: neuronEntity.getEntityData()) {
-                            if (ed.getId().equals(root.getId())) {
-                                found = ed;
-                            }
-                        }
-                        if (found != null) {
-                            System.out.println("found entity data to edit");
-                            // put in a nonsense value for the parent
-                            String newPayload = TmGeoAnnotation.toStringFromArguments(root.getId(),
-                                12345678L, 0, root.getX(), root.getY(), root.getZ(),
-                                root.getComment());
-                            found.setValue(newPayload);
-                            modelMgr.saveOrUpdateEntityData(found);
-                        } else {
-                            System.out.println("couldn't find right entity data to edit");
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        System.out.println("Root wrong parent had no exceptions");
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        System.out.println("Root wrong parent reported exception");
-                        error.printStackTrace();
-                    }
-                };
-                worker.execute();
-
-            }
-        });
-        // disabled; testing is over
-        // add(testButton2);
+        add(testButton1);
 
 
 

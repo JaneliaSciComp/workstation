@@ -109,6 +109,22 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             progressHandle.finish();
             throw ex;
         }
+
+        // check neuron consistency and repair (some) problems
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            List<String> results = neuron.checkRepairNeuron();
+            // List<String> results = neuron.checkNeuron();
+            if (results.size() > 0) {
+                // save results, then output to log; this is unfortunately
+                //  not visible to the user; we aren't in a place in the
+                //  code where we can pop a dialog
+                saveNeuron(neuron);
+                for (String s: results) {
+                    log.warn(s);
+                }
+            }
+        }
+
     }
 
     /**
