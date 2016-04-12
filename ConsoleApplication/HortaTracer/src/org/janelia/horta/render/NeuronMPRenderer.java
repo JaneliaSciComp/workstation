@@ -232,7 +232,7 @@ extends MultipassRenderer
         double opacity = opacityForScreenXy(xy, camera);
         // TODO: threshold might need to be tuned
         // 0.5 seems too small, I want to select that vertex!
-        final double opacityThreshold = 0.7; // Always use transparent material, if it's dense enough
+        final double opacityThreshold = 0.9; // Always use transparent material, if it's dense enough
         if (opacity >= opacityThreshold)
             return false; // transparent geometry is strong here, so no, not well visible
         return true; // I see a neuron model at this spot
