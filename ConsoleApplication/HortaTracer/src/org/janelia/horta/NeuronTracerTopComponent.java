@@ -355,6 +355,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (! tileAlreadyDisplayed) {
                     System.out.println("Uploading tile "+ newTile.getBrainTile().getLocalPath() +" to GPU");
                     neuronMPRenderer.addVolumeActor(newTile);
+                    redrawNow();
                 }
             }
         });
