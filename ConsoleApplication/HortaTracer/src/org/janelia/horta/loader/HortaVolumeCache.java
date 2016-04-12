@@ -72,7 +72,7 @@ import org.openide.util.RequestProcessor;
  */
 public class HortaVolumeCache
 {
-    private int ramTileCount = 2;
+    private int ramTileCount = 3;
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
