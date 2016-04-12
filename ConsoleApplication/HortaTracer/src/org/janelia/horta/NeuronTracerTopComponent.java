@@ -202,9 +202,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     // Cache latest hover information
     private Vector3 mouseStageLocation = null;
     private final Observer cursorCacheDestroyer;
-    
-    // load new volumes based on camera postion
-    private final Observer volumeLoadTrigger;
 
     private TracingInteractor tracingInteractor;
     private StaticVolumeBrickSource volumeSource;
@@ -309,21 +306,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
-        
 
-        // When the camera focus changes, consider updating the tiles displayed
-        volumeLoadTrigger = new Observer() {
-            private ConstVector3 cachedFocus = null;
-            @Override
-            public void update(Observable o, Object arg) {
-                ConstVector3 newFocus = new Vector3(sceneWindow.getCamera().getVantage().getFocusPosition());
-                if (newFocus.equals(cachedFocus))
-                    return; // no change
-                // logger.info("focus changed"); // TODO
-                cachedFocus = newFocus;
-            }
-        };
-        sceneWindow.getCamera().getVantage().addObserver(volumeLoadTrigger);
         
         // Repaint when color map changes
         brightnessModel.addObserver(new Observer() {
