@@ -1579,6 +1579,10 @@ called from a  SimpleWorker thread.
     public synchronized void postWorkspaceUpdate() throws Exception {
         updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
+        // it's possible this reload of the neurons isn't needed; currently
+        //  it's only called as part of bulk SWC import, and the neurons are
+        //  reloaded earlier in that process; however, I'm not sure how to
+        //  definitively test it, so I'm reluctant to remove it now
         neuronManager.loadWorkspaceNeurons(workspace);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
