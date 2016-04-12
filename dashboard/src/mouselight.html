@@ -37,6 +37,7 @@
         <p>Neuron List size={{neuronList.length}}</p>
         <table>
             <tr ng-repeat="neuron in neuronList | orderBy:'createTimestamp'">
+                <td>{{neuron.idString}}</td>
                 <td>{{neuron.name}}</td>
                 <td>{{neuron.pointCount}}</td>
                 <td>&nbsp;</td>
@@ -52,6 +53,8 @@
         <table>
             <tr ng-repeat="p in pointList | orderBy:'z' | orderBy:'y' | orderBy:'x'">
                 <td>Point</td>
+                <td>{{p.idString}}</td>
+                <td>{{p.parentIdString}}</td>
                 <td>{{p.x}}</td>
                 <td>{{p.y}}</td>
                 <td>{{p.z}}</td>
