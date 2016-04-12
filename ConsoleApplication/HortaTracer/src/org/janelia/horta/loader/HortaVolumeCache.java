@@ -98,13 +98,17 @@ public class HortaVolumeCache
     private final BrightnessModel brightnessModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private int currentColorChannel = 0;
 
     public HortaVolumeCache(final PerspectiveCamera camera, 
             final BrightnessModel brightnessModel,
-            final VolumeMipMaterial.VolumeState volumeState) 
+            final VolumeMipMaterial.VolumeState volumeState,
+            int currentColorChannel) 
     {
         this.brightnessModel = brightnessModel;
         this.volumeState = volumeState;
+        this.currentColorChannel = currentColorChannel;
+
         this.camera = camera;
         camera.addObserver(new CameraObserver());
     }
@@ -226,7 +230,7 @@ public class HortaVolumeCache
             @Override
             public void run() {
                 // Throttle to slow down loading of too many tiles if user is moving a lot
-                if (queuedForLoad.size() > 3) { // Hmm... Many things are already loading, so maybe I should play it cool...
+                if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
                     try {
                         Thread.sleep(1000); // milliseconds to wait before starting load
                     } catch (InterruptedException ex) {
@@ -244,7 +248,7 @@ public class HortaVolumeCache
                 progress.setDisplayName("Loading Tile " + tile.getLocalPath() + " ...");
                 progress.switchToIndeterminate();
                 try {
-                    Texture3d tileTexture = tile.loadBrick(10);
+                    Texture3d tileTexture = tile.loadBrick(10, currentColorChannel);
                     if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
                         nearVolumeInRam.put(tile, tileTexture);
                         // Trigger GPU upload, if appropriate
@@ -322,6 +326,10 @@ public class HortaVolumeCache
 
     public void deleteObservers() {
         observers.clear();
+    }
+
+    public void setColorChannel(int colorChannel) {
+        this.currentColorChannel = colorChannel;
     }
 
     private class CameraObserver implements Observer

@@ -338,7 +338,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         volumeCache = new HortaVolumeCache(
                 (PerspectiveCamera)sceneWindow.getCamera(),
                 brightnessModel,
-                volumeState
+                volumeState,
+                defaultColorChannel
         );
         volumeCache.addObserver(new HortaVolumeCache.TileDisplayObserver() {
             @Override
@@ -364,6 +365,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     // Remove displayed tiles that are no longer current
                     if (! allTiles.contains(actorInfo)) {
                         iter.remove(); // Safe member deletion via iterator
+                        neuronMPRenderer.queueObsoleteResource(brickActor);
                     }
                 }
                 // Upload up to one tile per update call
@@ -431,6 +433,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
+            volumeCache.setColorChannel(defaultColorChannel);
             activityLogger.logHortaLaunch(sampleLocation);
 
         } catch (Exception ex) {
