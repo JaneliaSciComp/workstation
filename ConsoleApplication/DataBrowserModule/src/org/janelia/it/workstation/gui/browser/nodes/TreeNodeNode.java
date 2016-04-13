@@ -97,7 +97,7 @@ public class TreeNodeNode extends DomainObjectNode {
         log.trace("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
         log.debug("Refreshing children for {} (now has {} children)",domainObject.getName(),treeNode.getNumChildren());
         childFactory.update(treeNode);
-        childFactory.refresh();
+        refreshChildren();
     }
     
     public void refreshChildren() {
@@ -120,11 +120,11 @@ public class TreeNodeNode extends DomainObjectNode {
 
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
+        if (getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             return Icons.getIcon("folder-blue-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("folder-blue-icon.png").getImage();    
+            return Icons.getIcon("folder-white-icon.png").getImage();
         }
     }
     

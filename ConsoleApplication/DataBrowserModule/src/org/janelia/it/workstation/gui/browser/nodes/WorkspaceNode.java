@@ -35,11 +35,11 @@ public class WorkspaceNode extends TreeNodeNode {
     
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
+        if (getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
             return Icons.getIcon("user-folder-blue-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("user-folder-blue-icon.png").getImage();    
+            return Icons.getIcon("user-folder-white-icon.png").getImage();
         }
     }
     

@@ -33,11 +33,7 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
-import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
-import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
-import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.components.*;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -78,12 +74,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
-        if (!DomainViewerTopComponent.isSupported(domainObject)) return;
-        DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-        if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
-            viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-            viewer.requestActive();
-            viewer.loadDomainObject(domainObject, true);
+        if (DomainViewerTopComponent.isSupported(domainObject)) {
+            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+            if (viewer == null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
+                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.requestActive();
+                viewer.loadDomainObject(domainObject, true);
+            }
+        }
+        else if (DomainExplorerTopComponent.isSupported(domainObject)) {
+            // TODO: shoudl select by path to ensure we get the right one
+            DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
+            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
     }
     

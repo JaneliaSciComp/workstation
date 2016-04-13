@@ -9,7 +9,6 @@
       <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/generated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
@@ -23,10 +22,18 @@
       <sourceFolder url="file://$MODULE_DIR$/DataBrowserModule/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/IntegrationAPIs/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Geometry3d/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DataBrowserModule/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/build/classes-generated" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
-      <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build" />
-      <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build" />
-      <excludeFolder url="file://$MODULE_DIR$/DataBrowserModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/depcache" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build/depcache" />
+      <excludeFolder url="file://$MODULE_DIR$/DataBrowserModule/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/DataBrowserModule/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/DataViewModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
@@ -41,10 +48,12 @@
       <excludeFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/SceneWindow/build" />
       <excludeFolder url="file://$MODULE_DIR$/SceneWindow/src" />
-      <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/SlideView/build" />
       <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
-      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build" />
+      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/build_eclipse" />
