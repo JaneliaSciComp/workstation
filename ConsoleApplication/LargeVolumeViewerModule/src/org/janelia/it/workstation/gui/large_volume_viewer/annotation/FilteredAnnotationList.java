@@ -266,8 +266,11 @@ public class FilteredAnnotationList extends JPanel {
                         // no tip here
                         tip = null;
                     } else {
-                        // for the rest, show the full text (esp. for notes)
+                        // for the rest, show the full text (esp. for notes), if any
                         tip = (String) model.getValueAt(realRowIndex, realColumnIndex);
+                        if (tip.length() == 0) {
+                            tip = null;
+                        }
                     }
                     return tip;
                 } else {
