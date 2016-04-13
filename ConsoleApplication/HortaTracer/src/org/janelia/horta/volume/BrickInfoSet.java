@@ -60,6 +60,19 @@ public class BrickInfoSet implements Set<BrickInfo> {
         }
     }
     
+    public Collection<BrickInfo> getClosestBricks(float[] xyz, int count) {
+        double[] key = new double[] {xyz[0], xyz[1], xyz[2]};
+        try {
+            return centroidIndex.nearest(key, count);
+        } catch (KeySizeException ex) {
+            Exceptions.printStackTrace(ex);
+        } catch (IllegalArgumentException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        return null;
+    }
+
+    
     @Override
     public int size() {
         return centroidIndex.size();
@@ -138,5 +151,6 @@ public class BrickInfoSet implements Set<BrickInfo> {
     public void clear() {
         set.clear();
     }
+
     
 }

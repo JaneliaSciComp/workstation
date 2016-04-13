@@ -761,7 +761,11 @@ public class TracingInteractor extends MouseAdapter
                     null, 
                     options,
                     options[1]); // default button
-            if (answer == JOptionPane.YES_OPTION) {
+            if (answer == JOptionPane.YES_OPTION) 
+            {
+                // merging is not undoable, and thus taints previous edits 
+                undoRedoManager.discardAllEdits();
+                
                 // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
                 // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
                 boolean merged = parentNeuron.mergeNeurite(hoveredVertex, parentVertex);

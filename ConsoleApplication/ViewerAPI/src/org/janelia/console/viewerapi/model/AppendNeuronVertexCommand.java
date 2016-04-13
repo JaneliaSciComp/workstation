@@ -107,7 +107,8 @@ implements UndoableEdit, Command
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
         try {
-            neuron.deleteVertex(newVertex);
+            if (! neuron.deleteVertex(newVertex))
+                die();
         } catch (Exception exc) {
             // Something went wrong. Perhaps this anchor no longer exists
             die(); // This Command object is no longer useful
