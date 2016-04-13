@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,10 +18,10 @@ import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
-import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
+import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -276,11 +275,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void deleteKeyPressed() {
         IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof ObjectSet) {
-            ObjectSet objectSet = (ObjectSet)parent; 
-            if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
+        if (parent instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)parent; 
+            if (ClientDomainUtils.hasWriteAccess(treeNode)) {                
                 List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
+                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
                 action.doAction();
             }
         }

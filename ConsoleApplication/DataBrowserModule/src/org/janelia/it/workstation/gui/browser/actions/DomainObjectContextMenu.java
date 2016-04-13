@@ -23,15 +23,12 @@ import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -113,8 +110,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getDetailsItem());
         add(getPermissionItem());
         
-        add(getAddToSetItem());
-        add(getRemoveFromSetItem());
+        add(getAddToFolderItem());
+        add(getRemoveFromFolderItem());
 
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -630,18 +627,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return markItem;
     }
     
-    protected JMenuItem getAddToSetItem() {
-        AddItemsToObjectSetAction action = new AddItemsToObjectSetAction(domainObjectList);
+    protected JMenuItem getAddToFolderItem() {
+        AddItemsToFolderAction action = new AddItemsToFolderAction(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
         item.setText("  "+item.getText());
         return item;
     }
     
-    protected JMenuItem getRemoveFromSetItem() {
+    protected JMenuItem getRemoveFromFolderItem() {
         
         NamedAction action = null;
-        if (contextObject instanceof ObjectSet) {
-            action = new RemoveItemsFromObjectSetAction((ObjectSet)contextObject, domainObjectList);
+        if (contextObject instanceof TreeNode) {
+            action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
         }
         else {
             return null;

@@ -1,18 +1,14 @@
 package org.janelia.it.workstation.gui.browser.components;
 
-import java.awt.BorderLayout;
-
-import javax.swing.JComponent;
-
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
@@ -28,6 +24,9 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Top component which displays lists of domain objects.
@@ -252,8 +251,8 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (domainObject instanceof Filter) {
             return FilterEditorPanel.class;
         }
-        else if (domainObject instanceof ObjectSet) {
-            return ObjectSetEditorPanel.class;
+        else if (domainObject instanceof TreeNode) {
+            return TreeNodeEditorPanel.class;
         }
         return null;
     }

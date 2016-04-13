@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -41,9 +41,9 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectionEditor<ObjectSet>, SearchProvider {
+public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelectionEditor<TreeNode>, SearchProvider {
 
-    private final static Logger log = LoggerFactory.getLogger(ObjectSetEditorPanel.class);
+    private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -52,7 +52,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     private final PaginatedResultsPanel resultsPanel;
 
     // State
-    private ObjectSet objectSet;
+    private TreeNode treeNode;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     
@@ -60,7 +60,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
-    public ObjectSetEditorPanel() {
+    public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
         
@@ -70,7 +70,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
                 return searchResults.getPage(page);
             }
         };
-        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ObjectSetEditorPanel"));
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
     }
 
@@ -138,11 +138,11 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     }
     @Override
     public String getName() {
-        if (objectSet==null) {
+        if (treeNode==null) {
             return "Set Editor";
         }
         else {
-            return "Set: "+StringUtils.abbreviate(objectSet.getName(), 15);
+            return "Set: "+StringUtils.abbreviate(treeNode.getName(), 15);
         }
     }
     
@@ -165,16 +165,16 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
-            ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+            TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
             if (updatedSet!=null) {
                 loadDomainObject(updatedSet, false, null);
             }
         }
         else {
             for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(objectSet.getId())) {
+                if (domainObject.getId().equals(treeNode.getId())) {
                     log.info("objects set invalidated, reloading...");
-                    ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+                    TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
                     if (updatedSet!=null) {
                         loadDomainObject(updatedSet, false, null);
                     }
@@ -185,27 +185,27 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     }
     
     @Override
-    public void loadDomainObject(final ObjectSet objectSet, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
 
-        if (objectSet==null) return;
+        if (treeNode==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
         
-        log.info("loadDomainObject(ObjectSet:{})",objectSet.getName());
+        log.info("loadDomainObject(TreeNode:{})",treeNode.getName());
         resultsPanel.showLoadingIndicator();
 
-        this.objectSet = objectSet;
-        selectionModel.setParentObject(objectSet);
+        this.treeNode = treeNode;
+        selectionModel.setParentObject(treeNode);
         
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
+                domainObjects = model.getDomainObjects(treeNode.getChildren());
                 annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
                 log.info("Showing "+domainObjects.size()+" items");
             }

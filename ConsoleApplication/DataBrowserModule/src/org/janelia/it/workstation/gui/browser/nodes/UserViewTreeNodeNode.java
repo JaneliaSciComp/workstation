@@ -1,27 +1,25 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 
-import java.awt.Image;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A tree node (i.e. Folder) in the data graph.
@@ -121,9 +119,6 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
                         if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                        else if (config.getVisibleClasses().contains(ObjectSet.class) && ObjectSet.class.isAssignableFrom(obj.getClass())) {
-                            temp.add(obj);
-                        }
                     }
                     else {
                         //temp.add(new DeadReference(reference));
@@ -141,9 +136,6 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
                 // TODO: would be nice to do this dynamically, or at least with some sort of annotation
                 if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(key.getClass())) {
                     return new UserViewTreeNodeNode((TreeNode)key, config);
-                }
-                else if (config.getVisibleClasses().contains(ObjectSet.class) && ObjectSet.class.isAssignableFrom(key.getClass())) {
-                    return new UserViewObjectSetNode((ObjectSet)key);
                 }
                 else {
                     return null;

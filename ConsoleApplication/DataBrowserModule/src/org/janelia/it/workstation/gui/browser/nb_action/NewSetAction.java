@@ -15,7 +15,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.gui.editor.ObjectSetEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -113,7 +113,7 @@ public final class NewSetAction implements ActionListener {
             browser.open();
             browser.requestActive();
         }
-        browser.setEditorClass(ObjectSetEditorPanel.class);
+        browser.setEditorClass(TreeNodeEditorPanel.class);
         return browser;
     }
 }
