@@ -90,7 +90,7 @@ public class FilteredAnnotationList extends JPanel {
         sorter = new TableRowSorter<>((FilteredAnnotationModel) filteredTable.getModel());
         filteredTable.setRowSorter(sorter);
 
-        // default sort order: let's go with ID column for now?
+        // default sort order: let's go with first (date) column for now
         filteredTable.getRowSorter().toggleSortOrder(0);
 
 
@@ -534,7 +534,7 @@ public class FilteredAnnotationList extends JPanel {
 /**
  * this renderer displays a short form of the time stamp:
  *
- *   hour:minute if less than a day old
+ *   hour:minute if today
  *   day/month if less than a year old
  *   year if more than a year old
  *
@@ -548,9 +548,19 @@ class ShortDateRenderer extends DefaultTableCellRenderer {
 
     public void setValue(Object value) {
         if (value != null) {
+            /*
+            // this is 24 hours ago, which is not what they want anymore
             Calendar oneDayAgo = Calendar.getInstance();
             oneDayAgo.setTime(new Date());
             oneDayAgo.add(Calendar.DATE, -1);
+            */
+
+            Calendar midnight = new GregorianCalendar();
+            midnight.set(Calendar.HOUR_OF_DAY, 0);
+            midnight.set(Calendar.MINUTE, 0);
+            midnight.set(Calendar.SECOND, 0);
+            midnight.set(Calendar.MILLISECOND, 0);
+
 
             Calendar oneYearAgo = Calendar.getInstance();
             oneYearAgo.setTime(new Date());
@@ -560,8 +570,8 @@ class ShortDateRenderer extends DefaultTableCellRenderer {
             creation.setTime((Date) value);
 
             String dateFormat;
-            if (oneDayAgo.compareTo(creation) < 0) {
-                // hour:minute if recent (24h clock)
+            if (midnight.compareTo(creation) < 0) {
+                // hour:minute if today
                 dateFormat = TIME_DATE_FORMAT;
             } else if (oneYearAgo.compareTo(creation) < 0) {
                 // month/day if older than 1 day
