@@ -8,12 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
@@ -24,9 +19,6 @@ import javax.swing.ImageIcon;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Vector;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -73,49 +65,20 @@ public class SkeletonActor
         }
     }
 
-    private class ElementDataOffset {
-        public ElementDataOffset(Long id, int size, long offset) { this.id=id; this.size=size; this.offset=offset; }
-        public Long id;
-        public int size;
-        public long offset;
-    }
-    
     private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 
-    // semantic constants for allocating byte arrays
-    private static final int FLOAT_BYTE_COUNT = 4;
-    private static final int VERTEX_FLOAT_COUNT = 3;
-    private static final int INT_BYTE_COUNT = 4;
-    private static final int COLOR_FLOAT_COUNT = 3;
-
     private boolean bIsGlInitialized = false;
-
-    // arrays for draw
-    private Multiset<Long> neuronVertexCount = HashMultiset.create();
-    private Map<Long, FloatBuffer> neuronVertices = new HashMap<>();
-    private Map<Long, FloatBuffer> neuronColors = new HashMap<>();
-
-    List<ElementDataOffset> vertexOffsets=new ArrayList<>();
-    List<ElementDataOffset> colorOffsets=new ArrayList<>();
-    List<ElementDataOffset> lineOffsets=new ArrayList<>();
-    List<ElementDataOffset> pointOffsets=new ArrayList<>();
-
-    Map<Long, ElementDataOffset> vertexOffsetMap=new HashMap<>();
-    Map<Long, ElementDataOffset> colorOffsetMap=new HashMap<>();
 
     private int vbo = -1;
     private int lineIbo = -1;
     private int pointIbo = -1;
     private int colorBo = -1;
 
-    private boolean verticesNeedCopy = false;
-    private boolean pointIndicesNeedCopy = false;
+    private SkeletonActorModel model;
 
-    // Vertex buffer objects need indices
-    private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
-    private Map<Long, Map<Integer, Anchor>> neuronIndexAnchors = new HashMap<>();
-    private Map<Long, IntBuffer> neuronPointIndices = new HashMap<>();
-    private Map<Long, IntBuffer> neuronLineIndices = new HashMap<>();
+    private int skeletonActorModelVersion=0;
+    public int getSkeletonActorModelVersion() { return skeletonActorModelVersion; }
+    public void setSkeletonActorModelVersion(int skeletonActorModelVersion) { this.skeletonActorModelVersion=skeletonActorModelVersion; }
 
     private PathShader lineShader = new PathShader();
     private AnchorShader anchorShader = new AnchorShader();
@@ -124,9 +87,6 @@ public class SkeletonActor
     private BufferedImage anchorImage;
     private int anchorTextureId = -1;
     private BufferedImage parentAnchorImage;
-    private int discardNonParent = 0; //Emphasize default value.
-    private int parentAnchorTextureId = -1;
-    //
     private Skeleton skeleton;
     private SkeletonActorStateUpdater updater;
     private Camera3d camera;
@@ -137,8 +97,6 @@ public class SkeletonActor
     
     //
     private boolean bIsVisible = true;
-
-    private Map<Long, Map<SegmentIndex, TracedPathActor>> neuronTracedSegments = new HashMap<>();
 
     private NeuronStyleModel neuronStyles;
 
@@ -151,13 +109,11 @@ public class SkeletonActor
     private RenderInterpositionMethod rim = RenderInterpositionMethod.MIP;
 
     public enum RenderInterpositionMethod {
-
         MIP, Occlusion
     }
 
     public SkeletonActor() {
         updater = new SkeletonActorStateUpdater();
-        // log.info("New SkeletonActor");
     }
 
     public void setRenderInterpositionMethod(RenderInterpositionMethod rim) {
