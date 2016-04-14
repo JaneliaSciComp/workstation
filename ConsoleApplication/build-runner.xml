@@ -6,6 +6,14 @@ of adapter.
 -->
 <project name="run-console-build" default="build">
     <property environment="env"/>
+    <!-- Create a unique user directory for IDE runs. -->
+    <property name="git.branch" value="anyBranch"/>
+    <exec executable="git" outputproperty="git.branch"
+          failifexecutionfails="false">
+        <arg line="rev-parse --abbrev-ref HEAD"/>
+    </exec>
+    <echo message="Current branch: ${git.branch}"/>
+    <property name="test.user.dir" value="${env.USERPROFILE}/rcp_testuserdir_${git.branch}" />
     <property file="../buildprocess/config/${user.name}.properties" />
     <target name="build" description="Build using ant target" depends="prop-copy,internal-jar-copy">
         <echoproperties/>
