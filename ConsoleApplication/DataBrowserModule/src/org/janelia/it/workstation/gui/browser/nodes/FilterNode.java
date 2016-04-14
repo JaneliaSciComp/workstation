@@ -26,10 +26,10 @@ public class FilterNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (getFilter().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            return Icons.getIcon("search-blue-icon.png").getImage();
+            return Icons.getIcon("search-yellow-icon.png").getImage();
         }
         else {
-            return Icons.getIcon("search-white-icon.png").getImage();
+            return Icons.getIcon("search-blue-icon.png").getImage();
         }
     }
     

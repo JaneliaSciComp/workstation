@@ -36,6 +36,19 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         this.treeNode = treeNode;
     }
 
+    public boolean hasNodeChildren() {
+        for(Reference reference : treeNode.getChildren()) {
+            if (reference==null) continue;
+            if (reference.getTargetClassName().equals("TreeNode")) {
+                return true;
+            }
+            else if (reference.getTargetClassName().equals("Filter")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     protected boolean createKeys(List<DomainObject> list) {
         if (treeNode==null) return false;

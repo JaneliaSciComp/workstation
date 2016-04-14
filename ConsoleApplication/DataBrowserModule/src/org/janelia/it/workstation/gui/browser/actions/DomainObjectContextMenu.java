@@ -83,7 +83,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         }
         else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-            // TODO: shoudl select by path to ensure we get the right one
+            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
@@ -124,7 +124,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getDownloadItem());
         
         setNextAddRequiresSeparator(true);
-        add(getErrorFlag());
+        add(getReportProblemItem());
         add(getMarkForReprocessingItem());
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
@@ -304,7 +304,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return pasteItem;
     }
 
-    protected JMenu getErrorFlag() {
+    protected JMenu getReportProblemItem() {
         if (multiple) return null;
         
         JMenu errorMenu = new JMenu("  Report A Problem With This Data");

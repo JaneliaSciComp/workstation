@@ -37,7 +37,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * Simple editor panel for viewing object sets. In the future it may support drag and drop editing of object sets. 
+ * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -139,10 +139,10 @@ public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelection
     @Override
     public String getName() {
         if (treeNode==null) {
-            return "Set Editor";
+            return "Folder Editor";
         }
         else {
-            return "Set: "+StringUtils.abbreviate(treeNode.getName(), 15);
+            return "Folder: "+StringUtils.abbreviate(treeNode.getName(), 15);
         }
     }
     
@@ -173,7 +173,7 @@ public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelection
         else {
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(treeNode.getId())) {
-                    log.info("objects set invalidated, reloading...");
+                    log.info("tree node invalidated, reloading...");
                     TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
                     if (updatedSet!=null) {
                         loadDomainObject(updatedSet, false, null);

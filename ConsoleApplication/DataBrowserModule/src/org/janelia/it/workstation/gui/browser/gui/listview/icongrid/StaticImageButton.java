@@ -7,17 +7,18 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 
 /**
- * An AnnotatedImageButton with a static icon or label.
+ * An AnnotatedImageButton with a static UNKNOWN_ICON or label.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
+
+    private static final BufferedImage UNKNOWN_ICON = Utils.toBufferedImage(Icons.getIcon("question_block_large.png").getImage());
 
     private BufferedImage staticIcon;
     private JLabel label;
@@ -51,10 +52,11 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
     @Override
     public void setViewable(boolean viewable) {
         if (viewable) {
-            Entity temp = new Entity();
-            temp.setEntityTypeName("Folder");
-            this.staticIcon = Icons.getLargeIconAsBufferedImage(temp);
-
+            this.staticIcon = imageModel.getStaticIcon(imageObject);
+            if (staticIcon==null) {
+                staticIcon = UNKNOWN_ICON;
+            }
+            
             // Register our aspect ratio
             double w = label.getIcon().getIconWidth();
             double h = label.getIcon().getIconHeight();
