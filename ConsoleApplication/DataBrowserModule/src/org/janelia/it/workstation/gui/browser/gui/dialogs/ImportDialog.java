@@ -210,7 +210,7 @@ public class ImportDialog extends ModalDialog {
                 } else {
                     List<Reference> parents = model.getContainerReferences(selNode);
                     for (Reference parent: parents) {
-                        if (parent.getTargetClassName().equals(TreeNode.class.getCanonicalName())) {
+                        if (parent.getTargetClassName().equals(TreeNode.class.getSimpleName())) {
                             rootFolder = (TreeNode) model.getDomainObject(parent);
                             break;
                         }
@@ -403,7 +403,7 @@ public class ImportDialog extends ModalDialog {
                                             protected void hadSuccess() {
                                                 log.info("AYEYEYEYEYEYEYEYEY");
                                                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                                rootFolder = (TreeNode)model.getDomainObject(new Reference(rootFolder.getClass().getCanonicalName(), rootFolder.getId()));
+                                                rootFolder = (TreeNode)model.getDomainObject(Reference.createFor(rootFolder));
                                                 List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
                                                 DomainObject importFolder = null;
                                                 for (DomainObject child: children) {

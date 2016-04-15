@@ -74,11 +74,7 @@ public final class NewDomainObjectAction extends NodeAction {
         JMenuItem newFilterItem = new JMenuItem("Filter");
         newFilterItem.addActionListener(new NewFilterAction(node));
         newMenu.add(newFilterItem);
-        
-        JMenuItem newSetItem = new JMenuItem("Set");
-        newSetItem.addActionListener(new NewSetAction(node));
-        newMenu.add(newSetItem);
-        
+
         if (selected.size()!=1) {
             newMenu.setEnabled(false);
         }

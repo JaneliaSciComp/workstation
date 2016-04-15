@@ -23,24 +23,17 @@ import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
-import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
-import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
-import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
-import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
+import org.janelia.it.workstation.gui.browser.components.*;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -81,12 +74,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
-        if (!DomainViewerTopComponent.isSupported(domainObject)) return;
-        DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-        if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
-            viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-            viewer.requestActive();
-            viewer.loadDomainObject(domainObject, true);
+        if (DomainViewerTopComponent.isSupported(domainObject)) {
+            DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
+            if (viewer == null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
+                viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                viewer.requestActive();
+                viewer.loadDomainObject(domainObject, true);
+            }
+        }
+        else if (DomainExplorerTopComponent.isSupported(domainObject)) {
+            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+            DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
+            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
     }
     
@@ -113,8 +112,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getDetailsItem());
         add(getPermissionItem());
         
-        add(getAddToSetItem());
-        add(getRemoveFromSetItem());
+        add(getAddToFolderItem());
+        add(getRemoveFromFolderItem());
 
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -125,7 +124,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getDownloadItem());
         
         setNextAddRequiresSeparator(true);
-        add(getErrorFlag());
+        add(getReportProblemItem());
         add(getMarkForReprocessingItem());
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
@@ -305,7 +304,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return pasteItem;
     }
 
-    protected JMenu getErrorFlag() {
+    protected JMenu getReportProblemItem() {
         if (multiple) return null;
         
         JMenu errorMenu = new JMenu("  Report A Problem With This Data");
@@ -630,18 +629,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return markItem;
     }
     
-    protected JMenuItem getAddToSetItem() {
-        AddItemsToObjectSetAction action = new AddItemsToObjectSetAction(domainObjectList);
+    protected JMenuItem getAddToFolderItem() {
+        AddItemsToFolderAction action = new AddItemsToFolderAction(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
         item.setText("  "+item.getText());
         return item;
     }
     
-    protected JMenuItem getRemoveFromSetItem() {
+    protected JMenuItem getRemoveFromFolderItem() {
         
         NamedAction action = null;
-        if (contextObject instanceof ObjectSet) {
-            action = new RemoveItemsFromObjectSetAction((ObjectSet)contextObject, domainObjectList);
+        if (contextObject instanceof TreeNode) {
+            action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
         }
         else {
             return null;

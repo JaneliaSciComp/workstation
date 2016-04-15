@@ -43,17 +43,13 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -346,18 +342,19 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private String getInputFieldValue() {
         return (String)inputField.getSelectedItem();
     }
-    
+
     public void dropDomainObject(DomainObject obj) {
+        if (obj instanceof TreeNode) {
+            Reference reference = Reference.createFor(TreeNode.class, obj.getId());
 
-        Reference reference = new Reference(ObjectSet.class.getName(), obj.getId());
+            TreeNodeCriteria criteria = new TreeNodeCriteria();
+            criteria.setTreeNodeName(obj.getName());
+            criteria.setTreeNodeReference(reference);
+            filter.addCriteria(criteria);
 
-        ObjectSetCriteria criteria = new ObjectSetCriteria();
-        criteria.setObjectSetName(obj.getName());
-        criteria.setObjectSetReference(reference);
-        filter.addCriteria(criteria);
-
-        dirty = true;   
-        refreshSearchResults();
+            dirty = true;
+            refreshSearchResults();
+        }
     }
 
     private void refreshSearchResults() {

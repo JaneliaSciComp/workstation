@@ -84,9 +84,9 @@ public class TestHarness {
 //        newFilter.setSearchString("whatevers");
 //        newFilter.setSearchClass("whateversclass");
 //        List<Criteria> critList = new ArrayList<>();
-//        ObjectSetCriteria crit = new ObjectSetCriteria();
-//        crit.setObjectSetName("objectName");
-//        crit.setObjectSetReference(new Reference("org.janelia.it.jacs.model.domain.sample.Sample", new Long("1714569876758069346")));
+//        TreeNodeCriteria crit = new TreeNodeCriteria();
+//        crit.setTreeNodeName("objectName");
+//        crit.setTreeNodeReference(new Reference("org.janelia.it.jacs.model.domain.sample.Sample", new Long("1714569876758069346")));
 //        critList.add(crit);
 //        newFilter.setCriteriaList(critList);
 //        newFilter = testclient.create(newFilter);

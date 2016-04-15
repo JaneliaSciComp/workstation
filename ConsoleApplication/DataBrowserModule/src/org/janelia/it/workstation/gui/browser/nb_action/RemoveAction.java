@@ -113,7 +113,7 @@ public final class RemoveAction extends NodeAction {
                     // first check to make sure this Object only has one ancestor references; if it does pop up a dialog before removal
                     List<Reference> refList = model.getContainerReferences (domainObject);
                     if (refList==null || refList.size()<=1) {
-                        listToDelete.add(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+                        listToDelete.add(Reference.createFor(domainObject));
                     }
                     removeFromFolders.put(treeNode,domainObject);
                 }

@@ -236,7 +236,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         }
                     }
                     else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        if (selectionCurrIndex>=objectList.size()) return;
+                        if (selectionCurrIndex>=objectList.size()-1) return;
                         selectionCurrIndex += 1;
                         if (selectionCurrIndex>selectionAnchorIndex) {
                             selectObject(objectList.get(selectionCurrIndex), false);
@@ -352,6 +352,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         final T object = button.getUserObject();
         final S uniqueId = getImageModel().getImageUniqueId(object);
 
+        log.trace("buttonSelection(uniqueId={},multiSelect={},rangeSelect={})",uniqueId,multiSelect,rangeSelect);
+
         if (multiSelect) {
             // With the meta key we toggle items in the current selection without clearing it
             if (!button.isSelected()) {
@@ -365,22 +367,25 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         else {
             // With shift, we select ranges
             S lastSelectedId = selectionModel.getLastSelectedId();
-            log.trace("lastSelectedId="+lastSelectedId);
             if (rangeSelect && lastSelectedId != null) {
+                log.trace("Selecting range starting with lastSelectedId={}",lastSelectedId);
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
                 for (T otherObject : objectList) {
                     final S otherUniqueId = getImageModel().getImageUniqueId(otherObject);
-                    log.trace("Consider "+otherUniqueId);
+                    log.trace("Considering: "+otherUniqueId);
                     if (otherUniqueId.equals(lastSelectedId) || otherUniqueId.equals(uniqueId)) {
+                        // Start or end, either way we need to begin selecting
                         if (otherUniqueId.equals(lastSelectedId)) {
-                            log.trace("  Last selected!");
+                            log.trace("  This was the last selected button");
                         }
                         if (otherUniqueId.equals(uniqueId)) {
                             // Always select the button that was clicked
                             selectObject(otherObject, false);
                             // This becomes the selection anchor if the user keeps holding shift
-                            beginRangeSelection(objectList.indexOf(otherObject));
+                            int index = objectList.indexOf(otherObject);
+                            log.trace("  Begin range selection mode (index={})",index);
+                            beginRangeSelection(index);
                         }
                         if (selecting) {
                             log.trace("  End selecting");
@@ -393,6 +398,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                     }
                     if (selecting) {
                         selectObject(otherObject, false);
+                        log.trace("  End range selection mode");
                         endRangeSelection();
                     }
                 }

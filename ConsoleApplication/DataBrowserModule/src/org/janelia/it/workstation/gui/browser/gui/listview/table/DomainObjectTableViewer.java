@@ -1,28 +1,16 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.table;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import javax.swing.JPanel;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
-import javax.swing.table.TableModel;
-
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
-import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
+import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -35,14 +23,23 @@ import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import javax.swing.table.TableModel;
+import java.awt.image.BufferedImage;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.concurrent.Callable;
+
 /**
- * A table viewer for domain objects. 
- * 
+ * A table viewer for domain objects.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
@@ -50,19 +47,19 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private static final Logger log = LoggerFactory.getLogger(DomainObjectTableViewer.class);
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
-    
+
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
-    
+
     private TableViewerConfigDialog configDialog;
     private String sortField;
     private boolean ascending = true;
 
     // TODO: this is mostly copy and pasted from DomainObjectIconGridViewer, and should be refactored later
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
-        
+
         @Override
         public Reference getImageUniqueId(DomainObject domainObject) {
             return Reference.createFor(domainObject);
@@ -72,27 +69,32 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         public String getImageFilepath(DomainObject domainObject) {
             return null;
         }
-        
+
+        @Override
+        public BufferedImage getStaticIcon(DomainObject imageObject) {
+            return null;
+        }
+
         @Override
         public DomainObject getImageByUniqueId(Reference id) {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
-        
+
         @Override
         public String getImageLabel(DomainObject domainObject) {
             return domainObject.getName();
         }
-        
+
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
         }
     };
-    
+
     public DomainObjectTableViewer() {
         setImageModel(imageModel);
     }
-    
+
     @Override
     public JPanel getPanel() {
         return this;
@@ -102,13 +104,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void setSearchProvider(SearchProvider searchProvider) {
         super.setSearchProvider(searchProvider);
     }
-    
+
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
     }
-    
+
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
@@ -116,24 +118,24 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
-        super.selectObjects(domainObjects, select, clearAll);    
+        super.selectObjects(domainObjects, select, clearAll);
     }
-    
+
     @Override
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
-        
+
         this.domainObjectList = domainObjectList;
         final Class<? extends DomainObject> domainClass = domainObjectList.getDomainClass();
-        
+
         attributeMap.clear();
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             private final List<DomainObjectAttribute> attrs = new ArrayList<>();
-            
+
             @Override
             protected void doStuff() throws Exception {
-                
+
                 if (domainClass!=null) {
                     attrs.add(annotationAttr);
                     for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
@@ -159,14 +161,14 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
                 getToolbar().getChooseColumnsButton().setEnabled(configDialog!=null);
                 getToolbar().getExportButton().setEnabled(configDialog!=null);
-                
+
                 getDynamicTable().clearColumns();
                 for(DomainObjectAttribute attr : attrs) {
                     attributeMap.put(attr.getName(), attr);
                     boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
                     getDynamicTable().addColumn(attr.getName(), attr.getLabel(), true, false, true, sortable);
                 }
-                
+
                 updateViewerConfig();
                 showObjects(domainObjectList.getDomainObjects());
 
@@ -215,15 +217,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             updateTableModel();
         }
     }
-    
+
     @Override
     protected void deleteKeyPressed() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
         IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof ObjectSet) {
-            ObjectSet objectSet = (ObjectSet)parent; 
-            if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
-                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, getSelectedObjects());
+        if (parent instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)parent;
+            if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
                 action.doAction();
             }
         }

@@ -8,7 +8,6 @@ import java.util.Map;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -35,6 +34,19 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
     public void update(TreeNode treeNode) {
         this.treeNode = treeNode;
+    }
+
+    public boolean hasNodeChildren() {
+        for(Reference reference : treeNode.getChildren()) {
+            if (reference==null) continue;
+            if (reference.getTargetClassName().equals("TreeNode")) {
+                return true;
+            }
+            else if (reference.getTargetClassName().equals("Filter")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -64,16 +76,12 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                     if (TreeNode.class.isAssignableFrom(obj.getClass())) {
                         temp.add(obj);
                     }
-                    else if (ObjectSet.class.isAssignableFrom(obj.getClass())) {
-                        temp.add(obj);
-                    }
                     else if (Filter.class.isAssignableFrom(obj.getClass())) {
                         temp.add(obj);
                     }
                 }
                 else {
-                    log.warn("Dead reference detected: "+reference.getTargetId());
-                    //temp.add(new DeadReference(reference));
+                    log.warn("Dead reference detected: "+reference);
                 }
             }
         }
@@ -88,9 +96,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         try {
             if (TreeNode.class.isAssignableFrom(key.getClass())) {
                 return new TreeNodeNode(this, (TreeNode)key);
-            }
-            else if (ObjectSet.class.isAssignableFrom(key.getClass())) {
-                return new ObjectSetNode(this, (ObjectSet)key);
             }
             else if (Filter.class.isAssignableFrom(key.getClass())) {
                 return new FilterNode(this, (Filter)key);

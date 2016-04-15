@@ -55,7 +55,10 @@ public class TreeNodeNode extends DomainObjectNode {
     
     private TreeNodeNode(ChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
         super(parentChildFactory, Children.create(childFactory, false), treeNode);
+        // We actually want to do something like the following, but this fails if the node gets children later on. We need a way to change between ChildFactory and LEAF status.
+//        super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
         log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
+
         this.childFactory = childFactory;
         if (treeNode.getNumChildren()>0) {
             getLookupContents().add(new Index.Support() {
@@ -97,7 +100,7 @@ public class TreeNodeNode extends DomainObjectNode {
         log.trace("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
         log.debug("Refreshing children for {} (now has {} children)",domainObject.getName(),treeNode.getNumChildren());
         childFactory.update(treeNode);
-        childFactory.refresh();
+        refreshChildren();
     }
     
     public void refreshChildren() {
@@ -112,14 +115,19 @@ public class TreeNodeNode extends DomainObjectNode {
     public String getPrimaryLabel() {
         return getTreeNode().getName();
     }
-        
+
+    @Override
+    public String getExtraLabel() {
+        return "("+getTreeNode().getNumChildren()+")";
+    }
+
     @Override
     public Image getIcon(int type) {
-        if (!getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
-            return Icons.getIcon("folder-blue-icon.png").getImage();
+        if (getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
+            return Icons.getIcon("folder.png").getImage();
         }
         else {
-            return Icons.getIcon("folder-blue-icon.png").getImage();    
+            return Icons.getIcon("folder_blue.png").getImage();
         }
     }
     

@@ -76,6 +76,7 @@ public class StateMgr {
     }
     
     public OntologyTerm getErrorOntology() {
+        // TODO: use DomainDAO.getErrorOntologyCategory
         if (errorOntology == null) {
             List<Ontology> ontologies = DomainMgr.getDomainMgr().getModel().getDomainObjects(Ontology.class, DomainConstants.ERROR_ONTOLOGY_NAME);
             for (Ontology ontology : ontologies) {
