@@ -83,7 +83,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         public BufferedImage getStaticIcon(DomainObject imageObject) {
             String filename = "question_block_large.png";
             if (imageObject instanceof Sample) {
-                filename = "image_stack.png";
+                filename = "microscope_large.png";
             }
             else if (imageObject instanceof Filter) {
                 filename = "search_large.png";
