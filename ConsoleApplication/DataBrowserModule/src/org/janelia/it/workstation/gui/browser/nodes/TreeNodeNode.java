@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -12,11 +11,12 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
@@ -54,9 +54,8 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     private TreeNodeNode(ChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
-        super(parentChildFactory, Children.create(childFactory, false), treeNode);
-        // We actually want to do something like the following, but this fails if the node gets children later on. We need a way to change between ChildFactory and LEAF status.
-//        super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
+        super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
+            
         log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
 
         this.childFactory = childFactory;
@@ -93,6 +92,24 @@ public class TreeNodeNode extends DomainObjectNode {
         }
     }
 
+    public final void checkChildren() {
+        boolean isLeaf = getChildren()==Children.LEAF;
+        boolean hasChildren = childFactory.hasNodeChildren();
+        if (isLeaf == hasChildren) {
+            log.trace("Node {} changed child-having status",getDisplayName());
+            this.setChildren(createChildren());
+        }
+    }
+
+    public Children createChildren() {
+        if (childFactory.hasNodeChildren()) {
+            return Children.create(new TreeNodeChildFactory(getTreeNode()), false);
+        }
+        else {
+            return Children.LEAF;
+        }
+    }
+    
     @Override
     public void update(DomainObject domainObject) {
         super.update(domainObject);
@@ -105,6 +122,7 @@ public class TreeNodeNode extends DomainObjectNode {
     
     public void refreshChildren() {
         childFactory.refresh();
+        checkChildren();
     }
     
     public TreeNode getTreeNode() {
@@ -123,7 +141,7 @@ public class TreeNodeNode extends DomainObjectNode {
 
     @Override
     public Image getIcon(int type) {
-        if (getTreeNode().getOwnerKey().equals(AccessManager.getSubjectKey())) {
+        if (ClientDomainUtils.isOwner(getTreeNode())) {
             return Icons.getIcon("folder.png").getImage();
         }
         else {
@@ -166,6 +184,8 @@ public class TreeNodeNode extends DomainObjectNode {
         if (!ClientDomainUtils.hasWriteAccess(getTreeNode())) {
             return null;
         }
+
+        List<DomainObjectNode> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
             DomainObjectNode node = DomainObjectNodeFlavor.getDomainObjectNode(t);
@@ -173,7 +193,39 @@ public class TreeNodeNode extends DomainObjectNode {
                 return null;
             }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
-            return new TreeNodePasteType(Arrays.asList(node), this, index);
+            nodes = Arrays.asList(node);
+        }
+        else if (t.isDataFlavorSupported(DomainObjectFlavor.LIST_FLAVOR)) {
+            final List<DomainObject> objects;
+            try {
+                objects = (List<DomainObject>) t.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
+            }
+            catch (UnsupportedFlavorException | IOException e) {
+                log.error("Error getting drop type", e);
+                return null;
+            }
+            return new PasteType() {
+                @Override
+                public String getName() {
+                    return "PasteIntoObjectSet";
+                }
+                @Override
+                public Transferable paste() throws IOException {
+                    try {
+                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        if (index<0) {
+                            model.addChildren(getTreeNode(), objects);
+                        }
+                        else {
+                            model.addChildren(getTreeNode(), objects, index);
+                        }
+                    }
+                    catch (Exception e) {
+                        throw new IOException("Error pasting into object set",e);
+                    }
+                    return null;
+                }
+            };
         }
         else if (t.isDataFlavorSupported(ExTransferable.multiFlavor)) {
             MultiTransferObject multi;
@@ -184,8 +236,7 @@ public class TreeNodeNode extends DomainObjectNode {
                 log.error("Error getting transfer data", e);
                 return null;
             }
-            
-            List<DomainObjectNode> nodes = new ArrayList<>();
+
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
@@ -200,19 +251,19 @@ public class TreeNodeNode extends DomainObjectNode {
                     log.trace("Multi-transferable is expected to support DomainObjectNodeFlavor.");
                 }
             }
-            
-            if (!nodes.isEmpty()) {
-                return new TreeNodePasteType(nodes, this, index);
-            }
-            
-            return null;
         }
         else {
             log.trace("Transferable is expected to support either DomainObjectNodeFlavor or multiFlavor.");
             return null;
-        }   
+        }
+
+        if (!nodes.isEmpty()) {
+            return new TreeNodePasteType(nodes, this, index);
+        }
+
+        return null;
     }
-    
+
     private class TreeNodePasteType extends PasteType {
         
         private final List<DomainObjectNode> nodes;
@@ -233,7 +284,7 @@ public class TreeNodeNode extends DomainObjectNode {
         @Override
         public Transferable paste() throws IOException {
             try {
-            log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
+                log.trace("paste called on TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
                 TreeNode newParent = targetNode.getTreeNode();
                 
                 // Have to keep track of the original parents before we do anything, 
@@ -296,4 +347,5 @@ public class TreeNodeNode extends DomainObjectNode {
             return null;
         }
     }
+
 }

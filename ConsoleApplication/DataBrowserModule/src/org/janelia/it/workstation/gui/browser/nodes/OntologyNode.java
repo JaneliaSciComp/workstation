@@ -2,27 +2,26 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.openide.nodes.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentMap;
-import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
+import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
+import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.openide.nodes.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Root node of an ontology. Manages all the nodes in the ontology, including

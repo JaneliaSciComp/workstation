@@ -345,14 +345,14 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
     
     @Override
     public Transferable clipboardCopy() throws IOException {
-        log.debug("Copy to clipboard: {}"+getDomainObject());
+        log.debug("Copy to clipboard: {}",getDomainObject());
         Transferable deflt = super.clipboardCopy();
         return addFlavors(ExTransferable.create(deflt));
     }
 
     @Override
     public Transferable clipboardCut() throws IOException {
-        log.debug("Cut to clipboard: {}"+getDomainObject());
+        log.debug("Cut to clipboard: {}",getDomainObject());
         Transferable deflt = super.clipboardCut();
         return addFlavors(ExTransferable.create(deflt));
     }
