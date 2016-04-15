@@ -30,6 +30,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
+import Jama.Matrix;
 import java.util.Objects;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
@@ -44,11 +45,13 @@ public class NeuronVertexAdapter implements NeuronVertex
     private final TmGeoAnnotation vertex;
     private final Long vertexId;
     private final Jama.Matrix voxToMicronMatrix;
+    private final Jama.Matrix micronToVoxMatrix;
 
     public NeuronVertexAdapter(TmGeoAnnotation vertex, TmWorkspace workspace) {
         this.vertex = vertex;
         this.vertexId = vertex.getId();
         this.voxToMicronMatrix = workspace.getVoxToMicronMatrix();
+        this.micronToVoxMatrix = workspace.getMicronToVoxMatrix();
     }
     
     @Override
@@ -73,25 +76,43 @@ public class NeuronVertexAdapter implements NeuronVertex
     @Override
     public void setLocation(float x, float y, float z)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // Convert from Cartesian micrometers to image voxel coordinates
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix micLoc = new Jama.Matrix(new double[][] {
+            {x, }, 
+            {y, }, 
+            {z, },
+            {1.0, },
+        });
+        // TmGeoAnnotation XYZ is in voxel coordinates
+        Jama.Matrix voxLoc = micronToVoxMatrix.times(micLoc);
+        vertex.setX(new Double(voxLoc.get(0,0)));
+        vertex.setY(new Double(voxLoc.get(1,0)));
+        vertex.setZ(new Double(voxLoc.get(2,0)));
+        // TODO - signalling?
     }
 
     @Override
     public boolean hasRadius()
     {
-        return false; // Radius is not currently stored (Oct 2015 CMB)
+        if (vertex == null) 
+            return false;
+        if (vertex.getRadius() == null) 
+            return false;
+        return true;
     }
 
     @Override
     public float getRadius()
     {
-        throw new UnsupportedOperationException();
+        return vertex.getRadius().floatValue();
     }
 
     @Override
     public void setRadius(float radius)
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        vertex.setRadius(new Double(radius));
+        // TODO - signalling?
     }
 
     @Override

@@ -68,6 +68,8 @@ import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.gltools.GL3Resource;
+import org.janelia.horta.volume.BrickActor;
 import org.openide.util.Exceptions;
 
 /**
@@ -87,6 +89,8 @@ extends MultipassRenderer
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
     private final AllSwcActor allSwcActor = new AllSwcActor();
+    
+    private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
     public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
     {
@@ -164,6 +168,21 @@ extends MultipassRenderer
     }
     
     @Override
+    public void display(GL3 gl, AbstractCamera camera) 
+    {
+        // Take out the garbage, such as old 3D volume blocks
+        Iterator<GL3Resource> iter = obsoleteGLResources.iterator();
+        while (iter.hasNext()) {
+            GL3Resource resource = iter.next();
+            resource.dispose(gl);
+            iter.remove();
+        }
+        
+        super.display(gl, camera);
+    }
+
+    
+    @Override
     public void init(GL3 gl) {
         super.init(gl);
     }
@@ -232,7 +251,7 @@ extends MultipassRenderer
         double opacity = opacityForScreenXy(xy, camera);
         // TODO: threshold might need to be tuned
         // 0.5 seems too small, I want to select that vertex!
-        final double opacityThreshold = 0.7; // Always use transparent material, if it's dense enough
+        final double opacityThreshold = 0.9; // Always use transparent material, if it's dense enough
         if (opacity >= opacityThreshold)
             return false; // transparent geometry is strong here, so no, not well visible
         return true; // I see a neuron model at this spot
@@ -351,6 +370,10 @@ extends MultipassRenderer
     public boolean isVolumeDensityAt(Point2D xy, AbstractCamera camera)
     {
         return isVisibleTransparentAtScreenXy(xy, camera);
+    }
+
+    public void queueObsoleteResource(GL3Resource resource) {
+        obsoleteGLResources.add(resource);
     }
     
     private class VolumeLayerExpirer implements Observer

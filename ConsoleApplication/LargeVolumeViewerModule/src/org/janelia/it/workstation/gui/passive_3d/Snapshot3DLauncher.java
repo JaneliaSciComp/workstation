@@ -68,7 +68,7 @@ public class Snapshot3DLauncher {
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider;
         this.sharedImageColorModel = imageColorModel;
-        this.activityLog = new ActivityLogHelper();
+        this.activityLog = ActivityLogHelper.getInstance();
         this.basePath = basePath;
         this.dataUrl = dataUrl;
         this.camera = camera;
