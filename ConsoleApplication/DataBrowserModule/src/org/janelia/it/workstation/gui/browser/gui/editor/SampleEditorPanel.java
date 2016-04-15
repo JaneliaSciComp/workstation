@@ -564,7 +564,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
     	
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
     	for(LSMImage lsm : lsms) {
     		objectiveSet.add(lsm.getObjective());
@@ -618,7 +618,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
         
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
         
         // Populate currRunMap
@@ -675,8 +675,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
         
-        for(String objective : sample.getOrderedObjectives()) {
+        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
             
+            String objective = objectiveSample.getObjective();
             boolean diplayObjective = true;
             
             if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {

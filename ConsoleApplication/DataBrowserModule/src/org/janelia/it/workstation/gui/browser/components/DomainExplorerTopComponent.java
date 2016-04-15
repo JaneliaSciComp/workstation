@@ -15,12 +15,17 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
+import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
@@ -445,6 +450,13 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         beanTreeView.expand(idPath);
     }
 
+    public void expandNodeById(Long id) {
+        for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
+            expand(NodeUtils.createIdPath(node));
+            break;
+        }
+    }
+
     public void selectNode(Node node) {
         log.info("selectNode({})",node.getDisplayName());
         beanTreeView.selectNode(node);
@@ -489,5 +501,16 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     @Override
     public void openMatch() {
+    }
+
+    public static boolean isSupported(DomainObject domainObject) {
+        // TODO: this class shouldn't know about all this, it should be abstracted in Nodes somehow
+        if (domainObject instanceof TreeNode) {
+            return true;
+        }
+        else if (domainObject instanceof Filter) {
+            return true;
+        }
+        return false;
     }
 }

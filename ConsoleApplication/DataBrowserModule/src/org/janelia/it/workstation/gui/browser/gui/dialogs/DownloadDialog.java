@@ -1,45 +1,13 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
-
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -58,10 +26,19 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
-
-import net.miginfocom.swing.MigLayout;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A dialog for exporting data. Supports exporting hierarchies of files in various ways. 
@@ -262,9 +239,9 @@ public class DownloadDialog extends ModalDialog {
                 }
             }
         }
-        else if (domainObject instanceof ObjectSet) {
-            ObjectSet objectSet = (ObjectSet)domainObject;
-            List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
+        else if (domainObject instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)domainObject;
+            List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(treeNode.getChildren());
             List<String> childPath = new ArrayList<>(path);
             childPath.add(domainObject.getName());
             for(DomainObject child : children) {

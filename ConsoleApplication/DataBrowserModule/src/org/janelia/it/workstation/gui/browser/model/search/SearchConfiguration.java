@@ -17,12 +17,8 @@ import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -249,9 +245,9 @@ public class SearchConfiguration {
                     }
 
                 }
-                else if (criteria instanceof ObjectSetCriteria) {
-                    ObjectSetCriteria sc = (ObjectSetCriteria) criteria;
-                    Reference ref = sc.getObjectSetReference();
+                else if (criteria instanceof TreeNodeCriteria) {
+                    TreeNodeCriteria sc = (TreeNodeCriteria) criteria;
+                    Reference ref = sc.getTreeNodeReference();
                     log.info("Setting query root: {}",ref.getTargetId());
                     builder.setRootId(ref.getTargetId());
                 }
@@ -338,7 +334,7 @@ public class SearchConfiguration {
                 String type = (String) doc.getFieldValue(SOLR_TYPE_FIELD);
                 String className = DomainUtils.getClassNameForSearchType(type);
                 if (className != null) {
-                    refs.add(new Reference(className, id));
+                    refs.add(Reference.createFor(className, id));
                 } else {
                     log.warn("Unrecognized type has no collection mapping: " + type);
                 }

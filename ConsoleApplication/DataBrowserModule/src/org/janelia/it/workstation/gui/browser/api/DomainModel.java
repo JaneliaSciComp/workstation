@@ -390,7 +390,7 @@ public class DomainModel {
 
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
         List<T> objects = new ArrayList<>();
-        for(DomainObject domainObject : getDomainObjects(clazz.getName(), ids)) {
+        for(DomainObject domainObject : getDomainObjects(clazz.getSimpleName(), ids)) {
             objects.add((T)domainObject);
         }
         return objects;
@@ -422,7 +422,7 @@ public class DomainModel {
         List<Long> unsatisfiedIds = new ArrayList<>();
 
         for(Long id : ids) {
-            Reference ref = new Reference(className, id);
+            Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = objectCache.getIfPresent(ref);
             if (domainObject!=null) {
                 map.put(ref, domainObject);
@@ -441,7 +441,7 @@ public class DomainModel {
 
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
-            Reference ref = new Reference(className, id);
+            Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));

@@ -29,8 +29,7 @@ public class DomainHelper {
     public List<AlignmentContext> getAvailableAlignmentContexts(Sample sample) throws Exception {
         List<AlignmentContext> rtnVal = new ArrayList<>();
         if (sample.getObjectives() != null) {
-            for (String objKey : sample.getObjectives().keySet()) {
-                ObjectiveSample os = sample.getObjectives().get(objKey);
+            for (ObjectiveSample os : sample.getObjectiveSamples()) {
                 if (! os.hasPipelineRuns()) {
                     continue;
                 }

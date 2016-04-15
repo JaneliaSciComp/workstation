@@ -1,28 +1,28 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
-import java.util.ArrayList;
+import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
-import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromObjectSetAction;
+import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -38,6 +38,8 @@ import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +78,24 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
             return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageType());
         }
-        
+
+        @Override
+        public BufferedImage getStaticIcon(DomainObject imageObject) {
+            String filename = "question_block_large.png";
+            if (imageObject instanceof Sample) {
+                filename = "microscope_large.png";
+            }
+            else if (imageObject instanceof Filter) {
+                filename = "search_large.png";
+            }
+            else if (imageObject instanceof TreeNode) {
+                filename = "folder_large.png";
+            }
+            ImageIcon icon = Icons.getIcon(filename);
+            if (icon==null) return null;
+            return Utils.toBufferedImage(icon.getImage());
+        }
+
         @Override
         public DomainObject getImageByUniqueId(Reference id) {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
@@ -276,11 +295,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     protected void deleteKeyPressed() {
         IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof ObjectSet) {
-            ObjectSet objectSet = (ObjectSet)parent; 
-            if (ClientDomainUtils.hasWriteAccess(objectSet)) {                
+        if (parent instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)parent; 
+            if (ClientDomainUtils.hasWriteAccess(treeNode)) {                
                 List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromObjectSetAction action = new RemoveItemsFromObjectSetAction(objectSet, selectedObjects);
+                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
                 action.doAction();
             }
         }
