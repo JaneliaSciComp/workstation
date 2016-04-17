@@ -28,7 +28,7 @@ import com.google.common.collect.Multimap;
 import net.miginfocom.swing.MigLayout;
 
 /**
- * A dialog for confirming deletion of an ObjectSet, Filter, or TreeNode that isn't referenced elsewhere in the system.
+ * A dialog for confirming deletion of a Filter, or TreeNode that isn't referenced elsewhere in the system.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

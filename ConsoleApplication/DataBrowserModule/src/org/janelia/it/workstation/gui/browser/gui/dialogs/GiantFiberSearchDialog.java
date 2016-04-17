@@ -35,8 +35,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
 import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -993,19 +994,20 @@ public class GiantFiberSearchDialog extends ModalDialog {
         SimpleWorker worker = new SimpleWorker() {
 
             private Workspace outputFolder;
-            private ObjectSet saveFolder;
+            private TreeNode saveFolder;
 
             @Override
             protected void doStuff() throws Exception {
-                // copy the results to an ObjectSet
+                // copy the results to an TreeNode folder
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 outputFolder = model.getDefaultWorkspace();
-                saveFolder = new ObjectSet();
+                saveFolder = new TreeNode();
                 saveFolder.setName(currentSetTextField.getText());
-                saveFolder.setClassName(Sample.class.getName());
                 List<Long> membershipSampleList = new ArrayList<>();
                 membershipSampleList.addAll(membershipSampleSet);
-                saveFolder.setMembers(membershipSampleList);
+                for (Long memberSample : membershipSampleList) {
+                    saveFolder.addChild(Reference.createFor(Sample.class, memberSample.longValue()));
+                }
                 saveFolder = model.create(saveFolder);
                 if (saveFolder.getId()!=null) {
                     model.addChild(outputFolder,saveFolder);
