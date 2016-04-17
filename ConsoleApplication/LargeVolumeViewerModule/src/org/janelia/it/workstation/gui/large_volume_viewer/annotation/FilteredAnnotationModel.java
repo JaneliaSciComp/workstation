@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.util.ArrayList;
+import java.util.Date;
 import javax.swing.table.AbstractTableModel;
 
 /**
@@ -53,4 +54,22 @@ public class FilteredAnnotationModel extends AbstractTableModel {
         }
 
     }
+
+    // this needs to be done to get Date column to sort right
+    public Class getColumnClass(int column) {
+        switch (column) {
+            case 0:
+                // date
+                return Date.class;
+            case 1:
+                // geometry string
+                return String.class;
+            case 2:
+                // note string
+                return String.class;
+            default:
+                return Object.class;
+        }
+    }
+
 }

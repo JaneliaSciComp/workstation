@@ -122,22 +122,10 @@ public class NeuronTraceLoader {
         return loadTileAtCurrentFocus( volumeSource, defaultColorChannel );
     }
     
-    /**
-     * Helper method toward automatic tile loading
-     */
-    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
-        PerformanceTimer timer = new PerformanceTimer();
-        
-        // Remember most recently loaded color channel for next time
-        defaultColorChannel = colorChannel;
-
-        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-
-        // 2 - Load the brick at the center...
-        // TODO - should happen automatically
-        // Find the best resolution available
-        double screenPixelResolution = pCam.getVantage().getSceneUnitsPerViewportHeight()
-                / pCam.getViewport().getHeightPixels();
+    public static BrickInfoSet getBricksForCameraResolution(StaticVolumeBrickSource volumeSource, PerspectiveCamera camera) 
+    {
+        double screenPixelResolution = camera.getVantage().getSceneUnitsPerViewportHeight()
+                / camera.getViewport().getHeightPixels();
         double minDist = Double.MAX_VALUE;
         Double bestRes = null;
         for (Double res : volumeSource.getAvailableResolutions()) {
@@ -150,7 +138,22 @@ public class NeuronTraceLoader {
         Double brickResolution = bestRes;
         assert brickResolution != null : "No best-resolution found.  Volume Source=" + volumeSource;
 
-        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
+        BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution); 
+        return brickInfoSet;
+    }
+    
+    /**
+     * Helper method toward automatic tile loading
+     */
+    public BrickInfo loadTileAtCurrentFocus( StaticVolumeBrickSource volumeSource, int colorChannel ) throws IOException {
+        PerformanceTimer timer = new PerformanceTimer();
+        
+        // Remember most recently loaded color channel for next time
+        defaultColorChannel = colorChannel;
+
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        BrickInfoSet brickInfoSet = getBricksForCameraResolution(volumeSource, pCam);
+        
         BrickInfo brickInfo = brickInfoSet.getBestContainingBrick(pCam.getVantage().getFocusPosition());
 
         // Check for existing brick already loaded here

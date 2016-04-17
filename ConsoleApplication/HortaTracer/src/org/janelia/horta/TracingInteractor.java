@@ -62,6 +62,7 @@ import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -174,6 +175,7 @@ public class TracingInteractor extends MouseAdapter
     @Override
     public void mouseClicked(MouseEvent event) {
         // System.out.println("Mouse clicked in tracer");
+        long clickTime = System.nanoTime();
         
         // Cache the current state, in case subsequent asynchronous changes occur to hoveredDensity etc.
         InteractorContext context = createContext();
@@ -185,6 +187,9 @@ public class TracingInteractor extends MouseAdapter
             if (event.isShiftDown()) { // Hold down shift to build neurons
                 if (context.canAppendVertex()) {
                     context.appendVertex();
+                    long appendedTime = System.nanoTime();
+                    double elapsed = (appendedTime - clickTime) / 1.0e6;
+                    // System.out.println("Append took " + elapsed + "milliseconds"); // 1200 ms -- way too long
                 }
                 else if (context.canMergeNeurite()) { // Maybe merge two neurons
                     context.mergeNeurite();
@@ -691,6 +696,7 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public boolean appendVertex() {
+            long beginAppendTime = System.nanoTime();
             if (! canAppendVertex())
                 return false;
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
@@ -702,13 +708,17 @@ public class TracingInteractor extends MouseAdapter
                     parentAppendCmd,
                     densityVertex.getLocation(), 
                     densityVertex.getRadius());
+            long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
+                long endExecuteTime = System.nanoTime();
+                // System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
                 NeuronVertex addedVertex = appendCmd.getAppendedVertex();
                 if (addedVertex != null) {
                     selectParentVertex(addedVertex, parentNeuron);
                     // undoRedoManager.addEdit(appendCmd);
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
                     appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
+                    long endAppendTime = System.nanoTime();
                     return true;
                 }
             }
@@ -732,6 +742,7 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == null) return false;
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
+            if (parentNeuron == hoveredNeuron) return false; // Cannot merge a neuron with itself.
             return true;
         }
         
@@ -750,7 +761,11 @@ public class TracingInteractor extends MouseAdapter
                     null, 
                     options,
                     options[1]); // default button
-            if (answer == JOptionPane.YES_OPTION) {
+            if (answer == JOptionPane.YES_OPTION) 
+            {
+                // merging is not undoable, and thus taints previous edits 
+                undoRedoManager.discardAllEdits();
+                
                 // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
                 // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
                 boolean merged = parentNeuron.mergeNeurite(hoveredVertex, parentVertex);
@@ -764,6 +779,7 @@ public class TracingInteractor extends MouseAdapter
                     return false;
                 }
                 else {
+                    ActivityLogHelper.getInstance().logMergedNeurite(hoveredVertex);
                     return true;
                 }
             }

@@ -28,7 +28,7 @@ public class UniqueColorSelector implements RenderedIdPicker.PixelListener {
         this.dataSource = dataSource;
         this.idCoderProvider = idCoderProvider;
         this.annoSkeletonPanel = redrawComponent;
-        this.activityLog = new ActivityLogHelper();
+        this.activityLog = ActivityLogHelper.getInstance();
     }
     
     public UniqueColorSelector(AnnotationSkeletonDataSourceI dataSource) {

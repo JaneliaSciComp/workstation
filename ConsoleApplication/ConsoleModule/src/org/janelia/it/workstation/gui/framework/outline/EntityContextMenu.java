@@ -1725,7 +1725,16 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getFijiViewerItem() {
         if (multiple)
             return null;
-        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
+        String tmpPath = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
+
+        // Not every image has a default image
+        String tmpAnyPath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        if (null!=tmpAnyPath&&!(tmpAnyPath.toLowerCase().endsWith("nrrd")||tmpAnyPath.toLowerCase().endsWith("h5j")||
+                                tmpAnyPath.toLowerCase().endsWith("v3dpbd")||tmpAnyPath.endsWith("v3draw")||
+                                tmpAnyPath.endsWith("tiff")||tmpAnyPath.endsWith("tif"))) {
+            tmpAnyPath=null;
+        }
+        final String path = (!StringUtils.isEmpty(tmpPath))?tmpPath:tmpAnyPath;
         if (!StringUtils.isEmpty(path)) {
             JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {

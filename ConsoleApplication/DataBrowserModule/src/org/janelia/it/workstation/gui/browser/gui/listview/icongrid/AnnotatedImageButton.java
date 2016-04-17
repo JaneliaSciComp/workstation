@@ -85,12 +85,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
             this.source = new DragSource();
             source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
             // TODO: this class should not know about DomainObjects
-            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel) {
-                @Override
-                public JComponent getDropTargetComponent() {
-                    return AnnotatedImageButton.this;
-                }
-            });
+            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel));
         }
 
         GridBagConstraints c = new GridBagConstraints();

@@ -1,19 +1,5 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import static javax.swing.Action.NAME;
-
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
@@ -23,6 +9,16 @@ import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
