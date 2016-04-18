@@ -14,6 +14,7 @@ import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -24,6 +25,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEncl
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This hands off interesting driving info to skeleton.
@@ -31,6 +34,9 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  */
 public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
         NextParentListener, NeuronStyleChangeListener {
+
+    private static final Logger log = LoggerFactory.getLogger(SkeletonController.class);
+
     private Skeleton skeleton;
     private List<SkeletonActor> actors = new ArrayList<>();
     private List<JComponent> updateListeners = new ArrayList<>();
@@ -232,6 +238,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
+        log.info("anchor time="+ TraceMode.getTimerMs());
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
