@@ -966,7 +966,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             PipelineError error = run.getError();
             if (error==null) throw new IllegalStateException("Cannot create a PipelineErrorPanel for non-error run");
 
-            String title = run.getParent().getObjective()+" "+StringUtils.splitCamelCase(error.getClassification());
+            String errorClass = error.getClassification()==null?"Unclassified Error":error.getClassification();
+            String title = run.getParent().getObjective()+" "+errorClass;
             label.setText(title);
             subLabel.setText(error.getDescription());
 
