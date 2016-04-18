@@ -156,26 +156,35 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         saveAsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
-                        "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, filter.getName());
-                if ((newName == null) || (newName.length() <= 0)) {
-                    return;
+
+                String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
+                String newName = null;
+                while (StringUtils.isEmpty(newName)) {
+                    newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
+                            "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, name);
+                    log.info("newName:" + newName);
+                    if (newName == null) {
+                        // User chose "Cancel"
+                        return;
+                    }
+                    if ("".equals(newName)) {
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Filter name cannot be blank");
+                    }
                 }
-                
+
+                final String finalName = newName;
                 final boolean isNewFilter = filter.getId()==null;
 
                 SimpleWorker worker = new SimpleWorker() {
                         
                     @Override
                     protected void doStuff() throws Exception {
-                        
                         Filter savedFilter = filter;
                         if (!isNewFilter) {
                             // This filter is already saved, duplicate it so that we don't overwrite the existing one
                             savedFilter = DomainUtils.cloneFilter(filter);
                         }
-                        savedFilter.setName(newName);
+                        savedFilter.setName(finalName);
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
                         savedFilter = model.save(savedFilter);
                         model.addChild(model.getDefaultWorkspace(), savedFilter);
@@ -294,7 +303,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             updateView();
             
             configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter)) {
+            if (ClientDomainUtils.hasWriteAccess(filter) || filter.getName().equals(DEFAULT_FILTER_NAME)) {
 	            configPanel.addTitleComponent(saveButton, false, true);
 	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
