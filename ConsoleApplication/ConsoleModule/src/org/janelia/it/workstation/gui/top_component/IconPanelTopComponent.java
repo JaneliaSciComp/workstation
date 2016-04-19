@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.IconPanelTopComponent")
-@ActionReference(path = "Menu/Window", position = 402)
+@ActionReference(path = "Menu/Window", position = 452)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_IconPanelAction",
         preferredID = IconPanelTopComponent.PREFERRED_ID

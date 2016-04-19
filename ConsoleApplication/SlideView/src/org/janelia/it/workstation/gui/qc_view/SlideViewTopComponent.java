@@ -23,14 +23,14 @@ import org.openide.util.NbBundle.Messages;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.SlideViewTopComponent")
-@ActionReference(path = "Menu/Window", position = 400)
+@ActionReference(path = "Menu/Window", position = 460)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_SlideViewAction",
         preferredID = SlideViewTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_SlideViewAction=Slide View",
-    "CTL_SlideViewTopComponent=Slide View",
+    "CTL_SlideViewAction=Legacy Slide View",
+    "CTL_SlideViewTopComponent=Legacy Slide View",
     "HINT_SlideViewTopComponent=Display LSMs with one row per slide"
 })
 public final class SlideViewTopComponent extends TopComponent {
