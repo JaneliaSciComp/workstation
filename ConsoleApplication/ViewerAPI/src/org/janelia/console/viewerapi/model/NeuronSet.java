@@ -43,4 +43,5 @@ public interface NeuronSet extends Collection<NeuronModel>
     ObservableInterface getMembershipChangeObservable();
     ObservableInterface getNameChangeObservable();
     String getName();
+    NeuronModel createNeuron(String initialNeuronName);
 }

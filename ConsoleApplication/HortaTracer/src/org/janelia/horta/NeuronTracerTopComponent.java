@@ -118,7 +118,7 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
@@ -188,7 +188,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
-    private HortaWorkspace workspace;
+    private HortaMetaWorkspace metaWorkspace;
     private final NeuronVertexSpatialIndex neuronVertexIndex;
     
     // private MultipassVolumeActor mprActor;
@@ -243,7 +243,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Drag a YML tilebase file to put some data in the viewer
         setupDragAndDropYml();
 
-        neuronManager = new NeuronManager(workspace);
+        neuronManager = new NeuronManager(metaWorkspace);
         neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
         
 
@@ -362,14 +362,33 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronMPRenderer = setUpActors();
         
-        setBackgroundColor( workspace.getBackgroundColor() ); // call this AFTER setUpActors
+        setBackgroundColor( metaWorkspace.getBackgroundColor() ); // call this AFTER setUpActors
         // neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
-        workspace.addObserver(new Observer() {
+        metaWorkspace.addObserver(new Observer() {
             // Update is called when the set of neurons changes, or the background color changes
             @Override
             public void update(Observable o, Object arg)
             {
-                setBackgroundColor( workspace.getBackgroundColor() );
+                // Apply tracing interactions to LVV workspace
+                // TODO: for now assuming that the largest NeuronSet is the LVV one
+                
+                Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
+                if (sets.size() == 0) {} // Do nothing
+                else if (sets.size() == 1) {
+                    tracingInteractor.setDefaultWorkspace(sets.iterator().next());                    
+                }
+                else {
+                    for (NeuronSet ws : sets) {
+                        // Skip initial internal default set
+                        if (ws.getName().equals("Temporary Neurons"))
+                            continue;
+                        // Assume any other set is probably the LVV workspace
+                        tracingInteractor.setDefaultWorkspace(ws);
+                    }
+                }
+                
+                // Update background color
+                setBackgroundColor( metaWorkspace.getBackgroundColor() );
                 redrawNow();
             }
         });
@@ -386,7 +405,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         loadStartupPreferences();
 
-        workspace.notifyObservers();
+        metaWorkspace.notifyObservers();
 
     }
     
@@ -433,7 +452,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     {
         
         // TODO - refactor all stages to use multipass renderer, like this
-        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(sceneWindow.getGLAutoDrawable(), brightnessModel, workspace);
+        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(sceneWindow.getGLAutoDrawable(), brightnessModel, metaWorkspace);
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
         renderers.clear();
         renderers.add(neuronMPRenderer0);
@@ -739,11 +758,11 @@ public final class NeuronTracerTopComponent extends TopComponent
        // associateLookup(Lookups.singleton(vantage)); // ONE item in lookup
         // associateLookup(Lookups.fixed(vantage, brightnessModel)); // TWO items in lookup
         FrameTracker frameTracker = sceneWindow.getRenderer().getFrameTracker();
-        workspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
+        metaWorkspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
         associateLookup(Lookups.fixed(
                 vantage, 
                 brightnessModel, 
-                workspace, 
+                metaWorkspace, 
                 frameTracker));
         
         // reduce near clipping of volume block surfaces
@@ -772,7 +791,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         // Put dropped neuron models into "Temporary neurons"
-        WorkspaceUtil ws = new WorkspaceUtil(workspace);
+        WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
         final HortaSwcLoader swcLoader = new HortaSwcLoader(ns, neuronMPRenderer);
         droppedFileHandler.addLoader(swcLoader);
@@ -834,15 +853,15 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void run()
                         {
                             // Update models after drop.
-                            if (workspace == null) return;
-                            WorkspaceUtil ws = new WorkspaceUtil(workspace);
+                            if (metaWorkspace == null) return;
+                            WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
                             NeuronSet ns = ws.getTemporaryNeuronSetOrNull();
                             if (ns == null) return;
                             if (! ns.getMembershipChangeObservable().hasChanged()) return;
                             ns.getMembershipChangeObservable().notifyObservers();
                             // force repaint - just once per drop action though.
-                            workspace.setChanged();
-                            workspace.notifyObservers();
+                            metaWorkspace.setChanged();
+                            metaWorkspace.notifyObservers();
                         }
                     });
                     

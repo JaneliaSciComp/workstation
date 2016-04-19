@@ -38,12 +38,12 @@ import org.janelia.console.viewerapi.ComposableObservable;
 // import org.janelia.geometry3d.Vantage;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 
 /**
  * @author Christopher Bruns
  */
-public class BasicHortaWorkspace implements HortaWorkspace
+public class BasicHortaWorkspace implements HortaMetaWorkspace
 {
     private final VantageInterface vantage;
     private final ComposableObservable changeObservable = new ComposableObservable();

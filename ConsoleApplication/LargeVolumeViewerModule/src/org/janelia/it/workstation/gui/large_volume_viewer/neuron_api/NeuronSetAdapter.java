@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -54,6 +54,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -74,8 +75,8 @@ implements NeuronSet, LookupListener
     private AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
-    private HortaWorkspace cachedHortaWorkspace = null;
-    private final Lookup.Result<HortaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
+    private HortaMetaWorkspace cachedHortaWorkspace = null;
+    private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter()
@@ -85,6 +86,52 @@ implements NeuronSet, LookupListener
         annotationModListener = new MyTmGeoAnnotationModListener();
         hortaWorkspaceResult.addLookupListener(this);
     }
+    
+    @Override
+    public NeuronModel createNeuron(String neuronName) {
+        TmNeuron neuron;
+        try {
+            neuron = annotationModel.createNeuron(neuronName);
+        } catch (Exception ex) {
+            // Exceptions.printStackTrace(ex);
+            return null;
+        }
+        return new NeuronModelAdapter(neuron, annotationModel, workspace);
+    }
+    
+    private boolean removeNeuron(NeuronModel neuron) {
+        if (! (neuron instanceof NeuronModelAdapter))
+            return false;
+        
+        NeuronModelAdapter nma = (NeuronModelAdapter) neuron;
+        TmNeuron tmn = nma.getTmNeuron();
+        TmNeuron previousNeuron = annotationModel.getCurrentNeuron();
+        boolean removingCurrentNeuron = (previousNeuron.getId() == tmn.getId());
+        
+        if (! super.remove(nma))
+            return false;
+        
+        if (! removingCurrentNeuron) 
+            annotationModel.selectNeuron(tmn);
+        
+        try {
+            annotationModel.deleteCurrentNeuron();
+        } catch (Exception ex) {
+            // Exceptions.printStackTrace(ex);
+        }
+        if (! removingCurrentNeuron) // restore previous selected neuron
+            annotationModel.selectNeuron(previousNeuron);
+        
+        return true;
+    }
+    
+    @Override
+    public boolean remove(Object o)
+    {
+        if (! (o instanceof NeuronModelAdapter))
+            return super.remove(o);
+        return removeNeuron((NeuronModelAdapter) o);
+    }    
     
     public void observe(AnnotationModel annotationModel)
     {
@@ -152,10 +199,10 @@ implements NeuronSet, LookupListener
     @Override
     public void resultChanged(LookupEvent lookupEvent)
     {
-        Collection<? extends HortaWorkspace> allWorkspaces = hortaWorkspaceResult.allInstances();
+        Collection<? extends HortaMetaWorkspace> allWorkspaces = hortaWorkspaceResult.allInstances();
         if (allWorkspaces.isEmpty())
             return;
-        HortaWorkspace workspace = allWorkspaces.iterator().next();
+        HortaMetaWorkspace workspace = allWorkspaces.iterator().next();
         if (workspace != cachedHortaWorkspace) {
             cachedHortaWorkspace = workspace;
         }

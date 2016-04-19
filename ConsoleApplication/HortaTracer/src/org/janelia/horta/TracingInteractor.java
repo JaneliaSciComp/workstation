@@ -62,7 +62,9 @@ import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.model.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
@@ -111,6 +113,18 @@ public class TracingInteractor extends MouseAdapter
             new TwoDimensionalRadiusEstimator(); // TODO: Use this again
             // new ConstantRadiusEstimator(5.0f);
     private StatusDisplayer.Message previousHoverMessage;
+    
+    private NeuronSet defaultWorkspace = null;
+
+    public NeuronSet getDefaultWorkspace() {
+        return defaultWorkspace;
+    }
+
+    public void setDefaultWorkspace(NeuronSet defaultWorkspace) {
+        if (this.defaultWorkspace == defaultWorkspace)
+            return;
+        this.defaultWorkspace = defaultWorkspace;
+    }
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
@@ -197,7 +211,9 @@ public class TracingInteractor extends MouseAdapter
                     context.mergeNeurite();
                 }
                 else {
-                    // TODO: create a new neuron
+                    if (context.canCreateNeuron()) {
+                        context.createNeuron();
+                    }
                 }
             }
             else { // Non-shift click to select vertices
@@ -737,6 +753,57 @@ public class TracingInteractor extends MouseAdapter
             if (! canClearParent())
                 return false;
             return clearParentVertexAndNotify();
+        }
+        
+        public boolean canCreateNeuron() {
+            if (parentNeuron != null) return false; // must not already have an active neuron
+            if (parentVertex != null) return false; // must not already have an active vertex
+            if (hoveredVertex != null) return false; // must not be looking at an existing vertex
+            if (densityVertex == null) return false; // must have a place to plant the seed
+            if (defaultWorkspace == null) return false; // must have a workspace to place the neuron into
+            return true;
+        }
+        
+        public boolean createNeuron() {
+            if (! canCreateNeuron())
+                return false;
+            
+            // TODO: come up with a unique neuron name
+            String defaultName = "Neuron 1";
+            
+            //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
+            Object neuronName = JOptionPane.showInputDialog(
+                    volumeProjection.getMouseableComponent(),
+                    "Create new neuron here?",
+                    "Create new neuron",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    null,
+                    defaultName); // default button
+            if (neuronName == null) {
+                return false; // User pressed "Cancel"
+            }
+            CreateNeuronCommand cmd = new CreateNeuronCommand(
+                    defaultWorkspace,
+                    neuronName.toString(),
+                    densityVertex.getLocation(),
+                    densityVertex.getRadius());
+            String errorMessage = "Failed to create neuron";
+            try {
+                if (cmd.execute()) {
+                    // TODO: log creation event
+                    return true;
+                }
+            }
+            catch (Exception exc) {
+                errorMessage += ":\n" + exc.getMessage();
+            }
+            JOptionPane.showMessageDialog(
+                    volumeProjection.getMouseableComponent(),
+                    errorMessage,
+                    "Failed to create neuron",
+                    JOptionPane.WARNING_MESSAGE);                
+            return false;
         }
         
         public boolean canMergeNeurite() {

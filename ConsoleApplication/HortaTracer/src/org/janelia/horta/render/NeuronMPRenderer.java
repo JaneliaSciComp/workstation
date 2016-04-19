@@ -67,7 +67,7 @@ import org.janelia.horta.actors.ConesActor;
 import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.horta.volume.BrickActor;
 import org.openide.util.Exceptions;
@@ -85,14 +85,14 @@ extends MultipassRenderer
     private final VolumeRenderPass volumeRenderPass;
     
     private final Set<NeuronSet> currentNeuronLists = new HashSet<>();
-    private final HortaWorkspace workspace;
+    private final HortaMetaWorkspace workspace;
     private final Observer neuronListRefresher = new NeuronListRefresher(); // helps with signalling
     private final Observer volumeLayerExpirer = new VolumeLayerExpirer();
     private final AllSwcActor allSwcActor = new AllSwcActor();
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
-    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaWorkspace workspace) 
+    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaMetaWorkspace workspace) 
     {
         this.drawable = drawable;
         

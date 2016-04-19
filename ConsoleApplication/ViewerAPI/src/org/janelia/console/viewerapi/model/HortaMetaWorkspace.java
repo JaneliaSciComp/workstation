@@ -38,7 +38,7 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author Christopher Bruns
  */
-public interface HortaWorkspace extends ObservableInterface
+public interface HortaMetaWorkspace extends ObservableInterface
 {
     VantageInterface getVantage();
     Collection<NeuronSet> getNeuronSets();
