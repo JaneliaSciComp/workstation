@@ -113,7 +113,7 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                             }
                             
                         }
-                        userInput = bldr.toString();
+                        userInput = bldr.toString().trim();
                         if (! cf.isServerPathAvailable(userInput, true) ) {
                             errorLabel.setText(userInput + " not found on server. Please Try again.");
                         }
