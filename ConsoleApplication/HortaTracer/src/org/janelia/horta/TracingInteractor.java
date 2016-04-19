@@ -79,7 +79,6 @@ public class TracingInteractor extends MouseAdapter
         implements MouseInputListener, KeyListener, 
         NeuronVertexDeletionListener, NeuronVertexCreationListener
 {
-
     private final VolumeProjection volumeProjection;
     private final int max_tol = 5; // pixels
         
@@ -364,7 +363,7 @@ public class TracingInteractor extends MouseAdapter
 
         // Create a modified vertex to represent the enlarged, highlighted actor
         BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
-        densityVertex.setRadius(1.0f); // TODO: measure radius and set this rationally
+        densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
         // blend neuron color with white(?) provisional vertex color
         Color vertexColor = new Color(0.2f, 1.0f, 0.8f, 0.5f);
 
