@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JOptionPane;
+import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -73,7 +74,7 @@ import org.openide.awt.UndoRedo;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseListener, MouseMotionListener, KeyListener, 
+        implements MouseInputListener, KeyListener, 
         NeuronVertexDeletionListener, NeuronVertexCreationListener
 {
 
@@ -137,8 +138,9 @@ public class TracingInteractor extends MouseAdapter
     }
 
     private void connectMouseToComponent() {
-        volumeProjection.getMouseableComponent().addMouseListener(this);
-        volumeProjection.getMouseableComponent().addMouseMotionListener(this);
+        MouseInputListener listener = new TolerantMouseClickListener(this, 5);
+        volumeProjection.getMouseableComponent().addMouseListener(listener);
+        volumeProjection.getMouseableComponent().addMouseMotionListener(listener);
         volumeProjection.getMouseableComponent().addKeyListener(this);
     }
     
