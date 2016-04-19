@@ -6,10 +6,8 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -17,25 +15,18 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +66,6 @@ public class SkeletonActor
     private int colorBo = -1;
 
     private SkeletonActorModel model=new SkeletonActorModel();
-
-    private int skeletonActorModelVersion=0;
-    public int getSkeletonActorModelVersion() { return skeletonActorModelVersion; }
-    public void setSkeletonActorModelVersion(int skeletonActorModelVersion) { this.skeletonActorModelVersion=skeletonActorModelVersion; }
-
     private PathShader lineShader = new PathShader();
     private AnchorShader anchorShader = new AnchorShader();
     private BoundingBox3d bb = new BoundingBox3d();
@@ -91,12 +77,10 @@ public class SkeletonActor
     private int parentAnchorTextureId = -1;
     //
 
-    private Camera3d camera;
     private float zThicknessInPixels = 100;
     private String parentAnchorImageName = SMALL_PARENT_IMG;
     private boolean modulateParentImage = true;
-    private boolean isFocusOnNextParent = false;
-    
+
     //
     private boolean bIsVisible = true;
 
@@ -105,7 +89,6 @@ public class SkeletonActor
     private float neuronColor[] = {0.8f, 1.0f, 0.3f};
     private final float blackColor[] = {0, 0, 0};
 
-    private TileFormat tileFormat;
     private RenderInterpositionMethod rim = RenderInterpositionMethod.MIP;
 
     public enum RenderInterpositionMethod {
@@ -119,6 +102,8 @@ public class SkeletonActor
     public void setRenderInterpositionMethod(RenderInterpositionMethod rim) {
         this.rim = rim;
     }
+
+    public SkeletonActorModel getModel() { return model; }
 
 
     /**
@@ -159,6 +144,7 @@ public class SkeletonActor
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         lineShader.load(gl2);
         lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        Camera3d camera=model.getCamera();
         float focus[] = {
                 (float) camera.getFocus().getX(),
                 (float) camera.getFocus().getY(),
@@ -334,6 +320,7 @@ public class SkeletonActor
         //  that's now done in the appropriate update loops
         // At high zoom, keep thickness to at least 5 pixels deep.
         anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        Camera3d camera=model.getCamera();
         float focus[] = {
             (float) camera.getFocus().getX(),
             (float) camera.getFocus().getY(),
@@ -394,6 +381,7 @@ public class SkeletonActor
         lineShader.load(gl2);
         float zt = zThicknessInPixels;
         float zoomLimit = 5.0f;
+        Camera3d camera=model.getCamera();
         if (camera.getPixelsPerSceneUnit() > zoomLimit) {
             zt = zThicknessInPixels * (float) camera.getPixelsPerSceneUnit() / zoomLimit;
         }
@@ -438,22 +426,11 @@ public class SkeletonActor
     public BoundingBox3d getBoundingBox3d() {
         return bb; // TODO actually populate bounding box
     }
-    
-    public Camera3d getCamera() {
-        return camera;
-    }
-
-    public void setCamera(Camera3d camera) {
-        this.camera = camera;
-    }
 
     public float getZThicknessInPixels() {
         return zThicknessInPixels;
     }
 
-    public void setFocusOnNextParent(boolean flag) {
-        isFocusOnNextParent = flag;
-    }
 
     public void setShowOnlyParentAnchors(boolean showOnlyParent) {
         this.discardNonParent = showOnlyParent ? 1 : 0;
@@ -642,8 +619,5 @@ public class SkeletonActor
         }
     }
 
-    private TileFormat getTileFormat() {
-        return tileFormat;
-    }
 
 }

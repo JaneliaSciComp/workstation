@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -34,6 +35,29 @@ public class SkeletonActorModel {
     public static final int VERTEX_FLOAT_COUNT = 3;
     public static final int INT_BYTE_COUNT = 4;
     public static final int COLOR_FLOAT_COUNT = 3;
+
+    private int mostRecentAnchorVersion=-1;
+
+    private boolean pointIndicesNeedCopy=true;
+    private boolean verticesNeedCopy=true;
+
+    private Camera3d camera;
+
+    public Camera3d getCamera() {
+        return camera;
+    }
+
+    public void setCamera(Camera3d camera) {
+        this.camera = camera;
+    }
+
+    private boolean isFocusOnNextParent = false;
+
+    private TileFormat tileFormat;
+
+    private TileFormat getTileFormat() {
+        return tileFormat;
+    }
 
     private NeuronStyleModel neuronStyles;
 
@@ -77,9 +101,6 @@ public class SkeletonActorModel {
     Map<Long, ElementDataOffset> vertexOffsetMap=new HashMap<>();
     Map<Long, ElementDataOffset> colorOffsetMap=new HashMap<>();
 
-    public synchronized void updateSkeletonActorIfNecessary(SkeletonActor skeletonActor) {
-    }
-
     // Vertex buffer objects need indices
     private Map<Anchor, Integer> neuronAnchorIndices = new HashMap<>();
     private Map<Long, Map<Integer, Anchor>> neuronIndexAnchors = new HashMap<>();
@@ -90,13 +111,29 @@ public class SkeletonActorModel {
 
     public Map<Long, IntBuffer> getNeuronLineIndices() { return neuronLineIndices; }
 
-    private boolean verticesNeedCopy() { return true; }
-
     int cummulativeVertexOffset = 0;
     int cummulativeColorOffset = 0;
     int cummulativeLineOffset = 0;
 
     int cummulativePointOffset=0;
+
+    public int getCummulativeVertexOffset() { return cummulativeVertexOffset; }
+    public ByteBuffer getVertexBuffer() { return vertexByteBuffer; }
+    public int getCummulativeColorOffset() { return cummulativeColorOffset; }
+    public FloatBuffer getColorBuffer() { return colorBuffer; }
+    public int getCummulativeLineOffset() { return cummulativeLineOffset; }
+    public IntBuffer getLineBuffer() { return lineBuffer; }
+    public List<ElementDataOffset> getLineOffsets() { return lineOffsets; }
+    public List<ElementDataOffset> getVertexOffsets() { return vertexOffsets; }
+    public List<ElementDataOffset> getColorOffsets() { return colorOffsets; }
+    public int getCummulativePointOffset() { return cummulativePointOffset; }
+    public IntBuffer getPointBuffer() { return pointBuffer; }
+    public Map<Long, IntBuffer> getNeuronPointIndices() { return neuronPointIndices; }
+    public List<ElementDataOffset> getPointOffsets() { return pointOffsets; }
+    public Map<Long, ElementDataOffset> getVertexOffsetMap() { return vertexOffsetMap; }
+    Map<Long, ElementDataOffset> getColorOffsetMap() { return colorOffsetMap; }
+    public Multiset<Long> getNeuronVertexCount() { return neuronVertexCount; }
+    public Map<Long, Map<SegmentIndex, TracedPathActor>> getNeuronTracedSegments() { return neuronTracedSegments; }
 
     public SkeletonActorModel() {
         updater = new SkeletonActorStateUpdater();
@@ -129,7 +166,7 @@ public class SkeletonActorModel {
     }
 
     public boolean updateVertices() {
-        if (verticesNeedCopy()) {
+        if (verticesNeedCopy) {
 
             cummulativeVertexOffset=0;
             cummulativeColorOffset=0;
@@ -141,7 +178,6 @@ public class SkeletonActorModel {
 
             vertexOffsetMap.clear();
             colorOffsetMap.clear();
-
 
             List<Long> neuronOrderList = new ArrayList<>();
 
@@ -222,16 +258,15 @@ public class SkeletonActorModel {
                 n++;
             }
             lineBuffer.rewind();
+            verticesNeedCopy=false;
             return true;
         } else {
             return false;
         }
     }
 
-    private boolean pointIndicesNeedCopy() { return true; }
-
     public boolean updatePoints() {
-        if (pointIndicesNeedCopy()) {
+        if (pointIndicesNeedCopy) {
 
             pointOffsets.clear();
 
@@ -261,45 +296,12 @@ public class SkeletonActorModel {
                 n++;
             }
             pointBuffer.rewind();
+            pointIndicesNeedCopy=false;
             return true;
         } else {
             return false;
         }
     }
-
-    public int getCummulativeVertexOffset() { return cummulativeVertexOffset; }
-
-    public ByteBuffer getVertexBuffer() { return vertexByteBuffer; }
-
-    public int getCummulativeColorOffset() { return cummulativeColorOffset; }
-
-    public FloatBuffer getColorBuffer() { return colorBuffer; }
-
-    public int getCummulativeLineOffset() { return cummulativeLineOffset; }
-
-    public IntBuffer getLineBuffer() { return lineBuffer; }
-
-    public List<ElementDataOffset> getLineOffsets() { return lineOffsets; }
-
-    public List<ElementDataOffset> getVertexOffsets() { return vertexOffsets; }
-
-    public List<ElementDataOffset> getColorOffsets() { return colorOffsets; }
-
-    public int getCummulativePointOffset() { return cummulativePointOffset; }
-
-    public IntBuffer getPointBuffer() { return pointBuffer; }
-
-    public Map<Long, IntBuffer> getNeuronPointIndices() { return neuronPointIndices; }
-
-    public List<ElementDataOffset> getPointOffsets() { return pointOffsets; }
-
-    public Map<Long, ElementDataOffset> getVertexOffsetMap() { return vertexOffsetMap; }
-
-    Map<Long, ElementDataOffset> getColorOffsetMap() { return colorOffsetMap; }
-
-    public Multiset<Long> getNeuronVertexCount() { return neuronVertexCount; }
-
-    public Map<Long, Map<SegmentIndex, TracedPathActor>> getNeuronTracedSegments() { return neuronTracedSegments; }
 
     public int getIndexForAnchor(Anchor anchor) {
         if (anchor == null) {
@@ -330,6 +332,14 @@ public class SkeletonActorModel {
     public synchronized void updateAnchors() {
         if (skeleton == null) {
             return;
+        }
+
+        if (mostRecentAnchorVersion==skeleton.getAnchorSetVersion()) {
+            log.info("updateAnchors() skipping redundant update");
+            return;
+        } else {
+            mostRecentAnchorVersion=skeleton.getAnchorSetVersion();
+            log.info("updateAnchors() - updating to version="+mostRecentAnchorVersion);
         }
 
         // we do the point update in this method, then call out
@@ -405,6 +415,7 @@ public class SkeletonActorModel {
             int i1 = neuronAnchorIndices.get(anchor);
             neuronPointIndices.get(anchor.getNeuronID()).put(i1);
         }
+
         pointIndicesNeedCopy=true;
 
         // automatically traced paths
@@ -470,8 +481,7 @@ public class SkeletonActorModel {
             }
             neuronLineIndices.get(neuronID).rewind();
         }
-
-        verticesNeedCopy = true;
+        verticesNeedCopy=true;
     }
 
     private void updateTracedPaths() {
@@ -643,6 +653,10 @@ public class SkeletonActorModel {
 
     public void addAnchorUpdateListener(UpdateAnchorListener l) {
         getUpdater().addListener(l);
+    }
+
+    public void setFocusOnNextParent(boolean flag) {
+        isFocusOnNextParent = flag;
     }
 
     private boolean updateParent(Anchor parent) {

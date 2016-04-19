@@ -75,7 +75,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
-        actor.setNextParentByID(nextParentId);        
+        actor.getModel().setNextParentByID(nextParentId);
     }
     
     public void unregister(SkeletonActor actor) {
@@ -183,7 +183,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {
-            actor.clearStyles();
+            actor.getModel().clearStyles();
         }
 		skeletonChanged();
     }
@@ -193,7 +193,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void setNextParent(Long id) {
         nextParentId = id;
         for (SkeletonActor actor: actors) {
-            actor.setNextParentByID(id);
+            actor.getModel().setNextParentByID(id);
         }
         fireComponentUpdate();
     }
@@ -201,7 +201,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void setNextParent(Anchor parent) {
         for (SkeletonActor actor : actors) {
-            actor.setNextParent(parent);
+            actor.getModel().setNextParent(parent);
         }
         // Need not rebuild everything, each time the anchor is selected.
         //   ** this would make the whole display very slow ** updateMeshDrawActor();
@@ -211,7 +211,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         for (SkeletonActor actor: actors) {
-            actor.changeNeuronStyle(neuron, style);
+            actor.getModel().changeNeuronStyle(neuron, style);
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
@@ -221,7 +221,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
         for (TmNeuron neuron: neuronStyleMap.keySet()) {
             for (SkeletonActor actor: actors) {
-                actor.changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
+                actor.getModel().changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
             }
         }
         refreshMeshDrawUpdateTimer();
@@ -234,7 +234,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     
     public void skeletonChanged() {
         for (SkeletonActor actor: actors) {
-            actor.updateAnchors();
+            actor.getModel().updateAnchors();
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();

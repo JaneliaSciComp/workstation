@@ -309,7 +309,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
 
         // if there's a selected annotation in the neuron already, don't change it:
-        Anchor anchor = largeVolumeViewer.getSkeletonActor().getNextParent();
+        Anchor anchor = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
         if (anchor != null && neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
             return;
         }

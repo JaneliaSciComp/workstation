@@ -20,6 +20,59 @@ public class Skeleton {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
 
+    private class VersionedLinkedHashSet<E> extends LinkedHashSet<E> {
+        private int version=0;
+
+        public int getVersion() { return version; }
+
+        @Override
+        public boolean add(E e) {
+            if (super.add(e)) {
+                version++;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            if (super.remove(o)) {
+                version++;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public void clear() {
+            version++;
+            super.clear();
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            if (super.removeAll(c)) {
+                version++;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends E> c) {
+            if (super.addAll(c)) {
+                version++;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+    }
+
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
 	 * So I can send multiple values in a single argument to events.
@@ -61,7 +114,7 @@ public class Skeleton {
     private SkeletonController controller;
     private TileFormat tileFormat;
 
-	private Set<Anchor> anchors = new LinkedHashSet<>();
+	private VersionedLinkedHashSet<Anchor> anchors = new VersionedLinkedHashSet<>();
     private Anchor nextParent;
     private Anchor hoverAnchor;
 	
@@ -393,5 +446,9 @@ public class Skeleton {
 		// log.info("tracedSegments.values().size() [307] = "+result.size());
 		return result;
 	}
+
+    public int getAnchorSetVersion() {
+        return anchors.getVersion();
+    }
 
 }
