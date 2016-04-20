@@ -247,27 +247,36 @@ public class SkeletonActor
         Map<Long, ElementDataOffset> vertexOffsetMap=model.getVertexOffsetMap();
         Map<Long, ElementDataOffset> colorOffsetMap=model.getColorOffsetMap();
 
+
+        Skeleton skeleton=model.getSkeleton();
+        Long hoverAnchorNeuronID=null;
+        Anchor hoverAnchor=skeleton.getHoverAnchor();
+        if (hoverAnchor!=null) {
+            hoverAnchorNeuronID=hoverAnchor.getNeuronID();
+        }
+        Anchor nextParent=skeleton.getNextParent();
+        Long nextParentNeuronID=null;
+        if (nextParent!=null) {
+            nextParentNeuronID=nextParent.getNeuronID();
+        }
+
         for (ElementDataOffset pointOffset : pointOffsets) {
 
             Long neuronID = pointOffset.id;
             ElementDataOffset vertexOffset=vertexOffsetMap.get(neuronID);
             ElementDataOffset colorOffset=colorOffsetMap.get(neuronID);
 
-            Skeleton skeleton=model.getSkeleton();
-
             if (vertexOffset!=null && colorOffset!=null) {
 
                 // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
                 int tempIndex;
-                Anchor hoverAnchor = skeleton.getHoverAnchor();
-                if (hoverAnchor != null && hoverAnchor.getNeuronID().equals(neuronID)) {
+                if (hoverAnchorNeuronID!=null && hoverAnchor.getNeuronID().equals(neuronID)) {
                     tempIndex = model.getIndexForAnchor(hoverAnchor);
                 } else {
                     tempIndex = -1;
                 }
                 anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
-                Anchor nextParent = skeleton.getNextParent();
-                if (nextParent != null && nextParent.getNeuronID().equals(neuronID)) {
+                if (nextParentNeuronID != null && nextParentNeuronID.equals(neuronID)) {
                     tempIndex = model.getIndexForAnchor(nextParent);
                 } else {
                     tempIndex = -1;
