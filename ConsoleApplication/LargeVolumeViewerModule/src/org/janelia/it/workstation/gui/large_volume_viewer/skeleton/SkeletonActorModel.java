@@ -185,18 +185,23 @@ public class SkeletonActorModel {
 
             for (Long neuronID : neuronVertices.keySet()) {
 
-                if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                NeuronStyle neuronStyle=neuronStyles.get(neuronID);
+
+                if (neuronStyle != null && !neuronStyle.isVisible()) {
                     continue;
                 }
 
                 neuronOrderList.add(neuronID);
 
-                int vertexBufferSize = neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT;
-                int colorBufferSize = neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT;
+                int vertexCount=neuronVertexCount.count(neuronID);
+
+                int vertexBufferSize = vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT;
+                int colorBufferSize = vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT;
 
                 int lineBufferSize = 0;
-                if (neuronLineIndices.containsKey(neuronID)) {
-                    lineBufferSize = neuronLineIndices.get(neuronID).capacity() * INT_BYTE_COUNT;
+                IntBuffer lineBuffer=neuronLineIndices.get(neuronID);
+                if (lineBuffer!=null) {
+                    lineBufferSize = lineBuffer.capacity() * INT_BYTE_COUNT;
                 }
 
                 ElementDataOffset vertexOffset = new ElementDataOffset(neuronID, vertexBufferSize, cummulativeVertexOffset);
@@ -220,12 +225,10 @@ public class SkeletonActorModel {
             }
             int n = 0;
             for (Long neuronID : neuronOrderList) {
-                //log.info("start n="+n);
                 ElementDataOffset elementDataOffset = vertexOffsets.get(n);
                 FloatBuffer neuronVertexBuffer = neuronVertices.get(elementDataOffset.id);
                 neuronVertexBuffer.rewind();
                 vertexBuffer.put(neuronVertexBuffer);
-                //log.info("end n="+n);
                 n++;
             }
             vertexBuffer.rewind();
@@ -274,7 +277,8 @@ public class SkeletonActorModel {
             List<Long> neuronOrderList=new ArrayList<>();
 
             for (Long neuronID : neuronVertices.keySet()) {
-                if (neuronStyles.get(neuronID) != null && !neuronStyles.get(neuronID).isVisible()) {
+                NeuronStyle neuronStyle=neuronStyles.get(neuronID);
+                if (neuronStyle != null && !neuronStyle.isVisible()) {
                     continue;
                 }
                 neuronOrderList.add(neuronID);
@@ -355,12 +359,13 @@ public class SkeletonActorModel {
             neuronVertexCount.add(anchor.getNeuronID());
         }
         for (Long neuronID : neuronVertexCount.elementSet()) {
-            ByteBuffer tempBytes = ByteBuffer.allocateDirect(neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
+            int vertexCount=neuronVertexCount.count(neuronID);
+            ByteBuffer tempBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * VERTEX_FLOAT_COUNT);
             tempBytes.order(ByteOrder.nativeOrder());
             neuronVertices.put(neuronID, tempBytes.asFloatBuffer());
             neuronVertices.get(neuronID).rewind();
 
-            tempBytes = ByteBuffer.allocateDirect(neuronVertexCount.count(neuronID) * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
+            tempBytes = ByteBuffer.allocateDirect(vertexCount * FLOAT_BYTE_COUNT * COLOR_FLOAT_COUNT);
             tempBytes.order(ByteOrder.nativeOrder());
             neuronColors.put(neuronID, tempBytes.asFloatBuffer());
             neuronColors.get(neuronID).rewind();
@@ -369,35 +374,38 @@ public class SkeletonActorModel {
         neuronAnchorIndices.clear();
         neuronIndexAnchors.clear();
         Map<Long, Integer> neuronVertexIndex = new HashMap<>();
-        int currentVertexIndex;
+        Integer currentVertexIndex;
         NeuronStyle style;
         for (Anchor anchor : anchors) {
             Long neuronID = anchor.getNeuronID();
+
             Vec3 xyz = anchor.getLocation();
-            neuronVertices.get(neuronID).put((float) xyz.getX());
-            neuronVertices.get(neuronID).put((float) xyz.getY());
-            neuronVertices.get(neuronID).put((float) xyz.getZ());
-            if (neuronStyles.containsKey(neuronID)) {
-                style = neuronStyles.get(neuronID);
-            } else {
+            FloatBuffer vertexBuffer=neuronVertices.get(neuronID);
+            vertexBuffer.put((float) xyz.getX());
+            vertexBuffer.put((float) xyz.getY());
+            vertexBuffer.put((float) xyz.getZ());
+
+            style=neuronStyles.get(neuronID);
+            if (style==null) {
                 style = NeuronStyle.getStyleForNeuron(neuronID);
             }
-            neuronColors.get(neuronID).put(style.getRedAsFloat());
-            neuronColors.get(neuronID).put(style.getGreenAsFloat());
-            neuronColors.get(neuronID).put(style.getBlueAsFloat());
+            float[] styleColorArr=style.getColorAsFloatArray();
+            FloatBuffer colorBuffer=neuronColors.get(neuronID);
+            colorBuffer.put(styleColorArr);
 
-            if (neuronVertexIndex.containsKey(neuronID)) {
-                currentVertexIndex = neuronVertexIndex.get(neuronID);
-            } else {
-                currentVertexIndex = 0;
+            currentVertexIndex=neuronVertexIndex.get(neuronID);
+            if (currentVertexIndex==null) {
+                currentVertexIndex=0;
                 neuronVertexIndex.put(neuronID, currentVertexIndex);
             }
             neuronAnchorIndices.put(anchor, currentVertexIndex);
 
-            if (!neuronIndexAnchors.containsKey(neuronID)) {
-                neuronIndexAnchors.put(neuronID, new HashMap<Integer, Anchor>());
+            Map<Integer, Anchor> indexAnchorMap=neuronIndexAnchors.get(neuronID);
+            if (indexAnchorMap==null) {
+                indexAnchorMap=new HashMap<>();
+                neuronIndexAnchors.put(neuronID, indexAnchorMap);
             }
-            neuronIndexAnchors.get(neuronID).put(currentVertexIndex, anchor);
+            indexAnchorMap.put(currentVertexIndex, anchor);
 
             neuronVertexIndex.put(neuronID, currentVertexIndex + 1);
         }
@@ -419,11 +427,11 @@ public class SkeletonActorModel {
         pointIndicesNeedCopy=true;
 
         // automatically traced paths
-        updateTracedPaths();
+        updateTracedPaths(anchors);
 
         // lines between points, if no path (must be done after path updates so
         //  we know where the paths are!)
-        updateLines();
+        updateLines(anchors);
 
         if (!anchors.contains(getNextParent())) {
             setNextParent(null);
@@ -432,39 +440,48 @@ public class SkeletonActorModel {
         updater.update();
     }
 
-    private void updateLines() {
+    private void updateLines(Collection<Anchor> anchors) {
         // iterate through anchors and record lines where there are no traced
         //  paths; then copy the line indices you get into an array
         // note: I believe this works because we process the points and
         //  lines in exactly the same order (the order skeleton.getAnchors()
         //  returns them in)
 
+        if (anchors==null) {
+            anchors=getAnchorsSafe();
+        }
+
         Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        for (Anchor anchor : getAnchorsSafe()) {
+        for (Anchor anchor : anchors) {
             int i1 = getIndexForAnchor(anchor);
             if (i1 < 0) {
                 continue;
             }
             for (Anchor neighbor : anchor.getNeighbors()) {
-                int i2 = getIndexForAnchor(neighbor);
+                Integer i2=neuronAnchorIndices.get(neighbor);
+                if (i2==null) {
+                    i2=-1;
+                }
                 if (i2 < 0) {
                     continue;
                 }
                 if (i1 >= i2) {
                     continue; // only use ascending pairs, for uniqueness
                 }
-                SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-                // if neuron has any paths, check and don't draw line
-                //  where there's already a traced segment
-                if (neuronTracedSegments.containsKey(anchor.getNeuronID())
-                        && neuronTracedSegments.get(anchor.getNeuronID()).containsKey(segmentIndex)) {
-                    continue;
+                Long neuronID=anchor.getNeuronID();
+                if (neuronTracedSegments.containsKey(neuronID)) {
+                    SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+                    // if neuron has any paths, check and don't draw line
+                    //  where there's already a traced segment
+                    if (neuronTracedSegments.get(neuronID).containsKey(segmentIndex)) {
+                        continue;
+                    }
                 }
-                if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
-                    tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
+                if (!tempLineIndices.containsKey(neuronID)) {
+                    tempLineIndices.put(neuronID, new Vector<Integer>());
                 }
-                tempLineIndices.get(anchor.getNeuronID()).add(i1);
-                tempLineIndices.get(anchor.getNeuronID()).add(i2);
+                tempLineIndices.get(neuronID).add(i1);
+                tempLineIndices.get(neuronID).add(i2);
             }
         }
 
@@ -473,18 +490,19 @@ public class SkeletonActorModel {
         for (Long neuronID : tempLineIndices.keySet()) {
             ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.get(neuronID).size() * INT_BYTE_COUNT);
             lineBytes.order(ByteOrder.nativeOrder());
-            neuronLineIndices.put(neuronID, lineBytes.asIntBuffer());
-            neuronLineIndices.get(neuronID).rewind();
+            IntBuffer lineIndexBuffer=lineBytes.asIntBuffer();
+            neuronLineIndices.put(neuronID, lineIndexBuffer);
+            lineIndexBuffer.rewind();
             for (int i : tempLineIndices.get(neuronID)) // fill actual int buffer
             {
-                neuronLineIndices.get(neuronID).put(i);
+                lineIndexBuffer.put(i);
             }
-            neuronLineIndices.get(neuronID).rewind();
+            lineIndexBuffer.rewind();
         }
         verticesNeedCopy=true;
     }
 
-    private void updateTracedPaths() {
+    private void updateTracedPaths(Collection<Anchor> anchors) {
         // Update Traced path actors
 
         // first, a short-circuit; if there are no anchors, the whole
@@ -492,7 +510,9 @@ public class SkeletonActorModel {
         //  this is necessary because unlike in the old not-per-neuron way of
         //  doing things, we would normally need some info from anchors that
         //  just isn't there when the whole skeleton is cleared
-        Collection<Anchor> anchors = getAnchorsSafe();
+        if (anchors==null) {
+            anchors = getAnchorsSafe();
+        }
         if ( anchors.isEmpty() ) {
             neuronTracedSegments.clear();
             return;
@@ -590,7 +610,7 @@ public class SkeletonActorModel {
         for (int i = 0; i < 3; ++i) {
             neuronVertices.get(dragAnchor.getNeuronID()).put(offset + i, (float) (double) location.get(i));
         }
-        updateLines();
+        updateLines(null);
         updater.update();
     }
 

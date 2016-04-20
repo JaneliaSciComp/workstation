@@ -157,10 +157,14 @@ public class SkeletonActor
         List<ElementDataOffset> lineOffsets=model.getLineOffsets();
         List<ElementDataOffset> vertexOffsets=model.getVertexOffsets();
         List<ElementDataOffset> colorOffsets=model.getColorOffsets();
+
+        NeuronStyleModel neuronStyles=model.getNeuronStyles();
+
         n=0;
         for (ElementDataOffset lineElementOffset : lineOffsets) {
             ElementDataOffset vertexElementOffset = vertexOffsets.get(n);
             ElementDataOffset colorElementOffset = colorOffsets.get(n);
+
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
             gl2.glVertexPointer(SkeletonActorModel.VERTEX_FLOAT_COUNT, GL2.GL_FLOAT, 0, vertexElementOffset.offset);
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
@@ -178,11 +182,8 @@ public class SkeletonActor
 
             // 2nd pass : colored line
             gl.glLineWidth(1.5f);
-            NeuronStyle style;
-            NeuronStyleModel neuronStyles=model.getNeuronStyles();
-            if (neuronStyles.containsKey(lineElementOffset.id)) {
-                style = neuronStyles.get(lineElementOffset.id);
-            } else {
+            NeuronStyle style = neuronStyles.get(lineElementOffset.id);
+            if (style==null) {
                 style = NeuronStyle.getStyleForNeuron(lineElementOffset.id);
             }
             lineShader.setUniform3v(gl, "baseColor", 1, style.getColorAsFloatArray());
@@ -241,7 +242,6 @@ public class SkeletonActor
 
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
-        //PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
 
         List<ElementDataOffset> pointOffsets=model.getPointOffsets();
         Map<Long, ElementDataOffset> vertexOffsetMap=model.getVertexOffsetMap();
@@ -251,33 +251,43 @@ public class SkeletonActor
         Skeleton skeleton=model.getSkeleton();
         Long hoverAnchorNeuronID=null;
         Anchor hoverAnchor=skeleton.getHoverAnchor();
+        int tmpIndexForHoverAnchor=-1;
         if (hoverAnchor!=null) {
             hoverAnchorNeuronID=hoverAnchor.getNeuronID();
+            tmpIndexForHoverAnchor=model.getIndexForAnchor(hoverAnchor);
         }
         Anchor nextParent=skeleton.getNextParent();
         Long nextParentNeuronID=null;
+        int tmpIndexForNextParent=-1;
         if (nextParent!=null) {
             nextParentNeuronID=nextParent.getNeuronID();
+            tmpIndexForNextParent=model.getIndexForAnchor(nextParent);
         }
 
+        long lastNeuronID=-1;
         for (ElementDataOffset pointOffset : pointOffsets) {
 
             Long neuronID = pointOffset.id;
-            ElementDataOffset vertexOffset=vertexOffsetMap.get(neuronID);
-            ElementDataOffset colorOffset=colorOffsetMap.get(neuronID);
+            ElementDataOffset vertexOffset=null;
+            ElementDataOffset colorOffset=null;
+            if (neuronID!=lastNeuronID) {
+                vertexOffset = vertexOffsetMap.get(neuronID);
+                colorOffset = colorOffsetMap.get(neuronID);
+            }
+            lastNeuronID=neuronID;
 
             if (vertexOffset!=null && colorOffset!=null) {
 
                 // setup per-neuron anchor shader settings (used to be in setupAnchorShader)
                 int tempIndex;
-                if (hoverAnchorNeuronID!=null && hoverAnchor.getNeuronID().equals(neuronID)) {
-                    tempIndex = model.getIndexForAnchor(hoverAnchor);
+                if (hoverAnchorNeuronID!=null && hoverAnchorNeuronID.equals(neuronID)) {
+                    tempIndex = tmpIndexForHoverAnchor;
                 } else {
                     tempIndex = -1;
                 }
                 anchorShader.setUniform(gl, "highlightAnchorIndex", tempIndex);
                 if (nextParentNeuronID != null && nextParentNeuronID.equals(neuronID)) {
-                    tempIndex = model.getIndexForAnchor(nextParent);
+                    tempIndex = tmpIndexForNextParent;
                 } else {
                     tempIndex = -1;
                 }
