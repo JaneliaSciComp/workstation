@@ -77,5 +77,5 @@ public class GLJPanelWrapper extends GLJPanel implements GLDrawableWrapper
     {
         super.paintComponent(g);
     }
-    
+
 }

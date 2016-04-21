@@ -1173,14 +1173,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // get a name for the new workspace and validate (are there any rules for entity names?)
-        String workspaceName = (String) JOptionPane.showInputDialog(
-                ComponentUtil.getLVVMainWindow(),
-                "Workspace name:",
-                "Create workspace",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                "new workspace");
+        String[] options = {"Set name"};
+        JPanel newWorkspaceRenamePanel = new JPanel();
+        JLabel newWorkspaceRenameLabel = new JLabel("Workspace name: ");
+        JTextField newWorkspaceRenameField = new JTextField("new workspace", 30);
+        newWorkspaceRenamePanel.add(newWorkspaceRenameLabel);
+        newWorkspaceRenamePanel.add(newWorkspaceRenameField);
+        int selectedOption = JOptionPane.showOptionDialog(null,
+                newWorkspaceRenamePanel,
+                "Rename new workspace",
+                JOptionPane.OK_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options ,
+                options[0]);
+        String workspaceName = newWorkspaceRenameField.getText();
+
         // this is all the validation we have right now...
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
             workspaceName = "new workspace";
