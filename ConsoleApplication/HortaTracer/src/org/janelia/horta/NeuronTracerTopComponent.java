@@ -68,7 +68,6 @@ import java.text.ParseException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.prefs.Preferences;
@@ -87,15 +86,12 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.text.Keymap;
-import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
-import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
-import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Quaternion;
@@ -217,6 +213,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private boolean leverageCompressedFiles = false;
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
+    
     private final NeuronManager neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
@@ -397,7 +394,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 NeuronTracerTopComponent.this,
                 neuronMPRenderer,
                 sceneWindow
-                // tracingInteractor
         );
         
         // Default to compressed voxels, per user request February 2016
@@ -710,6 +706,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         volumeState.filteringOrder = 
                 prefs.getInt("startupRenderFilter", volumeState.filteringOrder);
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
+        volumeCache.setUpdateCache(
+                prefs.getBoolean("bCacheHortaTiles", volumeCache.isUpdateCache()));
     }
     
     private void saveStartupPreferences() {
@@ -719,6 +717,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
+        prefs.putBoolean("bCacheHortaTiles", volumeCache.isUpdateCache());
     }
 
     private void initialize3DViewer() {
@@ -941,13 +940,27 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                if (currentSource != null) {
+                if (currentSource != null) 
+                {
+                    JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
+                            "Auto-load Image Tiles", volumeCache.isUpdateCache());
+                    menu.add(enableVolumeCacheMenu);
+                    enableVolumeCacheMenu.addActionListener(new AbstractAction() {
+                        @Override
+                        public void actionPerformed(ActionEvent e)
+                        {
+                            JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
+                            volumeCache.toggleUpdateCache();
+                            item.setSelected(volumeCache.isUpdateCache());
+                        }
+                    });
+
                     menu.add(new AbstractAction("Load Image Tile Here") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
                         }
-                    });
+                    });                    
                 }
                 
                 if (volumeState != null) {
@@ -1309,6 +1322,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
     }
 
+    public void setUpdateVolumeCache(boolean doUpdate) {
+        volumeCache.setUpdateCache(doUpdate);
+    }
+    
+    public boolean doesUpdateVolumeCache() {
+        return volumeCache.isUpdateCache();
+    }
+    
     public GL3Actor createBrickActor(BrainTileInfo brainTile, int colorChannel) throws IOException 
     {
         return new BrickActor(brainTile, brightnessModel, volumeState, colorChannel);
@@ -1505,6 +1526,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     public NeuronVertexSpatialIndex getVertexIndex()
     {
         return neuronVertexIndex;
+    }
+
+    void registerLoneDisplayedTile(BrickActor boxMesh) {
+        volumeCache.registerLoneDisplayedTile(boxMesh);
     }
 
     

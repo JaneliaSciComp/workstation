@@ -101,6 +101,8 @@ public class VolumeMipMaterial extends BasicMaterial
         
         setShadingStyle(Shading.FLAT);
     }
+    
+    public Texture3d getTexture() {return volumeTexture;}
 
     public VolumeState getVolumeState()
     {
