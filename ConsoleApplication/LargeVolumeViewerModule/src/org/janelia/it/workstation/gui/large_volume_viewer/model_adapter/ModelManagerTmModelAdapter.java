@@ -13,7 +13,10 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -23,6 +26,7 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapt
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -51,7 +55,10 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
     private final TmProtobufExchanger exchanger = new TmProtobufExchanger();
     
-    private Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
+    private static Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
+
+    private static ScheduledThreadPoolExecutor saveQueue=new ScheduledThreadPoolExecutor(1);
+    private static boolean saveQueueErrorFlag=false;
     
     @Override
     public void loadNeurons(TmWorkspace workspace) throws Exception {
@@ -106,6 +113,104 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             progressHandle.finish();
             throw ex;
         }
+
+        // check neuron consistency and repair (some) problems
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            List<String> results = neuron.checkRepairNeuron();
+            // List<String> results = neuron.checkNeuron();
+            if (results.size() > 0) {
+                // save results, then output to log; this is unfortunately
+                //  not visible to the user; we aren't in a place in the
+                //  code where we can pop a dialog
+                saveNeuron(neuron);
+                for (String s: results) {
+                    log.warn(s);
+                }
+            }
+        }
+
+    }
+
+    private static class SaveNeuronRunnable implements Runnable {
+        TmNeuron neuron;
+        Entity workspaceEntity;
+        private final TmProtobufExchanger exchanger = new TmProtobufExchanger();
+
+        public SaveNeuronRunnable(Entity workspaceEntity, TmNeuron neuron) {
+            this.workspaceEntity=workspaceEntity;
+            this.neuron=neuron;
+        }
+
+        @Override
+        public void run() {
+
+            try {
+                // May need to exchange this entity-data for existing one on workspace
+                EntityData preExistingEntityData = null;
+                if (neuron != null && neuron.getId() != null) {
+                    for (EntityData edata : workspaceEntity.getEntityData()) {
+                        log.debug("Comparing neuron {} to entity data {}.", neuron.getId(), edata.getId());
+                        if (edata.getId() == null) {
+                            log.warn("No id in entity data. {}", edata);
+                        } else if (edata.getId().equals(neuron.getId())) {
+                            preExistingEntityData = edata;
+                            break;
+                        }
+                    }
+                }
+
+                long timeStart = new Date().getTime();
+
+                if (preExistingEntityData == null) {
+                    // Must now push a new entity data
+                    EntityData entityData = new EntityData();
+                    entityData.setOwnerKey(neuron.getOwnerKey());
+                    entityData.setCreationDate(neuron.getCreationDate());
+                    entityData.setId(neuron.getId());  // May have been seeded as null.
+                    // Avoid transmitting siblings over the wire.
+                    Entity nullParent = new Entity();
+                    nullParent.setEntityTypeName(workspaceEntity.getEntityTypeName());
+                    nullParent.setCreationDate(workspaceEntity.getCreationDate());
+                    nullParent.setName(workspaceEntity.getName());
+                    nullParent.setOwnerKey(workspaceEntity.getOwnerKey());
+                    //nullParent.getEntityData().add(entityData);
+                    nullParent.setId(workspaceEntity.getId());
+                    entityData.setParentEntity(nullParent);
+                    entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
+                    preExistingEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
+
+                    preExistingEntityData.setParentEntity(workspaceEntity);
+                    workspaceEntity.getEntityData().add(preExistingEntityData);
+                    neuron.setId(preExistingEntityData.getId());
+                }
+
+                // Need to make serializable version of the data.
+                byte[] serializableBytes = exchanger.serializeNeuron(neuron);
+                BASE64Encoder encoder = new BASE64Encoder();
+                preExistingEntityData.setValue(encoder.encode(serializableBytes));
+
+                TiledMicroscopeBeanRemote tiledMicroscopeBeanRemote = EJBFactory.getRemoteTiledMicroscopeBean();
+                tiledMicroscopeBeanRemote.saveProtobufNeuronBytesJDBC(preExistingEntityData.getId(), serializableBytes);
+
+                long elapsedTime = new Date().getTime() - timeStart;
+
+                log.info("Neuron save/update time = " + elapsedTime + " ms");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                log.error(ex.getMessage());
+                saveQueueErrorFlag=true;
+            }
+        }
+    }
+
+
+    private static void saveNeuronToQueue(Entity workspaceEntity, TmNeuron neuron) throws Exception {
+        if (saveQueueErrorFlag) {
+            throw new Exception("Neuron save queue in error state - workstation should be restarted");
+        } else {
+            SaveNeuronRunnable saveNeuronRunnable=new SaveNeuronRunnable(workspaceEntity, neuron);
+            saveQueue.submit(saveNeuronRunnable);
+        }
     }
 
     /**
@@ -117,44 +222,13 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     @Override
     public void saveNeuron(TmNeuron neuron) throws Exception {
         Entity workspaceEntity = ensureWorkspaceEntity(neuron.getWorkspaceId());
-
-        // Need to make serializable version of the data.
-        byte[] serializableBytes = exchanger.serializeNeuron(neuron);
-        
-        // May need to exchange this entity-data for existing one on workspace
-        EntityData preExistingEntityData = null;
-        if (neuron != null  &&  neuron.getId() != null) {
-            for (EntityData edata : workspaceEntity.getEntityData()) {
-                log.debug("Comparing neuron {} to entity data {}.", neuron.getId(), edata.getId());
-                if (edata.getId() == null) {
-                    log.warn("No id in entity data. {}", edata);
-                }
-                else if (edata.getId().equals(neuron.getId())) {
-                    preExistingEntityData = edata;
-                    break;
-                }
-            }
+        if (neuron.getId()==null) {
+         // Do not use queue
+            SaveNeuronRunnable saveNeuronRunnable=new SaveNeuronRunnable(workspaceEntity, neuron);
+            saveNeuronRunnable.run();
+        } else {
+            saveNeuronToQueue(workspaceEntity, neuron);
         }
-
-        // Must now push a new entity data
-        EntityData entityData = new EntityData();
-        entityData.setOwnerKey(neuron.getOwnerKey());
-        entityData.setCreationDate(neuron.getCreationDate());
-        entityData.setId(neuron.getId());  // May have been seeded as null.
-        entityData.setParentEntity(workspaceEntity);
-        // Encoding on the client side for convenience: the save-or-update
-        // method already exists.  We expect to see this carried out one
-        // neuron (or two) at a time, not wholesale.
-		// @todo is there real danger of this being removed?
-        BASE64Encoder encoder = new BASE64Encoder();
-        entityData.setValue(encoder.encode(serializableBytes));
-        entityData.setEntityAttrName(EntityConstants.ATTRIBUTE_PROTOBUF_NEURON);
-        EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(entityData);
-        if (preExistingEntityData != null) {
-            workspaceEntity.getEntityData().remove(preExistingEntityData);
-        }
-        workspaceEntity.getEntityData().add(savedEntityData);
-        neuron.setId(savedEntityData.getId());
     }
 
     @Override

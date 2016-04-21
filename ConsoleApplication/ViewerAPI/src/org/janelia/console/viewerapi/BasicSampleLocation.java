@@ -48,6 +48,8 @@ public class BasicSampleLocation implements SampleLocation
     private double micrometersPerWindowHeight = 100;
     private int defaultColorChannel = 0;
     private boolean compressed = false;
+    private Long workspaceId = null;  // Optional
+    private Long sampleId = null;     // Optional
 
     public BasicSampleLocation()
     {
@@ -138,5 +140,35 @@ public class BasicSampleLocation implements SampleLocation
     @Override
     public void setCompressed(boolean compressed) {
         this.compressed = compressed;
+    }
+
+    /**
+     * Identifier for some workspace ID that may be known, about this sample.
+     * Optional, since it cannot currently be provided by all callers.
+     * 
+     * @return 
+     */
+    @Override
+    public Long getWorkspaceId() {
+        return workspaceId;
+    }
+    
+    public void setWorkspaceId(Long workspaceId) {
+        this.workspaceId = workspaceId;
+    }
+
+    /**
+     * Identifier for some sample ID that may be known, about this sample.
+     * Optional, since it cannot currently be provided by all callers.
+     * 
+     * @return 
+     */
+    @Override
+    public Long getSampleId() {
+        return sampleId;
+    }
+    
+    public void setSampleId(Long sampleId) {
+        this.sampleId = sampleId;
     }
 }

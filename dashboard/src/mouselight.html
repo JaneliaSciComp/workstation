@@ -5,50 +5,109 @@
 
 <div ng-app="myApp" ng-controller="myCtrl">
 
-    <h1>Workspaces</h1>
+   <p><span ng-bind="serverUrl"/></p>
 
-    <table>
-        <tr ng-repeat="x in workspaces | orderBy:'createTimestamp'">
-            <td>{{x.ownerName}}</td>
-            <td>{{x.name}}</td>
-            <td>{{x.createTimeString}}</td>
-            <td><button ng-click="analyzeWorkspace(x)">Analyze</button></td>
-            <td>{{x.dataType}}</td>
-            <td>{{x.neuronCount}}</td>
-            <td ng-if="isOwnedByDeveloper(x)"><button ng-click="addArtificialNeurons(x)">Add</button></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>Set Name<input type="text" ng-model="x.addName"></form></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>Number<input type="text" ng-model="x.addNumber"></form></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>Points<input type="text" ng-model="x.addPoints"></form></td>
-            <td ng-if="isOwnedByDeveloper(x)"><form>BranchProb<input type="text" value="0.0" ng-model="x.addBranchProb"></form></td>
-        </tr>
-    </table>
+    <div ng-show="isMode('initialize')">
+        <h1>Loading...</h1>
+    </div>
+
+    <div ng-show="isMode('workspaces')">
+        <h1>Workspaces</h1>
+        <p>count={{workspaces.length}}</p>
+        <table>
+            <tr ng-repeat="x in workspaces | orderBy:'createTimestamp'">
+                <td>{{x.ownerName}}</td>
+                <td>{{x.name}}</td>
+                <td>{{x.createTimeString}}</td>
+                <td><button ng-click="analyzeWorkspace(x)">Analyze</button></td>
+                <td>{{x.dataType}}</td>
+                <td>{{x.neuronCount}}</td>
+                <td><button ng-click="displayNeuronSummaryForWorkspace(x)">Info</button></form></td>
+                <td ng-if="isOwnedByDeveloper(x)"><button ng-click="addArtificialNeurons(x)">Add</button></td>
+                <td ng-if="isOwnedByDeveloper(x)"><form>Set Name<input type="text" ng-model="x.addName"></form></td>
+                <td ng-if="isOwnedByDeveloper(x)"><form>Number<input type="text" ng-model="x.addNumber"></form></td>
+                <td ng-if="isOwnedByDeveloper(x)"><form>Points<input type="text" ng-model="x.addPoints"></form></td>
+                <td ng-if="isOwnedByDeveloper(x)"><form>BranchProb<input type="text" value="0.0" ng-model="x.addBranchProb"></form></td>
+            </tr>
+        </table>
+
+    </div>
+
+    <div ng-show="isMode('neuronSummary')">
+        <p>Neuron List size={{neuronList.length}}</p>
+        <table>
+            <tr ng-repeat="neuron in neuronList | orderBy:'createTimestamp'">
+                <td>{{neuron.idString}}</td>
+                <td>{{neuron.name}}</td>
+                <td>{{neuron.pointCount}}</td>
+                <td>&nbsp;</td>
+                <td>{{neuron.createTimeString}}</td>
+                <td><button ng-click="displayPointsForNeuron(currentWorkspace,neuron)">Points</button></td>
+            </tr>
+        </table>
+        <button ng-click="switchToMode('workspaces')">Workspaces</button>
+    </div>
+
+    <div ng-show="isMode('pointSummary')">
+        <p>Point List size={{pointList.lenth}}</p>
+        <table>
+            <tr ng-repeat="p in pointList | orderBy:'z' | orderBy:'y' | orderBy:'x'">
+                <td>Point</td>
+                <td>{{p.idString}}</td>
+                <td>{{p.parentIdString}}</td>
+                <td>{{p.x}}</td>
+                <td>{{p.y}}</td>
+                <td>{{p.z}}</td>
+            </tr>
+        </table>
+        <button ng-click="switchToMode('neuronSummary')">Neuron</button>
+        <button ng-click="switchToMode('workspaces')">Workspaces</button>
+    </div>
 
 </div>
 
 
 <script>
     var app = angular.module('myApp', []);
-    app.controller('myCtrl', function($scope, $http) {
+    app.controller('myCtrl', function($scope, $http, $location) {
 
-        $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaces")
+        $scope.serverUrl = "http://" + $location.host() + ":" + $location.port();
+
+      //  $scope.serverUrl="http://h01u03.int.janelia.org:8180";
+
+        $scope.mode="initialize";
+
+        $scope.isMode = function(m) {
+            if ($scope.mode == m) {
+                return true;
+            }
+            return false;
+        }
+
+        $scope.switchToMode = function(m) {
+            $scope.mode=m;
+        }
+
+        $http.get($scope.serverUrl + "/rest-v1/mouselight/workspaces")
             .then(function(response) {
                 $scope.workspaces = response.data;
+                $scope.mode="workspaces";
             });
 
         $scope.analyzeWorkspace = function(x) {
-            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaceInfo?id="+ x.idString)
+            $http.get($scope.serverUrl + "/rest-v1/mouselight/workspaceInfo?id="+ x.idString)
                 .then(function(response) {
                     x.dataType=response.data.dataType;
                     x.neuronCount=response.data.neuronCount;
-                })
+                });
         }
 
         $scope.addArtificialNeurons = function(x) {
-            $http.get("http://h01u03.int.janelia.org:8180/rest-v1/mouselight/workspaceAddArtificialNeurons?id="+
+            $http.get($scope.serverUrl + "/rest-v1/mouselight/workspaceAddArtificialNeurons?id="+
                 x.idString+"&name="+x.addName+"&number="+x.addNumber+"&points="+x.addPoints+"&brprob="+x.addBranchProb)
                 .then(function(response) {
                     x.neuronCount=response.data.neuronCount;
-                })
+                });
         }
 
         $scope.isOwnedByDeveloper = function(x) {
@@ -61,6 +120,26 @@
                 return false;
             }
         }
+
+        $scope.displayNeuronSummaryForWorkspace = function(x) {
+            $http.get($scope.serverUrl+"/rest-v1/mouselight/neuronSummaryForWorkspace?id="+ x.idString)
+                .then(function(response) {
+                    $scope.neuronList=response.data;
+                    $scope.neuronListSize=$scope.neuronList.length;
+                    $scope.currentWorkspace=x;
+                    $scope.mode="neuronSummary";
+                });
+        }
+
+        $scope.displayPointsForNeuron = function(w, n) {
+            $http.get($scope.serverUrl+"/rest-v1/mouselight/pointSummaryForNeuron?workspaceId="+ w.idString+"&neuronId="+ n.idString)
+                .then(function(response) {
+                    $scope.pointList=response.data;
+                    $scope.currentNeuron=n;
+                    $scope.mode="pointSummary";
+                });
+        }
+
     });
 </script>
 

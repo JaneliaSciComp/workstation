@@ -105,10 +105,10 @@ public class AnnotationSkeletonPanel extends JPanel {
             // This one also acts as a collector of data.
             linesDrawActor = new SkeletonActor();
             linesDrawActor.setParentAnchorImageName( SkeletonActor.ParentAnchorImage.LARGE );
-            linesDrawActor.setNeuronStyleModel( dataSource.getNeuronStyleModel() );
+            linesDrawActor.getModel().setNeuronStyleModel( dataSource.getNeuronStyleModel() );
             linesDrawActor.setShowOnlyParentAnchors( true );
-            linesDrawActor.setAnchorsVisible(true);
-            linesDrawActor.setFocusOnNextParent(true);
+            linesDrawActor.getModel().setAnchorsVisible(true);
+            linesDrawActor.getModel().setFocusOnNextParent(true);
             TileFormat tileFormat = dataSource.getSkeleton().getTileFormat();
             final BoundingBox3d boundingBox = tileFormat.calcBoundingBox();
             Vec3 yExtender = new Vec3(0, 0.75 * boundingBox.getHeight(), 0);
@@ -135,9 +135,9 @@ public class AnnotationSkeletonPanel extends JPanel {
             context.setVoxelMicrometers(voxelMicronF);
             final Camera3d rendererCamera = context.getCamera3d();
 
-            linesDrawActor.setSkeleton(dataSource.getSkeleton());
-            linesDrawActor.setCamera(rendererCamera);
-            linesDrawActor.setTileFormat(tileFormat);
+            linesDrawActor.getModel().setSkeleton(dataSource.getSkeleton());
+            linesDrawActor.getModel().setCamera(rendererCamera);
+            linesDrawActor.getModel().setTileFormat(tileFormat);
             linesDrawActor.setRenderInterpositionMethod(
                     SkeletonActor.RenderInterpositionMethod.Occlusion
             );
@@ -146,7 +146,7 @@ public class AnnotationSkeletonPanel extends JPanel {
             });
             // Set maximal thickness.  Z-fade is not practical for 3D rotations.
             linesDrawActor.setZThicknessInPixels( Long.MAX_VALUE );
-            linesDrawActor.updateAnchors();
+            linesDrawActor.getModel().updateAnchors();
 
             DirectionalReferenceAxesActor refAxisActor = new DirectionalReferenceAxesActor(
                     new float[] { 100.0f, 100.0f, 100.0f },

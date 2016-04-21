@@ -36,6 +36,7 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.actors.BrainTileMesh;
 
@@ -60,6 +61,20 @@ public class BrickActor extends MeshActor
         this.brainTile = brainTile;
         this.brickMaterial = (BrickMaterial)getMaterial();
     }
+
+    // Constructor version that uses preloaded Texture3d
+    public BrickActor(
+            BrainTileInfo brainTile, 
+            Texture3d texture3d, 
+            BrightnessModel brightnessModel, 
+            VolumeState volumeState) 
+    {
+        super(
+                new BrainTileMesh(brainTile), 
+                new BrickMaterial(brainTile, texture3d, brightnessModel, volumeState),
+                null);
+        this.brainTile = brainTile;
+        this.brickMaterial = (BrickMaterial)getMaterial();    }
     
     public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
         brickMaterial.setOpaqueDepthTexture(depthTexture, zNear, zFar);
@@ -84,6 +99,16 @@ public class BrickActor extends MeshActor
                 int colorChannel) throws IOException
         {
             super(brainTile.loadBrick(10, colorChannel), brightnessModel);
+            setVolumeState(volumeState);
+        }
+
+        private BrickMaterial(
+                BrainTileInfo brainTile, 
+                Texture3d texture3d, 
+                BrightnessModel brightnessModel, 
+                VolumeState volumeState) 
+        {
+            super(texture3d, brightnessModel);
             setVolumeState(volumeState);
         }
         

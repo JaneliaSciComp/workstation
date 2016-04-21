@@ -66,7 +66,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.prefs.Preferences;
@@ -85,8 +87,10 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.text.Keymap;
+import org.janelia.console.viewerapi.BasicGenericObservable;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -119,20 +123,19 @@ import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.HortaSwcLoader;
+import org.janelia.horta.loader.HortaVolumeCache;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.horta.volume.BrickInfo;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -199,14 +202,12 @@ public final class NeuronTracerTopComponent extends TopComponent
     // Cache latest hover information
     private Vector3 mouseStageLocation = null;
     private final Observer cursorCacheDestroyer;
-    
-    // load new volumes based on camera postion
-    private final Observer volumeLoadTrigger;
 
     private TracingInteractor tracingInteractor;
     private StaticVolumeBrickSource volumeSource;
     private CenterCrossHairActor crossHairActor;
     private ScaleBar scaleBar = new ScaleBar();
+    private ActivityLogHelper activityLogger = ActivityLogHelper.getInstance();
         
     private final NeuronMPRenderer neuronMPRenderer;
     
@@ -225,6 +226,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         return (NeuronTracerTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
     private int defaultColorChannel = 0;
+    
+    private final HortaVolumeCache volumeCache;
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -304,19 +307,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
 
-        // When the camera focus changes, consider updating the tiles displayed
-        volumeLoadTrigger = new Observer() {
-            private ConstVector3 cachedFocus = null;
-            @Override
-            public void update(Observable o, Object arg) {
-                ConstVector3 newFocus = new Vector3(sceneWindow.getCamera().getVantage().getFocusPosition());
-                if (newFocus.equals(cachedFocus))
-                    return; // no change
-                // logger.info("focus changed"); // TODO
-                cachedFocus = newFocus;
-            }
-        };
-        sceneWindow.getCamera().getVantage().addObserver(volumeLoadTrigger);
         
         // Repaint when color map changes
         brightnessModel.addObserver(new Observer() {
@@ -324,6 +314,49 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void update(Observable o, Object arg) {
                 // logger.info("Camera changed");
                 redrawNow();
+            }
+        });
+
+        // Load new volume data when the focus moves
+        volumeCache = new HortaVolumeCache(
+                (PerspectiveCamera)sceneWindow.getCamera(),
+                brightnessModel,
+                volumeState,
+                defaultColorChannel
+        );
+        volumeCache.addObserver(new HortaVolumeCache.TileDisplayObserver() {
+            @Override
+            public void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles) {
+                if (! allTiles.contains(newTile.getBrainTile()))
+                    return; // Tile is stale, so don't load it
+                // System.out.println("Got "+allTiles.size()+" tile(s) to display from Volume Cache");
+                
+                // Undisplay stale tiles and upload to GPU
+                Iterator<GL3Actor> iter = neuronMPRenderer.getVolumeActors().iterator();
+                boolean tileAlreadyDisplayed = false;
+                while (iter.hasNext()) {
+                    GL3Actor actor = iter.next();
+                    if (!(actor instanceof BrickActor))
+                        continue;
+                    BrickActor brickActor = (BrickActor) actor;
+                    BrickInfo actorInfo = brickActor.getBrainTile();
+                    // Check whether maybe the new tile is already displayed somehow
+                    if (actorInfo.isSameBrick(newTile.getBrainTile())) {
+                        tileAlreadyDisplayed = true;
+                        continue;
+                    }
+                    // Remove displayed tiles that are no longer current
+                    if (! allTiles.contains(actorInfo)) {
+                        iter.remove(); // Safe member deletion via iterator
+                        neuronMPRenderer.queueObsoleteResource(brickActor);
+                    }
+                }
+                // Upload up to one tile per update call
+                if (! tileAlreadyDisplayed) {
+                    // System.out.println("Uploading tile "+ newTile.getBrainTile().getLocalPath() +" to GPU");
+                    neuronMPRenderer.addVolumeActor(newTile);
+                    redrawNow();
+                }
             }
         });
 
@@ -365,6 +398,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public void setVolumeSource(StaticVolumeBrickSource volumeSource) {
         this.volumeSource = volumeSource;
+        this.volumeCache.setSource(volumeSource);
     }
     
     /** Tells caller what source we are examining. */
@@ -383,7 +417,9 @@ public final class NeuronTracerTopComponent extends TopComponent
             acceptor.acceptLocation(sampleLocation);
             currentSource = sampleLocation.getSampleUrl().toString();
             defaultColorChannel = sampleLocation.getDefaultColorChannel();
-            FrameworkImplProvider.getSessionSupport().logToolEvent(new ToolString("HORTA"), new CategoryString("launchHorta"), new ActionString(sampleLocation.getSampleUrl().toString()));
+            volumeCache.setColorChannel(defaultColorChannel);
+            activityLogger.logHortaLaunch(sampleLocation);
+
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
             throw new RuntimeException(
@@ -468,7 +504,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public StaticVolumeBrickSource loadYaml(InputStream sourceYamlStream, NeuronTraceLoader loader, ProgressHandle progress) throws IOException, ParseException
     {
-        volumeSource = new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress);
+        setVolumeSource(new MouseLightYamlBrickSource(sourceYamlStream, leverageCompressedFiles, progress));
         return volumeSource;
     }
 
@@ -723,7 +759,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void loadDroppedYaml(InputStream yamlStream) throws IOException, ParseException
     {
         // currentSource = Utilities.toURI(file).toURL().toString();
-        volumeSource = loadYaml(yamlStream, loader, null);
+        setVolumeSource(loadYaml(yamlStream, loader, null));
         loader.loadTileAtCurrentFocus(volumeSource);
     }
     
@@ -887,7 +923,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 });
 
                 if (currentSource != null) {
-                    menu.add(new AbstractAction("Load Volume Brick Here") {
+                    menu.add(new AbstractAction("Load Image Tile Here") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
