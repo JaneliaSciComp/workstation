@@ -25,6 +25,8 @@ public class Skeleton {
 
         public int getVersion() { return version; }
 
+        public void incrementVersion() { version++; }
+
         @Override
         public boolean add(E e) {
             if (super.add(e)) {
@@ -128,6 +130,8 @@ public class Skeleton {
     public void setController(SkeletonController controller) {
         this.controller = controller;
     }
+
+    public void incrementAnchorVersion() { anchors.incrementVersion(); }
     
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
@@ -191,6 +195,7 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
+        anchors.incrementVersion();
         controller.skeletonChanged();
 		return true;
 	}
@@ -393,7 +398,7 @@ public class Skeleton {
             anchor.getNeighbors().remove(removeAnchor);
             removeAnchor.getNeighbors().remove(anchor);
         }
-
+        anchors.incrementVersion();
     }
 
 	public Set<Anchor> getAnchors() {

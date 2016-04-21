@@ -130,18 +130,21 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.addTracedSegment(path);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
     @Override
     public void addAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
         skeleton.addTracedSegments(paths);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
     @Override
     public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.removeTracedSegment(path);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
@@ -330,6 +333,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         @Override
         public void anchorMoved(Anchor anchor) {
             annoMgr.moveAnchor(anchor);
+            skeleton.incrementAnchorVersion();
             skeletonChanged();
         }
         
