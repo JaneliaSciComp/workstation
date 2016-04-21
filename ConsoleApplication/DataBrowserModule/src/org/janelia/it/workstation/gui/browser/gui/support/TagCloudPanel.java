@@ -107,9 +107,12 @@ public class TagCloudPanel<T> extends JPanel {
                 break;
             }
         }
-
         // Only display a subset of the tags, if there are too many. 
-        if (displayedTags.size()>maxNumTags) {
+        
+        if (maxNumTags<1) {
+            displayedTags = new ArrayList<>();
+        }
+        else if (displayedTags.size()>maxNumTags) {
             displayedTags = displayedTags.subList(0, maxNumTags);
         }
 

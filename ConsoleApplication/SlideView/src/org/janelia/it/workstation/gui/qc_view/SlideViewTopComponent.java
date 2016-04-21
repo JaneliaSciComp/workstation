@@ -12,27 +12,27 @@ import org.openide.util.NbBundle.Messages;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.qc_view//SlideView//EN",
-        autostore = false
-)
-@TopComponent.Description(
-        preferredID = SlideViewTopComponent.PREFERRED_ID,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_ALWAYS
-)
-@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.SlideViewTopComponent")
-@ActionReference(path = "Menu/Window", position = 460)
-@TopComponent.OpenActionRegistration(
-        displayName = "#CTL_SlideViewAction",
-        preferredID = SlideViewTopComponent.PREFERRED_ID
-)
-@Messages({
-    "CTL_SlideViewAction=Legacy Slide View",
-    "CTL_SlideViewTopComponent=Legacy Slide View",
-    "HINT_SlideViewTopComponent=Display LSMs with one row per slide"
-})
+//@ConvertAsProperties(
+//        dtd = "-//org.janelia.it.workstation.gui.qc_view//SlideView//EN",
+//        autostore = false
+//)
+//@TopComponent.Description(
+//        preferredID = SlideViewTopComponent.PREFERRED_ID,
+//        //iconBase="SET/PATH/TO/ICON/HERE",
+//        persistenceType = TopComponent.PERSISTENCE_ALWAYS
+//)
+//@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 100)
+//@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.qc_view.SlideViewTopComponent")
+//@ActionReference(path = "Menu/Window", position = 460)
+//@TopComponent.OpenActionRegistration(
+//        displayName = "#CTL_SlideViewAction",
+//        preferredID = SlideViewTopComponent.PREFERRED_ID
+//)
+//@Messages({
+//    "CTL_SlideViewAction=Legacy Slide View",
+//    "CTL_SlideViewTopComponent=Legacy Slide View",
+//    "HINT_SlideViewTopComponent=Display LSMs with one row per slide"
+//})
 public final class SlideViewTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "SlideViewTopComponent";
@@ -42,8 +42,8 @@ public final class SlideViewTopComponent extends TopComponent {
     public SlideViewTopComponent() {
         this.slideViewPanel = new SlideViewPanel();
         initComponents();
-        setName(Bundle.CTL_SlideViewTopComponent());
-        setToolTipText(Bundle.HINT_SlideViewTopComponent());
+//        setName(Bundle.CTL_SlideViewTopComponent());
+//        setToolTipText(Bundle.HINT_SlideViewTopComponent());
     }
     
     /**

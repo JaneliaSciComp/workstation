@@ -3,18 +3,23 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
@@ -32,9 +37,6 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
@@ -85,14 +87,20 @@ public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelection
             protected void doStuff() throws Exception {
                 final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
                 final boolean ascending = !sortCriteria.startsWith("-");
+
+                final Map<DomainObject,Object> fieldValues = new HashMap<>();
+                for(DomainObject domainObject : domainObjects) {
+                    Object value = ClientDomainUtils.getFieldValue(domainObject, sortField);
+                    fieldValues.put(domainObject, value);
+                }
+
                 Collections.sort(domainObjects, new Comparator<DomainObject>() {
                     @Override
                     @SuppressWarnings({"rawtypes", "unchecked"})
                     public int compare(DomainObject o1, DomainObject o2) {
                         try {
-                            // TODO: speed could be improved by moving the reflection calls outside of the sort
-                            Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
-                            Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
+                            Comparable v1 = (Comparable)fieldValues.get(o1);
+                            Comparable v2 = (Comparable)fieldValues.get(o2);
                             Ordering ordering = Ordering.natural().nullsLast();
                             if (!ascending) {
                                 ordering = ordering.reverse();

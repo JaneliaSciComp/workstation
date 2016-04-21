@@ -15,8 +15,6 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface AnnotatedDomainObjectList {
-
-    public Class<? extends DomainObject> getDomainClass();
     
     public List<DomainObject> getDomainObjects();
     

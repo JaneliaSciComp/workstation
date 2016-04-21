@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
@@ -39,7 +40,10 @@ import org.openide.util.NbBundle.Messages;
 @ActionRegistration(
         displayName = "#CTL_NewFilterAction"
 )
-@ActionReference(path = "Menu/File/New", position = 2)
+@ActionReferences({
+        @ActionReference(path = "Menu/File/New", position = 2),
+        @ActionReference(path = "Shortcuts", name = "M-S")
+})
 @Messages("CTL_NewFilterAction=Filter")
 public final class NewFilterAction implements ActionListener {
 

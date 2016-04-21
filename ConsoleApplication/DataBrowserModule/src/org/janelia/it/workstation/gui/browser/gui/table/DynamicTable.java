@@ -232,8 +232,28 @@ public abstract class DynamicTable extends JPanel {
         });
 
         JTableHeader header = table.getTableHeader();
-
         header.setReorderingAllowed(false);
+
+        header.addMouseListener(new MouseHandler() {
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                if (e.isConsumed()) {
+                    return;
+                }
+                showColumnPopupMenu(e);
+                e.consume();
+            }
+
+            @Override
+            protected void singleLeftClicked(MouseEvent e) {
+                // This triggers a sort
+            }
+
+            @Override
+            protected void doubleLeftClicked(MouseEvent e) {
+            }
+        });
+
 
         scrollPane = new JScrollPane();
         scrollPane.addMouseListener(new MouseForwarder(this, "JScrollPane->DynamicTable"));
@@ -340,6 +360,13 @@ public abstract class DynamicTable extends JPanel {
     }
 
     /**
+     * Override this method to provide custom functionality when the user right-clicks a column.
+     */
+    protected JPopupMenu createColumnPopupMenu(MouseEvent e, int col) {
+        return null;
+    }
+
+    /**
      * Override this method and call super.createPopupMenu(e) to create the base menu. Then add your custom items
      * to the menu. Item names should begin with two spaces.
      *
@@ -395,6 +422,14 @@ public abstract class DynamicTable extends JPanel {
         }
     }
 
+    protected void showColumnPopupMenu(MouseEvent e) {
+        int index = table.convertColumnIndexToModel(table.columnAtPoint(e.getPoint()));
+        JPopupMenu popupMenu = createColumnPopupMenu(e, index);
+        if (popupMenu!=null) {
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
+    }
+
     /**
      * Override this method to provide custom functionality for row left clicking.
      *
@@ -417,6 +452,9 @@ public abstract class DynamicTable extends JPanel {
     protected void backgroundClicked() {
     }
 
+    /**
+     * Add a named column.
+     */
     public DynamicColumn addColumn(String label) {
         return addColumn(label, label, true, false, false, false);
     }
@@ -473,6 +511,20 @@ public abstract class DynamicTable extends JPanel {
         for (DynamicColumn col : columns) {
             if (col.getName().equals(name)) {
                 return col;
+            }
+        }
+        return null;
+    }
+
+    public DynamicColumn getColumn(int index) {
+        return columns.get(index);
+    }
+
+    public DynamicColumn getVisibleColumn(int index) {
+        int i = 0;
+        for (DynamicColumn col : columns) {
+            if (col.isVisible()) {
+                if (i++==index) return col;
             }
         }
         return null;

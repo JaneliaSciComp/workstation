@@ -1,21 +1,16 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
@@ -37,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+
+import static org.janelia.it.jacs.model.domain.support.DomainUtils.getTypeFromSubjectKey;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -351,6 +348,20 @@ public class SearchConfiguration {
 
         facetValues.clear();
         if (results.getFacetValues()!=null) {
+
+            // Sort each facet list in place. The mutability isn't great, but no one else will see this list.
+            for(String facet : results.getFacetValues().keySet()) {
+                List<FacetValue> facetValues = results.getFacetValues().get(facet);
+                Collections.sort(facetValues, new Comparator<FacetValue>() {
+                    @Override
+                    public int compare(FacetValue o1, FacetValue o2) {
+                        return ComparisonChain.start()
+                                .compare(o1.getValue(), o2.getValue(), Ordering.natural())
+                                .result();
+                    }
+                });
+            }
+
             facetValues.putAll(results.getFacetValues());
         }
         

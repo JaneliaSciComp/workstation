@@ -2,10 +2,8 @@ package org.janelia.it.workstation.gui.browser.gui.listview.table;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -23,15 +21,16 @@ import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.table.TableModel;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -53,7 +52,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
 
-    private TableViewerConfigDialog configDialog;
+    private List<DomainObjectAttribute> attrs;
     private String sortField;
     private boolean ascending = true;
 
@@ -125,51 +124,54 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
         this.domainObjectList = domainObjectList;
-        final Class<? extends DomainObject> domainClass = domainObjectList.getDomainClass();
 
         attributeMap.clear();
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private final List<DomainObjectAttribute> attrs = new ArrayList<>();
+            private final Set<DomainObjectAttribute> attrSet = new HashSet<>();
 
             @Override
             protected void doStuff() throws Exception {
 
-                if (domainClass!=null) {
-                    attrs.add(annotationAttr);
-                    for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
+                attrSet.add(annotationAttr);
+
+                Set<Class<? extends DomainObject>> domainClasses = new HashSet<>();
+                for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
+                    domainClasses.add(domainObject.getClass());
+                }
+
+                for(Class<? extends DomainObject> domainClass : domainClasses) {
+                    for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
                         if (attr.isDisplay()) {
-                            attrs.add(attr);
+                            attrSet.add(attr);
                         }
                     }
-                    Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
-                        @Override
-                        public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                            return o1.getLabel().compareTo(o2.getLabel());
-                        }
-                    });
-                    configDialog = new TableViewerConfigDialog(domainClass, attrs);
                 }
-                else {
-                    configDialog = null;
-                }
+
             }
 
             @Override
             protected void hadSuccess() {
 
-                getToolbar().getChooseColumnsButton().setEnabled(configDialog!=null);
-                getToolbar().getExportButton().setEnabled(configDialog!=null);
+                attrs = new ArrayList<>(attrSet);
+                Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
+                    @Override
+                    public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
+                        return o1.getLabel().compareTo(o2.getLabel());
+                    }
+                });
+
+                TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
 
                 getDynamicTable().clearColumns();
                 for(DomainObjectAttribute attr : attrs) {
                     attributeMap.put(attr.getName(), attr);
+                    boolean visible = config.isColumnVisible(attr.getName());
                     boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
-                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), true, false, true, sortable);
+                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
                 }
 
-                updateViewerConfig();
                 showObjects(domainObjectList.getDomainObjects());
 
                 // Finally, we're done, we can call the success callback
@@ -202,6 +204,30 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return popupMenu;
     }
 
+    protected JPopupMenu getColumnPopupMenu(final int col) {
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem hideItem = new JMenuItem("Hide this column");
+        hideItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DynamicColumn column = getDynamicTable().getVisibleColumn(col);
+                log.info("Hiding column {} ({})",column.getLabel(),col);
+                try {
+                    TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
+                    config.getHiddenColumns().add(column.getName());
+                    config.save();
+                    column.setVisible(false);
+                    updateTableModel();
+                }
+                catch (Exception ex) {
+                    SessionMgr.getSessionMgr().handleException(ex);
+                }
+            }
+        });
+        menu.add(hideItem);
+        return menu;
+    }
+
     @Override
     protected void objectDoubleClicked(DomainObject object) {
         getContextualPopupMenu().runDefaultAction();
@@ -209,11 +235,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void chooseColumnsButtonPressed() {
-        if (configDialog==null) {
-            return;
-        }
+        TableViewerConfigDialog configDialog = new TableViewerConfigDialog(attrs);
         if (configDialog.showDialog(this)==1) {
-            updateViewerConfig();
+            TableViewerConfiguration config = configDialog.getConfig();
+            for(String attrName : attributeMap.keySet()) {
+                boolean visible = config.isColumnVisible(attrName);
+                getColumn(attrName).setVisible(visible);
+            }
             updateTableModel();
         }
     }
@@ -256,20 +284,17 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 return attr.getGetter().invoke(object);
             }
         }
-        catch(IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            log.error("Error getting attribute value for column: "+columnName,e);
+        catch (IllegalArgumentException e) {
+            // This happens if we have mixed objects and we try to get an attribute from one on another 
+            log.debug("Cannot get attribute {} for {}",columnName,object.getType());
+            return null;
+        }
+        catch(IllegalAccessException | InvocationTargetException e) {
+            log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
             return null;
         }
     }
 
-    public void updateViewerConfig() {
-        TableViewerConfiguration config = configDialog==null?null:configDialog.getConfig();
-        for(String attrName : attributeMap.keySet()) {
-            boolean visible = config==null?true:config.isVisible(attrName);
-            getColumn(attrName).setVisible(visible);
-        }
-    }
-    
     @Override
     protected void updateTableModel() {
         super.updateTableModel();
