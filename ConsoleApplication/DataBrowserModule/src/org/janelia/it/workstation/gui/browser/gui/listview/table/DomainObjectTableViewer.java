@@ -29,6 +29,9 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import javax.swing.table.TableModel;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -195,11 +198,31 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
-        // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
+
         List<Reference> ids = selectionModel.getSelectedIds();
         List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
         // TODO: should this use the same result as the icon grid viewer?
         DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
+
+        JTable table = getTable();
+        ListSelectionModel lsm = table.getSelectionModel();
+        if (lsm.getMinSelectionIndex()==lsm.getMaxSelectionIndex()) {
+            final String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            JMenuItem titleMenuItem = new JMenuItem(value);
+            titleMenuItem.setEnabled(false);
+            popupMenu.add(titleMenuItem);
+
+            JMenuItem copyMenuItem = new JMenuItem("  Copy To Clipboard");
+            copyMenuItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Transferable t = new StringSelection(value);
+                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+                }
+            });
+            popupMenu.add(copyMenuItem);
+        }
+
         popupMenu.addMenuItems();
         return popupMenu;
     }
