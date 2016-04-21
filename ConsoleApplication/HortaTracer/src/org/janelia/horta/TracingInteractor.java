@@ -109,8 +109,9 @@ public class TracingInteractor extends MouseAdapter
     Map<List<Float>, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
-            new TwoDimensionalRadiusEstimator(); // TODO: Use this again
-            // new ConstantRadiusEstimator(5.0f);
+            // new TwoDimensionalRadiusEstimator(); // TODO: Use this again
+            new ConstantRadiusEstimator(DefaultNeuron.radius);
+    
     private StatusDisplayer.Message previousHoverMessage;
     
     private NeuronSet defaultWorkspace = null;
@@ -349,7 +350,7 @@ public class TracingInteractor extends MouseAdapter
         return false;
     }
     
-    private boolean setDensityCursor(Vector3 xyz)
+    private boolean setDensityCursor(Vector3 xyz, Point screenPoint)
     {
         if (xyz == null) return false;
         
@@ -363,7 +364,11 @@ public class TracingInteractor extends MouseAdapter
 
         // Create a modified vertex to represent the enlarged, highlighted actor
         BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
-        densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
+
+        float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
+        // densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
+        densityVertex.setRadius(radius);
+
         // blend neuron color with white(?) provisional vertex color
         Color vertexColor = new Color(0.2f, 1.0f, 0.8f, 0.5f);
 
@@ -555,7 +560,7 @@ public class TracingInteractor extends MouseAdapter
             // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
             Point optimizedPoint = optimizePosition(hoverPoint);
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(optimizedPoint);
-            setDensityCursor(cursorXyz);
+            setDensityCursor(cursorXyz, optimizedPoint);
         }
         else {
             Collection<NeuronVertex> densityVertexes = densityCursorModel.getVertexes();
