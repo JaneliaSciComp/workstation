@@ -359,6 +359,7 @@ public class VolumeMipMaterial extends BasicMaterial
                         getClass().getResourceAsStream(
                                 "/org/janelia/gltools/material/shader/"
                                         + "VolumeMipVrtx.glsl"))
+                                        // + "PanoramaVrtx.glsl")) // TODO: for testing only
                 );
                 String projectionDefine = "#define PROJECTION_MODE " + projectionMode + "\n";
                 String basicFragShaderString = IOUtils.toString(getClass().getResourceAsStream(
