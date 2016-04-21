@@ -320,6 +320,7 @@ public class SkeletonActorModel {
     public void changeNeuronStyle(TmNeuron neuron, NeuronStyle style) {
         if (neuron != null) {
             neuronStyles.put(neuron.getId(), style);
+            mostRecentAnchorVersion--; // trick to trigger update
             updateAnchors();
         }
     }
