@@ -68,7 +68,7 @@ import org.openide.util.RequestProcessor;
  */
 public class HortaVolumeCache
 {
-    private int ramTileCount = 2;
+    private int ramTileCount = 3; // Three is better than two for tile availability
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
@@ -209,7 +209,7 @@ public class HortaVolumeCache
         }
         
         // Just in case; should not be necessary
-        // closestBricks.addAll(veryClosestBricks); // NO. This list does not avoid duplicates
+        // closestBricks.addAll(veryClosestBricks);
         
         // Compare to cached list of tile metadata
         // Create list of new and obsolete tiles
@@ -272,7 +272,14 @@ public class HortaVolumeCache
         // System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
         Runnable loadTask = new Runnable() {
             @Override
-            public void run() {
+            public void run() 
+            {
+                // Check whether this tile is still relevant
+                if (! nearVolumeMetadata.contains(tile)) {
+                    queuedForLoad.remove(tile);
+                    return;
+                }
+                
                 // Throttle to slow down loading of too many tiles if user is moving a lot
                 if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
                     try {
@@ -280,6 +287,7 @@ public class HortaVolumeCache
                     } catch (InterruptedException ex) {
                     }
                 }
+                
                 // Maybe after that wait, this tile is no longer needed
                 if (! nearVolumeMetadata.contains(tile)) {
                     queuedForLoad.remove(tile);
@@ -316,9 +324,9 @@ public class HortaVolumeCache
             };
         };
         // Submit load task asynchronously
-        int start_lag = 500; // milliseconds
-        if (priority >= Thread.NORM_PRIORITY) {
-            start_lag = 0;
+        int start_lag = 300; // milliseconds
+        if (priority < Thread.NORM_PRIORITY) {
+            start_lag = 1500;
         }
         loadProcessor.post(loadTask, start_lag, priority);
     }
