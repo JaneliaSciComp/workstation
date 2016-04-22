@@ -212,7 +212,7 @@ public class TracingInteractor extends MouseAdapter
                 }
                 else {
                     if (context.canCreateNeuron()) {
-                        context.createNeuron();
+                        // context.createNeuron(); // TODO: still needs work
                     }
                 }
             }
