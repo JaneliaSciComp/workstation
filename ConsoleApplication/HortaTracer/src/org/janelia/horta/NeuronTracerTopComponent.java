@@ -125,6 +125,7 @@ import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.HortaSwcLoader;
 import org.janelia.horta.loader.HortaVolumeCache;
+import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
@@ -789,6 +790,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TarFileLoader());
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
+        droppedFileHandler.addLoader(new ObjMeshLoader());
         // Put dropped neuron models into "Temporary neurons"
         WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();

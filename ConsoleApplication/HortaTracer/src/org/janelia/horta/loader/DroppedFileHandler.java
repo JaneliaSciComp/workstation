@@ -55,7 +55,9 @@ public class DroppedFileHandler implements FileHandler
             throws FileNotFoundException, IOException 
     {
         DataSource source = new FileDataSource(f);
-        return handleDataSource(source);
+        boolean result = handleDataSource(source);
+        // source.getInputStream().close();
+        return result;
     }
     
     public boolean handleStream(InputStream stream, String fileName) 
@@ -71,8 +73,9 @@ public class DroppedFileHandler implements FileHandler
     {
         for (FileTypeLoader loader : typeLoaders) {
             if (loader.supports(source)) {
-                if (loader.load(source, this))
+                if (loader.load(source, this)) {
                     return true;
+                }
             }
         }
         return false;
