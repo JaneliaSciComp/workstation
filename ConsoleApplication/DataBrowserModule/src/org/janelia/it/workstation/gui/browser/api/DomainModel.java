@@ -686,15 +686,6 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public ObjectSet create(ObjectSet objectSet) throws Exception {
-        ObjectSet canonicalObject;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.create(objectSet));
-        }
-        notifyDomainObjectCreated(canonicalObject);
-        return canonicalObject;
-    }
-
     public void remove(DataSet dataSet) throws Exception {
         sampleFacade.remove(dataSet);
         notifyDomainObjectRemoved(dataSet);
@@ -780,30 +771,6 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public ObjectSet addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        return addMembers(objectSet, Arrays.asList(domainObject));
-    }
-
-    public ObjectSet addMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.addMembers(objectSet, DomainUtils.getReferences(domainObjects)));
-        }
-        return canonicalObject;
-    }
-
-    public ObjectSet removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        return removeMembers(objectSet, Arrays.asList(domainObject));
-    }
-
-    public ObjectSet removeMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects)));
-        }
-        return canonicalObject;
-    }
-
     public List<LineRelease> getLineReleases() {
         List<LineRelease> releases = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
@@ -836,6 +803,14 @@ public class DomainModel {
     public void remove(LineRelease release) throws Exception {
         sampleFacade.remove(release);
         notifyDomainObjectRemoved(release);
+    }
+
+    public DomainObject update(DomainObject domainObject) throws Exception {
+        DomainObject canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(domainFacade.update(domainObject));
+        }
+        return canonicalObject;
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {
