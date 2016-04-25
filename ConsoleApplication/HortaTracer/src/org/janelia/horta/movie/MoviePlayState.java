@@ -46,6 +46,6 @@ public interface MoviePlayState extends GenericObservable<ViewerState>
     boolean isRunning();
     void skipToTime(float seconds);
     void playEveryFrame(float framesPerSecond);
-    void playRealTime();
+    void playRealTime(float maxFramesPerSecond);
     void pause();
 }

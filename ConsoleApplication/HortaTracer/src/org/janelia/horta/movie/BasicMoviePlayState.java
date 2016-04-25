@@ -88,7 +88,7 @@ public class BasicMoviePlayState implements MoviePlayState
     }
 
     @Override
-    public void playRealTime() {
+    public void playRealTime(float maxFramesPerSecond) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
