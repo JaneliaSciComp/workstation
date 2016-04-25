@@ -1,7 +1,10 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.lang.reflect.InvocationTargetException;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,5 +43,14 @@ public class ClientDomainUtils {
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
         return DomainUtils.hasWriteAccess(domainObject, AccessManager.getSubjectKey());
+    }
+
+    public static Object getFieldValue(DomainObject o1, String fieldName) throws InvocationTargetException, IllegalAccessException {
+        try {
+            return ReflectionUtils.get(o1, fieldName);
+        }
+        catch (NoSuchMethodException e) {
+            return null;
+        }
     }
 }

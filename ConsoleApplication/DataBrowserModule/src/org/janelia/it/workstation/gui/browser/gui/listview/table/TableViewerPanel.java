@@ -22,7 +22,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.Position.Bias;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
@@ -92,6 +91,11 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
             @Override
             protected JPopupMenu createPopupMenu(MouseEvent e) {
                 return getContextualPopupMenu();
+            }
+
+            @Override
+            protected JPopupMenu createColumnPopupMenu(MouseEvent e, int col) {
+                return getColumnPopupMenu(col);
             }
         };
 
@@ -169,6 +173,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     }
 
     protected abstract JPopupMenu getContextualPopupMenu();
+
+    protected abstract JPopupMenu getColumnPopupMenu(int col);
 
     protected abstract void objectDoubleClicked(T object);
     

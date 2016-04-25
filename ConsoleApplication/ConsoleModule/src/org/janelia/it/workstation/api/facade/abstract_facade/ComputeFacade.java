@@ -41,8 +41,10 @@ public interface ComputeFacade {
     public Subject getSubject(String nameOrKey) throws Exception;
     public List<Subject> getSubjects() throws Exception;
     public Subject loginSubject(String username, String password) throws Exception;
+    boolean isServerPathAvailable(String serverPath, boolean directoryOnly);
     public void beginSession();
     public void addEventToSession(UserToolEvent event);
     public void addEventsToSession(UserToolEvent[] events);
     public void endSession();
+
 }

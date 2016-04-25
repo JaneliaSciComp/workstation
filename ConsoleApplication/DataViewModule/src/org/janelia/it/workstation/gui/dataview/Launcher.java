@@ -1,11 +1,10 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import org.janelia.it.jacs.model.domain.enums.SubjectRole;
-import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.Group;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.WindowManager;
 
@@ -50,7 +49,7 @@ public class Launcher implements EntityAcceptor  {
         if (EntityUtils.isVirtual(e)) {
             return false;
         }
-        return SessionMgr.authenticatedSubjectIsInGroup(SubjectRole.Admin) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_KEY);
+        return SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_KEY) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_KEY);
     }
 
     @Override

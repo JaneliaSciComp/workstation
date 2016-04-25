@@ -45,16 +45,6 @@ public class ResultPage implements AnnotatedDomainObjectList {
     public long getNumPageResults() {
         return domainObjects.size();
     }
-
-    @Override
-    public Class<? extends DomainObject> getDomainClass() {
-        if (domainObjects.isEmpty()) {
-            return null;
-        }
-        else {
-            return domainObjects.get(0).getClass();
-        }
-    }
     
     @Override
     public List<DomainObject> getDomainObjects() {

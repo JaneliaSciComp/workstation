@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false, position = 10)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityExplorerTopComponent")
-@ActionReference(path = "Menu/Window", position = 400)
+@ActionReference(path = "Menu/Window", position = 450)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityExplorerAction",
         preferredID = EntityExplorerTopComponent.PREFERRED_ID

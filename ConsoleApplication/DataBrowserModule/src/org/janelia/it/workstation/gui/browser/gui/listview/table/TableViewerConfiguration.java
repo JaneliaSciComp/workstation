@@ -4,6 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.it.jacs.model.domain.DomainConstants;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 /**
  * UI configuration for a TableViewerPanel. 
@@ -13,42 +18,69 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TableViewerConfiguration {
 
     private Set<String> hiddenColumns = new HashSet<>();
-    
+
     public TableViewerConfiguration() {
     }
     
-    public void setAttributeVisibility(String attrName, boolean visible) {
+    public void setColumnVisibility(String columnName, boolean visible) {
         if (visible) {
-            hiddenColumns.remove(attrName);
+            hiddenColumns.remove(columnName);
         }
         else {
-            hiddenColumns.add(attrName);
+            hiddenColumns.add(columnName);
         }
     }
     
-    public boolean isVisible(String attrName) {
-        return !hiddenColumns.contains(attrName);
+    public boolean isColumnVisible(String columnName) {
+        return !hiddenColumns.contains(columnName);
     }
 
-    public void clear() {
+    public void clearHiddenColumns() {
         hiddenColumns.clear();
-    }
- 
-    public static String serialize(TableViewerConfiguration config) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.writeValueAsString(config);
-    }
-    
-    public static TableViewerConfiguration deserialize(String json) throws Exception  {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json, TableViewerConfiguration.class);
     }
 
     public Set<String> getHiddenColumns() {
         return hiddenColumns;
     }
+ 
+    private static String serialize(TableViewerConfiguration config) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(config);
+    }
 
-    public void setHiddenColumns(Set<String> hiddenColumns) {
-        this.hiddenColumns = hiddenColumns;
+    private static TableViewerConfiguration deserialize(String json) throws Exception  {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json, TableViewerConfiguration.class);
+    }
+
+    public static TableViewerConfiguration loadConfig() {
+
+        TableViewerConfiguration config;
+        Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(
+                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
+                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
+
+        if (columnsPreference==null) {
+            config = new TableViewerConfiguration();
+        }
+        else {
+            try {
+                config = TableViewerConfiguration.deserialize(columnsPreference.getValue());
+            }
+            catch (Exception e) {
+                throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());
+            }
+        }
+
+        return config;
+    }
+
+    public void save() throws Exception {
+        Preference columnsPreference = new Preference(AccessManager.getSubjectKey(),
+                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
+                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, "");
+        String value = TableViewerConfiguration.serialize(this);
+        columnsPreference.setValue(value);
+        DomainMgr.getDomainMgr().savePreference(columnsPreference);
     }
 }

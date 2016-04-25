@@ -4,8 +4,10 @@ import java.awt.BorderLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -116,7 +118,20 @@ public final class DomainInspectorTopComponent extends TopComponent {
             return;
         }
 
-        log.info("domainObjectSelected({})",Reference.createFor(domainObject));
-        detailsPanel.loadDomainObject(domainObject);
+        if (event.isUserDriven()) {
+            log.info("domainObjectSelected({})", Reference.createFor(domainObject));
+            detailsPanel.loadDomainObject(domainObject);
+        }
     }
+
+    @Subscribe
+    public void resultSelected(PipelineResultSelectionEvent event) {
+
+        if (event.isUserDriven()) {
+            PipelineResult result = event.getPipelineResult();
+            log.info("resultSelected({})", result.getId());
+            detailsPanel.loadPipelineResult(result);
+        }
+    }
+
 }

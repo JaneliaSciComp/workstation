@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Checkbox;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
@@ -8,7 +9,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
@@ -19,12 +26,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Preference;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
@@ -44,47 +48,71 @@ public class TableViewerConfigDialog extends ModalDialog {
     
     private int returnValue = ERROR_OPTION;
     
-    private JPanel mainPanel;
-    private JPanel attrsPanel;
+    private final JPanel mainPanel;
+    private final JPanel attrsPanel;
 
     private TableViewerConfiguration config;
-    private Preference columnsPreference;
-    
-    public TableViewerConfigDialog(Class<? extends DomainObject> domainClass, List<DomainObjectAttribute> attrs) {
+    private List<DomainObjectAttribute> sortedAttrs;
+    private Map<DomainObjectAttribute, JCheckBox> checkboxes = new HashMap<>();
 
-        this.columnsPreference = DomainMgr.getDomainMgr().getPreference(
-                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, domainClass.getName());
-        
-        if (columnsPreference==null) {
-            this.columnsPreference = new Preference(AccessManager.getSubjectKey(), DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS, domainClass.getName(), "");
-            this.config = new TableViewerConfiguration(); 
-        }
-        else {
-            try {
-                this.config = TableViewerConfiguration.deserialize(columnsPreference.getValue());
-            }
-            catch (Exception e) {
-                throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());
-            }
-        }
-        
+    public TableViewerConfigDialog(List<DomainObjectAttribute> attrs) {
+
+        this.config = TableViewerConfiguration.loadConfig();
         setTitle("Table Configuration");
+
+        JButton checkAllButton = new JButton("Check all");
+        checkAllButton.setFocusable(false);
+        checkAllButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setAll(true);
+            }
+        });
+
+        JButton uncheckAllButton = new JButton("Uncheck all");
+        uncheckAllButton.setFocusable(false);
+        uncheckAllButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setAll(false);
+            }
+        });
+
+        JPanel topPane = new JPanel();
+        topPane.setLayout(new BoxLayout(topPane, BoxLayout.LINE_AXIS));
+        topPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+        topPane.add(checkAllButton);
+        topPane.add(uncheckAllButton);
+        topPane.add(Box.createHorizontalGlue());
 
         attrsPanel = new ScrollablePanel();
         attrsPanel.setLayout(new BoxLayout(attrsPanel, BoxLayout.PAGE_AXIS));
         attrsPanel.setOpaque(false);
 
-        for (final DomainObjectAttribute attr : attrs) {
-            final JCheckBox checkBox = new JCheckBox(new AbstractAction(attr.getLabel()) {
+        this.sortedAttrs = new ArrayList<>(new HashSet<>(attrs));
+        Collections.sort(sortedAttrs, new Comparator<DomainObjectAttribute>() {
+            @Override
+            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
+                return ComparisonChain.start()
+                        .compare(o1.getLabel(), o2.getLabel(), Ordering.natural().nullsFirst())
+                        .result();
+            }
+        });
+
+        for (final DomainObjectAttribute attr : sortedAttrs) {
+
+            String label = attr.getLabel();
+            final JCheckBox checkBox = new JCheckBox(new AbstractAction(label) {
                 public void actionPerformed(ActionEvent e) {
                     JCheckBox cb = (JCheckBox) e.getSource();
-                    config.setAttributeVisibility(attr.getName(), cb.isSelected());
+                    config.setColumnVisibility(attr.getName(), cb.isSelected());
                 }
             });
 
+            checkboxes.put(attr, checkBox);
+
             checkBox.setToolTipText(attr.getLabel());
-            checkBox.setSelected(config.isVisible(attr.getName()));
-//            checkBox.setFont(checkboxFont);
+            checkBox.setSelected(config.isColumnVisible(attr.getName()));
             attrsPanel.add(checkBox);
         }
 
@@ -94,10 +122,11 @@ public class TableViewerConfigDialog extends ModalDialog {
         attrScrollPane.setPreferredSize(new Dimension(400, 300));
 
         mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(topPane, BorderLayout.NORTH);
         mainPanel.add(attrScrollPane, BorderLayout.CENTER);
-        
+
         add(mainPanel, BorderLayout.CENTER);
-        
+
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
         cancelButton.addActionListener(new ActionListener() {
@@ -125,12 +154,20 @@ public class TableViewerConfigDialog extends ModalDialog {
         buttonPane.add(okButton);
 
         add(buttonPane, BorderLayout.SOUTH);
-        
+
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 returnValue = CANCEL_OPTION;
             }
         });
+    }
+
+    private void setAll(boolean state) {
+        for (final DomainObjectAttribute attr : sortedAttrs) {
+            JCheckBox cb = checkboxes.get(attr);
+            cb.setSelected(state);
+            config.setColumnVisibility(attr.getName(), state);
+        }
     }
 
     public int showDialog(Component parent) throws HeadlessException {
@@ -146,9 +183,7 @@ public class TableViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                String value = TableViewerConfiguration.serialize(config);
-                columnsPreference.setValue(value);
-                DomainMgr.getDomainMgr().savePreference(columnsPreference);
+                config.save();
             }
 
             @Override

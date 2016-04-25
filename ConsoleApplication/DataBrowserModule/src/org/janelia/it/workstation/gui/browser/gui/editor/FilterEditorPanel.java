@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
+import java.awt.Desktop;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
@@ -14,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,19 +28,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.AbstractAction;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -67,10 +57,12 @@ import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.gui.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -110,8 +102,9 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private final PaginatedResultsPanel resultsPanel;
     private final DropDownButton typeCriteriaButton;
     private final DropDownButton addCriteriaButton;
-    private final JComboBox<String> inputField;    
-    
+    private final SmartSearchBox searchBox;
+    private final JButton infoButton;
+
     // State
     private Filter filter;    
     private boolean dirty = false;
@@ -156,26 +149,35 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         saveAsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
-                        "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, filter.getName());
-                if ((newName == null) || (newName.length() <= 0)) {
-                    return;
+
+                String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
+                String newName = null;
+                while (StringUtils.isEmpty(newName)) {
+                    newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
+                            "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, name);
+                    log.info("newName:" + newName);
+                    if (newName == null) {
+                        // User chose "Cancel"
+                        return;
+                    }
+                    if ("".equals(newName)) {
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Filter name cannot be blank");
+                    }
                 }
-                
+
+                final String finalName = newName;
                 final boolean isNewFilter = filter.getId()==null;
 
                 SimpleWorker worker = new SimpleWorker() {
                         
                     @Override
                     protected void doStuff() throws Exception {
-                        
                         Filter savedFilter = filter;
                         if (!isNewFilter) {
                             // This filter is already saved, duplicate it so that we don't overwrite the existing one
                             savedFilter = DomainUtils.cloneFilter(filter);
                         }
-                        savedFilter.setName(newName);
+                        savedFilter.setName(finalName);
                         DomainModel model = DomainMgr.getDomainMgr().getModel();
                         savedFilter = model.save(savedFilter);
                         model.addChild(model.getDefaultWorkspace(), savedFilter);
@@ -205,7 +207,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         });
         
-        this.typeCriteriaButton = new DropDownButton("Type: Sample");
+        this.typeCriteriaButton = new DropDownButton();
         
         ButtonGroup typeGroup = new ButtonGroup();
         
@@ -226,15 +228,28 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         
         this.addCriteriaButton = new DropDownButton("Add Criteria...");
         
-        this.inputField = new JComboBox<>();
-        inputField.setMinimumSize(new Dimension(100, Integer.MIN_VALUE));
-        inputField.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
-        inputField.setEditable(true);
-        inputField.setToolTipText("Enter search terms...");
-        
+        this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
+
+        infoButton = new JButton(Icons.getIcon("info.png"));
+        infoButton.setMargin(new Insets(0,2,0,2));
+        infoButton.setBorderPainted(false);
+        infoButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // TODO: make a custom help page later
+                try {
+                    Desktop.getDesktop().browse(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
+                }
+                catch (Exception ex) {
+                    SessionMgr.getSessionMgr().handleException(ex);
+                }
+            }
+        });
+
         AbstractAction mySearchAction = new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                searchBox.addCurrentSearchTermToHistory();
                 refreshSearchResults();
             }
         };
@@ -294,7 +309,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             updateView();
             
             configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter)) {
+            if (ClientDomainUtils.hasWriteAccess(filter) || filter.getName().equals(DEFAULT_FILTER_NAME)) {
 	            configPanel.addTitleComponent(saveButton, false, true);
 	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
@@ -338,10 +353,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     public void deactivate() {
         resultsPanel.deactivate();
     }
-    
-    private String getInputFieldValue() {
-        return (String)inputField.getSelectedItem();
-    }
 
     public void dropDomainObject(DomainObject obj) {
         if (obj instanceof TreeNode) {
@@ -377,7 +388,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private void refreshSearchResults(final Callable<Void> success, final Callable<Void> failure) {
         log.trace("refresh");
         
-        String inputFieldValue = getInputFieldValue();
+        String inputFieldValue = searchBox.getSearchString();
         if (filter.getSearchString()!=null && !filter.getSearchString().equals(inputFieldValue)) {
             dirty = true;
         }
@@ -392,14 +403,15 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private void updateView() {
 
     	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
-        typeCriteriaButton.setText("Type: " + searchTypeAnnot.label());
+        typeCriteriaButton.setText("Result Type: " + searchTypeAnnot.label());
         
         configPanel.setTitle(filter.getName());
         
         // Update filters
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(typeCriteriaButton);
-        configPanel.addConfigComponent(inputField);
+        configPanel.addConfigComponent(searchBox);
+        configPanel.addConfigComponent(infoButton);
         
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
@@ -799,4 +811,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
             }
         }
     }
+
+
 }

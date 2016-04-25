@@ -61,7 +61,7 @@ public class Browser implements Cloneable {
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
     public static final String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
-    public static final String SEARCH_HISTORY = "SEARCH_HISTORY";
+    public static final String SEARCH_HISTORY = "modelPropertyName";
     /** @deprecated use ADD_TO_FOLDER_HISTORY instead */
     public static final String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
     public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";

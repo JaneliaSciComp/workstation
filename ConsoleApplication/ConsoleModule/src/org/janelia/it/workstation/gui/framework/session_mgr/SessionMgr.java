@@ -1057,27 +1057,27 @@ public final class SessionMgr implements ActivityLogging {
         return subject.getEmail();
     }
 
-//    public static boolean authenticatedSubjectIsInGroup(String groupName) {
-//        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-//        return subject instanceof User && isUserInGroup((User) subject, groupName);
-//    }
-//
-//    public static boolean currentUserIsInGroup(String groupName) {
-//        Subject subject = SessionMgr.getSessionMgr().getSubject();
-//        return subject instanceof User && isUserInGroup((User) subject, groupName);
-//    }
-//
-//    private static boolean isUserInGroup(User targetUser, String targetGroup) {
-//        if (null == targetUser) {
-//            return false;
-//        }
-//        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
-//            if (relation.getGroup().getName().equals(targetGroup)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
+    public static boolean authenticatedSubjectIsInGroup(String groupName) {
+        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
+        return subject instanceof Subject && isUserInGroup2((User) subject, groupName);
+    }
+
+    public static boolean currentUserIsInGroup(String groupName) {
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        return subject instanceof User && isUserInGroup2((User) subject, groupName);
+    }
+
+    private static boolean isUserInGroup2(User targetUser, String targetGroup) {
+        if (null == targetUser) {
+            return false;
+        }
+        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
+            if (relation.getGroup().getName().equals(targetGroup)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 //    public boolean loginSubject(String username, String password) {
 //        try {

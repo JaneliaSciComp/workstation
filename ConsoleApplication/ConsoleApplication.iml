@@ -6,13 +6,9 @@
       <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/branding" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SceneWindow/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SlideView/src" isTestSource="false" />
@@ -27,7 +23,12 @@
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes-generated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/classes-generated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SlideView/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleWrapper/build/classes" />
@@ -37,7 +38,7 @@
       <excludeFolder url="file://$MODULE_DIR$/DataViewModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
-      <excludeFolder url="file://$MODULE_DIR$/GeometricSearchModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/GeometricSearchModule/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/Geometry3d/build" />
       <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build" />
       <excludeFolder url="file://$MODULE_DIR$/HortaTracer/src" />
@@ -50,11 +51,11 @@
       <excludeFolder url="file://$MODULE_DIR$/SceneWindow/src" />
       <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/depcache" />
-      <excludeFolder url="file://$MODULE_DIR$/SlideView/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SlideView/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
+      <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/src" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/build/depcache" />
-      <excludeFolder url="file://$MODULE_DIR$/ViewerAPI/src" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/build_eclipse" />
       <excludeFolder url="file://$MODULE_DIR$/generated" />
@@ -89,5 +90,6 @@
         <jarDirectory url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="Compute" />
   </component>
 </module>
