@@ -1241,6 +1241,11 @@ called from a  SimpleWorker thread.
             }
         }
 
+        // update modification date in for the geo annotation whose text annotation
+        //  we changed; get it fresh; the object may have changed
+        TmGeoAnnotation updatedAnn = getGeoAnnotationFromID(geoAnnotation.getId());
+        updatedAnn.updateModificationDate();
+
 		// Send the data back to the server to save.
 		neuronManager.saveNeuronData(neuron);
 
@@ -1259,6 +1264,10 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
 		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
+        if (textAnnotation.getParentType() == TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION) {
+            TmGeoAnnotation ann = getGeoAnnotationFromID(textAnnotation.getParentId());
+            ann.updateModificationDate();
+        }
         neuronManager.saveNeuronData(neuron);
 
         // updates
