@@ -30,12 +30,12 @@
 
 package org.janelia.horta.movie;
 
-import java.util.Deque;
-
 /**
  *
  * @author brunsc
  */
-public interface Timeline extends Deque<KeyFrame>
-{ 
+public interface MovieSource<T extends ViewerState> 
+{
+    T getViewerState();
+    void setViewerState(T state); // For interactive display playback
 }

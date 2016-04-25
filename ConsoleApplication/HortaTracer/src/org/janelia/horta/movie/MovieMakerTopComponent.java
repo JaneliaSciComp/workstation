@@ -29,11 +29,16 @@
  */
 package org.janelia.horta.movie;
 
+import java.util.Collection;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.Utilities;
 
 /**
  * Top component which displays something.
@@ -56,16 +61,21 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_MovieMakerAction=MovieMaker",
-    "CTL_MovieMakerTopComponent=MovieMaker Window",
-    "HINT_MovieMakerTopComponent=This is a MovieMaker window"
+    "CTL_MovieMakerTopComponent=Movie Maker",
+    "HINT_MovieMakerTopComponent=This is a Movie Maker window"
 })
-public final class MovieMakerTopComponent extends TopComponent {
+public final class MovieMakerTopComponent 
+extends TopComponent 
+implements LookupListener
+{
+    private Timeline movieTimeline = new BasicMovieTimeline();
+    private MoviePlayState playState = new BasicMoviePlayState(movieTimeline);
+    private float nextFrameDuration = 2.0f; // seconds
 
     public MovieMakerTopComponent() {
         initComponents();
         setName(Bundle.CTL_MovieMakerTopComponent());
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
-
     }
 
     /**
@@ -76,30 +86,41 @@ public final class MovieMakerTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        addFrameButton = new javax.swing.JButton();
+        playButton = new javax.swing.JButton();
+        saveFramesButton = new javax.swing.JButton();
         jCheckBox1 = new javax.swing.JCheckBox();
+        frameCountLabel = new javax.swing.JLabel();
+        saveScriptButton = new javax.swing.JButton();
+        durationTextField = new javax.swing.JFormattedTextField();
+        jLabel2 = new javax.swing.JLabel();
+        fpsSpinner = new javax.swing.JSpinner();
         jLabel1 = new javax.swing.JLabel();
-        jButton4 = new javax.swing.JButton();
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jButton1.text")); // NOI18N
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        org.openide.awt.Mnemonics.setLocalizedText(addFrameButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.addFrameButton.text")); // NOI18N
+        addFrameButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                addFrameButtonActionPerformed(evt);
             }
         });
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton2, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jButton2.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(playButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.playButton.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton3, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jButton3.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(saveFramesButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveFramesButton.text")); // NOI18N
 
         jCheckBox1.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(jCheckBox1, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jCheckBox1.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel1.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(frameCountLabel, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.frameCountLabel.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton4, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jButton4.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(saveScriptButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.text")); // NOI18N
+
+        durationTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
+        durationTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel2.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel1.text")); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -108,57 +129,94 @@ public final class MovieMakerTopComponent extends TopComponent {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton1)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jCheckBox1))
-                    .addComponent(jButton3)
-                    .addComponent(jButton4)
+                    .addComponent(addFrameButton)
+                    .addComponent(saveFramesButton)
+                    .addComponent(saveScriptButton)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(frameCountLabel)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel2))))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(playButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jCheckBox1))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(fpsSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel1)))
-                .addContainerGap(259, Short.MAX_VALUE))
+                .addContainerGap(253, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jButton1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel1)
+                .addComponent(addFrameButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(frameCountLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton2)
+                    .addComponent(playButton)
                     .addComponent(jCheckBox1))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(fpsSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
+                .addGap(38, 38, 38)
+                .addComponent(saveFramesButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton4)
-                .addContainerGap(139, Short.MAX_VALUE))
+                .addComponent(saveScriptButton)
+                .addContainerGap(65, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void addFrameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFrameButtonActionPerformed
+        if (movieSource == null)
+            return;
+        ViewerState viewerState = movieSource.getViewerState();
+        if (viewerState == null)
+            return;
+        KeyFrame keyFrame = new BasicKeyFrame(viewerState, nextFrameDuration);
+        if (! movieTimeline.add(keyFrame))
+            return;
+        frameCountLabel.setText(movieTimeline.size() + " frames in movie");
+    }//GEN-LAST:event_addFrameButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
+    private javax.swing.JButton addFrameButton;
+    private javax.swing.JFormattedTextField durationTextField;
+    private javax.swing.JSpinner fpsSpinner;
+    private javax.swing.JLabel frameCountLabel;
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JButton playButton;
+    private javax.swing.JButton saveFramesButton;
+    private javax.swing.JButton saveScriptButton;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
         // TODO add custom code on component opening
+        movieSourcesResult = Utilities.actionsGlobalContext().lookupResult(MovieSource.class);
+        movieSourcesResult.addLookupListener(this);
+        Collection<? extends MovieSource> allSources = movieSourcesResult.allInstances();
+        if (allSources.isEmpty())
+            setMovieSource(null);
+        else
+            setMovieSource(allSources.iterator().next());
     }
 
     @Override
     public void componentClosed() {
         // TODO add custom code on component closing
+        movieSourcesResult.removeLookupListener(this);
     }
 
     void writeProperties(java.util.Properties p) {
@@ -171,5 +229,45 @@ public final class MovieMakerTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
+    }
+
+    
+    private Lookup.Result<MovieSource> movieSourcesResult = null;
+    private MovieSource movieSource = null;
+
+    public MovieSource getMovieSource() {
+        return movieSource;
+    }
+
+    public void setMovieSource(MovieSource movieSource) {
+        if (this.movieSource == movieSource)
+            return; // no change
+        if (movieSource == null)
+            return; // remember the old source, when the new one seems to be null
+        this.movieSource = movieSource;
+        if (movieSource == null) {
+            addFrameButton.setEnabled(false); // disable controls
+            return;
+        }
+        addFrameButton.setEnabled(true); // enable controls
+    }
+
+    public float getPlaybackFramesPerSecond() {
+        return playState.getFramesPerSecond();
+    }
+    
+    public void setPlaybackFramesPerSecond(float fps) {
+        playState.setFramesPerSecond(fps);
+    }
+    
+    @Override
+    public void resultChanged(LookupEvent le) {
+        if (movieSourcesResult == null)
+            return;
+        Collection<? extends MovieSource> sources = movieSourcesResult.allInstances();
+        if (sources.isEmpty())
+            setMovieSource(null);
+        else
+            setMovieSource(sources.iterator().next());
     }
 }

@@ -30,13 +30,22 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.console.viewerapi.GenericObservable;
+
 /**
  *
  * @author brunsc
  */
-public interface KeyFrameInterval {
-    KeyFrame getBeginFrame();
-    KeyFrame getEndFrame();
-    float getIntervalTimeInSeconds();
-    void setIntervalTimeInSeconds(float seconds);
+public interface MoviePlayState extends GenericObservable<ViewerState>
+{
+    float getFramesPerSecond();
+    void setFramesPerSecond(float fps);
+    float getTotalDuration();
+    boolean isLoop();
+    void setLoop(boolean doLoop);
+    boolean isRunning();
+    void skipToTime(float seconds);
+    void playEveryFrame(float framesPerSecond);
+    void playRealTime();
+    void pause();
 }

@@ -340,11 +340,11 @@ public class SkeletonActorModel {
         }
 
         if (mostRecentAnchorVersion==skeleton.getAnchorSetVersion()) {
-            log.info("updateAnchors() skipping redundant update");
+            // log.info("updateAnchors() skipping redundant update");
             return;
         } else {
             mostRecentAnchorVersion=skeleton.getAnchorSetVersion();
-            log.info("updateAnchors() - updating to version="+mostRecentAnchorVersion);
+            // log.info("updateAnchors() - updating to version="+mostRecentAnchorVersion);
         }
 
         // we do the point update in this method, then call out

@@ -70,13 +70,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Properties;
 import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.GroupLayout;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JCheckBoxMenuItem;
@@ -121,6 +119,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.loader.DroppedFileHandler;
@@ -131,6 +130,8 @@ import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
+import org.janelia.horta.movie.MovieRenderer;
+import org.janelia.horta.movie.MovieSource;
 import org.janelia.horta.movie.ViewerState;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
@@ -181,7 +182,9 @@ import org.slf4j.LoggerFactory;
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
-        implements VolumeProjection, YamlStreamLoader
+        implements VolumeProjection, YamlStreamLoader,
+        MovieSource<HortaViewerState>,
+        MovieRenderer<HortaViewerState>
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -766,7 +769,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 vantage, 
                 brightnessModel, 
                 metaWorkspace, 
-                frameTracker));
+                frameTracker,
+                (MovieRenderer)this,
+                (MovieSource)this));
         
         // reduce near clipping of volume block surfaces
         Viewport vp = sceneWindow.getCamera().getViewport();
@@ -1158,7 +1163,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     @Override
                     public void actionPerformed(ActionEvent e) 
                     {
-                        BufferedImage image = getScreenshot();
+                        BufferedImage image = getScreenShot();
                         if (image == null) {
                             return;
                         }
@@ -1530,24 +1535,28 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // Nascent API for movie maker viewers
-    
+
+    @Override
     public HortaViewerState getViewerState() {
         return new HortaViewerState(this);
     }
-    
-    public void setViewerStateCasual(HortaViewerState state) {
+
+    @Override
+    public void setViewerState(HortaViewerState state) {
         float [] focus = state.getCameraFocus();
         sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
     }
     
-    public void setViewerStatePerfect(HortaViewerState state) {
-        setViewerStateCasual(state);
+    @Override
+    public BufferedImage getRenderedFrame(HortaViewerState state) {
+        setViewerState(state);
         sceneWindow.getVantage().notifyObservers();
-        // TODO - load volume
         redrawNow();
+        // TODO: wait for tile load
+        return getScreenShot();
     }
     
-    public BufferedImage getScreenshot() 
+    public BufferedImage getScreenShot() 
     {
         GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
         glad.getContext().makeCurrent();
@@ -1559,6 +1568,16 @@ public final class NeuronTracerTopComponent extends TopComponent
         glad.getContext().release();
         return image;
     }
+
+    @Override
+    public BufferedImage getRenderedFrame(HortaViewerState state, int imageWidth, int imageHeight) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean supportsCustomSize() {
+        return false;
+    }
     
     /**
      *
@@ -1566,6 +1585,7 @@ public final class NeuronTracerTopComponent extends TopComponent
      */
     public static class HortaViewerState implements ViewerState 
     {
+        // TODO: Expand the set of tracked parameters
         private final float cameraFocusX;
         private final float cameraFocusY;
         private final float cameraFocusZ;

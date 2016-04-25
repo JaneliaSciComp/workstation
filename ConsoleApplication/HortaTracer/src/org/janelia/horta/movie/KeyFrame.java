@@ -34,6 +34,9 @@ package org.janelia.horta.movie;
  *
  * @author brunsc
  */
-public interface KeyFrame<T extends ViewerState> {
+public interface KeyFrame<T extends ViewerState>
+{
     T getViewerState();
+    float getFollowingIntervalDuration(); // time in seconds between this frame and the next
+    void setFollowingIntervalDuration(float seconds); //  time in seconds between this frame and the next
 }

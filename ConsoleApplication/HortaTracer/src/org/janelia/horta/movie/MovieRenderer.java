@@ -30,12 +30,15 @@
 
 package org.janelia.horta.movie;
 
-import java.util.Deque;
+import java.awt.image.BufferedImage;
 
 /**
  *
  * @author brunsc
  */
-public interface Timeline extends Deque<KeyFrame>
-{ 
+public interface MovieRenderer<T extends ViewerState> 
+{
+    BufferedImage getRenderedFrame(T state);
+    BufferedImage getRenderedFrame(T state, int imageWidth, int imageHeight);
+    boolean supportsCustomSize();
 }
