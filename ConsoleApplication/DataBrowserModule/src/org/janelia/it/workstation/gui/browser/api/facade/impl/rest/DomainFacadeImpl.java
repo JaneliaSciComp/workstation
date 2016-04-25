@@ -120,6 +120,21 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         return domainObjs;
     }
 
+    @Override
+    public DomainObject update(DomainObject domainObject) {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(domainObject);
+
+        Response response = manager.getDomainObjectEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request to update domainObject from server: " + domainObject.getId())) {
+            return null;
+        }
+        DomainObject domainObj = response.readEntity(DomainObject.class);
+        return domainObj;
+    }
 
 
     @Override
