@@ -70,11 +70,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Properties;
 import java.util.prefs.Preferences;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.GroupLayout;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JCheckBoxMenuItem;
@@ -129,6 +131,7 @@ import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
+import org.janelia.horta.movie.ViewerState;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
@@ -1153,17 +1156,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 menu.add(new AbstractAction("Save Screen Shot...") {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
-                        glad.getContext().makeCurrent();
-
-                        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
-                        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
-                        // In Jogl 2.2.4, this newer screenshot method seems to work OK
-                        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
-                        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
-
-                        glad.getContext().release();
+                    public void actionPerformed(ActionEvent e) 
+                    {
+                        BufferedImage image = getScreenshot();
                         if (image == null) {
                             return;
                         }
@@ -1534,5 +1529,58 @@ public final class NeuronTracerTopComponent extends TopComponent
         volumeCache.registerLoneDisplayedTile(boxMesh);
     }
 
+    // Nascent API for movie maker viewers
     
+    public HortaViewerState getViewerState() {
+        return new HortaViewerState(this);
+    }
+    
+    public void setViewerStateCasual(HortaViewerState state) {
+        float [] focus = state.getCameraFocus();
+        sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
+    }
+    
+    public void setViewerStatePerfect(HortaViewerState state) {
+        setViewerStateCasual(state);
+        sceneWindow.getVantage().notifyObservers();
+        // TODO - load volume
+        redrawNow();
+    }
+    
+    public BufferedImage getScreenshot() 
+    {
+        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+        glad.getContext().makeCurrent();
+        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
+        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
+        // In Jogl 2.2.4, this newer screenshot method seems to work OK
+        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
+        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
+        glad.getContext().release();
+        return image;
+    }
+    
+    /**
+     *
+     * @author brunsc
+     */
+    public static class HortaViewerState implements ViewerState 
+    {
+        private final float cameraFocusX;
+        private final float cameraFocusY;
+        private final float cameraFocusZ;
+        
+        public HortaViewerState(NeuronTracerTopComponent horta) {
+            Vantage vantage = horta.sceneWindow.getVantage();
+            float [] focus = vantage.getFocus();
+            cameraFocusX = focus[0];
+            cameraFocusY = focus[1];
+            cameraFocusZ = focus[2];
+        }
+        
+        public float[] getCameraFocus() {
+            return new float[] {cameraFocusX, cameraFocusY, cameraFocusZ};
+        }
+    }
+
 }

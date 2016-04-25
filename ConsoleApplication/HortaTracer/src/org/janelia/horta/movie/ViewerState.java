@@ -34,6 +34,6 @@ package org.janelia.horta.movie;
  *
  * @author brunsc
  */
-public interface FrameState {
+public interface ViewerState {
     
 }

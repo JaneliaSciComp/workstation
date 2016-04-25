@@ -34,6 +34,6 @@ package org.janelia.horta.movie;
  *
  * @author brunsc
  */
-public interface KeyFrame {
-    FrameState getFrameState();
+public interface KeyFrame<T extends ViewerState> {
+    T getViewerState();
 }
