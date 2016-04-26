@@ -70,6 +70,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
     private static final Logger log = LoggerFactory.getLogger(Texture3d.class);
 
+    private static ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
+
     protected int height = 0;
     protected int depth = 0;
     protected int pixelBufferObject = 0;
@@ -248,7 +250,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 LoadStackZSlice8bit loadStackZSlice8bit=new LoadStackZSlice8bit(0,depth,pixels,raster,depth,height,width,numberOfComponents);
                 loadStackZSlice8bit.run();
             } else {
-                ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
                 List<Future> threadList=new ArrayList<>();
                 for (int z=0;z<depth;) {
                     int remainingZ=depth-z;
@@ -287,7 +288,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 LoadStackZSlice16bit loadStackZSlice16bit=new LoadStackZSlice16bit(0,depth,shortPixels,raster,depth,height,width,numberOfComponents);
                 loadStackZSlice16bit.run();
             } else {
-                ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
                 List<Future> threadList=new ArrayList<>();
                 for (int z=0;z<depth;) {
                     int remainingZ=depth-z;
@@ -574,7 +574,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
             zRunnable.run();
             return result;
         } else {
-            ScheduledThreadPoolExecutor threadPoolExecutor = new ScheduledThreadPoolExecutor(4);
             List<Future> threadList = new ArrayList<>();
             for (int z = 0; z < result.depth; ) {
                 int zCount = 4;
@@ -584,7 +583,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 }
                 MipMapMaxFilterZSlice zRunnable = new MipMapMaxFilterZSlice(z, zCount, zh1, yh1, xh1, HWN, WN, result, depth,
                         width, height, numberOfComponents, shortArr, byteArr, bytesPerIntensity, shortsOut, bytesOut);
-                threadList.add(threadPoolExecutor.submit(zRunnable));
+                threadList.add(scheduledThreadPoolExecutor.submit(zRunnable));
                 z += zCount;
             }
             int doneCount = 0;
