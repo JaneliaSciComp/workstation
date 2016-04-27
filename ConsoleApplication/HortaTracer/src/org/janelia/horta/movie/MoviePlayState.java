@@ -36,7 +36,7 @@ import org.janelia.console.viewerapi.GenericObservable;
  *
  * @author brunsc
  */
-public interface MoviePlayState extends GenericObservable<ViewerState>
+public interface MoviePlayState<T extends ViewerState> extends GenericObservable<T>
 {
     float getFramesPerSecond();
     void setFramesPerSecond(float fps);
@@ -48,4 +48,5 @@ public interface MoviePlayState extends GenericObservable<ViewerState>
     void playEveryFrame(float framesPerSecond);
     void playRealTime(float maxFramesPerSecond);
     void pause();
+    void reset();
 }

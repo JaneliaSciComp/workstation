@@ -34,19 +34,19 @@ package org.janelia.horta.movie;
  *
  * @author brunsc
  */
-class BasicKeyFrame implements KeyFrame 
+class BasicKeyFrame<T extends ViewerState> implements KeyFrame<T>
 {
-    private ViewerState viewerState;
+    private T viewerState;
     private float followingIntervalDuration;
 
-    public BasicKeyFrame(ViewerState viewerState, float followingIntervalDuration) 
+    public BasicKeyFrame(T viewerState, float followingIntervalDuration) 
     {
         this.viewerState = viewerState;
         this.followingIntervalDuration = followingIntervalDuration;
     }
 
     @Override
-    public ViewerState getViewerState() {
+    public T getViewerState() {
         return viewerState;
     }
 

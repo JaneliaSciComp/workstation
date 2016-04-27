@@ -30,6 +30,7 @@
 package org.janelia.horta.movie;
 
 import java.util.Collection;
+import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -68,14 +69,16 @@ public final class MovieMakerTopComponent
 extends TopComponent 
 implements LookupListener
 {
-    private Timeline movieTimeline = new BasicMovieTimeline();
-    private MoviePlayState playState = new BasicMoviePlayState(movieTimeline);
+    private Timeline<HortaViewerState> movieTimeline;
+    private MoviePlayState<HortaViewerState> playState;
     private float nextFrameDuration = 2.0f; // seconds
+    private final Interpolator<HortaViewerState> defaultInterpolator;
 
     public MovieMakerTopComponent() {
         initComponents();
         setName(Bundle.CTL_MovieMakerTopComponent());
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
+        defaultInterpolator = new HortaViewerStateInterpolator();
     }
 
     /**
@@ -96,6 +99,7 @@ implements LookupListener
         jLabel2 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         fpsTextField = new javax.swing.JFormattedTextField();
+        deleteFramesButton = new javax.swing.JButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(addFrameButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.addFrameButton.text")); // NOI18N
         addFrameButton.addActionListener(new java.awt.event.ActionListener() {
@@ -128,7 +132,14 @@ implements LookupListener
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel1.text")); // NOI18N
 
         fpsTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
-        fpsTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.fpsTextField.text_1")); // NOI18N
+        fpsTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.fpsTextField.text_2")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(deleteFramesButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.deleteFramesButton.text")); // NOI18N
+        deleteFramesButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteFramesButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -155,7 +166,8 @@ implements LookupListener
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(realTimeCheckBox)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING))))
+                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)))
+                    .addComponent(deleteFramesButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -181,33 +193,54 @@ implements LookupListener
                 .addComponent(saveFramesButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(saveScriptButton)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(deleteFramesButton)
+                .addContainerGap(83, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void addFrameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFrameButtonActionPerformed
         if (movieSource == null)
             return;
-        ViewerState viewerState = movieSource.getViewerState();
+        HortaViewerState viewerState = movieSource.getViewerState();
         if (viewerState == null)
             return;
-        KeyFrame keyFrame = new BasicKeyFrame(viewerState, nextFrameDuration);
+        KeyFrame<HortaViewerState> keyFrame = new BasicKeyFrame<HortaViewerState>(viewerState, nextFrameDuration);
         if (! movieTimeline.add(keyFrame))
             return;
-        frameCountLabel.setText(movieTimeline.size() + " frames in movie");
+        updateGui();
     }//GEN-LAST:event_addFrameButtonActionPerformed
 
     private void playButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_playButtonActionPerformed
+        if (playState == null) {
+            playButton.setEnabled(false);
+            return;
+        }            
         boolean realTime = realTimeCheckBox.isSelected();
-        Float framesPerSecond = Float.parseFloat(fpsTextField.getText());
+        float fps = 5.0f;
+        String fpsText = fpsTextField.getText();
+        if (!fpsText.isEmpty()) {
+            Float framesPerSecond = Float.parseFloat(fpsTextField.getText());
+            fps = framesPerSecond.floatValue();
+        }
         if (realTime)
-            playState.playRealTime(framesPerSecond);
+            playState.playRealTime(fps);
         else
-            playState.playEveryFrame(framesPerSecond);
+            playState.playEveryFrame(fps);
     }//GEN-LAST:event_playButtonActionPerformed
+
+    private void deleteFramesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteFramesButtonActionPerformed
+        if (movieTimeline != null)
+            movieTimeline.clear();
+        if (playState != null) {
+            playState.reset();
+        }
+        updateGui();
+    }//GEN-LAST:event_deleteFramesButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addFrameButton;
+    private javax.swing.JButton deleteFramesButton;
     private javax.swing.JFormattedTextField durationTextField;
     private javax.swing.JFormattedTextField fpsTextField;
     private javax.swing.JLabel frameCountLabel;
@@ -248,25 +281,45 @@ implements LookupListener
         // TODO read your settings according to their version
     }
 
+    private void updateGui() {
+        if (movieTimeline == null) {
+            playButton.setEnabled(false);
+            frameCountLabel.setText("No frames in movie");
+            addFrameButton.setEnabled(false);
+        }
+        else {
+            playButton.setEnabled(movieTimeline.size() > 0);
+            frameCountLabel.setText(movieTimeline.size() + " frames in movie");
+            addFrameButton.setEnabled(true);
+        }
+    }
     
     private Lookup.Result<MovieSource> movieSourcesResult = null;
-    private MovieSource movieSource = null;
+    private MovieSource<HortaViewerState> movieSource = null;
 
     public MovieSource getMovieSource() {
         return movieSource;
     }
 
-    public void setMovieSource(MovieSource movieSource) {
+    public void setMovieSource(MovieSource movieSource) 
+    {
+        if ((movieSource == null) && (this.movieSource == null)) 
+        {
+            addFrameButton.setEnabled(false); // disable controls
+            return;
+        }
         if (this.movieSource == movieSource)
             return; // no change
         if (movieSource == null)
             return; // remember the old source, when the new one seems to be null
         this.movieSource = movieSource;
-        if (movieSource == null) {
-            addFrameButton.setEnabled(false); // disable controls
-            return;
-        }
-        addFrameButton.setEnabled(true); // enable controls
+        
+        if (movieTimeline == null)
+            movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
+        movieTimeline.clear();
+        playState = new BasicMoviePlayState(movieTimeline, movieSource);
+        
+        updateGui();
     }
 
     public float getPlaybackFramesPerSecond() {

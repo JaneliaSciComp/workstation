@@ -30,6 +30,8 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.console.viewerapi.ObservableInterface;
+
 /**
  *
  * @author brunsc
@@ -38,4 +40,5 @@ public interface MovieSource<T extends ViewerState>
 {
     T getViewerState();
     void setViewerState(T state); // For interactive display playback
+    ObservableInterface getViewerStateUpdatedObservable();
 }

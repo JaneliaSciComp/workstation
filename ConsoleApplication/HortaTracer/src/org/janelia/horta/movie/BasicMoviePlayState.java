@@ -31,32 +31,67 @@
 package org.janelia.horta.movie;
 
 import java.util.Deque;
+import java.util.Observable;
+import java.util.Observer;
+import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.GenericObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author brunsc
  */
-public class BasicMoviePlayState implements MoviePlayState 
+public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayState<T>
 {
-    private final Timeline timeline;
+    private final Timeline<T> timeline;
     private boolean doLoop = false;
     private float framesPerSecond;
+    private final MovieSource<T> movieSource;
+    
+    private double previousFrameStartTimeInLab = System.nanoTime() / 1.0e9;
+    private double currentFrameTimeInVideo = 0;
+    private boolean bIsRunning = false;
+    
+    private double minFrameDuration = 1.0 / 5.0;
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public BasicMoviePlayState(Timeline timeline) {
+    public BasicMoviePlayState(Timeline<T> timeline, MovieSource<T> movieSource) {
         this.timeline = timeline;
+        this.movieSource = movieSource;
+        
+        // Here what we do when the viewer signals it has updated the previous frame:
+        movieSource.getViewerStateUpdatedObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (bIsRunning)
+                    advanceToNextFrame();
+            }
+        });
+    }
+    
+    private synchronized void start() {
+        if (bIsRunning)
+            return; // already playing
+        bIsRunning = true;
+        previousFrameStartTimeInLab = System.nanoTime() / 1.0e9; // note start time
+        (new NextFrameThread()).start();
+    }
+    
+    private synchronized void advanceToNextFrame() {
+        (new NextFrameThread()).start();
     }
     
     @Override
     public float getTotalDuration() {
-        Deque<KeyFrame> f = timeline;
+        Deque<KeyFrame<T>> f = timeline;
         float totalDuration = 0;
-        for (KeyFrame keyFrame : f) {
+        for (KeyFrame<T> keyFrame : f) {
             totalDuration += keyFrame.getFollowingIntervalDuration();
         }
         // Don't include final frame duration, unless movie is a loop
         if ( (! isLoop()) && (f.size() > 0) ) {
-            KeyFrame finalFrame = f.getLast();
+            KeyFrame<T> finalFrame = f.getLast();
             totalDuration -= finalFrame.getFollowingIntervalDuration();
         }
         return totalDuration;
@@ -74,7 +109,7 @@ public class BasicMoviePlayState implements MoviePlayState
 
     @Override
     public boolean isRunning() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return bIsRunning;
     }
 
     @Override
@@ -89,7 +124,8 @@ public class BasicMoviePlayState implements MoviePlayState
 
     @Override
     public void playRealTime(float maxFramesPerSecond) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        minFrameDuration = 1.0/maxFramesPerSecond;
+        start();
     }
 
     @Override
@@ -108,7 +144,7 @@ public class BasicMoviePlayState implements MoviePlayState
     }
 
     @Override
-    public void addObserver(GenericObserver<ViewerState> observer) {
+    public void addObserver(GenericObserver<T> observer) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -118,7 +154,7 @@ public class BasicMoviePlayState implements MoviePlayState
     }
 
     @Override
-    public void deleteObserver(GenericObserver<ViewerState> observer) {
+    public void deleteObserver(GenericObserver<T> observer) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -147,5 +183,85 @@ public class BasicMoviePlayState implements MoviePlayState
         this.framesPerSecond = framesPerSecond;
     }
     
+    public void reset() {
+        bIsRunning = false;
+        currentFrameTimeInVideo = 0;
+        previousFrameStartTimeInLab = System.nanoTime() / 1.0e9;
+    }
+    
+    class NextFrameThread extends Thread implements Runnable
+    {
+        @Override
+        public void run() 
+        {
+            if (! bIsRunning)
+                return; // paused or something
+
+            // logger.info("previous movie frame play time was " + currentFrameTimeInVideo + " seconds");
+
+            // Are we done playing?
+            double totalDuration = getTotalDuration();
+            
+            if (totalDuration == 0) {
+                // This is a one frame non-looping movie, so just go to that one frame
+                bIsRunning = false;
+                currentFrameTimeInVideo = 0; // where to set this, if not here?
+                // don't return in this case, we want to show the one frame
+            }
+            else if ( (!doLoop) && (currentFrameTimeInVideo >= totalDuration) ) {
+                bIsRunning = false;
+                currentFrameTimeInVideo = 0; // where to set this, if not here?
+                return; // movie ended
+            }
+            
+            // How long since the previous frame, or start if this is the first?
+            double now = System.nanoTime() / 1.0e9; // seconds
+            double elapsed = now - previousFrameStartTimeInLab;
+            
+            logger.info("initial elapsed time since last frame = " + elapsed + " seconds");
+
+            if (elapsed < minFrameDuration) {
+                long sleepTimeMs = (long)((minFrameDuration - elapsed) * 1000);
+                logger.info("sleeping for = " + sleepTimeMs + " milliseconds");            
+                try {
+                    Thread.sleep( (long)((minFrameDuration - elapsed) * 1000) );
+                } catch (InterruptedException ex) {
+                    // Exceptions.printStackTrace(ex);
+                }
+            }
+            
+
+            // Update after sleep
+            now = System.nanoTime() / 1.0e9; // seconds
+            elapsed = now - previousFrameStartTimeInLab;
+            
+            // logger.info("elapsed time since last frame = " + elapsed + " seconds");
+
+            double nextFrameTime = currentFrameTimeInVideo + elapsed;
+            if (doLoop) {
+                if (nextFrameTime > totalDuration) {
+                    nextFrameTime -= totalDuration;
+                }
+            }
+            else {
+                if (nextFrameTime > totalDuration) {
+                    nextFrameTime = totalDuration;
+                }
+            }
+            final T state = timeline.viewerStateForTime((float)nextFrameTime, doLoop);
+
+            // Update internal state
+            previousFrameStartTimeInLab = now;
+            currentFrameTimeInVideo = nextFrameTime;
+            // logger.info("playing movie frame at time " + nextFrameTime + " seconds");
+            
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    movieSource.setViewerState(state);
+                }
+            });
+        }
+    };
     
 }

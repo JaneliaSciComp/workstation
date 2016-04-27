@@ -36,6 +36,7 @@ import java.util.Deque;
  *
  * @author brunsc
  */
-public interface Timeline extends Deque<KeyFrame>
-{ 
+public interface Timeline<T extends ViewerState> extends Deque<KeyFrame<T>>
+{
+    T viewerStateForTime(float timeInSeconds, boolean doLoop);
 }

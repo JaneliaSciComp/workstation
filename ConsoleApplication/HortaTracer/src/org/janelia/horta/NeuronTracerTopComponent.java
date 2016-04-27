@@ -87,7 +87,9 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
 import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.BasicSampleLocation;
+import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -1545,6 +1547,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setViewerState(HortaViewerState state) {
         float [] focus = state.getCameraFocus();
         sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
+        sceneWindow.getVantage().notifyObservers();
+        redrawNow();
+        viewerStateUpdatedObservable.setChanged();
+        viewerStateUpdatedObservable.notifyObservers();
     }
     
     @Override
@@ -1578,6 +1584,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     public boolean supportsCustomSize() {
         return false;
     }
+
+    // Used to signal movie maker that viewer has updated, in response to setViewerState()
+    private ObservableInterface viewerStateUpdatedObservable = new ComposableObservable();
+    @Override
+    public ObservableInterface getViewerStateUpdatedObservable() {
+        return viewerStateUpdatedObservable;
+    }
     
     /**
      *
@@ -1586,9 +1599,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static class HortaViewerState implements ViewerState 
     {
         // TODO: Expand the set of tracked parameters
-        private final float cameraFocusX;
-        private final float cameraFocusY;
-        private final float cameraFocusZ;
+        private float cameraFocusX = 0;
+        private float cameraFocusY = 0;
+        private float cameraFocusZ = 0;
+        
+        public HortaViewerState() {}
         
         public HortaViewerState(NeuronTracerTopComponent horta) {
             Vantage vantage = horta.sceneWindow.getVantage();
@@ -1600,6 +1615,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         public float[] getCameraFocus() {
             return new float[] {cameraFocusX, cameraFocusY, cameraFocusZ};
+        }
+        public void setCameraFocus(float x, float y, float z) {
+            cameraFocusX = x;
+            cameraFocusY = y;
+            cameraFocusZ = z;
         }
     }
 

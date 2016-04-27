@@ -30,44 +30,53 @@
 
 package org.janelia.horta.movie;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 
 /**
  *
  * @author brunsc
  */
-public class LinearPoint3DInterpolator 
-implements Point3DInterpolator
+class HortaViewerStateInterpolator implements Interpolator<HortaViewerState> 
 {
-    private final Interpolator<Number> lfi = new LinearNumberInterpolator();
+    Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator();
+
+    public HortaViewerStateInterpolator() {
+    }
 
     @Override
-    public List<Number> interpolate(List<List<Number>> values, float ofTheWay, boolean isCircular) 
+    public HortaViewerState interpolate_equidistant(
+            double ofTheWay, 
+            HortaViewerState p0, HortaViewerState p1, HortaViewerState p2, HortaViewerState p3) 
     {
-        // Figure out bounds of where to look in the list of values
-        int listIndex = (int) Math.floor(ofTheWay);
-        float fraction = ofTheWay - listIndex;
-        assert(fraction >= 0);
-        assert(fraction <= 1);
-        // Left edge value
-        List<Number> v1 = values.get(listIndex);
-        if (fraction <= 0) 
-            return v1; // early termination at left edge
-        // Right edge value
-        List<Number> v2 = values.get(listIndex);
-        assert(v1.size() == v2.size());
-        // Interpolated value
-        List<Number> result = new ArrayList<>();
-        // Interpolate each element of the vector, one at a time
-        for (int i = 0; i < v1.size(); ++i) {
-            // We only need two items for linear interpolation, so delegate a sub-list to the Number interpolator
-            List<Number> toInterpolate = new ArrayList<>();
-            toInterpolate.add(v1.get(i));
-            toInterpolate.add(v2.get(i));
-            result.add(lfi.interpolate(toInterpolate, fraction, isCircular));
-        }
-        assert(result.size() == v1.size());
+        HortaViewerState result = new HortaViewerState();
+
+        Vector3 focus = vec3Interpolator.interpolate_equidistant(ofTheWay, 
+                new Vector3(p0.getCameraFocus()), 
+                new Vector3(p1.getCameraFocus()), 
+                new Vector3(p2.getCameraFocus()), 
+                new Vector3(p3.getCameraFocus()));
+        result.setCameraFocus(focus.getX(), focus.getY(), focus.getZ());
+        
+        return result;
+    }
+
+    @Override
+    public HortaViewerState interpolate(
+            double ofTheWay, 
+            HortaViewerState p0, HortaViewerState p1, HortaViewerState p2, HortaViewerState p3, 
+            double t0, double t1, double t2, double t3) 
+    {
+        HortaViewerState result = new HortaViewerState();
+
+        Vector3 focus = vec3Interpolator.interpolate(ofTheWay, 
+                new Vector3(p0.getCameraFocus()), 
+                new Vector3(p1.getCameraFocus()), 
+                new Vector3(p2.getCameraFocus()), 
+                new Vector3(p3.getCameraFocus()), 
+                t0, t1, t2, t3);
+        result.setCameraFocus(focus.getX(), focus.getY(), focus.getZ());
+        
         return result;
     }
     

@@ -39,131 +39,134 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  *
  * @author brunsc
  */
-class BasicMovieTimeline implements Timeline 
+class BasicMovieTimeline<T extends ViewerState> 
+implements Timeline<T>
 {
-    private final Deque<KeyFrame> keyFrames = new ConcurrentLinkedDeque<>();
+    private final Deque<KeyFrame<T>> keyFrames = new ConcurrentLinkedDeque<>();
+    private Interpolator<T> interpolator;
 
-    public BasicMovieTimeline() {
+    public BasicMovieTimeline(Interpolator<T> interpolator) {
+        this.interpolator = interpolator;
     }
 
     @Override
-    public void addFirst(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void addFirst(KeyFrame<T> e) {
+        keyFrames.addFirst(e);
     }
 
     @Override
-    public void addLast(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void addLast(KeyFrame<T> e) {
+        keyFrames.addLast(e);
     }
 
     @Override
-    public boolean offerFirst(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public boolean offerFirst(KeyFrame<T> e) {
+        return keyFrames.offerFirst(e);
     }
 
     @Override
-    public boolean offerLast(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public boolean offerLast(KeyFrame<T> e) {
+        return keyFrames.offerLast(e);
     }
 
     @Override
-    public KeyFrame removeFirst() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> removeFirst() {
+        return keyFrames.removeFirst();
     }
 
     @Override
-    public KeyFrame removeLast() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> removeLast() {
+        return keyFrames.removeLast();
     }
 
     @Override
-    public KeyFrame pollFirst() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> pollFirst() {
+        return keyFrames.pollFirst();
     }
 
     @Override
-    public KeyFrame pollLast() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> pollLast() {
+        return keyFrames.pollLast();
     }
 
     @Override
-    public KeyFrame getFirst() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> getFirst() {
+        return keyFrames.getFirst();
     }
 
     @Override
-    public KeyFrame getLast() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> getLast() {
+        return keyFrames.getLast();
     }
 
     @Override
-    public KeyFrame peekFirst() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> peekFirst() {
+        return keyFrames.peekFirst();
     }
 
     @Override
-    public KeyFrame peekLast() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> peekLast() {
+        return keyFrames.peekLast();
     }
 
     @Override
     public boolean removeFirstOccurrence(Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.removeFirstOccurrence(o);
     }
 
     @Override
     public boolean removeLastOccurrence(Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.removeLastOccurrence(o);
     }
 
     @Override
-    public boolean add(KeyFrame e) {
+    public boolean add(KeyFrame<T> e) {
         return keyFrames.add(e);
     }
 
     @Override
-    public boolean offer(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public boolean offer(KeyFrame<T> e) {
+        return keyFrames.offer(e);
     }
 
     @Override
-    public KeyFrame remove() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> remove() {
+        return keyFrames.remove();
     }
 
     @Override
-    public KeyFrame poll() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> poll() {
+        return keyFrames.poll();
     }
 
     @Override
-    public KeyFrame element() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> element() {
+        return keyFrames.element();
     }
 
     @Override
-    public KeyFrame peek() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> peek() {
+        return keyFrames.peek();
     }
 
     @Override
-    public void push(KeyFrame e) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void push(KeyFrame<T> e) {
+        keyFrames.push(e);
     }
 
     @Override
-    public KeyFrame pop() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public KeyFrame<T> pop() {
+        return keyFrames.pop();
     }
 
     @Override
     public boolean remove(Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.remove(o);
     }
 
     @Override
     public boolean contains(Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.contains(o);
     }
 
     @Override
@@ -172,53 +175,167 @@ class BasicMovieTimeline implements Timeline
     }
 
     @Override
-    public Iterator<KeyFrame> iterator() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Iterator<KeyFrame<T>> iterator() {
+        return keyFrames.iterator();
     }
 
     @Override
-    public Iterator<KeyFrame> descendingIterator() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public Iterator<KeyFrame<T>> descendingIterator() {
+        return keyFrames.descendingIterator();
     }
 
     @Override
     public boolean isEmpty() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.isEmpty();
     }
 
     @Override
     public Object[] toArray() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.toArray();
     }
 
     @Override
     public <T> T[] toArray(T[] a) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.toArray(a);
     }
 
     @Override
     public boolean containsAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends KeyFrame> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public boolean addAll(Collection<? extends KeyFrame<T>> c) {
+        return keyFrames.addAll(c);
     }
 
     @Override
     public boolean removeAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.removeAll(c);
     }
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return keyFrames.retainAll(c);
     }
 
     @Override
     public void clear() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        keyFrames.clear();
+    }
+
+    @Override
+    public int hashCode() {
+        return keyFrames.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return keyFrames.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+        return keyFrames.toString();
+    }
+    
+    @Override
+    public T viewerStateForTime(float timeInSeconds, boolean doLoop) 
+    {
+        if (isEmpty())
+            return null; // There are no keyframes to interpolate
+        
+        // Find four frame neighborhood for interpolation
+        KeyFrame<T> k0, k1, k2, k3;
+        k0 = k1 = k2 = k3 = null;
+        
+        float movieTimeHeadPosition = 0;
+        float partialFrameInterval = 0; // seconds into inter-frame interval
+        Iterator<KeyFrame<T>> it = this.iterator();
+        KeyFrame<T> previousKeyFrame = null;
+        KeyFrame<T> previousKeyFrame2 = null;
+        
+        // This loop finds first three key frames
+        boolean doBreak = false;
+        while (it.hasNext()) {
+            KeyFrame<T> keyFrame = it.next();
+            if (movieTimeHeadPosition > timeInSeconds) {
+                k2 = keyFrame;
+                k1 = previousKeyFrame;
+                k0 = previousKeyFrame2;
+                partialFrameInterval = movieTimeHeadPosition - timeInSeconds;
+                doBreak = true;
+            }
+            else if (movieTimeHeadPosition == timeInSeconds) {
+                k1 = keyFrame;
+                k0 = previousKeyFrame;
+                if (it.hasNext())
+                    k2 = it.next();
+                partialFrameInterval = 0;
+                doBreak = true;
+            }
+            movieTimeHeadPosition += keyFrame.getFollowingIntervalDuration();
+            previousKeyFrame2 = previousKeyFrame;
+            previousKeyFrame = keyFrame;
+            if (doBreak)
+                break;
+        }
+        // get fourth key frame
+        if (it.hasNext())
+            k3 = it.next();
+        
+        // maybe requested time is in duration of final frame
+        if (k2 == null) {
+            k1 = previousKeyFrame; // final frame
+            k0 = previousKeyFrame2;
+            partialFrameInterval = movieTimeHeadPosition - timeInSeconds;
+        }
+        
+        assert(k1 != null);
+        
+        // Looping requires interpolation between final and initial key frames
+        if ((k1 == getFirst()) && (doLoop)) {
+            k0 = getLast();
+        }        
+        if ((k1 == getLast()) && (doLoop)) {
+            k2 = getFirst();
+        }
+        
+        // Pad empty ends with duplicates
+        if (k0 == null)
+            k0 = k1;        
+        if (k2 == null)
+            k2 = k1;
+        if (k3 == null)
+            k3 = k2;
+        
+        // Compute the offset parameter between frames k1 and k2
+        float t = 1.0f - (partialFrameInterval / k1.getFollowingIntervalDuration());
+        // sanity checks
+        if (t < 0) {
+            t = 0;
+        }
+        if (t > 1) {
+            t = 1;
+        }
+
+        // Compute local time stamps for each key frame
+        double t0 = 0;
+        double t1 = t0 + k0.getFollowingIntervalDuration();
+        if (k0 == k1)
+            t1 = t0;
+        double t2 = t1 + k1.getFollowingIntervalDuration();
+        if (k1 == k2)
+            t2 = t1;
+        double t3 = t2 + k2.getFollowingIntervalDuration();
+        if (k2 == k3)
+            t3 = t2;
+        
+        T result = interpolator.interpolate(t, 
+                k0.getViewerState(), k1.getViewerState(), k2.getViewerState(), k3.getViewerState(),
+                t0, t1, t2, t3);
+        
+        return result;
     }
 
 }

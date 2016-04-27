@@ -30,16 +30,23 @@
 
 package org.janelia.horta.movie;
 
-import java.util.List;
-
 /**
  *
  * @author brunsc
  */
-public interface Interpolator<T> {
+public interface Interpolator<T> 
+{
+    // Interpolates value at a particular proportion of the distance between p1 and p2.
+    // Assumes points are spaced equally
+    T interpolate_equidistant(
+            double ofTheWay, // varies between zero and one
+            T p0, T p1, T p2, T p3 // neighborhood of 4 points for optional smooth interpolation
+    );
+    
+    // Interpolates value at a particular proportion of the distance between p1 and p2.
     T interpolate(
-            List<T> values, // All items in the sequence, or at least the surrounding 4 items
-            float ofTheWay, // in range [zero, values.size() - 1]
-            boolean isCircular // does final value blend back to initial value?
+            double ofTheWay, // varies between zero and one
+            T p0, T p1, T p2, T p3, // neighborhood of 4 points for optional smooth interpolation
+            double t0, double t1, double t2, double t3 // x-axis positions of the 4 points
     );
 }
