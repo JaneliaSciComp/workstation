@@ -196,8 +196,17 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
                 log.info("Neuron save/update time = " + elapsedTime + " ms");
             } catch (Exception ex) {
-                ex.printStackTrace();
-                log.error(ex.getMessage());
+                if (ex==null) {
+                    log.info("SaveNeuronRunnable - ex is null");
+                } else {
+                    ex.printStackTrace();
+                    log.info("SaveNeuronRunnable error message (info): " + ex.getMessage());
+                    log.error("SaveNeuronRunnable error message (error): " + ex.getMessage());
+                    StackTraceElement[] stackTraceElements=ex.getStackTrace();
+                    for (StackTraceElement stackTraceElement : stackTraceElements) {
+                        log.info("SaveNeuronRunnable STACK TRACE ELEMENT="+stackTraceElement.toString());
+                    }
+                }
                 saveQueueErrorFlag=true;
             }
         }
