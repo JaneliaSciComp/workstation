@@ -5,14 +5,13 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDCompar
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 
 /**
@@ -95,7 +94,7 @@ public class FragmentSizeSetterAndFilter {
                 logger.debug(
                         "Not keeping {}, entity {}, because it has too few voxels.",
                         data.getBean().getLabelFileNum(),
-                        data.getBean().getRenderableEntity()
+                        data.getBean().getId()
                 );
             }
 
@@ -121,15 +120,21 @@ public class FragmentSizeSetterAndFilter {
                 // Filter for first-N neurons cutoff.
                 if ( renDataBeanItemParentIdToChildCount != null ) {
                     rtnVal = false;
-                    if ( bean.getRenderableEntity() != null ) {
-                        AlignedItem alignedItem = AlignmentBoardMgr.getInstance().getLayersPanel()
-                                .getAlignmentBoardContext().getAlignedItemWithEntityId(
+                    if ( bean.getId() != null ) {
+                        AlignmentBoardItem alignmentBoardItem = AlignmentBoardMgr.getInstance().getLayersPanel()
+                                .getAlignmentBoardContext()
+                                .getAlignmentBoardItemWithId(
                                         bean.getAlignedItemId()
                                 );
-                        if ( alignedItem != null ) {
-                            EntityWrapper parent = alignedItem.getParent();
+                        
+                        if ( alignmentBoardItem != null ) {
+                            AlignmentBoardItem parent = AlignmentBoardMgr.getInstance().getLayersPanel()
+                                .getAlignmentBoardContext()
+                                .getAlignmentBoardItemParent(
+                                        bean.getAlignedItemId()
+                                );
                             if ( parent != null ) {
-                                long parentId = parent.getId();
+                                long parentId = parent.getTarget().getTargetId();
 
                                 Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
                                 if ( countForParent == null ) {
@@ -148,7 +153,7 @@ public class FragmentSizeSetterAndFilter {
                 if ( rtnVal ) {
                     logger.debug(
                             "Keeping {}, with {} voxels.",
-                            data.getBean().getRenderableEntity(), voxelCount
+                            data.getBean().getAlignedItemId(), voxelCount
                     );
                 }
             }

@@ -7,7 +7,6 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
@@ -18,14 +17,22 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import static org.janelia.it.workstation.gui.dialogs.search.alignment_board.SearchWorker.SEARCH_HISTORY_MDL_PROP;
+import org.janelia.it.workstation.model.domain.Sample;
 
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
  * Date: 12/13/13
  * Time: 9:53 AM
+ * @todo move fully away from Entities.
  *
  * This specialized search dialog's output will be targeted at the alignment board.
  */
@@ -138,12 +145,23 @@ public class ABTargetedSearchDialog extends ModalDialog {
                         for ( BaseballCard bbc: selected ) {
                             logger.info("Adding entity {}.", bbc.toString());
                             try {
-                                context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
+                                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                final String entityTypeName = bbc.getEntity().getEntityTypeName();
+                                String domainObjectClass = null;
+                                if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+                                    domainObjectClass = NeuronFragment.class.getName();
+                                }
+                                else if (entityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
+                                    domainObjectClass = Sample.class.getName();
+                                }
+                                DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getEntity().getId());
+                                context.addDomainObject(dobj, "63x");
+                                //context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
                             } catch ( Exception ex ) {
                                 logger.error(
                                         "Failed to add entity {} to alignment board context {}.",
                                         bbc.getEntity(),
-                                        context.getName()
+                                        context.getAlignmentBoard().getName()
                                 );
                             }
                         }

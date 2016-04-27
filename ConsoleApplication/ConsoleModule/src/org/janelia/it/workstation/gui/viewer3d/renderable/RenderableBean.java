@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.renderable;
 
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
 
 /**
@@ -16,12 +15,14 @@ public class RenderableBean {
     private int labelFileNum = -1;
     private int translatedNum;
     private byte[] rgb;
-    private Entity renderableEntity;
+    private Long id;
+    private String name;
     private long alignedItemId;
     private AlignedItem alignedItem;
     private boolean invertedY;
     private String type;
     private Long voxelCount = 0L; // Never null.
+    private Reference reference;
 
     public int getLabelFileNum() {
         return labelFileNum;
@@ -47,30 +48,9 @@ public class RenderableBean {
         this.rgb = rgb;
     }
 
-    public Entity getRenderableEntity() {
-        return renderableEntity;
-    }
-
-    public void setRenderableEntity(Entity entity) {
-        this.renderableEntity = entity;
-        String typeName = entity.getEntityTypeName();
-        if ( this.type == null ) {
-            this.type = typeName;
-        }
-        if ( typeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ) {
-            String[] nameParts = entity.getName().trim().split(" ");
-            // In establishing the label file number, must add one to account for 0-based neuron numbering
-            // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
-            // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
-            if ( labelFileNum == -1 ) {
-                labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
-            }
-        }
-    }
-
     @Override
     public String toString() {
-        return renderableEntity.getName() + "::" + renderableEntity.getId();
+        return getName() + "::" + getId();
     }
 
     /** Establish equality based on contained entity. */
@@ -79,7 +59,7 @@ public class RenderableBean {
         boolean rtnVal = false;
         if ( o != null  &&  o instanceof RenderableBean ) {
             RenderableBean other = (RenderableBean)o;
-            if ( other.getRenderableEntity().getId().equals( getRenderableEntity().getId() ) ) {
+            if ( other.getId().equals( getId() ) ) {
                 rtnVal = true;
             }
         }
@@ -90,8 +70,8 @@ public class RenderableBean {
     /** Hash based on contained entity. */
     @Override
     public int hashCode() {
-        if ( getRenderableEntity() != null )
-            return getRenderableEntity().getId().hashCode();
+        if ( getId() != null )
+            return getId().hashCode();
         else
             return translatedNum;
     }
@@ -125,10 +105,6 @@ public class RenderableBean {
         return alignedItemId;
     }
 
-    public void setAlignedItemId(long alignedItemId) {
-        this.alignedItemId = alignedItemId;
-    }
-    
     public AlignedItem getAlignedItem() {
         return this.alignedItem;
     }
@@ -138,4 +114,55 @@ public class RenderableBean {
         if ( item != null )
             this.alignedItemId = item.getId();
     }
+
+    public void setReference( Reference reference ) {
+        String typeName = reference.getTargetClassName();
+        if (this.type == null) {
+            this.type = typeName;
+        }
+        // CAUTION: Dependency on name of class.
+        if (typeName.equals(typeName.contains("NeuronFragment"))) {
+            String[] nameParts = name.trim().split(" ");
+            // In establishing the label file number, must add one to account for 0-based neuron numbering
+            // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
+            // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
+            if (labelFileNum == -1) {
+                labelFileNum = (Integer.parseInt(nameParts[ nameParts.length - 1])) + 1;
+            }
+        }
+        this.reference = reference;
+    }
+    
+    public Reference getReference() {
+        return reference;
+    }
+    
+    /**
+     * @return the id
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     */
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    /**
+     * @return the name
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @param name the name to set
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+    
 }

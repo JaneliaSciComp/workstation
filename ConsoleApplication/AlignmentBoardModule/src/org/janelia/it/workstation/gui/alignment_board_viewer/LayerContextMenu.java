@@ -13,24 +13,24 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemRemoveEvent;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
+import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDetailsDialog;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,15 +44,17 @@ public class LayerContextMenu extends JPopupMenu {
     private static final Logger log = LoggerFactory.getLogger(LayerContextMenu.class);
 
     protected final AlignmentBoardContext alignmentBoardContext;
-    protected final AlignedItem alignedItem;
-    protected final List<AlignedItem> multiSelectionItems;
+    protected final AlignmentBoardItem alignmentBoardItem;
+    protected final DomainObject alignedItemTarget;
+    protected final List<DomainObject> multiSelectionItems;
 
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem, List<AlignedItem> multiSelectionItems) {
+    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem alignmentBoardItem, List<DomainObject> multiSelectionItems) {
         this.alignmentBoardContext = alignmentBoardContext;
-        this.alignedItem = alignedItem;
+        this.alignmentBoardItem = alignmentBoardItem;
+        this.alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
         this.multiSelectionItems = multiSelectionItems;
     }
 
@@ -106,7 +108,7 @@ public class LayerContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getTitleItem() {
-        String name = alignedItem.getItemWrapper().getName();
+        String name = alignedItemTarget.getName();
         JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
@@ -117,7 +119,7 @@ public class LayerContextMenu extends JPopupMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(alignedItem.getItemWrapper().getName());
+                Transferable t = new StringSelection(alignedItemTarget.getName());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
             }
         });
@@ -129,7 +131,7 @@ public class LayerContextMenu extends JPopupMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(alignedItem.getItemWrapper().getId().toString());
+                Transferable t = new StringSelection(alignedItemTarget.getId().toString());
                 Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
             }
         });
@@ -140,8 +142,8 @@ public class LayerContextMenu extends JPopupMenu {
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                new EntityDetailsDialog().showForRootedEntity(alignedItem.getItemWrapper().getInternalRootedEntity());
+            public void actionPerformed(ActionEvent e) {  
+                new AlignmentBoardItemDetailsDialog().show(alignmentBoardItem);
             }
         });
         return detailsMenuItem;
@@ -152,7 +154,7 @@ public class LayerContextMenu extends JPopupMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AlignmentBoardMgr.getInstance().getLayersPanel().chooseColor(alignedItem);
+                AlignmentBoardMgr.getInstance().getLayersPanel().chooseColor(alignmentBoardItem);
             }
         });
         return copyMenuItem;
@@ -160,7 +162,7 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected JMenuItem getRawRenderToggle() {
         JMenuItem menuItem = new JMenuItem(
-                alignedItem.isPassthroughRendering() ? "  Monocolored Rendering" : "  Raw Rendering");
+                RenderUtils.isPassthroughRendering(alignmentBoardItem) ? "  Monocolored Rendering" : "  Raw Rendering");
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -168,13 +170,14 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        alignedItem.setPassthroughRendering(!alignedItem.isPassthroughRendering());
+                        RenderUtils.setPassthroughRendering(
+                                !RenderUtils.isPassthroughRendering(alignmentBoardItem), alignmentBoardItem);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItem, ChangeType.ColorChange);
+                                alignmentBoardContext, RenderUtils.getObjectForItem(alignmentBoardItem), ChangeType.ColorChange);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -198,13 +201,13 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        alignedItem.setColor(null);
+                        alignmentBoardItem.setColor(null);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItem, ChangeType.ColorChange);
+                                alignmentBoardContext, alignedItemTarget, ChangeType.ColorChange);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -229,13 +232,13 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        alignedItem.setColor(null);
+                        alignmentBoardItem.setColor(null);
                     }
 
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItem, ChangeType.OverlapFilter);
+                                alignmentBoardContext, alignedItemTarget, ChangeType.OverlapFilter);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -257,8 +260,8 @@ public class LayerContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
 
                 final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Alias:\n", "Set Alias For "
-                        + alignedItem.getItemWrapper().getName()+" in this Alignment Board", JOptionPane.PLAIN_MESSAGE, 
-                        null, null, alignedItem.getName());
+                        + alignedItemTarget.getName()+" in this Alignment Board", JOptionPane.PLAIN_MESSAGE, 
+                        null, null, alignedItemTarget.getName());
                 if ((newName == null) || (newName.length() <= 0)) {
                     return;
                 }
@@ -266,7 +269,8 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        ModelMgr.getModelMgr().renameEntity(alignedItem.getInternalEntity(), newName);
+//                        DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
+//                        ModelMgr.getModelMgr().renameEntity(alignedItemTarget, newName);
                     }
                     
                     @Override
@@ -283,45 +287,60 @@ public class LayerContextMenu extends JPopupMenu {
             }
         });
 
-        if (!ModelMgrUtils.hasWriteAccess(alignedItem.getInternalEntity())) {
-            renameItem.setEnabled(false);
-        }
+        //TODO: find modern code.
+//        if (!ModelMgrUtils.hasWriteAccess(alignmentBoardItem.getInternalEntity())) {
+//            renameItem.setEnabled(false);
+//        }
         
         return renameItem;
     }
 
     protected JMenuItem getDeleteUnderClickItem() {
 
-        List<RootedEntity> rootedEntityList = new ArrayList<>();
-        rootedEntityList.add(alignedItem.getInternalRootedEntity());
-        String name = alignedItem.getName();
+        List<DomainObject> domainObjectList = new ArrayList<>();
+        DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
+        domainObjectList.add(dObj);
+        String name = dObj.getName();
         if ( name.length() > 15 ) {
             name = name.substring( 0, 6 ) + "..." + name.substring( name.length() - 6 );
         }
         String text = String.format("  Remove the '%s' from Alignment Board", name);
-        return getDeleteListItem(rootedEntityList, text);
+        return getDeleteListItem(domainObjectList, text);
     }
 
     private JMenuItem getDeleteMultiSelectionItem() {
-        List<RootedEntity> rootedEntityList = new ArrayList<>();
-        for ( AlignedItem item: multiSelectionItems ) {
-            rootedEntityList.add(item.getInternalRootedEntity());
+        List<DomainObject> domainObjectList = new ArrayList<>();
+        for ( DomainObject item: multiSelectionItems ) {
+            domainObjectList.add(item);
         }
         String text = String.format("  Remove %d items from Alignment Board", multiSelectionItems.size() );
-        return getDeleteListItem(rootedEntityList, text);
+        return getDeleteListItem(domainObjectList, text);
     }
     
-    private JMenuItem getDeleteListItem(final List<RootedEntity> rootedEntityList, String text) {
-        final Action action = new RemoveEntityAction(rootedEntityList, false, false, new Callable<Void>() {
+    /** TODO: This is no longer using the Entity Delete List action.  But it does nothing. */
+    private JMenuItem getDeleteListItem(final List<DomainObject> domainObjects, String text) {
+        final Action action = new Action() { //new RemoveEntityAction(domainObjects, false, false, new Callable<Void>() {
             @Override
+            public String getName() {
+                return "Dummy Delete List";
+            }
+            @Override
+            public void doAction() {
+                try {
+                    call();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+            
+            //@Override
             public Void call() throws Exception {
                 AlignmentBoardItemRemoveEvent abEvent;
-                if ( rootedEntityList.size() == 1 ) {
-                    RootedEntity nextRootedEntity = rootedEntityList.get( 0 );
-                    EntityData myEd = nextRootedEntity.getEntityData();
+                if ( domainObjects.size() == 1 ) {
+                    DomainObject nextDomainObject = domainObjects.get( 0 );
                     log.debug("The removed entity was an aligned item, firing alignment board event...");
                     abEvent = new AlignmentBoardItemRemoveEvent(
-                            alignmentBoardContext, new AlignedItem(nextRootedEntity), myEd == null ? null : myEd.getOrderIndex());
+                            alignmentBoardContext, nextDomainObject, 0); // Q: order index required?
                 }
                 else {
                     abEvent = new AlignmentBoardItemRemoveEvent(
@@ -331,7 +350,7 @@ public class LayerContextMenu extends JPopupMenu {
                 ModelMgr.getModelMgr().postOnEventBus(abEvent);
                 return null;
             }
-        });
+        };
 
         JMenuItem deleteItem = new JMenuItem(text);
         deleteItem.addActionListener(new ActionListener() {
@@ -341,24 +360,25 @@ public class LayerContextMenu extends JPopupMenu {
             }
         });
         
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            Entity entity = rootedEntity.getEntity();
-            Entity parent = rootedEntity.getEntityData().getParentEntity();
+        for (DomainObject dObj : domainObjects) {
+            DomainObject parent = null; // TODO: get parent. dObj.get; //???
             
             boolean canDelete = true;
             // User can't delete if they don't have write access
-            if (!ModelMgrUtils.hasWriteAccess(entity)) {
+            String subject = SessionMgr.getSubjectKey();
+            if (!dObj.getWriters().contains(subject)) {
                 canDelete = false;
                 // Unless they own the parent
-                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
+                if (parent!=null && parent.getId()!=null && parent.getWriters().contains(subject)) {
                     canDelete = true;
                 }
             }
             
             // Can never delete protected entities
-            if (EntityUtils.isProtected(entity)) {
+            //TODO : figure out how these are protected.
+//            if (DomainMgr.getDomainMgr().getModel().isProtected(dObj)) {
                 canDelete = false;
-            }
+//            }
             
             if (!canDelete) deleteItem.setEnabled(false);
         }

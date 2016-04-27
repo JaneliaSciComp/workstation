@@ -1,7 +1,7 @@
-package org.janelia.it.workstation.gui.viewer3d.events;
+package org.janelia.it.workstation.gui.alignment_board.events;
 
-import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
  * An item on an open alignment board has changed in some way.
@@ -19,17 +19,17 @@ public class AlignmentBoardItemChangeEvent extends AlignmentBoardEvent {
         FilterLevelChange
     }
     
-    private final AlignedItem alignedItem;
+    private final DomainObject domainObject;
     private final ChangeType changeType;
     
-	public AlignmentBoardItemChangeEvent(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem, ChangeType changeType) {
+	public AlignmentBoardItemChangeEvent(AlignmentBoardContext alignmentBoardContext, DomainObject domainObject, ChangeType changeType) {
 		super(alignmentBoardContext);		
-		this.alignedItem = alignedItem;
+		this.domainObject = domainObject;
         this.changeType = changeType;
 	}
-
-    public AlignedItem getAlignedItem() {
-        return alignedItem;
+    
+    public DomainObject getDomainObject() {
+        return domainObject;
     }
 
     public ChangeType getChangeType() {

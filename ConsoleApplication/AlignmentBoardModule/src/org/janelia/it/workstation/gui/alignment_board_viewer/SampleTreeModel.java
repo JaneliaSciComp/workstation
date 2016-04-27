@@ -8,11 +8,11 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class SampleTreeModel implements TreeModel {
     
     public SampleTreeModel(AlignmentBoardContext alignmentBoardContext) {
         this.alignmentBoardContext = alignmentBoardContext;
-        log.debug("Creating SampleTreeModel for alignment board context id={}",alignmentBoardContext.getId());
+        log.debug("Creating SampleTreeModel for alignment board context id={}",alignmentBoardContext.getAlignmentBoard().getId());
     }
 
     @Override

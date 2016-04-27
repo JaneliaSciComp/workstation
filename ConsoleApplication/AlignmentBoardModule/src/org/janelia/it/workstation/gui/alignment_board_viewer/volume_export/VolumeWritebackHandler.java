@@ -13,8 +13,11 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +28,6 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -157,11 +159,13 @@ public class VolumeWritebackHandler {
         PrintWriter pw = new PrintWriter( new FileWriter( metaFile ) );
 
         AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-        List<EntityWrapper> children = abContext.getChildren();
-        for ( EntityWrapper nextChild: children ) {
-            pw.println("Container Item: NAME=" + nextChild.getName() + ", ID=" + nextChild.getUniqueId());
-            for ( EntityWrapper grandChild: nextChild.getChildren() ) {
-                pw.println("Neuron: ID=" + grandChild.getUniqueId() + " NAME=" + grandChild.getName() + " TYPE=" + grandChild.getType() + " OWNER=" + grandChild.getOwnerKey());
+        List<AlignmentBoardItem> children = abContext.getAlignmentBoard().getChildren();
+        for ( AlignmentBoardItem nextChild: children ) {
+            DomainObject dobj = RenderUtils.getObjectForItem(nextChild);
+            pw.println("Container Item: NAME=" + dobj.getName() + ", ID=" + dobj.getId());
+            for ( AlignmentBoardItem grandChild: nextChild.getChildren() ) {
+                DomainObject gcDObj = RenderUtils.getObjectForItem(grandChild);
+                pw.println("Neuron: ID=" + gcDObj.getId() + " NAME=" + gcDObj.getName() + " TYPE=" + gcDObj.getType() + " OWNER=" + gcDObj.getOwnerKey());
             }
         }
 

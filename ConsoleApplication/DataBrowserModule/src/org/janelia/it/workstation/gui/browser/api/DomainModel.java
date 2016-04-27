@@ -455,6 +455,19 @@ public class DomainModel {
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
         return domainObjects;
     }
+    
+    public List<DomainObject> getAllDomainObjectsByClass(String className) {
+        List<DomainObject> domainObjects = new ArrayList<>();
+        if (className==null) return domainObjects;
+        log.debug("getAllDomainObjectsByClass({})",className);
+
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        domainObjects = domainFacade.getAllDomainObjectsByClass(className);                
+        
+        if (TIMER) w.stop("getAllDomainObjectsByClass()");
+        log.debug("getAllDomainObjectsByClass: returning {} objects",domainObjects.size());
+        return domainObjects;
+    }
 
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) {
         // TODO: cache these?

@@ -12,13 +12,20 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
@@ -43,14 +50,13 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.model.domain.AlignmentContext;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -90,6 +96,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private AlignmentBoardControlsPanel settingsPanel;
     private AlignmentBoardControlsDialog settingsDialog;
     private AlignmentBoardControls controls;
+    private AlignmentBoard alignmentBoard;
     private final Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
 
     private boolean loadingInProgress = false;
@@ -118,7 +125,16 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         renderMapping = new ConfigurableColorMapping( multiMaskTracker, fileStats );
         setLayout(new BorderLayout());
         
-        setTransferHandler( new AlignmentBoardEntityTransferHandler( this ) );
+        //TODO fill in these nulls, make a new custom version of this,
+        // or adapt the AlignmentBoardEntityTransferHandler for this purpose.
+        // THIS WILL BREAK!  It will be fixed prior to release. LLF
+        setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject, Reference>) null, (DomainObjectSelectionModel) null) {
+            @Override
+            public JComponent getDropTargetComponent() {
+                logger.warn("Exploiting unimplemented feature: Drag-and-Drop.");
+                return AlignmentBoardPanel.this;
+            }
+        });
 
         // Saveback settings.
         shutdownListener = new ShutdownListener();
@@ -140,18 +156,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         repaint();
     }
 
-	public RootedEntity getContextRootedEntity() {
-        LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
-        if ( layersPanel == null ) {
-            return null;
-        }
-        AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
-        if ( alignmentBoardContext == null ) {
-            return null;
-        }
-        return alignmentBoardContext.getInternalRootedEntity();
-	}
-	
     @Override
     public void close() {
         logger.info( "Closing" );
@@ -186,7 +190,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
         try {
-            Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(abContext.getInternalEntity().getId());
             preExistingBoard = UserSettingSerializer.settingsExist( alignmentBoard );
             
             // Carry out any steps to prepare GUI for presence of this panel.
@@ -220,31 +223,32 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 
                 // Need to turn off all the items which do not stack in
                 // same space as the indicated value.
-                AlignedItem overlapGuide = event.getAlignedItem();
+                DomainObject overlapGuide = event.getDomainObject();
                 Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
                 
                 Collection<Integer> overlappingMasks = null;
                 for ( MaskChanRenderableData renderableData: renderableDatas ) {
                     if ( renderableData.getBean() != null  &&
-                         renderableData.getBean().getAlignedItem() != null  &&
-                         renderableData.getBean().getAlignedItem().getId() == overlapGuide.getId() ) {
+                         renderableData.getBean().getId() == overlapGuide.getId() ) {
                         overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
                     }
                     else {
                         if ( renderableData.getBean() == null ) {
                             logger.error("Renderable " + renderableData.getChannelPath() + " has no renderable data.");
                         }
-                        if ( renderableData.getBean().getRenderableEntity() == null ) {
-                            logger.error("Bean " + renderableData.getBean().getTranslatedNum() + " "+renderableData.getChannelPath() + " has no renderable entity.");
+                        if ( renderableData.getBean().getId() == null ) {
+                            logger.error("Bean " + renderableData.getBean().getTranslatedNum() + " "+renderableData.getChannelPath() + " has no renderable backing.");
                         }
                     }
                 }
                 if ( overlappingMasks != null ) {
                     for ( MaskChanRenderableData renderableData: renderableDatas ) {
                         try {
-                            AlignedItem ai = renderableData.getBean().getAlignedItem();
+                            AlignmentBoardContext ctx
+                                = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+                            AlignmentBoardItem ai = ctx.getAlignmentBoardItemWithId(renderableData.getBean().getAlignedItemId());
                             if ( ai != null ) {
-                                ai.setIsVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
+                                ai.setVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
                             }
                         } catch ( Exception ex ) {
                             ModelMgr.getModelMgr().handleException(ex);
@@ -348,8 +352,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         mip3d.resetView();
 
         // Pull settings back in from last time.
-        AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-        deserializeSettings(abContext);
+        deserializeSettings();
 
         if ( !preExistingBoard) {
             mip3d.setResetFirstRedraw( true );
@@ -466,10 +469,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 SimpleWorker serializeWorker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        AlignmentBoardContext context =
-                                AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-                        Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(context.getInternalEntity().getId());
-
                         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                                 alignmentBoard, mip3d.getVolumeModel(), settingsData
                         );
@@ -506,8 +505,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         if ( context != null ) {
             if ( mip3d != null && settingsPanel != null ) {
                 try {
-                        Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(context.getInternalEntity().getId());
-
                         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                                 alignmentBoard, mip3d.getVolumeModel(), settingsData
                         );
@@ -554,6 +551,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             this.updateContents(abContext);
             boardOpen = true;
         }
+        alignmentBoard = abContext.getAlignmentBoard();
     }
 
     private void deleteAll() {
@@ -631,7 +629,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     volumeModel.setVoxelMicrometers(
                             parseResolution( context.getAlignmentContext().getOpticalResolution() )
                     );
-                    int[] axialLengths = parseDimensions( context.getAlignmentContext().getPixelResolution() );
+                    int[] axialLengths = parseDimensions( context.getAlignmentContext().getImageSize() );
                     volumeModel.setVoxelDimensions( axialLengths );
 
                     multiMaskTracker.clear(); // New creation of board data implies discard old mask mappings.
@@ -656,7 +654,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
                     IndeterminateNoteProgressMonitor monitor =
                             new IndeterminateNoteProgressMonitor(
-                                    SessionMgr.getMainFrame(), "Updating alignment board...", context.getName()
+                                    SessionMgr.getMainFrame(), "Updating alignment board...", alignmentBoard.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
                     fileStats.clear();
@@ -703,8 +701,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         return sampler;
     }
 
-    private void deserializeSettings(AlignmentBoardContext context) {
-        Entity alignmentBoard = context.getInternalEntity();
+    private void deserializeSettings() {
         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                 alignmentBoard, mip3d.getVolumeModel(), settingsData
         );
@@ -736,7 +733,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         settingsPanel.setName( SETTINGS_PANEL_NAME );
         settingsPanel.setEnabled( false );
         
-        deserializeSettings(AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext());
+        deserializeSettings();
         //mip3d.addMenuAction( settingsDialog.getLaunchAction() );
         settingsPanel.update( true );
 
@@ -804,7 +801,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             toolbar = new JToolBar( JToolBar.HORIZONTAL );
         }
 
-        JLabel boardLabel = new JLabel("Board: " + getContextRootedEntity().getName());
+        JLabel boardLabel = new JLabel("Board: " + alignmentBoard.getName());
         boardLabel.setMinimumSize(new Dimension(0, 0));
         toolbar.add(boardLabel);
 

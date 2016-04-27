@@ -57,7 +57,8 @@ public class ConfigurableColorMappingTest {
         neuron1.setInvertedY(false);
         neuron1.setLabelFileNum(10);
         neuron1.setTranslatedNum( TRANSLATED_NUM_NF1 );
-        neuron1.setRenderableEntity(makeEntity( 10L, EntityConstants.TYPE_NEURON_FRAGMENT ));
+        neuron1.setName("Testing10");
+        neuron1.setId(10L);
 
         RenderableBean neuron2 = new RenderableBean();
         neuron2.setType(EntityConstants.TYPE_NEURON_FRAGMENT );
@@ -67,7 +68,8 @@ public class ConfigurableColorMappingTest {
         neuron2.setInvertedY(false);
         neuron2.setLabelFileNum(11);
         neuron2.setTranslatedNum(TRANSLATED_NUM_FOR_COLOR_WHEEL_A);
-        neuron2.setRenderableEntity( makeEntity(11L, EntityConstants.TYPE_NEURON_FRAGMENT) );
+        neuron2.setName("Testing11");
+        neuron2.setId(11L);
 
         RenderableBean neuron3 = new RenderableBean();
         neuron3.setType(EntityConstants.TYPE_NEURON_FRAGMENT );
@@ -77,7 +79,8 @@ public class ConfigurableColorMappingTest {
         neuron3.setInvertedY(false);
         neuron3.setLabelFileNum(21);
         neuron3.setTranslatedNum( TRANSLATED_NUM_FOR_COLOR_AVG );
-        neuron3.setRenderableEntity( makeEntity(ID_NUM_FOR_COLOR_AVG, EntityConstants.TYPE_NEURON_FRAGMENT) );
+        neuron3.setName("Neuron"+ID_NUM_FOR_COLOR_AVG);
+        neuron3.setId(ID_NUM_FOR_COLOR_AVG);
         // We will establish "average colors" for this one.
         fileStats.recordChannelAverages( ID_NUM_FOR_COLOR_AVG, CHANNEL_AVERAGES );
 
@@ -88,7 +91,8 @@ public class ConfigurableColorMappingTest {
         compartment1.setInvertedY(false);
         compartment1.setLabelFileNum(12);
         compartment1.setTranslatedNum( TRANSLATED_NUM_COMP1 );
-        compartment1.setRenderableEntity(makeEntity(12L, EntityConstants.TYPE_COMPARTMENT));
+        compartment1.setName("Compartment" + 12L);
+        compartment1.setId(12L);
 
         RenderableBean compartment2 = new RenderableBean();
         compartment2.setType(EntityConstants.TYPE_COMPARTMENT);

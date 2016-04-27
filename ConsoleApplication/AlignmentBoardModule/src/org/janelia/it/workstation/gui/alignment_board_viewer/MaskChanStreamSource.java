@@ -43,7 +43,7 @@ public class MaskChanStreamSource implements MaskChanStreamSourceI {
                 message += String.format(
                         "Renderable %s has a missing mask file. ID is %s.  ",
                         maskChanRenderableData.getBean().getTranslatedNum(),
-                        maskChanRenderableData.getBean().getRenderableEntity().getId()
+                        maskChanRenderableData.getBean().getId()
                 );
             }
             isSane = false;

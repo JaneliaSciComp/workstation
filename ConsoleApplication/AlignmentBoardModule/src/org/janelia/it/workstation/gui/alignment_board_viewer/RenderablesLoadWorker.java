@@ -31,6 +31,7 @@ import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.*;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 
 /**
@@ -438,24 +439,24 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             MaskChanRenderableData targetData = idToData.get(data.getBean());
             RenderableBean bean = data.getBean();
             if ( bean != null  &&
-                    bean.getRenderableEntity() != null  &&
+                    bean.getReference() != null  &&
                     bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
                     ) {
 
-                AlignedItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
+                AlignmentBoardItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignmentBoardItemWithId(bean.getAlignedItemId());
                 if ( item != null ) {
                     try {
                         if ( targetData != null ) {
                             // It's in the filtered list.  Mark it as such.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.In);
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.In.toString());
                         }
                         else {
                             // Not in the filtered list.  Exlude it.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize.toString());
                         }
                     } catch ( Exception ex ) {
                         ex.printStackTrace();
-                        logger.error("Failing to set inclusion status for entity id=" + bean.getRenderableEntity().getId() );
+                        logger.error("Failing to set inclusion status for entity id=" + bean.getId() );
                     }
                 }
             }
