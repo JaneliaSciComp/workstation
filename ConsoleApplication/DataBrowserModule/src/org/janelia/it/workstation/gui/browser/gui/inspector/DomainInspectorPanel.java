@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -27,10 +28,16 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
+import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -100,6 +107,8 @@ public class DomainInspectorPanel extends JPanel {
     private List<Subject> subjects;
     private Map<String,Subject> subjectMap;
     private DomainObject domainObject;
+    private PipelineResult result;
+    private Set<ImmutablePair<String, Object>> propertySet;
 
     private JLabel createLoadingLabel() {
         JLabel loadingLabel = new JLabel();
@@ -131,19 +140,13 @@ public class DomainInspectorPanel extends JPanel {
         attributesTable = new DynamicTable(true, false) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
-                DomainObjectAttribute attr = (DomainObjectAttribute) userObject;
-                if (null != attr) {
+                ImmutablePair<String,Object> attrPair = (ImmutablePair) userObject;
+                if (null != attrPair) {
                     if (column.getName().equals(ATTRIBUTES_COLUMN_KEY)) {
-                        return attr.getLabel();
+                        return attrPair.getKey();
                     }
                     else if (column.getName().equals(ATTRIBUTES_COLUMN_VALUE)) {
-                        try {
-                            return attr.getGetter().invoke(domainObject);
-                        }
-                        catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                            log.error("Error getting value for attribute: " + attr.getName(), e);
-                            return null;
-                        }
+                        return attrPair.getValue();
                     }
                 }
                 return null;
@@ -346,38 +349,101 @@ public class DomainInspectorPanel extends JPanel {
         if (defaultTab != null) {
             tabbedPane.setSelectedIndex(tabNames.indexOf(defaultTab));
         }
+        tabbedPane.setEnabledAt(1, true);
+        tabbedPane.setEnabledAt(2, true);
+    }
+
+    public void loadPipelineResult(PipelineResult result) {
+
+        log.debug("Loading properties for pipeline result {}", result.getId());
+        showAttributesLoadingIndicator();
+
+        this.result = result;
+        this.propertySet = new TreeSet<>();
+
+        addProperty("Creation Date", result.getCreationDate());
+        addProperty("Filepath", result.getFilepath());
+        addProperty("GUID", result.getId());
+        addProperty("Name", result.getName());
+
+        if (result instanceof HasAnatomicalArea) {
+            HasAnatomicalArea hasAA = (HasAnatomicalArea) result;
+            addProperty("Anatomical Area", hasAA.getAnatomicalArea());
+        }
+
+        if (result instanceof SampleAlignmentResult) {
+            SampleAlignmentResult alignment = (SampleAlignmentResult) result;
+            addProperty("Alignment Space", alignment.getAlignmentSpace());
+            addProperty("Bounding Box", alignment.getBoundingBox());
+            addProperty("Channel Colors", alignment.getChannelColors());
+            addProperty("Channel Spec", alignment.getChannelSpec());
+            addProperty("Image Size", alignment.getImageSize());
+            addProperty("Objective", alignment.getObjective());
+            addProperty("Optical Resolution", alignment.getOpticalResolution());
+            for (AlignmentScoreType scoretype : alignment.getScores().keySet()) {
+                String score = alignment.getScores().get(scoretype);
+                addProperty(scoretype.getLabel(), score);
+            }
+        }
+
+        if (result instanceof SampleProcessingResult) {
+            SampleProcessingResult spr = (SampleProcessingResult) result;
+            addProperty("Channel Colors", spr.getChannelColors());
+            addProperty("Channel Spec", spr.getChannelSpec());
+            addProperty("Image Size", spr.getImageSize());
+            addProperty("Optical Resolution", spr.getOpticalResolution());
+        }
+
+        addPropertiesToTable();
+        attributesPanel.removeAll();
+        attributesPanel.add(attributesTable, BorderLayout.CENTER);
+
+        tabbedPane.setSelectedIndex(0);
+        tabbedPane.setEnabledAt(1, false);
+        tabbedPane.setEnabledAt(2, false);
     }
 
     private void loadAttributes() {
 
-        log.debug("Loading attributes for {}", domainObject.getId());
+        log.debug("Loading properties for domain object {}", domainObject.getId());
         showAttributesLoadingIndicator();
 
-        // Update the attribute table
-        attributesTable.removeAllRows();
-
         List<DomainObjectAttribute> searchAttrs = DomainUtils.getSearchAttributes(domainObject.getClass());
-                
-        Collections.sort(searchAttrs, new Comparator<DomainObjectAttribute>() {
-            @Override
-            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                return o1.getLabel().compareTo(o2.getLabel());
-            }
-        });
 
+        this.propertySet = new TreeSet<>();
         for(DomainObjectAttribute attr : searchAttrs) {
             if (attr.isDisplay()) {
-                attributesTable.addRow(attr);
+                Object value = null;
+                try {
+                    value = attr.getGetter().invoke(domainObject);
+                }
+                catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                    log.error("Error getting value for attribute: " + attr.getName(), e);
+                }
+                addProperty(attr.getLabel(), value);
             }
         }
 
+        addPropertiesToTable();
+        attributesPanel.removeAll();
+        attributesPanel.add(attributesTable, BorderLayout.CENTER);
+    }
+
+    private void addProperty(String key, Object value) {
+        ImmutablePair<String,Object> attrPair = ImmutablePair.of(key, value);
+        propertySet.add(attrPair);
+    }
+
+    private void addPropertiesToTable() {
+        attributesTable.removeAllRows();
+        for(ImmutablePair<String,Object> attrPair : propertySet) {
+            attributesTable.addRow(attrPair);
+        }
         attributesTable.updateTableModel();
         if (firstLoad) {
             attributesTable.autoResizeColWidth();
             firstLoad = false;
         }
-        attributesPanel.removeAll();
-        attributesPanel.add(attributesTable, BorderLayout.CENTER);
     }
 
     private void loadSubjects() {

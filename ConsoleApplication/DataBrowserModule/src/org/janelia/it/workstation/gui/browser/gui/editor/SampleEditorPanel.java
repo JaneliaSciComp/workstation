@@ -564,7 +564,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
     	
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
     	for(LSMImage lsm : lsms) {
     		objectiveSet.add(lsm.getObjective());
@@ -618,7 +618,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         configPanel.addConfigComponent(objectiveButton);
         configPanel.addConfigComponent(areaButton);
         
-        Set<String> objectiveSet = new LinkedHashSet<>(sample.getOrderedObjectives());
+        Set<String> objectiveSet = new LinkedHashSet<>(sample.getObjectives());
         Set<String> areaSet = new LinkedHashSet<>();
         
         // Populate currRunMap
@@ -675,8 +675,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
         
-        for(String objective : sample.getOrderedObjectives()) {
+        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
             
+            String objective = objectiveSample.getObjective();
             boolean diplayObjective = true;
             
             if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {
@@ -965,7 +966,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             PipelineError error = run.getError();
             if (error==null) throw new IllegalStateException("Cannot create a PipelineErrorPanel for non-error run");
 
-            String title = run.getParent().getObjective()+" "+StringUtils.splitCamelCase(error.getClassification());
+            String errorClass = error.getClassification()==null?"Unclassified Error":error.getClassification();
+            String title = run.getParent().getObjective()+" "+errorClass;
             label.setText(title);
             subLabel.setText(error.getDescription());
 

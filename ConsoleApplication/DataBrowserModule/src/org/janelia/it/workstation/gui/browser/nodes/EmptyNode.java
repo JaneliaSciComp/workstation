@@ -4,6 +4,7 @@ import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 
 /**
+ * An empty node with a message.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -20,5 +21,4 @@ public class EmptyNode extends AbstractNode {
     public String getDisplayName() {
         return displayName;
     }
-    
 }

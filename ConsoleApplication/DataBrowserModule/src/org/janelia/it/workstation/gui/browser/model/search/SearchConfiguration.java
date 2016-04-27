@@ -1,28 +1,19 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.ObjectSetCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -41,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+
+import static org.janelia.it.jacs.model.domain.support.DomainUtils.getTypeFromSubjectKey;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -249,9 +242,9 @@ public class SearchConfiguration {
                     }
 
                 }
-                else if (criteria instanceof ObjectSetCriteria) {
-                    ObjectSetCriteria sc = (ObjectSetCriteria) criteria;
-                    Reference ref = sc.getObjectSetReference();
+                else if (criteria instanceof TreeNodeCriteria) {
+                    TreeNodeCriteria sc = (TreeNodeCriteria) criteria;
+                    Reference ref = sc.getTreeNodeReference();
                     log.info("Setting query root: {}",ref.getTargetId());
                     builder.setRootId(ref.getTargetId());
                 }
@@ -338,7 +331,7 @@ public class SearchConfiguration {
                 String type = (String) doc.getFieldValue(SOLR_TYPE_FIELD);
                 String className = DomainUtils.getClassNameForSearchType(type);
                 if (className != null) {
-                    refs.add(new Reference(className, id));
+                    refs.add(Reference.createFor(className, id));
                 } else {
                     log.warn("Unrecognized type has no collection mapping: " + type);
                 }
@@ -355,6 +348,20 @@ public class SearchConfiguration {
 
         facetValues.clear();
         if (results.getFacetValues()!=null) {
+
+            // Sort each facet list in place. The mutability isn't great, but no one else will see this list.
+            for(String facet : results.getFacetValues().keySet()) {
+                List<FacetValue> facetValues = results.getFacetValues().get(facet);
+                Collections.sort(facetValues, new Comparator<FacetValue>() {
+                    @Override
+                    public int compare(FacetValue o1, FacetValue o2) {
+                        return ComparisonChain.start()
+                                .compare(o1.getValue(), o2.getValue(), Ordering.natural())
+                                .result();
+                    }
+                });
+            }
+
             facetValues.putAll(results.getFacetValues());
         }
         

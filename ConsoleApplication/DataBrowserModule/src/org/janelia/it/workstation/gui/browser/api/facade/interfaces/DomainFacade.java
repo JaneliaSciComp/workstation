@@ -92,4 +92,12 @@ public interface DomainFacade {
      */
     public void remove(List<Reference> deleteObjectRefs) throws Exception;
 
+    /**
+     *
+     * For individual cases, adds support to update an existing DomainObject
+     * @param  domainObject domain object to update
+     * @throws Exception
+     */
+    public DomainObject update(DomainObject domainObject) throws Exception;
+
 }

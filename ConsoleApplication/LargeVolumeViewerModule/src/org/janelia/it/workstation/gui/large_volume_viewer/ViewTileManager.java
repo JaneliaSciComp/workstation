@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -340,8 +342,14 @@ public class ViewTileManager {
 		return latestTiles;
 	}
 	
-	public Set<TileIndex> getNeededTextures() {
-		return neededTextures;
+	public Collection<TileIndex> getNeededTextures() {
+            // 3/23/2016 CMB JW-24845
+            // Avoid (rare?) ConcurrentModificationException, by sending a Copy of the neededTextures
+            Collection<TileIndex> result;
+            synchronized(neededTextures) {
+                 result = new ArrayList<>(neededTextures);
+            }
+            return result;
 	}
 
     @SuppressWarnings("unused")

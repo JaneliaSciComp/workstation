@@ -390,7 +390,7 @@ public class DomainModel {
 
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
         List<T> objects = new ArrayList<>();
-        for(DomainObject domainObject : getDomainObjects(clazz.getName(), ids)) {
+        for(DomainObject domainObject : getDomainObjects(clazz.getSimpleName(), ids)) {
             objects.add((T)domainObject);
         }
         return objects;
@@ -422,7 +422,7 @@ public class DomainModel {
         List<Long> unsatisfiedIds = new ArrayList<>();
 
         for(Long id : ids) {
-            Reference ref = new Reference(className, id);
+            Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = objectCache.getIfPresent(ref);
             if (domainObject!=null) {
                 map.put(ref, domainObject);
@@ -441,7 +441,7 @@ public class DomainModel {
 
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Long id : ids) {
-            Reference ref = new Reference(className, id);
+            Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
@@ -699,15 +699,6 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public ObjectSet create(ObjectSet objectSet) throws Exception {
-        ObjectSet canonicalObject;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.create(objectSet));
-        }
-        notifyDomainObjectCreated(canonicalObject);
-        return canonicalObject;
-    }
-
     public void remove(DataSet dataSet) throws Exception {
         sampleFacade.remove(dataSet);
         notifyDomainObjectRemoved(dataSet);
@@ -793,30 +784,6 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public ObjectSet addMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        return addMembers(objectSet, Arrays.asList(domainObject));
-    }
-
-    public ObjectSet addMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.addMembers(objectSet, DomainUtils.getReferences(domainObjects)));
-        }
-        return canonicalObject;
-    }
-
-    public ObjectSet removeMember(ObjectSet objectSet, DomainObject domainObject) throws Exception {
-        return removeMembers(objectSet, Arrays.asList(domainObject));
-    }
-
-    public ObjectSet removeMembers(ObjectSet objectSet, Collection<? extends DomainObject> domainObjects) throws Exception {
-        ObjectSet canonicalObject = null;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(workspaceFacade.removeMembers(objectSet, DomainUtils.getReferences(domainObjects)));
-        }
-        return canonicalObject;
-    }
-
     public List<LineRelease> getLineReleases() {
         List<LineRelease> releases = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
@@ -849,6 +816,14 @@ public class DomainModel {
     public void remove(LineRelease release) throws Exception {
         sampleFacade.remove(release);
         notifyDomainObjectRemoved(release);
+    }
+
+    public DomainObject update(DomainObject domainObject) throws Exception {
+        DomainObject canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(domainFacade.update(domainObject));
+        }
+        return canonicalObject;
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {

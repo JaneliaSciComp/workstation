@@ -33,8 +33,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
@@ -114,7 +115,7 @@ public class PatternSearchDialog extends ModalDialog {
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     FilterResult filterResult;
     
-    private ObjectSet saveFolder;
+    private TreeNode saveFolder;
 	private boolean returnInsteadOfSaving = false;
 	private boolean saveClicked = false;
 
@@ -757,10 +758,11 @@ public class PatternSearchDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 // copy the results to an ObjectSet
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                saveFolder = new ObjectSet();
+                saveFolder = new TreeNode();
                 saveFolder.setName(currentSetTextField.getText());
-                saveFolder.setClassName(Sample.class.getName());
-                saveFolder.setMembers(filterResult.getSampleList());
+                for (Long sampleId: filterResult.getSampleList()) {
+                    saveFolder.addChild(Reference.createFor(Sample.class, sampleId.longValue()));
+                }
                 saveFolder = model.create(saveFolder);
                 if (saveFolder.getId()!=null) {
                     model.addChild(outputFolder,saveFolder);

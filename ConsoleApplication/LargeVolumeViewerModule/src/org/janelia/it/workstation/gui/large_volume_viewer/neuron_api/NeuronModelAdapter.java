@@ -52,6 +52,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.openide.util.Exceptions;
@@ -136,6 +137,7 @@ public class NeuronModelAdapter implements NeuronModel
             if (ann != null) {
                 NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
                 result = vertex;
+                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
             }
         } catch (Exception ex) {
         }
@@ -152,6 +154,15 @@ public class NeuronModelAdapter implements NeuronModel
         NeuronVertexAdapter targetNVA = (NeuronVertexAdapter)target;
         Long sourceID = sourceNVA.getTmGeoAnnotation().getId();
         Long targetID = targetNVA.getTmGeoAnnotation().getId();
+        
+        // Borrow logic from AnnotationManager::canMergeNeurite()::520
+        if (sourceID.equals(targetID))
+            return false; // cannot merge with itself
+        if (annotationModel.getNeuriteRootAnnotation(sourceNVA.getTmGeoAnnotation()).getId().equals(
+                annotationModel.getNeuriteRootAnnotation(targetNVA.getTmGeoAnnotation()).getId())) {
+            return false;
+        }
+        
         try {
             annotationModel.mergeNeurite(sourceID, targetID);
         } catch (Exception ex) {
@@ -167,7 +178,17 @@ public class NeuronModelAdapter implements NeuronModel
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+
+            // Borrow some defensive logic from AnnotationManager.java::405
+            if (annotation == null)
+                return false; // no such anchor
+            if (annotation.isRoot() && annotation.getChildIds().size() > 0)
+                return false; // non-empty root cannot be deleted
+            if (annotation.getChildIds().size() > 1)
+                return false; // non-terminal cannot be deleted
+            
             annotationModel.deleteLink(annotation);
+            ActivityLogHelper.getInstance().logExternallyDeleteLink(workspace.getSampleID(), workspace.getId(), annotation);
             return true;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
@@ -300,7 +321,7 @@ public class NeuronModelAdapter implements NeuronModel
     public boolean isVisible()
     {
         return bIsVisible;
-        // return neuronStyle.isVisible();
+        // return neuronStyle.isColumnVisible();
     }
 
     @Override
@@ -517,7 +538,14 @@ public class NeuronModelAdapter implements NeuronModel
         @Override
         public boolean contains(Object o)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if (! (o instanceof NeuronVertexAdapter))
+                return false;
+            NeuronVertexAdapter vertex = (NeuronVertexAdapter)o;
+            Long guid = vertex.getTmGeoAnnotation().getId();
+            NeuronVertex vertexAgain = getVertexByGuid(guid);
+            if (vertexAgain == null)
+                return false;
+            return true;
         }
 
         @Override

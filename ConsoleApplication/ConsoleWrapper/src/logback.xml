@@ -51,14 +51,14 @@
   <logger name="org.janelia.it.workstation.gui.framework.viewer.LoadImageWorker" level="INFO"/>
   
   <!-- NG classes -->
-  
+
   <logger name="org.janelia.it.jacs.model.domain.support.DomainDAO" level="INFO"/>
   <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="INFO"/>
   <logger name="org.janelia.it.workstation.gui.browser.events.selection" level="INFO"/>
   <logger name="org.janelia.it.workstation.gui.browser.components" level="INFO"/>
   <logger name="org.janelia.it.workstation.gui.browser.gui.listview.icongrid" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.browser.nodes" level="INFO"/>
 
-  
   <!--
   <logger name="org.janelia.it.workstation.shared.util.filecache" level="DEBUG"/>
   -->

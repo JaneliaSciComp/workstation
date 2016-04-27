@@ -138,7 +138,20 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         return domainObjs;
     }
 
+    public DomainObject update(DomainObject domainObject) {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(domainObject);
 
+        Response response = manager.getDomainObjectEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request to update domainObject from server: " + domainObject.getId())) {
+            return null;
+        }
+        DomainObject domainObj = response.readEntity(DomainObject.class);
+        return domainObj;
+    }
 
     @Override
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) {
@@ -181,7 +194,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights + "," + grant)) {
             return null;
         }
-        return this.getDomainObject(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+        return this.getDomainObject(Reference.createFor(domainObject));
     }
 
     @Override

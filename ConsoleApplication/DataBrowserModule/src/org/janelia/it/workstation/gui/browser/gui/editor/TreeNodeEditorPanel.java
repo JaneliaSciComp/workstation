@@ -3,18 +3,23 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
@@ -32,18 +37,15 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.eventbus.Subscribe;
 
 /**
- * Simple editor panel for viewing object sets. In the future it may support drag and drop editing of object sets. 
+ * Simple editor panel for viewing folders. In the future it may support drag and drop editing of folders.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectionEditor<ObjectSet>, SearchProvider {
+public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelectionEditor<TreeNode>, SearchProvider {
 
-    private final static Logger log = LoggerFactory.getLogger(ObjectSetEditorPanel.class);
+    private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
     // Utilities
     private final Debouncer debouncer = new Debouncer();
@@ -52,7 +54,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     private final PaginatedResultsPanel resultsPanel;
 
     // State
-    private ObjectSet objectSet;
+    private TreeNode treeNode;
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     
@@ -60,7 +62,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
-    public ObjectSetEditorPanel() {
+    public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
         
@@ -70,7 +72,7 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
                 return searchResults.getPage(page);
             }
         };
-        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->ObjectSetEditorPanel"));
+        resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->TreeNodeEditorPanel"));
         add(resultsPanel, BorderLayout.CENTER);
     }
 
@@ -85,14 +87,20 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
             protected void doStuff() throws Exception {
                 final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
                 final boolean ascending = !sortCriteria.startsWith("-");
+
+                final Map<DomainObject,Object> fieldValues = new HashMap<>();
+                for(DomainObject domainObject : domainObjects) {
+                    Object value = ClientDomainUtils.getFieldValue(domainObject, sortField);
+                    fieldValues.put(domainObject, value);
+                }
+
                 Collections.sort(domainObjects, new Comparator<DomainObject>() {
                     @Override
                     @SuppressWarnings({"rawtypes", "unchecked"})
                     public int compare(DomainObject o1, DomainObject o2) {
                         try {
-                            // TODO: speed could be improved by moving the reflection calls outside of the sort
-                            Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
-                            Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
+                            Comparable v1 = (Comparable)fieldValues.get(o1);
+                            Comparable v2 = (Comparable)fieldValues.get(o2);
                             Ordering ordering = Ordering.natural().nullsLast();
                             if (!ascending) {
                                 ordering = ordering.reverse();
@@ -138,11 +146,11 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     }
     @Override
     public String getName() {
-        if (objectSet==null) {
-            return "Set Editor";
+        if (treeNode==null) {
+            return "Folder Editor";
         }
         else {
-            return "Set: "+StringUtils.abbreviate(objectSet.getName(), 15);
+            return "Folder: "+StringUtils.abbreviate(treeNode.getName(), 15);
         }
     }
     
@@ -165,16 +173,16 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
-            ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+            TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
             if (updatedSet!=null) {
                 loadDomainObject(updatedSet, false, null);
             }
         }
         else {
             for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(objectSet.getId())) {
-                    log.info("objects set invalidated, reloading...");
-                    ObjectSet updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(ObjectSet.class, objectSet.getId());
+                if (domainObject.getId().equals(treeNode.getId())) {
+                    log.info("tree node invalidated, reloading...");
+                    TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
                     if (updatedSet!=null) {
                         loadDomainObject(updatedSet, false, null);
                     }
@@ -185,27 +193,27 @@ public class ObjectSetEditorPanel extends JPanel implements DomainObjectSelectio
     }
     
     @Override
-    public void loadDomainObject(final ObjectSet objectSet, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
 
-        if (objectSet==null) return;
+        if (treeNode==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
         
-        log.info("loadDomainObject(ObjectSet:{})",objectSet.getName());
+        log.info("loadDomainObject(TreeNode:{})",treeNode.getName());
         resultsPanel.showLoadingIndicator();
 
-        this.objectSet = objectSet;
-        selectionModel.setParentObject(objectSet);
+        this.treeNode = treeNode;
+        selectionModel.setParentObject(treeNode);
         
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                domainObjects = model.getDomainObjects(objectSet.getClassName(), objectSet.getMembers());
+                domainObjects = model.getDomainObjects(treeNode.getChildren());
                 annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
                 log.info("Showing "+domainObjects.size()+" items");
             }

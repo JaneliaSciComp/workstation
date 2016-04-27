@@ -31,8 +31,6 @@
 package org.janelia.console.viewerapi;
 
 import java.net.URL;
-import java.util.Collection;
-import org.janelia.console.viewerapi.model.NeuronModel;
 
 /**
  *
@@ -57,4 +55,9 @@ public interface SampleLocation
     
     boolean isCompressed();
     void setCompressed(boolean compressed);
+    
+    /** Optional, may not be supported. */
+    Long getWorkspaceId();
+    /** Optional, may not be supported. */
+    Long getSampleId();
 }

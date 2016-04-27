@@ -199,24 +199,7 @@ public class ImportDialog extends ModalDialog {
         try {
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-            if (explorer.getSelectionModel().getSelectedIds().size()==0) {
-                rootFolder = model.getDefaultWorkspace();
-            } else {
-                List<Reference> selectedNodes = explorer.getSelectionModel().getSelectedIds();
-                DomainObject selNode = model.getDomainObject(selectedNodes.get(0));
-                folderName = DEFAULT_FOLDER_NAME;
-                if (selNode instanceof TreeNode) {
-                    rootFolder = (TreeNode)selNode;
-                } else {
-                    List<Reference> parents = model.getContainerReferences(selNode);
-                    for (Reference parent: parents) {
-                        if (parent.getTargetClassName().equals(TreeNode.class.getCanonicalName())) {
-                            rootFolder = (TreeNode) model.getDomainObject(parent);
-                            break;
-                        }
-                    }
-                }
-            }
+            rootFolder = model.getDefaultWorkspace();
         } catch (Exception e) {
             log.error("Problem determining selected nodes",e);
             throw new RuntimeException("Problems determining selected nodes.", e);
@@ -373,11 +356,11 @@ public class ImportDialog extends ModalDialog {
                     
                     // Wait until task is finished
                     super.doStuff(); 
-                    
+
                     if (isCancelled()) throw new CancellationException();
                     setStatus("Done importing");
                 }
-                
+
                 @Override
                 public Callable<Void> getSuccessCallback() {
                     return new Callable<Void>() {
@@ -389,21 +372,20 @@ public class ImportDialog extends ModalDialog {
                             entityOutline.totalRefresh(true, new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
-                                    
+
                                     if (rootFolder!=null) {
-                                    
+
                                         SimpleWorker worker = new SimpleWorker() {
-                                            
+
                                             @Override
                                             protected void doStuff() throws Exception {
                                                 explorer.refresh();
                                             }
-                                            
+
                                             @Override
                                             protected void hadSuccess() {
-                                                log.info("AYEYEYEYEYEYEYEYEY");
                                                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                                rootFolder = (TreeNode)model.getDomainObject(new Reference(rootFolder.getClass().getCanonicalName(), rootFolder.getId()));
+                                                rootFolder = (TreeNode)model.getDomainObject(Reference.createFor(rootFolder));
                                                 List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
                                                 DomainObject importFolder = null;
                                                 for (DomainObject child: children) {
@@ -421,16 +403,16 @@ public class ImportDialog extends ModalDialog {
                                                     }
                                                 });
                                             }
-                                            
+
                                             @Override
                                             protected void hadError(Throwable error) {
                                                 SessionMgr.getSessionMgr().handleException(error);
                                             }
                                         };
-                                        
+
                                         worker.execute();
                                     }
-                                    
+
                                     return null;
                                 }
                             });
@@ -466,7 +448,7 @@ public class ImportDialog extends ModalDialog {
 
         final String owner = SessionMgr.getSubjectKey();
         final String process = "FileTreeLoader";
-        final boolean filesUploadedFlag = true;
+        final boolean filesUploadedFlag = false;
         Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
                                                    owner,
                                                    new ArrayList<Event>(),

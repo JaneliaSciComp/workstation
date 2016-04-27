@@ -42,13 +42,13 @@ public class DomainModelViewUtils {
         log.debug("  Result name prefix: {}",result.getResultNamePrefix());
         log.debug("  Group name: {}",result.getGroupName());
         
-        List<String> objectives = sample.getOrderedObjectives();
-        if (objectives==null || objectives.isEmpty()) return null;
+        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
+        if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
         
         HasFiles chosenResult = null;
         
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
-            ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
+            ObjectiveSample objSample = objectiveSamples.get(objectiveSamples.size()-1);
             if (objSample==null) return null;
             SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null) return null;
@@ -64,9 +64,7 @@ public class DomainModelViewUtils {
             }
         }
         else {
-            for(String objective : objectives) {
-                if (!objective.equals(result.getObjective())) continue;
-                ObjectiveSample objSample = sample.getObjectiveSample(objective);
+            for(ObjectiveSample objSample : objectiveSamples) {
                 if (objSample==null) continue;
                 SamplePipelineRun run = objSample.getLatestSuccessfulRun();
                 if (run==null || run.getResults()==null) continue;
@@ -96,10 +94,10 @@ public class DomainModelViewUtils {
 
     public static ResultDescriptor getLatestResultDescriptor(Sample sample) {
         
-        List<String> objectives = sample.getOrderedObjectives();
-        if (objectives==null || objectives.isEmpty()) return null;
+        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
+        if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
     
-        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size() - 1));
+        ObjectiveSample objSample = objectiveSamples.get(objectiveSamples.size() - 1);
         if (objSample==null) return null;
         SamplePipelineRun run = objSample.getLatestSuccessfulRun();
         if (run==null) return null;
@@ -120,8 +118,7 @@ public class DomainModelViewUtils {
     
     public static NeuronSeparation getNeuronSeparation(Sample sample, NeuronFragment neuronFragment) {
         if (neuronFragment==null) return null;
-        for(String objective : sample.getOrderedObjectives()) {
-            ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
+        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
             for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
                 if (run!=null && run.getResults()!=null) {
                     for(PipelineResult result : run.getResults()) {
