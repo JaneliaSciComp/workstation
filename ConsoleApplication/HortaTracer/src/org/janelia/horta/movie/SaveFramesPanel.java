@@ -30,16 +30,25 @@
 
 package org.janelia.horta.movie;
 
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.slf4j.Logger;
@@ -63,13 +72,51 @@ public class SaveFramesPanel extends JPanel
         
         this.notifyDescriptor = new NotifyDescriptor(
                 this, // instance of your panel
-                "Save all Horta movie frames", // title of the dialog
+                "Save all Horta movie frame images", // title of the dialog
                 NotifyDescriptor.OK_CANCEL_OPTION, // it is Yes/No dialog ...
                 NotifyDescriptor.QUESTION_MESSAGE, // ... of a question type => a question mark icon
                 options,
                 cancelOption // default option is "Cancel"
         );
     }
+    
+    private final JFileChooser folderChooser = new JFileChooser();
+
+    private File chooseOutputFolder() 
+    {
+        folderChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int result = folderChooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION)
+            return null;
+        File file = folderChooser.getSelectedFile();
+        if (! file.exists()) {
+            JOptionPane.showMessageDialog(this,
+                    "No such folder '" + file.getAbsolutePath() + "'",
+                    "Folder not found",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+        if (! file.isDirectory()) {
+            JOptionPane.showMessageDialog(this,
+                    "That's is a regular file, not a folder: '" + file.getAbsolutePath() + "'",
+                    "That's not a folder",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+        if (! file.canWrite()) {
+            JOptionPane.showMessageDialog(this,
+                    "You cannot write to this folder: '" + file.getAbsolutePath() + "'",
+                    "You cannot write to that folder",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;                    
+        }
+        return file;
+    }
+    
+    final JTextField outFolderField = new JTextField();
+    final JTextField movieNameField = new JTextField("mymovie");
+    final JComboBox<Float> fpsBox = new JComboBox<>(new Float[] {24.0f, 30.0f, 60.0f});
+    final JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
     
     private void buildGui() 
     {
@@ -79,23 +126,41 @@ public class SaveFramesPanel extends JPanel
         JPanel folderPanel = new JPanel();
         folderPanel.setBorder(BorderFactory.createTitledBorder("Movie frame image output folder"));
         folderPanel.setLayout(new BoxLayout(folderPanel, BoxLayout.LINE_AXIS));
-        JTextField outFolderField = new JTextField();
         folderPanel.add(outFolderField);
         JButton browseFolderButton = new JButton("...");
         folderPanel.add(browseFolderButton);
+        browseFolderButton.setAction(new AbstractAction() {
+            {
+                putValue(Action.NAME, "..."); // needed for button label
+            }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File folder = chooseOutputFolder();
+                if (folder != null)
+                    outFolderField.setText(folder.getAbsolutePath());        
+            }
+        });
+        folderPanel.setMaximumSize(new Dimension(
+                folderPanel.getMaximumSize().width,
+                folderPanel.getPreferredSize().height));
         add(folderPanel);
         
         // Movie name field
         JPanel movieNamePanel = new JPanel();
         movieNamePanel.setBorder(BorderFactory.createTitledBorder("Name of movie"));
         movieNamePanel.setLayout(new BoxLayout(movieNamePanel, BoxLayout.LINE_AXIS));
-        movieNamePanel.add(new JTextField("mymovie"));
+        movieNamePanel.add(movieNameField);
+        movieNamePanel.setMaximumSize(new Dimension(
+                movieNamePanel.getMaximumSize().width,
+                movieNamePanel.getPreferredSize().height));
         add(movieNamePanel);
         
         // delete frames toggle
         JPanel deleteFramesPanel = new JPanel();
         deleteFramesPanel.setLayout(new BoxLayout(deleteFramesPanel, BoxLayout.LINE_AXIS));
-        deleteFramesPanel.add(new JCheckBox("Delete frame images?"));
+        JCheckBox deleteCheckBox = new JCheckBox("Delete frame images?");
+        deleteCheckBox.setEnabled(false); // not implemented yet... TODO:
+        deleteFramesPanel.add(deleteCheckBox);
         deleteFramesPanel.add(Box.createHorizontalGlue());
         add(deleteFramesPanel);
         
@@ -103,21 +168,63 @@ public class SaveFramesPanel extends JPanel
         JPanel frameRatePanel = new JPanel();
         frameRatePanel.setBorder(BorderFactory.createTitledBorder("Movie Frame Rate"));
         frameRatePanel.setLayout(new BoxLayout(frameRatePanel, BoxLayout.LINE_AXIS));
-        JComboBox<Float> fpsBox = new JComboBox<>(new Float[] {24.0f, 30.0f, 60.0f});
+        fpsBox.setMaximumSize(fpsBox.getPreferredSize());
         frameRatePanel.add(fpsBox);
         frameRatePanel.add(new JLabel("frames per second"));
         frameRatePanel.add(Box.createHorizontalGlue());
         add(frameRatePanel);
         
         // progress bar
-        JProgressBar progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
         add(progressBar);        
+        
+        add(Box.createVerticalGlue());
+    }
+
+    private void saveFrameImages() {
+        File frameFolder = new File(outFolderField.getText());
+        String baseFileName = movieNameField.getText();
+        float frameRate = fpsBox.getItemAt(fpsBox.getSelectedIndex());
+        
+        logger.info("Hey! I should save frames here...");
+
+        // TODO: sanity checks
+        
+        // TODO: launch a separate save thread
+        progressBar.setValue(1);
+
+        // TODO: move below cleanup to a save thread listener
+        // TODO: post run sanity checks
+        // Assuming all went well...
+        progressBar.setValue(100);
+        
+        // Use a JTextPane so the user can select the text with a mouse
+        JTextPane message = new JTextPane();
+        message.setEditable(false);
+        message.setBackground(null); // same as JLabel
+        message.setBorder(null);
+        message.setContentType("text/html");
+        message.setText(""
+                + "<html>Finished saving frame images"
+                + "<br>in folder &quot;" + frameFolder + "&quot;"
+                + "<br>To create a movie file, run ffmpeg from the command line:"
+                + "<br><br> <b>ffmpeg" // program name
+                + " -i " + baseFileName + "_%5d.jpg" // input image file name pattern
+                + " -r " + frameRate // input frame rate
+                + " -b:v 5M" // use a decent bit rate
+                // + " -y" // always say "yes" to overwriting files
+                + " " + baseFileName +".mp4</b> <html>" // output file name
+                );
+        JOptionPane.showMessageDialog(this, 
+                message,
+                "Finished saving frame images",
+                JOptionPane.INFORMATION_MESSAGE);
+        progressBar.setValue(0);
     }
     
     public void showDialog() {
         Object result = DialogDisplayer.getDefault().notify(notifyDescriptor);
         if (result == saveOption) {
-            logger.info("Hey! I should save frames here...");
+            saveFrameImages();
         } 
         else {
             logger.info("Frame saving was cancelled");
