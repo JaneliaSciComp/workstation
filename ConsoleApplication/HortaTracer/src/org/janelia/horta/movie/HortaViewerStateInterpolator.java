@@ -43,9 +43,11 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
     private InterpolatorKernel defaultKernel = 
             // new LinearInterpolatorKernel();
             new CatmullRomSplineKernel();
+    private InterpolatorKernel linearKernel = 
+            new LinearInterpolatorKernel();
     private Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
     private PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
-    private Interpolator<Quaternion> rotationInterpolator = primitiveInterpolator;
+    private Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(defaultKernel);
 
     public HortaViewerStateInterpolator() {
     }

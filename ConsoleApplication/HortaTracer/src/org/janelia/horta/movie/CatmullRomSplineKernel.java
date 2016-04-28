@@ -67,7 +67,7 @@ public class CatmullRomSplineKernel implements InterpolatorKernel
     public Quaternion interpolate_equidistant(double t, Quaternion q00, Quaternion q01, Quaternion q02, Quaternion q03)
     {
         Quaternion q10 = q00.slerp(q01, (float)t+1);
-        Quaternion q11 = q01.slerp(q03, (float)t);
+        Quaternion q11 = q01.slerp(q02, (float)t);
         Quaternion q12 = q02.slerp(q03, (float)t-1);
         
         Quaternion q20 = q10.slerp(q11, (float)(t+1)/2f);
