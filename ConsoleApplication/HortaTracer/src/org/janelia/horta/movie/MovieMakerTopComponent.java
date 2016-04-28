@@ -133,6 +133,11 @@ implements LookupListener
 
         fpsTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
         fpsTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.fpsTextField.text_2")); // NOI18N
+        fpsTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fpsTextFieldActionPerformed(evt);
+            }
+        });
 
         org.openide.awt.Mnemonics.setLocalizedText(deleteFramesButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.deleteFramesButton.text")); // NOI18N
         deleteFramesButton.addActionListener(new java.awt.event.ActionListener() {
@@ -237,6 +242,10 @@ implements LookupListener
         }
         updateGui();
     }//GEN-LAST:event_deleteFramesButtonActionPerformed
+
+    private void fpsTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fpsTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_fpsTextFieldActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addFrameButton;

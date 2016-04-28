@@ -39,7 +39,7 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  */
 class HortaViewerStateInterpolator implements Interpolator<HortaViewerState> 
 {
-    Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator();
+    Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(new CatmullRomSplineKernel());
 
     public HortaViewerStateInterpolator() {
     }

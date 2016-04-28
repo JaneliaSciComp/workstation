@@ -31,32 +31,31 @@
 package org.janelia.horta.movie;
 
 import org.janelia.geometry3d.Quaternion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- *
+ * Interpolates Java primitive types, plus Quaternions
  * @author brunsc
  */
-public class CatmullRomSpline 
+public class PrimitiveInterpolator 
 {
+    private final InterpolatorKernel kernel;
+    
+    public PrimitiveInterpolator(InterpolatorKernel kernel) {
+        this.kernel = kernel;
+    }
     
     // Assumes points are spaced equally
-    static double interpolate_equidistant(double t, double p0, double p1, double p2, double p3)
+    double interpolate_equidistant(double t, double p0, double p1, double p2, double p3)
     {
-        return (
-              t*((2.0-t)*t - 1.0) * p0
-            + (t*t*(3.0*t - 5.0) + 2.0) * p1
-            + t*((4.0 - 3.0*t)*t + 1.0) * p2
-            + (t-1.0)*t*t * p3 ) / 2.0;
+        return kernel.interpolate_equidistant(t, p0, p1, p2, p3);
     }
     
     // General case does not require points to be spaced equally
-    static double interpolate(double t, // t in range [0-1], between points p1 and p2
+    double interpolate(double t, // t in range [0-1], between points p1 and p2
             double p0, double p1, double p2, double p3, // values at 4 points
             double t0, double t1, double t2, double t3) // distribution of 4 points along x axis
     {
-        // Logger logger = LoggerFactory.getLogger(CatmullRomSpline.class);
+        // Logger logger = LoggerFactory.getLogger(this.class);
         
         double result = p1;
 
@@ -78,11 +77,11 @@ public class CatmullRomSpline
     }
     
     // Specialization for floats
-    static float interpolate_equidistant(double t, float p0, float p1, float p2, float p3)
+    float interpolate_equidistant(double t, float p0, float p1, float p2, float p3)
     {
         return (float) interpolate_equidistant(t, (double)p0, (double)p1, (double)p2, (double)p3);
     }
-    static float interpolate(double t, 
+    float interpolate(double t, 
             float p0, float p1, float p2, float p3,
             double t0, double t1, double t2, double t3) 
     {
@@ -92,11 +91,11 @@ public class CatmullRomSpline
     }
     
     // Specialization for integers
-    static int interpolate_equidistant(double t, int p0, int p1, int p2, int p3)
+    int interpolate_equidistant(double t, int p0, int p1, int p2, int p3)
     {
         return (int)Math.round(interpolate_equidistant(t, (double)p0, (double)p1, (double)p2, (double)p3));
     }
-    static int interpolate(double t, 
+    int interpolate(double t, 
             int p0, int p1, int p2, int p3,
             double t0, double t1, double t2, double t3) 
     {
@@ -106,7 +105,7 @@ public class CatmullRomSpline
     }
     
     // Specialization for boolean values
-    static boolean interpolate_equidistant(double t, boolean p0, boolean p1, boolean p2, boolean p3)
+    boolean interpolate_equidistant(double t, boolean p0, boolean p1, boolean p2, boolean p3)
     {
         double d0 = p0 ? 1.0 : 0.0;
         double d1 = p0 ? 1.0 : 0.0;
@@ -115,7 +114,7 @@ public class CatmullRomSpline
         double result = interpolate_equidistant(t, d0, d1, d2, d3);
         return result >= 0.5;
     }
-    static boolean interpolate(double t, 
+    boolean interpolate(double t, 
             boolean p0, boolean p1, boolean p2, boolean p3,
             double t0, double t1, double t2, double t3) 
     {
@@ -130,17 +129,9 @@ public class CatmullRomSpline
     // specialization for Quaterions
     // Translated from page 449 of "Visualizing Quaternions" by Andrew J. Hanson.
     // TODO: I have no idea how to do a non-uniform version of Quaternion interpolation.
-    static Quaternion interpolate_equidistant(double t, Quaternion q00, Quaternion q01, Quaternion q02, Quaternion q03)
+    Quaternion interpolate_equidistant(double t, Quaternion q0, Quaternion q1, Quaternion q2, Quaternion q3)
     {
-        Quaternion q10 = q00.slerp(q01, (float)t+1);
-        Quaternion q11 = q01.slerp(q03, (float)t);
-        Quaternion q12 = q02.slerp(q03, (float)t-1);
-        
-        Quaternion q20 = q10.slerp(q11, (float)(t+1)/2f);
-        Quaternion q21 = q11.slerp(q12, (float)t/2f);
-        
-        Quaternion result = q20.slerp(q21, (float)t);
-        return result;
+        return kernel.interpolate_equidistant(t, q0, q1, q2, q3);
     }
-
+    
 }

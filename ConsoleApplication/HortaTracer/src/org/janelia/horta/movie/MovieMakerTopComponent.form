@@ -166,6 +166,9 @@
           <ResourceString bundle="org/janelia/horta/movie/Bundle.properties" key="MovieMakerTopComponent.fpsTextField.text_2" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="fpsTextFieldActionPerformed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="deleteFramesButton">
       <Properties>
