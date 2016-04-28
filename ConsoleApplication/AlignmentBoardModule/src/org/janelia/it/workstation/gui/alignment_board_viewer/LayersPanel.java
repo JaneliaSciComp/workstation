@@ -214,11 +214,12 @@ public class LayersPanel extends JPanel implements Refreshable {
             }
 
             /** Will 'act'/return true if the click was the color col. */
-            private boolean selectColorIfCorrectColumn(DomainObject ai) {
+            private boolean selectColorIfCorrectColumn(DomainObject dObj) {
                 // Need see if this is appropriate column.
                 // outline.getSelectedColumn()  does not work: clicking and selecting are different things.
                 int colIndex = outline.getSelectedColumn();
                 if ( colIndex == COLOR_SWATCH_COLNUM ) {
+                    AlignmentBoardItem ai = alignmentBoardContext.getAlignmentBoardItemWithId(dObj.getId());
                     chooseColor( ai );
                     return true;
                 }
@@ -324,7 +325,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         
         //TODO: reassess.  This may not have proper child linkages, etc.
         AlignmentBoardItem abi = new AlignmentBoardItem();
-        abi.setTarget(new Reference(domainObject.getClass().getName(), domainObject.getId()));
+        abi.setTarget(Reference.createFor(domainObject.getClass().getName(), domainObject.getId()));
         abi.setInclusionStatus(InclusionStatus.In.toString());
         abi.setVisible(true);
         final LayerContextMenu popupMenu = new LayerContextMenu(alignmentBoardContext, abi, multiSelectionItems);
@@ -516,19 +517,6 @@ public class LayersPanel extends JPanel implements Refreshable {
         columnModel.getColumn(2).setPreferredWidth(getWidth()-COLUMN_WIDTH_TREE_NEGATIVE);
     }
 
-    private AlignmentBoardItem findAlignedItemByEntityId(AlignmentBoardItem alignedItem, Long entityId) {
-        if (alignedItem.getTarget().getTargetId().equals(entityId)) {
-            return alignedItem;
-        }
-        for(AlignmentBoardItem childItem : alignedItem.getChildren()) {
-            AlignmentBoardItem foundItem = findAlignedItemByEntityId(childItem, entityId);
-            if (foundItem!=null) {
-                return foundItem;
-            }
-        }
-        return null;
-    }
-    
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
 //TODO: re-examine this.        

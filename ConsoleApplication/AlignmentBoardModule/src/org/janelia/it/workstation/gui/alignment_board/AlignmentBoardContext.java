@@ -227,7 +227,7 @@ public class AlignmentBoardContext {
         if (! sampleIsCompatible(sample)) {
             return false;
         }
-        ObjectiveSample objectiveSample = sample.getObjectives().get(objective);
+        ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
         if (objectiveSample == null) {
             return false;
         }
@@ -329,9 +329,9 @@ public class AlignmentBoardContext {
     }
     
     private boolean sampleIsCompatible(Sample sample) {
-        Map<String, ObjectiveSample> objectives = sample.getObjectives();
+        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
         boolean foundAcceptableSpace = false;
-        for (ObjectiveSample objectiveSample : objectives.values()) {
+        for (ObjectiveSample objectiveSample : objectiveSamples) {
             for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
                 for (SampleAlignmentResult result : run.getAlignmentResults()) {
                     String sampleAlignmentSpace = result.getAlignmentSpace();

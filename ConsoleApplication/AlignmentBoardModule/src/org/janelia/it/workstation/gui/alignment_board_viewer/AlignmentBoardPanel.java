@@ -23,7 +23,6 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
@@ -129,7 +128,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         // or adapt the AlignmentBoardEntityTransferHandler for this purpose.
         // THIS WILL BREAK!  It will be fixed prior to release. LLF
         setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject, Reference>) null, (DomainObjectSelectionModel) null) {
-            @Override
+            //@Override
             public JComponent getDropTargetComponent() {
                 logger.warn("Exploiting unimplemented feature: Drag-and-Drop.");
                 return AlignmentBoardPanel.this;
