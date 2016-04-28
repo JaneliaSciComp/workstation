@@ -60,7 +60,7 @@ import org.openide.util.Utilities;
 )
 @TopComponent.Registration(mode = "output", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.horta.ImageAdjustTopComponent")
-@ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Horta" , position = 50)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ImageAdjustAction",
         preferredID = "ImageAdjustTopComponent"

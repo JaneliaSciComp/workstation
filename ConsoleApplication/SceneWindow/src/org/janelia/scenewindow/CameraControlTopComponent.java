@@ -66,7 +66,7 @@ import org.openide.util.Utilities;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.scenewindow.CameraControlTopComponent")
-@ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Horta" , position = 100 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_CameraControlAction",
         preferredID = "CameraControlTopComponent"

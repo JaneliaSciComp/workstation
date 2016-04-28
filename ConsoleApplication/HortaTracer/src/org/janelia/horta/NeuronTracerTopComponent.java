@@ -173,7 +173,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.horta.NeuronTracerTopComponent")
-@ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Horta" , position = 0 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_NeuronTracerAction",
         preferredID = NeuronTracerTopComponent.PREFERRED_ID
