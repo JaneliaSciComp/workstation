@@ -1545,10 +1545,12 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public void setViewerState(HortaViewerState state) {
-        float [] focus = state.getCameraFocus();
+        float [] focus = state.getCameraFocus(); // translation
         sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
-        sceneWindow.getVantage().setRotationInGround(
+        sceneWindow.getVantage().setRotationInGround( // rotation
                 new Rotation().setFromQuaternion(state.getCameraRotation()));
+        sceneWindow.getVantage().setSceneUnitsPerViewportHeight( // zoom
+            state.getCameraSceneUnitsPerViewportHeight());
         
         sceneWindow.getVantage().notifyObservers();
         redrawNow();
@@ -1606,16 +1608,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         private final float cameraFocusX;
         private final float cameraFocusY;
         private final float cameraFocusZ;
-        private Quaternion cameraRotation;
+        private final Quaternion cameraRotation;
+        private final float cameraZoom;
         
         public HortaViewerState(
                 float cameraFocusX, float cameraFocusY, float cameraFocusZ,
-                Quaternion cameraRotation) 
+                Quaternion cameraRotation,
+                float cameraSceneUnitsPerViewportHeight) 
         {
             this.cameraFocusX = cameraFocusX;
             this.cameraFocusY = cameraFocusY;
             this.cameraFocusZ = cameraFocusZ;
             this.cameraRotation = cameraRotation;
+            this.cameraZoom = cameraSceneUnitsPerViewportHeight;
         }
         
         public HortaViewerState(NeuronTracerTopComponent horta) {
@@ -1625,6 +1630,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             cameraFocusY = focus[1];
             cameraFocusZ = focus[2];
             cameraRotation = vantage.getRotationInGround().convertRotationToQuaternion();
+            cameraZoom = vantage.getSceneUnitsPerViewportHeight();
         }
         
         public float[] getCameraFocus() {
@@ -1633,6 +1639,10 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         public Quaternion getCameraRotation() {
             return cameraRotation;
+        }
+        
+        public float getCameraSceneUnitsPerViewportHeight() {
+            return cameraZoom;
         }
     }
 

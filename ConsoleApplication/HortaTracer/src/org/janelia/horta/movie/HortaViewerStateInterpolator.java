@@ -69,10 +69,18 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
                 p2.getCameraRotation(), 
                 p3.getCameraRotation()
         );
+        
+        float zoom = primitiveInterpolator.interpolate_equidistant(
+                ofTheWay,
+                p0.getCameraSceneUnitsPerViewportHeight(),
+                p1.getCameraSceneUnitsPerViewportHeight(),
+                p2.getCameraSceneUnitsPerViewportHeight(),
+                p3.getCameraSceneUnitsPerViewportHeight());
                 
         HortaViewerState result = new HortaViewerState(
                 focus.getX(), focus.getY(), focus.getZ(),
-                rotation
+                rotation,
+                zoom
         );
         
         return result;
@@ -100,9 +108,18 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
                 t0, t1, t2, t3
         );
                 
+        float zoom = primitiveInterpolator.interpolate(
+                ofTheWay,
+                p0.getCameraSceneUnitsPerViewportHeight(),
+                p1.getCameraSceneUnitsPerViewportHeight(),
+                p2.getCameraSceneUnitsPerViewportHeight(),
+                p3.getCameraSceneUnitsPerViewportHeight(), 
+                t0, t1, t2, t3);
+                
         HortaViewerState result = new HortaViewerState(
                 focus.getX(), focus.getY(), focus.getZ(),
-                rotation
+                rotation,
+                zoom
         );
         
         return result;
