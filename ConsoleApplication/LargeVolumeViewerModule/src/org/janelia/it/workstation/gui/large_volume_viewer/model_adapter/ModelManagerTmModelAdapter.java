@@ -53,8 +53,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     
     private final Map<Long,Entity> wsIdToEntity = new HashMap<>();
 
-    private final TmProtobufExchanger exchanger = new TmProtobufExchanger();
-    
     private static Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
 
     private static ScheduledThreadPoolExecutor saveQueue=new ScheduledThreadPoolExecutor(1);
@@ -63,6 +61,8 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     @Override
     public void loadNeurons(TmWorkspace workspace) throws Exception {
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
+        final TmProtobufExchanger exchanger = new TmProtobufExchanger();
+
         try {
             // Obtain the serialized version of the data as raw byte buffers.
             progressHandle.start(TOTAL_WORKUNITS);
@@ -134,7 +134,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     private static class SaveNeuronRunnable implements Runnable {
         TmNeuron neuron;
         Entity workspaceEntity;
-        private final TmProtobufExchanger exchanger = new TmProtobufExchanger();
 
         public SaveNeuronRunnable(Entity workspaceEntity, TmNeuron neuron) {
             this.workspaceEntity=workspaceEntity;
@@ -185,6 +184,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                 }
 
                 // Need to make serializable version of the data.
+                TmProtobufExchanger exchanger = new TmProtobufExchanger();
                 byte[] serializableBytes = exchanger.serializeNeuron(neuron);
                 BASE64Encoder encoder = new BASE64Encoder();
                 preExistingEntityData.setValue(encoder.encode(serializableBytes));
@@ -253,6 +253,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                         neuronId, 
                         EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
                 );
+        final TmProtobufExchanger exchanger = new TmProtobufExchanger();
         return exchanger.deserializeNeuron(rawBuffer, neuron);
     }
 
