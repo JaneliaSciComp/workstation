@@ -61,8 +61,8 @@ public class RelocationMenuBuilder {
     public List<JMenuItem> buildSyncMenu(Collection<Tiled3dSampleLocationProviderAcceptor> locationProviderAcceptors, Tiled3dSampleLocationProviderAcceptor originator, ViewerLocationAcceptor viewerLocationAcceptor) {
         List<JMenuItem> rtnVal = new ArrayList<>();
         for (final Tiled3dSampleLocationProviderAcceptor providerAcceptor : locationProviderAcceptors) {
-            if (logger.isLoggable(Level.INFO))
-                logger.info("Adding menu item for " + providerAcceptor.getProviderUniqueName());
+//            if (logger.isLoggable(Level.INFO))
+//                logger.info("Adding menu item for " + providerAcceptor.getProviderUniqueName());
             final String description = providerAcceptor.getProviderDescription();
             /*
             JMenu synchronizeMenu = new JMenu("Synchronize with " + description);
