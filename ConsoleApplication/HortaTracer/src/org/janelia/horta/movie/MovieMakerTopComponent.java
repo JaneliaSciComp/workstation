@@ -119,10 +119,12 @@ implements LookupListener
 
         realTimeCheckBox.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(realTimeCheckBox, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.realTimeCheckBox.text")); // NOI18N
+        realTimeCheckBox.setEnabled(false);
 
         org.openide.awt.Mnemonics.setLocalizedText(frameCountLabel, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.frameCountLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(saveScriptButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.text")); // NOI18N
+        saveScriptButton.setEnabled(false);
 
         durationTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
         durationTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.text")); // NOI18N
@@ -295,9 +297,12 @@ implements LookupListener
             playButton.setEnabled(false);
             frameCountLabel.setText("No frames in movie");
             addFrameButton.setEnabled(false);
+            deleteFramesButton.setEnabled(false);
         }
         else {
-            playButton.setEnabled(movieTimeline.size() > 0);
+            boolean bHaveFrames = (movieTimeline.size() > 0);
+            playButton.setEnabled(bHaveFrames);
+            deleteFramesButton.setEnabled(bHaveFrames);
             frameCountLabel.setText(movieTimeline.size() + " frames in movie");
             addFrameButton.setEnabled(true);
         }
