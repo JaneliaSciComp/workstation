@@ -175,7 +175,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 mergeNeurite(anchor.getGuid(), closest.getId());
             } else {
                 // move, don't merge
-                activityLog.logMergedNeurite(getSampleID(), getWorkspaceID(), closest);
+                activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
                 moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
