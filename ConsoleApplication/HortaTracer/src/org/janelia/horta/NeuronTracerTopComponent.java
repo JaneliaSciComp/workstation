@@ -1547,8 +1547,12 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void setViewerState(HortaViewerState state) {
         float [] focus = state.getCameraFocus();
         sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
+        sceneWindow.getVantage().setRotationInGround(
+                new Rotation().setFromQuaternion(state.getCameraRotation()));
+        
         sceneWindow.getVantage().notifyObservers();
         redrawNow();
+        
         viewerStateUpdatedObservable.setChanged();
         viewerStateUpdatedObservable.notifyObservers();
     }
@@ -1599,11 +1603,20 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static class HortaViewerState implements ViewerState 
     {
         // TODO: Expand the set of tracked parameters
-        private float cameraFocusX = 0;
-        private float cameraFocusY = 0;
-        private float cameraFocusZ = 0;
+        private final float cameraFocusX;
+        private final float cameraFocusY;
+        private final float cameraFocusZ;
+        private Quaternion cameraRotation;
         
-        public HortaViewerState() {}
+        public HortaViewerState(
+                float cameraFocusX, float cameraFocusY, float cameraFocusZ,
+                Quaternion cameraRotation) 
+        {
+            this.cameraFocusX = cameraFocusX;
+            this.cameraFocusY = cameraFocusY;
+            this.cameraFocusZ = cameraFocusZ;
+            this.cameraRotation = cameraRotation;
+        }
         
         public HortaViewerState(NeuronTracerTopComponent horta) {
             Vantage vantage = horta.sceneWindow.getVantage();
@@ -1611,15 +1624,15 @@ public final class NeuronTracerTopComponent extends TopComponent
             cameraFocusX = focus[0];
             cameraFocusY = focus[1];
             cameraFocusZ = focus[2];
+            cameraRotation = vantage.getRotationInGround().convertRotationToQuaternion();
         }
         
         public float[] getCameraFocus() {
             return new float[] {cameraFocusX, cameraFocusY, cameraFocusZ};
         }
-        public void setCameraFocus(float x, float y, float z) {
-            cameraFocusX = x;
-            cameraFocusY = y;
-            cameraFocusZ = z;
+        
+        public Quaternion getCameraRotation() {
+            return cameraRotation;
         }
     }
 

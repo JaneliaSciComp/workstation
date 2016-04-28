@@ -36,7 +36,7 @@ import org.janelia.geometry3d.Quaternion;
  * Interpolates Java primitive types, plus Quaternions
  * @author brunsc
  */
-public class PrimitiveInterpolator 
+public class PrimitiveInterpolator implements Interpolator<Quaternion>
 {
     private final InterpolatorKernel kernel;
     
@@ -129,9 +129,20 @@ public class PrimitiveInterpolator
     // specialization for Quaterions
     // Translated from page 449 of "Visualizing Quaternions" by Andrew J. Hanson.
     // TODO: I have no idea how to do a non-uniform version of Quaternion interpolation.
-    Quaternion interpolate_equidistant(double t, Quaternion q0, Quaternion q1, Quaternion q2, Quaternion q3)
+    @Override
+    public Quaternion interpolate_equidistant(double t, Quaternion q0, Quaternion q1, Quaternion q2, Quaternion q3)
     {
         return kernel.interpolate_equidistant(t, q0, q1, q2, q3);
+    }
+
+    @Override
+    public Quaternion interpolate(
+            double ofTheWay, 
+            Quaternion p0, Quaternion p1, Quaternion p2, Quaternion p3, 
+            double t0, double t1, double t2, double t3) 
+    {
+        // TODO: I have no idea how to do a non-uniform version of Quaternion interpolation.
+        return interpolate_equidistant(ofTheWay, p0, p1, p2, p3);
     }
     
 }

@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 
@@ -39,7 +40,12 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  */
 class HortaViewerStateInterpolator implements Interpolator<HortaViewerState> 
 {
-    Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(new CatmullRomSplineKernel());
+    private InterpolatorKernel defaultKernel = 
+            // new LinearInterpolatorKernel();
+            new CatmullRomSplineKernel();
+    private Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
+    private PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
+    private Interpolator<Quaternion> rotationInterpolator = primitiveInterpolator;
 
     public HortaViewerStateInterpolator() {
     }
@@ -49,14 +55,25 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
             double ofTheWay, 
             HortaViewerState p0, HortaViewerState p1, HortaViewerState p2, HortaViewerState p3) 
     {
-        HortaViewerState result = new HortaViewerState();
 
         Vector3 focus = vec3Interpolator.interpolate_equidistant(ofTheWay, 
                 new Vector3(p0.getCameraFocus()), 
                 new Vector3(p1.getCameraFocus()), 
                 new Vector3(p2.getCameraFocus()), 
                 new Vector3(p3.getCameraFocus()));
-        result.setCameraFocus(focus.getX(), focus.getY(), focus.getZ());
+        
+        Quaternion rotation = rotationInterpolator.interpolate_equidistant(
+                ofTheWay,
+                p0.getCameraRotation(), 
+                p1.getCameraRotation(), 
+                p2.getCameraRotation(), 
+                p3.getCameraRotation()
+        );
+                
+        HortaViewerState result = new HortaViewerState(
+                focus.getX(), focus.getY(), focus.getZ(),
+                rotation
+        );
         
         return result;
     }
@@ -67,15 +84,26 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
             HortaViewerState p0, HortaViewerState p1, HortaViewerState p2, HortaViewerState p3, 
             double t0, double t1, double t2, double t3) 
     {
-        HortaViewerState result = new HortaViewerState();
-
         Vector3 focus = vec3Interpolator.interpolate(ofTheWay, 
                 new Vector3(p0.getCameraFocus()), 
                 new Vector3(p1.getCameraFocus()), 
                 new Vector3(p2.getCameraFocus()), 
                 new Vector3(p3.getCameraFocus()), 
                 t0, t1, t2, t3);
-        result.setCameraFocus(focus.getX(), focus.getY(), focus.getZ());
+        
+        Quaternion rotation = rotationInterpolator.interpolate(
+                ofTheWay,
+                p0.getCameraRotation(), 
+                p1.getCameraRotation(), 
+                p2.getCameraRotation(), 
+                p3.getCameraRotation(), 
+                t0, t1, t2, t3
+        );
+                
+        HortaViewerState result = new HortaViewerState(
+                focus.getX(), focus.getY(), focus.getZ(),
+                rotation
+        );
         
         return result;
     }

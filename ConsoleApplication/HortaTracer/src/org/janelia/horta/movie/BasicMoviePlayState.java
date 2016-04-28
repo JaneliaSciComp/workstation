@@ -218,11 +218,11 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
             double now = System.nanoTime() / 1.0e9; // seconds
             double elapsed = now - previousFrameStartTimeInLab;
             
-            logger.info("initial elapsed time since last frame = " + elapsed + " seconds");
+            // logger.info("initial elapsed time since last frame = " + elapsed + " seconds");
 
             if (elapsed < minFrameDuration) {
                 long sleepTimeMs = (long)((minFrameDuration - elapsed) * 1000);
-                logger.info("sleeping for = " + sleepTimeMs + " milliseconds");            
+                // logger.info("sleeping for = " + sleepTimeMs + " milliseconds");            
                 try {
                     Thread.sleep( (long)((minFrameDuration - elapsed) * 1000) );
                 } catch (InterruptedException ex) {
