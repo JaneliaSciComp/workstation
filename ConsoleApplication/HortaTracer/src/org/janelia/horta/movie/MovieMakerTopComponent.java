@@ -355,7 +355,7 @@ implements LookupListener
         if (allSources.isEmpty())
             setMovieSource(null);
         else
-            setMovieSource(allSources.iterator().next());
+            setMovieSource((MovieSource<HortaViewerState>)allSources.iterator().next());
     }
 
     @Override
@@ -397,11 +397,11 @@ implements LookupListener
     private Lookup.Result<MovieSource> movieSourcesResult = null;
     private MovieSource<HortaViewerState> movieSource = null;
 
-    public MovieSource getMovieSource() {
+    public MovieSource<HortaViewerState> getMovieSource() {
         return movieSource;
     }
 
-    public void setMovieSource(MovieSource movieSource) 
+    public void setMovieSource(MovieSource<HortaViewerState> movieSource) 
     {
         if ((movieSource == null) && (this.movieSource == null)) 
         {
@@ -417,7 +417,7 @@ implements LookupListener
         if (movieTimeline == null)
             movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
         movieTimeline.clear();
-        playState = new BasicMoviePlayState(movieTimeline, movieSource);
+        playState = new BasicMoviePlayState<>(movieTimeline, movieSource);
         
         updateGui();
     }
@@ -438,6 +438,6 @@ implements LookupListener
         if (sources.isEmpty())
             setMovieSource(null);
         else
-            setMovieSource(sources.iterator().next());
+            setMovieSource((MovieSource<HortaViewerState>)sources.iterator().next());
     }
 }

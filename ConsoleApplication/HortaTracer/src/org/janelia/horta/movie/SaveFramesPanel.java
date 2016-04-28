@@ -36,6 +36,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
@@ -87,12 +88,13 @@ public class SaveFramesPanel extends JPanel
         // Movie name field
         JPanel movieNamePanel = new JPanel();
         movieNamePanel.setBorder(BorderFactory.createTitledBorder("Name of movie"));
-        movieNamePanel.add(new JTextField());
+        movieNamePanel.setLayout(new BoxLayout(movieNamePanel, BoxLayout.LINE_AXIS));
+        movieNamePanel.add(new JTextField("mymovie"));
         add(movieNamePanel);
         
         // delete frames toggle
         JPanel deleteFramesPanel = new JPanel();
-        deleteFramesPanel.setLayout(new BoxLayout(folderPanel, BoxLayout.LINE_AXIS));
+        deleteFramesPanel.setLayout(new BoxLayout(deleteFramesPanel, BoxLayout.LINE_AXIS));
         deleteFramesPanel.add(new JCheckBox("Delete frame images?"));
         deleteFramesPanel.add(Box.createHorizontalGlue());
         add(deleteFramesPanel);
@@ -101,7 +103,9 @@ public class SaveFramesPanel extends JPanel
         JPanel frameRatePanel = new JPanel();
         frameRatePanel.setBorder(BorderFactory.createTitledBorder("Movie Frame Rate"));
         frameRatePanel.setLayout(new BoxLayout(frameRatePanel, BoxLayout.LINE_AXIS));
-        frameRatePanel.add(new JComboBox());
+        JComboBox<Float> fpsBox = new JComboBox<>(new Float[] {24.0f, 30.0f, 60.0f});
+        frameRatePanel.add(fpsBox);
+        frameRatePanel.add(new JLabel("frames per second"));
         frameRatePanel.add(Box.createHorizontalGlue());
         add(frameRatePanel);
         
