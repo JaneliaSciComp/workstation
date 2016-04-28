@@ -63,7 +63,7 @@ import org.openide.util.Utilities;
 @Messages({
     "CTL_MovieMakerAction=MovieMaker",
     "CTL_MovieMakerTopComponent=Movie Maker",
-    "HINT_MovieMakerTopComponent=This is a Movie Maker window"
+    "HINT_MovieMakerTopComponent=Horta Movie Maker controls"
 })
 public final class MovieMakerTopComponent 
 extends TopComponent 
@@ -102,6 +102,7 @@ implements LookupListener
         deleteFramesButton = new javax.swing.JButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(addFrameButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.addFrameButton.text")); // NOI18N
+        addFrameButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.addFrameButton.toolTipText")); // NOI18N
         addFrameButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addFrameButtonActionPerformed(evt);
@@ -109,6 +110,7 @@ implements LookupListener
         });
 
         org.openide.awt.Mnemonics.setLocalizedText(playButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.playButton.text")); // NOI18N
+        playButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.playButton.toolTipText")); // NOI18N
         playButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 playButtonActionPerformed(evt);
@@ -116,6 +118,7 @@ implements LookupListener
         });
 
         org.openide.awt.Mnemonics.setLocalizedText(saveFramesButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveFramesButton.text")); // NOI18N
+        saveFramesButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveFramesButton.toolTipText")); // NOI18N
 
         realTimeCheckBox.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(realTimeCheckBox, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.realTimeCheckBox.text")); // NOI18N
@@ -124,10 +127,12 @@ implements LookupListener
         org.openide.awt.Mnemonics.setLocalizedText(frameCountLabel, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.frameCountLabel.text")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(saveScriptButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.text")); // NOI18N
+        saveScriptButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.toolTipText")); // NOI18N
         saveScriptButton.setEnabled(false);
 
         durationTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
         durationTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.text")); // NOI18N
+        durationTextField.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.toolTipText")); // NOI18N
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel2.text")); // NOI18N
 
@@ -135,6 +140,7 @@ implements LookupListener
 
         fpsTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
         fpsTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.fpsTextField.text_2")); // NOI18N
+        fpsTextField.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.fpsTextField.toolTipText")); // NOI18N
         fpsTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 fpsTextFieldActionPerformed(evt);
@@ -142,6 +148,7 @@ implements LookupListener
         });
 
         org.openide.awt.Mnemonics.setLocalizedText(deleteFramesButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.deleteFramesButton.text")); // NOI18N
+        deleteFramesButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.deleteFramesButton.toolTipText")); // NOI18N
         deleteFramesButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteFramesButtonActionPerformed(evt);
@@ -155,25 +162,25 @@ implements LookupListener
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(addFrameButton)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(addFrameButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel2))
                     .addComponent(saveFramesButton)
                     .addComponent(saveScriptButton)
                     .addGroup(layout.createSequentialGroup()
                         .addGap(10, 10, 10)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(frameCountLabel)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jLabel2))))
+                        .addComponent(frameCountLabel))
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(fpsTextField)
-                            .addComponent(playButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addComponent(playButton)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(realTimeCheckBox)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)))
+                        .addComponent(fpsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 53, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(realTimeCheckBox))
                     .addComponent(deleteFramesButton))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -181,28 +188,26 @@ implements LookupListener
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(addFrameButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(addFrameButton)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(durationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel2)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(frameCountLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(playButton)
-                    .addComponent(realTimeCheckBox))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(fpsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel1)
-                    .addComponent(fpsTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(realTimeCheckBox))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(saveFramesButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(saveScriptButton)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(deleteFramesButton)
-                .addContainerGap(83, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -298,11 +303,13 @@ implements LookupListener
             frameCountLabel.setText("No frames in movie");
             addFrameButton.setEnabled(false);
             deleteFramesButton.setEnabled(false);
+            saveFramesButton.setEnabled(false);
         }
         else {
             boolean bHaveFrames = (movieTimeline.size() > 0);
             playButton.setEnabled(bHaveFrames);
             deleteFramesButton.setEnabled(bHaveFrames);
+            saveFramesButton.setEnabled(bHaveFrames);
             frameCountLabel.setText(movieTimeline.size() + " frames in movie");
             addFrameButton.setEnabled(true);
         }
