@@ -40,14 +40,14 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  */
 class HortaViewerStateInterpolator implements Interpolator<HortaViewerState> 
 {
-    private InterpolatorKernel defaultKernel = 
+    private final InterpolatorKernel defaultKernel = 
             // new LinearInterpolatorKernel();
             new CatmullRomSplineKernel();
-    private InterpolatorKernel linearKernel = 
+    private final InterpolatorKernel linearKernel = 
             new LinearInterpolatorKernel();
-    private Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
-    private PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
-    private Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(defaultKernel);
+    private final Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
+    private final PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
+    private final Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(defaultKernel);
 
     public HortaViewerStateInterpolator() {
     }

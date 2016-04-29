@@ -1495,6 +1495,13 @@ public final class NeuronTracerTopComponent extends TopComponent
             return;
         sceneWindow.getInnerComponent().repaint();
     }
+    
+    private void redrawImmediately() {
+        JComponent c = sceneWindow.getOuterComponent();
+        if (sceneWindow.getInnerComponent() instanceof JComponent)
+            c = (JComponent)sceneWindow.getInnerComponent();
+        c.paintImmediately(c.getBounds());
+    }
 
     @Override
     public void componentOpened() {
@@ -1564,6 +1571,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         setViewerState(state);
         sceneWindow.getVantage().notifyObservers();
         redrawNow();
+        // no, seriously
+        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+        glad.display(); // Now only the first two frames are stale
+        // TODO: make the first rendered image not stale
+        
         // TODO: wait for tile load
         return getScreenShot();
     }
