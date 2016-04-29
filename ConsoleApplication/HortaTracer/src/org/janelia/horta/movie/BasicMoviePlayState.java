@@ -118,11 +118,6 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     }
 
     @Override
-    public void playEveryFrame(float framesPerSecond) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public void playRealTime(float maxFramesPerSecond) {
         minFrameDuration = 1.0/maxFramesPerSecond;
         start();

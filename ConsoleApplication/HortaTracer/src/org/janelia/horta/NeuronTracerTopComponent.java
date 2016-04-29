@@ -379,7 +379,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // TODO: for now assuming that the largest NeuronSet is the LVV one
                 
                 Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
-                if (sets.size() == 0) {} // Do nothing
+                if (sets.isEmpty()) {} // Do nothing
                 else if (sets.size() == 1) {
                     tracingInteractor.setDefaultWorkspace(sets.iterator().next());                    
                 }

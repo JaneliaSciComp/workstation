@@ -45,7 +45,6 @@ public interface MoviePlayState<T extends ViewerState> extends GenericObservable
     void setLoop(boolean doLoop);
     boolean isRunning();
     void skipToTime(float seconds);
-    void playEveryFrame(float framesPerSecond);
     void playRealTime(float maxFramesPerSecond);
     void pause();
     void reset();

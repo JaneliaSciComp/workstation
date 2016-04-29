@@ -49,6 +49,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.slf4j.Logger;
@@ -89,27 +90,7 @@ public class SaveFramesPanel extends JPanel
         if (result != JFileChooser.APPROVE_OPTION)
             return null;
         File file = folderChooser.getSelectedFile();
-        if (! file.exists()) {
-            JOptionPane.showMessageDialog(this,
-                    "No such folder '" + file.getAbsolutePath() + "'",
-                    "Folder not found",
-                    JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
-        if (! file.isDirectory()) {
-            JOptionPane.showMessageDialog(this,
-                    "That's is a regular file, not a folder: '" + file.getAbsolutePath() + "'",
-                    "That's not a folder",
-                    JOptionPane.ERROR_MESSAGE);
-            return null;
-        }
-        if (! file.canWrite()) {
-            JOptionPane.showMessageDialog(this,
-                    "You cannot write to this folder: '" + file.getAbsolutePath() + "'",
-                    "You cannot write to that folder",
-                    JOptionPane.ERROR_MESSAGE);
-            return null;                    
-        }
+        sanityCheckOutputFolder(file);
         return file;
     }
     
@@ -180,45 +161,110 @@ public class SaveFramesPanel extends JPanel
         add(Box.createVerticalGlue());
     }
 
-    private void saveFrameImages() {
-        File frameFolder = new File(outFolderField.getText());
-        String baseFileName = movieNameField.getText();
-        float frameRate = fpsBox.getItemAt(fpsBox.getSelectedIndex());
+    private boolean sanityCheckOutputFolder(File file) {        
+        if (! file.exists()) {
+            JOptionPane.showMessageDialog(this,
+                    "No such folder '" + file.getAbsolutePath() + "'",
+                    "Folder not found",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (! file.isDirectory()) {
+            JOptionPane.showMessageDialog(this,
+                    "That's is a regular file, not a folder: '" + file.getAbsolutePath() + "'",
+                    "That's not a folder",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        if (! file.canWrite()) {
+            JOptionPane.showMessageDialog(this,
+                    "You cannot write to this folder: '" + file.getAbsolutePath() + "'",
+                    "You cannot write to that folder",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;                    
+        }
+        return true;
+    }
+    
+    // e.g. "/Users/"
+    private File fileForFrameImage(File folder, String baseName, int frameNumber) 
+    {
+        String imageName = baseName + "_" + String.format("%05d", frameNumber) + ".jpg";
+        File result = new File(folder, imageName);
+        return result;
+    }
+    
+    private boolean sanityCheckFrameName(File folder, String baseName) 
+    {
+        File firstFrameImage = fileForFrameImage(folder, baseName, 1);
+        if (firstFrameImage.exists()) {
+            int result = JOptionPane.showConfirmDialog(this,
+                    "Overwrite existing image: '" + firstFrameImage.getAbsolutePath() + "'?",
+                    "Overwrite existing files?",
+                    JOptionPane.OK_CANCEL_OPTION);
+            if (result == JOptionPane.CANCEL_OPTION)
+                return false;        
+        }
+        return true;
+    }
+    
+    private void saveFrameImages() 
+    {
+        final File frameFolder = new File(outFolderField.getText());
+        final String baseFileName = movieNameField.getText();
+        final float frameRate = fpsBox.getItemAt(fpsBox.getSelectedIndex());
         
-        logger.info("Hey! I should save frames here...");
+        if (! sanityCheckOutputFolder(frameFolder))
+            return;
 
-        // TODO: sanity checks
+        if (! sanityCheckFrameName(frameFolder, baseFileName))
+            return;
+        // logger.info("Hey! I should save frames here...");
         
-        // TODO: launch a separate save thread
         progressBar.setValue(1);
+        final JComponent parent = this;
 
-        // TODO: move below cleanup to a save thread listener
-        // TODO: post run sanity checks
-        // Assuming all went well...
-        progressBar.setValue(100);
-        
-        // Use a JTextPane so the user can select the text with a mouse
-        JTextPane message = new JTextPane();
-        message.setEditable(false);
-        message.setBackground(null); // same as JLabel
-        message.setBorder(null);
-        message.setContentType("text/html");
-        message.setText(""
-                + "<html>Finished saving frame images"
-                + "<br>in folder &quot;" + frameFolder + "&quot;"
-                + "<br>To create a movie file, run ffmpeg from the command line:"
-                + "<br><br> <b>ffmpeg" // program name
-                + " -i " + baseFileName + "_%5d.jpg" // input image file name pattern
-                + " -r " + frameRate // input frame rate
-                + " -b:v 5M" // use a decent bit rate
-                // + " -y" // always say "yes" to overwriting files
-                + " " + baseFileName +".mp4</b> <html>" // output file name
-                );
-        JOptionPane.showMessageDialog(this, 
-                message,
-                "Finished saving frame images",
-                JOptionPane.INFORMATION_MESSAGE);
-        progressBar.setValue(0);
+        // launch a separate save thread
+        Runnable saveFramesTask = new Runnable() {
+            @Override
+                public void run() {
+                    // TODO: actually collect and save the frames
+                    
+                    // TODO: report completion
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {                        // TODO: move below cleanup to a save thread listener
+                            // TODO: post run sanity checks
+                            // Assuming all went well...
+                            progressBar.setValue(100);
+
+                            // Use a JTextPane so the user can select the text with a mouse
+                            JTextPane message = new JTextPane();
+                            message.setEditable(false);
+                            message.setBackground(null); // same as JLabel
+                            message.setBorder(null);
+                            message.setContentType("text/html");
+                            message.setText(""
+                                    + "<html>Finished saving frame images"
+                                    + "<br>in folder &quot;" + frameFolder + "&quot;"
+                                    + "<br>To create a movie file, run ffmpeg from the command line:"
+                                    + "<br><br> <b>ffmpeg" // program name
+                                    + " -i " + baseFileName + "_%5d.jpg" // input image file name pattern
+                                    + " -r " + frameRate // input frame rate
+                                    + " -b:v 5M" // use a decent bit rate
+                                    // + " -y" // always say "yes" to overwriting files
+                                    + " " + baseFileName +".mp4</b> <html>" // output file name
+                            );
+                            JOptionPane.showMessageDialog(parent, 
+                                    message,
+                                    "Finished saving frame images",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            progressBar.setValue(0);
+                        }
+                    });
+            }
+        };
+        new Thread(saveFramesTask).start();
     }
     
     public void showDialog() {
@@ -227,7 +273,7 @@ public class SaveFramesPanel extends JPanel
             saveFrameImages();
         } 
         else {
-            logger.info("Frame saving was cancelled");
+            // logger.info("Frame saving was cancelled");
         }
     }
 }
