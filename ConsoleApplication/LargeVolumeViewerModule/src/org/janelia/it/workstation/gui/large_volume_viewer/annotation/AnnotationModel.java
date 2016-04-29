@@ -797,15 +797,27 @@ called from a  SimpleWorker thread.
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
+            log.info("Unexpected null neuron during anchor deletion");
             return;
+        }
+        if (neuron.getGeoAnnotationMap() == null) {
+            log.info("Unexpected null neuron.getGeoAnnotationMap() during anchor deletion");
         }
 
         // begin the (long) deletion process
         // reparent the deleted node's child (if there is one) to the node's parent
-        TmGeoAnnotation parent = neuron.getParentOf(link);
+        TmGeoAnnotation parent = neuron.getParentOf(link);      
         TmGeoAnnotation child = null;
         if (link.getChildIds().size() == 1) {
             child = neuron.getChildrenOf(link).get(0);
+            {
+                // Amina saw a NullPointerException inside the reparentGeometricAnnotation call below.
+                // Perhaps logging the trouble could help here
+                if (child == null) {
+                    log.info("Unexpected null child during anchor deletion");
+                    return;
+                }
+            }
             neuronManager.reparentGeometricAnnotation(child, parent.getId(), neuron);
 
             // if segment to child had a traced path, remove it
