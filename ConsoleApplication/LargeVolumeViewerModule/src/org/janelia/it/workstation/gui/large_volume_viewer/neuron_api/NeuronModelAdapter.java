@@ -209,7 +209,10 @@ public class NeuronModelAdapter implements NeuronModel
         Long vertexId = annotation.getId();
         assert(vertexes.containsKey(vertexId));
         Long parentId = annotation.getParentId();
-        NeuronVertex newVertex = vertexes.getVertexByGuid(vertexId);
+        NeuronVertex newVertex = vertexes.getVertexByTmGeoAnnotation(annotation);
+        if (newVertex == null) {
+            logger.error("Could not find anchor with guid "+vertexId);
+        }
         // Add edge
         if (vertexId.equals(parentId)) 
             return newVertex; // Self parent, so no edge. TODO: maybe this never happens
@@ -504,6 +507,7 @@ public class NeuronModelAdapter implements NeuronModel
         private Map<Long, TmGeoAnnotation> vertices;
         private final Map<Long, NeuronVertex> cachedVertices = new HashMap<>();
         private TmWorkspace workspace;
+        private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
         private VertexList(Map<Long, TmGeoAnnotation> vertices, TmWorkspace workspace)
         {
@@ -646,8 +650,30 @@ public class NeuronModelAdapter implements NeuronModel
         {
             if (! cachedVertices.containsKey(vertexId)) {
                 TmGeoAnnotation a = getAnnotationByGuid(vertexId);
-                if (a == null)
+                if (a == null) {
+                    logger.error("anchor not found in geoAnnotationMap");
                     return null;
+                }
+                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
+            }
+            return cachedVertices.get(vertexId);
+        }
+        
+        private NeuronVertex getVertexByTmGeoAnnotation(TmGeoAnnotation a)
+        {
+            if (a == null) {
+                logger.error("attempt to retrieve vertex for null TmGeoAnnotation");
+                return null;
+            }
+            Long vertexId = a.getId();
+            
+            // sanity check
+            TmGeoAnnotation fromGAMap = getAnnotationByGuid(vertexId);
+            if (fromGAMap == null) {
+                logger.error("anchor not found in neuron geoAnnotationMap");
+            }
+            
+            if (! cachedVertices.containsKey(vertexId)) {
                 cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
             }
             return cachedVertices.get(vertexId);

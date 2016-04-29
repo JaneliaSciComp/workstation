@@ -224,6 +224,10 @@ implements NeuronSet, LookupListener
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
                 if (neuron.getTmNeuron().getId().equals(neuronId)) {
                     NeuronVertex newVertex = neuron.addVertex(annotation);
+                    if (newVertex == null) {
+                        logger.error("NeuronModelAdapter.addVertex() returned null");
+                        return;
+                    }
                     neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
                     // Trigger a Horta repaint  for instant GUI feedback
                     // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
