@@ -179,6 +179,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
+            activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), anchorVoxelLocation);
             moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
         }
     }

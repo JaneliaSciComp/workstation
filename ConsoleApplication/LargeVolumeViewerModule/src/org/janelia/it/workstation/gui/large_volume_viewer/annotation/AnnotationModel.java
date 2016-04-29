@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
@@ -94,6 +95,7 @@ called from a  SimpleWorker thread.
 
     private LoadTimer addTimer = new LoadTimer();
 
+    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
 
@@ -161,6 +163,15 @@ called from a  SimpleWorker thread.
     // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
+    }
+    
+    private Long getWsId() {
+        if (currentWorkspace != null) {
+            return currentWorkspace.getId();
+        }
+        else {
+            return -1L;
+        }
     }
 
     private void updateCurrentWorkspace() {
@@ -501,6 +512,7 @@ called from a  SimpleWorker thread.
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, neuron.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
+        activityLog.logEndOfOperation(getWsId(), xyz);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -541,6 +553,7 @@ called from a  SimpleWorker thread.
                 viewStateListener.pathTraceRequested(annotation.getId());
         }
 
+        activityLog.logEndOfOperation(getWsId(), xyz);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -620,6 +633,7 @@ called from a  SimpleWorker thread.
             }
         }
 
+        activityLog.logEndOfOperation(getWsId(), location);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -718,6 +732,7 @@ called from a  SimpleWorker thread.
             neuronManager.saveNeuronData(sourceNeuron);
         }
 
+        activityLog.logEndOfOperation(getWsId(), targetAnnotation);
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -757,6 +772,7 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron currentNeuron = getCurrentNeuron();
 
+        activityLog.logEndOfOperation(getWsId(), annotation);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -853,6 +869,7 @@ called from a  SimpleWorker thread.
             viewStateListener.pathTraceRequested(child.getId());
         }
 
+        activityLog.logEndOfOperation(getWsId(), link);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -926,6 +943,7 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
 
+        activityLog.logEndOfOperation(getWsId(), rootAnnotation);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -1014,6 +1032,7 @@ called from a  SimpleWorker thread.
             }
         }
 
+        activityLog.logEndOfOperation(getWsId(), annotation);
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1043,6 +1062,7 @@ called from a  SimpleWorker thread.
 
         neuronManager.saveNeuronData(neuron);
 
+        activityLog.logEndOfOperation(getWsId(), newRoot);
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             final TmNeuron updateNeuron = getCurrentNeuron();
             SwingUtilities.invokeLater(new Runnable() {
@@ -1072,6 +1092,7 @@ called from a  SimpleWorker thread.
         neuronManager.saveNeuronData(neuron);
 
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
+        activityLog.logEndOfOperation(getWsId(), newRoot);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -1591,10 +1612,10 @@ called from a  SimpleWorker thread.
     public synchronized void postWorkspaceUpdate() throws Exception {
         updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
-        // it's possible this reload of the neurons isn't needed; currently
-        //  it's only called as part of bulk SWC import, and the neurons are
-        //  reloaded earlier in that process; however, I'm not sure how to
-        //  definitively test it, so I'm reluctant to remove it now
+        // This has been shown to be required. Without this load-back,
+        // the SWC import will not show the very latest neuron(s) added.
+        // In fact, not having called this consistently, was shown to be a bug.
+        // LLF, 4/29/2016
         neuronManager.loadWorkspaceNeurons(workspace);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
