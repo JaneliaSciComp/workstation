@@ -32,7 +32,12 @@ package org.janelia.horta.movie;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -52,6 +57,7 @@ import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,7 +214,104 @@ public class SaveFramesPanel extends JPanel
         return true;
     }
     
-    private void saveFrameImages() 
+    private void updateProgressBar(final int percent) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                progressBar.setValue( percent );
+        }});                           
+    }
+    
+    private void reportSuccess(final File frameFolder, final String baseFileName, final float frameRate) 
+    {
+        final JComponent parent = this;
+        // Report successful completion, in the GUI thread
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {                        
+                // Assuming all went well...
+                progressBar.setValue(100);
+
+                // Use a JTextPane so the user can select the text with a mouse
+                JTextPane message = new JTextPane();
+                message.setEditable(false);
+                message.setBackground(null); // same as JLabel
+                message.setBorder(null);
+                message.setContentType("text/html");
+                message.setText(""
+                        + "<html>Finished saving frame images"
+                        + "<br>in folder &quot;" + frameFolder + "&quot;"
+                        + "<br>To create a movie file, run ffmpeg from the command line:"
+                        + "<br><br> <b>ffmpeg" // program name
+                        + " -i " + baseFileName + "_%5d.jpg" // input image file name pattern
+                        + " -r " + frameRate // input frame rate
+                        + " -b:v 5M" // use a decent bit rate
+                        // + " -y" // always say "yes" to overwriting files
+                        + " " + baseFileName +".mp4</b> <html>" // output file name
+                );
+                
+                // Reduce save dialog
+                parent.setVisible(false);
+                
+                JOptionPane.showMessageDialog(parent, 
+                        message,
+                        "Finished saving frame images",
+                        JOptionPane.INFORMATION_MESSAGE);
+                progressBar.setValue(0);
+            }
+        });      
+    }
+    
+    private void reportCancel() 
+    {
+        final JComponent parent = this;
+        // Report successful completion, in the GUI thread
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(
+                        parent, 
+                        "Movie frame image saving was cancelled", 
+                        "Movie frame image saving was cancelled", 
+                        JOptionPane.WARNING_MESSAGE
+                        );
+                progressBar.setValue(0);
+            }
+        });      
+    }
+    
+    private void reportError(final String message) 
+    {
+        final JComponent parent = this;
+        // Report successful completion, in the GUI thread
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(
+                        parent, 
+                        message, 
+                        "Error saving movie image files", 
+                        JOptionPane.ERROR_MESSAGE
+                        );
+                progressBar.setValue(0);
+            }
+        });      
+    }
+    
+    private BufferedImage currentImage;
+    private BufferedImage getFrame(final MoviePlayState playState) 
+            throws InterruptedException, InvocationTargetException 
+    {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                currentImage = playState.getCurrentFrameImageNow();
+            }
+        });
+        return currentImage; // TODO:
+    }
+    
+    private void saveFrameImages(final MoviePlayState playState) 
     {
         final File frameFolder = new File(outFolderField.getText());
         final String baseFileName = movieNameField.getText();
@@ -222,55 +325,68 @@ public class SaveFramesPanel extends JPanel
         // logger.info("Hey! I should save frames here...");
         
         progressBar.setValue(1);
-        final JComponent parent = this;
+        final JComponent dialog = this;
 
         // launch a separate save thread
         Runnable saveFramesTask = new Runnable() {
             @Override
                 public void run() {
-                    // TODO: actually collect and save the frames
+                    float movieDuration = playState.getTotalDuration();
+                    // frameCount is ALL rendered frames, not just Key Frames
+                    int frameCount = (int) Math.ceil(frameRate * (movieDuration
+                            // smidgen added to round up to one from zero for zero-duration, single-frame movies
+                            + 0.2/frameRate)); 
                     
-                    // TODO: report completion
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {                        // TODO: move below cleanup to a save thread listener
-                            // TODO: post run sanity checks
-                            // Assuming all went well...
-                            progressBar.setValue(100);
-
-                            // Use a JTextPane so the user can select the text with a mouse
-                            JTextPane message = new JTextPane();
-                            message.setEditable(false);
-                            message.setBackground(null); // same as JLabel
-                            message.setBorder(null);
-                            message.setContentType("text/html");
-                            message.setText(""
-                                    + "<html>Finished saving frame images"
-                                    + "<br>in folder &quot;" + frameFolder + "&quot;"
-                                    + "<br>To create a movie file, run ffmpeg from the command line:"
-                                    + "<br><br> <b>ffmpeg" // program name
-                                    + " -i " + baseFileName + "_%5d.jpg" // input image file name pattern
-                                    + " -r " + frameRate // input frame rate
-                                    + " -b:v 5M" // use a decent bit rate
-                                    // + " -y" // always say "yes" to overwriting files
-                                    + " " + baseFileName +".mp4</b> <html>" // output file name
-                            );
-                            JOptionPane.showMessageDialog(parent, 
-                                    message,
-                                    "Finished saving frame images",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                            progressBar.setValue(0);
+                    for (int f = 0; f < frameCount; ++f) {
+                        float progressRatio = 0;
+                        if (f > 0) // avoid divide by zero
+                            progressRatio = f / (float)(frameCount - 1);
+                        float frameInstant = movieDuration * progressRatio;
+                        final File imageFile = fileForFrameImage(frameFolder, baseFileName, f+1);
+                        
+                        playState.skipToTime(frameInstant);
+                        
+                        try {
+                            // TODO: actually collect and save the frames
+                            BufferedImage frameImage = getFrame(playState);
+                            if (frameImage != null) {
+                                try {
+                                    ImageIO.write(frameImage, "JPG", imageFile);
+                                } catch (IOException ex) {
+                                    reportError(ex.getMessage());
+                                    return;
+                                }
+                            }
+                        } catch (InterruptedException ex) {
+                            updateProgressBar(0);
+                            reportCancel();
+                            return;
+                        } catch (InvocationTargetException ex) {
+                            Exceptions.printStackTrace(ex);
                         }
-                    });
-            }
+                        
+                        // TODO: check for "Cancel" operation
+                        
+                        updateProgressBar((int)Math.round(100 * progressRatio));                
+                    }
+                    
+                    // TODO: post run sanity checks
+                    
+                    // Report successful completion, in the GUI thread
+                    reportSuccess(frameFolder, baseFileName, frameRate);
+                }
         };
+
+        // Show the save dialog, so user can see progress bar
+        setVisible(true);
+        
         new Thread(saveFramesTask).start();
     }
     
-    public void showDialog() {
+    public void showDialog(MoviePlayState playState) {
         Object result = DialogDisplayer.getDefault().notify(notifyDescriptor);
         if (result == saveOption) {
-            saveFrameImages();
+            saveFrameImages(playState);
         } 
         else {
             // logger.info("Frame saving was cancelled");

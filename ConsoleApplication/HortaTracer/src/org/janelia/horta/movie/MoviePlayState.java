@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import java.awt.image.BufferedImage;
 import org.janelia.console.viewerapi.GenericObservable;
 
 /**
@@ -38,6 +39,7 @@ import org.janelia.console.viewerapi.GenericObservable;
  */
 public interface MoviePlayState<T extends ViewerState> extends GenericObservable<T>
 {
+    BufferedImage getCurrentFrameImageNow(); // must be called from GUI thread
     float getFramesPerSecond();
     void setFramesPerSecond(float fps);
     float getTotalDuration();

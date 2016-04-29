@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import java.awt.image.BufferedImage;
 import java.util.Deque;
 import java.util.Observable;
 import java.util.Observer;
@@ -48,6 +49,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     private boolean doLoop = false;
     private float framesPerSecond;
     private final MovieSource<T> movieSource;
+    private final MovieRenderer<T> movieRenderer;
     
     private double previousFrameStartTimeInLab = System.nanoTime() / 1.0e9;
     private double currentFrameTimeInVideo = 0;
@@ -56,9 +58,14 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     private double minFrameDuration = 1.0 / 5.0;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public BasicMoviePlayState(Timeline<T> timeline, MovieSource<T> movieSource) {
+    public BasicMoviePlayState(
+            Timeline<T> timeline, 
+            MovieSource<T> movieSource,
+            MovieRenderer<T> movieRenderer) 
+    {
         this.timeline = timeline;
         this.movieSource = movieSource;
+        this.movieRenderer = movieRenderer;
         
         // Here what we do when the viewer signals it has updated the previous frame:
         movieSource.getViewerStateUpdatedObservable().addObserver(new Observer() {
@@ -84,17 +91,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     
     @Override
     public float getTotalDuration() {
-        Deque<KeyFrame<T>> f = timeline;
-        float totalDuration = 0;
-        for (KeyFrame<T> keyFrame : f) {
-            totalDuration += keyFrame.getFollowingIntervalDuration();
-        }
-        // Don't include final frame duration, unless movie is a loop
-        if ( (! isLoop()) && (f.size() > 0) ) {
-            KeyFrame<T> finalFrame = f.getLast();
-            totalDuration -= finalFrame.getFollowingIntervalDuration();
-        }
-        return totalDuration;
+        return timeline.getTotalDuration(isLoop());
     }
     
     @Override
@@ -114,7 +111,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
 
     @Override
     public void skipToTime(float seconds) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        currentFrameTimeInVideo = seconds;
     }
 
     @Override
@@ -182,6 +179,14 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
         bIsRunning = false;
         currentFrameTimeInVideo = 0;
         previousFrameStartTimeInLab = System.nanoTime() / 1.0e9;
+    }
+    
+    // Must be run in GUI thread
+    @Override
+    public BufferedImage getCurrentFrameImageNow() {
+        T state = timeline.viewerStateForTime((float)currentFrameTimeInVideo, doLoop);
+        BufferedImage result = movieRenderer.getRenderedFrame(state);
+        return result;
     }
     
     class NextFrameThread extends Thread implements Runnable

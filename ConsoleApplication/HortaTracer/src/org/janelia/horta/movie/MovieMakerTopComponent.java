@@ -314,7 +314,7 @@ implements LookupListener
     }//GEN-LAST:event_fpsTextFieldActionPerformed
 
     private void saveFramesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveFramesButtonActionPerformed
-        saveFramesPanel.showDialog();
+        saveFramesPanel.showDialog(playState);
     }//GEN-LAST:event_saveFramesButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -335,7 +335,18 @@ implements LookupListener
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        // add custom code on component opening
+        
+        // Movie Renderers
+        movieRenderersResult = Utilities.actionsGlobalContext().lookupResult(MovieRenderer.class);
+        movieRenderersResult.addLookupListener(this);
+        Collection<? extends MovieRenderer> allRenderers = movieRenderersResult.allInstances();
+        if (allRenderers.isEmpty())
+            setMovieRenderer(null);
+        else
+            setMovieRenderer((MovieRenderer<HortaViewerState>)allRenderers.iterator().next());
+        
+        // Movie Sources
         movieSourcesResult = Utilities.actionsGlobalContext().lookupResult(MovieSource.class);
         movieSourcesResult.addLookupListener(this);
         Collection<? extends MovieSource> allSources = movieSourcesResult.allInstances();
@@ -348,6 +359,7 @@ implements LookupListener
     @Override
     public void componentClosed() {
         // TODO add custom code on component closing
+        movieRenderersResult.removeLookupListener(this);
         movieSourcesResult.removeLookupListener(this);
     }
 
@@ -381,11 +393,36 @@ implements LookupListener
         }
     }
     
+    private Lookup.Result<MovieRenderer> movieRenderersResult = null;
+    private MovieRenderer<HortaViewerState> movieRenderer = null;
+    
     private Lookup.Result<MovieSource> movieSourcesResult = null;
     private MovieSource<HortaViewerState> movieSource = null;
 
     public MovieSource<HortaViewerState> getMovieSource() {
         return movieSource;
+    }
+
+    public void setMovieRenderer(MovieRenderer<HortaViewerState> movieRenderer) 
+    {
+        if ((movieRenderer == null) && (this.movieRenderer == null)) 
+        {
+            addFrameButton.setEnabled(false); // disable controls
+            return;
+        }
+        if (this.movieRenderer == movieRenderer)
+            return; // no change
+        if (movieRenderer == null)
+            return; // remember the old source, when the new one seems to be null
+        this.movieRenderer = movieRenderer;
+        
+        if (movieTimeline == null)
+            movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
+        movieTimeline.clear();
+        if (movieSource != null)
+            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
+        
+        updateGui();
     }
 
     public void setMovieSource(MovieSource<HortaViewerState> movieSource) 
@@ -404,7 +441,8 @@ implements LookupListener
         if (movieTimeline == null)
             movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
         movieTimeline.clear();
-        playState = new BasicMoviePlayState<>(movieTimeline, movieSource);
+        if (movieRenderer != null)
+            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
         
         updateGui();
     }
@@ -418,7 +456,18 @@ implements LookupListener
     }
     
     @Override
-    public void resultChanged(LookupEvent le) {
+    public void resultChanged(LookupEvent le) 
+    {
+        // MovieRenderers
+        if (movieRenderersResult == null)
+            return;
+        Collection<? extends MovieRenderer> renderers = movieRenderersResult.allInstances();
+        if (renderers.isEmpty())
+            setMovieRenderer(null);
+        else
+            setMovieRenderer((MovieRenderer<HortaViewerState>)renderers.iterator().next());
+        
+        // MovieSources
         if (movieSourcesResult == null)
             return;
         Collection<? extends MovieSource> sources = movieSourcesResult.allInstances();

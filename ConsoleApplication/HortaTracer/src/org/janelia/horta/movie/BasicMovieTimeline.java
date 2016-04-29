@@ -50,6 +50,21 @@ implements Timeline<T>
     }
 
     @Override
+    public float getTotalDuration(boolean doLoop) {
+        Deque<KeyFrame<T>> f = this;
+        float totalDuration = 0;
+        for (KeyFrame<T> keyFrame : f) {
+            totalDuration += keyFrame.getFollowingIntervalDuration();
+        }
+        // Don't include final frame duration, unless movie is a loop
+        if ( (! doLoop) && (f.size() > 0) ) {
+            KeyFrame<T> finalFrame = f.getLast();
+            totalDuration -= finalFrame.getFollowingIntervalDuration();
+        }
+        return totalDuration;
+    }
+
+    @Override
     public void addFirst(KeyFrame<T> e) {
         keyFrames.addFirst(e);
     }
