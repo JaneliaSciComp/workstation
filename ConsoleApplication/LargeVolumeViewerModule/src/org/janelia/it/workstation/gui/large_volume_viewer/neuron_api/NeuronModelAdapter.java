@@ -207,7 +207,14 @@ public class NeuronModelAdapter implements NeuronModel
     NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
-        assert(vertexes.containsKey(vertexId));
+        
+        // Les reported this assert triggering recently
+        // assert(vertexes.containsKey(vertexId));
+        if (! vertexes.containsKey(vertexId)) {
+            logger.error("Could not find anchor with guid "+vertexId+" in NeuronModelAdapter");
+            return null;
+        }
+        
         Long parentId = annotation.getParentId();
         NeuronVertex newVertex = vertexes.getVertexByTmGeoAnnotation(annotation);
         if (newVertex == null) {
