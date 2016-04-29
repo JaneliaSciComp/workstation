@@ -34,7 +34,7 @@ import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import java.util.ArrayList;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 
 /**
  * Convenience methods I don't want to place into lean HortaWorkspace API
@@ -42,9 +42,9 @@ import org.janelia.console.viewerapi.model.HortaWorkspace;
  */
 public class WorkspaceUtil
 {
-    private final HortaWorkspace workspace;
+    private final HortaMetaWorkspace workspace;
 
-    public WorkspaceUtil(HortaWorkspace workspace) {
+    public WorkspaceUtil(HortaMetaWorkspace workspace) {
         this.workspace = workspace;
     }
     

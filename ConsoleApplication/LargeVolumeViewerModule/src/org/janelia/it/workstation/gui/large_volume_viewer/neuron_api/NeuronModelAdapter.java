@@ -105,14 +105,12 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexes.getVertexByGuid(annotation.getId());
     }
     
-    // Special method for adding annotations from the Horta side
+    // Special method for adding annotation anchors from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
     {
-        if (! (parent instanceof NeuronVertexAdapter))
+        if ((parent != null) && (! (parent instanceof NeuronVertexAdapter)))
             return null; // TODO: error?
-        NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
-        TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
         
         // Convert micron coordinates to voxel coordinates
         Matrix m2v = workspace.getMicronToVoxMatrix();
@@ -132,12 +130,21 @@ public class NeuronModelAdapter implements NeuronModel
             (float) voxLoc.get(2, 0) );
         NeuronVertex result = null;
         try {
-            // TODO: radius
-            TmGeoAnnotation ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+            // no parent? create root annotation.
+            TmGeoAnnotation ann;
+            if (parent == null) {
+                ann = annotationModel.addRootAnnotation(neuron, voxelXyz);
+            }
+            else {
+                NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
+                TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
+                ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
+            }
+            ann.setRadius(new Double(radius));
             if (ann != null) {
                 NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
                 result = vertex;
-                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
             }
         } catch (Exception ex) {
         }

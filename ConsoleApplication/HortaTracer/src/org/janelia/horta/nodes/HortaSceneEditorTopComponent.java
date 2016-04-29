@@ -32,7 +32,7 @@ package org.janelia.horta.nodes;
 
 import java.awt.BorderLayout;
 import java.util.Collection;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
@@ -78,8 +78,8 @@ implements ExplorerManager.Provider,  LookupListener
     private final ExplorerManager mgr = new ExplorerManager();
 
     // private HortaWorkspace workspace = null;
-    private Lookup.Result<HortaWorkspace> workspaceResult = null;
-    private HortaWorkspace cachedWorkspace = null;
+    private Lookup.Result<HortaMetaWorkspace> workspaceResult = null;
+    private HortaMetaWorkspace cachedWorkspace = null;
     
     // https://platform.netbeans.org/tutorials/74/nbm-selection-2.html
     // private final BeanTreeView treeView = new BeanTreeView();
@@ -144,7 +144,7 @@ implements ExplorerManager.Provider,  LookupListener
     
     @Override
     public void componentOpened() {
-        workspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
+        workspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
         workspaceResult.addLookupListener(this);
     }
     
@@ -155,12 +155,12 @@ implements ExplorerManager.Provider,  LookupListener
     
     @Override 
     public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends HortaWorkspace> allWorkspaces = workspaceResult.allInstances();
+        Collection<? extends HortaMetaWorkspace> allWorkspaces = workspaceResult.allInstances();
         if (allWorkspaces.isEmpty()) {
             // mgr.setRootContext(null); 
             return;
         }
-        HortaWorkspace workspace = allWorkspaces.iterator().next();
+        HortaMetaWorkspace workspace = allWorkspaces.iterator().next();
         if (workspace != cachedWorkspace) {
             logger.info("Creating new scene root");
             cachedWorkspace = workspace;

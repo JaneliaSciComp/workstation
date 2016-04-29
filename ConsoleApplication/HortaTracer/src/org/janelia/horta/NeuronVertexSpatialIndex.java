@@ -36,7 +36,7 @@ import edu.wlu.cs.levy.CG.KeyMissingException;
 import edu.wlu.cs.levy.CG.KeySizeException;
 import java.util.Collection;
 import java.util.Iterator;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -100,7 +100,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         return new double[] {xyz[0], xyz[1], xyz[2]};
     }
     
-    private void rebuildIndex(HortaWorkspace workspace) {
+    private void rebuildIndex(HortaMetaWorkspace workspace) {
         clear();
         for (NeuronSet set : workspace.getNeuronSets()) {
             addNeuronSet(set);

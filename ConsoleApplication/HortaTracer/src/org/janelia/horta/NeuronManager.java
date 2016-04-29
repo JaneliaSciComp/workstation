@@ -45,7 +45,7 @@ import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
@@ -69,7 +69,7 @@ public class NeuronManager implements LookupListener
     // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
     private Lookup.Result<NeuronSet> neuronsLookupResult = null;
 
-    private final HortaWorkspace workspace;
+    private final HortaMetaWorkspace workspace;
     private final Set<NeuronSet> currentNeuronSets = new HashSet<>();
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
@@ -102,7 +102,7 @@ public class NeuronManager implements LookupListener
     private final NeuronVertexDeletionObservable neuronVertexDeletionObservable =
             new NeuronVertexDeletionObservable();
     
-    public NeuronManager(HortaWorkspace workspace) {
+    public NeuronManager(HortaMetaWorkspace workspace) {
         this.workspace = workspace;
     }
     
@@ -193,7 +193,7 @@ public class NeuronManager implements LookupListener
         }
     }
 
-    HortaWorkspace getWorkspace() {
+    HortaMetaWorkspace getWorkspace() {
         return workspace;
     }
 

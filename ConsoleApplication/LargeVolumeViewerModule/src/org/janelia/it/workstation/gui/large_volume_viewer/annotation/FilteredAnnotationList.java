@@ -183,6 +183,7 @@ public class FilteredAnnotationList extends JPanel {
                         new InterestingAnnotation(ann.getId(),
                             neuron.getId(),
                             ann.getCreationDate(),
+                            ann.getModificationDate(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -260,8 +261,8 @@ public class FilteredAnnotationList extends JPanel {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
 
                     if (realColumnIndex == 0) {
-                        // show creation date
-                        tip = model.getAnnotationAtRow(realRowIndex).getCreationDate().toString();
+                        // show modification date
+                        tip = model.getAnnotationAtRow(realRowIndex).getModificationDate().toString();
                     } else if (realColumnIndex == 1) {
                         // no tip here
                         tip = null;

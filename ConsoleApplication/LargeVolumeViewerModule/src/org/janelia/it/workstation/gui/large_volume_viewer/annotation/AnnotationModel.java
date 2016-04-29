@@ -386,7 +386,7 @@ called from a  SimpleWorker thread.
      * @param name = name of neuron
      * @throws Exception
      */
-    public synchronized void createNeuron(String name) throws Exception {
+    public synchronized TmNeuron createNeuron(String name) throws Exception {
         final TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
 
         // update local workspace
@@ -402,7 +402,8 @@ called from a  SimpleWorker thread.
                 fireWsEntityChanged();
             }
         });
-
+        
+        return neuron;
     }
 
     /**
@@ -493,7 +494,7 @@ called from a  SimpleWorker thread.
      * @param xyz = x, y, z location of new annotation
      * @throws Exception
      */
-    public synchronized void addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
+    public synchronized TmGeoAnnotation addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent).  Updates to neuron's collections are done in the
         //  as well.
@@ -507,6 +508,8 @@ called from a  SimpleWorker thread.
                 fireAnnotationAdded(annotation);
             }
         });
+        
+        return annotation;
     }
 
     /**
@@ -1238,6 +1241,11 @@ called from a  SimpleWorker thread.
             }
         }
 
+        // update modification date in for the geo annotation whose text annotation
+        //  we changed; get it fresh; the object may have changed
+        TmGeoAnnotation updatedAnn = getGeoAnnotationFromID(geoAnnotation.getId());
+        updatedAnn.updateModificationDate();
+
 		// Send the data back to the server to save.
 		neuronManager.saveNeuronData(neuron);
 
@@ -1256,6 +1264,10 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
 		neuronManager.deleteStructuredTextAnnotation(neuron, textAnnotation.getParentId());
+        if (textAnnotation.getParentType() == TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION) {
+            TmGeoAnnotation ann = getGeoAnnotationFromID(textAnnotation.getParentId());
+            ann.updateModificationDate();
+        }
         neuronManager.saveNeuronData(neuron);
 
         // updates
