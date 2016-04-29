@@ -175,7 +175,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 mergeNeurite(anchor.getGuid(), closest.getId());
             } else {
                 // move, don't merge
-                activityLog.logMergedNeurite(getSampleID(), getWorkspaceID(), closest);
+                activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
                 moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
@@ -1587,6 +1587,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                     @Override
                     protected void hadSuccess() {
+                        postWorkspaceUpdate();
                     }
 
                     @Override
@@ -1608,25 +1609,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadSuccess() {
                         int latestValue = countDownSemaphor.decrementAndGet();
                         if (latestValue == 0) {
-                            // last file is loaded, so trigger update; needs another
-                            //  layer of threading, ugh:
-                            SimpleWorker updater = new SimpleWorker() {
-                                @Override
-                                protected void doStuff() throws Exception {
-                                    annotationModel.postWorkspaceUpdate();
-                                }
-
-                                @Override
-                                protected void hadSuccess() {
-                                    // nothing here
-                                }
-
-                                @Override
-                                protected void hadError(Throwable error) {
-                                    SessionMgr.getSessionMgr().handleException(error);
-                                }
-                            };
-                            updater.execute();
+                            postWorkspaceUpdate();
                         }
                     }
 
@@ -1639,6 +1622,28 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 importer.execute();
             }
         }
+    }
+
+    private void postWorkspaceUpdate() {
+        // last file is loaded, so trigger update; needs another
+        //  layer of threading, ugh:
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.postWorkspaceUpdate();
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+            
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
     }
 
     /**
