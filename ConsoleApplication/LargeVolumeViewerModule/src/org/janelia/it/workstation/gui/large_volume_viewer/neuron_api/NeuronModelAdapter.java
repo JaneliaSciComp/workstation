@@ -212,6 +212,7 @@ public class NeuronModelAdapter implements NeuronModel
         NeuronVertex newVertex = vertexes.getVertexByTmGeoAnnotation(annotation);
         if (newVertex == null) {
             logger.error("Could not find anchor with guid "+vertexId);
+            return null;
         }
         // Add edge
         if (vertexId.equals(parentId)) 
