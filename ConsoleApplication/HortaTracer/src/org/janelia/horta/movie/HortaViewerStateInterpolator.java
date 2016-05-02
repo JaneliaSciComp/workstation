@@ -113,13 +113,13 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
                 t0, t1, t2, t3
         );
                 
-        float zoom = primitiveInterpolator.interpolate(
+        float zoom = unpackZoom(primitiveInterpolator.interpolate(
                 ofTheWay,
-                p0.getCameraSceneUnitsPerViewportHeight(),
-                p1.getCameraSceneUnitsPerViewportHeight(),
-                p2.getCameraSceneUnitsPerViewportHeight(),
-                p3.getCameraSceneUnitsPerViewportHeight(), 
-                t0, t1, t2, t3);
+                packZoom(p0.getCameraSceneUnitsPerViewportHeight()),
+                packZoom(p1.getCameraSceneUnitsPerViewportHeight()),
+                packZoom(p2.getCameraSceneUnitsPerViewportHeight()),
+                packZoom(p3.getCameraSceneUnitsPerViewportHeight()), 
+                t0, t1, t2, t3));
                 
         // logger.info("ofTheWay = "+ofTheWay);
         // logger.info("zoom = "+zoom);
@@ -133,4 +133,12 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
         return result;
     }
     
+    // Transform zoom so log(zoom) gets interpolated, not linear zoom
+    private double packZoom(float zoom) {
+        return Math.log(zoom);
+    }
+    
+    private float unpackZoom(double logZoom) {
+        return (float)Math.exp(logZoom);
+    }
 }
