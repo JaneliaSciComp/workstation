@@ -114,12 +114,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         resultButton = new ResultSelectionButton() {
             @Override
             protected void resultChanged(ResultDescriptor resultDescriptor) {
+                log.info("Setting result preference: "+resultDescriptor.toString());
                 setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, resultDescriptor.toString());
+                typeButton.setResultDescriptor(resultDescriptor);
+                typeButton.populate(domainObjectList.getDomainObjects());
             }
         };
         typeButton = new ImageTypeSelectionButton() {
             @Override
             protected void imageTypeChanged(String typeName) {
+                log.info("Setting image type preference: "+typeName);
                 setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
             }
         };
@@ -236,10 +240,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
+            log.info("Got result preference: "+preference);
             if (preference!=null) {
                 resultButton.setResultDescriptor(new ResultDescriptor(preference.getValue()));
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
                 typeButton.setImageType(preference2.getValue());
             }
@@ -247,7 +253,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         resultButton.populate(objects.getDomainObjects());
         typeButton.setResultDescriptor(resultButton.getResultDescriptor());
-        typeButton.populate(objects.getDomainObjects());
+        typeButton.populate(domainObjectList.getDomainObjects());
                 
         showObjects(domainObjectList.getDomainObjects(), success);
     }

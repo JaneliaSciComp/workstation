@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.browser.model;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -46,13 +48,25 @@ public class DomainModelViewUtils {
         if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
         
         HasFiles chosenResult = null;
-        
+
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
-            ObjectiveSample objSample = objectiveSamples.get(objectiveSamples.size()-1);
-            if (objSample==null) return null;
-            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
-            if (run==null) return null;
-            chosenResult = run.getLatestResult();
+            int i = objectiveSamples.size()-1;
+            while (chosenResult==null && i>=0) {
+                log.debug("Testing objective with index "+i);
+                ObjectiveSample objSample = objectiveSamples.get(i--);
+                if (objSample!=null) {
+                    log.debug("Testing objective: "+objSample.getObjective());
+                    List<SamplePipelineRun> runs = new ArrayList<>(objSample.getPipelineRuns());
+                    Collections.reverse(runs);
+                    for(SamplePipelineRun run : runs) {
+                        log.debug("Testing run: "+run.getName());
+                        chosenResult = run.getLatestResult();
+                    }
+
+                }
+            }
+
+            log.debug("Got result: "+chosenResult);
 
             if (chosenResult instanceof HasFileGroups) {
                 HasFileGroups hasGroups = (HasFileGroups)chosenResult;
