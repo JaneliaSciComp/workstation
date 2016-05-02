@@ -36,7 +36,6 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -68,7 +67,7 @@ import org.slf4j.LoggerFactory;
 public class SaveFramesPanel extends JPanel
 {
     private final NotifyDescriptor notifyDescriptor;
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final String cancelOption = "Cancel";
     private final String saveOption = "Save";
     private final String[] options = {saveOption, cancelOption};
@@ -251,7 +250,7 @@ public class SaveFramesPanel extends JPanel
                 );
                 
                 // Reduce save dialog
-                parent.setVisible(false);
+                // parent.setVisible(false);
                 
                 JOptionPane.showMessageDialog(parent, 
                         message,
@@ -378,7 +377,7 @@ public class SaveFramesPanel extends JPanel
         };
 
         // Show the save dialog, so user can see progress bar
-        setVisible(true);
+        // setVisible(true);
         
         new Thread(saveFramesTask).start();
     }

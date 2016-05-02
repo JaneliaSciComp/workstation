@@ -33,6 +33,8 @@ package org.janelia.horta.movie;
 import org.janelia.geometry3d.Quaternion;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -48,6 +50,7 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
     private final Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
     private final PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
     private final Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(defaultKernel);
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public HortaViewerStateInterpolator() {
     }
@@ -118,6 +121,9 @@ class HortaViewerStateInterpolator implements Interpolator<HortaViewerState>
                 p3.getCameraSceneUnitsPerViewportHeight(), 
                 t0, t1, t2, t3);
                 
+        // logger.info("ofTheWay = "+ofTheWay);
+        // logger.info("zoom = "+zoom);
+        
         HortaViewerState result = new HortaViewerState(
                 focus.getX(), focus.getY(), focus.getZ(),
                 rotation,

@@ -34,6 +34,8 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -43,7 +45,8 @@ class BasicMovieTimeline<T extends ViewerState>
 implements Timeline<T>
 {
     private final Deque<KeyFrame<T>> keyFrames = new ConcurrentLinkedDeque<>();
-    private Interpolator<T> interpolator;
+    private final Interpolator<T> interpolator;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BasicMovieTimeline(Interpolator<T> interpolator) {
         this.interpolator = interpolator;
@@ -264,7 +267,7 @@ implements Timeline<T>
         KeyFrame<T> k0, k1, k2, k3;
         k0 = k1 = k2 = k3 = null;
         
-        float movieTimeHeadPosition = 0;
+        float currentKeyFrameHeadPosition = 0;
         float partialFrameInterval = 0; // seconds into inter-frame interval
         Iterator<KeyFrame<T>> it = this.iterator();
         KeyFrame<T> previousKeyFrame = null;
@@ -274,26 +277,31 @@ implements Timeline<T>
         boolean doBreak = false;
         while (it.hasNext()) {
             KeyFrame<T> keyFrame = it.next();
-            if (movieTimeHeadPosition > timeInSeconds) {
+            if (currentKeyFrameHeadPosition > timeInSeconds) {
                 k2 = keyFrame;
                 k1 = previousKeyFrame;
                 k0 = previousKeyFrame2;
-                partialFrameInterval = movieTimeHeadPosition - timeInSeconds;
-                doBreak = true;
+                if (k1 != null) {
+                    partialFrameInterval = k1.getFollowingIntervalDuration() - currentKeyFrameHeadPosition + timeInSeconds;
+                }
+                break;
             }
-            else if (movieTimeHeadPosition == timeInSeconds) {
+            else if (currentKeyFrameHeadPosition == timeInSeconds) {
                 k1 = keyFrame;
                 k0 = previousKeyFrame;
                 if (it.hasNext())
                     k2 = it.next();
                 partialFrameInterval = 0;
-                doBreak = true;
-            }
-            movieTimeHeadPosition += keyFrame.getFollowingIntervalDuration();
-            previousKeyFrame2 = previousKeyFrame;
-            previousKeyFrame = keyFrame;
-            if (doBreak)
+                previousKeyFrame2 = previousKeyFrame;
+                previousKeyFrame = keyFrame;
                 break;
+            }
+            else {
+                currentKeyFrameHeadPosition += keyFrame.getFollowingIntervalDuration();
+                previousKeyFrame2 = previousKeyFrame;
+                previousKeyFrame = keyFrame;
+                continue;
+            }
         }
         // get fourth key frame
         if (it.hasNext())
@@ -303,7 +311,9 @@ implements Timeline<T>
         if (k2 == null) {
             k1 = previousKeyFrame; // final frame
             k0 = previousKeyFrame2;
-            partialFrameInterval = movieTimeHeadPosition - timeInSeconds;
+            if (k1 != null) {
+                partialFrameInterval = k1.getFollowingIntervalDuration() - currentKeyFrameHeadPosition + timeInSeconds;
+            }
         }
         
         assert(k1 != null);
@@ -324,8 +334,13 @@ implements Timeline<T>
         if (k3 == null)
             k3 = k2;
         
+        if (k1 == k2)
+            partialFrameInterval = 0;
+        
         // Compute the offset parameter between frames k1 and k2
-        float t = 1.0f - (partialFrameInterval / k1.getFollowingIntervalDuration());
+        float t = 0;
+        if (k1.getFollowingIntervalDuration() > 0)
+            t = partialFrameInterval / k1.getFollowingIntervalDuration();
         // sanity checks
         if (t < 0) {
             t = 0;
@@ -334,6 +349,8 @@ implements Timeline<T>
             t = 1;
         }
 
+        // logger.info("partialFrameInterval = " + partialFrameInterval);
+        
         // Compute local time stamps for each key frame
         double t0 = 0;
         double t1 = t0 + k0.getFollowingIntervalDuration();
