@@ -157,6 +157,11 @@ extends MultipassRenderer
         setRelativeSlabThickness(0.5f);
     }
     
+    public void addMeshActor(GL3Actor meshActor) {
+        opaqueRenderPass.addActor(meshActor);
+        setOpaqueBufferDirty();
+    }
+    
     public void addVolumeActor(GL3Actor boxMesh) {
         volumeRenderPass.addActor(boxMesh);
         setIntensityBufferDirty();

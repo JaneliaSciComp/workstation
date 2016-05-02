@@ -34,6 +34,11 @@ import java.io.IOException;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.WavefrontObjLoader;
+import org.janelia.gltools.GL3Actor;
+import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.DiffuseMaterial;
+import org.janelia.gltools.material.IBLDiffuseMaterial;
+import org.janelia.horta.NeuronTracerTopComponent;
 
 /**
  *
@@ -41,6 +46,11 @@ import org.janelia.geometry3d.WavefrontObjLoader;
  */
 public class ObjMeshLoader implements FileTypeLoader
 {
+    private final NeuronTracerTopComponent horta;
+
+    public ObjMeshLoader(NeuronTracerTopComponent horta) {
+        this.horta = horta;
+    }
 
     @Override
     public boolean supports(DataSource source)
@@ -55,6 +65,13 @@ public class ObjMeshLoader implements FileTypeLoader
     public boolean load(DataSource source, FileHandler handler) throws IOException 
     {
         MeshGeometry meshGeometry = WavefrontObjLoader.load(source.getInputStream());
+        GL3Actor meshActor = new MeshActor(
+                meshGeometry,
+                new IBLDiffuseMaterial(),
+                null
+        );
+        horta.addMeshActor(meshActor);
+        
         // TODO:
         return true;
     }

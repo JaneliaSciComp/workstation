@@ -118,6 +118,7 @@ public class WavefrontObjLoader {
         
         // TODO: handle vertex normals
         
+        
         return result;
     }
 }

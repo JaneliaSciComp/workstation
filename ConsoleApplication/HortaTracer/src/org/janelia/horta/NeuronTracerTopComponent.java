@@ -800,7 +800,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TarFileLoader());
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
-        droppedFileHandler.addLoader(new ObjMeshLoader());
+        droppedFileHandler.addLoader(new ObjMeshLoader(this));
         // Put dropped neuron models into "Temporary neurons"
         WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
@@ -1609,6 +1609,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public ObservableInterface getViewerStateUpdatedObservable() {
         return viewerStateUpdatedObservable;
+    }
+
+    public void addMeshActor(GL3Actor meshActor) {
+        neuronMPRenderer.addMeshActor(meshActor);
     }
     
     /**
