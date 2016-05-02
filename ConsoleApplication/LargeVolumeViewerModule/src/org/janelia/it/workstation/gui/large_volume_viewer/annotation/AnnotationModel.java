@@ -660,7 +660,7 @@ called from a  SimpleWorker thread.
         stopwatch.start();
 
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
-        TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
+        final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         getCurrentWorkspace().getNeuronList().remove(targetNeuron);
         targetNeuron = neuronManager.refreshFromData(targetNeuron);
@@ -732,7 +732,6 @@ called from a  SimpleWorker thread.
             neuronManager.saveNeuronData(sourceNeuron);
         }
 
-        activityLog.logEndOfOperation(getWsId(), targetAnnotation);
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -745,6 +744,7 @@ called from a  SimpleWorker thread.
                 fireWorkspaceLoaded(workspace);
                 fireAnnotationReparented(updateSourceAnnotation);
                 // log.info("ending UI update for mergeNeurite(); elapsed = " + stopwatch);
+                activityLog.logEndOfOperation(getWsId(), targetAnnotation);
                 stopwatch.stop();
             }
         });
@@ -758,7 +758,7 @@ called from a  SimpleWorker thread.
     /**
      * move the neurite containing the input annotation to the given neuron
      */
-    public synchronized void moveNeurite(TmGeoAnnotation annotation, TmNeuron destNeuron) throws Exception {
+    public synchronized void moveNeurite(final TmGeoAnnotation annotation, TmNeuron destNeuron) throws Exception {
         if (eitherIsNull(annotation, destNeuron)) {
             return;
         }
@@ -772,13 +772,13 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron currentNeuron = getCurrentNeuron();
 
-        activityLog.logEndOfOperation(getWsId(), annotation);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
                 fireNeuronSelected(currentNeuron);
                 fireWorkspaceLoaded(workspace);
+                activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
 
@@ -869,7 +869,6 @@ called from a  SimpleWorker thread.
             viewStateListener.pathTraceRequested(child.getId());
         }
 
-        activityLog.logEndOfOperation(getWsId(), link);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -885,6 +884,7 @@ called from a  SimpleWorker thread.
                 if (updateChild != null) {
                     fireAnnotationReparented(updateChild);
                 }
+                activityLog.logEndOfOperation(getWsId(), link);
 
             }
         });
@@ -897,7 +897,7 @@ called from a  SimpleWorker thread.
      * @param rootAnnotation = annotation to be deleted along with its descendents
      * @throws Exception
      */
-    public synchronized void deleteSubTree(TmGeoAnnotation rootAnnotation) throws Exception {
+    public synchronized void deleteSubTree(final TmGeoAnnotation rootAnnotation) throws Exception {
         if (rootAnnotation == null) {
             return;
         }
@@ -943,13 +943,13 @@ called from a  SimpleWorker thread.
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
 
-        activityLog.logEndOfOperation(getWsId(), rootAnnotation);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
                 fireNeuronSelected(updateNeuron);
                 fireAnnotationsDeleted(deleteList);
+                activityLog.logEndOfOperation(getWsId(), rootAnnotation);
             }
         });
 
@@ -962,7 +962,7 @@ called from a  SimpleWorker thread.
      *
      * @param annotation = annotation to be split
      */
-    public synchronized void splitAnnotation(TmGeoAnnotation annotation) throws Exception {
+    public synchronized void splitAnnotation(final TmGeoAnnotation annotation) throws Exception {
         if (annotation == null) {
             return;
         }
@@ -1032,13 +1032,13 @@ called from a  SimpleWorker thread.
             }
         }
 
-        activityLog.logEndOfOperation(getWsId(), annotation);
         final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireAnnotationAdded(newAnnotation);
                 fireAnnotationReparented(updateAnnotation);
+                activityLog.logEndOfOperation(getWsId(), annotation);
             }
         });
     }
@@ -1052,7 +1052,7 @@ called from a  SimpleWorker thread.
      */
     public synchronized void rerootNeurite(Long newRootID) throws Exception {
         // do it in the DAO layer
-        TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
+        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
         TmNeuron neuron = getNeuronFromAnnotationID(newRoot.getId());
         neuronManager.rerootNeurite(neuron, newRoot);
 
@@ -1062,13 +1062,13 @@ called from a  SimpleWorker thread.
 
         neuronManager.saveNeuronData(neuron);
 
-        activityLog.logEndOfOperation(getWsId(), newRoot);
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             final TmNeuron updateNeuron = getCurrentNeuron();
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     fireNeuronSelected(updateNeuron);
+                    activityLog.logEndOfOperation(getWsId(), newRoot);
                 }
             });
         }
@@ -1082,7 +1082,7 @@ called from a  SimpleWorker thread.
      * @throws Exception
      */
     public synchronized void splitNeurite(final Long newRootID) throws Exception {
-        TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
+        final TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
         TmNeuron neuron = getNeuronFromAnnotationID(newRootID);
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
         removeAnchoredPath(neuron, newRoot, newRootParent);
@@ -1092,13 +1092,13 @@ called from a  SimpleWorker thread.
         neuronManager.saveNeuronData(neuron);
 
         final TmNeuron updateNeuron = getNeuronFromAnnotationID(newRootID);
-        activityLog.logEndOfOperation(getWsId(), newRoot);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID));
                 fireNeuronSelected(updateNeuron);
+                activityLog.logEndOfOperation(getWsId(), newRoot);
             }
         });
     }
