@@ -1570,36 +1570,14 @@ public final class NeuronTracerTopComponent extends TopComponent
     public BufferedImage getRenderedFrame(HortaViewerState state) 
     {
         setViewerState(state);
-        // logger.info("rendering frame with zoom = " + state.getCameraSceneUnitsPerViewportHeight());
-        sceneWindow.getVantage().notifyObservers();
-        redrawNow();
-        
-        // no, seriously
-        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
-        glad.display(); // Now only the first two frames are stale
-        // TODO: make the first rendered image not stale
-        
-        JComponent oc = sceneWindow.getOuterComponent();
-        Component ic = sceneWindow.getInnerComponent();
-        JComponent ic2 = null;
-        if (ic instanceof JComponent) {
-            ic2 = (JComponent) ic;
-        }
-        
-        // brute force 1: try redrawing 5 times
-        for (int i = 0; i < 5; ++i) {
-            sceneWindow.getVantage().setChanged();
-            sceneWindow.getVantage().notifyObservers();
-            redrawNow();
-            glad.display();
-            glad.swapBuffers();
-            oc.paintImmediately(oc.getBounds());
-            if (ic2 != null) {
-                ic2.paintImmediately(ic2.getBounds());
-            }
-        }
         
         // TODO: wait for tile load
+
+        // We need to update the display immediately, not on the next monitor refresh.
+        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+        glad.display();
+        glad.swapBuffers();
+        
         return getScreenShot();
     }
     
