@@ -12,7 +12,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.support.DomainDAO;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.FacetValue;
@@ -63,11 +62,6 @@ public class WorkspaceFacadeImpl implements WorkspaceFacade {
     public TreeNode create(TreeNode treeNode) throws Exception {
         return (TreeNode) updateIndex (dao.save(AccessManager.getSubjectKey(), treeNode));
     }
-    
-    @Override
-    public ObjectSet create(ObjectSet objectSet) throws Exception {
-        return (ObjectSet) updateIndex(dao.save(AccessManager.getSubjectKey(), objectSet));
-    }
 
     @Override
     public Filter create(Filter filter) throws Exception {
@@ -102,26 +96,6 @@ public class WorkspaceFacadeImpl implements WorkspaceFacade {
     @Override
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception {
         return dao.reorderChildren(AccessManager.getSubjectKey(), treeNode, order);
-    }
-    
-    @Override
-    public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        ObjectSet updatedNode = dao.addMembers(AccessManager.getSubjectKey(), objectSet, references);
-        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
-        for (DomainObject child: children) {
-            ModelMgr.getModelMgr().addAncestorToIndex(child.getId(), updatedNode.getId());
-        }
-        return updatedNode;
-    }
-
-    @Override
-    public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception {
-        ObjectSet updatedNode = dao.removeMembers(AccessManager.getSubjectKey(), objectSet, references);
-        List<DomainObject> children = dao.getDomainObjects(AccessManager.getSubjectKey(), new ArrayList<>(references));
-        for (DomainObject child: children) {
-            updateIndex(child);
-        }
-        return updatedNode;
     }
 
     @Override
