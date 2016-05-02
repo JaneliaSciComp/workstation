@@ -105,6 +105,7 @@ public class FindToolbar extends JPanel {
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,0,true),"prevMatch");
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,0,true),"nextMatch");
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"selectMatch");
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE,0,true),"closeFind");
 
         getActionMap().put("prevMatch",new AbstractAction("prevMatch") {
             @Override
@@ -124,6 +125,13 @@ public class FindToolbar extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 findContext.openMatch();
+                close();
+            }
+        });
+
+        getActionMap().put("closeFind",new AbstractAction("closeFind") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 close();
             }
         });
