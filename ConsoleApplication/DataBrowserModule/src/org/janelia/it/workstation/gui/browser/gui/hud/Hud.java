@@ -210,7 +210,18 @@ public class Hud extends ModalDialog {
         if (imagePath == null) {
             log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageType());
             previewLabel.setIcon(new MissingIcon());
+
+            if (render3DCheckbox != null) {
+                render3DCheckbox.setEnabled(false);
+                render3DCheckbox.setSelected(false);
+            }
+            
+            setAllColorsOn();
             setTitle(domainObject.getName());
+
+            if (toggle) {
+                toggleDialog();
+            }
         }
         else {
             
@@ -252,6 +263,7 @@ public class Hud extends ModalDialog {
                         previewLabel.setIcon(image == null ? null : new ImageIcon(image));
                         dirtyEntityFor3D = true;
                         if (render3DCheckbox != null) {
+                            render3DCheckbox.setEnabled(true);
                             render3DCheckbox.setSelected(false);
                             hud3DController.entityUpdate();
                         }
