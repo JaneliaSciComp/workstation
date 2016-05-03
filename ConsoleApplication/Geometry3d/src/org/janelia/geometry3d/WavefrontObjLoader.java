@@ -101,7 +101,7 @@ public class WavefrontObjLoader {
                 String vertices = matcher.group(1);
                 matcher = faceVertexPattern.matcher(vertices);
                 while (matcher.find()) {
-                    int vertexIx = Integer.parseInt(matcher.group(1));
+                    int vertexIx = Integer.parseInt(matcher.group(1)) - 1;
                     faceVertices.add(vertexIx);
                     String texCoord = matcher.group(2);
                     String normal = matcher.group(3); // TODO:
