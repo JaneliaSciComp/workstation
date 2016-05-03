@@ -108,12 +108,12 @@ public class ActivityLogHelper {
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
     
-    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, TmGeoAnnotation source, float[] micronXYZ) {        
+    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, Vec3 voxelXyz, float[] micronXYZ) {        
         //  Change Vec3 to double[] if inconvenient.
         logExternalGeometricEvent(
                 sampleId,
                 workspaceId,
-                source.getX(), source.getY(), source.getZ(),
+                voxelXyz.getX(), voxelXyz.getY(), voxelXyz.getZ(),
                 micronXYZ[0], micronXYZ[1], micronXYZ[2],
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
@@ -168,6 +168,27 @@ public class ActivityLogHelper {
                 source.getX(), source.getY(), source.getZ(),
                 (float)muX, (float)muY, (float)muZ,
                 LVV_DELETE_LINK_CATEGORY_STRING
+        );
+    }
+    
+    public void logExternallyMergeNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
+        double muX = 0;
+        double muY = 0;
+        double muZ = 0;
+        TileFormat tileFormat = sampleToTileFormat.get(sampleID);
+        if (tileFormat != null) {
+            TileFormat.MicrometerXyz mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(source.getX().intValue(), source.getY().intValue(), source.getZ().intValue()),
+                    CoordinateAxis.Z);
+            muX = mxyz.getX();
+            muY = mxyz.getY();
+            muZ = mxyz.getZ();
+        }
+        this.logExternalGeometricEvent(
+                sampleID, workspaceID, 
+                source.getX(), source.getY(), source.getZ(),
+                (float)muX, (float)muY, (float)muZ,
+                LVV_MERGE_NEURITES_CATEGORY_STRING
         );
     }
     

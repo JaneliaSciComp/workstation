@@ -505,19 +505,19 @@ called from a  SimpleWorker thread.
      * @param xyz = x, y, z location of new annotation
      * @throws Exception
      */
-    public synchronized TmGeoAnnotation addRootAnnotation(final TmNeuron neuron, Vec3 xyz) throws Exception {
+    public synchronized TmGeoAnnotation addRootAnnotation(final TmNeuron neuron, final Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent).  Updates to neuron's collections are done in the
         //  as well.
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, neuron.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        activityLog.logEndOfOperation(getWsId(), xyz);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNeuronSelected(neuron);
                 fireAnnotationAdded(annotation);
+                activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });
         
@@ -531,7 +531,7 @@ called from a  SimpleWorker thread.
      * @param xyz = location of new child annotation
      * @throws Exception
      */
-    public synchronized TmGeoAnnotation addChildAnnotation(TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
+    public synchronized TmGeoAnnotation addChildAnnotation(TmGeoAnnotation parentAnn, final Vec3 xyz) throws Exception {
         if (parentAnn == null) {
             return null;
         }
@@ -553,12 +553,12 @@ called from a  SimpleWorker thread.
                 viewStateListener.pathTraceRequested(annotation.getId());
         }
 
-        activityLog.logEndOfOperation(getWsId(), xyz);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireNeuronSelected(neuron);
                 fireAnnotationAdded(annotation);
+                activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });
 
@@ -578,7 +578,7 @@ called from a  SimpleWorker thread.
      * @param location = new location
      * @throws Exception
      */
-    public synchronized void moveAnnotation(final Long annotationID, Vec3 location) throws Exception {
+    public synchronized void moveAnnotation(final Long annotationID, final Vec3 location) throws Exception {
         final TmNeuron neuron = this.getNeuronFromAnnotationID(annotationID);
         TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
 
@@ -618,6 +618,7 @@ called from a  SimpleWorker thread.
                 @Override
                 public void run() {
                     fireAnnotationNotMoved(annotationID);
+                    activityLog.logEndOfOperation(getWsId(), location);
                 }
             });
             throw e;
@@ -633,7 +634,6 @@ called from a  SimpleWorker thread.
             }
         }
 
-        activityLog.logEndOfOperation(getWsId(), location);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -644,6 +644,7 @@ called from a  SimpleWorker thread.
                         fireNeuronSelected(getCurrentNeuron());
                     }
                 }
+                activityLog.logEndOfOperation(getWsId(), location);
             }
         });
     }

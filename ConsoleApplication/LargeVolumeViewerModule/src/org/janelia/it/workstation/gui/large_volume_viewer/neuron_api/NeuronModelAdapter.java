@@ -129,6 +129,8 @@ public class NeuronModelAdapter implements NeuronModel
             (float) voxLoc.get(1, 0), 
             (float) voxLoc.get(2, 0) );
         NeuronVertex result = null;
+        ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), voxelXyz, micronXyz);
+
         try {
             // no parent? create root annotation.
             TmGeoAnnotation ann;
@@ -139,7 +141,6 @@ public class NeuronModelAdapter implements NeuronModel
                 NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
                 TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
                 ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
-                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
             }
             ann.setRadius(new Double(radius));
             if (ann != null) {
@@ -171,6 +172,7 @@ public class NeuronModelAdapter implements NeuronModel
         }
         
         try {
+            ActivityLogHelper.getInstance().logExternallyMergeNeurite(workspace.getSampleID(), workspace.getId(), sourceNVA.getTmGeoAnnotation());
             annotationModel.mergeNeurite(sourceID, targetID);
         } catch (Exception ex) {
             return false;
@@ -185,6 +187,7 @@ public class NeuronModelAdapter implements NeuronModel
                 return false;
             NeuronVertexAdapter nva = (NeuronVertexAdapter)doomedVertex;
             TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            ActivityLogHelper.getInstance().logExternallyDeleteLink(workspace.getSampleID(), workspace.getId(), annotation);
 
             // Borrow some defensive logic from AnnotationManager.java::405
             if (annotation == null)
@@ -195,7 +198,6 @@ public class NeuronModelAdapter implements NeuronModel
                 return false; // non-terminal cannot be deleted
             
             annotationModel.deleteLink(annotation);
-            ActivityLogHelper.getInstance().logExternallyDeleteLink(workspace.getSampleID(), workspace.getId(), annotation);
             return true;
         } catch (Exception ex) {
             Exceptions.printStackTrace(ex);

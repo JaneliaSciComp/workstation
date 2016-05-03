@@ -491,7 +491,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     /**
-     * move the annotation with the input ID to the input location
+     * move the annotation with the input ID to the input location.
+     * Activity-logged by caller.
      */
     public void moveAnnotation(final Long annotationID, final Vec3 micronLocation) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -551,7 +552,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     /**
-     * merge the two neurites to which the two annotations belong
+     * merge the two neurites to which the two annotations belong.
+     * Activity-logged by caller.
      *
      * @param sourceAnnotationID
      * @param targetAnnotationID
