@@ -38,6 +38,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.ParseException;
+import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -100,7 +101,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                     progress.setDisplayName("Loading brain tile image...");
                     loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                    sceneWindow.getGLAutoDrawable().display();
+                    GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
+                    try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
+                    glAutoDrawable.display();
                 } catch (final IOException ex) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
