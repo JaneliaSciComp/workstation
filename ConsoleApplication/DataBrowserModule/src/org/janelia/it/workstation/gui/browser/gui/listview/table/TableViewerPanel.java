@@ -227,27 +227,27 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
 
     protected void updateHud(boolean toggle) {}
     
-    protected void selectObject(T object, boolean clearAll) {
-        selectObjects(Arrays.asList(object), true, clearAll);
-        selectionModel.select(object, clearAll, true);
+    protected void userSelectObject(T object, boolean clearAll) {
+        selectObjects(Arrays.asList(object), true, clearAll, true);
+//        selectionModel.select(object, clearAll, true);
     }
 
-    protected void deselectObject(T object) {
-        selectObjects(Arrays.asList(object), false, false);
-        selectionModel.deselect(object, true);
+    protected void userDeselectObject(T object) {
+        selectObjects(Arrays.asList(object), false, false, true);
+//        selectionModel.deselect(object, true);
     }
     
-    public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {
+    public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
 
-        log.trace("selectObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+        log.trace("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
 
-        if (domainObjects.isEmpty()) {
+        if (objects.isEmpty()) {
             return;
         }
         
         ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
         
-        Set<T> domainObjectSet = new HashSet<>(domainObjects);
+        Set<T> domainObjectSet = new HashSet<>(objects);
         int i = 0;
         Integer start = null;
         for(DynamicRow row : getRows()) {
@@ -272,9 +272,18 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
             }
             i++;
         }
-        
+
         if (start!=null) {
             getDynamicTable().scrollToVisible(start, 0);
+        }
+
+        for(T object : objects) {
+            if (select) {
+                selectionModel.select(object, clearAll, isUserDriven);
+            }
+            else {
+                selectionModel.deselect(object, isUserDriven);
+            }
         }
     }
 
@@ -441,7 +450,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
         T match = searcher.find();
         if (match != null) {
-            selectObject(match, true);
+            userSelectObject(match, true);
             scrollObjectToCenter(match);
         }
     }
@@ -451,7 +460,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
         T match = searcher.find();
         if (match != null) {
-            selectObject(match, true);
+            userSelectObject(match, true);
             scrollObjectToCenter(match);
         }
     }

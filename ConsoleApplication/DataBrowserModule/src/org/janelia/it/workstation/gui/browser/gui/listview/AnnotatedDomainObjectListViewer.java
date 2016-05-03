@@ -46,7 +46,7 @@ public interface AnnotatedDomainObjectListViewer {
      * @param select select if true, deselect if false
      * @param clearAll clear the existing selection before selecting?
      */
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven);
     
     /**
      * Show the objects in the list in the viewer, along with their annotations. 

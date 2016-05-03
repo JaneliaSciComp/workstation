@@ -50,7 +50,7 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(List<T> objects, boolean clearAll, boolean isUserDriven) {
-        log.trace("select {}, clearAll={}",objects,clearAll);
+        log.trace("select {}, clearAll={}, isUserDriven={}",objects,clearAll,isUserDriven);
         boolean clear = clearAll;
         for(T object : objects) {
             S id = getId(object);
@@ -101,7 +101,7 @@ public abstract class SelectionModel<T,S> {
     public final void deselect(List<T> objects, boolean isUserDriven) {
         for(T object : objects) {
             S id = getId(object);
-            log.trace("deselect {}",id);
+            log.trace("deselect {}, isUserDriven={}",id,isUserDriven);
             if (!selected.contains(id)) {
                 return;
             }
@@ -120,10 +120,10 @@ public abstract class SelectionModel<T,S> {
     
     /**
      * Sub-classes can implement this method to do something when an object's selection changes. 
-     * @param object
-     * @param id
+     * @param objects
      * @param select
      * @param clearAll
+     * @param isUserDriven
      */
     protected abstract void selectionChanged(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven);
     
@@ -153,7 +153,7 @@ public abstract class SelectionModel<T,S> {
 
     /**
      * Returns true if the given object is currently selected in this model.
-     * @param id
+     * @param object
      * @return
      */
     public final boolean isObjectSelected(T object) {

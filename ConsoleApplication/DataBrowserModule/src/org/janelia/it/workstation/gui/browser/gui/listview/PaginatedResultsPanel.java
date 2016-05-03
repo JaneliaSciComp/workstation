@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
+import static org.janelia.it.workstation.gui.browser.api.DomainMgr.getDomainMgr;
+
 /**
  * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
  * 
@@ -200,7 +202,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
         }
 
         final List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        DomainModel model = getDomainMgr().getModel();
         for(Reference id : selectionModel.getSelectedIds()) {
             DomainObject domainObject = model.getDomainObject(id);
             if (domainObject!=null) {
@@ -214,7 +216,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
             public Void call() throws Exception {
                 // Reselect the items that were selected
                 log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),viewerType.getName());
-                resultsView.selectDomainObjects(selectedDomainObjects, true, true);
+                resultsView.selectDomainObjects(selectedDomainObjects, true, true, true);
                 return null;
             }
         });
@@ -265,7 +267,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        DomainModel model = getDomainMgr().getModel();
                         page.updateAnnotations(domainObjectId, model.getAnnotations(Reference.createFor(pageObject)));
                     }
 
@@ -405,7 +407,10 @@ public abstract class PaginatedResultsPanel extends JPanel {
     public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
         this.searchResults = searchResults;
         numPages = searchResults.getNumTotalPages();
-        this.currPage = 0;
+        if (isUserDriven) {
+            // If the refresh is not user driven, don't jump back to the first page
+            this.currPage = 0;
+        }
         showCurrPage(isUserDriven);
     }
 
@@ -431,6 +436,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
 
             @Override
             protected void hadSuccess() {
+                final ArrayList<Reference> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
                 updateResultsView(new Callable<Void>() {   
                     @Override
                     public Void call() throws Exception {
@@ -446,8 +452,15 @@ public abstract class PaginatedResultsPanel extends JPanel {
                             //
                             List<DomainObject> objects = resultPage.getDomainObjects();
                             if (!objects.isEmpty()) {
-                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true);
+                                // This selection is NOT user driven though, it's automatic.
+                                resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false);
                             }
+                        }
+                        else {
+                            // Attempt to reselect the previously selected items
+                            log.info("Reselecting {} objects",selectedRefs.size());
+                            List<DomainObject> domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedRefs);
+                            resultsView.selectDomainObjects(domainObjects, true, true, false);
                         }
                         return null;
                     }

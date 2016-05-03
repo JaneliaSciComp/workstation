@@ -199,7 +199,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    selectObjects(objectList, true);
+                    selectObjects(objectList, true, true);
                     return;
                 } 
                 else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -229,20 +229,20 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         if (selectionCurrIndex<1) return;
                         selectionCurrIndex -= 1;
                         if (selectionCurrIndex<selectionAnchorIndex) {
-                            selectObject(objectList.get(selectionCurrIndex), false);
+                            userSelectObject(objectList.get(selectionCurrIndex), false);
                         }
                         else if (selectionCurrIndex+1!=selectionAnchorIndex) {
-                            deselectObject(objectList.get(selectionCurrIndex+1));
+                            userDeselectObject(objectList.get(selectionCurrIndex+1));
                         }
                     }
                     else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                         if (selectionCurrIndex>=objectList.size()-1) return;
                         selectionCurrIndex += 1;
                         if (selectionCurrIndex>selectionAnchorIndex) {
-                            selectObject(objectList.get(selectionCurrIndex), false);
+                            userSelectObject(objectList.get(selectionCurrIndex), false);
                         }
                         else if (selectionCurrIndex-1!=selectionAnchorIndex) {
-                            deselectObject(objectList.get(selectionCurrIndex-1));
+                            userDeselectObject(objectList.get(selectionCurrIndex-1));
                         }
                     }
 
@@ -268,8 +268,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                     }
 
                     if (object != null) {
-                        selectObject(object, true);
-                        // TODO: the rest of this should happen automatically as a consequence of the selectObject call
+                        userSelectObject(object, true);
+                        // TODO: the rest of this should happen automatically as a consequence of the userSelectObject call
                         S id = getImageModel().getImageUniqueId(object);
                         AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
                         if (button != null) {
@@ -357,10 +357,10 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         if (multiSelect) {
             // With the meta key we toggle items in the current selection without clearing it
             if (!button.isSelected()) {
-                selectObject(object, false);
+                userSelectObject(object, false);
             }
             else {
-                deselectObject(object);
+                userDeselectObject(object);
             }
             endRangeSelection();
         }
@@ -381,7 +381,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         }
                         if (otherUniqueId.equals(uniqueId)) {
                             // Always select the button that was clicked
-                            selectObject(otherObject, false);
+                            userSelectObject(otherObject, false);
                             // This becomes the selection anchor if the user keeps holding shift
                             int index = objectList.indexOf(otherObject);
                             log.trace("  Begin range selection mode (index={})",index);
@@ -397,7 +397,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                         continue; // Skip selection of the first and last items, which should already be selected
                     }
                     if (selecting) {
-                        selectObject(otherObject, false);
+                        userSelectObject(otherObject, false);
                         log.trace("  End range selection mode");
                         endRangeSelection();
                     }
@@ -405,7 +405,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
             }
             else {
                 // This is a good old fashioned single button selection
-                selectObject(object, true);
+                userSelectObject(object, true);
                 endRangeSelection();
             }
         }
@@ -421,32 +421,32 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         selectionAnchorIndex = selectionCurrIndex = null;
     }
 
-    protected void selectObject(T object, boolean clearAll) {
-        selectObjects(Arrays.asList(object), clearAll);
+    protected void userSelectObject(T object, boolean clearAll) {
+        selectObjects(Arrays.asList(object), clearAll, true);
     }
 
-    protected void deselectObject(T object) {
-        deselectObjects(Arrays.asList(object));
+    protected void userDeselectObject(T object) {
+        deselectObjects(Arrays.asList(object), true);
     }
     
-    protected void selectObjects(List<T> objects, boolean clearAll) {
+    protected void selectObjects(List<T> objects, boolean clearAll, boolean isUserDriven) {
         if (objects==null) return;
         List<S> ids = new ArrayList<>();
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
         imagesPanel.setSelectionByUniqueIds(ids, true, clearAll);
-        selectionModel.select(objects, clearAll, true);
+        selectionModel.select(objects, clearAll, isUserDriven);
     }
     
-    protected void deselectObjects(List<T> objects) {
+    protected void deselectObjects(List<T> objects, boolean isUserDriven) {
         if (objects==null) return;
         List<S> ids = new ArrayList<>();
         for(T object : objects) {
             ids.add(getImageModel().getImageUniqueId(object));
         }
         imagesPanel.setSelectionByUniqueIds(ids, false, false);
-        selectionModel.deselect(objects, true);
+        selectionModel.deselect(objects, isUserDriven);
     }
 
     private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
@@ -714,14 +714,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     @Override
     public void findPrevMatch(String text, boolean skipStartingNode) {
         IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
-        selectObject(searcher.find(), true);
+        userSelectObject(searcher.find(), true);
         scrollSelectedObjectsToCenter();
     }
 
     @Override
     public void findNextMatch(String text, boolean skipStartingNode) {
         IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
-        selectObject(searcher.find(), true);
+        userSelectObject(searcher.find(), true);
         scrollSelectedObjectsToCenter();
     }
 
