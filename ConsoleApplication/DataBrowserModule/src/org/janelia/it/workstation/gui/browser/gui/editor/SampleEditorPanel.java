@@ -513,7 +513,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             protected void doStuff() throws Exception {
                 if (MODE_LSMS.equals(currMode))  {
                     DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    lsms = model.getLsmsForSample(sample.getId());
+                    lsms = model.getLsmsForSample(sample);
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
                 }
                 else if (MODE_RESULTS.equals(currMode))  {

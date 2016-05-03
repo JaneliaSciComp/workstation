@@ -7,6 +7,7 @@ import javax.swing.JComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -200,7 +201,11 @@ public final class DomainViewerTopComponent extends TopComponent {
             NeuronFragment fragment = (NeuronFragment)domainObject;
             domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
         }
-        
+        else if (domainObject instanceof LSMImage) {
+            LSMImage lsmImage = (LSMImage)domainObject;
+            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
+        }
+
         final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             // TODO: comment this exception back in after initial development is complete

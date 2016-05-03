@@ -20,7 +20,9 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -71,11 +73,11 @@ public class DomainModel {
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
     private static final boolean TIMER = log.isDebugEnabled();
 
-    private DomainFacade domainFacade;
-    private OntologyFacade ontologyFacade;
-    private SampleFacade sampleFacade;
-    private SubjectFacade subjectFacade;
-    private WorkspaceFacade workspaceFacade;
+    private final DomainFacade domainFacade;
+    private final OntologyFacade ontologyFacade;
+    private final SampleFacade sampleFacade;
+    private final SubjectFacade subjectFacade;
+    private final WorkspaceFacade workspaceFacade;
     
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
@@ -345,6 +347,10 @@ public class DomainModel {
     }
 
     public List<DomainObject> getDomainObjects(List<Reference> references) {
+        return getDomainObjectsAs(DomainObject.class, references);
+    }
+
+    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) {
 
         if (references==null) return new ArrayList<>();
 
@@ -352,13 +358,13 @@ public class DomainModel {
         
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         
-        Map<Reference,DomainObject> map = new HashMap<>();
+        Map<Reference,T> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
 
         for(Reference ref : references) {
             DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
             if (domainObject!=null) {
-                map.put(ref, domainObject);
+                map.put(ref, (T)domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
@@ -367,14 +373,18 @@ public class DomainModel {
                 
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = domainFacade.getDomainObjects(unsatisfiedRefs);
-            map.putAll(DomainUtils.getMapByReference(objects));
+            List<T> classObjects = new ArrayList<>();
+            for(DomainObject domainObject : objects) {
+                classObjects.add((T)domainObject);
+            }
+            map.putAll(DomainUtils.getMapByReference(classObjects));
         }
 
         unsatisfiedRefs.clear();
 
-        List<DomainObject> domainObjects = new ArrayList<>();
+        List<T> domainObjects = new ArrayList<>();
         for(Reference ref : references) {
-            DomainObject domainObject = map.get(ref);
+            T domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
             }
@@ -530,12 +540,15 @@ public class DomainModel {
         return dataSets;
     }
     
-    public List<LSMImage> getLsmsForSample(Long sampleId) {
-        List<LSMImage> images = new ArrayList<>();
+    public List<LSMImage> getLsmsForSample(Sample sample) {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for(LSMImage image : sampleFacade.getLsmsForSample(sampleId)) {
-            images.add(putOrUpdate(image));
+        List<Reference> lsmRefs = new ArrayList<>();
+        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+            for(SampleTile tile : objectiveSample.getTiles()) {
+                lsmRefs.addAll(tile.getLsmReferences());
+            }
         }
+        List<LSMImage> images = getDomainObjectsAs(LSMImage.class, lsmRefs);
         if (TIMER) w.stop("getLsmsForSample");
         return images;
     }

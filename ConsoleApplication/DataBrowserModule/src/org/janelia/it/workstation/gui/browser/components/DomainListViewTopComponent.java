@@ -243,7 +243,6 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             setEditorClass(editorClass);
         }
         editor.loadDomainObject(domainObject, isUserDriven, null);
-//        editor.activate();
         setName(editor.getName());
     }
 

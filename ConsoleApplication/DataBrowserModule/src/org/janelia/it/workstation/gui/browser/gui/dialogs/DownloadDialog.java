@@ -269,7 +269,7 @@ public class DownloadDialog extends ModalDialog {
         else {
             if (domainObject instanceof Sample) {
                 if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
-                    for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample(domainObject.getId())) {
+                    for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample((Sample)domainObject)) {
                         log.info("Adding expanded LSM: "+lsm.getName());
                         downloadItems.add(new DownloadItem(path, lsm));
                     }

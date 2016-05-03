@@ -215,7 +215,7 @@ public class Hud extends ModalDialog {
                 render3DCheckbox.setEnabled(false);
                 render3DCheckbox.setSelected(false);
             }
-            
+
             setAllColorsOn();
             setTitle(domainObject.getName());
 
