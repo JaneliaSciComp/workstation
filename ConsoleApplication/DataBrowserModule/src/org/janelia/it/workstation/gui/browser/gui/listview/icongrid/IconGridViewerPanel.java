@@ -270,13 +270,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
                     if (object != null) {
                         userSelectObject(object, true);
                         // TODO: the rest of this should happen automatically as a consequence of the userSelectObject call
-                        S id = getImageModel().getImageUniqueId(object);
-                        AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
-                        if (button != null) {
-                            imagesPanel.scrollObjectToCenter(object);
-                            button.requestFocus();
-                            updateHud(false);
-                        }
                     }
                 }
             }
@@ -423,6 +416,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 
     protected void userSelectObject(T object, boolean clearAll) {
         selectObjects(Arrays.asList(object), clearAll, true);
+
+        S id = getImageModel().getImageUniqueId(object);
+        AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
+        if (button != null) {
+            imagesPanel.scrollObjectToCenter(object);
+            button.requestFocus();
+            updateHud(false);
+        }
     }
 
     protected void userDeselectObject(T object) {

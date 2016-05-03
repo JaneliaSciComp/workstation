@@ -43,13 +43,12 @@ public class DomainModelViewUtils {
         log.debug("Getting result '{}' from {}",result,sample.getName());
         log.debug("  Result name prefix: {}",result.getResultNamePrefix());
         log.debug("  Group name: {}",result.getGroupName());
-        
-        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
-        if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
-        
+
         HasFiles chosenResult = null;
 
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
+            List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
+            if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
             int i = objectiveSamples.size()-1;
             while (chosenResult==null && i>=0) {
                 log.debug("Testing objective with index "+i);
@@ -78,27 +77,25 @@ public class DomainModelViewUtils {
             }
         }
         else {
-            for(ObjectiveSample objSample : objectiveSamples) {
-                if (objSample==null) continue;
-                SamplePipelineRun run = objSample.getLatestSuccessfulRun();
-                if (run==null || run.getResults()==null) continue;
-                
-                for(PipelineResult pipelineResult : run.getResults()) {
-                    if (pipelineResult instanceof HasFileGroups) {
-                        HasFileGroups hasGroups = (HasFileGroups)pipelineResult;
-                        for(String groupKey : hasGroups.getGroupKeys()) {
-                            if (pipelineResult.getName().equals(result.getResultNamePrefix()) && groupKey.equals(result.getGroupName())) {
-                                chosenResult = hasGroups.getGroup(groupKey);
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        if (pipelineResult.getName().equals(result.getResultName())) {
-                            chosenResult = pipelineResult;
+            ObjectiveSample objSample = sample.getObjectiveSample(result.getObjective());
+            if (objSample==null) return null;
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
+            if (run==null || run.getResults()==null) return null;
+            for(PipelineResult pipelineResult : run.getResults()) {
+                if (pipelineResult instanceof HasFileGroups) {
+                    HasFileGroups hasGroups = (HasFileGroups)pipelineResult;
+                    for(String groupKey : hasGroups.getGroupKeys()) {
+                        if (pipelineResult.getName().equals(result.getResultNamePrefix()) && groupKey.equals(result.getGroupName())) {
+                            chosenResult = hasGroups.getGroup(groupKey);
                             break;
                         }
-                    }   
+                    }
+                }
+                else {
+                    if (pipelineResult.getName().equals(result.getResultName())) {
+                        chosenResult = pipelineResult;
+                        break;
+                    }
                 }
             }
         }

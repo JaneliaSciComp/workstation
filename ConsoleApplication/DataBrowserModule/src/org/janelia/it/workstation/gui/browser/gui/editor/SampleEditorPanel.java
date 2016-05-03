@@ -310,6 +310,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             // Only make this the focused component if the user actually clicked on it. The main thing this does is change the 
             // active key listener, which we don't want to do if the selection is the result of some selection cascade. 
             resultPanel.requestFocus();
+            // Update the lightbox if necessary
+            updateHud(false);
         }
     }
     
@@ -443,10 +445,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             ResultDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
             
             if (toggle) {
-                hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
+                hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
             }
             else {
-                hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString(), true);
+                hud.setObject(sample, resultDescriptor, null, true);
             }
         }
     }

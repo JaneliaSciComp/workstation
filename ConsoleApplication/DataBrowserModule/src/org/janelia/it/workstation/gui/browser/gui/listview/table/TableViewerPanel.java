@@ -211,7 +211,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                     deleteKeyPressed();
                     e.consume();
                 }
-                if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    updateHud(false);
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     updateHud(false);
                 }
             }
@@ -229,12 +232,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     
     protected void userSelectObject(T object, boolean clearAll) {
         selectObjects(Arrays.asList(object), true, clearAll, true);
-//        selectionModel.select(object, clearAll, true);
     }
 
     protected void userDeselectObject(T object) {
         selectObjects(Arrays.asList(object), false, false, true);
-//        selectionModel.deselect(object, true);
     }
     
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {

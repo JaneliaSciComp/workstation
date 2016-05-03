@@ -137,7 +137,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void doStuff() throws Exception {
-                
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
                     Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
@@ -149,7 +148,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }
                     DomainMgr.getDomainMgr().savePreference(preference);
                 }
-                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted.
             }
 
             @Override
