@@ -47,7 +47,6 @@ public class OntologyExportAction extends NodePresenterAction   {
         assert !selectedNodes.isEmpty() : "No nodes are selected";
 
         JMenuItem exportMenuItem = new JMenuItem("Export Ontology...");
-
         Node selectedNode = selectedNodes.get(0);
         final OntologyTermNode termNode = (OntologyTermNode) selectedNode;
         final OntologyTerm ontologyTerm = termNode.getOntologyTerm();

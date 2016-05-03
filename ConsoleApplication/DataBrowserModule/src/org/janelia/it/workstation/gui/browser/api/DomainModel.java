@@ -20,6 +20,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
@@ -128,13 +129,28 @@ public class DomainModel {
     }
 
     /**
-     * Put the object in the cache, or update the cached domain object if there is already a version in the cache. In the latter case, the updated cached
-     * instance is returned, and the argument instance can be discarded.
+     * Call putOrUpdate(domainObject, false)
      *
      * @param domainObject
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject) {
+        return putOrUpdate(domainObject, false);
+    }
+
+    /**
+     * Put the object in the cache, or update the cached domain object if there is already a version in the cache.
+     * In the latter case, the updated cached instance is returned, and the argument instance can be discarded.
+     *
+     * If the cache is updated, the object will be invalidated. If invalidateTree is true, then all of its descendants
+     * will also be invalidated.
+     *
+     * @param domainObject
+     * @param invalidateTree
+     * @param <T>
+     * @return
+     */
+    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
         if (domainObject == null) {
             // This is a null object, which cannot go into the cache
             log.debug("putOrUpdate: object is null");
@@ -148,7 +164,7 @@ public class DomainModel {
                     canonicalObject = domainObject;
                     log.debug("putOrUpdate: Updating cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
                     objectCache.put(id, domainObject);
-                    notifyDomainObjectsInvalidated(canonicalObject);
+                    notifyDomainObjectInvalidated(canonicalObject, invalidateTree);
                 }
                 else {
                     log.debug("putOrUpdate: Returning cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
@@ -651,7 +667,7 @@ public class DomainModel {
             ontologyFacade.removeOntology(ontologyId);
         }
         notifyDomainObjectRemoved(canonicalObject);
-        notifyDomainObjectsInvalidated(canonicalObject);
+        notifyDomainObjectInvalidated(canonicalObject, false);
     }
 
     public TreeNode create(TreeNode treeNode) throws Exception {
@@ -816,7 +832,7 @@ public class DomainModel {
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {
-        DomainObject canonicalObject = null;
+        DomainObject canonicalObject;
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
         }
@@ -824,9 +840,9 @@ public class DomainModel {
     }
 
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-        DomainObject canonicalObject = null;
+        DomainObject canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(domainFacade.changePermissions(domainObject, granteeKey, rights, grant));
+            canonicalObject = putOrUpdate(domainFacade.changePermissions(domainObject, granteeKey, rights, grant), true);
         }
         return canonicalObject;
     }
@@ -876,13 +892,37 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(objects));
     }
 
-    private void notifyDomainObjectsInvalidated(DomainObject domainObject) {
+    private void notifyDomainObjectInvalidated(DomainObject domainObject, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityInvalidationEvent for {}", DomainUtils.identify(domainObject));
         }
         Collection<DomainObject> invalidated = new ArrayList<>();
-        invalidated.add(domainObject);
+        if (invalidateTree) {
+            addTree(invalidated, domainObject);
+        }
+        else {
+            invalidated.add(domainObject);
+        }
+
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
 
+    private void addTree(Collection<DomainObject> objects, DomainObject domainObject) {
+
+        if (domainObject instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)domainObject;
+            for(Reference childRef : treeNode.getChildren()) {
+                DomainObject childObj = objectCache.getIfPresent(childRef);
+                if (childObj!=null) {
+                    objectCache.invalidate(childRef);
+                    addTree(objects, childObj);
+                }
+            }
+        }
+        else if (domainObject instanceof Sample) {
+            // TODO: Should handle invalidation of LSMs and neuron fragments
+        }
+
+        objects.add(domainObject);
+    }
 }

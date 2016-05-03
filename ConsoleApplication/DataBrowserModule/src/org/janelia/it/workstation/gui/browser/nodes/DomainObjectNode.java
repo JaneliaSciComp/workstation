@@ -30,6 +30,8 @@ import org.janelia.it.workstation.gui.browser.components.DomainListViewTopCompon
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -199,6 +201,9 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
+        actions.add(new ViewDetailsAction());
+        actions.add(new ChangePermissionsAction());
+        actions.add(null);
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
@@ -303,7 +308,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             return ClientDomainUtils.hasWriteAccess(domainObject);
         }
     }
-    
+
     protected final class OpenInNewViewerAction extends AbstractAction {
 
         public OpenInNewViewerAction() {
@@ -322,7 +327,36 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
             return DomainListViewTopComponent.isSupported(getDomainObject());
         }
     }
-    
+
+    protected final class ViewDetailsAction extends AbstractAction {
+
+        public ViewDetailsAction() {
+            putValue(NAME, "View Details");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new DomainDetailsDialog().showForDomainObject(getDomainObject());
+        }
+    }
+
+    protected final class ChangePermissionsAction extends AbstractAction {
+
+        public ChangePermissionsAction() {
+            putValue(NAME, "Change Permissions");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            new DomainDetailsDialog().showForDomainObject(getDomainObject(), DomainInspectorPanel.TAB_NAME_PERMISSIONS);
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return ClientDomainUtils.isOwner(getDomainObject());
+        }
+    }
+
     @Override
     public void destroy() throws IOException {
         if (parentChildFactory==null) {

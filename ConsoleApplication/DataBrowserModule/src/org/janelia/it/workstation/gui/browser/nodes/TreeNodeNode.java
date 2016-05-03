@@ -161,6 +161,8 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
+        actions.add(new ViewDetailsAction());
+        actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
