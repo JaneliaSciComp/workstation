@@ -31,6 +31,7 @@
 package org.janelia.horta.loader;
 
 import java.io.IOException;
+import javax.swing.SwingUtilities;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.WavefrontObjLoader;
@@ -38,7 +39,9 @@ import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DiffuseMaterial;
 import org.janelia.gltools.material.IBLDiffuseMaterial;
+import org.janelia.gltools.material.TransparentEnvelope;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -62,17 +65,33 @@ public class ObjMeshLoader implements FileTypeLoader
     }
 
     @Override
-    public boolean load(DataSource source, FileHandler handler) throws IOException 
+    public boolean load(final DataSource source, FileHandler handler) throws IOException 
     {
-        MeshGeometry meshGeometry = WavefrontObjLoader.load(source.getInputStream());
-        GL3Actor meshActor = new MeshActor(
-                meshGeometry,
-                new IBLDiffuseMaterial(),
-                null
-        );
-        horta.addMeshActor(meshActor);
+        Runnable meshLoadTask = new Runnable() {
+            @Override
+            public void run() {
+                MeshGeometry meshGeometry;
+                try {
+                    meshGeometry = WavefrontObjLoader.load(source.getInputStream());
+                    final GL3Actor meshActor = new MeshActor(
+                            meshGeometry,
+                            new TransparentEnvelope(),
+                            null
+                    );
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            horta.addMeshActor(meshActor);
+                        }
+                    });
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
+            }
+        };
         
-        // TODO:
+        new Thread(meshLoadTask).start();
+        
         return true;
     }
     
