@@ -852,7 +852,6 @@ public class TracingInteractor extends MouseAdapter
                     return false;
                 }
                 else {
-                    ActivityLogHelper.getInstance().logMergedNeurite(hoveredVertex);
                     return true;
                 }
             }
