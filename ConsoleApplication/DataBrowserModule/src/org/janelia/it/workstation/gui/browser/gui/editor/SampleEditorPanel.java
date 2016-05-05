@@ -634,10 +634,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             if (run==null) {
             	// If not, pick one as the default
-            	run = objectiveSample.getLatestSuccessfulRun();
-            	if (run==null) {
-            		run = objectiveSample.getLatestRun();
-            	}
+                run = objectiveSample.getLatestRun();
             	if (run!=null) {
             		currRunMap.put(objective, run);
             	}
@@ -972,6 +969,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             String title = run.getParent().getObjective()+" "+errorClass;
             label.setText(title);
             subLabel.setText(error.getDescription());
+
+            // TODO: after populating creation date for all errors, we can use this:
+            //subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
 
             JPanel titlePanel = new JPanel(new BorderLayout());
             titlePanel.add(label, BorderLayout.PAGE_START);
