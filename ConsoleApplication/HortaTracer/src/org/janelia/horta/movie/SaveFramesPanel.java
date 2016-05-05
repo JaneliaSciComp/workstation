@@ -307,7 +307,18 @@ public class SaveFramesPanel extends JPanel
                 currentImage = playState.getCurrentFrameImageNow();
             }
         });
-        return currentImage; // TODO:
+        
+        // FFMpeg h264 requires that image width be even
+        int w = currentImage.getWidth();
+        int h = currentImage.getHeight();
+        // ensure width and height are even
+        if (w % 2 == 1)
+            w -= 1;
+        if (h % 2 == 1)
+            h -= 1;
+        currentImage = currentImage.getSubimage(0, 0, w, h);
+        
+        return currentImage;
     }
     
     private void saveFrameImages(final MoviePlayState playState) 
