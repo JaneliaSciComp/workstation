@@ -3,24 +3,29 @@ package org.janelia.it.workstation.gui.browser.nb_action;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.ConfirmRemoveDialog;
+import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 /**
  * Action which implements node removal for Folders and Workspaces. 
@@ -97,9 +102,11 @@ public final class RemoveAction extends NodeAction {
     
     @Override
     protected void performAction (Node[] activatedNodes) {
-        Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.<TreeNode,DomainObject>create();
-        List<Reference> listToDelete = new ArrayList<>();
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
+
+        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+        final Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.create();
+        final List<Reference> listToDelete = new ArrayList<>();
+
         for(Node node : toRemove) {
             if (node instanceof DomainObjectNode) {
                 TreeNodeNode parentNode = (TreeNodeNode)node.getParentNode();
@@ -123,24 +130,44 @@ public final class RemoveAction extends NodeAction {
             }
         }
 
-        if (listToDelete.size()>0) {
-            // pop up confirm dialog
-            ConfirmRemoveDialog confirmRemoveDialog = new ConfirmRemoveDialog();
-            confirmRemoveDialog.setDeleteObjectList(listToDelete);
-            confirmRemoveDialog.setRemoveFromFolders(removeFromFolders);
-            confirmRemoveDialog.showDialog();
-        } else {
-            // go ahead and remove references since no objects need to be deleted
-            for (TreeNode treeNode : removeFromFolders.keySet()) {
-                try {
-                    for (DomainObject domainObject: removeFromFolders.get(treeNode)) {
-                         model.removeChild(treeNode, domainObject);
-                    }
-                }
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
+        if (!listToDelete.isEmpty()) {
+            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
+                    "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
+                    "Are you sure?", JOptionPane.YES_NO_OPTION);
+            if (deleteConfirmation != 0) {
+                return;
             }
         }
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+
+                // Remove references
+                for (TreeNode treeNode : removeFromFolders.keySet()) {
+                    for (DomainObject domainObject: removeFromFolders.get(treeNode)) {
+                        model.removeChild(treeNode, domainObject);
+                    }
+                }
+
+                // Remove any actual objects that are no longer references
+                if (!listToDelete.isEmpty()) {
+                    model.remove(listToDelete);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // Handled by the event system
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 }

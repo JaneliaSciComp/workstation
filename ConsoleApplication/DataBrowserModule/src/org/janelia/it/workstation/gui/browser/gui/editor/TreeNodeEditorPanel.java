@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
@@ -169,29 +170,6 @@ public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelection
         resultsPanel.deactivate();
     }
     
-    @Subscribe
-    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-            if (updatedSet!=null) {
-                loadDomainObject(updatedSet, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(treeNode.getId())) {
-                    log.info("tree node invalidated, reloading...");
-                    TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-                    if (updatedSet!=null) {
-                        loadDomainObject(updatedSet, false, null);
-                    }
-                    break;
-                }
-            }
-        }
-    }
-    
     @Override
     public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
 
@@ -250,4 +228,37 @@ public class TreeNodeEditorPanel extends JPanel implements DomainObjectSelection
         return selectionModel;
     }
 
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+            if (updatedSet!=null) {
+                loadDomainObject(updatedSet, false, null);
+            }
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(treeNode.getId())) {
+                    log.info("tree node invalidated, reloading...");
+                    TreeNode updatedSet = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+                    if (updatedSet!=null) {
+                        loadDomainObject(updatedSet, false, null);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject().getId().equals(treeNode.getId())) {
+            this.treeNode = null;
+            domainObjects.clear();
+            annotations.clear();
+            searchResults = null;
+            showNothing();
+        }
+    }
 }

@@ -60,6 +60,7 @@ public class DomainModelViewUtils {
                     for(SamplePipelineRun run : runs) {
                         log.debug("Testing run: "+run.getName());
                         chosenResult = run.getLatestResult();
+                        if (chosenResult!=null) break;
                     }
 
                 }

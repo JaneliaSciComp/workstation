@@ -234,18 +234,18 @@ public class DomainModel {
         if (SwingUtilities.isEventDispatchThread()) {
             throw new IllegalStateException("DomainModel illegally called from EDT!");
         }
-        Reference id = checkIfCanonicalDomainObject(domainObject);
+        Reference ref = checkIfCanonicalDomainObject(domainObject);
         log.debug("Invalidating cached instance {}", DomainUtils.identify(domainObject));
 
-        objectCache.invalidate(id);
-        workspaceCache.remove(id);
+        objectCache.invalidate(ref);
+        workspaceCache.remove(ref);
 
         // Reload the domain object and stick it into the cache
         DomainObject canonicalDomainObject;
         try {
-            canonicalDomainObject = loadDomainObject(id);
+            canonicalDomainObject = loadDomainObject(ref);
             if (canonicalDomainObject==null) {
-                log.warn("Object no longer exists: "+id);
+                log.warn("Object no longer exists: "+ref);
                 return;
             }
             canonicalDomainObject = putOrUpdate(canonicalDomainObject);
@@ -525,11 +525,11 @@ public class DomainModel {
 
     }
 
-    public Workspace getDefaultWorkspace() throws Exception {
+    public Workspace getDefaultWorkspace() {
         return getWorkspaces().iterator().next();
     }
 
-    public List<DataSet> getDataSets() throws Exception {
+    public List<DataSet> getDataSets() {
         List<DataSet> dataSets = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (DataSet dataSet : sampleFacade.getDataSets()) {
@@ -566,21 +566,20 @@ public class DomainModel {
         return null;
     }
 
-    public void remove(List<Reference> deleteObjectRefs) {
-        try {
-            domainFacade.remove(deleteObjectRefs);
-        }
-        catch (Exception e) {
-            log.error("Problems removing objects", e);
+    public void remove(List<Reference> deleteObjectRefs) throws Exception {
+        List<DomainObject> objects = getDomainObjects(deleteObjectRefs);
+        domainFacade.remove(deleteObjectRefs);
+        invalidate(objects);
+        for(DomainObject object : objects) {
+            notifyDomainObjectRemoved(object);
         }
     }
 
     /**
      * Returns all of the ontologies that a user has access to view. 
      * @return collection of ontologies
-     * @throws Exception
      */
-    public List<Ontology> getOntologies() throws Exception {
+    public List<Ontology> getOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (Ontology ontology : ontologyFacade.getOntologies()) {
@@ -680,7 +679,6 @@ public class DomainModel {
             ontologyFacade.removeOntology(ontologyId);
         }
         notifyDomainObjectRemoved(canonicalObject);
-        notifyDomainObjectInvalidated(canonicalObject, false);
     }
 
     public TreeNode create(TreeNode treeNode) throws Exception {

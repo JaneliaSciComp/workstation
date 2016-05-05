@@ -30,7 +30,7 @@ public class RemoveItemsFromFolderAction implements NamedAction {
 
     @Override
     public String getName() {
-        return domainObjects.size() > 1 ? "Remove \"" + domainObjects.size() + "\" Items From Folder '"+treeNode.getName()+"'" : "Remove This Item From Folder '"+treeNode.getName()+"'";
+        return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+treeNode.getName()+"'" : "Remove This Item From Folder '"+treeNode.getName()+"'";
     }
 
     @Override

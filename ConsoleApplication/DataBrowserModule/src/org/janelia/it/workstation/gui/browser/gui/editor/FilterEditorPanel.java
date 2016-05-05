@@ -48,6 +48,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
@@ -812,5 +813,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
     }
 
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject().getId().equals(filter.getId())) {
+            loadNewFilter();
+        }
+    }
 
 }

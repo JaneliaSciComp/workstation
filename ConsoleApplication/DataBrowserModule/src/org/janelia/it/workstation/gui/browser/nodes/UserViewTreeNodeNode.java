@@ -38,7 +38,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
     }
     
     private UserViewTreeNodeNode(UserViewTreeNodeChildFactory parentChildFactory, final UserViewTreeNodeChildFactory childFactory, TreeNode treeNode, UserViewConfiguration config) {
-        super(parentChildFactory, treeNode.getNumChildren()==0?Children.LEAF:Children.create(childFactory, false), treeNode);
+        super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
         this.childFactory = childFactory;
         this.config = config;
     }
@@ -91,7 +91,21 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
             this.treeNodeRef = new WeakReference<>(treeNode);
             this.config = config;
         }
-        
+
+        public boolean hasNodeChildren() {
+            TreeNode treeNode = treeNodeRef.get();
+            for(Reference reference : treeNode.getChildren()) {
+                if (reference==null) continue;
+                if (reference.getTargetClassName().equals("TreeNode")) {
+                    return true;
+                }
+                else if (reference.getTargetClassName().equals("Filter")) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         @Override
         protected boolean createKeys(List<DomainObject> list) {
             TreeNode treeNode = treeNodeRef.get();
@@ -119,9 +133,6 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
                         if (config.getVisibleClasses().contains(TreeNode.class) && TreeNode.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                    }
-                    else {
-                        //temp.add(new DeadReference(reference));
                     }
                 }
             }

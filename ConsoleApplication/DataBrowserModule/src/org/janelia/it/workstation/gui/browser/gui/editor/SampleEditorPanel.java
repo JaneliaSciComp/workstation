@@ -58,6 +58,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
@@ -449,41 +450,6 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
             else {
                 hud.setObject(sample, resultDescriptor, null, true);
-            }
-        }
-    }
-    
-    @Subscribe
-    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-            if (updatedSample!=null) {
-                loadDomainObject(updatedSample, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(sample.getId())) {
-                    log.info("objects set invalidated, reloading...");
-                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                    if (updatedSample!=null) {
-                        loadDomainObject(updatedSample, false, null);
-                    }
-                    break;
-                }
-                else if (lsms!=null) {
-                    for(LSMImage lsm : lsms) {
-                        if (domainObject.getId().equals(lsm.getId())) {
-                            log.info("lsm invalidated, reloading...");
-                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                            if (updatedSample!=null) {
-                                loadDomainObject(updatedSample, false, null);
-                            }
-                            break;
-                        }
-                    }
-                }
             }
         }
     }
@@ -991,6 +957,52 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         public SamplePipelineRun getRun() {
             return run;
+        }
+    }
+
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+            if (updatedSample!=null) {
+                loadDomainObject(updatedSample, false, null);
+            }
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(sample.getId())) {
+                    log.info("objects set invalidated, reloading...");
+                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                    if (updatedSample!=null) {
+                        loadDomainObject(updatedSample, false, null);
+                    }
+                    break;
+                }
+                else if (lsms!=null) {
+                    for(LSMImage lsm : lsms) {
+                        if (domainObject.getId().equals(lsm.getId())) {
+                            log.info("lsm invalidated, reloading...");
+                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                            if (updatedSample!=null) {
+                                loadDomainObject(updatedSample, false, null);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject().getId().equals(sample.getId())) {
+            this.sample = null;
+            currRunMap.clear();
+            lsms.clear();
+            lsmAnnotations.clear();
+            showNothing();
         }
     }
 }
