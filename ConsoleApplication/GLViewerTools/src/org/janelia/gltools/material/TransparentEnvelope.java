@@ -29,11 +29,14 @@
  */
 package org.janelia.gltools.material;
 
+import java.awt.Color;
+import java.io.IOException;
 import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.ShaderStep;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -41,6 +44,9 @@ import org.janelia.gltools.ShaderStep;
  */
 public class TransparentEnvelope extends BasicMaterial
 {
+    private float[] diffuseColor = new float[] {1,0,1};
+    private int colorIndex = -1;
+    
     public TransparentEnvelope() {
         shaderProgram = new TransparentEnvelopeShader();
         setShadingStyle(Shading.SMOOTH);
@@ -53,10 +59,22 @@ public class TransparentEnvelope extends BasicMaterial
     }
 
     @Override
+    public void init(GL3 gl) {
+        if (isInitialized)
+            return;
+        super.init(gl);
+        if (! isInitialized)
+            return;
+        int s = shaderProgram.getProgramHandle();
+        colorIndex = gl.glGetUniformLocation(s, "diffuseColor");
+    }
+
+    @Override
     public void load(GL3 gl, AbstractCamera camera) {
         super.load(gl, camera);
         gl.glEnable(GL3.GL_BLEND);
         gl.glDepthMask(false);
+        gl.glUniform3fv(colorIndex, 1, diffuseColor, 0);
     }
 
     @Override
@@ -65,63 +83,29 @@ public class TransparentEnvelope extends BasicMaterial
         gl.glDepthMask(true);
         super.unload(gl);
     }
-    
+
+    public void setDiffuseColor(Color color) {
+        this.diffuseColor = color.getColorComponents(null);
+    }
+
     private static class TransparentEnvelopeShader extends BasicShaderProgram {
         public TransparentEnvelopeShader() {
-            getShaderSteps().add(new ShaderStep(
-                    GL2ES2.GL_VERTEX_SHADER, ""
-                    + "#version 330 \n"
-                    + " \n"
-                    + "uniform mat4 modelViewMatrix = mat4(1); \n"
-                    + "uniform mat4 projectionMatrix = mat4(1); \n"
-                    + " \n"
-                    + "in vec3 position; \n"
-                    + "in vec3 normal; \n"
-                    + " \n"
-                    + "out vec3 fragNormal; \n"
-                    + "out vec4 fragPosition; \n"
-                    + " \n"
-                    + "void main(void) \n"
-                    + "{ \n"
-                    + "  fragPosition = modelViewMatrix * vec4(position, 1); \n"
-                    + "  gl_Position = projectionMatrix * fragPosition; \n"
-                    + "  // TODO - for more generality, use the NormalMatrix \n"
-                    + "  fragNormal = (modelViewMatrix * vec4(normal, 0)).xyz; \n"
-                    + "} \n")
-            );
-            getShaderSteps().add(new ShaderStep(
-                    GL2ES2.GL_FRAGMENT_SHADER, ""
-                    // TODO - expose lighting parameters as uniform variables
-                    // TODO - permit per-vertex lighting
-                    + "#version 330 \n"
-                    + " \n"
-                    + "in vec3 fragNormal; \n"
-                    + "in vec4 fragPosition; \n"
-                    + " \n"
-                    + "const vec4 lightPosition = vec4(10, 10, 10, 1); \n"
-                    + "const vec3 lightColor = vec3(1, 1, 1); \n"
-                    + "const float ambientScale = 0.3; \n"
-                    + "const float diffuseScale = 0.7; \n"
-                    + "const vec3 ambientColor = vec3(0.6, 0.6, 1.0); \n"
-                    + "const vec3 diffuseColor = vec3(1.0, 0.8, 0.5); \n"
-                    + " \n"
-                    + "out vec4 fragColor; \n"
-                    + " \n"
-                    + "void main(void) \n"
-                    + "{ \n"
-                    + "  vec3 n = normalize(fragNormal); \n"
-                    + "  vec3 camPos = fragPosition.xyz/fragPosition.w; \n"                            
-                    + "  vec3 L = lightPosition.xyz - lightPosition.w * camPos; \n"
-                    + "  L = normalize(L); \n"
-                    + "  vec3 ambient = ambientScale * ambientColor; \n"
-                    + "  vec3 diffuse = diffuseScale * max(dot(n, L), 0) * diffuseColor; \n"
-                    + "  float angleCosineCutoff = 0.5; \n"
-                    + "  float straight_on_ness = abs(dot(n, normalize(camPos))) / angleCosineCutoff; \n"
-                    + "  if (straight_on_ness >= 1) discard; \n"
-                    + "  float edginess = 1.0 - straight_on_ness; \n"
-                    + "  fragColor = vec4(diffuse + ambient, edginess); \n"
-                    + "} \n")
-            );
+            try {
+                getShaderSteps().add(new ShaderStep(
+                        GL2ES2.GL_VERTEX_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/gltools/material/shader/"
+                                        + "BasicMeshVrtx.glsl"))
+                );
+                getShaderSteps().add(new ShaderStep(
+                        GL2ES2.GL_FRAGMENT_SHADER,
+                        getClass().getResourceAsStream(
+                                "/org/janelia/gltools/material/shader/"
+                                        + "TransparentEnvelopeFrag.glsl"))
+                );
+            } catch (IOException ex) {
+                Exceptions.printStackTrace(ex);
+            }
         }
     }
 }

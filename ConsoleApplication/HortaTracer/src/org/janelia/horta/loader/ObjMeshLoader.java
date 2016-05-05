@@ -30,6 +30,7 @@
 
 package org.janelia.horta.loader;
 
+import java.awt.Color;
 import java.io.IOException;
 import javax.swing.SwingUtilities;
 import org.apache.commons.io.FilenameUtils;
@@ -73,9 +74,13 @@ public class ObjMeshLoader implements FileTypeLoader
                 MeshGeometry meshGeometry;
                 try {
                     meshGeometry = WavefrontObjLoader.load(source.getInputStream());
+                    TransparentEnvelope material = new TransparentEnvelope();
+                    Color color = meshGeometry.getDefaultColor();
+                    if (color != null)
+                        material.setDiffuseColor(color);
                     final GL3Actor meshActor = new MeshActor(
                             meshGeometry,
-                            new TransparentEnvelope(),
+                            material,
                             null
                     );
                     SwingUtilities.invokeLater(new Runnable() {

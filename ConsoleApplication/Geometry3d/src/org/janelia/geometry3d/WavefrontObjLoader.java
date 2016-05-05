@@ -30,6 +30,7 @@
 
 package org.janelia.geometry3d;
 
+import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,6 +52,9 @@ public class WavefrontObjLoader {
         MeshGeometry result = new MeshGeometry();
 
         Pattern commentPattern = Pattern.compile("^\\s*#.*");
+        
+        // e.g. "# Compartment color: 0xFF7080"
+        Pattern colorPattern = Pattern.compile("^.*\\bcolor\\b.*\\b(0x[0-9A-F]{6})\\b.*", Pattern.CASE_INSENSITIVE);
         Pattern vertexPattern = Pattern.compile("^\\s*v\\s+(\\S+)\\s+(\\S+)\\s+(\\S+)(?:\\s+(\\S+))?.*");
         Pattern normalPattern = Pattern.compile("^\\s*vn\\s+(\\S+)\\s+(\\S+)\\s+(\\S+).*");
         Pattern facePattern = Pattern.compile("^\\s*f((?:\\s+[0-9/]+)+).*");
@@ -80,6 +84,14 @@ public class WavefrontObjLoader {
             matcher = commentPattern.matcher(line);
             if (matcher.matches()) {
                 String g1 = matcher.group(0);
+                Matcher colorMatcher = colorPattern.matcher(line);
+                if (colorMatcher.matches()) {
+                    String hexColor = colorMatcher.group(1);
+                    Color color = Color.decode(hexColor);
+                    if (color != null) {
+                        result.setDefaultColor(color);
+                    }
+                }
                 continue; // skip comment lines
             }
             
