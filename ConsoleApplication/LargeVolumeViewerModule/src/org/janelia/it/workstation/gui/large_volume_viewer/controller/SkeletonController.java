@@ -48,12 +48,17 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
+    private boolean skipSkeletonChange=false;
     
     private static SkeletonController instance = new SkeletonController();
     
     private Long nextParentId = -1L;
     
     private SkeletonController() {
+    }
+
+    public void setSkipSkeletonChange(boolean skipSkeletonChange) {
+        this.skipSkeletonChange=skipSkeletonChange;
     }
     
     public static SkeletonController getInstance() {
@@ -236,12 +241,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public void skeletonChanged() {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().updateAnchors();
+        if (!skipSkeletonChange) {
+            for (SkeletonActor actor : actors) {
+                actor.getModel().updateAnchors();
+            }
+            refreshMeshDrawUpdateTimer();
+            fireComponentUpdate();
+            log.info("anchor time=" + TraceMode.getTimerMs());
         }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
-        log.info("anchor time="+ TraceMode.getTimerMs());
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {

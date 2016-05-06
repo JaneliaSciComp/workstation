@@ -366,7 +366,7 @@ public class AnnotationPanel extends JPanel
 
         // ----- interesting annotations
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        filteredList = new FilteredAnnotationList(annotationMgr, annotationModel, width);
+        filteredList = FilteredAnnotationList.createInstance(annotationMgr, annotationModel, width);
         add(filteredList, cVert);
 
 
