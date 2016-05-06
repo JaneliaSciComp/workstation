@@ -60,14 +60,26 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         double[] micronLocation = micronCoordsFormatter.messageToTuple(content);
         Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
         
-        TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
         int[] micronIntCoords = new int[ micronLocation.length ];
         for (int i = 0; i < micronLocation.length; i++ ) {
             micronIntCoords[i] = (int)micronLocation[i];
         }
+        log.info("Translated [" + content + "] to [" + micronIntCoords[0] + "," + micronIntCoords[1] + "," + micronIntCoords[2] + "]");
+        TileFormat.VoxelXyz voxelCoords
+                = tileFormat.voxelXyzForMicrometerXyz(
+                        new TileFormat.MicrometerXyz(
+                                micronIntCoords[0],
+                                micronIntCoords[1],
+                                micronIntCoords[2]
+                        )
+                );
+        int[] voxelCoordArr = new int[] {
+            voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ()
+        };
+
         StringSelection selection;
         try {
-            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), micronIntCoords);
+            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), voxelCoordArr);
             File c0File = rfi.getChannel0();
             String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
             // Not truly looking for the file path; just the legs of the path.
