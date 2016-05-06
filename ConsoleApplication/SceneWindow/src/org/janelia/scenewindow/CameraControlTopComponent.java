@@ -167,7 +167,10 @@ implements LookupListener
         jLabel7 = new javax.swing.JLabel();
         resetAllButton = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
-        slabSlider = new javax.swing.JSlider();
+        nearSlabSlider = new javax.swing.JSlider();
+        farSlabSlider = new javax.swing.JSlider();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
 
         focusPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.focusPanel.border.title"))); // NOI18N
 
@@ -506,24 +509,47 @@ implements LookupListener
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jPanel1.border.title"))); // NOI18N
 
-        slabSlider.setMinorTickSpacing(25);
-        slabSlider.setPaintTicks(true);
-        slabSlider.setValue(25);
-        slabSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+        nearSlabSlider.setMaximum(99);
+        nearSlabSlider.setMinimum(1);
+        nearSlabSlider.setMinorTickSpacing(25);
+        nearSlabSlider.setValue(90);
+        nearSlabSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                slabSliderStateChanged(evt);
+                nearSlabSliderStateChanged(evt);
             }
         });
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel8, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jLabel8.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel9, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jLabel9.text")); // NOI18N
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(slabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(farSlabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(nearSlabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel8)
+                    .addComponent(jLabel9)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(slabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(nearSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jLabel8)
+                        .addGap(12, 12, 12)))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel9)
+                    .addComponent(farSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -536,7 +562,7 @@ implements LookupListener
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(resetAllButton)
-                .addContainerGap(137, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
@@ -549,9 +575,9 @@ implements LookupListener
                 .addComponent(zoomPanl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(18, 18, 18)
                 .addComponent(resetAllButton)
-                .addContainerGap(76, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -621,7 +647,8 @@ implements LookupListener
             selectedVantage.resetView();
             selectedVantage.notifyObservers();
         }
-        slabSlider.setValue(25);
+        nearSlabSlider.setValue(50);
+        farSlabSlider.setValue(50);
     }//GEN-LAST:event_resetAllButtonActionPerformed
 
     private void stayUpCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stayUpCheckBoxActionPerformed
@@ -660,18 +687,15 @@ implements LookupListener
         incrementLocalTranslation(localTranslateZSpinner, new Vector3(0, 0, -1));
     }//GEN-LAST:event_localTranslateZSpinnerStateChanged
 
-    private void slabSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_slabSliderStateChanged
+    private void nearSlabSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_nearSlabSliderStateChanged
         // TODO add your handling code here:
         if (selectedViewSlab == null)
             return;
-        int sliderValue = slabSlider.getValue();
-        double logSlabRatio = sliderValue / 25.0;
-        float zFarRelative = (float)(Math.pow(10.0, logSlabRatio) + 0.01); // range ( 1.0 - 10000.0 )
-        float zNearRelative = 1.0f/(float)(Math.pow(2.0, logSlabRatio) + 0.01); // range ( 1e-5 - 1.0 )
+        int sliderValue = nearSlabSlider.getValue();
+        float zNearRelative = (float)sliderValue/100.0f; // (range 0.01 - 0.99)
         selectedViewSlab.setzNearRelative(zNearRelative);
-        selectedViewSlab.setzFarRelative(zFarRelative);
         selectedViewSlab.getChangeObservable().notifyObservers();
-    }//GEN-LAST:event_slabSliderStateChanged
+    }//GEN-LAST:event_nearSlabSliderStateChanged
 
     private void incrementLocalRotation(JSpinner spinner, Vector3 axis)
     {
@@ -703,6 +727,7 @@ implements LookupListener
     }
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JSlider farSlabSlider;
     private javax.swing.JPanel focusPanel;
     private javax.swing.JLabel focusXLabel;
     private javax.swing.JSpinner focusXSpinner;
@@ -717,6 +742,8 @@ implements LookupListener
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JSpinner localRotXSpinner;
     private javax.swing.JSpinner localRotYSpinner;
@@ -724,6 +751,7 @@ implements LookupListener
     private javax.swing.JSpinner localTranslateXSpinner;
     private javax.swing.JSpinner localTranslateYSpinner;
     private javax.swing.JSpinner localTranslateZSpinner;
+    private javax.swing.JSlider nearSlabSlider;
     private javax.swing.JButton resetAllButton;
     private javax.swing.JButton resetFocusButton;
     private javax.swing.JButton resetRotationButton;
@@ -735,7 +763,6 @@ implements LookupListener
     private javax.swing.JLabel rotZLabel;
     private javax.swing.JSpinner rotZSpinner;
     private javax.swing.JPanel rotationPanel;
-    private javax.swing.JSlider slabSlider;
     private javax.swing.JCheckBox stayUpCheckBox;
     private javax.swing.JPanel zoomPanl;
     private javax.swing.JSpinner zoomSpinner;

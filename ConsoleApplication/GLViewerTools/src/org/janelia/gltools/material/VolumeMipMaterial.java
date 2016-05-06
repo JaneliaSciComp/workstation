@@ -38,6 +38,7 @@ import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.VolumeTextureMesh;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
@@ -277,7 +278,37 @@ public class VolumeMipMaterial extends BasicMaterial
        
         super.displayMesh(gl, mesh, camera, modelViewMatrix);
     }
-    
+
+    @Override
+    protected void displayWithMatrices(
+                GL3 gl, 
+                MeshActor mesh, 
+                AbstractCamera camera,
+                Matrix4 modelViewMatrix) 
+    {
+        if (modelViewMatrix == null)
+            modelViewMatrix = new Matrix4(camera.getViewMatrix());
+        gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
+        
+        // Replace "official" camera with one that has very generous clip planes, 
+        // because we need to show entire brick bounding volume, and later clip in fragment shader.
+        Viewport generousViewport = new Viewport();
+        Viewport vp = camera.getViewport();
+        generousViewport.setHeightPixels(vp.getHeightPixels());
+        generousViewport.setWidthPixels(vp.getWidthPixels());
+        generousViewport.setOriginXPixels(vp.getOriginXPixels());
+        generousViewport.setOriginYPixels(vp.getOriginYPixels());
+        generousViewport.setzNearRelative(vp.getzNearRelative() / 10.0f);
+        generousViewport.setzFarRelative(vp.getzFarRelative() + 100.0f);
+        PerspectiveCamera generousCamera = new PerspectiveCamera(camera.getVantage(), generousViewport);
+        // TODO: Cache modified camera so we don't have to perform full copy every time.
+        Matrix4 projectionMatrix = generousCamera.getProjectionMatrix();
+
+        gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
+        
+        displayNoMatrices(gl, mesh, generousCamera, modelViewMatrix);
+    }
+
     @Override
     public void dispose(GL3 gl) {
         // Destroy extra shader programs
