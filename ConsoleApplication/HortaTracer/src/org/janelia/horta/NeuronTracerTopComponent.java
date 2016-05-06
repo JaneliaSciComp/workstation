@@ -771,11 +771,15 @@ public final class NeuronTracerTopComponent extends TopComponent
         // reduce near clipping of volume block surfaces
         Viewport vp = sceneWindow.getCamera().getViewport();
         vp.setzNearRelative(0.93f);
-        vp.setzFarRelative(1.07f); // We use rear faces for volume rendering now...
+        vp.setzFarRelative(1.07f);
         vp.getChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
-                logger.info("zNearRelative = " + sceneWindow.getCamera().getViewport().getzNearRelative());
+                Viewport vp = sceneWindow.getCamera().getViewport();
+                logger.info("zNearRelative = " + vp.getzNearRelative());
+                // TODO: should that be updateRelativeSlabThickness?
+                neuronMPRenderer.setRelativeSlabThickness(vp.getzNearRelative(), vp.getzFarRelative());
+                redrawNow();
             }
         });
 
@@ -1501,13 +1505,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (! isShowing())
             return;
         sceneWindow.getInnerComponent().repaint();
-    }
-    
-    private void redrawImmediately() {
-        JComponent c = sceneWindow.getOuterComponent();
-        if (sceneWindow.getInnerComponent() instanceof JComponent)
-            c = (JComponent)sceneWindow.getInnerComponent();
-        c.paintImmediately(c.getBounds());
     }
 
     @Override

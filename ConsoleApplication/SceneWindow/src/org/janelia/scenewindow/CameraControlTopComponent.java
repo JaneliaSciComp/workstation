@@ -509,13 +509,18 @@ implements LookupListener
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jPanel1.border.title"))); // NOI18N
 
-        nearSlabSlider.setMaximum(99);
         nearSlabSlider.setMinimum(1);
         nearSlabSlider.setMinorTickSpacing(25);
         nearSlabSlider.setValue(90);
         nearSlabSlider.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 nearSlabSliderStateChanged(evt);
+            }
+        });
+
+        farSlabSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                farSlabSliderStateChanged(evt);
             }
         });
 
@@ -692,10 +697,21 @@ implements LookupListener
         if (selectedViewSlab == null)
             return;
         int sliderValue = nearSlabSlider.getValue();
-        float zNearRelative = (float)sliderValue/100.0f; // (range 0.01 - 0.99)
+        float zNearRelative = (float)sliderValue/100.1f; // (range 0.01 - 0.999)
         selectedViewSlab.setzNearRelative(zNearRelative);
         selectedViewSlab.getChangeObservable().notifyObservers();
     }//GEN-LAST:event_nearSlabSliderStateChanged
+
+    private void farSlabSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_farSlabSliderStateChanged
+        // TODO add your handling code here:
+        if (selectedViewSlab == null)
+            return;
+        int sliderValue = farSlabSlider.getValue();
+        double exponent = sliderValue / 25.0 - 1.0; // range [-1, 3]
+        float zFarRelative = 0.901f + (float)Math.pow(10.0, exponent); // (range 1.001 - 1000.9)
+        selectedViewSlab.setzFarRelative(zFarRelative);
+        selectedViewSlab.getChangeObservable().notifyObservers();
+    }//GEN-LAST:event_farSlabSliderStateChanged
 
     private void incrementLocalRotation(JSpinner spinner, Vector3 axis)
     {

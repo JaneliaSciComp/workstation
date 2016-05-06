@@ -166,6 +166,8 @@ public class VolumeRenderPass extends RenderPass
 
     void setRelativeSlabThickness(float zNear, float zFar)
     {
+        if ((zNear == relativeZNear) && (zFar == relativeZFar))
+            return; // nothing changed        
         relativeZNear = zNear;
         relativeZFar = zFar;
         for (GL3Actor actor : getActors()) {
@@ -175,6 +177,8 @@ public class VolumeRenderPass extends RenderPass
             ba.setRelativeZNear(zNear);
             ba.setRelativeZFar(zFar);
         }
+        hdrTarget.setDirty(true);
+        pickBuffer.setDirty(true);
     }
 
     public float getRelativeZNear() {

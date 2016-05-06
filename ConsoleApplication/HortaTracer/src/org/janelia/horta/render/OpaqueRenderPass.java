@@ -124,8 +124,11 @@ public class OpaqueRenderPass extends RenderPass
     }
     
     public void setRelativeSlabThickness(float zNear, float zFar) {
+        if ((zNear == relativeZNear) && (zFar == relativeZFar))
+            return; // nothing changed
         relativeZNear = zNear;
         relativeZFar = zFar;
+        setBuffersDirty();
     }
     
     @Override
