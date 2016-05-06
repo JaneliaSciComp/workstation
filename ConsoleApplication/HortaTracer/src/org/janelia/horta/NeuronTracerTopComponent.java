@@ -767,18 +767,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         // associateLookup(Lookups.fixed(vantage, brightnessModel)); // TWO items in lookup
         FrameTracker frameTracker = sceneWindow.getRenderer().getFrameTracker();
         metaWorkspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
-        associateLookup(Lookups.fixed(
-                vantage, 
-                brightnessModel, 
-                metaWorkspace, 
-                frameTracker,
-                (MovieRenderer)this,
-                (MovieSource)this));
         
         // reduce near clipping of volume block surfaces
         Viewport vp = sceneWindow.getCamera().getViewport();
         vp.setzNearRelative(0.50f);
         vp.setzFarRelative(50.0f); // We use rear faces for volume rendering now...
+
+        associateLookup(Lookups.fixed(
+                vantage, 
+                brightnessModel, 
+                metaWorkspace, 
+                frameTracker,
+                this,
+                vp));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);

@@ -68,6 +68,7 @@ import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.horta.volume.BrickActor;
 import org.openide.util.Exceptions;
@@ -154,7 +155,7 @@ extends MultipassRenderer
             }
         });
         
-        setRelativeSlabThickness(0.5f);
+        setRelativeSlabThickness(0.92f, 1.08f);
     }
     
     public void addMeshActor(GL3Actor meshActor) {
@@ -283,23 +284,29 @@ extends MultipassRenderer
         }
         else if (isVisibleTransparentAtScreenXy(xy, camera)) {
             double z = relativeTransparentDepthOffsetForScreenXy(xy, camera);
-            z *= 0.5 * getViewSlabThickness(camera);
-            return z;
+            double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
+            double zNear = getRelativeZNear() * focusDistance;
+            double zFar = getRelativeZFar() * focusDistance;
+            return zNear + z * (zFar - zNear);
         }
         else { // we have neither opaque nor transparent geometry to calibrate depth
             return 0;
         }
     }
 
-    public final void setRelativeSlabThickness(float thickness) {
-        opaqueRenderPass.setRelativeSlabThickness(thickness);
-        volumeRenderPass.setRelativeSlabThickness(thickness);
+    public final void setRelativeSlabThickness(float zNear, float zFar) {
+        opaqueRenderPass.setRelativeSlabThickness(zNear, zFar);
+        volumeRenderPass.setRelativeSlabThickness(zNear, zFar);
     }
     
-    public float getViewSlabThickness(AbstractCamera camera) {
-        return volumeRenderPass.getViewSlabThickness(camera);
+    public float getRelativeZNear() {
+        return volumeRenderPass.getRelativeZNear();
     }
-    
+
+    public float getRelativeZFar() {
+        return volumeRenderPass.getRelativeZFar();
+    }
+
     private void addNeuronReconstruction(NeuronModel neuron) {
         allSwcActor.addNeuronReconstruction(neuron);
         

@@ -148,10 +148,12 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
         return true;
     }
     
+    @Override
     public float getSceneUnitsPerViewportHeight() {
         return sceneUnitsPerViewportHeight;
     }
 
+    @Override
     public boolean setSceneUnitsPerViewportHeight(float sceneUnitsPerViewportHeight) {
         if(sceneUnitsPerViewportHeight == this.sceneUnitsPerViewportHeight)
             return false;

@@ -67,7 +67,10 @@ public class OpaqueRenderPass extends RenderPass
     
     private PerspectiveCamera localCamera; // local version of camera with custom slab
     private Viewport localViewport = new Viewport(); // local version of camera with custom slab
-    private float slabThickness = 0.50f; // Half of view height
+    
+    // private float slabThickness = 0.50f; // Half of view height
+    private float relativeZNear = 0.92f;
+    private float relativeZFar = 1.08f;
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
     {
@@ -120,8 +123,9 @@ public class OpaqueRenderPass extends RenderPass
         super.init(gl);
     }
     
-    public void setRelativeSlabThickness(float relativeThickness) {
-        this.slabThickness = relativeThickness;
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        relativeZNear = zNear;
+        relativeZFar = zFar;
     }
     
     @Override
@@ -141,20 +145,20 @@ public class OpaqueRenderPass extends RenderPass
         // TODO - set slab thickness and update projection
         
         float focusDistance = localCamera.getCameraFocusDistance();
-        float heightInUnits = localCamera.getVantage().getSceneUnitsPerViewportHeight();
-        float slabInUnits = slabThickness * heightInUnits;
-        float zNear = focusDistance - 0.5f * slabInUnits;
-        float zFar  = focusDistance + 0.5f * slabInUnits;
-        if (zNear < 1e-3f) zNear = 1e-3f;
-        if (zFar <= zNear) zFar = zNear + 1e-3f;
-        float relNear = zNear/focusDistance;
-        float relFar = zFar/focusDistance;
+        // float heightInUnits = localCamera.getVantage().getSceneUnitsPerViewportHeight();
+        // float slabInUnits = slabThickness * heightInUnits;
+        // float zNear = focusDistance - 0.5f * slabInUnits;
+        // float zFar  = focusDistance + 0.5f * slabInUnits;
+        // if (zNear < 1e-3f) zNear = 1e-3f;
+        // if (zFar <= zNear) zFar = zNear + 1e-3f;
+        float relNear = relativeZNear;
+        float relFar = relativeZFar;
         localViewport.setzNearRelative(relNear);
         localViewport.setzFarRelative(relFar);
         
         // Store camera parameters for use by volume rendering pass
-        cachedZNear = zNear;
-        cachedZFar = zFar;
+        cachedZNear = relNear * focusDistance;
+        cachedZFar = relFar * focusDistance;
         
         if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);

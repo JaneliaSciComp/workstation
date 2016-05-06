@@ -86,7 +86,10 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
-    private float relativeSlabThickness = 0.5f;
+    
+    // private float relativeSlabThickness = 0.5f;
+    private float relativeZNear = 0.92f;
+    private float relativeZFar = 1.08f;
     
     public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
     {
@@ -100,6 +103,22 @@ public class VolumeMipMaterial extends BasicMaterial
         shaderProgram = mipShader;
         
         setShadingStyle(Shading.FLAT);
+    }
+
+    public float getRelativeZNear() {
+        return relativeZNear;
+    }
+
+    public void setRelativeZNear(float relativeZNear) {
+        this.relativeZNear = relativeZNear;
+    }
+
+    public float getRelativeZFar() {
+        return relativeZFar;
+    }
+
+    public void setRelativeZFar(float relativeZFar) {
+        this.relativeZFar = relativeZFar;
     }
     
     public Texture3d getTexture() {return volumeTexture;}
@@ -123,13 +142,13 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glCullFace(GL3.GL_FRONT);
     }
     
-    public void setRelativeSlabThickness(float thickness) {
-        relativeSlabThickness = thickness;
-    }
+    // public void setRelativeSlabThickness(float thickness) {
+    //     relativeSlabThickness = thickness;
+    // }
     
-    public float getViewSlabThickness(AbstractCamera camera) {
-        return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
-    }
+    // public float getViewSlabThickness(AbstractCamera camera) {
+    //     return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
+    // }
     
     /*
     public static float getViewSlabThickness(AbstractCamera camera) {
@@ -209,7 +228,7 @@ public class VolumeMipMaterial extends BasicMaterial
             gl.glUniform1i(levelOfDetailIndex, intLod);
             
             // Clip on slab, to limit depth of rendering
-            float slabThickness = getViewSlabThickness(camera);
+            // float slabThickness = getViewSlabThickness(camera);
             // float slabThickness = relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
             float cameraFocusDistance = 0.0f;
             if (camera instanceof PerspectiveCamera) {
@@ -218,9 +237,9 @@ public class VolumeMipMaterial extends BasicMaterial
             }
             // Plane equation is easy to express in camera frame
             Vector4 nearSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance - 0.5f*slabThickness);
+                    cameraFocusDistance * relativeZNear);
             Vector4 farSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance + 0.5f*slabThickness);
+                    cameraFocusDistance * relativeZFar);
             // But we need plane equation in texture coordinate frame
             Matrix4 planeXform = camera_X_tc.inverse().transpose(); // look it up...
             Vector4 nearSlabPlane_tc = planeXform.multiply( nearSlabPlane_camera );
