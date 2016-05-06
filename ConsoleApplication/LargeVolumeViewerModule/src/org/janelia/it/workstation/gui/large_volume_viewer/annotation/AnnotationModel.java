@@ -12,6 +12,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
@@ -29,11 +30,6 @@ import java.util.List;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -452,11 +448,25 @@ called from a  SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+
+                SkeletonController skeletonController=SkeletonController.getInstance();
+                skeletonController.setSkipSkeletonChange(true);
+
+                FilteredAnnotationList filteredAnnotationList=FilteredAnnotationList.getInstance();
+                filteredAnnotationList.setSkipUpdate(true);
+
                 fireNeuronSelected(null);
                 fireAnnotationsDeleted(tempAnnotationList);
                 fireAnchoredPathsRemoved(tempPathList);
                 fireWorkspaceLoaded(workspace);
                 fireWsEntityChanged();
+
+                skeletonController.setSkipSkeletonChange(false);
+                skeletonController.skeletonChanged();
+
+                filteredAnnotationList.setSkipUpdate(false);
+                filteredAnnotationList.updateData();
+
             }
         });
     }
