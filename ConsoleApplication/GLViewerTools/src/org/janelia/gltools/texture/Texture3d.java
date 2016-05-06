@@ -868,7 +868,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
         RenderedImage slices[] = new RenderedImage[sz];
         for (int z = 0; z < sz; ++z)
             slices[z] = decoder.decodeAsRenderedImage(z);
-        System.out.println("Creating RenderedImages for all slices took "+timer.reportMsAndRestart()+" ms");
+        if (slices.length>0) {
+            System.out.println("Creating RenderedImages for all slices took " + timer.reportMsAndRestart() + " ms, x=" + slices[0].getWidth() + " y=" + slices[0].getHeight() + " z=" + sz);
+        }
         return slices;
     }
 
