@@ -6,11 +6,12 @@ import java.util.List;
 
 import javax.swing.text.Position.Bias;
 
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Searches an icon grid viewer forward or backward to find objects matching some string.
+ * Searches a table viewer forward or backward to find objects matching some string.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -52,7 +53,6 @@ public class TableViewerFind<T,S> {
             Collections.reverse(objectList);
         }
         else {
-
             log.debug("Search forward (skipStartingNode={})",skipStartingNode);
         }
         
@@ -66,8 +66,9 @@ public class TableViewerFind<T,S> {
     }
     
     private T checkCurrent(T currObject) {
+
         String name = tableViewer.getImageModel().getImageLabel(currObject);
-        
+
         // Begin actually looking only once we get to the starting node
         if (currObject.equals(startingObject)) {
             log.debug("Beginning search at {}", name, looking);
@@ -92,8 +93,20 @@ public class TableViewerFind<T,S> {
     }
     
     private boolean matches(T currObject, String searchString) {
-        String name = tableViewer.getImageModel().getImageLabel(currObject);
         // TODO: search the entire row in the table for this object
-        return name.toUpperCase().contains(searchString);
+        String name = tableViewer.getImageModel().getImageLabel(currObject);
+        //return name.toUpperCase().contains(searchString);
+        for(DynamicColumn column : tableViewer.getColumns()) {
+            Object value = tableViewer.getValue(currObject, column.getName());
+            if (value!=null) {
+                if (value.toString().toUpperCase().contains(searchString)) {
+                    log.trace("Found match in attribute {} of {}",column.getLabel(),name    );
+                    return true;
+                }
+            }
+        }
+
+        return false;
+
     }
 }
