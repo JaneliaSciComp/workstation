@@ -102,7 +102,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         };
 
         imagesPanel.setButtonKeyListener(keyListener);
-//        addKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(mouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
         
@@ -586,82 +585,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         }
     }
 
-    
-    
-//
-//    public List<RootedEntity> getSelectedEntities() {
-//        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
-//        if (pageRootedEntities == null) {
-//            return selectedEntities;
-//        }
-//        for (RootedEntity rootedEntity : pageRootedEntities) {
-//            AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
-//            if (button.isSelected()) {
-//                selectedEntities.add(rootedEntity);
-//            }
-//        }
-//        return selectedEntities;
-//    }
-
-//    public EntityViewerState saveViewerState() {
-//        // We could get this from the EntitySelectionModel, but sometimes that 
-//        // doesn't have the latest select the user is currently making.
-//        Set<String> selectedIds = new HashSet<String>();
-//        for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
-//            selectedIds.add(button.getRootedEntity().getId());
-//        }
-//        return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
-//    }
-//
-//    public void restoreViewerState(final EntityViewerState state) {
-//        // It's critical to call loadEntity in the ViewerPane not the local one.
-//        // The ViewerPane version does extra stuff to get the ancestors button
-//        // and breadcrumbs to show correctly.
-//        getViewerPane().loadEntity(state.getContextRootedEntity(), new Callable<Void>() {
-//            @Override
-//            public Void call() throws Exception {
-//                // Go to the right page
-//                int i = 0;
-//                int firstIdIndex = 0;
-//                for (RootedEntity rootedEntity : allRootedEntities) {
-//                    if (state.getSelectedIds().contains(rootedEntity.getId())) {
-//                        firstIdIndex = i;
-//                        break;
-//                    }
-//                    i++;
-//                }
-//
-//                Callable<Void> makeSelections = new Callable<Void>() {
-//                    @Override
-//                    public Void call() throws Exception {
-//                        for (String selectedId : state.getSelectedIds()) {
-//                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, false);
-//                        }
-//                        // Wait for all selections to finish before we scroll
-//                        SwingUtilities.invokeLater(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                imagesPanel.scrollSelectedEntitiesToCenter();
-//                            }
-//                        });
-//                        return null;
-//                    }
-//                };
-//
-//                int page = (int) Math.floor((double) firstIdIndex / (double) PAGE_SIZE);
-//                if (page != currPage) {
-//                    loadImageEntities(page, makeSelections);
-//                }
-//                else {
-//                    makeSelections.call();
-//                }
-//
-//                return null;
-//            }
-//        });
-//    }
-
-    
     protected Map<S, T> getObjectMap() {
         return objectMap;
     }
