@@ -207,16 +207,18 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         JTable table = getTable();
         ListSelectionModel lsm = table.getSelectionModel();
         if (lsm.getMinSelectionIndex()==lsm.getMaxSelectionIndex()) {
-            final String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-            JMenuItem titleMenuItem = new JMenuItem(value);
+            String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+            final String label = value==null?"null":value;
+
+            JMenuItem titleMenuItem = new JMenuItem(label);
             titleMenuItem.setEnabled(false);
             popupMenu.add(titleMenuItem);
 
-            JMenuItem copyMenuItem = new JMenuItem("  Copy To Clipboard");
+            JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
             copyMenuItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    Transferable t = new StringSelection(value);
+                    Transferable t = new StringSelection(label);
                     Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
                 }
             });

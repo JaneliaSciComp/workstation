@@ -269,7 +269,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 
                     if (object != null) {
                         userSelectObject(object, true);
-                        // TODO: the rest of this should happen automatically as a consequence of the userSelectObject call
                     }
                 }
             }

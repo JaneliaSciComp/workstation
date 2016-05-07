@@ -202,7 +202,7 @@ public abstract class DynamicTable extends JPanel {
                     if (getColumns().get(col).isEditable()) {
                         return;
                     }
-                    rowClicked(row);
+                    cellClicked(row, col);
                 }
                 else {
                     backgroundClicked();
@@ -435,7 +435,7 @@ public abstract class DynamicTable extends JPanel {
      *
      * @param row
      */
-    protected void rowClicked(int row) {
+    protected void cellClicked(int row, int col) {
     }
 
     /**

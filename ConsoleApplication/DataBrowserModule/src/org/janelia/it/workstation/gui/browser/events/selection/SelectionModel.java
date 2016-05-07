@@ -50,7 +50,7 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(List<T> objects, boolean clearAll, boolean isUserDriven) {
-        log.trace("select {}, clearAll={}, isUserDriven={}",objects,clearAll,isUserDriven);
+        log.trace("select(objects.size={}, clearAll={}, isUserDriven={})",objects.size(),clearAll,isUserDriven);
         boolean clear = clearAll;
         for(T object : objects) {
             S id = getId(object);
@@ -99,9 +99,9 @@ public abstract class SelectionModel<T,S> {
      * @param objects
      */
     public final void deselect(List<T> objects, boolean isUserDriven) {
+        log.trace("deselect(objects.size={}, isUserDriven={})",objects.size(),isUserDriven);
         for(T object : objects) {
             S id = getId(object);
-            log.trace("deselect {}, isUserDriven={}",id,isUserDriven);
             if (!selected.contains(id)) {
                 return;
             }
