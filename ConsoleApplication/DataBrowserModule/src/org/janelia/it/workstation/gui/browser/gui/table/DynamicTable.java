@@ -483,9 +483,6 @@ public abstract class DynamicTable extends JPanel {
 
     /**
      * Get a list of all columns.
-     *
-     * @param name
-     * @return
      */
     public List<DynamicColumn> getColumns() {
         return columns;
@@ -493,9 +490,6 @@ public abstract class DynamicTable extends JPanel {
 
     /**
      * Get a list of currently displayed columns.
-     *
-     * @param name
-     * @return
      */
     public List<DynamicColumn> getDisplayedColumns() {
         return displayedColumns;
@@ -503,9 +497,6 @@ public abstract class DynamicTable extends JPanel {
 
     /**
      * Get the column with the given name.
-     *
-     * @param name
-     * @return
      */
     public DynamicColumn getColumn(String name) {
         for (DynamicColumn col : columns) {
@@ -804,8 +795,6 @@ public abstract class DynamicTable extends JPanel {
     
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
-     *
-     * @param table table to work against
      */
     public void autoResizeColWidth() {
 
@@ -850,7 +839,7 @@ public abstract class DynamicTable extends JPanel {
     }
     
     /**
-     * Borrowed from http://smi-protege.stanford.edu/repos/protege/protege-core/trunk/src/edu/stanford/smi/protege/util/ComponentUtilities.java
+     * Adapter from ImagesPanel, should be factored out into a common class.
      * @param rowIndex
      * @param vColIndex
      */
@@ -865,18 +854,33 @@ public abstract class DynamicTable extends JPanel {
         // This rectangle is relative to the table where the
         // northwest corner of cell (0,0) is always (0,0).
         Rectangle rect = table.getCellRect(rowIndex, vColIndex, true);
+        log.trace("Button rect: {}",rect);
 
-        // The location of the viewport relative to the table
-        Point pt = viewport.getViewPosition();
+        // The location of the view relative to the table
+        Rectangle viewRect = viewport.getViewRect();
+        log.trace("View rect: {}",viewRect);
 
         // Translate the cell location so that it is relative
         // to the view, assuming the northwest corner of the
-        // view is (0,0)
-        rect.setLocation(rect.x-pt.x, rect.y-pt.y);
+        // view is (0,0).
+        rect.setLocation(rect.x - viewRect.x, rect.y - viewRect.y);
 
-        table.scrollRectToVisible(rect);
+        // Calculate location of rect if it were at the center of view
+        int centerX = (viewRect.width - rect.width) / 2;
+        int centerY = (viewRect.height - rect.height) / 2;
 
-        // Scroll the area into view
-        //viewport.scrollRectToVisible(rect);
+        // Fake the location of the cell so that scrollRectToVisible
+        // will move the cell to the center
+        if (rect.x < centerX) {
+            centerX = -centerX;
+        }
+        if (rect.y < centerY) {
+            centerY = -centerY;
+        }
+        rect.translate(centerX, centerY);
+
+        // Scroll the area into view.
+        log.trace("Scroll to visible: {}",rect);
+        viewport.scrollRectToVisible(rect);
     }
 }

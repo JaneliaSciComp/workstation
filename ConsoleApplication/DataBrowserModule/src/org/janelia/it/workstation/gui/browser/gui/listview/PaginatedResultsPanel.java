@@ -10,18 +10,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
-import javax.swing.UIManager;
+import javax.swing.*;
+import javax.swing.text.Position;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -29,9 +21,13 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
+import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
+import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
+import org.janelia.it.workstation.gui.browser.model.search.ResultIterator;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -42,23 +38,27 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-
 import static org.janelia.it.workstation.gui.browser.api.DomainMgr.getDomainMgr;
+import static org.janelia.it.workstation.gui.browser.model.search.SearchResults.PAGE_SIZE;
 
 /**
  * A panel that displays a paginated result set inside of a user-configurable AnnotatedDomainObjectListViewer.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class PaginatedResultsPanel extends JPanel {
+public abstract class PaginatedResultsPanel extends JPanel implements FindContext {
 
     private static final Logger log = LoggerFactory.getLogger(PaginatedResultsPanel.class);
     
     // Splash panel
     private final JLabel splashPanel;
-    
+
+    // Result view
+    private AnnotatedDomainObjectListViewer resultsView;
+
     // Status bar
+    private FindToolbar findToolbar;
+    private final JPanel bottomBar;
     private final JPanel statusBar;
     private final JLabel statusLabel;
     private final JPanel selectionButtonContainer;
@@ -69,10 +69,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
     private final JButton selectAllButton;
     private final JLabel pagingStatusLabel;
     private final DropDownButton viewTypeButton;
-    
-    // Result view
-    private AnnotatedDomainObjectListViewer resultsView;
-    
+
     // Content
     private SearchResults searchResults;
     private ResultPage resultPage;
@@ -168,7 +165,17 @@ public abstract class PaginatedResultsPanel extends JPanel {
         statusBar.add(prevPageButton);
         statusBar.add(nextPageButton);
         statusBar.add(endPageButton);
-        
+
+        findToolbar = new FindToolbar(this);
+        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->PaginatedResultsPanel"));
+
+        bottomBar = new JPanel();
+        bottomBar.setLayout(new BorderLayout());
+        bottomBar.add(findToolbar, BorderLayout.NORTH);
+        bottomBar.add(statusBar, BorderLayout.CENTER);
+
+        addHierarchyListener(new FindContextRegistration(this, this));
+
         setViewerType(ListViewerType.IconViewer);
     }
     
@@ -394,7 +401,7 @@ public abstract class PaginatedResultsPanel extends JPanel {
             pagingStatusLabel.setText("Page " + (currPage + 1) + " of " + numPages);
         }
         updateStatusBar();
-        add(statusBar, BorderLayout.SOUTH);
+        add(bottomBar, BorderLayout.SOUTH);
         updateUI();
     }
     
@@ -489,5 +496,97 @@ public abstract class PaginatedResultsPanel extends JPanel {
     }
     
     protected abstract ResultPage getPage(SearchResults searchResults, int page) throws Exception;
-    
+
+
+    @Override
+    public void showFindUI() {
+        findToolbar.open();
+    }
+
+    @Override
+    public void hideFindUI() {
+        findToolbar.close();
+    }
+
+    @Override
+    public void findPrevMatch(String text, boolean skipStartingNode) {
+        findMatch(text, Position.Bias.Backward, skipStartingNode);
+    }
+
+    @Override
+    public void findNextMatch(String text, boolean skipStartingNode) {
+        findMatch(text, Position.Bias.Forward, skipStartingNode);
+    }
+
+    private void findMatch(final String text, final Position.Bias bias, final boolean skipStartingNode) {
+
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private ResultIteratorFind searcher;
+            private DomainObject match;
+            private Integer matchPage;
+
+            @Override
+            protected void doStuff() throws Exception {
+                DomainObject startObject = null;
+                Reference lastSelectedId = selectionModel.getLastSelectedId();
+                if (lastSelectedId!=null) {
+                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedId);    
+                }
+                else {
+                    // This is generally unexpected, because the viewer should 
+                    // select the first item automatically, and there is no way to deselect everything. 
+                    log.warn("No 'last selected object' in selection model! Defaulting to first object...");
+                    startObject = resultPage.getDomainObjects().get(0);
+                }
+                
+                int index = resultPage.getDomainObjects().indexOf(startObject);
+                if (index<0) {
+                    throw new IllegalStateException("Last selected object no longer exists");
+                }
+                log.info("currPage={}",currPage);
+                int globalStartIndex = currPage*PAGE_SIZE + index;
+                log.info("globalStartIndex={}",globalStartIndex);
+                ResultIterator resultIterator = new ResultIterator(searchResults, globalStartIndex, bias, skipStartingNode);
+                searcher = new ResultIteratorFind(resultIterator, text);
+                match = searcher.find();
+                matchPage = resultIterator.getCurrPage();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                if (match != null) {
+                    log.info("Found match for '{}': {}",text,match.getId());
+                    if (matchPage!=null && matchPage!=currPage) {
+                        log.info("Match page ({}) differs from current page ({})",matchPage,currPage);
+                        currPage = matchPage;
+                        selectionModel.select(Arrays.asList(match), true, true);
+                        showCurrPage(false); // isUserDriven=false in order to "reselect" the match
+                    }
+                    else {
+                        resultsView.selectDomainObjects(Arrays.asList(match), true, true, true);
+                    }
+                }
+                else {
+                    log.info("No match found for '{}'",text);
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
+
+    }
+
+    @Override
+    public void openMatch() {
+    }
 }

@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import java.awt.BorderLayout;
+
+import javax.swing.JComponent;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -24,9 +28,6 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
 
 /**
  * Top component which displays lists of domain objects.

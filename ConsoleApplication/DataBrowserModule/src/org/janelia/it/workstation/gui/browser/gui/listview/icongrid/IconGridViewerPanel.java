@@ -20,16 +20,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import javax.swing.text.Position.Bias;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
-import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
-import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -54,14 +50,13 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindContext {
+public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(IconGridViewerPanel.class);
 
     // Main components
     private IconGridViewerToolbar toolbar;
     private ImagesPanel<T,S> imagesPanel;
-    private FindToolbar findToolbar;
 
     // These members deal with the context and entities within it
     private List<T> objectList;
@@ -104,11 +99,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(mouseListener);
         imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconGridViewerPanel"));
-        
-        findToolbar = new FindToolbar(this);
-        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->IconGridViewerPanel"));
 
-        addHierarchyListener(new FindContextRegistration(this, this));
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -539,7 +530,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(imagesPanel, BorderLayout.CENTER);
-        add(findToolbar, BorderLayout.SOUTH);
         revalidate();
         repaint();
     }
@@ -622,33 +612,5 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
     
     public void scrollSelectedObjectsToCenter() {
         imagesPanel.scrollSelectedObjectsToCenter();
-    }
-
-    @Override
-    public void showFindUI() {
-        findToolbar.open();
-    }
-
-    @Override
-    public void hideFindUI() {
-        findToolbar.close();
-    }
-
-    @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
-        userSelectObject(searcher.find(), true);
-        scrollSelectedObjectsToCenter();
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        IconGridViewerFind<T,S> searcher = new IconGridViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
-        userSelectObject(searcher.find(), true);
-        scrollSelectedObjectsToCenter();
-    }
-
-    @Override
-    public void openMatch() {
     }
 }
