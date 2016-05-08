@@ -1,5 +1,31 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.table;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.table.TableModel;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
@@ -20,24 +46,10 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.table.TableModel;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * A table viewer for domain objects.
@@ -273,11 +285,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public boolean matches(DomainObject domainObject, String text) {
+    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+        log.debug("Searching "+domainObject.getName());
         for(DynamicColumn column : getColumns()) {
             if (column.isVisible()) {
                 log.trace("Searching column "+column.getLabel());
-                Object value = getValue(domainObject, column.getName());
+                Object value = getValue(resultPage, domainObject, column.getName());
                 if (value != null) {
                     if (value.toString().toUpperCase().contains(text.toUpperCase())) {
                         log.trace("Found match in column {}: {}",column.getLabel(),value);
@@ -292,8 +305,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
-    @Override
-    public Object getValue(DomainObject object, String columnName) {
+    private Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
         try {
             if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
                 StringBuilder builder = new StringBuilder();
@@ -309,7 +321,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             }
         }
         catch (IllegalArgumentException e) {
-            // This happens if we have mixed objects and we try to get an attribute from one on another 
+            // This happens if we have mixed objects and we try to get an attribute from one on another
             log.debug("Cannot get attribute {} for {}",columnName,object.getType());
             return null;
         }
@@ -317,6 +329,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
             return null;
         }
+    }
+
+    @Override
+    public Object getValue(DomainObject object, String columnName) {
+        return getValue(domainObjectList, object, columnName);
     }
 
     @Override

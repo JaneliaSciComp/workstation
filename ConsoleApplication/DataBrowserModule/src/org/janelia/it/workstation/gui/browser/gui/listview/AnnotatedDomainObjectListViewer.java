@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.
@@ -73,9 +74,10 @@ public interface AnnotatedDomainObjectListViewer {
 
     /**
      * Check if the displayed text for the given object contains the given string.
+     * @param resultPage page containing domainObject
      * @param domainObject a domain object currently being displayed by the viewer
      * @param text search string
      * @return true if the object contains the given text
      */
-    public boolean matches(DomainObject domainObject, String text);
+    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text);
 }

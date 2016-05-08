@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.model.search;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -58,6 +59,7 @@ public class ResultIterator implements Iterator<DomainObject> {
                 moveNext(objects.size());
             }
             catch (Exception e) {
+                // This shouldn't happen because the page should already be cached
                 throw new IllegalStateException("Error fetching current page",e);
             }
         }
@@ -73,6 +75,10 @@ public class ResultIterator implements Iterator<DomainObject> {
 
     @Override
     public DomainObject next() {
+
+        if (SwingUtilities.isEventDispatchThread()) {
+            throw new RuntimeException("ResultIterator.next called in the EDT");
+        }
 
         log.trace("Getting next object at currPage={}, currIndex={}",currPage,currIndex);
 
@@ -139,8 +145,26 @@ public class ResultIterator implements Iterator<DomainObject> {
         }
     }
 
+    /**
+     * Returns the index of the page containing the last result returned by getNext().
+     * @return 0-indexed page number
+     */
     public int getCurrPage() {
         return lastPage;
+    }
+
+    /**
+     * Returns the result page containing the last result returned by getNext().
+     * @return loaded result page
+     */
+    public ResultPage getCurrResultPage() {
+        try {
+            return searchResults.getPage(lastPage);
+        }
+        catch (Exception e) {
+            // This shouldn't happen because the page should already be cached
+            throw new IllegalStateException("Error fetching current page",e);
+        }
     }
 
     @Override

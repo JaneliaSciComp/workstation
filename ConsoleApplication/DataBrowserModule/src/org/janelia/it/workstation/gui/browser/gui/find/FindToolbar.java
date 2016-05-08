@@ -6,16 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -139,19 +130,31 @@ public class FindToolbar extends JPanel {
 
     private void prevMatch(boolean skipStartingNode) {
         findContext.findPrevMatch(textField.getText(), skipStartingNode);
+        takeFocus();
     }
 
     private void nextMatch(boolean skipStartingNode) {
         findContext.findNextMatch(textField.getText(), skipStartingNode);
+        takeFocus();
     }
     
     public void open() {
         setVisible(true);
-        textField.grabFocus();
         nextMatch(false);
+        takeFocus();
     }
     
     public void close() {
         setVisible(false);
+    }
+
+    private void takeFocus() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // Maintain focus
+                textField.grabFocus();
+            }
+        });
     }
 }

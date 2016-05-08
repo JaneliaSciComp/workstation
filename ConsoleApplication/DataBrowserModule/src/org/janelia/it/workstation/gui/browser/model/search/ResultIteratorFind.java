@@ -1,7 +1,6 @@
-package org.janelia.it.workstation.gui.browser.gui.listview;
+package org.janelia.it.workstation.gui.browser.model.search;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.model.search.ResultIterator;
 
 /**
  * Searches a ResultIterator to find objects matching some string
@@ -25,7 +24,7 @@ public abstract class ResultIteratorFind {
     public DomainObject find() {
         while (resultIterator.hasNext()) {
             DomainObject domainObject = resultIterator.next();
-            if (domainObject!=null && matches(domainObject)) {
+            if (domainObject!=null && matches(resultIterator.getCurrResultPage(), domainObject)) {
                 return domainObject;
             }
         }
@@ -34,8 +33,9 @@ public abstract class ResultIteratorFind {
 
     /**
      * Implement this method to describe how an object should be matched.
-     * @param currObject object to match against
+     * @param resultPage the result page containing domainObject
+     * @param domainObject object to match against
      * @return true if the object matches the search string
      */
-    protected abstract boolean matches(DomainObject currObject);
+    protected abstract boolean matches(ResultPage resultPage, DomainObject domainObject);
 }

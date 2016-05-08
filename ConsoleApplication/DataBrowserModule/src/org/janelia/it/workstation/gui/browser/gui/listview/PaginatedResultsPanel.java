@@ -28,6 +28,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultIterator;
+import org.janelia.it.workstation.gui.browser.model.search.ResultIteratorFind;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -552,8 +553,8 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 ResultIterator resultIterator = new ResultIterator(searchResults, globalStartIndex, bias, skipStartingNode);
                 searcher = new ResultIteratorFind(resultIterator) {
                     @Override
-                    protected boolean matches(DomainObject currObject) {
-                        return resultsView.matches(currObject, text);
+                    protected boolean matches(ResultPage resultPage, DomainObject currObject) {
+                        return resultsView.matches(resultPage, currObject, text);
                     }
                 };
                 match = searcher.find();

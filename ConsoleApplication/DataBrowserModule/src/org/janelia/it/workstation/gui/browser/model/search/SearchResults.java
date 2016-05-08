@@ -31,7 +31,7 @@ public class SearchResults {
         SearchResults searchResults = null;
         List<DomainObject> pageObjects = new ArrayList<>();
         
-        ArrayListMultimap<Long, Annotation> annotationsByTarget = ArrayListMultimap.<Long, Annotation>create();
+        ArrayListMultimap<Long, Annotation> annotationsByTarget = ArrayListMultimap.create();
         for(Annotation annotation : annotations) {
             annotationsByTarget.put(annotation.getTarget().getTargetId(), annotation);
         }

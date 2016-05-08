@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -240,9 +241,19 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
-    public boolean matches(DomainObject domainObject, String text) {
+    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+
         String name = getImageModel().getImageLabel(domainObject);
-        return name.toUpperCase().contains(text.toUpperCase());
+        if (name.toUpperCase().contains(text.toUpperCase())) {
+            return true;
+        }
+
+        for(Annotation annotation : resultPage.getAnnotations(domainObject.getId())) {
+            if (annotation.getName().toUpperCase().contains(text.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
