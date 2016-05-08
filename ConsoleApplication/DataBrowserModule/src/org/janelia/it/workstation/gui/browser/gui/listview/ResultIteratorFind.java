@@ -8,14 +8,12 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultIterator;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ResultIteratorFind {
+public abstract class ResultIteratorFind {
 
     private final ResultIterator resultIterator;
-    private final String searchString;
 
-    public ResultIteratorFind(ResultIterator resultIterator, String searchString) {
+    public ResultIteratorFind(ResultIterator resultIterator) {
         this.resultIterator = resultIterator;
-        this.searchString = searchString==null?null:searchString.toUpperCase();
     }
 
     /**
@@ -34,9 +32,10 @@ public class ResultIteratorFind {
         return null;
     }
 
-    private boolean matches(DomainObject currObject) {
-        // TODO: get the right strings to search
-        String name = currObject.getName();
-        return name.toUpperCase().contains(searchString);
-    }
+    /**
+     * Implement this method to describe how an object should be matched.
+     * @param currObject object to match against
+     * @return true if the object matches the search string
+     */
+    protected abstract boolean matches(DomainObject currObject);
 }

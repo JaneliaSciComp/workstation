@@ -530,7 +530,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
             @Override
             protected void doStuff() throws Exception {
-                DomainObject startObject = null;
+                DomainObject startObject;
                 Reference lastSelectedId = selectionModel.getLastSelectedId();
                 if (lastSelectedId!=null) {
                     startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedId);    
@@ -546,11 +546,16 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 if (index<0) {
                     throw new IllegalStateException("Last selected object no longer exists");
                 }
-                log.info("currPage={}",currPage);
+                log.debug("currPage={}",currPage);
                 int globalStartIndex = currPage*PAGE_SIZE + index;
-                log.info("globalStartIndex={}",globalStartIndex);
+                log.debug("globalStartIndex={}",globalStartIndex);
                 ResultIterator resultIterator = new ResultIterator(searchResults, globalStartIndex, bias, skipStartingNode);
-                searcher = new ResultIteratorFind(resultIterator, text);
+                searcher = new ResultIteratorFind(resultIterator) {
+                    @Override
+                    protected boolean matches(DomainObject currObject) {
+                        return resultsView.matches(currObject, text);
+                    }
+                };
                 match = searcher.find();
                 matchPage = resultIterator.getCurrPage();
             }
@@ -561,7 +566,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 if (match != null) {
                     log.info("Found match for '{}': {}",text,match.getId());
                     if (matchPage!=null && matchPage!=currPage) {
-                        log.info("Match page ({}) differs from current page ({})",matchPage,currPage);
+                        log.trace("Match page ({}) differs from current page ({})",matchPage,currPage);
                         currPage = matchPage;
                         selectionModel.select(Arrays.asList(match), true, true);
                         showCurrPage(false); // isUserDriven=false in order to "reselect" the match

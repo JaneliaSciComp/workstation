@@ -58,6 +58,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
+    private SearchProvider searchProvider;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -168,11 +169,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public JPanel getPanel() {
         return this;
     }
-
-    @Override
-    public void setSearchProvider(SearchProvider searchProvider) {
-        super.setSearchProvider(searchProvider);
-    }
     
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
@@ -244,6 +240,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public boolean matches(DomainObject domainObject, String text) {
+        String name = getImageModel().getImageLabel(domainObject);
+        return name.toUpperCase().contains(text.toUpperCase());
+    }
+
+    @Override
     public void refreshDomainObject(DomainObject domainObject) {
         refreshObject(domainObject);
     }
@@ -268,7 +270,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    protected void buttonDrillDown(DomainObject domainObject) {
+    protected void objectDoubleClick(DomainObject object) {
         getContextualPopupMenu().runDefaultAction();
     }
     
@@ -309,5 +311,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private List<DomainObject> getSelectedObjects() {
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+    }
+
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
+    public SearchProvider getSearchProvider() {
+        return searchProvider;
     }
 }

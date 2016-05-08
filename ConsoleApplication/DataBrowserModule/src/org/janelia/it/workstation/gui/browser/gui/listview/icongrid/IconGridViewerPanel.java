@@ -21,13 +21,11 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -44,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
  * functionality on top of it, such as:
  * 1) Asynchronous entity loading
- * 2) Entity selection and navigation
+ * 2) Item selection and navigation
  * 3) Toolbar with various features
  * 4) HUD display for currently selected image
  *
@@ -63,8 +61,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     private Map<S,T> objectMap;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
-    // TODO: use this reference to implement an export button, like in TableViewerPanel
-    private SearchProvider searchProvider;
     
     // UI state
     private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
@@ -267,11 +263,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             repaint();
         }
     };
-    
-    protected void enterKeyPressed() {}
-    
-    protected void deleteKeyPressed() {}
-    
+
     // Listener for clicking on buttons
     protected MouseListener mouseListener = new MouseHandler() {
 
@@ -298,8 +290,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
             AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
             if (button!=null) {
-                final DomainObject domainObject = (DomainObject)button.getUserObject();
-                buttonDrillDown(domainObject);
+                objectDoubleClick((T)button.getUserObject());
                 e.consume();
             }
         }
@@ -321,13 +312,22 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
     };
 
+    protected void enterKeyPressed() {
+        T selectedObject = getLastSelectedObject();
+        objectDoubleClick(selectedObject);
+    }
+
+    protected void deleteKeyPressed() {}
+
+    protected abstract void objectDoubleClick(T object);
+
+    protected abstract JPopupMenu getContextualPopupMenu();
+
     protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
     
     protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
-    
-    protected abstract JPopupMenu getContextualPopupMenu();
 
-    protected abstract void buttonDrillDown(DomainObject domainObject);
+    protected void updateHud(boolean toggle) {}
 
     protected void buttonSelection(AnnotatedImageButton<T,S> button, boolean multiSelect, boolean rangeSelect) {
 
@@ -439,6 +439,38 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         selectionModel.deselect(objects, isUserDriven);
     }
 
+    public T getPreviousObject() {
+        if (objectList == null) {
+            return null;
+        }
+        int i = objectList.indexOf(getLastSelectedObject());
+        if (i < 1) {
+            // Already at the beginning
+            return null;
+        }
+        return objectList.get(i - 1);
+    }
+
+    public T getNextObject() {
+        if (objectList == null) {
+            return null;
+        }
+        int i = objectList.indexOf(getLastSelectedObject());
+        if (i > objectList.size() - 2) {
+            // Already at the end
+            return null;
+        }
+        return objectList.get(i + 1);
+    }
+
+    public synchronized T getLastSelectedObject() {
+        S uniqueId = selectionModel.getLastSelectedId();
+        if (uniqueId == null) {
+            return null;
+        }
+        return objectMap.get(uniqueId);
+    }
+
     private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
         Component c = component;
         while (!(c instanceof AnnotatedImageButton)) {
@@ -448,12 +480,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         return (AnnotatedImageButton<T,S>) c;
     }
 
-    /**
-     * This should be called by any handler that wishes to show/unshow the HUD.
-     */
-    protected void updateHud(boolean toggle) {
-    }
-        
     public void showObjects(final List<T> objects, final Callable<Void> success) {
         
         log.debug("showObjects(objects.size={})",objects.size());
@@ -498,6 +524,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         });
     }
 
+    public void refresh() {
+        showObjects(objectList, null);
+    }
+    
+    public void totalRefresh() {
+        DomainMgr.getDomainMgr().getModel().invalidateAll();
+    }
+
     public void refreshObject(T object) {
         S uniqueId = imageModel.getImageUniqueId(object);
         for(AnnotatedImageButton<T,S> button : imagesPanel.getButtonsByUniqueId(uniqueId)) {
@@ -505,12 +539,13 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         }
     }
 
-    public void refresh() {
-        showObjects(objectList, null);
-    }
-    
-    public void totalRefresh() {
-        DomainMgr.getDomainMgr().getModel().invalidateAll();
+    private void setObjects(List<T> objectList) {
+        log.debug("Setting {} objects",objectList.size());
+        this.objectList = objectList;
+        this.objectMap = new HashMap<>();
+        for(T object : objectList) {
+            objectMap.put(getImageModel().getImageUniqueId(object), object);
+        }
     }
 
     public synchronized void clear() {
@@ -521,7 +556,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     public void close() {
-        // TODO: this should be called by something 
+        // TODO: this should be invoked somehow if the panel is closed
         SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
@@ -534,59 +569,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         repaint();
     }
     
-    public T getPreviousObject() {
-        if (objectList == null) {
-            return null;
-        }
-        int i = objectList.indexOf(getLastSelectedObject());
-        if (i < 1) {
-            // Already at the beginning
-            return null;
-        }
-        return objectList.get(i - 1);
-    }
-
-    public T getNextObject() {
-        if (objectList == null) {
-            return null;
-        }
-        int i = objectList.indexOf(getLastSelectedObject());
-        if (i > objectList.size() - 2) {
-            // Already at the end
-            return null;
-        }
-        return objectList.get(i + 1);
-    }
-
-    public synchronized T getLastSelectedObject() {
-        S uniqueId = selectionModel.getLastSelectedId();
-        if (uniqueId == null) {
-            return null;
-        }
-        return objectMap.get(uniqueId);
-    }
-    
-    private synchronized void setObjects(List<T> objectList) {
-        log.debug("Setting {} objects",objectList.size());
-        this.objectList = objectList;
-        this.objectMap = new HashMap<>();
-        for(T object : objectList) {
-            objectMap.put(getImageModel().getImageUniqueId(object), object);
-        }
-    }
-
-    protected Map<S, T> getObjectMap() {
-        return objectMap;
-    }
-    
-    public List<T> getObjectList() {
-        return objectList;
-    }
-
-    public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
-    }
-    
     protected ImageModel<T, S> getImageModel() {
         return imageModel;
     }
@@ -597,9 +579,9 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
     
     public void setSelectionModel(SelectionModel<T,S> selectionModel) {
+        selectionModel.setSource(this);
         this.selectionModel = selectionModel;
         imagesPanel.setSelectionModel(selectionModel);
-        selectionModel.setSource(this);
     }
     
     public SelectionModel<T,S> getSelectionModel() {

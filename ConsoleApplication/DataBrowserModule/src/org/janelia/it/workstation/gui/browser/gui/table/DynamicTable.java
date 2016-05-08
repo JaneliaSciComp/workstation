@@ -843,7 +843,7 @@ public abstract class DynamicTable extends JPanel {
      * @param rowIndex
      * @param vColIndex
      */
-    public void scrollToVisible(int rowIndex, int vColIndex) {
+    public void scrollCellToCenter(int rowIndex, int vColIndex) {
         
         if (!(table.getParent() instanceof JViewport)) {
             return;

@@ -54,6 +54,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
+    private SearchProvider searchProvider;
 
     private List<DomainObjectAttribute> attrs;
     private String sortField;
@@ -103,11 +104,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
-    public void setSearchProvider(SearchProvider searchProvider) {
-        super.setSearchProvider(searchProvider);
-    }
-
-    @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
         super.setSelectionModel(selectionModel);
         this.selectionModel = selectionModel;
@@ -127,67 +123,45 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
         this.domainObjectList = domainObjectList;
+        log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
 
         attributeMap.clear();
 
-        SimpleWorker worker = new SimpleWorker() {
+        Set<DomainObjectAttribute> attrSet = new HashSet<>();
+        attrSet.add(annotationAttr);
 
-            private final Set<DomainObjectAttribute> attrSet = new HashSet<>();
+        Set<Class<? extends DomainObject>> domainClasses = new HashSet<>();
+        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
+            domainClasses.add(domainObject.getClass());
+        }
 
-            @Override
-            protected void doStuff() throws Exception {
-
-                attrSet.add(annotationAttr);
-
-                Set<Class<? extends DomainObject>> domainClasses = new HashSet<>();
-                for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-                    domainClasses.add(domainObject.getClass());
+        for(Class<? extends DomainObject> domainClass : domainClasses) {
+            for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
+                if (attr.isDisplay()) {
+                    attrSet.add(attr);
                 }
-
-                for(Class<? extends DomainObject> domainClass : domainClasses) {
-                    for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
-                        if (attr.isDisplay()) {
-                            attrSet.add(attr);
-                        }
-                    }
-                }
-
             }
+        }
 
+        attrs = new ArrayList<>(attrSet);
+        Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
             @Override
-            protected void hadSuccess() {
-
-                attrs = new ArrayList<>(attrSet);
-                Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
-                    @Override
-                    public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                        return o1.getLabel().compareTo(o2.getLabel());
-                    }
-                });
-
-                TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
-
-                getDynamicTable().clearColumns();
-                for(DomainObjectAttribute attr : attrs) {
-                    attributeMap.put(attr.getName(), attr);
-                    boolean visible = config.isColumnVisible(attr.getName());
-                    boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
-                    getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
-                }
-
-                showObjects(domainObjectList.getDomainObjects());
-
-                // Finally, we're done, we can call the success callback
-                ConcurrentUtils.invokeAndHandleExceptions(success);
+            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
+                return o1.getLabel().compareTo(o2.getLabel());
             }
+        });
 
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
+        TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
 
-        worker.execute();
+        getDynamicTable().clearColumns();
+        for(DomainObjectAttribute attr : attrs) {
+            attributeMap.put(attr.getName(), attr);
+            boolean visible = config.isColumnVisible(attr.getName());
+            boolean sortable = !COLUMN_KEY_ANNOTATIONS.equals(attr.getName());
+            getDynamicTable().addColumn(attr.getName(), attr.getLabel(), visible, false, true, sortable);
+        }
+
+        showObjects(domainObjectList.getDomainObjects(), success);
     }
 
     @Override
@@ -285,6 +259,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
+    protected void exportButtonPressed() {
+        searchProvider.export();
+    }
+
+    @Override
     public void activate() {
         Hud.getSingletonInstance().setKeyListener(keyListener);
     }
@@ -292,7 +271,27 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     public void deactivate() {
     }
-    
+
+    @Override
+    public boolean matches(DomainObject domainObject, String text) {
+        for(DynamicColumn column : getColumns()) {
+            if (column.isVisible()) {
+                log.trace("Searching column "+column.getLabel());
+                Object value = getValue(domainObject, column.getName());
+                if (value != null) {
+                    if (value.toString().toUpperCase().contains(text.toUpperCase())) {
+                        log.trace("Found match in column {}: {}",column.getLabel(),value);
+                        return true;
+                    }
+                }
+            }
+            else {
+                log.trace("Skipping invisible column {}",column.getLabel());
+            }
+        }
+        return false;
+    }
+
     @Override
     public Object getValue(DomainObject object, String columnName) {
         try {
@@ -450,4 +449,12 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         public void allRowsChanged() {
         }
     };
+
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
+    public SearchProvider getSearchProvider() {
+        return searchProvider;
+    }
 }
