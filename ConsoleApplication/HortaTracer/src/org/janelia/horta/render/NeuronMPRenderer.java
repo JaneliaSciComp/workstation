@@ -276,7 +276,7 @@ extends MultipassRenderer
             // TODO - transform to scene units (micrometers)
             double zNear = opaqueRenderPass.getZNear();
             double zFar = opaqueRenderPass.getZFar();
-            double zFocus = 0.5 * (zNear + zFar);
+            double zFocus = opaqueRenderPass.getZFocus();
             double zBuf = od;
             // code lifted from VolumeMipFrag.glsl, which wants the same depth information
             double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));

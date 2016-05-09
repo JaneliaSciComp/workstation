@@ -248,6 +248,16 @@ public class OpaqueRenderPass extends RenderPass
         return cachedZFar;
     }
     
+    public float getZFocus() 
+    {
+        if (localCamera != null) {
+            return localCamera.getCameraFocusDistance();
+        }
+        // float ratio = 0.5f; // zero means focus at zNear, 1.0 means focus at zFar
+        float ratio = (1.0f - relativeZNear) / (relativeZFar - relativeZNear);
+        return (1.0f - ratio) * getZNear() + ratio * getZFar();
+    }
+    
     /**
      * 
      * @param xy view window relative 2D point, in pixel units
