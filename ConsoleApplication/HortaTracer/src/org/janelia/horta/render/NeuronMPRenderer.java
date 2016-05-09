@@ -297,6 +297,10 @@ extends MultipassRenderer
     public final void setRelativeSlabThickness(float zNear, float zFar) {
         opaqueRenderPass.setRelativeSlabThickness(zNear, zFar);
         volumeRenderPass.setRelativeSlabThickness(zNear, zFar);
+        volumeRenderPass.setOpaqueDepthTexture(
+            opaqueRenderPass.getFlatDepthTarget(),
+            opaqueRenderPass.getZNear(),
+            opaqueRenderPass.getZFar());
     }
     
     public float getRelativeZNear() {

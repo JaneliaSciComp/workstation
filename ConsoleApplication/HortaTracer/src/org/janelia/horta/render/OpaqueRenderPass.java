@@ -66,7 +66,7 @@ public class OpaqueRenderPass extends RenderPass
     private float cachedZFar = 1e4f;
     
     private PerspectiveCamera localCamera; // local version of camera with custom slab
-    private Viewport localViewport = new Viewport(); // local version of camera with custom slab
+    private final Viewport localViewport = new Viewport(); // local version of camera with custom slab
     
     // private float slabThickness = 0.50f; // Half of view height
     private float relativeZNear = 0.92f;
@@ -129,6 +129,14 @@ public class OpaqueRenderPass extends RenderPass
         relativeZNear = zNear;
         relativeZFar = zFar;
         setBuffersDirty();
+        if (localCamera != null) {
+            localViewport.setzNearRelative(zNear); // TODO
+            localViewport.setzFarRelative(zFar);
+            float focusDistance = localCamera.getCameraFocusDistance();
+            cachedZNear = zNear * focusDistance;
+            cachedZFar = zFar * focusDistance;
+            localViewport.getChangeObservable().notifyObservers();
+        }
     }
     
     @Override
