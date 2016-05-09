@@ -195,10 +195,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
     }
 
+
     @Override
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
-        
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})",domainObjects.size(),select,clearAll,isUserDriven);
+
         if (domainObjects.isEmpty()) {
             return;
         }
@@ -215,7 +216,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             public void run() {
                 scrollSelectedObjectsToCenter();
             }
-        });   
+        });
     }
 
     @Override
