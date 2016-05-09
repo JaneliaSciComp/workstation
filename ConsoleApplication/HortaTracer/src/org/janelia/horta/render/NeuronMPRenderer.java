@@ -219,6 +219,7 @@ extends MultipassRenderer
         return result;
     }
     
+    // Ranges from zNear(returns -1.0) to zFar(returns 1.0)
     private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
         double intensity = intensityForScreenXy(xy);
@@ -268,6 +269,7 @@ extends MultipassRenderer
         return (opacity > 0);
     }
     
+    // Returns signed difference between focusDistance depth, and depth of item at screen point xy
     public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
     {
         if (isVisibleOpaqueAtScreenXy(xy, camera)) {
@@ -283,11 +285,13 @@ extends MultipassRenderer
             return zEye - zFocus;
         }
         else if (isVisibleTransparentAtScreenXy(xy, camera)) {
-            double z = relativeTransparentDepthOffsetForScreenXy(xy, camera);
+            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [-1,1]
+            zRel = 0.5*(zRel + 1.0); // rescale to range [0,1]
             double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
             double zNear = getRelativeZNear() * focusDistance;
             double zFar = getRelativeZFar() * focusDistance;
-            return zNear + z * (zFar - zNear);
+            double zSubject = zNear + zRel * (zFar - zNear);
+            return zSubject - focusDistance;
         }
         else { // we have neither opaque nor transparent geometry to calibrate depth
             return 0;
