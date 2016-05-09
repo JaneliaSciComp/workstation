@@ -63,10 +63,6 @@ public class DataSetDialog extends ModalDialog {
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String, JCheckBox> processCheckboxes = new LinkedHashMap<>();
-    public final String NAME_COL = "Name";
-    public final String PIPELINE_PROCESS_COL = "Pipeline Process";
-    public final String SAMPLE_NAME_COL = "Sample Name Pattern";
-    public final String SAGE_SYNC_COL = "SAGE Sync";
 
     private DataSet dataSet;
 

@@ -1,12 +1,13 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -16,7 +17,6 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -37,6 +37,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -50,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
-
+    
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
     private ResultSelectionButton resultButton;
@@ -59,6 +60,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
+    private SearchProvider searchProvider;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -115,12 +117,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         resultButton = new ResultSelectionButton() {
             @Override
             protected void resultChanged(ResultDescriptor resultDescriptor) {
+                log.info("Setting result preference: "+resultDescriptor.toString());
                 setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, resultDescriptor.toString());
+                typeButton.setResultDescriptor(resultDescriptor);
+                typeButton.populate(domainObjectList.getDomainObjects());
             }
         };
         typeButton = new ImageTypeSelectionButton() {
             @Override
             protected void imageTypeChanged(String typeName) {
+                log.info("Setting image type preference: "+typeName);
                 setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
             }
         };
@@ -134,7 +140,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void doStuff() throws Exception {
-                
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
                     Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
@@ -146,7 +151,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     }
                     DomainMgr.getDomainMgr().savePreference(preference);
                 }
-                // TODO: If the parent object has not been persisted, the preferences will not get saved here. They should be saved when the object is persisted.
             }
 
             @Override
@@ -167,11 +171,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public JPanel getPanel() {
         return this;
     }
-
-    @Override
-    public void setSearchProvider(SearchProvider searchProvider) {
-        super.setSearchProvider(searchProvider);
-    }
     
     @Override
     public void setSelectionModel(DomainObjectSelectionModel selectionModel) {
@@ -184,7 +183,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         return selectionModel;
     }
 
-    @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects.size={},select={})", domainObjects.size(), select);
 
@@ -205,34 +203,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             return;
         }
 
-        Set<Reference> selectedIds = new HashSet<>();
-
         if (select) {
-            selectObjects(domainObjects, clearAll);
+            selectObjects(domainObjects, clearAll, isUserDriven);
         }
         else {
-            deselectObjects(domainObjects);
+            deselectObjects(domainObjects, isUserDriven);
         }
-        
-//        boolean currClearAll = clearAll;
-//        for(DomainObject domainObject : domainObjects) {
-//            Reference id = getImageModel().getImageUniqueId(domainObject);
-//            if (select && getObjectMap().get(id)!=null) {
-//                selectObject(domainObject, currClearAll);
-//                selectedIds.add(id);
-//            }
-//            currClearAll = false;
-//        }
-//
-//        if (clearAll) {
-//            // Clear out everything that was not selected above
-//            for(Reference selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-//                if (!selectedIds.contains(selectedId)) {
-//                    deselectObject(imageModel.getImageByUniqueId(selectedId));
-//                }
-//            }
-//        }
-        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -250,10 +227,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
+            log.info("Got result preference: "+preference);
             if (preference!=null) {
                 resultButton.setResultDescriptor(new ResultDescriptor((String)preference.getValue()));
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
                 typeButton.setImageType((String)preference2.getValue());
             }
@@ -261,7 +240,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         resultButton.populate(objects.getDomainObjects());
         typeButton.setResultDescriptor(resultButton.getResultDescriptor());
-        typeButton.populate(objects.getDomainObjects());
+        typeButton.populate(domainObjectList.getDomainObjects());
                 
         showObjects(domainObjectList.getDomainObjects(), success);
     }
@@ -291,6 +270,22 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+
+        String name = getImageModel().getImageLabel(domainObject);
+        if (name.toUpperCase().contains(text.toUpperCase())) {
+            return true;
+        }
+
+        for(Annotation annotation : resultPage.getAnnotations(domainObject.getId())) {
+            if (annotation.getName().toUpperCase().contains(text.toUpperCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public void refreshDomainObject(DomainObject domainObject) {
         refreshObject(domainObject);
     }
@@ -315,7 +310,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     @Override
-    protected void buttonDrillDown(DomainObject domainObject) {
+    protected void objectDoubleClick(DomainObject object) {
         getContextualPopupMenu().runDefaultAction();
     }
     
@@ -356,5 +351,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private List<DomainObject> getSelectedObjects() {
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+    }
+
+    public void setSearchProvider(SearchProvider searchProvider) {
+        this.searchProvider = searchProvider;
+    }
+
+    public SearchProvider getSearchProvider() {
+        return searchProvider;
     }
 }

@@ -2,7 +2,6 @@ package org.janelia.it.workstation.model.domain;
 
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
@@ -32,9 +31,10 @@ public class EntityWrapperFactory {
         else if (EntityConstants.TYPE_COMPARTMENT.equals(type)) {
             return new Compartment(rootedEntity);
         }
-        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
-            return new AlignmentBoardContext(rootedEntity);
-        }
+        // No longer treating alignment board with rooted entities.
+//        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
+//            return new AlignmentBoardContext(rootedEntity);
+//        }
         else if (EntityConstants.TYPE_IMAGE_3D.equals(type)) {
             return new VolumeImage(rootedEntity);
         }

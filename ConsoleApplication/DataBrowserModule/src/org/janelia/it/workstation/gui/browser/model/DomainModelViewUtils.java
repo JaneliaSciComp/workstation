@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.browser.model;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -41,18 +43,30 @@ public class DomainModelViewUtils {
         log.debug("Getting result '{}' from {}",result,sample.getName());
         log.debug("  Result name prefix: {}",result.getResultNamePrefix());
         log.debug("  Group name: {}",result.getGroupName());
-        
-        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
-        if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
-        
+
         HasFiles chosenResult = null;
-        
+
         if (DomainConstants.PREFERENCE_VALUE_LATEST.equals(result.getResultKey())) {
-            ObjectiveSample objSample = objectiveSamples.get(objectiveSamples.size()-1);
-            if (objSample==null) return null;
-            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
-            if (run==null) return null;
-            chosenResult = run.getLatestResult();
+            List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
+            if (objectiveSamples==null || objectiveSamples.isEmpty()) return null;
+            int i = objectiveSamples.size()-1;
+            while (chosenResult==null && i>=0) {
+                log.debug("Testing objective with index "+i);
+                ObjectiveSample objSample = objectiveSamples.get(i--);
+                if (objSample!=null) {
+                    log.debug("Testing objective: "+objSample.getObjective());
+                    List<SamplePipelineRun> runs = new ArrayList<>(objSample.getPipelineRuns());
+                    Collections.reverse(runs);
+                    for(SamplePipelineRun run : runs) {
+                        log.debug("Testing run: "+run.getName());
+                        chosenResult = run.getLatestResult();
+                        if (chosenResult!=null) break;
+                    }
+
+                }
+            }
+
+            log.debug("Got result: "+chosenResult);
 
             if (chosenResult instanceof HasFileGroups) {
                 HasFileGroups hasGroups = (HasFileGroups)chosenResult;
@@ -64,27 +78,25 @@ public class DomainModelViewUtils {
             }
         }
         else {
-            for(ObjectiveSample objSample : objectiveSamples) {
-                if (objSample==null) continue;
-                SamplePipelineRun run = objSample.getLatestSuccessfulRun();
-                if (run==null || run.getResults()==null) continue;
-                
-                for(PipelineResult pipelineResult : run.getResults()) {
-                    if (pipelineResult instanceof HasFileGroups) {
-                        HasFileGroups hasGroups = (HasFileGroups)pipelineResult;
-                        for(String groupKey : hasGroups.getGroupKeys()) {
-                            if (pipelineResult.getName().equals(result.getResultNamePrefix()) && groupKey.equals(result.getGroupName())) {
-                                chosenResult = hasGroups.getGroup(groupKey);
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        if (pipelineResult.getName().equals(result.getResultName())) {
-                            chosenResult = pipelineResult;
+            ObjectiveSample objSample = sample.getObjectiveSample(result.getObjective());
+            if (objSample==null) return null;
+            SamplePipelineRun run = objSample.getLatestSuccessfulRun();
+            if (run==null || run.getResults()==null) return null;
+            for(PipelineResult pipelineResult : run.getResults()) {
+                if (pipelineResult instanceof HasFileGroups) {
+                    HasFileGroups hasGroups = (HasFileGroups)pipelineResult;
+                    for(String groupKey : hasGroups.getGroupKeys()) {
+                        if (pipelineResult.getName().equals(result.getResultNamePrefix()) && groupKey.equals(result.getGroupName())) {
+                            chosenResult = hasGroups.getGroup(groupKey);
                             break;
                         }
-                    }   
+                    }
+                }
+                else {
+                    if (pipelineResult.getName().equals(result.getResultName())) {
+                        chosenResult = pipelineResult;
+                        break;
+                    }
                 }
             }
         }

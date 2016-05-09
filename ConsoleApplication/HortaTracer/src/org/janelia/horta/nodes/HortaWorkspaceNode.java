@@ -42,7 +42,7 @@ import java.util.Observable;
 import java.util.Observer;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VantageInterface;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.SwcLoader;
@@ -67,10 +67,10 @@ import org.slf4j.LoggerFactory;
  */
 public class HortaWorkspaceNode extends AbstractNode
 {
-    private final HortaWorkspace workspace;
+    private final HortaMetaWorkspace workspace;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public HortaWorkspaceNode(HortaWorkspace workspace) {
+    public HortaWorkspaceNode(HortaMetaWorkspace workspace) {
         super(Children.create(new HortaWorkspaceChildFactory(workspace), true), Lookups.singleton(workspace));
         this.workspace = workspace;
         updateDisplayName();

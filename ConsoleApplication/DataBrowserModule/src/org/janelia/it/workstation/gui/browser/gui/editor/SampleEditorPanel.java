@@ -58,6 +58,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
@@ -310,6 +311,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             // Only make this the focused component if the user actually clicked on it. The main thing this does is change the 
             // active key listener, which we don't want to do if the selection is the result of some selection cascade. 
             resultPanel.requestFocus();
+            // Update the lightbox if necessary
+            updateHud(false);
         }
     }
     
@@ -443,45 +446,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             ResultDescriptor resultDescriptor = ((PipelineResultPanel)pipelineResultPanel).getResultDescriptor();
             
             if (toggle) {
-                hud.setObjectAndToggleDialog(sample, resultDescriptor, FileType.SignalMip.toString());
+                hud.setObjectAndToggleDialog(sample, resultDescriptor, null);
             }
             else {
-                hud.setObject(sample, resultDescriptor, FileType.SignalMip.toString(), true);
-            }
-        }
-    }
-    
-    @Subscribe
-    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-            if (updatedSample!=null) {
-                loadDomainObject(updatedSample, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(sample.getId())) {
-                    log.info("objects set invalidated, reloading...");
-                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                    if (updatedSample!=null) {
-                        loadDomainObject(updatedSample, false, null);
-                    }
-                    break;
-                }
-                else if (lsms!=null) {
-                    for(LSMImage lsm : lsms) {
-                        if (domainObject.getId().equals(lsm.getId())) {
-                            log.info("lsm invalidated, reloading...");
-                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                            if (updatedSample!=null) {
-                                loadDomainObject(updatedSample, false, null);
-                            }
-                            break;
-                        }
-                    }
-                }
+                hud.setObject(sample, resultDescriptor, null, true);
             }
         }
     }
@@ -511,7 +479,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             protected void doStuff() throws Exception {
                 if (MODE_LSMS.equals(currMode))  {
                     DomainModel model = DomainMgr.getDomainMgr().getModel();
-                    lsms = model.getLsmsForSample(sample.getId());
+                    lsms = model.getLsmsForSample(sample);
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
                 }
                 else if (MODE_RESULTS.equals(currMode))  {
@@ -632,10 +600,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             if (run==null) {
             	// If not, pick one as the default
-            	run = objectiveSample.getLatestSuccessfulRun();
-            	if (run==null) {
-            		run = objectiveSample.getLatestRun();
-            	}
+                run = objectiveSample.getLatestRun();
             	if (run!=null) {
             		currRunMap.put(objective, run);
             	}
@@ -971,6 +936,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             label.setText(title);
             subLabel.setText(error.getDescription());
 
+            // TODO: after populating creation date for all errors, we can use this:
+            //subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+
             JPanel titlePanel = new JPanel(new BorderLayout());
             titlePanel.add(label, BorderLayout.PAGE_START);
             titlePanel.add(subLabel, BorderLayout.PAGE_END);
@@ -989,6 +957,52 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
         public SamplePipelineRun getRun() {
             return run;
+        }
+    }
+
+    @Subscribe
+    public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.info("total invalidation, reloading...");
+            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+            if (updatedSample!=null) {
+                loadDomainObject(updatedSample, false, null);
+            }
+        }
+        else {
+            for (DomainObject domainObject : event.getDomainObjects()) {
+                if (domainObject.getId().equals(sample.getId())) {
+                    log.info("objects set invalidated, reloading...");
+                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                    if (updatedSample!=null) {
+                        loadDomainObject(updatedSample, false, null);
+                    }
+                    break;
+                }
+                else if (lsms!=null) {
+                    for(LSMImage lsm : lsms) {
+                        if (domainObject.getId().equals(lsm.getId())) {
+                            log.info("lsm invalidated, reloading...");
+                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                            if (updatedSample!=null) {
+                                loadDomainObject(updatedSample, false, null);
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Subscribe
+    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject().getId().equals(sample.getId())) {
+            this.sample = null;
+            currRunMap.clear();
+            lsms.clear();
+            lsmAnnotations.clear();
+            showNothing();
         }
     }
 }

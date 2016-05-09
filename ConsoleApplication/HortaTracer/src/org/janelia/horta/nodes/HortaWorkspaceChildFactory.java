@@ -35,7 +35,7 @@ import java.util.Observable;
 import java.util.Observer;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 
@@ -45,10 +45,10 @@ import org.openide.nodes.Node;
  */
 class HortaWorkspaceChildFactory extends ChildFactory<NeuronSet>
 {
-    private final HortaWorkspace workspace;
+    private final HortaMetaWorkspace workspace;
     private final Observer refresher;
 
-    public HortaWorkspaceChildFactory(HortaWorkspace workspace)  {
+    public HortaWorkspaceChildFactory(HortaMetaWorkspace workspace)  {
         this.workspace = workspace;
         refresher = new Observer() {
             @Override

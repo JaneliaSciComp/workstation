@@ -1,7 +1,7 @@
-package org.janelia.it.workstation.gui.viewer3d.events;
+package org.janelia.it.workstation.gui.alignment_board.events;
 
-import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
  * An item on an open alignment board has changed in some way.
@@ -12,8 +12,8 @@ public class AlignmentBoardItemRemoveEvent extends AlignmentBoardItemChangeEvent
     
     private Integer previousOrderIndex;
     
-	public AlignmentBoardItemRemoveEvent(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem, Integer previousOrderIndex) {
-		super(alignmentBoardContext, alignedItem, ChangeType.Removed);		
+	public AlignmentBoardItemRemoveEvent(AlignmentBoardContext alignmentBoardContext, DomainObject domainObject, Integer previousOrderIndex) {
+		super(alignmentBoardContext, domainObject, ChangeType.Removed);		
 		this.previousOrderIndex = previousOrderIndex;
 	}
 

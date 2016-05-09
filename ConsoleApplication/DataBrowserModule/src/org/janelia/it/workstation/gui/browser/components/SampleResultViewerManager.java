@@ -57,7 +57,7 @@ public class SampleResultViewerManager implements ViewerManager<SampleResultView
     @Subscribe
     public void sampleResultSelected(PipelineResultSelectionEvent event) {
         
-        log.info("sampleResultSelected({})",event.getPipelineResult());
+        log.info("sampleResultSelected(PipelineResult:{})",event.getPipelineResult().getName());
 
         SampleResultViewerTopComponent viewer = SampleResultViewerManager.getInstance().getActiveViewer();
         

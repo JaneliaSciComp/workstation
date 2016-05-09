@@ -6,8 +6,6 @@ import java.util.List;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for node-sensitive actions which are basically sub-menus, 
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class NodePresenterAction extends NodeAction {
 
-    private final static Logger log = LoggerFactory.getLogger(NodePresenterAction.class);
-    
     private final List<Node> selected = new ArrayList<>();
         
     @Override

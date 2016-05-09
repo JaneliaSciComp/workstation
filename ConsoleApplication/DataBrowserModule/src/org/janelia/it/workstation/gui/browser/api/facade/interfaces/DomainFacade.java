@@ -60,6 +60,13 @@ public interface DomainFacade {
     public List<DomainObject> getDomainObjects(String className, Collection<Long> ids);
 
     /**
+     * Returns the domain objects of a particular type, for ANY ownership.
+     * @param className class name
+     * @return list of domain objects
+     */
+    public List<DomainObject> getAllDomainObjectsByClass(String className);
+    
+    /**
      * Update a property on the given domain object.
      * @param domainObject domain object to update
      * @param propName name of property to update

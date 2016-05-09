@@ -167,5 +167,10 @@ implements NeuronSet
     {
         return nameChangeObservable;
     }
+
+    @Override
+    public NeuronModel createNeuron(String initialNeuronName) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JOptionPane;
+import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -61,7 +62,9 @@ import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.model.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
@@ -73,10 +76,9 @@ import org.openide.awt.UndoRedo;
  * @author Christopher Bruns
  */
 public class TracingInteractor extends MouseAdapter
-        implements MouseListener, MouseMotionListener, KeyListener, 
+        implements MouseInputListener, KeyListener, 
         NeuronVertexDeletionListener, NeuronVertexCreationListener
 {
-
     private final VolumeProjection volumeProjection;
     private final int max_tol = 5; // pixels
         
@@ -107,9 +109,22 @@ public class TracingInteractor extends MouseAdapter
     Map<List<Float>, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
-            new TwoDimensionalRadiusEstimator(); // TODO: Use this again
-            // new ConstantRadiusEstimator(5.0f);
+            // new TwoDimensionalRadiusEstimator(); // TODO: Use this again
+            new ConstantRadiusEstimator(DefaultNeuron.radius);
+    
     private StatusDisplayer.Message previousHoverMessage;
+    
+    private NeuronSet defaultWorkspace = null;
+
+    public NeuronSet getDefaultWorkspace() {
+        return defaultWorkspace;
+    }
+
+    public void setDefaultWorkspace(NeuronSet defaultWorkspace) {
+        if (this.defaultWorkspace == defaultWorkspace)
+            return;
+        this.defaultWorkspace = defaultWorkspace;
+    }
     
     @Override
     public void keyTyped(KeyEvent keyEvent) {
@@ -137,8 +152,9 @@ public class TracingInteractor extends MouseAdapter
     }
 
     private void connectMouseToComponent() {
-        volumeProjection.getMouseableComponent().addMouseListener(this);
-        volumeProjection.getMouseableComponent().addMouseMotionListener(this);
+        MouseInputListener listener = new TolerantMouseClickListener(this, 5);
+        volumeProjection.getMouseableComponent().addMouseListener(listener);
+        volumeProjection.getMouseableComponent().addMouseMotionListener(listener);
         volumeProjection.getMouseableComponent().addKeyListener(this);
     }
     
@@ -195,7 +211,9 @@ public class TracingInteractor extends MouseAdapter
                     context.mergeNeurite();
                 }
                 else {
-                    // TODO: create a new neuron
+                    if (context.canCreateNeuron()) {
+                        // context.createNeuron(); // TODO: still needs work
+                    }
                 }
             }
             else { // Non-shift click to select vertices
@@ -332,7 +350,7 @@ public class TracingInteractor extends MouseAdapter
         return false;
     }
     
-    private boolean setDensityCursor(Vector3 xyz)
+    private boolean setDensityCursor(Vector3 xyz, Point screenPoint)
     {
         if (xyz == null) return false;
         
@@ -346,7 +364,11 @@ public class TracingInteractor extends MouseAdapter
 
         // Create a modified vertex to represent the enlarged, highlighted actor
         BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
-        densityVertex.setRadius(1.0f); // TODO: measure radius and set this rationally
+
+        float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
+        // densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
+        densityVertex.setRadius(radius);
+
         // blend neuron color with white(?) provisional vertex color
         Color vertexColor = new Color(0.2f, 1.0f, 0.8f, 0.5f);
 
@@ -538,7 +560,7 @@ public class TracingInteractor extends MouseAdapter
             // screenPoint = optimizePosition(screenPoint); // TODO: disabling optimization for now
             Point optimizedPoint = optimizePosition(hoverPoint);
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(optimizedPoint);
-            setDensityCursor(cursorXyz);
+            setDensityCursor(cursorXyz, optimizedPoint);
         }
         else {
             Collection<NeuronVertex> densityVertexes = densityCursorModel.getVertexes();
@@ -737,6 +759,57 @@ public class TracingInteractor extends MouseAdapter
             return clearParentVertexAndNotify();
         }
         
+        public boolean canCreateNeuron() {
+            if (parentNeuron != null) return false; // must not already have an active neuron
+            if (parentVertex != null) return false; // must not already have an active vertex
+            if (hoveredVertex != null) return false; // must not be looking at an existing vertex
+            if (densityVertex == null) return false; // must have a place to plant the seed
+            if (defaultWorkspace == null) return false; // must have a workspace to place the neuron into
+            return true;
+        }
+        
+        public boolean createNeuron() {
+            if (! canCreateNeuron())
+                return false;
+            
+            // TODO: come up with a unique neuron name
+            String defaultName = "Neuron 1";
+            
+            //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
+            Object neuronName = JOptionPane.showInputDialog(
+                    volumeProjection.getMouseableComponent(),
+                    "Create new neuron here?",
+                    "Create new neuron",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    null,
+                    defaultName); // default button
+            if (neuronName == null) {
+                return false; // User pressed "Cancel"
+            }
+            CreateNeuronCommand cmd = new CreateNeuronCommand(
+                    defaultWorkspace,
+                    neuronName.toString(),
+                    densityVertex.getLocation(),
+                    densityVertex.getRadius());
+            String errorMessage = "Failed to create neuron";
+            try {
+                if (cmd.execute()) {
+                    // TODO: log creation event
+                    return true;
+                }
+            }
+            catch (Exception exc) {
+                errorMessage += ":\n" + exc.getMessage();
+            }
+            JOptionPane.showMessageDialog(
+                    volumeProjection.getMouseableComponent(),
+                    errorMessage,
+                    "Failed to create neuron",
+                    JOptionPane.WARNING_MESSAGE);                
+            return false;
+        }
+        
         public boolean canMergeNeurite() {
             if (parentNeuron == null) return false;
             if (hoveredVertex == null) return false;
@@ -779,7 +852,6 @@ public class TracingInteractor extends MouseAdapter
                     return false;
                 }
                 else {
-                    ActivityLogHelper.getInstance().logMergedNeurite(hoveredVertex);
                     return true;
                 }
             }

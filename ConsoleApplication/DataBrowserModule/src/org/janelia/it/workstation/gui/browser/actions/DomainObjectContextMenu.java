@@ -704,7 +704,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getDownloadItem() {
 
-        String label = domainObjectList.size() > 1 ? "Download \"" + domainObjectList.size() + "\" Items..." : "Download...";
+        String label = domainObjectList.size() > 1 ? "Download " + domainObjectList.size() + " Items..." : "Download...";
         
         JMenuItem toggleHudMI = new JMenuItem("  "+label);
         toggleHudMI.addActionListener(new ActionListener() {

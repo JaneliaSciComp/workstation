@@ -105,14 +105,12 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexes.getVertexByGuid(annotation.getId());
     }
     
-    // Special method for adding annotations from the Horta side
+    // Special method for adding annotation anchors from the Horta side
     @Override
     public NeuronVertex appendVertex(NeuronVertex parent, float[] micronXyz, float radius) 
     {
-        if (! (parent instanceof NeuronVertexAdapter))
+        if ((parent != null) && (! (parent instanceof NeuronVertexAdapter)))
             return null; // TODO: error?
-        NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
-        TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
         
         // Convert micron coordinates to voxel coordinates
         Matrix m2v = workspace.getMicronToVoxMatrix();
@@ -132,12 +130,21 @@ public class NeuronModelAdapter implements NeuronModel
             (float) voxLoc.get(2, 0) );
         NeuronVertex result = null;
         try {
-            // TODO: radius
-            TmGeoAnnotation ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+            // no parent? create root annotation.
+            TmGeoAnnotation ann;
+            if (parent == null) {
+                ann = annotationModel.addRootAnnotation(neuron, voxelXyz);
+            }
+            else {
+                NeuronVertexAdapter p = (NeuronVertexAdapter)parent;
+                TmGeoAnnotation parentAnnotation = p.getTmGeoAnnotation();
+                ann = annotationModel.addChildAnnotation(parentAnnotation, voxelXyz);
+                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
+            }
+            ann.setRadius(new Double(radius));
             if (ann != null) {
                 NeuronVertex vertex = vertexes.getVertexByGuid(ann.getId()); // new NeuronVertexAdapter(ann, workspace);
                 result = vertex;
-                ActivityLogHelper.getInstance().logExternallyAddAnchor(workspace.getSampleID(), workspace.getId(), ann, micronXyz);
             }
         } catch (Exception ex) {
         }
@@ -200,9 +207,20 @@ public class NeuronModelAdapter implements NeuronModel
     NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
-        assert(vertexes.containsKey(vertexId));
+        
+        // Les reported this assert triggering recently
+        // assert(vertexes.containsKey(vertexId));
+        if (! vertexes.containsKey(vertexId)) {
+            logger.error("Could not find anchor with guid "+vertexId+" in NeuronModelAdapter");
+            return null;
+        }
+        
         Long parentId = annotation.getParentId();
-        NeuronVertex newVertex = vertexes.getVertexByGuid(vertexId);
+        NeuronVertex newVertex = vertexes.getVertexByTmGeoAnnotation(annotation);
+        if (newVertex == null) {
+            logger.error("Could not find anchor with guid "+vertexId);
+            return null;
+        }
         // Add edge
         if (vertexId.equals(parentId)) 
             return newVertex; // Self parent, so no edge. TODO: maybe this never happens
@@ -497,6 +515,7 @@ public class NeuronModelAdapter implements NeuronModel
         private Map<Long, TmGeoAnnotation> vertices;
         private final Map<Long, NeuronVertex> cachedVertices = new HashMap<>();
         private TmWorkspace workspace;
+        private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
         private VertexList(Map<Long, TmGeoAnnotation> vertices, TmWorkspace workspace)
         {
@@ -639,8 +658,30 @@ public class NeuronModelAdapter implements NeuronModel
         {
             if (! cachedVertices.containsKey(vertexId)) {
                 TmGeoAnnotation a = getAnnotationByGuid(vertexId);
-                if (a == null)
+                if (a == null) {
+                    logger.error("anchor not found in geoAnnotationMap");
                     return null;
+                }
+                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
+            }
+            return cachedVertices.get(vertexId);
+        }
+        
+        private NeuronVertex getVertexByTmGeoAnnotation(TmGeoAnnotation a)
+        {
+            if (a == null) {
+                logger.error("attempt to retrieve vertex for null TmGeoAnnotation");
+                return null;
+            }
+            Long vertexId = a.getId();
+            
+            // sanity check
+            TmGeoAnnotation fromGAMap = getAnnotationByGuid(vertexId);
+            if (fromGAMap == null) {
+                logger.error("anchor not found in neuron geoAnnotationMap");
+            }
+            
+            if (! cachedVertices.containsKey(vertexId)) {
                 cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
             }
             return cachedVertices.get(vertexId);

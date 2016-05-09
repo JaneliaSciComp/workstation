@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * You can use this hierarchy listener on a FindContext, so that it properly registers itself with its top component.
+ * You can install this hierarchy listener on a FindContext, so that it properly registers itself with its top component.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

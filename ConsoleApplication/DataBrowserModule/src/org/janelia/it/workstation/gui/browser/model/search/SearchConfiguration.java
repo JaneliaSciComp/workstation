@@ -10,7 +10,6 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
@@ -32,8 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-
-import static org.janelia.it.jacs.model.domain.support.DomainUtils.getTypeFromSubjectKey;
 
 /**
  * A faceted search for domain objects of a certain type. 
@@ -324,6 +321,7 @@ public class SearchConfiguration {
         SolrJsonResults results = model.search(queryParams);
 
         List<Reference> refs = new ArrayList<>();
+        long numFound = 0;
 
         if (results != null) {
             for (SolrDocument doc : results.getResults()) {
@@ -336,35 +334,32 @@ public class SearchConfiguration {
                     log.warn("Unrecognized type has no collection mapping: " + type);
                 }
             }
-        }
+            
+            numFound = results.getNumFound();
 
+            facetValues.clear();
+            if (results.getFacetValues()!=null) {
+
+                // Sort each facet list in place. The mutability isn't great, but no one else will see this list.
+                for(String facet : results.getFacetValues().keySet()) {
+                    List<FacetValue> facetValueList = results.getFacetValues().get(facet);
+                    Collections.sort(facetValueList, new Comparator<FacetValue>() {
+                        @Override
+                        public int compare(FacetValue o1, FacetValue o2) {
+                            return ComparisonChain.start()
+                                    .compare(o1.getValue(), o2.getValue(), Ordering.natural())
+                                    .result();
+                        }
+                    });
+                }
+
+                facetValues.putAll(results.getFacetValues());
+            }
+        }
 
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
-        
-        long numFound = results.getNumFound();
-        
         log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
-
-        facetValues.clear();
-        if (results.getFacetValues()!=null) {
-
-            // Sort each facet list in place. The mutability isn't great, but no one else will see this list.
-            for(String facet : results.getFacetValues().keySet()) {
-                List<FacetValue> facetValues = results.getFacetValues().get(facet);
-                Collections.sort(facetValues, new Comparator<FacetValue>() {
-                    @Override
-                    public int compare(FacetValue o1, FacetValue o2) {
-                        return ComparisonChain.start()
-                                .compare(o1.getValue(), o2.getValue(), Ordering.natural())
-                                .result();
-                    }
-                });
-            }
-
-            facetValues.putAll(results.getFacetValues());
-        }
-        
         return new ResultPage(domainObjects, annotations, numFound);
     }
 }

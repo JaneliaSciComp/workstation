@@ -131,8 +131,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
         // remove all the individual annotations from 2D view
+        int size=annotationList.size();
+        int i=0;
         for (TmGeoAnnotation ann: annotationList) {
+            if (i%100==0) {
+                logger.info("deleteAnnotations() fireAnchorDeleted " + i + " of " + size);
+            }
             fireAnchorDeleted(ann);
+            i++;
         }
 
         // if first annotation in delete list has a parent, select it
@@ -309,7 +315,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         }
 
         // if there's a selected annotation in the neuron already, don't change it:
-        Anchor anchor = largeVolumeViewer.getSkeletonActor().getNextParent();
+        Anchor anchor = largeVolumeViewer.getSkeletonActor().getModel().getNextParent();
         if (anchor != null && neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
             return;
         }

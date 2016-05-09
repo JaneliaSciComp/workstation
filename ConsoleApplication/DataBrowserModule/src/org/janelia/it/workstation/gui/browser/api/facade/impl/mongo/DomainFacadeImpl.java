@@ -47,6 +47,11 @@ public class DomainFacadeImpl implements DomainFacade {
     }
 
     @Override
+    public List<DomainObject> getAllDomainObjectsByClass(String className) {
+        return dao.getDomainObjects(null, className, null);
+    }
+
+    @Override
     public List<DomainObject> getDomainObjects(ReverseReference reference) {
         return dao.getDomainObjects(AccessManager.getSubjectKey(), reference);
     }

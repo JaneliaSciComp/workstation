@@ -16,6 +16,7 @@ public class NeuronStyle {
 
     private Color color;
     private boolean visible = true;
+    float[] cachedColorArray=new float[3]; // needed for performance
 
     // constants, because I already used "visible" instead of "visibility" once...
     private static final String COLOR_KEY = "color";
@@ -76,20 +77,20 @@ public class NeuronStyle {
     }
 
     public NeuronStyle(Color color, boolean visible) {
-        this.color = color;
+        setColor(color);
         this.visible = visible;
     }
 
     public float getRedAsFloat() {
-        return getColor().getRed() / 255.0f;
+        return cachedColorArray[0];
     }
 
     public float getGreenAsFloat() {
-        return getColor().getGreen() / 255.0f;
+        return cachedColorArray[1];
     }
 
     public float getBlueAsFloat() {
-        return getColor().getBlue() / 255.0f;
+        return cachedColorArray[2];
     }
 
     public Color getColor() {
@@ -97,10 +98,13 @@ public class NeuronStyle {
     }
 
     public float[] getColorAsFloatArray() {
-        return new float[] {getRedAsFloat(), getGreenAsFloat(), getBlueAsFloat()};
+        return cachedColorArray;
     }
 
     public void setColor(Color color) {
+        cachedColorArray[0]=color.getRed() / 255.0f;
+        cachedColorArray[1]=color.getGreen() / 255.0f;
+        cachedColorArray[2]=color.getBlue() / 255.0f;
         this.color = color;
     }
 

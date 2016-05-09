@@ -8,24 +8,19 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.openide.nodes.Node;
-import org.openide.util.HelpCtx;
-import org.openide.util.actions.NodeAction;
 
 /**
  * Action which implements File Download. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public final class DownloadAction extends NodeAction {
+public final class DownloadAction extends NodePresenterAction {
 
     private final static DownloadAction singleton = new DownloadAction();
     public static DownloadAction get() {
         return singleton;
     }
-    
-    private final List<Node> selected = new ArrayList<>();
-    private final List<Node> toDownload = new ArrayList<>();
-    
+
     private DownloadAction() {
     }
     
@@ -33,34 +28,11 @@ public final class DownloadAction extends NodeAction {
     public String getName() {
         return "Download...";
     }
-    
-    @Override
-    public HelpCtx getHelpCtx() {
-        return new HelpCtx("DownloadAction");
-    }
-    
-    @Override
-    protected boolean asynchronous() {
-        return false;
-    }
-    
-    @Override
-    protected boolean enable(Node[] activatedNodes) {
-        selected.clear();
-        toDownload.clear();
-        for(Node node : activatedNodes) {            
-            if (node instanceof DomainObjectNode) {
-                toDownload.add(node);
-            }
-            selected.add(node);
-        }
-        return toDownload.size()==selected.size();
-    }
-    
+
     @Override
     protected void performAction (Node[] activatedNodes) {
         List<DomainObject> domainObjectList = new ArrayList<>();
-        for(Node node : toDownload) {
+        for(Node node : getSelectedNodes()) {
             if (node instanceof DomainObjectNode) {
                 DomainObjectNode domainObjectNode = (DomainObjectNode)node;
                 domainObjectList.add(domainObjectNode.getDomainObject());

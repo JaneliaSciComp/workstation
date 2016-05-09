@@ -1,18 +1,13 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.swing.SwingUtilities;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -25,8 +20,10 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
@@ -46,11 +43,6 @@ import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses
@@ -81,11 +73,11 @@ public class DomainModel {
     private static final Logger log = LoggerFactory.getLogger(DomainModel.class);
     private static final boolean TIMER = log.isDebugEnabled();
 
-    private DomainFacade domainFacade;
-    private OntologyFacade ontologyFacade;
-    private SampleFacade sampleFacade;
-    private SubjectFacade subjectFacade;
-    private WorkspaceFacade workspaceFacade;
+    private final DomainFacade domainFacade;
+    private final OntologyFacade ontologyFacade;
+    private final SampleFacade sampleFacade;
+    private final SubjectFacade subjectFacade;
+    private final WorkspaceFacade workspaceFacade;
     
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
@@ -139,13 +131,28 @@ public class DomainModel {
     }
 
     /**
-     * Put the object in the cache, or update the cached domain object if there is already a version in the cache. In the latter case, the updated cached
-     * instance is returned, and the argument instance can be discarded.
+     * Call putOrUpdate(domainObject, false)
      *
      * @param domainObject
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject) {
+        return putOrUpdate(domainObject, false);
+    }
+
+    /**
+     * Put the object in the cache, or update the cached domain object if there is already a version in the cache.
+     * In the latter case, the updated cached instance is returned, and the argument instance can be discarded.
+     *
+     * If the cache is updated, the object will be invalidated. If invalidateTree is true, then all of its descendants
+     * will also be invalidated.
+     *
+     * @param domainObject
+     * @param invalidateTree
+     * @param <T>
+     * @return
+     */
+    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
         if (domainObject == null) {
             // This is a null object, which cannot go into the cache
             log.debug("putOrUpdate: object is null");
@@ -159,7 +166,7 @@ public class DomainModel {
                     canonicalObject = domainObject;
                     log.debug("putOrUpdate: Updating cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
                     objectCache.put(id, domainObject);
-                    notifyDomainObjectsInvalidated(canonicalObject);
+                    notifyDomainObjectInvalidated(canonicalObject, invalidateTree);
                 }
                 else {
                     log.debug("putOrUpdate: Returning cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
@@ -227,18 +234,18 @@ public class DomainModel {
         if (SwingUtilities.isEventDispatchThread()) {
             throw new IllegalStateException("DomainModel illegally called from EDT!");
         }
-        Reference id = checkIfCanonicalDomainObject(domainObject);
+        Reference ref = checkIfCanonicalDomainObject(domainObject);
         log.debug("Invalidating cached instance {}", DomainUtils.identify(domainObject));
 
-        objectCache.invalidate(id);
-        workspaceCache.remove(id);
+        objectCache.invalidate(ref);
+        workspaceCache.remove(ref);
 
         // Reload the domain object and stick it into the cache
         DomainObject canonicalDomainObject;
         try {
-            canonicalDomainObject = loadDomainObject(id);
+            canonicalDomainObject = loadDomainObject(ref);
             if (canonicalDomainObject==null) {
-                log.warn("Object no longer exists: "+id);
+                log.warn("Object no longer exists: "+ref);
                 return;
             }
             canonicalDomainObject = putOrUpdate(canonicalDomainObject);
@@ -340,6 +347,10 @@ public class DomainModel {
     }
 
     public List<DomainObject> getDomainObjects(List<Reference> references) {
+        return getDomainObjectsAs(DomainObject.class, references);
+    }
+
+    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) {
 
         if (references==null) return new ArrayList<>();
 
@@ -347,13 +358,13 @@ public class DomainModel {
         
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         
-        Map<Reference,DomainObject> map = new HashMap<>();
+        Map<Reference,T> map = new HashMap<>();
         List<Reference> unsatisfiedRefs = new ArrayList<>();
 
         for(Reference ref : references) {
             DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
             if (domainObject!=null) {
-                map.put(ref, domainObject);
+                map.put(ref, (T)domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
@@ -362,14 +373,18 @@ public class DomainModel {
                 
         if (!unsatisfiedRefs.isEmpty()) {
             List<DomainObject> objects = domainFacade.getDomainObjects(unsatisfiedRefs);
-            map.putAll(DomainUtils.getMapByReference(objects));
+            List<T> classObjects = new ArrayList<>();
+            for(DomainObject domainObject : objects) {
+                classObjects.add((T)domainObject);
+            }
+            map.putAll(DomainUtils.getMapByReference(classObjects));
         }
 
         unsatisfiedRefs.clear();
 
-        List<DomainObject> domainObjects = new ArrayList<>();
+        List<T> domainObjects = new ArrayList<>();
         for(Reference ref : references) {
-            DomainObject domainObject = map.get(ref);
+            T domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(putOrUpdate(domainObject));
             }
@@ -455,6 +470,19 @@ public class DomainModel {
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
         return domainObjects;
     }
+    
+    public List<DomainObject> getAllDomainObjectsByClass(String className) {
+        List<DomainObject> domainObjects = new ArrayList<>();
+        if (className==null) return domainObjects;
+        log.debug("getAllDomainObjectsByClass({})",className);
+
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        domainObjects = domainFacade.getAllDomainObjectsByClass(className);                
+        
+        if (TIMER) w.stop("getAllDomainObjectsByClass()");
+        log.debug("getAllDomainObjectsByClass: returning {} objects",domainObjects.size());
+        return domainObjects;
+    }
 
     public List<DomainObject> getDomainObjects(ReverseReference reverseReference) {
         // TODO: cache these?
@@ -497,11 +525,11 @@ public class DomainModel {
 
     }
 
-    public Workspace getDefaultWorkspace() throws Exception {
+    public Workspace getDefaultWorkspace() {
         return getWorkspaces().iterator().next();
     }
 
-    public List<DataSet> getDataSets() throws Exception {
+    public List<DataSet> getDataSets() {
         List<DataSet> dataSets = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (DataSet dataSet : sampleFacade.getDataSets()) {
@@ -512,12 +540,15 @@ public class DomainModel {
         return dataSets;
     }
     
-    public List<LSMImage> getLsmsForSample(Long sampleId) {
-        List<LSMImage> images = new ArrayList<>();
+    public List<LSMImage> getLsmsForSample(Sample sample) {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for(LSMImage image : sampleFacade.getLsmsForSample(sampleId)) {
-            images.add(putOrUpdate(image));
+        List<Reference> lsmRefs = new ArrayList<>();
+        for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+            for(SampleTile tile : objectiveSample.getTiles()) {
+                lsmRefs.addAll(tile.getLsmReferences());
+            }
         }
+        List<LSMImage> images = getDomainObjectsAs(LSMImage.class, lsmRefs);
         if (TIMER) w.stop("getLsmsForSample");
         return images;
     }
@@ -535,21 +566,20 @@ public class DomainModel {
         return null;
     }
 
-    public void remove(List<Reference> deleteObjectRefs) {
-        try {
-            domainFacade.remove(deleteObjectRefs);
-        }
-        catch (Exception e) {
-            log.error("Problems removing objects", e);
+    public void remove(List<Reference> deleteObjectRefs) throws Exception {
+        List<DomainObject> objects = getDomainObjects(deleteObjectRefs);
+        domainFacade.remove(deleteObjectRefs);
+        invalidate(objects);
+        for(DomainObject object : objects) {
+            notifyDomainObjectRemoved(object);
         }
     }
 
     /**
      * Returns all of the ontologies that a user has access to view. 
      * @return collection of ontologies
-     * @throws Exception
      */
-    public List<Ontology> getOntologies() throws Exception {
+    public List<Ontology> getOntologies() {
         List<Ontology> ontologies = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for (Ontology ontology : ontologyFacade.getOntologies()) {
@@ -649,7 +679,6 @@ public class DomainModel {
             ontologyFacade.removeOntology(ontologyId);
         }
         notifyDomainObjectRemoved(canonicalObject);
-        notifyDomainObjectsInvalidated(canonicalObject);
     }
 
     public TreeNode create(TreeNode treeNode) throws Exception {
@@ -814,7 +843,7 @@ public class DomainModel {
     }
 
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) throws Exception {
-        DomainObject canonicalObject = null;
+        DomainObject canonicalObject;
         synchronized (this) {
             canonicalObject = putOrUpdate(domainFacade.updateProperty(domainObject, propName, propValue));
         }
@@ -822,9 +851,9 @@ public class DomainModel {
     }
 
     public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-        DomainObject canonicalObject = null;
+        DomainObject canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(domainFacade.changePermissions(domainObject, granteeKey, rights, grant));
+            canonicalObject = putOrUpdate(domainFacade.changePermissions(domainObject, granteeKey, rights, grant), true);
         }
         return canonicalObject;
     }
@@ -874,13 +903,37 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(objects));
     }
 
-    private void notifyDomainObjectsInvalidated(DomainObject domainObject) {
+    private void notifyDomainObjectInvalidated(DomainObject domainObject, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityInvalidationEvent for {}", DomainUtils.identify(domainObject));
         }
         Collection<DomainObject> invalidated = new ArrayList<>();
-        invalidated.add(domainObject);
+        if (invalidateTree) {
+            addTree(invalidated, domainObject);
+        }
+        else {
+            invalidated.add(domainObject);
+        }
+
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
     }
 
+    private void addTree(Collection<DomainObject> objects, DomainObject domainObject) {
+
+        if (domainObject instanceof TreeNode) {
+            TreeNode treeNode = (TreeNode)domainObject;
+            for(Reference childRef : treeNode.getChildren()) {
+                DomainObject childObj = objectCache.getIfPresent(childRef);
+                if (childObj!=null) {
+                    objectCache.invalidate(childRef);
+                    addTree(objects, childObj);
+                }
+            }
+        }
+        else if (domainObject instanceof Sample) {
+            // TODO: Should handle invalidation of LSMs and neuron fragments
+        }
+
+        objects.add(domainObject);
+    }
 }

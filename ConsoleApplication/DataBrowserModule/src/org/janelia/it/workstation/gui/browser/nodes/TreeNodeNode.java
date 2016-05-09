@@ -11,7 +11,6 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -162,6 +161,8 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
+        actions.add(new ViewDetailsAction());
+        actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());

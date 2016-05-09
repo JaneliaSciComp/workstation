@@ -46,7 +46,7 @@ public class AddItemsToFolderAction implements NamedAction {
 
     @Override
     public String getName() {
-        return domainObjects.size() > 1 ? "Add \"" + domainObjects.size() + "\" Items To Folder" : "Add Item To Folder";
+        return domainObjects.size() > 1 ? "Add " + domainObjects.size() + " Items To Folder" : "Add Item To Folder";
     }
 
     @Override
@@ -55,7 +55,7 @@ public class AddItemsToFolderAction implements NamedAction {
     }
     
     public JMenuItem getPopupPresenter() {
-        
+
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -117,44 +117,15 @@ public class AddItemsToFolderAction implements NamedAction {
 
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-
-                // TODO: we should only display object sets of a particular type (the type of the selected domain objects)
                 NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to");
                 nodeChooser.setRootVisible(false);
-                
                 int returnVal = nodeChooser.showDialog(explorer);
                 if (returnVal != NodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
-                final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
-                final TreeNode treeNode = selectedNode.getTreeNode();
-                SimpleWorker worker = new SimpleWorker() {
-
-                    private Long[] idPath;
-                
-                    @Override
-                    protected void doStuff() throws Exception {
-                        idPath = NodeUtils.createIdPath(selectedNode);
-                        addObjectsToFolder(treeNode, idPath);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        log.info("Added to tree node {}",treeNode.getId());
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                explorer.expand(idPath);
-                                explorer.selectNodeByPath(idPath);
-                            }
-                        });
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                worker.execute();
+                UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
+                TreeNode treeNode = selectedNode.getTreeNode();
+                Long[] idPath = NodeUtils.createIdPath(selectedNode);
+                addUniqueItemsToFolder(treeNode, idPath);
             }
         });
 
@@ -171,7 +142,7 @@ public class AddItemsToFolderAction implements NamedAction {
             for (String path : addHistory) {
 
                 final Long[] idPath = NodeUtils.createIdPath(path);
-                final Long treeNodeId = idPath[idPath.length-1];
+                Long treeNodeId = idPath[idPath.length-1];
 
                 TreeNode treeNode;
                 try {
@@ -188,31 +159,7 @@ public class AddItemsToFolderAction implements NamedAction {
                 JMenuItem commonRootItem = new JMenuItem(finalTreeNode.getName());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
-
-                        SimpleWorker worker = new SimpleWorker() {
-                            @Override
-                            protected void doStuff() throws Exception {
-                                addObjectsToFolder(finalTreeNode, idPath);
-                            }
-
-                            @Override
-                            protected void hadSuccess() {
-                                log.info("Added to folder {}",finalTreeNode.getId());
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        explorer.expand(idPath);
-                                        explorer.selectNodeByPath(idPath);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        worker.execute();
+                        addUniqueItemsToFolder(finalTreeNode, idPath);
                     }
                 });
 
@@ -223,17 +170,66 @@ public class AddItemsToFolderAction implements NamedAction {
 
         return newFolderMenu;
     }
-    
+
+    private void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath) {
+
+        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
+
+        int existing = 0;
+        for(DomainObject domainObject : domainObjects) {
+            if (treeNode.hasChild(domainObject)) {
+                existing++;
+            }
+        }
+
+        if (existing>0) {
+            String message;
+            if (existing==domainObjects.size()) {
+                message = "All items are already in the target folder, no items will be added.";
+            }
+            else {
+                message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
+            }
+            JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
+        }
+
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                addObjectsToFolder(treeNode, idPath);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                log.info("Added to folder {}", treeNode.getId());
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        explorer.expand(idPath);
+                        explorer.selectNodeByPath(idPath);
+                    }
+                });
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
+
+    }
+
     private void addObjectsToFolder(TreeNode treeNode, Long[] idPath) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        
+
         // Add them to the given folder
         model.addChildren(treeNode, domainObjects);
-        
+
         // Update history
-        updateAddToSetHistory(idPath);                
+        updateAddToSetHistory(idPath);
     }
-    
+
     private void updateAddToSetHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
         List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);

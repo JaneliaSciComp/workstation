@@ -236,9 +236,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void setMouseMode(MouseMode.Mode mode) {
         // Only display anchors in Trace mode
         if (mode == MouseMode.Mode.TRACE) {
-            getSkeletonActor().setAnchorsVisible(true);
+            getSkeletonActor().getModel().setAnchorsVisible(true);
         } else {
-            getSkeletonActor().setAnchorsVisible(false);
+            getSkeletonActor().getModel().setAnchorsVisible(false);
         }
     }
     
@@ -252,7 +252,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     public void backtrackNeuronMicron() {
         TmNeuron neuron = annotationModel.getCurrentNeuron();
         if (neuron != null) {
-            Anchor anchor = getSkeletonActor().getNextParent();
+            Anchor anchor = getSkeletonActor().getModel().getNextParent();
             if (anchor != null) {
                 TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
                 if (!ann.isRoot()) {
@@ -267,7 +267,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     public void centerNextParentMicron() {
-        Anchor anchor = getSkeletonActor().getNextParent();
+        Anchor anchor = getSkeletonActor().getModel().getNextParent();
         if (anchor != null) {
             setCameraFocus(anchor.getLocation());
         }
@@ -318,7 +318,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
-        getSkeletonActor().addAnchorUpdateListener(annotationMgr);
+        getSkeletonActor().getModel().addAnchorUpdateListener(annotationMgr);
                 
         // Nb: skeleton.anchorMovedSilentSignal intentionally does *not* connect to annotationMgr!
         quadViewController = new QuadViewController(this, annotationMgr, largeVolumeViewer);
@@ -450,7 +450,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         //  go somewhere else so it only happens once, but not clear where;
         //  not clear we have a trigger for when the image is loaded enough for
         //  this info to be available (it loads asynchronously)
-        getSkeletonActor().setTileFormat(
+        getSkeletonActor().getModel().setTileFormat(
                 tileServer.getLoadAdapter().getTileFormat());
 
         // construct new request; add image data to anchor and pass it on
@@ -1380,7 +1380,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
         resetViewAction.actionPerformed(null);
         
-        getSkeletonActor().setTileFormat(
+        getSkeletonActor().getModel().setTileFormat(
                 tileServer.getLoadAdapter().getTileFormat());
     }
 

@@ -36,7 +36,9 @@ import org.yaml.snakeyaml.Yaml;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyImportAction extends NodePresenterAction   {
+
     private final static Logger log = LoggerFactory.getLogger(OntologyImportAction.class);
+
     private final static OntologyImportAction singleton = new OntologyImportAction();
     public static OntologyImportAction get() {
         return singleton;

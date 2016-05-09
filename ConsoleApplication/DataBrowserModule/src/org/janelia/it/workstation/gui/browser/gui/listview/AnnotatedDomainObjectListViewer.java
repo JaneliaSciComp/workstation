@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.
@@ -45,8 +46,9 @@ public interface AnnotatedDomainObjectListViewer {
      * @param domainObjects list of domain objects for which to change selection
      * @param select select if true, deselect if false
      * @param clearAll clear the existing selection before selecting?
+     * @param isUserDriven is this action driven directly by the user?
      */
-    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll);
+    public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven);
     
     /**
      * Show the objects in the list in the viewer, along with their annotations. 
@@ -69,6 +71,15 @@ public interface AnnotatedDomainObjectListViewer {
      * Called when the viewer loses focus.
      */
     public void deactivate();
+
+    /**
+     * Check if the displayed text for the given object contains the given string.
+     * @param resultPage page containing domainObject
+     * @param domainObject a domain object currently being displayed by the viewer
+     * @param text search string
+     * @return true if the object contains the given text
+     */
+    public boolean matches(ResultPage resultPage, DomainObject domainObject, String text);
 
     /**
      * Called on the specific viewer to toggle edit mode

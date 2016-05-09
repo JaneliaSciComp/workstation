@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.DownloadItem;
+import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
@@ -66,8 +67,11 @@ public class DownloadDialog extends ModalDialog {
             + "It may also use the following special attributes: {Sample Name}, {Result Name}, {File Name}, {Extension}<br>"
             + "Each attribute may include multiple names as a fallback, e.g.: {Fly Core Alias|Line}"
             + "</font></html>";
-    
+
+    private static final String NATIVE_EXTENSION = "No conversion";
+
     private static final String[] FORMAT_EXTENSIONS = {
+            NATIVE_EXTENSION,
             "lsm.bz2", 
             "lsm", 
             "tif", 
@@ -81,6 +85,7 @@ public class DownloadDialog extends ModalDialog {
             "{Sample Name}/{Result Name|\"Image\"}-{File Name}", 
             "{Line}/{Sample Name}.{Extension}"
     };
+    private static final String FILE_PATTERN_PROP_NAME = "LAST_USER_FILE_PATTERN";
 
     // GUI
     private final JLabel loadingLabel;
@@ -91,6 +96,7 @@ public class DownloadDialog extends ModalDialog {
     private JList<String> expandedObjectList;
     private JLabel expandedObjectCountLabel;
     private ResultSelectionButton resultButton;
+
     private JComboBox<Format> formatCombo;
     private JCheckBox splitChannelCheckbox;
     private JCheckBox flattenStructureCheckbox;
@@ -269,7 +275,7 @@ public class DownloadDialog extends ModalDialog {
         else {
             if (domainObject instanceof Sample) {
                 if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
-                    for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample(domainObject.getId())) {
+                    for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample((Sample)domainObject)) {
                         log.info("Adding expanded LSM: "+lsm.getName());
                         downloadItems.add(new DownloadItem(path, lsm));
                     }
@@ -346,7 +352,7 @@ public class DownloadDialog extends ModalDialog {
         formatCombo = new JComboBox<>();
         formatCombo.setEditable(false);
         formatCombo.setToolTipText("Choose an export format");
-        addField("File format:", formatCombo);      
+        addField("Output file format:", formatCombo);
         
         splitChannelCheckbox = new JCheckBox();
         addField("Split channels?", splitChannelCheckbox);
@@ -360,10 +366,14 @@ public class DownloadDialog extends ModalDialog {
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel) filePatternCombo.getModel();
+        String userFilePattern = (String)SessionMgr.getSessionMgr().getModelProperty(FILE_PATTERN_PROP_NAME);
+        if (userFilePattern!=null) {
+            fpmodel.addElement(userFilePattern);
+        }
         for (String pattern : STANDARD_FILE_PATTERNS) {
             fpmodel.addElement(pattern);
         }
-        
+
         addField("Naming pattern:", filePatternCombo, "width 200:300:600, grow");
         
         attrPanel.add(new JLabel(""), "gap para, aligny top");
@@ -375,7 +385,7 @@ public class DownloadDialog extends ModalDialog {
         downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:800:1000, height 80:100:200, grow");
+        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:800:1000, height 80:300:1000, grow");
         
         populateDownloadItemList();
 
@@ -443,18 +453,23 @@ public class DownloadDialog extends ModalDialog {
         stopListeners();
         
         final ResultDescriptor resultDescriptor = resultButton.getResultDescriptor();
-        final Format format = (Format)formatCombo.getSelectedItem();
-        final String extension = format==null?null:format.getExtension();
         final boolean splitChannels = splitChannelCheckbox.isSelected();
         final boolean flattenStructure = flattenStructureCheckbox.isSelected();
         final String filenamePattern = (String)filePatternCombo.getSelectedItem();
-        
+
+        final Format format = (Format)formatCombo.getSelectedItem();
+        String extension = null;
+        if (format!=null && !format.getExtension().equals(NATIVE_EXTENSION)) {
+            extension = format.getExtension();
+        }
+        final String finalExtension = extension;
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 for (DownloadItem downloadItem : downloadItems) {
-                    downloadItem.init(resultDescriptor, extension, splitChannels, flattenStructure, filenamePattern);
+                    downloadItem.init(resultDescriptor, finalExtension, splitChannels, flattenStructure, filenamePattern);
                 }
             }
 
@@ -511,10 +526,8 @@ public class DownloadDialog extends ModalDialog {
         });
         
         for(String extension : sortedExtensions) {
-            log.info("{}, count={}", extension, countedExtensions.count(extension));
+            log.trace("Extension '{}' has {} instances", extension, countedExtensions.count(extension));
         }
-        
-        String maxCountExtension = sortedExtensions.get(0);
 
         DefaultComboBoxModel<Format> model = (DefaultComboBoxModel) formatCombo.getModel();
         Format currValue = (Format)model.getSelectedItem();
@@ -524,10 +537,9 @@ public class DownloadDialog extends ModalDialog {
             if (!allLsms && extension.startsWith("lsm")) {
                 continue;
             }
-            Format format = new Format(extension, extension.equals(maxCountExtension));
+            Format format = new Format(extension, false);
             model.addElement(format);
-            
-            if (extension.equals(maxCountExtension)) {
+            if (extension.equals(NATIVE_EXTENSION)) {
                 model.setSelectedItem(format);
             }
         }
@@ -540,7 +552,19 @@ public class DownloadDialog extends ModalDialog {
     }
     
     private void saveAndClose() {
-        
+
+        String filePattern = (String)filePatternCombo.getSelectedItem();
+        boolean found = false;
+        for (String pattern : STANDARD_FILE_PATTERNS) {
+            if (pattern.equals(filePattern)) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            SessionMgr.getSessionMgr().setModelProperty(FILE_PATTERN_PROP_NAME, filePattern);
+        }
+
         boolean started = false;
         for(final DownloadItem downloadItem : downloadItems) {
             if (downloadItem.getSourceFile()!=null) {
@@ -574,7 +598,8 @@ public class DownloadDialog extends ModalDialog {
 
         @Override
         public String toString() {
-            return extension+(isNative?"":" (Convert)");
+            //return extension+(isNative?"":" (Convert)");
+            return extension;
         }
     }
     

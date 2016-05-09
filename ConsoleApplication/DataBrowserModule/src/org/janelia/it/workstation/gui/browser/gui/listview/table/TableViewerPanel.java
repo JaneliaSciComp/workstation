@@ -6,30 +6,27 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.Position.Bias;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
-import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
-import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
@@ -38,16 +35,17 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A generic table viewer for a specific object type. 
+ * A generic table viewer supporting a data model and object selection.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class TableViewerPanel<T,S> extends JPanel implements FindContext {
+public abstract class TableViewerPanel<T,S> extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(TableViewerPanel.class);
     
@@ -55,14 +53,12 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     private TableViewerToolbar toolbar;
     private final JPanel resultsPane;
     private final DynamicTable resultsTable;
-    private FindToolbar findToolbar;
 
     // These members deal with the context and entities within it
     private List<T> objectList;
     private Map<S,T> objectMap;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
-    private SearchProvider searchProvider;
     
     // Listeners
     private final SessionModelListener sessionModelListener;
@@ -84,8 +80,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
 
             @Override
             protected void rowDoubleClicked(int row) {
-                final T object = (T) getRows().get(row).getUserObject();
-                objectDoubleClicked(object);
+                objectDoubleClicked((T)getRows().get(row).getUserObject());
             }
 
             @Override
@@ -133,9 +128,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
         resultsTable.addMouseListener(new MouseForwarder(this, "DynamicTable->TableViewerPanel"));
 
-        findToolbar = new FindToolbar(this);
-        findToolbar.addMouseListener(new MouseForwarder(this, "FindToolbar->TableViewerPanel"));
-        
         resultsPane = new JPanel(new BorderLayout());
         resultsPane.add(resultsTable, BorderLayout.CENTER);
 
@@ -149,7 +141,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         };
         
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
-        addHierarchyListener(new FindContextRegistration(this, this));
     }
     
     private TableViewerToolbar createToolbar() {
@@ -167,19 +158,11 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
 
             @Override
             public void exportButtonPressed() {
-                searchProvider.export();
+                TableViewerPanel.this.exportButtonPressed();
             }
         };
     }
 
-    protected abstract JPopupMenu getContextualPopupMenu();
-
-    protected abstract JPopupMenu getColumnPopupMenu(int col);
-
-    protected abstract void objectDoubleClicked(T object);
-    
-    protected abstract void chooseColumnsButtonPressed();
-    
     // Listen for key strokes and execute the appropriate key bindings
     // TODO: this is copy & pasted from IconGridViewerPanel, and can probably be factored out into its own reusable class
     protected KeyListener keyListener = new KeyAdapter() {
@@ -211,7 +194,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
                     deleteKeyPressed();
                     e.consume();
                 }
-                if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                else if (e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                    updateHud(false);
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     updateHud(false);
                 }
             }
@@ -221,36 +207,41 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         }
     };
 
-    protected void enterKeyPressed() {}
-    
+    protected abstract Object getValue(T object, String column);
+
+    protected void enterKeyPressed() {
+        T selectedObject = getLastSelectedObject();
+        objectDoubleClicked(selectedObject);
+    }
+
     protected void deleteKeyPressed() {}
 
+    protected abstract void objectDoubleClicked(T object);
+
+    protected abstract JPopupMenu getContextualPopupMenu();
+
+    protected abstract JPopupMenu getColumnPopupMenu(int col);
+
+    protected abstract void chooseColumnsButtonPressed();
+
+    protected abstract void exportButtonPressed();
+
     protected void updateHud(boolean toggle) {}
-    
-    protected void selectObject(T object, boolean clearAll) {
-        selectObjects(Arrays.asList(object), true, clearAll);
-        selectionModel.select(object, clearAll, true);
-    }
 
-    protected void deselectObject(T object) {
-        selectObjects(Arrays.asList(object), false, false);
-        selectionModel.deselect(object, true);
-    }
-    
-    public void selectObjects(List<T> domainObjects, boolean select, boolean clearAll) {
+    public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
 
-        log.trace("selectObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
+        log.trace("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
 
-        if (domainObjects.isEmpty()) {
+        if (objects.isEmpty()) {
             return;
         }
         
         ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
         
-        Set<T> domainObjectSet = new HashSet<>(domainObjects);
+        Set<T> domainObjectSet = new HashSet<>(objects);
         int i = 0;
         Integer start = null;
-        for(DynamicRow row : getRows()) {
+        for(DynamicRow row : resultsTable.getRows()) {
             T rowObject = (T)row.getUserObject();
             if (domainObjectSet.contains(rowObject)) {
                 if (select) {
@@ -272,32 +263,20 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
             }
             i++;
         }
-        
+
         if (start!=null) {
-            getDynamicTable().scrollToVisible(start, 0);
+            log.info("Scrolling to row {}",start);
+            getDynamicTable().scrollCellToCenter(start, 0);
         }
-    }
 
-    protected abstract Object getValue(T object, String column);
-    
-    public List<DynamicColumn> getColumns() {
-        return resultsTable.getColumns();
-    }
-
-    public DynamicColumn getColumn(String columnName) {
-        return resultsTable.getColumn(columnName);
-    }
-    
-    protected DynamicTable getDynamicTable() {
-    	return resultsTable;
-    }
-    
-    protected JTable getTable() {
-    	return resultsTable.getTable();
-    }
-    
-    protected List<DynamicRow> getRows() {
-        return resultsTable.getRows();
+        for(T object : objects) {
+            if (select) {
+                selectionModel.select(object, clearAll, isUserDriven);
+            }
+            else {
+                selectionModel.deselect(object, isUserDriven);
+            }
+        }
     }
 
     protected void selectNone() {
@@ -308,30 +287,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         resultsTable.getTable().getSelectionModel().setSelectionInterval(index1, index2);
     }
 
-    public T getPreviousObject() {
-        if (objectList == null) {
-            return null;
-        }
-        int i = objectList.indexOf(getLastSelectedObject());
-        if (i < 1) {
-            // Already at the beginning
-            return null;
-        }
-        return objectList.get(i - 1);
-    }
-
-    public T getNextObject() {
-        if (objectList == null) {
-            return null;
-        }
-        int i = objectList.indexOf(getLastSelectedObject());
-        if (i > objectList.size() - 2) {
-            // Already at the end
-            return null;
-        }
-        return objectList.get(i + 1);
-    }
-
     public synchronized T getLastSelectedObject() {
         S uniqueId = selectionModel.getLastSelectedId();
         if (uniqueId == null) {
@@ -339,49 +294,88 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
         }
         return objectMap.get(uniqueId);
     }
-    
-    protected void showObjects(List<T> objectList) {
-        
-        this.objectList = objectList;
-        this.objectMap = new HashMap<>();
-        for(T object : objectList) {
-            objectMap.put(getImageModel().getImageUniqueId(object), object);
-        }
-        
+
+    public void showObjects(List<T> objectList, final Callable<Void> success) {
+
+        log.debug("showObjects(objects.size={})", objectList.size());
+
+        setObjects(objectList);
+
         resultsTable.removeAllRows();
         for (T object : objectList) {
             resultsTable.addRow(object);
         }
         updateTableModel();
+
+        // Actually display everything
         showAll();
-    }
-    
-    protected void updateTableModel() {
-        resultsTable.updateTableModel();
+
+        // Wait until everything is recomputed
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                // Finally, we're done, we can call the success callback
+                ConcurrentUtils.invokeAndHandleExceptions(success);
+            }
+        });
     }
 
     public void refresh() {
-        showObjects(objectList);
+        showObjects(objectList, null);
     }
-    
+
     public void totalRefresh() {
         DomainMgr.getDomainMgr().getModel().invalidateAll();
     }
 
-    protected Map<S, T> getObjectMap() {
-        return objectMap;
+    private void setObjects(List<T> objectList) {
+        log.debug("Setting {} objects", objectList.size());
+        this.objectList = objectList;
+        this.objectMap = new HashMap<>();
+        for(T object : objectList) {
+            objectMap.put(getImageModel().getImageUniqueId(object), object);
+        }
     }
-    
-    public List<T> getObjectList() {
-        return objectList;
+
+    public synchronized void clear() {
+        this.objectList = null;
+        removeAll();
+        revalidate();
+        repaint();
     }
-    
-    public void setSearchProvider(SearchProvider searchProvider) {
-        this.searchProvider = searchProvider;
+
+    public void close() {
+        // TODO: this should be invoked somehow if the panel is closed
+        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
-    
-    public SearchProvider getSearchProvider() {
-        return searchProvider;
+
+    public synchronized void showAll() {
+        removeAll();
+        add(toolbar, BorderLayout.NORTH);
+        add(resultsPane, BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
+
+    protected void updateTableModel() {
+        resultsTable.updateTableModel();
+    }
+
+    public List<DynamicColumn> getColumns() {
+        return resultsTable.getColumns();
+    }
+
+    public DynamicColumn getColumn(String columnName) {
+        return resultsTable.getColumn(columnName);
+    }
+
+    protected DynamicTable getDynamicTable() {
+        return resultsTable;
+    }
+
+    protected JTable getTable() {
+        return resultsTable.getTable();
     }
 
     protected ImageModel<T, S> getImageModel() {
@@ -404,59 +398,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel implements FindContex
     public TableViewerToolbar getToolbar() {
         return toolbar;
     }
-    
-    public synchronized void clear() {
-        this.objectList = null;
-        removeAll();
-        revalidate();
-        repaint();
-    }
-    
-    public synchronized void showAll() {
-        removeAll();
-        add(toolbar, BorderLayout.NORTH);
-        add(resultsPane, BorderLayout.CENTER);
-        add(findToolbar, BorderLayout.SOUTH);
-        revalidate();
-        repaint();
-    }
-    
+
     public void scrollObjectToCenter(T object) {
         int row = objectList.indexOf(object);
-        getDynamicTable().scrollToVisible(row, 0);
-    }
-    
-    @Override
-    public void showFindUI() {
-        findToolbar.open();
-    }
-
-    @Override
-    public void hideFindUI() {
-        findToolbar.close();
-    }
-
-    @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Backward, skipStartingNode);
-        T match = searcher.find();
-        if (match != null) {
-            selectObject(match, true);
-            scrollObjectToCenter(match);
-        }
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        TableViewerFind<T,S> searcher = new TableViewerFind<>(this, text, getLastSelectedObject(), Bias.Forward, skipStartingNode);
-        T match = searcher.find();
-        if (match != null) {
-            selectObject(match, true);
-            scrollObjectToCenter(match);
-        }
-    }
-
-    @Override
-    public void openMatch() {
+        getDynamicTable().scrollCellToCenter(row, 0);
     }
 }

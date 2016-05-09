@@ -176,8 +176,9 @@ public class Hud extends ModalDialog {
             log.debug("HUD: entity type is {}", domainObject.getType());
         }
 
-        ResultDescriptor currResult = overrideSettings?resultDescriptor:resultButton.getResultDescriptor();
-        String currImageType  = overrideSettings?typeName:typeButton.getImageType();
+        ResultDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
+        String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageType();
+
         log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
         if (currResult==null) {
@@ -209,7 +210,18 @@ public class Hud extends ModalDialog {
         if (imagePath == null) {
             log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageType());
             previewLabel.setIcon(new MissingIcon());
+
+            if (render3DCheckbox != null) {
+                render3DCheckbox.setEnabled(false);
+                render3DCheckbox.setSelected(false);
+            }
+
+            setAllColorsOn();
             setTitle(domainObject.getName());
+
+            if (toggle) {
+                toggleDialog();
+            }
         }
         else {
             
@@ -251,6 +263,7 @@ public class Hud extends ModalDialog {
                         previewLabel.setIcon(image == null ? null : new ImageIcon(image));
                         dirtyEntityFor3D = true;
                         if (render3DCheckbox != null) {
+                            render3DCheckbox.setEnabled(true);
                             render3DCheckbox.setSelected(false);
                             hud3DController.entityUpdate();
                         }

@@ -121,6 +121,23 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
     }
 
     @Override
+    public List<DomainObject> getAllDomainObjectsByClass(String className) {
+        DomainQuery query = new DomainQuery();
+        // Not using a subject key: these are universal collections.
+        query.setObjectType(className);
+
+        Response response = manager.getDomainObjectEndpoint()
+                .path("class")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request getAllDomainObjectsByClass from server: " + className)) {
+            return null;
+        }
+        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
+        });
+        return domainObjs;
+    }
+
     public DomainObject update(DomainObject domainObject) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -135,7 +152,6 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         DomainObject domainObj = response.readEntity(DomainObject.class);
         return domainObj;
     }
-
 
     @Override
     public DomainObject updateProperty(DomainObject domainObject, String propName, Object propValue) {

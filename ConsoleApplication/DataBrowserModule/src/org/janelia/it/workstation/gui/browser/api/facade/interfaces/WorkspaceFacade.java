@@ -6,7 +6,6 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
@@ -46,14 +45,6 @@ public interface WorkspaceFacade {
      * @throws Exception something went wrong
      */
     public TreeNode create(TreeNode treeNode) throws Exception;
-    
-    /**
-     * Create a new object set. 
-     * @param objectSet the object set to create, with null GUID
-     * @return the saved object set
-     * @throws Exception
-     */
-    public ObjectSet create(ObjectSet objectSet) throws Exception;
 
     /**
      * Create and return a new filter. 
@@ -100,24 +91,6 @@ public interface WorkspaceFacade {
      */
     public TreeNode reorderChildren(TreeNode treeNode, int[] order) throws Exception;
 
-    /**
-     * Add the specified domain objects as members of the given object set. 
-     * @param objectSet the object set
-     * @param references collection of references to domain objects
-     * @return the updated object set
-     * @throws Exception something went wrong
-     */
-    public ObjectSet addMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
-
-    /**
-     * Remove the specified domain objects from the given object set. 
-     * @param objectSet the object set
-     * @param references collection of references to domain objects
-     * @return the updated object set
-     * @throws Exception something went wrong
-     */
-    public ObjectSet removeMembers(ObjectSet objectSet, Collection<Reference> references) throws Exception;
-    
     /**
      * Checks whether there are any TreeNode or ObjectSet references to this object
      * @param object the object set\

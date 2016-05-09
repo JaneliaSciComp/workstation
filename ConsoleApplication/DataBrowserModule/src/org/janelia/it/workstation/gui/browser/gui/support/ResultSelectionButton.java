@@ -14,6 +14,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
+import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -23,6 +24,8 @@ import org.janelia.it.workstation.gui.util.Icons;
 
 import com.google.common.collect.LinkedHashMultiset;
 import com.google.common.collect.Multiset;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,
@@ -31,6 +34,8 @@ import com.google.common.collect.Multiset;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ResultSelectionButton extends DropDownButton {
+
+    private static final Logger log = LoggerFactory.getLogger(ResultSelectionButton.class);
 
     private ResultDescriptor currResult;
     private boolean showTitle;
@@ -71,7 +76,7 @@ public class ResultSelectionButton extends DropDownButton {
                     SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
                     if (run==null || run.getResults()==null) continue;
                     for(PipelineResult result : run.getResults()) {
-                        if (result instanceof HasFileGroups) {
+                        if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
                                 String name = objectiveSample.getObjective()+" "+result.getName()+" ("+groupKey+")";
@@ -96,9 +101,7 @@ public class ResultSelectionButton extends DropDownButton {
         
         List<ResultDescriptor> sortedResults = new ArrayList<>();
         for(String resultName : sortedResultNames)  {
-            if (countedResultNames.count(resultName)>1 || domainObjects.size()==1) {
-                sortedResults.add(new ResultDescriptor(resultName));
-            }
+            sortedResults.add(new ResultDescriptor(resultName));
         }
 
         sortedResults.add(0, ResultDescriptor.LATEST);

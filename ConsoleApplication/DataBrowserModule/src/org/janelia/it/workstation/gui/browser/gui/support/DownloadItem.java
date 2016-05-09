@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
@@ -135,7 +136,6 @@ public class DownloadItem {
             attributeMap.put(attr.getLabel(), attr);
         }
 
-        log.info("Source filepath: {}", sourceFile);
         log.info("File pattern: {}", filePattern);
         
         Pattern pattern = Pattern.compile("\\{(.+?)\\}");
@@ -199,8 +199,10 @@ public class DownloadItem {
         if (splitChannels) {
             filepath.append("_#");
         }
-        
-        filepath.append(".").append(targetExtension);
+
+        if (!StringUtils.isEmpty(targetExtension)) {
+            filepath.append(".").append(targetExtension);
+        }
         log.info("Final file path: {}",filepath);
         return filepath.toString();
     }

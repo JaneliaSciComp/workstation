@@ -1,6 +1,6 @@
-package org.janelia.it.workstation.gui.viewer3d.events;
+package org.janelia.it.workstation.gui.alignment_board.events;
 
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
  * The given alignment board has just been closed.

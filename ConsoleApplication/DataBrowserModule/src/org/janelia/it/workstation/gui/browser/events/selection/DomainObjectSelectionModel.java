@@ -32,7 +32,7 @@ public class DomainObjectSelectionModel extends SelectionModel<DomainObject,Refe
 
     @Override
     protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.debug((select?"select":"deselect")+" {}, clearAll={}",domainObjects,clearAll);
+        log.debug("selectionChanged(objects.size={}, select={}, clearAll={}, isUserDriven={})",domainObjects.size(),select,clearAll,isUserDriven);
         if (domainObjects.size()==1) {
             DomainObject domainObject = domainObjects.get(0);
             if (domainObject instanceof TreeNode) {

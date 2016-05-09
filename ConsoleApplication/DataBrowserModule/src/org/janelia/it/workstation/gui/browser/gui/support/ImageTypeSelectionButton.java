@@ -94,8 +94,8 @@ public class ImageTypeSelectionButton extends DropDownButton {
         log.debug("{} domain objects have {} type names",domainObjects.size(),countedTypeNames.elementSet().size());
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
-            if (countedTypeNames.count(typeName)>1 || (countedTypeNames.count(typeName)==1 && domainObjects.size()==1)) {
-                log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+            log.trace("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+            if (countedTypeNames.count(typeName)>0) {
                 if (currImageType == null || !countedTypeNames.contains(currImageType)) {
                     this.currImageType = typeName;
                 }
