@@ -78,7 +78,12 @@ public class NeuronTraceLoader {
      * @param xyz
      * @param vantage
      */
-    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) {
+    public boolean animateToFocusXyz(Vector3 xyz, Vantage vantage, int milliseconds) 
+    {
+        // Disable auto loading during move
+        boolean wasCacheEnabled = nttc.doesUpdateVolumeCache();
+        nttc.setUpdateVolumeCache(false);
+        
         Vector3 startPos = new Vector3(vantage.getFocusPosition());
         Vector3 endPos = new Vector3(xyz);
         long startTime = System.nanoTime();
@@ -115,6 +120,8 @@ public class NeuronTraceLoader {
             sceneWindow.getGLAutoDrawable().display();
             // sceneWindow.getInnerComponent().repaint();
         }
+        
+        nttc.setUpdateVolumeCache(wasCacheEnabled);
         return didMove;
     }
 
@@ -172,7 +179,7 @@ public class NeuronTraceLoader {
             }
         }
         
-        if (! tileAlreadyLoaded) {
+        if ( (! tileAlreadyLoaded) && (! nttc.doesUpdateVolumeCache())) {
             GL3Actor boxMesh = nttc.createBrickActor((BrainTileInfo) brickInfo, colorChannel);
 
             StatusDisplayer.getDefault().setStatusText(
@@ -181,9 +188,10 @@ public class NeuronTraceLoader {
                     + " seconds."
             );
 
+            nttc.registerLoneDisplayedTile((BrickActor)boxMesh);
+            
             // Clear, so only one tiles is shown at a time (two tiles are in memory during transition)
             neuronMPRenderer.clearVolumeActors();
-            
             neuronMPRenderer.addVolumeActor(boxMesh);
         }
         

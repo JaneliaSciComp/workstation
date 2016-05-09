@@ -39,12 +39,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
-import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
@@ -68,14 +67,14 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronSetAdapter
 extends BasicNeuronSet
-implements NeuronSet, LookupListener
+implements NeuronSet// , LookupListener
 {
     private TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     private AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
-    private HortaWorkspace cachedHortaWorkspace = null;
-    private final Lookup.Result<HortaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaWorkspace.class);
+    private HortaMetaWorkspace cachedHortaWorkspace = null;
+    private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public NeuronSetAdapter()
@@ -83,8 +82,54 @@ implements NeuronSet, LookupListener
         super("LVV Neurons", new NeuronList());
         globalAnnotationListener = new MyGlobalAnnotationListener();
         annotationModListener = new MyTmGeoAnnotationModListener();
-        hortaWorkspaceResult.addLookupListener(this);
+        hortaWorkspaceResult.addLookupListener(new NSALookupListener());
     }
+    
+    @Override
+    public NeuronModel createNeuron(String neuronName) {
+        TmNeuron neuron;
+        try {
+            neuron = annotationModel.createNeuron(neuronName);
+        } catch (Exception ex) {
+            // Exceptions.printStackTrace(ex);
+            return null;
+        }
+        return new NeuronModelAdapter(neuron, annotationModel, workspace);
+    }
+    
+    private boolean removeNeuron(NeuronModel neuron) {
+        if (! (neuron instanceof NeuronModelAdapter))
+            return false;
+        
+        NeuronModelAdapter nma = (NeuronModelAdapter) neuron;
+        TmNeuron tmn = nma.getTmNeuron();
+        TmNeuron previousNeuron = annotationModel.getCurrentNeuron();
+        boolean removingCurrentNeuron = (previousNeuron.getId() == tmn.getId());
+        
+        if (! super.remove(nma))
+            return false;
+        
+        if (! removingCurrentNeuron) 
+            annotationModel.selectNeuron(tmn);
+        
+        try {
+            annotationModel.deleteCurrentNeuron();
+        } catch (Exception ex) {
+            // Exceptions.printStackTrace(ex);
+        }
+        if (! removingCurrentNeuron) // restore previous selected neuron
+            annotationModel.selectNeuron(previousNeuron);
+        
+        return true;
+    }
+    
+    @Override
+    public boolean remove(Object o)
+    {
+        if (! (o instanceof NeuronModelAdapter))
+            return super.remove(o);
+        return removeNeuron((NeuronModelAdapter) o);
+    }    
     
     public void observe(AnnotationModel annotationModel)
     {
@@ -149,18 +194,6 @@ implements NeuronSet, LookupListener
         return true;
     }
 
-    @Override
-    public void resultChanged(LookupEvent lookupEvent)
-    {
-        Collection<? extends HortaWorkspace> allWorkspaces = hortaWorkspaceResult.allInstances();
-        if (allWorkspaces.isEmpty())
-            return;
-        HortaWorkspace workspace = allWorkspaces.iterator().next();
-        if (workspace != cachedHortaWorkspace) {
-            cachedHortaWorkspace = workspace;
-        }
-    }
-
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
         
@@ -172,37 +205,48 @@ implements NeuronSet, LookupListener
             // updateEdges(); // Brute force approach reanalyzes all edges            
             // Surgical approach only adds the one new edge
             // (vertex is added implicitly)
+                        
+            // Find neuron
             Long neuronId = annotation.getNeuronId();
+            NeuronModelAdapter neuron = null;
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
-                NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuron().getId().equals(neuronId)) {
-                    NeuronVertex newVertex = neuron.addVertex(annotation);
-                    neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
-                    // Trigger a Horta repaint  for instant GUI feedback
-                    // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
-                    final boolean doRecenterHorta = false;
-                    if (cachedHortaWorkspace != null) 
-                    {
-                        if (doRecenterHorta) 
-                        {
-                            // 1) recenter on annotation location in Horta, just like in LVV
-                            float recenter[] = newVertex.getLocation();
-                            cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
-                            cachedHortaWorkspace.getVantage().setChanged();
-                            cachedHortaWorkspace.getVantage().notifyObservers();
-                        }
-
-                        // 2) repaint Horta now, to update view without further user interaction
-                        // Below is the way to trigger a repaint, without changing the viewpoint
-                        cachedHortaWorkspace.setChanged();
-                        cachedHortaWorkspace.notifyObservers();
-                        // Emit annotation added signal, to update Horta spatial index
-                        NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
-                        addedSignal.setChanged();
-                        addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron0));
-                    }
+                neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuron().getId().equals(neuronId))
                     break;
+            }
+            if (neuron == null) {
+                logger.error("could not find NeuronModel for newly added TmGeoAnnotation");
+                return;
+            }
+            
+            NeuronVertex newVertex = neuron.addVertex(annotation);
+            if (newVertex == null) {
+                logger.error("NeuronModelAdapter.addVertex() returned null");
+                return;
+            }
+            neuron.getGeometryChangeObservable().setChanged(); // set here because its hard to detect otherwise
+            // Trigger a Horta repaint  for instant GUI feedback
+            // NOTE - assumes this callback is only invoked from one-at-a-time manual addition
+            final boolean doRecenterHorta = false;
+            if (cachedHortaWorkspace != null) 
+            {
+                if (doRecenterHorta) 
+                {
+                    // 1) recenter on annotation location in Horta, just like in LVV
+                    float recenter[] = newVertex.getLocation();
+                    cachedHortaWorkspace.getVantage().setFocus(recenter[0], recenter[1], recenter[2]);
+                    cachedHortaWorkspace.getVantage().setChanged();
+                    cachedHortaWorkspace.getVantage().notifyObservers();
                 }
+
+                // 2) repaint Horta now, to update view without further user interaction
+                // Below is the way to trigger a repaint, without changing the viewpoint
+                cachedHortaWorkspace.setChanged();
+                cachedHortaWorkspace.notifyObservers();
+                // Emit annotation added signal, to update Horta spatial index
+                NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
+                addedSignal.setChanged();
+                addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
         }
 
@@ -484,5 +528,20 @@ implements NeuronSet, LookupListener
             return neuronMembershipChanged; //  || neuronsWereRefreshed;
         }
 
+    }
+    
+    class NSALookupListener implements LookupListener
+    {
+        @Override
+        public void resultChanged(LookupEvent lookupEvent)
+        {
+            Collection<? extends HortaMetaWorkspace> allWorkspaces = hortaWorkspaceResult.allInstances();
+            if (allWorkspaces.isEmpty())
+                return;
+            HortaMetaWorkspace metaWorkspace = allWorkspaces.iterator().next();
+            if (metaWorkspace != cachedHortaWorkspace) {
+                cachedHortaWorkspace = metaWorkspace;
+            }
+        }
     }
 }

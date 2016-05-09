@@ -70,9 +70,23 @@ public class FilteredAnnotationList extends JPanel {
     //  imagine allowing note editing from this widget in the future
     private EditNoteRequestedListener editNoteRequestedListener;
 
+    private static FilteredAnnotationList theInstance;
+    private boolean skipUpdate=false;
 
+    public static FilteredAnnotationList createInstance(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
+        theInstance = new FilteredAnnotationList(annotationMgr, annotationModel, width);
+        return theInstance;
+    }
 
-    public FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
+    public static FilteredAnnotationList getInstance() {
+        return theInstance;
+    }
+
+    public void setSkipUpdate(boolean skipUpdate) {
+        this.skipUpdate=skipUpdate;
+    }
+
+    private FilteredAnnotationList(final AnnotationManager annotationMgr, final AnnotationModel annotationModel, int width) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
         this.width = width;
@@ -153,7 +167,11 @@ public class FilteredAnnotationList extends JPanel {
         updateData();
     }
 
-    private void updateData() {
+    public synchronized void updateData() {
+
+        if (skipUpdate)
+            return;
+
         // check how long to update
         // ans: with ~2k annotations, <20ms to update
         // Stopwatch stopwatch = new Stopwatch();
@@ -183,6 +201,7 @@ public class FilteredAnnotationList extends JPanel {
                         new InterestingAnnotation(ann.getId(),
                             neuron.getId(),
                             ann.getCreationDate(),
+                            ann.getModificationDate(),
                             getAnnotationGeometry(ann),
                             note);
                     if (filter.isInteresting(maybeInteresting)) {
@@ -260,8 +279,8 @@ public class FilteredAnnotationList extends JPanel {
                     int realRowIndex = convertRowIndexToModel(rowIndex);
 
                     if (realColumnIndex == 0) {
-                        // show creation date
-                        tip = model.getAnnotationAtRow(realRowIndex).getCreationDate().toString();
+                        // show modification date
+                        tip = model.getAnnotationAtRow(realRowIndex).getModificationDate().toString();
                     } else if (realColumnIndex == 1) {
                         // no tip here
                         tip = null;

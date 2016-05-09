@@ -63,9 +63,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     // annotation model object
     private AnnotationModel annotationModel;
-    
+
     private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-    
+
     // quad view ui object
     private QuadViewUi quadViewUi;
 
@@ -175,10 +175,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 mergeNeurite(anchor.getGuid(), closest.getId());
             } else {
                 // move, don't merge
-                activityLog.logMergedNeurite(getSampleID(), getWorkspaceID(), closest);
+                activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), closest);
                 moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
             }
         } else {
+            activityLog.logMovedNeurite(getSampleID(), getWorkspaceID(), anchorVoxelLocation);
             moveAnnotation(anchor.getGuid(), anchorVoxelLocation);
         }
     }
@@ -490,7 +491,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     /**
-     * move the annotation with the input ID to the input location
+     * move the annotation with the input ID to the input location.
+     * Activity-logged by caller.
      */
     public void moveAnnotation(final Long annotationID, final Vec3 micronLocation) {
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -550,7 +552,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     /**
-     * merge the two neurites to which the two annotations belong
+     * merge the two neurites to which the two annotations belong.
+     * Activity-logged by caller.
      *
      * @param sourceAnnotationID
      * @param targetAnnotationID
@@ -640,10 +643,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             final String neuronName = promptForNeuronName(null);
             if (neuronName == null) {
                 JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
-                    "Neuron rename canceled; move neurite canceled",
-                    "Move neurite canceled",
-                    JOptionPane.ERROR_MESSAGE);
+                        ComponentUtil.getLVVMainWindow(),
+                        "Neuron rename canceled; move neurite canceled",
+                        "Move neurite canceled",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -864,10 +867,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         String noteText = getNote(annotationID);
 
         AddEditNoteDialog testDialog = new AddEditNoteDialog(
-            (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-            noteText,
-            annotationModel.getNeuronFromAnnotationID(annotationID),
-            annotationID);
+                (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
+                noteText,
+                annotationModel.getNeuronFromAnnotationID(annotationID),
+                annotationID);
         testDialog.setVisible(true);
         if (testDialog.isSuccess()) {
             String resultText = testDialog.getOutputText().trim();
@@ -1173,14 +1176,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // get a name for the new workspace and validate (are there any rules for entity names?)
-        String workspaceName = (String) JOptionPane.showInputDialog(
-                ComponentUtil.getLVVMainWindow(),
-                "Workspace name:",
-                "Create workspace",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                "new workspace");
+        String[] options = {"Set name"};
+        JPanel newWorkspaceRenamePanel = new JPanel();
+        JLabel newWorkspaceRenameLabel = new JLabel("Workspace name: ");
+        JTextField newWorkspaceRenameField = new JTextField("new workspace", 30);
+        newWorkspaceRenamePanel.add(newWorkspaceRenameLabel);
+        newWorkspaceRenamePanel.add(newWorkspaceRenameField);
+        int selectedOption = JOptionPane.showOptionDialog(null,
+                newWorkspaceRenamePanel,
+                "Rename new workspace",
+                JOptionPane.OK_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options ,
+                options[0]);
+        String workspaceName = newWorkspaceRenameField.getText();
+
         // this is all the validation we have right now...
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
             workspaceName = "new workspace";
@@ -1486,8 +1497,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
             JOptionPane.showMessageDialog(quadViewUi,
                     "# neurons = " + nneurons + "\n" +
-                    "# annotations (total) = " + nannotations + "\n" +
-                    "# annotations (largest neuron) = " + maxannotations + "\n",
+                            "# annotations (total) = " + nannotations + "\n" +
+                            "# annotations (largest neuron) = " + maxannotations + "\n",
                     "Info",
                     JOptionPane.PLAIN_MESSAGE);
         }
@@ -1579,6 +1590,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
                     @Override
                     protected void hadSuccess() {
+                        postWorkspaceUpdate();
                     }
 
                     @Override
@@ -1600,25 +1612,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadSuccess() {
                         int latestValue = countDownSemaphor.decrementAndGet();
                         if (latestValue == 0) {
-                            // last file is loaded, so trigger update; needs another
-                            //  layer of threading, ugh:
-                            SimpleWorker updater = new SimpleWorker() {
-                                @Override
-                                protected void doStuff() throws Exception {
-                                    annotationModel.postWorkspaceUpdate();
-                                }
-
-                                @Override
-                                protected void hadSuccess() {
-                                    // nothing here
-                                }
-
-                                @Override
-                                protected void hadError(Throwable error) {
-                                    SessionMgr.getSessionMgr().handleException(error);
-                                }
-                            };
-                            updater.execute();
+                            postWorkspaceUpdate();
                         }
                     }
 
@@ -1626,11 +1620,33 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     protected void hadError(Throwable error) {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
-                    
+
                 };
                 importer.execute();
             }
         }
+    }
+
+    private void postWorkspaceUpdate() {
+        // last file is loaded, so trigger update; needs another
+        //  layer of threading, ugh:
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.postWorkspaceUpdate();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
     }
 
     /**
@@ -1664,7 +1680,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return null;
         }
     }
-    
+
     private Long getWorkspaceID() {
         return annotationModel.getCurrentWorkspace().getId();
     }

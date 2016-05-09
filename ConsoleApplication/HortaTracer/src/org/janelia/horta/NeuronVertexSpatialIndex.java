@@ -36,7 +36,7 @@ import edu.wlu.cs.levy.CG.KeyMissingException;
 import edu.wlu.cs.levy.CG.KeySizeException;
 import java.util.Collection;
 import java.util.Iterator;
-import org.janelia.console.viewerapi.model.HortaWorkspace;
+import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -46,6 +46,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * NeuronVertexIndex is intended to permit rapid access to a NeuronVertex, given XYZ.
@@ -58,6 +60,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
     private final NeuronManager neuronManager;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 
     public NeuronVertexSpatialIndex(NeuronManager neuronManager) {
@@ -100,7 +103,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         return new double[] {xyz[0], xyz[1], xyz[2]};
     }
     
-    private void rebuildIndex(HortaWorkspace workspace) {
+    private void rebuildIndex(HortaMetaWorkspace workspace) {
         clear();
         for (NeuronSet set : workspace.getNeuronSets()) {
             addNeuronSet(set);
@@ -109,6 +112,9 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     
     private void addNeuronModel(NeuronModel neuron) {
         for (NeuronVertex vertex : neuron.getVertexes()) {
+            if (vertex == null) {
+                log.error("Attempt to add null anchor to spatial index");
+            }
             addPrivately(vertex);
         }
     }

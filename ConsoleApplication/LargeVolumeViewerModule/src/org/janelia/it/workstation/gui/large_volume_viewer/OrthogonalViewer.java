@@ -219,7 +219,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         wheelMode.setCamera(camera);
         pointComputer.setCamera(camera);
         if (skeletonActor != null)
-            skeletonActor.setCamera(camera);
+            skeletonActor.getModel().setCamera(camera);
 	}
 	
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
@@ -301,7 +301,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             this.mouseMode = panMode;
         }
         else if (modeId == MouseMode.Mode.TRACE) {
-            TraceMode traceMode = new TraceMode(skeletonActor.getSkeleton());
+            TraceMode traceMode = new TraceMode(skeletonActor.getModel().getSkeleton());
             traceMode.setViewport(getViewport());
             traceMode.setActor(skeletonActor);
             traceMode.setViewerInGround(getViewerInGround());
@@ -388,8 +388,8 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 			return;
 		this.skeletonActor = skeletonActor;
 		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
-		skeletonActor.setCamera(camera);
-        skeletonActor.getUpdater().addListener(this);
+		skeletonActor.getModel().setCamera(camera);
+        skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);
 	}
 

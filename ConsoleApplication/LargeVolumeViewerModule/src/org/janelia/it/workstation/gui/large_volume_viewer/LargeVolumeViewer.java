@@ -154,7 +154,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		pointComputer.setWidget(this, false);
 		//
         renderer.addActor(skeletonActor);
-        SkeletonActorStateUpdater sasUpdater = skeletonActor.getUpdater();
+        SkeletonActorStateUpdater sasUpdater = skeletonActor.getModel().getUpdater();
         sasUpdater.addListener(this);
         skeletonActor.setZThicknessInPixels(viewport.getDepth());        
 		//
@@ -365,7 +365,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		pointComputer.setCamera(camera);
-        skeletonActor.setCamera(camera);
+        skeletonActor.getModel().setCamera(camera);
 	}
     public CameraListenerAdapter cameraListener;
 	
@@ -381,15 +381,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 	}
     
     public void setNeuronStyleModel(NeuronStyleModel nsModel) {
-        skeletonActor.setNeuronStyleModel(nsModel);
+        skeletonActor.getModel().setNeuronStyleModel(nsModel);
     }
 	
 	public Skeleton getSkeleton() {
-		return skeletonActor.getSkeleton();
+		return skeletonActor.getModel().getSkeleton();
 	}
 	
 	public void setSkeleton(Skeleton skeleton) {
-		skeletonActor.setSkeleton(skeleton);
+		skeletonActor.getModel().setSkeleton(skeleton);
 	}
 
 	public SkeletonActor getSkeletonActor() {

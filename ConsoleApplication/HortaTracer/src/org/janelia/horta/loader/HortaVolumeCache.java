@@ -33,7 +33,6 @@ package org.janelia.horta.loader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Observable;
@@ -41,9 +40,6 @@ import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.SwingUtilities;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.console.viewerapi.BasicGenericObservable;
-import org.janelia.console.viewerapi.GenericObservable;
-import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.material.VolumeMipMaterial;
@@ -72,7 +68,7 @@ import org.openide.util.RequestProcessor;
  */
 public class HortaVolumeCache
 {
-    private int ramTileCount = 3;
+    private int ramTileCount = 3; // Three is better than two for tile availability
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
     private StaticVolumeBrickSource source = null;
@@ -87,6 +83,9 @@ public class HortaVolumeCache
     // Fewer on GPU cache
     private final Map<BrickInfo, BrickActor> actualDisplayTiles = new ConcurrentHashMap<>();
     private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentHashSet<>();
+    
+    // To enable/disable loading
+    private boolean doUpdateCache = true;
     
     // Cache camera data for early termination
     float cachedFocusX = Float.NaN;
@@ -111,6 +110,36 @@ public class HortaVolumeCache
 
         this.camera = camera;
         camera.addObserver(new CameraObserver());
+    }
+
+    public void registerLoneDisplayedTile(BrickActor actor) 
+    {
+        if (actualDisplayTiles.containsKey(actor.getBrainTile()))
+            return;
+        Texture3d texture = ((VolumeMipMaterial)actor.getMaterial()).getTexture();
+        synchronized(actualDisplayTiles) {
+            nearVolumeMetadata.add(actor.getBrainTile());
+            nearVolumeInRam.put(actor.getBrainTile(), texture);
+            actualDisplayTiles.clear();
+            actualDisplayTiles.put(actor.getBrainTile(), actor);
+        }
+    }
+    
+    public boolean isUpdateCache() {
+        return doUpdateCache;
+    }
+
+    public void setUpdateCache(boolean doUpdateCache) {
+        if (this.doUpdateCache == doUpdateCache)
+            return; // no change
+        this.doUpdateCache = doUpdateCache;
+        if (this.doUpdateCache) {
+            updateLocation(); // Begin any pending loads
+        }
+    }
+    
+    public void toggleUpdateCache() {
+        setUpdateCache(! isUpdateCache());
     }
     
     public int getRamTileCount() {
@@ -137,8 +166,20 @@ public class HortaVolumeCache
         this.gpuTileCount = videoTileCount;
     }
     
+    private void updateLocation() {
+        updateLocation(camera);
+    }
+    
+    private void updateLocation(PerspectiveCamera cam) {
+        float[] focusXyz = cam.getVantage().getFocus();
+        float zoom = cam.getVantage().getSceneUnitsPerViewportHeight();
+        updateLocation(focusXyz, zoom);
+    }
+    
     public void updateLocation(float[] xyz, float zoom) 
     {
+        if (! doUpdateCache)
+            return;
         // Cache previous location for early termination
         if (xyz[0] == cachedFocusX
                 && xyz[1] == cachedFocusY
@@ -168,7 +209,7 @@ public class HortaVolumeCache
         }
         
         // Just in case; should not be necessary
-        closestBricks.addAll(veryClosestBricks);
+        // closestBricks.addAll(veryClosestBricks);
         
         // Compare to cached list of tile metadata
         // Create list of new and obsolete tiles
@@ -207,11 +248,11 @@ public class HortaVolumeCache
                 continue; // already displayed           
             if (nearVolumeInRam.containsKey(brick)) // Is the texture already loaded in RAM?
                 continue; // already loaded
-            queueLoad((BrainTileInfo)brick);
+            queueLoad((BrainTileInfo)brick, Thread.NORM_PRIORITY);
         }
         for (final BrickInfo brick : newBricks) 
         {
-            queueLoad((BrainTileInfo)brick); // Don't worry; duplicates will be skipped
+            queueLoad((BrainTileInfo)brick, Thread.MIN_PRIORITY); // Don't worry; duplicates will be skipped
         }
 
         // Begin deleting the old tiles        
@@ -220,15 +261,25 @@ public class HortaVolumeCache
         }
     }
     
-    private void queueLoad(final BrainTileInfo tile) 
+    private void queueLoad(final BrainTileInfo tile, int priority) 
     {
+        if (! doUpdateCache)
+            return;
+        
         if (queuedForLoad.contains(tile))
             return; // already loading
         queuedForLoad.add(tile);
         // System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
         Runnable loadTask = new Runnable() {
             @Override
-            public void run() {
+            public void run() 
+            {
+                // Check whether this tile is still relevant
+                if (! nearVolumeMetadata.contains(tile)) {
+                    queuedForLoad.remove(tile);
+                    return;
+                }
+                
                 // Throttle to slow down loading of too many tiles if user is moving a lot
                 if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
                     try {
@@ -236,12 +287,18 @@ public class HortaVolumeCache
                     } catch (InterruptedException ex) {
                     }
                 }
+                
                 // Maybe after that wait, this tile is no longer needed
                 if (! nearVolumeMetadata.contains(tile)) {
                     queuedForLoad.remove(tile);
                     return;
                 }
-
+                
+                if (! doUpdateCache) {
+                    queuedForLoad.remove(tile);
+                    return;
+                }
+                
                 ProgressHandle progress
                     = ProgressHandleFactory.createHandle("Loading Tile " + tile.getLocalPath() + " ...");
                 progress.start();
@@ -267,10 +324,16 @@ public class HortaVolumeCache
             };
         };
         // Submit load task asynchronously
-        loadProcessor.post(loadTask);
+        int start_lag = 300; // milliseconds
+        if (priority < Thread.NORM_PRIORITY) {
+            start_lag = 1500;
+        }
+        loadProcessor.post(loadTask, start_lag, priority);
     }
     
     private void uploadToGpu(BrainTileInfo brick) {
+        if (! doUpdateCache)
+            return;
         if (actualDisplayTiles.containsKey(brick))
             return; // already displayed
         if (! desiredDisplayTiles.contains(brick))
@@ -334,9 +397,7 @@ public class HortaVolumeCache
     {
         @Override
         public void update(Observable o, Object arg) {
-            float[] focusXyz = camera.getVantage().getFocus();
-            float zoom = camera.getVantage().getSceneUnitsPerViewportHeight();
-            updateLocation(focusXyz, zoom);
+            updateLocation();
         }
     }
     

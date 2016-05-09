@@ -21,12 +21,16 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
  * @author fosterl
  */
 public class ActivityLogHelper {
+    // sample:workspace:micronX,micronY,micronZ:voxX,voxY,voxZ:time
     public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
-    
+    // sample:workspace:X,Y,Z:time
+    public static final String SIMPLE_COORDS_FMT = "%d:%5.3f,%5.3f,%5.3f";
+
     private static final ActivityLogHelper instance = new ActivityLogHelper();
 
     // These category strings are used similarly.  Lining them up spatially
     // makes it easier to see that they are all different.
+    // xyzsw = x-y-z coords, sample, workspace
     private static final ToolString EXTERNAL_LVV_LOGSTAMP_ID                    = new ToolString("Horta");
     private static final CategoryString LIX_CATEGORY_STRING                     = new CategoryString("loadTileIndexToRam:elapsed");
     private static final CategoryString LONG_TILE_LOAD_CATEGORY_STRING          = new CategoryString("longRunningTileIndexLoad");
@@ -41,20 +45,26 @@ public class ActivityLogHelper {
     private static final CategoryString LVV_REROOT_NEURITE_CATEGORY_STRING      = new CategoryString("rerootNeurite");
     private static final CategoryString LVV_3D_LAUNCH_CATEGORY_STRING           = new CategoryString("launch3dBrickView");
     private static final CategoryString LVV_NAVIGATE_LANDMARK_CATEGORY_STRING   = new CategoryString("navigateInLandmarkView");
-    
+    // endAOmu: end of annotation operation; coords as microns
+    // endAOvx: end of annotation operation; coords as voxels.
+    // xyzw=x-y-z coords, workspace
+    private static final CategoryString END_OP_VOXEL_CATEGORY_STRING            = new CategoryString("endAOvx:xyzw");
+    // Time-of-writing: nothing is producing micron coords alone.
+    private static final CategoryString END_OP_MICRON_CATEGORY_STRING           = new CategoryString("endAOmu:xyzw");
+
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
-    
+
     private Map<Long,TileFormat> sampleToTileFormat = new HashMap<>();
-    
+
     public static ActivityLogHelper getInstance() {
         return instance;
     }
-    
+
     private ActivityLogHelper() {}
-    
+
     public void setTileFormat(TileFormat tileFormat, Long sampleId) {
         assert tileFormat != null : "Null tile format";
-        assert sampleId != null : "Null sample id";        
+        assert sampleId != null : "Null sample id";
         sampleToTileFormat.put(sampleId, tileFormat);
     }
 
@@ -83,22 +93,22 @@ public class ActivityLogHelper {
 
     public void logFolderOpen(String remoteBasePath, long folderOpenTimestamp) {
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
-                LVV_SESSION_CATEGORY_STRING, 
+                LVV_LOGSTAMP_ID,
+                LVV_SESSION_CATEGORY_STRING,
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
         );
     }
-    
-    public void logAddAnchor(Long sampleId, Long workspaceId, Vec3 location) {        
+
+    public void logAddAnchor(Long sampleId, Long workspaceId, Vec3 location) {
         //  Change Vec3 to double[] if inconvenient.
         logGeometricEvent(
                 sampleId,
                 workspaceId,
-                location.getX(), location.getY(), location.getZ(), 
+                location.getX(), location.getY(), location.getZ(),
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
-    
-    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, TmGeoAnnotation source, float[] micronXYZ) {        
+
+    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, TmGeoAnnotation source, float[] micronXYZ) {
         //  Change Vec3 to double[] if inconvenient.
         logExternalGeometricEvent(
                 sampleId,
@@ -107,23 +117,37 @@ public class ActivityLogHelper {
                 micronXYZ[0], micronXYZ[1], micronXYZ[2],
                 LVV_ADD_ANCHOR_CATEGORY_STRING);
     }
-    
+
+    public void logExternallyAddAnchor(Long sampleId, Long workspaceId, Vec3 source, float[] micronXYZ) {
+        //  Change Vec3 to double[] if inconvenient.
+        logExternalGeometricEvent(
+                sampleId,
+                workspaceId,
+                source.getX(), source.getY(), source.getZ(),
+                micronXYZ[0], micronXYZ[1], micronXYZ[2],
+                LVV_ADD_ANCHOR_CATEGORY_STRING);
+    }
+
     public void logRerootNeurite(Long sampleID, Long workspaceID, Long neuronID) {
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
-                LVV_REROOT_NEURITE_CATEGORY_STRING, 
+                LVV_LOGSTAMP_ID,
+                LVV_REROOT_NEURITE_CATEGORY_STRING,
                 new ActionString(sampleID + ":" + workspaceID + ":" + neuronID)
         );
     }
-    
+
     public void logMergedNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_MERGE_NEURITES_CATEGORY_STRING);
     }
-    
+
     public void logMovedNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_MOVE_NEURITE_CATEGORY_STRING);
     }
-    
+
+    public void logMovedNeurite(Long sampleID, long workspaceID, Vec3 location) {
+        this.logGeometricEvent(sampleID, workspaceID, location, LVV_MOVE_NEURITE_CATEGORY_STRING);
+    }
+
     public void logSplitNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_SPLIT_NEURITE_CATEGORY_STRING);
     }
@@ -131,11 +155,11 @@ public class ActivityLogHelper {
     public void logSplitAnnotation(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_SPLIT_ANNO_CATEGORY_STRING);
     }
-    
+
     public void logDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_LINK_CATEGORY_STRING);
     }
-    
+
     public void logExternallyDeleteLink(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
         double muX = 0;
         double muY = 0;
@@ -150,25 +174,92 @@ public class ActivityLogHelper {
             muZ = mxyz.getZ();
         }
         this.logExternalGeometricEvent(
-                sampleID, workspaceID, 
+                sampleID, workspaceID,
                 source.getX(), source.getY(), source.getZ(),
                 (float)muX, (float)muY, (float)muZ,
                 LVV_DELETE_LINK_CATEGORY_STRING
         );
     }
-    
-    public void logDeleteSubTree(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
-        this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_SUBTREE_CATEGORY_STRING);        
+
+    public void logExternallyMergeNeurite(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
+        double muX = 0;
+        double muY = 0;
+        double muZ = 0;
+        TileFormat tileFormat = sampleToTileFormat.get(sampleID);
+        if (tileFormat != null) {
+            TileFormat.MicrometerXyz mxyz = tileFormat.micrometerXyzForVoxelXyz(
+                    new TileFormat.VoxelXyz(source.getX().intValue(), source.getY().intValue(), source.getZ().intValue()),
+                    CoordinateAxis.Z);
+            muX = mxyz.getX();
+            muY = mxyz.getY();
+            muZ = mxyz.getZ();
+        }
+        this.logExternalGeometricEvent(
+                sampleID, workspaceID,
+                source.getX(), source.getY(), source.getZ(),
+                (float)muX, (float)muY, (float)muZ,
+                LVV_MERGE_NEURITES_CATEGORY_STRING
+        );
     }
-    
+
+    public void logDeleteSubTree(Long sampleID, Long workspaceID, TmGeoAnnotation source) {
+        this.logGeometricEvent(sampleID, workspaceID, source, LVV_DELETE_SUBTREE_CATEGORY_STRING);
+    }
+
+    /**
+     * Capture when something has been completed.  The location should be
+     * available from the annotation. Protect caller from runtime errors.
+     *
+     * @param workspaceID which workspace was it?
+     * @param annotation annotation, bearing the location.
+     */
+    public void logEndOfOperation(Long workspaceID, TmGeoAnnotation annotation) {
+        if (annotation == null  ||  workspaceID == null) {
+            return;
+        }
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                END_OP_VOXEL_CATEGORY_STRING,
+                new ActionString(
+                        formatSingleLocationAction(
+                                annotation.getX(), annotation.getY(), annotation.getZ(),
+                                workspaceID
+                        )
+                )
+        );
+    }
+
+    /**
+     * Capture when something has been completed.  The location should be
+     * available from the annotation. Shield caller from errors.
+     *
+     * @param workspaceID which workspace was it?
+     * @param location location.
+     */
+    public void logEndOfOperation(Long workspaceID, Vec3 location) {
+        if (workspaceID == null  ||  location == null) {
+            return;
+        }
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                END_OP_VOXEL_CATEGORY_STRING,
+                new ActionString(
+                        formatSingleLocationAction(
+                                location.getX(), location.getY(), location.getZ(),
+                                workspaceID
+                        )
+                )
+        );
+    }
+
     public void logSnapshotLaunch(String labelText, Long workspaceId) {
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
+                LVV_LOGSTAMP_ID,
                 LVV_3D_LAUNCH_CATEGORY_STRING,
                 new ActionString(labelText + " workspaceId=" + workspaceId)
         );
     }
-    
+
     public void logLandmarkViewPick(AnnotationModel annotationModel, Long annotationId) {
         String action = "Unknown";
         if (annotationModel != null
@@ -177,12 +268,12 @@ public class ActivityLogHelper {
             action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleID() + ":" + annotationId;
         }
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID, 
+                LVV_LOGSTAMP_ID,
                 LVV_NAVIGATE_LANDMARK_CATEGORY_STRING,
                 new ActionString(action)
         );
     }
-    
+
     private void logGeometricEvent(Long sampleID, Long workspaceID, Double x, Double y, Double z, CategoryString category) {
         String action = formatGeoAction(x, y, z, sampleID, workspaceID);
         SessionMgr.getSessionMgr().logToolEvent(
@@ -205,6 +296,13 @@ public class ActivityLogHelper {
         logGeometricEvent(
                 sampleID, workspaceID,
                 anno.getX(), anno.getY(), anno.getZ(),
+                category);
+    }
+
+    private void logGeometricEvent(Long sampleID, Long workspaceID, Vec3 location, CategoryString category) {
+        logGeometricEvent(
+                sampleID, workspaceID,
+                location.getX(), location.getY(), location.getZ(),
                 category);
     }
 
@@ -238,6 +336,15 @@ public class ActivityLogHelper {
                 BOTH_COORDS_FMT,
                 sampleID, workspaceID,
                 muX, muY, muZ,
+                x, y, z
+        );
+        return action;
+    }
+
+    private String formatSingleLocationAction(Double x, Double y, Double z, Long workspaceID) {
+        String action = String.format(
+                SIMPLE_COORDS_FMT,
+                workspaceID,
                 x, y, z
         );
         return action;

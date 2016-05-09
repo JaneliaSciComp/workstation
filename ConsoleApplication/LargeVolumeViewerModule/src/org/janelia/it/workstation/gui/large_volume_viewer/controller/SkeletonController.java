@@ -14,6 +14,7 @@ import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -24,6 +25,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.LineEncl
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This hands off interesting driving info to skeleton.
@@ -31,6 +34,9 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
  */
 public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnotationAnchorListener,
         NextParentListener, NeuronStyleChangeListener {
+
+    private static final Logger log = LoggerFactory.getLogger(SkeletonController.class);
+
     private Skeleton skeleton;
     private List<SkeletonActor> actors = new ArrayList<>();
     private List<JComponent> updateListeners = new ArrayList<>();
@@ -42,14 +48,19 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
-    
+    private boolean skipSkeletonChange=false;
+
     private static SkeletonController instance = new SkeletonController();
     
     private Long nextParentId = -1L;
     
     private SkeletonController() {
     }
-    
+
+    public void setSkipSkeletonChange(boolean skipSkeletonChange) {
+        this.skipSkeletonChange=skipSkeletonChange;
+    }
+
     public static SkeletonController getInstance() {
         return instance;
     }
@@ -69,7 +80,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void registerForEvents(SkeletonActor actor) {
         this.actors.add(actor);
-        actor.setNextParentByID(nextParentId);        
+        actor.getModel().setNextParentByID(nextParentId);
     }
     
     public void unregister(SkeletonActor actor) {
@@ -124,18 +135,21 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.addTracedSegment(path);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
     @Override
     public void addAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
         skeleton.addTracedSegments(paths);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
     @Override
     public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
         skeleton.removeTracedSegment(path);
+        skeleton.incrementAnchorVersion();
         skeletonChanged();
     }
 
@@ -177,7 +191,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {
-            actor.clearStyles();
+            actor.getModel().clearStyles();
         }
 		skeletonChanged();
     }
@@ -187,7 +201,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void setNextParent(Long id) {
         nextParentId = id;
         for (SkeletonActor actor: actors) {
-            actor.setNextParentByID(id);
+            actor.getModel().setNextParentByID(id);
         }
         fireComponentUpdate();
     }
@@ -195,7 +209,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void setNextParent(Anchor parent) {
         for (SkeletonActor actor : actors) {
-            actor.setNextParent(parent);
+            actor.getModel().setNextParent(parent);
         }
         // Need not rebuild everything, each time the anchor is selected.
         //   ** this would make the whole display very slow ** updateMeshDrawActor();
@@ -205,7 +219,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         for (SkeletonActor actor: actors) {
-            actor.changeNeuronStyle(neuron, style);
+            actor.getModel().changeNeuronStyle(neuron, style);
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
@@ -215,7 +229,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
         for (TmNeuron neuron: neuronStyleMap.keySet()) {
             for (SkeletonActor actor: actors) {
-                actor.changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
+                actor.getModel().changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
             }
         }
         refreshMeshDrawUpdateTimer();
@@ -227,11 +241,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public void skeletonChanged() {
-        for (SkeletonActor actor: actors) {
-            actor.updateAnchors();
+        if (!skipSkeletonChange) {
+            for (SkeletonActor actor : actors) {
+                actor.getModel().updateAnchors();
+            }
+            refreshMeshDrawUpdateTimer();
+            fireComponentUpdate();
+            log.info("anchor time=" + TraceMode.getTimerMs());
         }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -323,6 +340,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         @Override
         public void anchorMoved(Anchor anchor) {
             annoMgr.moveAnchor(anchor);
+            skeleton.incrementAnchorVersion();
             skeletonChanged();
         }
         

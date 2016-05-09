@@ -7,6 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -48,6 +49,10 @@ implements MouseMode, KeyListener
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
     private Logger logger = LoggerFactory.getLogger(TraceMode.class);
+
+	private static long time1;
+	public static void startTimer() { time1=new Date().getTime();}
+	public static String getTimerMs() { return new Long(new Date().getTime() - time1).toString(); }
 	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
@@ -97,7 +102,7 @@ implements MouseMode, KeyListener
 	
 	private void appendAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
-		skeleton.addAnchorAtXyz(xyz, skeletonActor.getNextParent());
+		skeleton.addAnchorAtXyz(xyz, skeletonActor.getModel().getNextParent());
 	}
 	
 	private void seedAnchor(Vec3 xyz) {
@@ -114,7 +119,7 @@ implements MouseMode, KeyListener
 			// System.out.println("Trace click "+xyz);
             
             // TODO - nudge location to voxel center
-            
+            TraceMode.startTimer();
 			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
@@ -130,7 +135,7 @@ implements MouseMode, KeyListener
 		// We might be moving an anchor
 		if (dragAnchor != null) {
 			Vec3 loc = worldFromPixel(event.getPoint());
-			skeletonActor.lightweightPlaceAnchor(dragAnchor, loc);
+			skeletonActor.getModel().lightweightPlaceAnchor(dragAnchor, loc);
 		}
 		// Middle button drag to pan
 		if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
@@ -186,9 +191,9 @@ implements MouseMode, KeyListener
 		if ((skeletonActor != null) && closest != hoverAnchor) {
 			// test for closest == null because null will come back invisible,
 			//	and we need hover-->null to unhover
-			if (closest == null || skeletonActor.anchorIsVisible(closest)){
+			if (closest == null || skeletonActor.getModel().anchorIsVisible(closest)){
 				hoverAnchor = closest;
-				skeletonActor.setHoverAnchor(hoverAnchor);
+				skeletonActor.getModel().setHoverAnchor(hoverAnchor);
 			}
 		}
 
@@ -292,7 +297,7 @@ implements MouseMode, KeyListener
                     }));
                     ///// Popup menu items that require an anchor under the mouse /////
                     Anchor hover = getHoverAnchor();
-                    Anchor parent = skeletonActor.getNextParent();
+                    Anchor parent = skeletonActor.getModel().getNextParent();
                     result.add(null); // separator
                     if (hover == null) { // No anchor under mouse? Maybe user wants to create a new anchor.
                         ///// Popup menu items that do not require an anchor under the mouse /////
@@ -481,7 +486,7 @@ implements MouseMode, KeyListener
                             result.add(new JMenuItem(new AbstractAction("Center on current parent anchor") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
-                                    camera.setFocus(skeletonActor.getNextParent().getLocation());
+                                    camera.setFocus(skeletonActor.getModel().getNextParent().getLocation());
                                 }
                             }));                    		
                     	}
@@ -515,7 +520,7 @@ implements MouseMode, KeyListener
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
-		Anchor nextParent = skeletonActor.getNextParent();
+		Anchor nextParent = skeletonActor.getModel().getNextParent();
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:

@@ -37,7 +37,13 @@ public class InterceptingEventQueue extends EventQueue implements MessageSource 
                 }
             }
         }
-        super.dispatchEvent(event);
+        try {
+            super.dispatchEvent(event);
+        } catch (Throwable t) {
+            System.err.println("Error happened in intercepting event queue.  Suppressing for continuity.  Some event has gone awry.  Here's the memory free value." + Runtime.getRuntime().freeMemory());
+            System.err.println("Event at fault is: " + event.getClass().toString());
+            t.printStackTrace();
+        }
     }
     
     @Override
