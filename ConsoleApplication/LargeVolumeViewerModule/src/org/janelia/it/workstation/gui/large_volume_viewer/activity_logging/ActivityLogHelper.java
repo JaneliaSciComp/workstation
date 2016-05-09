@@ -22,9 +22,9 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
  */
 public class ActivityLogHelper {
     // sample:workspace:micronX,micronY,micronZ:voxX,voxY,voxZ:time
-    public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f:%d";
+    public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
     // sample:workspace:X,Y,Z:time
-    public static final String SIMPLE_COORDS_FMT = "%d:%5.3f,%5.3f,%5.3f:%d";
+    public static final String SIMPLE_COORDS_FMT = "%d:%5.3f,%5.3f,%5.3f";
 
     private static final ActivityLogHelper instance = new ActivityLogHelper();
 
@@ -325,8 +325,7 @@ public class ActivityLogHelper {
                 BOTH_COORDS_FMT,
                 sampleID, workspaceID,
                 muX, muY, muZ,
-                x, y, z,
-                new Date().getTime()
+                x, y, z
         );
         return action;
     }
@@ -337,8 +336,7 @@ public class ActivityLogHelper {
                 BOTH_COORDS_FMT,
                 sampleID, workspaceID,
                 muX, muY, muZ,
-                x, y, z,
-                new Date().getTime()
+                x, y, z
         );
         return action;
     }
@@ -347,8 +345,7 @@ public class ActivityLogHelper {
         String action = String.format(
                 SIMPLE_COORDS_FMT,
                 workspaceID,
-                x, y, z,
-                new Date().getTime()
+                x, y, z
         );
         return action;
     }
