@@ -119,6 +119,8 @@ public class DomainMgr {
     public Preference getPreference(String category, String key) {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
+            log.info("AAAAAA");
+            log.info(subjectFacade.getPreferences().toString());
             for(Preference preference : subjectFacade.getPreferences()) {
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
             }

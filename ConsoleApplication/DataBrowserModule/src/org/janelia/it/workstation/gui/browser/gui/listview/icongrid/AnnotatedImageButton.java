@@ -11,11 +11,14 @@ import java.awt.dnd.DragGestureEvent;
 import java.awt.dnd.DragGestureListener;
 import java.awt.dnd.DragSource;
 import java.awt.dnd.MouseDragGestureRecognizer;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
 
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -58,6 +61,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     protected final ImageModel<T,S> imageModel;
     protected final SelectionModel<T,S> selectionModel;
     protected final T imageObject;
+    protected final JCheckBox editMode;
     protected List<Annotation> annotations;
     protected final JComponent innerComponent;
     
@@ -73,9 +77,8 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         }
     }
 
-    protected AnnotatedImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
-
-        this.imageObject = imageObject;
+    protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, final ImagesPanel<T,S> imagesPanel) {
+        this.imageObject = imgObject;
         this.imageModel = imageModel;
         this.selectionModel = selectionModel;
         this.imagesPanel = imagesPanel;
@@ -112,9 +115,27 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
 
+        editMode = new JCheckBox();
+        editMode.setHorizontalAlignment(SwingConstants.LEFT);
+        editMode.setVerticalAlignment(SwingConstants.NORTH);
+        editMode.setVisible(false);
+        editMode.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                imagesPanel.updateEditSelectModel(imageObject, editMode.isSelected());
+            }
+        });
+
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 0, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 0;
+        buttonPanel.add(editMode, c);
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
@@ -122,7 +143,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(0, 0, 5, 0);
+        c.insets = new Insets(0, 0, 10, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
@@ -244,6 +265,18 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
     public T getUserObject() {
         return imageObject;
+    }
+
+    public void toggleEditMode (boolean mode) {
+        editMode.setVisible(mode);
+    }
+
+    public void setEditModeValue (boolean selection) {
+        editMode.setSelected(selection);
+    }
+
+    public boolean getEditModeValue () {
+        return editMode.isSelected();
     }
 
     public synchronized void setImageSize(int maxWidth, int maxHeight) {

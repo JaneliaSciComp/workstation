@@ -69,4 +69,28 @@ public interface AnnotatedDomainObjectListViewer {
      * Called when the viewer loses focus.
      */
     public void deactivate();
+
+    /**
+     * Called on the specific viewer to toggle edit mode
+     */
+    public void toggleEditMode(boolean editMode);
+
+    /**
+     * Configure the edit selection model to use in the viewer.
+     * @param editSelectionModel selection model
+     */
+    public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel);
+
+    /**
+     * Returns the current edit selections.
+     * @return selection model
+     */
+    public DomainObjectSelectionModel getEditSelectionModel();
+
+    /**
+     * subgroup of edit items to toggle selection; might want to consider swapping selection model to use checkboxes instead
+     * @param domainObjects list of domain objects for which to change edit selection
+     * @param select select if true, deselect if false
+     */
+    public void selectEditObjects(List<DomainObject> domainObjects, boolean select);
 }

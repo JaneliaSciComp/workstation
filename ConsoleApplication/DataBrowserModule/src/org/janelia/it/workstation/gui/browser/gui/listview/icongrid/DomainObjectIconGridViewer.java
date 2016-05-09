@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject,Reference> implements AnnotatedDomainObjectListViewer {
-    
+
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
     private ResultSelectionButton resultButton;
@@ -58,6 +58,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
+    private DomainObjectSelectionModel editSelectionModel;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
         
@@ -182,7 +183,20 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
     }
-    
+
+    @Override
+    public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
+        log.info("selectEditObjects(domainObjects.size={},select={})", domainObjects.size(), select);
+
+        if (domainObjects.isEmpty()) {
+            return;
+        }
+
+        if (select) {
+            this.selectEditObjects(domainObjects);
+        }
+    }
+
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll) {
         log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={})",domainObjects.size(),select,clearAll);
@@ -237,11 +251,11 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
             if (preference!=null) {
-                resultButton.setResultDescriptor(new ResultDescriptor(preference.getValue()));
+                resultButton.setResultDescriptor(new ResultDescriptor((String)preference.getValue()));
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
             if (preference2!=null) {
-                typeButton.setImageType(preference2.getValue());
+                typeButton.setImageType((String)preference2.getValue());
             }
         }
         
@@ -258,6 +272,22 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void deactivate() {
+    }
+
+    @Override
+    public void toggleEditMode(boolean editMode) {
+        imagesPanel.setEditMode(editMode);
+    }
+
+    @Override
+    public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
+        this.editSelectionModel = editSelectionModel;
+        imagesPanel.setEditSelectionModel(editSelectionModel);
+    }
+
+    @Override
+    public DomainObjectSelectionModel getEditSelectionModel() {
+        return editSelectionModel;
     }
 
     @Override
@@ -301,7 +331,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }
     }
-    
+
     @Override
     protected void updateHud(boolean toggle) {
 

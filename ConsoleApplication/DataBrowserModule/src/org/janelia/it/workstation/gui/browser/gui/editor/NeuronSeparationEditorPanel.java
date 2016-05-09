@@ -3,27 +3,44 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dSignalFileLoader;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
@@ -44,6 +61,7 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +69,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+
 
 /**
  * An editor which can display the neuron separations for a given sample result. 
@@ -67,12 +86,17 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     // UI Elements
     private final ConfigPanel configPanel;
     private final DropDownButton resultButton;
-    private final JToggleButton editModeButton;
+    private final JButton editModeButton;
     private final JButton openInNAButton;
+    private final JButton editOkButton;
+    private final JButton editCancelButton;
     private final PaginatedResultsPanel resultsPanel;
     
     // State
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
+    private boolean hideFragments = false;
+    private boolean editModeEnabled = false;
     private NeuronSeparation separation;
     
     // Results
@@ -88,7 +112,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         
         resultButton = new DropDownButton();
         
-        editModeButton = new JToggleButton();
+        editModeButton = new JButton();
         editModeButton.setIcon(Icons.getIcon("page_white_edit.png"));
         editModeButton.setFocusable(false);
         editModeButton.setToolTipText("Edit the visibility of the fragments in the current separation");
@@ -96,6 +120,27 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             @Override
             public void actionPerformed(ActionEvent e) {
                 enterEditMode();
+            }
+        });
+        editOkButton = new JButton();
+        editOkButton.setIcon(Icons.getIcon("button_ok_16x16.png"));
+        editOkButton.setFocusable(false);
+        editOkButton.setVisible(false);
+        editOkButton.setToolTipText("Save your visibility preferences");
+        editOkButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveVisibilities();
+            }
+        });
+        editCancelButton = new JButton();
+        editCancelButton.setIcon(Icons.getIcon("cancel.png"));
+        editCancelButton.setVisible(false);
+        editCancelButton.setToolTipText("Save your visibility preferences");
+        editCancelButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cancelEditMode();
             }
         });
         
@@ -113,9 +158,28 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         configPanel = new ConfigPanel(true);
         configPanel.addTitleComponent(openInNAButton, true, true);
         configPanel.addConfigComponent(resultButton);
-        // TODO: make this visible once it's implemented  
-        //topPanel.addConfigComponent(editModeButton);
-        
+        configPanel.addConfigComponent(editModeButton);
+        configPanel.addConfigComponent(editOkButton);
+        configPanel.addConfigComponent(editCancelButton);
+
+        JCheckBox enableVisibilityCheckBox = new JCheckBox(new AbstractAction("Hide/Unhide") {
+            public void actionPerformed(ActionEvent e) {
+                JCheckBox cb = (JCheckBox) e.getSource();
+                hideFragments = cb.isSelected();
+                updateUI();
+            }
+        });
+        configPanel.addConfigComponent(enableVisibilityCheckBox);
+        openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
+        openInNAButton.setFocusable(false);
+        openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
+        openInNAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                openInNA();
+            }
+        });
+
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
             protected ResultPage getPage(SearchResults searchResults, int page) throws Exception {
@@ -123,10 +187,60 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         };
         resultsPanel.addMouseListener(new MouseForwarder(this, "PaginatedResultsPanel->NeuronSeparationEditorPanel"));
+        resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
     
     private void enterEditMode() {
-        // TODO: implement editing mode
+        List<DomainObject> neuronFrags = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
+
+        // get the visibility preference from the domainmgr
+        Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                Long.toString(separation.getId()));
+        List<DomainObject> visibleNeuronFrags = new ArrayList<DomainObject>();
+        if (neuronSepVisibility!=null) {
+            Set<Long> visibleFragSet = new HashSet((List)neuronSepVisibility.getValue());
+            for (int i=0; i<neuronFrags.size(); i++) {
+                if (visibleFragSet.contains(neuronFrags.get(i).getId())) {
+                    visibleNeuronFrags.add(neuronFrags.get(i));
+                }
+            }
+            resultsPanel.getViewer().selectEditObjects(visibleNeuronFrags, true);
+        }
+
+        // show checkboxes for all items
+        editModeButton.setVisible(false);
+        editOkButton.setVisible(true);
+        editCancelButton.setVisible(true);
+        editModeEnabled = true;
+        resultsPanel.getViewer().toggleEditMode(true);
+
+    }
+
+
+    private void cancelEditMode() {
+        // show checkboxes for all items
+        editModeButton.setVisible(true);
+        editOkButton.setVisible(false);
+        editCancelButton.setVisible(false);
+        editModeEnabled = false;
+        resultsPanel.getViewer().toggleEditMode(false);
+    }
+
+    private void saveVisibilities() {
+        Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                Long.toString(separation.getId()));
+        if (neuronSepVisibility==null) {
+            neuronSepVisibility = new Preference();
+            neuronSepVisibility.setCategory(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY);
+            neuronSepVisibility.setKey(Long.toString(separation.getId()));
+        }
+        List<Long> visibilities = new ArrayList<>();
+        List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
+        for (int i=0; i<visibleFragments.size(); i++) {
+            visibleFragments.get(i).getTargetId();
+        }
+        editModeEnabled = false;
+        resultsPanel.getViewer().toggleEditMode(false);
     }
 
     private void openInNA() {
@@ -214,6 +328,28 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 }
                 else {
                     domainObjects = model.getDomainObjects(separation.getFragmentsReference());
+                    // TODO: set up global preference for visibility, allow users to select other user's preferences
+
+                    // find the list of visibilities for this separation Id
+                    if (hideFragments || editModeEnabled) {
+                        Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                                Long.toString(separation.getId()));
+                        if (neuronSepVisibility!=null) {
+                            List<Boolean> fragmentVis = (List)neuronSepVisibility.getValue();
+                            for (int i=domainObjects.size()-1; i>=0; i--) {
+                                NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
+
+                                // remove items that are hidden
+                                if (!fragmentVis.get(i).booleanValue()) {
+                                    domainObjects.remove(i);
+                                }
+
+                            }
+                        }
+
+                    }
+
+
                     annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
                 }
                 log.info("Showing "+domainObjects.size()+" neurons");

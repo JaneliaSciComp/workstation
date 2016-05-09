@@ -67,6 +67,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     // Model
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
+    private SelectionModel<T,S> editSelectionModel;
 
     // State
     private boolean tagTable = false;
@@ -127,6 +128,10 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     
     public void setSelectionModel(SelectionModel<T, S> selectionModel) {
         this.selectionModel = selectionModel;
+    }
+
+    public void setEditSelectionModel(SelectionModel<T, S> editSelectionModel) {
+        this.editSelectionModel = editSelectionModel;
     }
     
     /**
@@ -429,6 +434,12 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
             ensureCorrectAnnotationView(button);
         }
     }
+
+    public void setEditMode(boolean mode) {
+        for (final AnnotatedImageButton<T,S> button : buttons.values()) {
+            button.toggleEditMode(mode);
+        }
+    }
     
     void ensureCorrectAnnotationView(final AnnotatedImageButton<T, S> button) {
         if (tagTable) {
@@ -464,6 +475,23 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
             return true;
         }
         return false;
+    }
+
+    private boolean setEditSelection(final AnnotatedImageButton<T,S> button, boolean selection) {
+        updateEditSelectModel(button.getUserObject(), selection);
+        if (button.getEditModeValue() != selection) {
+            button.setEditModeValue(selection);
+            return true;
+        }
+        return false;
+    }
+
+    public void updateEditSelectModel(T imgObject, boolean select) {
+        if (select) {
+            editSelectionModel.select(imgObject, false, true);
+        } else {
+            editSelectionModel.deselect(imgObject, true);
+        }
     }
 
     public void setSelection(T selectedObject, boolean selection, boolean clearAll) {
@@ -508,6 +536,16 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
             }
             else if (clearAll) {
                 setSelection(button, !selection);
+            }
+        }
+    }
+
+    public void setEditSelection(List<S> selectedIds, boolean editSelection) {
+        for (AnnotatedImageButton<T,S> button : buttons.values()) {
+            T imageObject = button.getUserObject();
+            S imageId = imageModel.getImageUniqueId(imageObject);
+            if (selectedIds.contains(imageId)) {
+                setEditSelection(button, editSelection);
             }
         }
     }

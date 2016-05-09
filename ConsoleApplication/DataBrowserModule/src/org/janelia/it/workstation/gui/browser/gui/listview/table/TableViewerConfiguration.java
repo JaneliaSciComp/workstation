@@ -65,7 +65,7 @@ public class TableViewerConfiguration {
         }
         else {
             try {
-                config = TableViewerConfiguration.deserialize(columnsPreference.getValue());
+                config = TableViewerConfiguration.deserialize((String)columnsPreference.getValue());
             }
             catch (Exception e) {
                 throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());

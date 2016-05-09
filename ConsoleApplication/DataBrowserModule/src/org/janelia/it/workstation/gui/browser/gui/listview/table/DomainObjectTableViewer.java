@@ -290,7 +290,31 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     public void deactivate() {
     }
-    
+
+    // TODO: implement this so things like neuron fragments can be edited in table mode
+    @Override
+    public void toggleEditMode(boolean editMode) {
+
+    }
+
+    // TODO: implement this so things like neuron fragments can be edited in table mode
+    @Override
+    public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
+
+    }
+
+    // TODO: implement this so things like neuron fragments can be edited in table mode
+    @Override
+    public DomainObjectSelectionModel getEditSelectionModel() {
+        return null;
+    }
+
+    // TODO: implement this so things like neuron fragments can be edited in table mode
+    @Override
+    public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
+
+    }
+
     @Override
     public Object getValue(DomainObject object, String columnName) {
         try {

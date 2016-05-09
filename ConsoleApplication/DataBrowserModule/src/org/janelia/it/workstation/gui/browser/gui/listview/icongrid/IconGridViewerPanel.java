@@ -60,7 +60,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
 
     // Main components
     private IconGridViewerToolbar toolbar;
-    private ImagesPanel<T,S> imagesPanel;
+    protected ImagesPanel<T,S> imagesPanel;
     private FindToolbar findToolbar;
 
     // These members deal with the context and entities within it
@@ -437,6 +437,15 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel implements FindCon
         }
         imagesPanel.setSelectionByUniqueIds(ids, true, clearAll);
         selectionModel.select(objects, clearAll, true);
+    }
+
+    protected void selectEditObjects(List<T> objects) {
+        if (objects==null) return;
+        List<S> ids = new ArrayList<>();
+        for(T object : objects) {
+            ids.add(getImageModel().getImageUniqueId(object));
+        }
+        imagesPanel.setEditSelection(ids, true);
     }
     
     protected void deselectObjects(List<T> objects) {
