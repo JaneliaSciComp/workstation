@@ -9,21 +9,27 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * This viewer displays text. Override the getText method to define where the text comes from.
@@ -58,19 +64,7 @@ public abstract class TextViewer extends Viewer {
 
         textArea.addMouseListener(new MouseForwarder(this, "JTextPane->ErrorViewer"));
 
-        sessionModelListener = new SessionModelListener() {
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
+        sessionModelListener = new SessionModelAdapter() {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if (key == "console.serverLogin") {

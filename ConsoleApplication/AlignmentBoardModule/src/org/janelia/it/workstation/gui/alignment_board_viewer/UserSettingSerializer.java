@@ -7,8 +7,8 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+//import org.janelia.it.jacs.model.entity.Entity;
+//import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 public class UserSettingSerializer implements Serializable {
     private static final String SELECTION_BOUNDS_SETTING = "SelectionBounds";
@@ -35,7 +37,7 @@ public class UserSettingSerializer implements Serializable {
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
 
     private final SerializationAdapter serializationAdapter;
-    private Entity alignmentBoard;
+    private AlignmentBoard alignmentBoard;
 
     private final Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
 
@@ -46,7 +48,7 @@ public class UserSettingSerializer implements Serializable {
      * @param alignmentBoard what to look at.
      * @return T: found string; F: no settings stored before this call.
      */
-    public static boolean settingsExist( Entity alignmentBoard ) {
+    public static boolean settingsExist( AlignmentBoard alignmentBoard ) {
         return getSettingsString( alignmentBoard ) != null;
     }
 
@@ -58,7 +60,7 @@ public class UserSettingSerializer implements Serializable {
      * @param alignmentBoardSettings for user-click settings.
      */
     public UserSettingSerializer(
-            Entity alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
+            AlignmentBoard alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
         serializationAdapter = new DirectStateSerializationAdapter( volumeModel, alignmentBoardSettings );
         this.alignmentBoard = alignmentBoard;
         logger.debug("Serializer: with VolumeModel {}, with cam3D {}.", volumeModel, volumeModel.getCamera3d() );
@@ -82,15 +84,15 @@ public class UserSettingSerializer implements Serializable {
             // This excessive length
             if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
                 logger.warn( "Abandoning the serialized string {}.", settingsString );
-                // Write back.
-                ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
                 settingsString = "";
             }
             logger.info( "Save-back Setting string: {}.", settingsString );
 
             // Write back.
-            ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
-
+            alignmentBoard.setEncodedUserSettings(settingsString);
+            //DomainMgr.getDomainMgr().getModel().create(alignmentBoard);
+            //  TODO use David's new generic or otherwise, method.
+// **** ******** ******** !!!!!!!!!!
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
@@ -350,13 +352,8 @@ public class UserSettingSerializer implements Serializable {
 
     }
 
-    private static String getSettingsString( Entity alignmentBoard ) {
-        // Read up.
-        String settingString =
-                alignmentBoard.getValueByAttributeName(
-                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
-                );
-        return settingString;
+    private static String getSettingsString( AlignmentBoard alignmentBoard ) {
+        return alignmentBoard.getEncodedUserSettings();
     }
 
     /** Sets a neuron-cutoff constraint.  Here for purpose of non-redundancy. */

@@ -1,0 +1,12 @@
+mongoHost: mongo-db
+mongoPort: 27017
+mongoDatabase: jacs
+mongoUsername: flyportal
+mongoPassword: flyportal
+
+swagger:
+  resourcePackage: org.janelia.workstation.microjacsapi
+  title: Micro JACS API
+  description: RESTful Microservice to the JAnelia Computational Services (JACS)
+  contact: rokickik@janelia.hhmi.org
+  

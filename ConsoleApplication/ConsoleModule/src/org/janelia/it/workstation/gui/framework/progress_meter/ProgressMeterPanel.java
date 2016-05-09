@@ -171,7 +171,6 @@ public class ProgressMeterPanel extends JPanel {
         }
     }
         
-    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
         log.debug("Worker started: {}",e.getWorker().getName());
@@ -179,7 +178,6 @@ public class ProgressMeterPanel extends JPanel {
         updateMenuLabel(true);
     }
 
-    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerChangedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
@@ -190,7 +188,6 @@ public class ProgressMeterPanel extends JPanel {
         }
     }
 
-    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());

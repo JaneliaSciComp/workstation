@@ -1,9 +1,55 @@
 package org.janelia.it.workstation.shared.util;
 
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.HeadlessException;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.Transparency;
+import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.PixelGrabber;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.*;
+import loci.formats.in.APNGReader;
+import loci.formats.in.BMPReader;
+import loci.formats.in.GIFReader;
+import loci.formats.in.JPEGReader;
+import loci.formats.in.TiffReader;
+
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -14,30 +60,11 @@ import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.openide.windows.WindowManager;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.ColorModel;
-import java.awt.image.PixelGrabber;
-import java.io.*;
-import java.math.BigDecimal;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.nio.file.Files;
-import org.openide.windows.WindowManager;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.
@@ -755,10 +782,65 @@ public class Utils {
 
         return totalBytesWritten;
     }
+    
+    public static void runOffEDT(final Runnable runnable, final Runnable callbackOnEDT) {
+        try {
+            if (!SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+                SwingUtilities.invokeLater(callbackOnEDT);
+            }
+            else {
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        if (runnable!=null) runnable.run();
+                    }
+                    @Override
+                    protected void hadSuccess() {
+                        if (callbackOnEDT!=null) callbackOnEDT.run();
+                    }
+                    @Override
+                    protected void hadError(Throwable e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                };
+                worker.execute();
+            }
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+    }
 
     private static BigDecimal divideAndScale(double numerator,
                                              double denominator,
                                              int scale) {
         return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
+    }
+
+    public static boolean hasAncestorWithType(Component component, Class<?> clazz) {
+        if (clazz==null) return false;
+        Component c = component;
+        while (c!=null) {
+            log.trace("check if {} is assignable from {}",clazz.getName(),c.getClass().getName());
+            if (clazz.isAssignableFrom(c.getClass())) {
+                return true;
+            }
+            c = c.getParent();
+        }
+        return false;
+    }
+
+    public static <T> T getAncestorWithType(Component component, Class<T> clazz) {
+        if (clazz==null) return null;
+        Component c = component;
+        while (c!=null) {
+            log.trace("check if {} is assignable from {}",clazz.getName(),c.getClass().getName());
+            if (clazz.isAssignableFrom(c.getClass())) {
+                return (T)c;
+            }
+            c = c.getParent();
+        }
+        return null;
     }
 }

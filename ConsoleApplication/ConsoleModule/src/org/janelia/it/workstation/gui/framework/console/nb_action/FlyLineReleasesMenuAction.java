@@ -13,16 +13,16 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.Presenter;
 
-@ActionID(
-        category = "Services",
-        id = "FlyLineReleasesMenuAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_FlyLineReleasesMenuAction",
-        lazy = false
-)
-@ActionReference(path = "Menu/Services", position = 200)
-@Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")
+//@ActionID(
+//        category = "Services",
+//        id = "FlyLineReleasesMenuAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_FlyLineReleasesMenuAction",
+//        lazy = false
+//)
+//@ActionReference(path = "Menu/Services", position = 200)
+//@Messages("CTL_FlyLineReleasesMenuAction=Fly Line Releases")
 public final class FlyLineReleasesMenuAction extends AbstractAction implements Presenter.Menu {
     
     public static final String RELEASES_ITEM = "Fly Line Releases";

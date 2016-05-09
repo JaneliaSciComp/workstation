@@ -150,7 +150,7 @@ public class Icons {
     	imageCache.put(type, bi);
     	return bi;
     }
-    
+
     /**
      * Returns an icon which represents the given entity. If the entity is an Ontology Element then this method
      * delegates to getOntologyIcon(). 

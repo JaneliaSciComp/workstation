@@ -50,6 +50,7 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
 
     @Override
     public Entity getErrorOntology() throws Exception{
-        return EJBFactory.getRemoteAnnotationBean().getErrorOntology();
+       return null;
+        //return EJBFactory.getRemoteAnnotationBean().getErrorOntology();
     }
 }

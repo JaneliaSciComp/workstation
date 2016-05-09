@@ -494,13 +494,13 @@ public class EntityDetailsPanel extends JPanel implements Refreshable {
 
             @Override
             protected void doStuff() throws Exception {
-                subjects = ModelMgr.getModelMgr().getSubjects();
+                /*subjects = ModelMgr.getModelMgr().getSubjects();
                 Collections.sort(subjects, new Comparator<Subject>() {
                     @Override
                     public int compare(Subject o1, Subject o2) {
                         return ComparisonChain.start().compare(o1.getKey(), o2.getKey()).result();
                     }
-                });
+                });*/
             }
 
             @Override

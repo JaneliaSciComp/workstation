@@ -27,16 +27,16 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 10)
+@TopComponent.Registration(mode = "explorer", openAtStartup = false, position = 10)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityExplorerTopComponent")
-@ActionReference(path = "Menu/Window", position = 10)
+@ActionReference(path = "Menu/Window", position = 450)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityExplorerAction",
         preferredID = EntityExplorerTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_EntityExplorerAction=Data Explorer",
-    "CTL_EntityExplorerTopComponent=Data Explorer",
+    "CTL_EntityExplorerAction=Legacy Data Explorer",
+    "CTL_EntityExplorerTopComponent=Legacy Data Explorer",
     "HINT_EntityExplorerTopComponent=Browse the data"
 })
 public final class EntityExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
@@ -51,7 +51,6 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
         initComponents();
         setName(Bundle.CTL_EntityExplorerTopComponent());
         setToolTipText(Bundle.HINT_EntityExplorerTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);   
     }
     
     /**

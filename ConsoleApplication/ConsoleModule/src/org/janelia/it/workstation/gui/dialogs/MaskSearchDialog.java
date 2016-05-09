@@ -86,6 +86,7 @@ public class MaskSearchDialog extends ModalDialog {
         }
         else {
             folderField.setText(SessionMgr.getUsername()+TOP_LEVEL_FOLDER_NAME);
+            //folderField.setText(SessionMgr-UserName+TOP_LEVEL_FOLDER_NAME);
         }
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
 

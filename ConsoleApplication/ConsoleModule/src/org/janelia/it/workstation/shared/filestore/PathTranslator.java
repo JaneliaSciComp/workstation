@@ -1,20 +1,20 @@
 package org.janelia.it.workstation.shared.filestore;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.hibernate.Hibernate;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModel;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModel;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.web.FileProxyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * Translate between paths to various mounted file resources.
@@ -99,7 +99,7 @@ public class PathTranslator {
             if (entityData.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
                 String path = entityData.getValue();
                 try {
-                    String url = FileProxyService.getProxiedFileUrl(path).toString();
+                    String url = getProxiedFileUrl(path).toString();
                     entityData.setValue(url);
                 }
                 catch (MalformedURLException e) {
@@ -128,5 +128,10 @@ public class PathTranslator {
             return PathTranslator.JACS_DATA_PATH_WINDOWS;
         }
         return "";
+    }
+    
+    // TODO: move this somewhere. It used to be in the FileProxyService before NG refactoring madness. 
+    public static URL getProxiedFileUrl(String standardPath) throws MalformedURLException {
+        return new URL("http://localhost:40001/webdav"+standardPath);
     }
 }

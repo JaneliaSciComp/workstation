@@ -23,6 +23,10 @@ public abstract class OntologyElementAction implements Action {
     public OntologyElement getOntologyElement() {
         return element;
     }
+    
+    public Long getElementId() {
+        return element.getId();
+    }
 
     public String getUniqueId() {
         return uniqueId;

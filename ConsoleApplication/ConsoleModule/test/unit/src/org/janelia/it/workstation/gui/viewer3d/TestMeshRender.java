@@ -1,21 +1,26 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
-import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
-import org.janelia.it.workstation.gui.viewer3d.mesh.MeshViewer;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.WorkstationEnvironment;
+import org.janelia.it.workstation.gui.browser.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
+import org.janelia.it.workstation.gui.viewer3d.mesh.MeshViewer;
+import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.TestCategories;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 
 /**
  * Testing class - a regression test vehicle, for looking at mesh rendering over existing volumes.

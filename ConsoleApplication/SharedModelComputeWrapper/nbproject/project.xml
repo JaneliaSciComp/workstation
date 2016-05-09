@@ -26,11 +26,22 @@
                 <package>org.janelia.it.jacs.model.collections</package>
                 <package>org.janelia.it.jacs.model.common</package>
                 <package>org.janelia.it.jacs.model.domain</package>
+                <package>org.janelia.it.jacs.model.domain.compartments</package>
+                <package>org.janelia.it.jacs.model.domain.enums</package>
+                <package>org.janelia.it.jacs.model.domain.gui.alignment_board</package>
+                <package>org.janelia.it.jacs.model.domain.gui.search</package>
+                <package>org.janelia.it.jacs.model.domain.gui.search.criteria</package>
+                <package>org.janelia.it.jacs.model.domain.interfaces</package>
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
+                <package>org.janelia.it.jacs.model.domain.sample</package>
+                <package>org.janelia.it.jacs.model.domain.screen</package>
+                <package>org.janelia.it.jacs.model.domain.support</package>
+                <package>org.janelia.it.jacs.model.domain.workspace</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
                 <package>org.janelia.it.jacs.model.entity.json</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
+                <package>org.janelia.it.jacs.model.jobs</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
                 <package>org.janelia.it.jacs.model.ontology.types</package>
                 <package>org.janelia.it.jacs.model.sage</package>
@@ -96,10 +107,12 @@
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.sample_discovery</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
+                <package>org.janelia.it.jacs.shared.security</package>
                 <package>org.janelia.it.jacs.shared.solr</package>
                 <package>org.janelia.it.jacs.shared.swc</package>
                 <package>org.janelia.it.jacs.shared.tasks</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
+                <package>org.janelia.it.jacs.shared.utils.domain</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
                 <package>org.janelia.it.jacs.shared.utils.zeiss</package>

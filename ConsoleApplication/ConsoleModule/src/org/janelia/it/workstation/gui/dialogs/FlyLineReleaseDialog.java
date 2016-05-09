@@ -38,6 +38,7 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.ISO8601Utils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DataSetComboBoxRenderer;
@@ -46,8 +47,6 @@ import org.janelia.it.workstation.gui.util.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
-
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
 
 import de.javasoft.swing.DateComboBox;
 import javax.swing.JCheckBox;
@@ -133,7 +132,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
         }
 
         boolean editable = releaseEntity == null;
-        String releaseOwnerKey = releaseEntity == null ? SessionMgr.getSubjectKey() : releaseEntity.getOwnerKey();
+        String releaseOwnerKey = releaseEntity.getOwnerKey();
 
         attrPanel.removeAll();
 
@@ -229,6 +228,7 @@ public class FlyLineReleaseDialog extends ModalDialog {
                     if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
                         continue;
                     }
+                    
                     subjects.add(subject);
                     subjectMap.put(subject.getKey(), subject);
                 }

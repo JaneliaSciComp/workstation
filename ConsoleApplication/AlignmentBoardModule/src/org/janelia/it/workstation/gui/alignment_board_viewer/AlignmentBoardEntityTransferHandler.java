@@ -9,7 +9,6 @@ import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
@@ -21,6 +20,7 @@ import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
 import java.util.List;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,6 +29,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
  * Time: 3:19 PM
  *
  * Overriding the transfer handler, to enforce drag-prohibit earlier.
+ * @deprecated not suitable for Domain Object drag-and-drop.
  */
 public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
     private static final int MAX_FRAGMENT_CAPACITY = 20000;
@@ -57,7 +58,13 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
 
                 // Need check for alignment context compatibility.
                 AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-                Entity abEntity = abContext.getInternalEntity();
+                Entity abEntity = null; //abContext.getInternalEntity();
+                
+                /*
+                 * This will break.  Leaving code in case code can be reused
+                 * for DomainObject.
+                 */
+                
                 List<RootedEntity> rootedEntities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
                 AlignmentContext standardContext = new AlignmentContext(
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
@@ -78,7 +85,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                 rtnVal = false;
 
                 for ( RootedEntity rootedEntity: rootedEntities ) {
-                    if ( abContext.isAcceptedType(rootedEntity.getType()) ) {
+                    if ( abContext.isAcceptedType(null)) {   // *** !!! Plug in the Domain Object
                         typeIsFragment = rootedEntity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
                         typeIsSample = rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE);
                         typeIsRef = rootedEntity.getType().equals(EntityConstants.TYPE_IMAGE_3D) && rootedEntity.getName().startsWith("Reference");

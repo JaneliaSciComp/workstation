@@ -1,20 +1,6 @@
 package org.janelia.it.workstation.gui.framework.tool_manager;
 
-import org.janelia.it.workstation.gui.framework.console.ToolsMenuModifier;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.shared.preferences.InfoObject;
-import org.janelia.it.workstation.shared.preferences.PrefMgrListener;
-import org.janelia.it.workstation.shared.preferences.PreferenceManager;
-import org.janelia.it.workstation.shared.util.FileCallable;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -25,6 +11,20 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+
+import javax.swing.JOptionPane;
+
+import org.janelia.it.workstation.gui.framework.console.ToolsMenuModifier;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
+import org.janelia.it.workstation.shared.preferences.InfoObject;
+import org.janelia.it.workstation.shared.preferences.PrefMgrListener;
+import org.janelia.it.workstation.shared.preferences.PreferenceManager;
+import org.janelia.it.workstation.shared.util.FileCallable;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -284,7 +284,7 @@ public class ToolMgr extends PreferenceManager {
             String path = tmpTool.getPath();
             // When executing vaa3d, give it a port to connect back to the console
             if (toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D)) {
-                int consolePort = SessionMgr.getSessionMgr().getAxisServer().getPort();
+                int consolePort = SessionMgr.getSessionMgr().getAxisServerPort();
                 if (consolePort > 0) {
                     path = "env " + CONSOLE_PORT_VAR_NAME + "=" + consolePort + " " + path;
                     log.info("Executing with environment: " + path);
@@ -369,9 +369,7 @@ public class ToolMgr extends PreferenceManager {
     }
 
 
-    private class MySessionModelListener implements SessionModelListener {
-        public void browserAdded(BrowserModel browserModel) {}
-        public void browserRemoved(BrowserModel browserModel){}
+    private class MySessionModelListener extends SessionModelAdapter {
         /**
          * This method first commits any changes to be safe, and then sets all dirty
          * infos to the selected writeback file.  Then for each selection in the

@@ -60,8 +60,8 @@ import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
@@ -384,19 +384,7 @@ public class IconDemoPanel extends IconPanel {
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        sessionModelListener = new SessionModelListener() {
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
+        sessionModelListener = new SessionModelAdapter() {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if (key == "console.serverLogin") {
@@ -598,7 +586,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelAdapter() {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
@@ -624,18 +612,6 @@ public class IconDemoPanel extends IconPanel {
                     imagesPanel.scrollSelectedEntitiesToCenter();
                     imagesPanel.loadUnloadImages();
                 }
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
             }
         });        
     }

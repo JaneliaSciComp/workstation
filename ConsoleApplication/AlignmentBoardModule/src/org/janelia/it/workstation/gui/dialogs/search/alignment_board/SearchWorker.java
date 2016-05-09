@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.dialogs.search.alignment_board;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,20 +11,20 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.RootedEntityReceiver;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
-import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +120,7 @@ public class SearchWorker extends SimpleWorker {
             guids.add( entity.getId() );
         }
         String opticalRes = context.getAlignmentContext().getOpticalResolution();
-        String pixelRes = context.getAlignmentContext().getPixelResolution();
+        String pixelRes = context.getAlignmentContext().getImageSize();
         List<Long> compatibleList = ModelMgr.getModelMgr().getEntityIdsInAlignmentSpace(opticalRes, pixelRes, guids);
 
         int nonCompatibleNeuronCount = 0;
@@ -192,7 +193,8 @@ public class SearchWorker extends SimpleWorker {
         boolean rtnVal;
         boolean foundMatch = false;
         Sample wrapper = (Sample) EntityWrapperFactory.wrap(entity);
-        List< AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
+        List<AlignmentContext> contexts = Collections.EMPTY_LIST;
+        //List<AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
         Iterator<AlignmentContext> contextIterator = contexts.iterator();
 
         while ( contextIterator.hasNext() && (! foundMatch) ) {

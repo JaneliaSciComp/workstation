@@ -176,7 +176,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSortBySimilarityItem());
         add(getMergeItem());
         add(getDownloadMenu());
-        add(getImportItem());
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -1876,27 +1875,6 @@ public class EntityContextMenu extends JPopupMenu {
                 }
             });
             return vaa3dMenuItem;
-        }
-        return null;
-    }
-
-    protected JMenuItem getImportItem() {
-        if (multiple) return null;
-        
-        String entityTypeName = rootedEntity.getEntity().getEntityTypeName();
-        if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
-            newAttachmentItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        browser.getImportDialog().showDialog(rootedEntity);
-                    } catch (Exception ex) {
-                        SessionMgr.getSessionMgr().handleException(ex);
-                    }
-                }
-            });
-
-            return newAttachmentItem;
         }
         return null;
     }

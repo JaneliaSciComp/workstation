@@ -30,27 +30,21 @@ public interface ComputeFacade {
     
     public List<Task> getUserTasksByType(String taskName) throws Exception;
 
-    public Subject getSubject() throws Exception;
-    
-    public Subject getSubject(String nameOrKey) throws Exception;
-    
-    public List<Subject> getSubjects() throws Exception;
-
     public Subject saveOrUpdateSubject(Subject subject) throws Exception;
 
     public void removePreferenceCategory(String preferenceCategory) throws Exception;
 
     public void stopContinuousExecution(Long taskId) throws Exception;
 
-    boolean isServerPathAvailable(String serverPath, boolean directoryOnly);
-            
+    // temporarily restoring this to support legacy code. Old stuff to remove
+    public Subject getSubject() throws Exception;
+    public Subject getSubject(String nameOrKey) throws Exception;
+    public List<Subject> getSubjects() throws Exception;
     public Subject loginSubject(String username, String password) throws Exception;
-    
+    boolean isServerPathAvailable(String serverPath, boolean directoryOnly);
     public void beginSession();
-    
     public void addEventToSession(UserToolEvent event);
-    
     public void addEventsToSession(UserToolEvent[] events);
-    
     public void endSession();
+
 }

@@ -145,10 +145,7 @@ public class TestMaskedMip3d {
 
                          */
 
-                        Entity mockE = new Entity();
-                        mockE.setId( MOCK_UID );
-                        mockE.setEntityTypeName(EntityConstants.TYPE_NEURON_FRAGMENT);
-                        mockE.setName("Entity: " + MOCK_UID);
+                        String mockName = "Entity: " + MOCK_UID;
 
                         RenderableBean renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(1);
@@ -163,38 +160,44 @@ public class TestMaskedMip3d {
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(2);
                         renderableBean.setLabelFileNum(1);
-                        renderableBean.setRenderableEntity( mockE );
+                        renderableBean.setName(mockName);
+                        renderableBean.setId(MOCK_UID);
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(3);
                         renderableBean.setLabelFileNum(2);
-                        renderableBean.setRenderableEntity( mockE );
+                        renderableBean.setName(mockName);
+                        renderableBean.setId(MOCK_UID);
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(4);
                         renderableBean.setLabelFileNum(3);
-                        renderableBean.setRenderableEntity( mockE );
+                        renderableBean.setName(mockName);
+                        renderableBean.setId(MOCK_UID);
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(6);
                         renderableBean.setLabelFileNum(5);
-                        renderableBean.setRenderableEntity( mockE );
+                        renderableBean.setName(mockName);
+                        renderableBean.setId(MOCK_UID);
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(8);
                         renderableBean.setLabelFileNum(7);
-                        renderableBean.setRenderableEntity( mockE );
+                        renderableBean.setName(mockName);
+                        renderableBean.setId(MOCK_UID);
                         beans.add(renderableBean);
 
                         for ( int i = 8; i < 21; i++ ) {
                             renderableBean = new RenderableBean();
                             renderableBean.setTranslatedNum(i);
                             renderableBean.setLabelFileNum(i+1);
-                            renderableBean.setRenderableEntity( mockE );
+                            renderableBean.setName(mockName);
+                            renderableBean.setId(MOCK_UID);
                             beans.add(renderableBean);
                         }
 //                        /**
@@ -217,7 +220,8 @@ public class TestMaskedMip3d {
                         colorMapping = new ConfigurableColorMapping();
                         if ( args.length > 2 ) {
                             // This mock-entity needs ONLY its ID, a type, and a name.
-                            renderableBean.setRenderableEntity(mockE);
+                            renderableBean.setName(mockName);
+                            renderableBean.setId(MOCK_UID);
 
                             // Here, establish a map suitable for testing.  It will get a UID-vs-render-method.
                             // This affects only the last-entered file.

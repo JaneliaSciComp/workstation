@@ -7,8 +7,11 @@
             <file name="org-netbeans-modules-quicksearch-QuickSearchAction.instance_hidden"/>
             <file name="org-netbeans-modules-search-FindInFilesAction.instance_hidden"/>
             <file name="org-netbeans-modules-search-ReplaceInFilesAction.instance_hidden"/>
+            <!--
             <file name="org-openide-actions-CopyAction.instance_hidden"/>
             <file name="org-openide-actions-CutAction.instance_hidden"/>
+            <file name="org-openide-actions-PasteAction.instance_hidden"/>
+            -->
             <file name="org-openide-actions-DeleteAction.instance_hidden"/>
             <file name="org-openide-actions-FindAction.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.instance_hidden"/>
@@ -103,7 +106,6 @@
             <file name="CloseAllDocumentsAction.shadow_hidden"/>
             <file name="CloseWindowAction.shadow_hidden"/>
             <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
-            <file name="Tools_hidden"/>
             <file name="Web_hidden"/>
             <file name="org-netbeans-modules-project-ui-logical-tab-action.shadow_hidden"/>
         </folder>
@@ -131,6 +133,9 @@
         <folder name="Modes">
             <file name="explorer.wsmode" url="Modes/explorer.wsmode"/>
             <file name="appExplorerBtm.wsmode" url="Modes/appExplorerBtm.wsmode"/>
+            <file name="editor.wsmode" url="Modes/editor.wsmode"/>
+            <file name="editor2.wsmode" url="Modes/editor2.wsmode"/>
+            <file name="editor3.wsmode" url="Modes/editor3.wsmode"/>
         </folder>
     </folder>
 </filesystem>

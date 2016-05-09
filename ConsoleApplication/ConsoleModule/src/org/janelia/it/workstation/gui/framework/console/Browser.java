@@ -23,13 +23,9 @@ import javax.swing.JPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
 import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
-import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.ImportDialog;
 import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
@@ -42,6 +38,7 @@ import org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
@@ -63,9 +60,12 @@ public class Browser implements Cloneable {
 
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
 
-    private static final String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
-    public static final String SEARCH_HISTORY = "SEARCH_HISTORY";
+    public static final String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
+    public static final String SEARCH_HISTORY = "modelPropertyName";
+    /** @deprecated use ADD_TO_FOLDER_HISTORY instead */
     public static final String ADD_TO_ROOT_HISTORY = "ADD_TO_ROOT_HISTORY";
+    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
+    public static final String ADD_TO_SET_HISTORY = "ADD_TO_SET_HISTORY";
     private static final String VIEWERS_LINKED = "Browser.ViewersLinked";
     private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 
@@ -82,12 +82,12 @@ public class Browser implements Cloneable {
     private static final int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static final int PRINT_OVERHEAD_SIZE = 1000000;
 
-    private JPanel allPanelsView = new JPanel();
-    private JPanel collapsedOutlineView = new JPanel();
-    private JPanel mainPanel = new JPanel();
+//    private JPanel allPanelsView = new JPanel();
+//    private JPanel collapsedOutlineView = new JPanel();
+//    private JPanel mainPanel = new JPanel();
     private ViewerManager viewerManager;
     private final ImageCache imageCache = new ImageCache();
-    private CardLayout layout = new CardLayout();
+//    private CardLayout layout = new CardLayout();
     private SessionModelListener modelListener = new MySessionModelListener();
 
     private BrowserModel browserModel;
@@ -96,27 +96,23 @@ public class Browser implements Cloneable {
     private EntityDetailsOutline entityDetailsOutline;
     private ToolsMenuModifier toolsMenuModifier;
 
-    private VerticalPanelPicker rightPanel;
+//    private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
 
-    private ImportDialog importDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
-    private PatternSearchDialog patternSearchDialog;
-    private GiantFiberSearchDialog giantFiberSearchDialog;
     private ScreenEvaluationDialog screenEvaluationDialog;
     private MAASearchDialog maaSearchDialog;
-    private DataSetListDialog dataSetListDialog;
     private FlyLineReleaseListDialog flyLineReleaseListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
-    
+
     private PermissionTemplate autoShareTemplate;
     private List<String> searchHistory;
-    
+
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
      * THis constructor is used only by the clone method
@@ -133,16 +129,19 @@ public class Browser implements Cloneable {
     private void jbInit(BrowserModel browserModel) throws Exception {
 
         log.info("Initializing browser...");
-        
+
+        // TODO: delete this eventually, when we have cleaned up everyone's preferences
+        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, null);
+
         this.browserModel = browserModel;
-        
+
         // Initialize workspace
         ModelMgr.getModelMgr().init();
-        
+
         // Load model properties
         this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
         this.searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
-        
+
         this.viewerManager = new ViewerManager();
 
         boolean isViewersLinked = false;
@@ -165,7 +164,7 @@ public class Browser implements Cloneable {
         entityOutline = new EntityOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
-            	List<Entity> workspaces = ModelMgr.getModelMgr().getWorkspaces();
+                List<Entity> workspaces = ModelMgr.getModelMgr().getWorkspaces();
                 loadedWorkspaces(workspaces);
                 return workspaces;
             }
@@ -181,31 +180,31 @@ public class Browser implements Cloneable {
                 return roots;
             }
         };
-                
+
         ontologyOutline.setPreferredSize(new Dimension());
 
-        resetBrowserPosition();
-        
+//        resetBrowserPosition();
+
         // Collect the final components
-        mainPanel.setLayout(layout);
-        allPanelsView.setLayout(new BorderLayout());
-        mainPanel.add(allPanelsView, "Regular");
-        collapsedOutlineView.setLayout(new BorderLayout());
-        mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
+//        mainPanel.setLayout(layout);
+//        allPanelsView.setLayout(new BorderLayout());
+//        mainPanel.add(allPanelsView, "Regular");
+//        collapsedOutlineView.setLayout(new BorderLayout());
+//        mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
 
         resetView();
-        
+
         log.info("Ready.");
     }
-    
+
     /**
      * Once the workspaces are loaded, we can initialize other UI components.
-     * @param workspaces 
+     * @param workspaces
      */
     private void loadedWorkspaces(List<Entity> workspaces) {
-        
+
         log.debug("Workspaces loaded. Initializing dialogs...");
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -217,13 +216,9 @@ public class Browser implements Cloneable {
             @Override
             protected void hadSuccess() {
                 generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
-                importDialog = new ImportDialog("Import Files");
-                patternSearchDialog = new PatternSearchDialog();
-                giantFiberSearchDialog = new GiantFiberSearchDialog();
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
                 screenEvaluationDialog = new ScreenEvaluationDialog();
                 maaSearchDialog = new MAASearchDialog();
-                dataSetListDialog = new DataSetListDialog();
                 flyLineReleaseListDialog = new FlyLineReleaseListDialog();
             }
 
@@ -373,16 +368,7 @@ public class Browser implements Cloneable {
         }
     }
 
-    class MySessionModelListener implements SessionModelListener {
-
-        public void browserAdded(BrowserModel browserModel) {
-        }
-
-        public void browserRemoved(BrowserModel browserModel) {
-        }
-
-        public void sessionWillExit() {
-        }
+    class MySessionModelListener extends SessionModelAdapter {
 
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
             if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
@@ -397,7 +383,7 @@ public class Browser implements Cloneable {
     public ImageCache getImageCache() {
         return imageCache;
     }
-    
+
     public ViewerManager getViewerManager() {
         return viewerManager;
     }
@@ -414,24 +400,12 @@ public class Browser implements Cloneable {
         return ontologyOutline;
     }
 
-    public void selectRightPanel(String panelName) {
-        rightPanel.showPanel(panelName);
-    }
+//    public void selectRightPanel(String panelName) {
+//        rightPanel.showPanel(panelName);
+//    }
 
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
-    }
-
-    public ImportDialog getImportDialog() {
-        return importDialog;
-    }
-
-    public PatternSearchDialog getPatternSearchDialog() {
-        return patternSearchDialog;
-    }
-
-    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
-        return giantFiberSearchDialog;
     }
 
     public ScreenEvaluationDialog getScreenEvaluationDialog() {
@@ -440,10 +414,6 @@ public class Browser implements Cloneable {
 
     public MAASearchDialog getMAASearchDialog() {
         return maaSearchDialog;
-    }
-
-    public DataSetListDialog getDataSetListDialog() {
-        return dataSetListDialog;
     }
 
     public FlyLineReleaseListDialog getFlyLineReleaseListDialog() {

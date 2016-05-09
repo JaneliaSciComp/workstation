@@ -339,7 +339,7 @@ public class NeuronModelAdapter implements NeuronModel
     public boolean isVisible()
     {
         return bIsVisible;
-        // return neuronStyle.isVisible();
+        // return neuronStyle.isColumnVisible();
     }
 
     @Override

@@ -63,7 +63,8 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public List<Task> getUserTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getSubjectKey());
+        return null;
+       // return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getSubjectKey());
     }
 
     @Override
@@ -85,7 +86,7 @@ public class EJBComputeFacade implements ComputeFacade {
     public Subject getSubject(String nameOrKey) throws Exception {
         return EJBFactory.getRemoteComputeBean().getSubjectWithPreferences(nameOrKey);
     }
-    
+
     @Override
     public List<Subject> getSubjects() throws Exception {
         return EJBFactory.getRemoteComputeBean().getSubjects();
@@ -96,11 +97,10 @@ public class EJBComputeFacade implements ComputeFacade {
         return EJBFactory.getRemoteComputeBean().saveOrUpdateSubject(subject);
     }
 
-    @Override
     public boolean isServerPathAvailable( String serverPath, boolean directoryOnly ) {
         return EJBFactory.getRemoteComputeBean().isServerPathAvailable(serverPath, directoryOnly);
-    }    
-    
+    }
+
     @Override
     public Subject loginSubject(final String username, final String password) throws Exception {
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
@@ -122,7 +122,7 @@ public class EJBComputeFacade implements ComputeFacade {
 
         return loggedInSubject;
     }
-    
+
     @Override
     public void beginSession() {
         UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
@@ -133,12 +133,12 @@ public class EJBComputeFacade implements ComputeFacade {
             SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
         }
     }
-    
+
     @Override
     public void addEventToSession(UserToolEvent event) {
         EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
     }
-    
+
     @Override
     public void addEventsToSession(UserToolEvent[] events) {
         EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
@@ -152,7 +152,7 @@ public class EJBComputeFacade implements ComputeFacade {
                 ConsoleProperties.getString("console.Title"),
                 SessionMgr.getSessionMgr().getCurrentSessionId());
             SessionMgr.getSessionMgr().setCurrentSessionId(null);
-        } catch( NullPointerException npe){   
+        } catch( NullPointerException npe){
             // This is for bug FW-2512.  At time of writing, unable to duplicate
             // this exception. This bug may have been fixed by unrelated commit.
             // Therefore, leaving this trail to see which
@@ -163,7 +163,7 @@ public class EJBComputeFacade implements ComputeFacade {
             throw npe;
         }
     }
-    
+
     @Override
     public void removePreferenceCategory(String preferenceCategory) throws Exception {
         EJBFactory.getRemoteComputeBean().removePreferenceCategory(preferenceCategory);

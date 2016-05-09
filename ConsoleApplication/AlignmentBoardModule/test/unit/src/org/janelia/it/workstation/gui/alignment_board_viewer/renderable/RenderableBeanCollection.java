@@ -29,16 +29,11 @@ public class RenderableBeanCollection {
         String nextEntityName = "AnEntity__";
         for ( int i = 0; i < 50; i++ ) {
             RenderableBean rb = new RenderableBean();
-            rb.setAlignedItemId( nextItemId );
             rb.setInvertedY(false);
             rb.setLabelFileNum(nextLabelNum++);
-            Entity entity = new Entity();
-            entity.setName( nextEntityName + i );
             String validType = validTypes[random.nextInt(validTypes.length)];
-            entity.setEntityTypeName( validType );
-            entity.setId( random.nextLong() );
-            rb.setRenderableEntity(entity);
-            rb.setAlignedItemId(nextItemId++);
+            rb.setName(nextEntityName + i);
+            rb.setId(random.nextLong());
             rb.setRgb(new byte[]{(byte) 128, 0, 0});
             rb.setType(validType);
             rb.setVoxelCount( (long)random.nextInt( 500 ) );

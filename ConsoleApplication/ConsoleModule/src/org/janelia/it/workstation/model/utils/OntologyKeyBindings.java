@@ -8,57 +8,55 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
-
 /**
- * The set of key bindings for an ontology. 
- * 
+ * The set of key bindings for an ontology.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 public class OntologyKeyBindings {
 
-	@XmlElement
-	private String user;
+    @XmlElement
+    private String user;
 
-	@XmlElement
-	private Long ontologyId;
-	
-    @XmlElement(name="keyBinding")
-    @XmlElementWrapper(name="keyBindingSet")
-	private Set<OntologyKeyBind> keybindSet = new HashSet<OntologyKeyBind>();
+    @XmlElement
+    private Long ontologyId;
 
-	public OntologyKeyBindings() {
-	}
-	
-	public OntologyKeyBindings(String subjectKey, Long ontologyId) {
-		super();
-		this.user = subjectKey;
-		this.ontologyId = ontologyId;
-	}
-	
-	public void addBinding(String key, Long ontologyTermId) {
-		keybindSet.add(new OntologyKeyBind(key, ontologyTermId));
-	}
+    @XmlElement(name = "keyBinding")
+    @XmlElementWrapper(name = "keyBindingSet")
+    private Set<OntologyKeyBind> keybindSet = new HashSet<OntologyKeyBind>();
 
-	public String getUser() {
-		return user;
-	}
+    public OntologyKeyBindings() {
+    }
 
-	public void setUser(String user) {
-		this.user = user;
-	}
+    public OntologyKeyBindings(String subjectKey, Long ontologyId) {
+        super();
+        this.user = subjectKey;
+        this.ontologyId = ontologyId;
+    }
 
-	public Long getOntologyId() {
-		return ontologyId;
-	}
+    public void addBinding(String key, Long ontologyTermId) {
+        keybindSet.add(new OntologyKeyBind(key, ontologyTermId));
+    }
 
-	public void setOntologyId(Long ontologyId) {
-		this.ontologyId = ontologyId;
-	}
+    public String getUser() {
+        return user;
+    }
 
-	public Set<OntologyKeyBind> getKeybinds() {
-		return keybindSet;
-	}
-	
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public Long getOntologyId() {
+        return ontologyId;
+    }
+
+    public void setOntologyId(Long ontologyId) {
+        this.ontologyId = ontologyId;
+    }
+
+    public Set<OntologyKeyBind> getKeybinds() {
+        return keybindSet;
+    }
 
 }

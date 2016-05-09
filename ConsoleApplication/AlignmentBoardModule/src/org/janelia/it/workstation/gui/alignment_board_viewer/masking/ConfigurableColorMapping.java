@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import org.janelia.it.jacs.model.domain.Reference;
 
 /**
  * Created with IntelliJ IDEA.
@@ -193,9 +194,9 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             if ( rgb == null  ||  rgbValsZero ) {
-                Entity entity = renderableBean.getRenderableEntity();
+                Reference reference = renderableBean.getReference();
                 rgb = rgbCopy( COLOR_WHEEL[ translatedNum % COLOR_WHEEL.length ] );
-                if ( entity != null ) {
+                if ( reference != null ) {
                     if ( rgbValsZero ) {
                         // Special case: user has turned down colors to minimum, on purpose.
                         rgb = rgbCopy( TRANSPARENT_RENDER );
@@ -218,8 +219,8 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             // Placing this here, to benefit from null-catch of RGB array above.
-            if ( renderableBean.getRenderableEntity() != null && guidToRenderMethod != null ) {
-                Long entityId = renderableBean.getRenderableEntity().getId();
+            if ( renderableBean.getReference() != null && guidToRenderMethod != null ) {
+                Long entityId = renderableBean.getId();
                 Integer renderMethodNum = guidToRenderMethod.get( entityId );
                 if ( renderMethodNum != null ) {
                     rgb[ 3 ] = renderMethodNum.byteValue();
@@ -267,8 +268,8 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private byte[] setRgbFromAverageColor(RenderableBean bean) {
         byte[] rtnVal = null;
         // Taking average voxels into account.
-        if ( bean.getRenderableEntity() != null  &&  fileStats != null ) {
-            double[] colorAverages = fileStats.getChannelAverages( bean.getRenderableEntity().getId() );
+        if ( bean.getReference() != null  &&  fileStats != null ) {
+            double[] colorAverages = fileStats.getChannelAverages( bean.getId() );
             if ( colorAverages != null ) {
                 rtnVal = new byte[ 4 ];
                 for ( int i = 0; i < colorAverages.length; i++ ) {

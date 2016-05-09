@@ -17,6 +17,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.jacs.compute.api.support.MappedId;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -153,10 +154,10 @@ public final class ModelMgr {
      * This adds a session event.  It is best to use the method in the
      * Session Manager instead, as that has more convenient 'finding' of various
      * parts of the event.
-     * 
+     *
      * @param event to log.
      */
-    public void addEventToSession(UserToolEvent event) {  
+    public void addEventToSession(UserToolEvent event) {
         try {
             FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
         } catch (Exception ex) {
@@ -293,7 +294,7 @@ public final class ModelMgr {
         return ontologyElementTreeSet;
     }
 
-    public List<Entity> ontologyWalker(List<Entity> list) {
+    private List<Entity> ontologyWalker(List<Entity> list) {
         List<Entity> finalList = new ArrayList<>();
         finalList.addAll(list);
         for (Entity entity : list) {
@@ -306,19 +307,24 @@ public final class ModelMgr {
     }
 
     public String getSortCriteria(Long entityId) {
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
-        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-        String entityIdStr = entityId.toString();
-        for (SubjectPreference pref : prefs.values()) {
-            if (pref.getName().equals(entityIdStr)) {
-                return pref.getValue();
+        try {
+            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
+            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+            String entityIdStr = entityId.toString();
+            for (SubjectPreference pref : prefs.values()) {
+                if (pref.getName().equals(entityIdStr)) {
+                    return pref.getValue();
+                }
             }
+        }
+        catch (Exception e) {
+            log.error("Error loading sort criteria for {}", entityId,e);
         }
         return null;
     }
 
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
         if (StringUtils.isEmpty(sortCriteria)) {
             subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
             log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
@@ -328,12 +334,14 @@ public final class ModelMgr {
             log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
         }
         Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-        SessionMgr.getSessionMgr().setSubject(newSubject);
+       // SessionMgr.getSessionMgr().setSubject(newSubject);
     }
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+        Subject subject = null;
+        return null;
+        /*//ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -341,13 +349,13 @@ public final class ModelMgr {
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
 
-        return ontologyKeyBindings;
+        return ontologyKeyBindings;*/
     }
 
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
+       /* Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
 
         // First delete all keybinds for this ontology
         for (String key : subject.getCategoryPreferences(category).keySet()) {
@@ -361,8 +369,8 @@ public final class ModelMgr {
         }
 
         Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-        SessionMgr.getSessionMgr().setSubject(newSubject);
-        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());
+       // SessionMgr.getSessionMgr().setSubject(newSubject);
+        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());*/
     }
 
     public void removeOntologyKeyBindings(long ontologyId) throws Exception {
@@ -1067,7 +1075,7 @@ public final class ModelMgr {
         subjectByKey.put(subject.getKey(), subject);
         return subject;
     }
-    
+
     public Subject getSubjectWithPreferences(String nameOrKey) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
     }
@@ -1089,10 +1097,27 @@ public final class ModelMgr {
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-        log.debug("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
+        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
 
+    public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
+        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
+        return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
+    }
+
+    public void updateIndex(DomainObject domainObj) throws Exception {
+        FacadeManager.getFacadeManager().getSolrFacade().updateIndex(domainObj);
+    }
+
+    public void removeFromIndex(Long domainObjId) throws Exception {
+         FacadeManager.getFacadeManager().getSolrFacade().removeFromIndex(domainObjId);
+    }
+
+    public void addAncestorToIndex(Long domainObjId, Long ancestorId) throws Exception {
+        FacadeManager.getFacadeManager().getSolrFacade().addAncestorToIndex(domainObjId, ancestorId);
+    }
+    
     public Map<String, SageTerm> getImageVocabulary() throws Exception {
         return FacadeManager.getFacadeManager().getSolrFacade().getImageVocabulary();
     }
