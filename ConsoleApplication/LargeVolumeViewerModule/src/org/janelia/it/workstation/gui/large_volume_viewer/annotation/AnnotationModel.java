@@ -671,25 +671,15 @@ called from a  SimpleWorker thread.
         TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         final TmGeoAnnotation targetAnnotation = targetNeuron.getGeoAnnotationMap().get(targetAnnotationID);
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
-        getCurrentWorkspace().getNeuronList().remove(targetNeuron);
-        targetNeuron = neuronManager.refreshFromData(targetNeuron);
-        getCurrentWorkspace().getNeuronList().add(targetNeuron);
-        TmNeuron sourceNeuron = null;
 
+        TmNeuron sourceNeuron = null;
         final TmWorkspace workspace = getCurrentWorkspace();
-        if (! sourceAnnotation.getNeuronId().equals(targetAnnotation.getNeuronId())) {
+        if (!sourceAnnotation.getNeuronId().equals(targetAnnotation.getNeuronId())) {
             sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
-            workspace.getNeuronList().remove(sourceNeuron);
-            sourceNeuron = neuronManager.refreshFromData(sourceNeuron);
-            workspace.getNeuronList().add(sourceNeuron);
         }
         else {
             sourceNeuron = targetNeuron;
         }
-
-        // Re-grab the source annotation, to ensure it is the one contained
-        // in the source neuron of reference.
-        sourceAnnotation = sourceNeuron.getGeoAnnotationMap().get(sourceAnnotationID);
 
         // reroot source neurite to source ann
         if (!sourceAnnotation.isRoot()) {
@@ -959,7 +949,6 @@ called from a  SimpleWorker thread.
 
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
-        refreshNeuronInWorkspace(neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
