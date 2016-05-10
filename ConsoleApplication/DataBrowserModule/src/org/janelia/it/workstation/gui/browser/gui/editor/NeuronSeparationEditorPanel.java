@@ -166,7 +166,27 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             public void actionPerformed(ActionEvent e) {
                 JCheckBox cb = (JCheckBox) e.getSource();
                 hideFragments = cb.isSelected();
-                updateUI();
+                // find the list of visibilities for this separation Id
+                if (hideFragments) {
+                    Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                            Long.toString(separation.getId()));
+                    if (neuronSepVisibility!=null) {
+                        Set<Long> fragmentVis = new HashSet((List)neuronSepVisibility.getValue());
+                        for (int i=domainObjects.size()-1; i>=0; i--) {
+                            NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
+
+                            // remove items that are hidden
+                            if (fragmentVis.contains(neuronFragment.getId())) {
+                                domainObjects.remove(i);
+                            }
+
+                        }
+                    }
+                } else {
+                    domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
+                }
+                showResults(true);
+
             }
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
@@ -227,21 +247,27 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void saveVisibilities() {
-        Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                Long.toString(separation.getId()));
-        if (neuronSepVisibility==null) {
-            neuronSepVisibility = new Preference();
-            neuronSepVisibility.setCategory(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY);
-            neuronSepVisibility.setKey(Long.toString(separation.getId()));
+        try {
+            Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
+                    Long.toString(separation.getId()));
+            if (neuronSepVisibility == null) {
+                neuronSepVisibility = new Preference();
+                neuronSepVisibility.setCategory(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY);
+                neuronSepVisibility.setKey(Long.toString(separation.getId()));
+            }
+            List<Long> visibilities = new ArrayList<>();
+            List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
+            for (int i = 0; i < visibleFragments.size(); i++) {
+                visibilities.add(visibleFragments.get(i).getTargetId());
+            }
+            neuronSepVisibility.setValue(visibilities);
+            DomainMgr.getDomainMgr().savePreference(neuronSepVisibility);
+        } catch (Exception e) {
+            log.error("Problem encountered saving preferences", e);
         }
-        List<Long> visibilities = new ArrayList<>();
-        List<Reference> visibleFragments = editSelectionModel.getSelectedIds();
-        for (int i=0; i<visibleFragments.size(); i++) {
-            visibleFragments.get(i).getTargetId();
-        }
-        editModeEnabled = false;
-        resultsPanel.getViewer().toggleEditMode(false);
+        cancelEditMode();
     }
+
 
     private void openInNA() {
         NamedAction action = new OpenInNeuronAnnotatorAction(separation);
@@ -329,26 +355,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 else {
                     domainObjects = model.getDomainObjects(separation.getFragmentsReference());
                     // TODO: set up global preference for visibility, allow users to select other user's preferences
-
-                    // find the list of visibilities for this separation Id
-                    if (hideFragments || editModeEnabled) {
-                        Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
-                                Long.toString(separation.getId()));
-                        if (neuronSepVisibility!=null) {
-                            List<Boolean> fragmentVis = (List)neuronSepVisibility.getValue();
-                            for (int i=domainObjects.size()-1; i>=0; i--) {
-                                NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
-
-                                // remove items that are hidden
-                                if (!fragmentVis.get(i).booleanValue()) {
-                                    domainObjects.remove(i);
-                                }
-
-                            }
-                        }
-
-                    }
-
 
                     annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
                 }

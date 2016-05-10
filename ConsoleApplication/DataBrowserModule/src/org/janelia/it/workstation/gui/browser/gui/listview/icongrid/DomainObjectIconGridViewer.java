@@ -189,6 +189,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
+        editSelectionModel.reset();
 
         if (select) {
             this.selectEditObjects(domainObjects);

@@ -268,6 +268,10 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
     }
 
     public void toggleEditMode (boolean mode) {
+        // if hiding edit mode, clear out checkbox
+        if (!mode) {
+            this.setEditModeValue(false);
+        }
         editMode.setVisible(mode);
     }
 
