@@ -959,7 +959,6 @@ called from a  SimpleWorker thread.
 
         // Must serialize the neuron, after having made changes.
         neuronManager.saveNeuronData(neuron);
-        refreshNeuronInWorkspace(neuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron updateNeuron = getCurrentNeuron();
