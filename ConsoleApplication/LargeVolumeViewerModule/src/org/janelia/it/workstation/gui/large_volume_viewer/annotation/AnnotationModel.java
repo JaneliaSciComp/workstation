@@ -977,12 +977,10 @@ called from a  SimpleWorker thread.
             return;
         }
 
-        //refresh neuron
-        TmNeuron neuron = getNeuronFromAnnotationID(annotation.getId());
-        neuron = neuronManager.refreshFromData(neuron);
 
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
+        TmNeuron neuron = getNeuronFromAnnotationID(annotation.getId());
         TmGeoAnnotation annotation1;
         TmGeoAnnotation annotation2;
         boolean reverse;
@@ -1031,8 +1029,6 @@ called from a  SimpleWorker thread.
         // if that segment had a trace, remove it
         removeAnchoredPath(neuron, annotation1, annotation2);
         neuronManager.saveNeuronData(neuron);
-        refreshNeuronInWorkspace(neuron);
-
 
         // retrace
         if (automatedTracingEnabled()) {
