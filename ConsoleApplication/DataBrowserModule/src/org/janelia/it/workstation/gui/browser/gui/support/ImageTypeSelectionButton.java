@@ -9,6 +9,8 @@ import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
@@ -20,9 +22,6 @@ import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
 
 /**
  * Drop-down button for selecting the image type to display. 
@@ -71,18 +70,24 @@ public class ImageTypeSelectionButton extends DropDownButton {
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {
+            Object source = domainObject;
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
                 HasFiles result = DomainModelViewUtils.getResult(sample, currResult);
                 if (result!=null) {
-                    countedTypeNames.addAll(DomainUtils.get2dTypeNames(result));
+                    source = result;
                 }
             }
-            else if (domainObject instanceof HasFileGroups) {
-                countedTypeNames.addAll(DomainUtils.get2dTypeNames((HasFileGroups)domainObject));
+            log.debug("Source: {} of {}",currResult,domainObject.getId());
+            if (source instanceof HasFileGroups) {
+                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFileGroups) source);
+                log.debug("Source has file groups: {}",typeNames);
+                countedTypeNames.addAll(typeNames);
             }
-            else if (domainObject instanceof HasFiles) {
-                countedTypeNames.addAll(DomainUtils.get2dTypeNames((HasFiles)domainObject));
+            if (source instanceof HasFiles) {
+                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFiles) source);
+                log.debug("Source has files: {}",typeNames);
+                countedTypeNames.addAll(typeNames);
             }
         }
         
