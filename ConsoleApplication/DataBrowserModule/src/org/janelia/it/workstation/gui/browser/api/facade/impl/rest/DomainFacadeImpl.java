@@ -125,11 +125,14 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         DomainQuery query = new DomainQuery();
         // Not using a subject key: these are universal collections.
         query.setObjectType(className);
+        query.setSubjectKey(AccessManager.getSubjectKey());
 
         Response response = manager.getDomainObjectEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("domainClass", className)
                 .path("class")
                 .request("application/json")
-                .post(Entity.json(query));
+                .get();
         if (checkBadResponse(response.getStatus(), "problem making request getAllDomainObjectsByClass from server: " + className)) {
             return null;
         }
