@@ -264,8 +264,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             i++;
         }
 
-        if (start!=null) {
-            log.info("Scrolling to row {}",start);
+        if (start!=null && isUserDriven) {
+            log.debug("scrolling to start of selection at row {}",start);
             getDynamicTable().scrollCellToCenter(start, 0);
         }
 

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -15,30 +14,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.Scrollable;
+import javax.swing.*;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
@@ -82,10 +65,6 @@ import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -465,7 +444,10 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
-        
+
+        // Save the scroll horizontal position on the table, so that users can compare attribuets more easily
+        final String viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
+
         currRunMap.clear();
         configPanel.setTitle(sample.getName());
         selectionModel.setParentObject(sample);
@@ -495,6 +477,9 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     if (!resultPanels.isEmpty()) {
                         panelSelection(resultPanels.get(0), isUserDriven);
                     }
+                }
+                else {
+                    lsmPanel.getViewer().restoreState(viewerState);
                 }
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
