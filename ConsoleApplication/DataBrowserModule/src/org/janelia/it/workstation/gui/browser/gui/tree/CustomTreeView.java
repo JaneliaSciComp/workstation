@@ -127,7 +127,10 @@ public class CustomTreeView extends BeanTreeView {
                 TreePath ep = paths.nextElement();
                 Node en = Visualizer.findNode(ep.getLastPathComponent());
                 Long[] path = NodeUtils.createIdPath(en);
-                result.add(path);
+                if (path.length>0) {
+                    log.debug("Adding expanded path " + NodeUtils.createPathString(en));
+                    result.add(path);
+                }
             }
         }
 
@@ -209,18 +212,21 @@ public class CustomTreeView extends BeanTreeView {
     /** 
      * Expand all the given paths.
      */
-    public void expand(List<Long[]> paths) {
-        if (paths==null) return;
+    public int expand(List<Long[]> paths) {
+        int numExpanded = 0;
+        if (paths==null) return numExpanded;
         for (Iterator<Long[]> it = paths.iterator(); it.hasNext();) {
             Long[] path = it.next();
             if (path==null) continue;
-            log.debug("Expanding {}",NodeUtils.createPathString(path));
+            log.debug("Expanding id path: {}",NodeUtils.createPathString(path));
             TreePath tp = getTreePath(path);
-            log.debug("Expanding {}",tp);
+            log.debug("Expanding tree path: {}",tp);
             if (tp != null) {
                 expand(tp);
+                numExpanded++;
             }
         }
+        return numExpanded;
     }
 
     private TreePath getTreePath(Long[] path) {
