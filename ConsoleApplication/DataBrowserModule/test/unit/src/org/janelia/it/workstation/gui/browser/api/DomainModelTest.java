@@ -7,14 +7,13 @@
 package org.janelia.it.workstation.gui.browser.api;
 
 import java.util.List;
-import junit.framework.Assert;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.mongo.DomainFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.mongo.OntologyFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.mongo.SampleFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.mongo.SubjectFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.mongo.WorkspaceFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.DomainFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.OntologyFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SampleFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SubjectFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.WorkspaceFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
@@ -77,4 +76,5 @@ public class DomainModelTest {
             System.out.println(String.format("Name=%s, ImageSize=%s, OpticalRes=%s", ctx.getAlignmentSpace(), ctx.getImageSize(), ctx.getOpticalResolution()));
         }
     }
+
 }
