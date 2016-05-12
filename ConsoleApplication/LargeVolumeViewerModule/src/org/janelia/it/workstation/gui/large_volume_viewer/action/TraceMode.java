@@ -400,10 +400,12 @@ implements MouseMode, KeyListener
                                 }
                             }
                         }));
-                        result.add(new JMenuItem(new AbstractAction("Move neurite...") {
+                        result.add(new JMenuItem(new AbstractAction("Transfer neurite...") {
                             @Override
                             public void actionPerformed(ActionEvent actionEvent) {
                                 if (getHoverAnchor() != null) {
+									// used to be called "Move neurite", and that's
+                                    //  still the internal name for the command
     								skeleton.moveNeuriteRequest(getHoverAnchor());
                                 }
                                 else {
