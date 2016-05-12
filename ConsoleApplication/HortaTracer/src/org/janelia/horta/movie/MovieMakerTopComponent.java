@@ -29,11 +29,23 @@
  */
 package org.janelia.horta.movie;
 
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
+import java.lang.reflect.Type;
 import java.util.Collection;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -74,12 +86,15 @@ implements LookupListener
     private float nextFrameDuration = 2.0f; // seconds
     private final Interpolator<HortaViewerState> defaultInterpolator;
     private final SaveFramesPanel saveFramesPanel = new SaveFramesPanel();
+    private final JFileChooser saveScriptChooser = new JFileChooser();
 
     public MovieMakerTopComponent() {
         initComponents();
         setName(Bundle.CTL_MovieMakerTopComponent());
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
         defaultInterpolator = new HortaViewerStateInterpolator();
+        FileNameExtensionFilter jsonFilter = new FileNameExtensionFilter("JSON Files", "json");
+        saveScriptChooser.setFileFilter(jsonFilter);
     }
 
     /**
@@ -118,6 +133,11 @@ implements LookupListener
         durationTextField.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.NumberFormatter(new java.text.DecimalFormat("#0.00"))));
         durationTextField.setText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.text")); // NOI18N
         durationTextField.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.durationTextField.toolTipText")); // NOI18N
+        durationTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                durationTextFieldActionPerformed(evt);
+            }
+        });
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jLabel2.text")); // NOI18N
 
@@ -204,6 +224,11 @@ implements LookupListener
         org.openide.awt.Mnemonics.setLocalizedText(saveScriptButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.text")); // NOI18N
         saveScriptButton.setToolTipText(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.saveScriptButton.toolTipText")); // NOI18N
         saveScriptButton.setEnabled(false);
+        saveScriptButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveScriptButtonActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -317,6 +342,48 @@ implements LookupListener
         saveFramesPanel.showDialog(playState);
     }//GEN-LAST:event_saveFramesButtonActionPerformed
 
+    private void saveScriptButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveScriptButtonActionPerformed
+        try {
+            int saveDialogResult = saveScriptChooser.showSaveDialog(this);
+            if (saveDialogResult != JFileChooser.APPROVE_OPTION)
+                return;
+            File file = saveScriptChooser.getSelectedFile();
+            Writer writer;
+            try {
+                writer = new FileWriter(file);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this,
+                        ex.getMessage(),
+                        "Error opening file " + file.getName(),
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            Type timelineType = new TypeToken<Timeline<HortaViewerState>>(){}.getType();
+            gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(playState.isLoop()));
+            
+            Gson gson = gsonBuilder.create();
+            gson.toJson(movieTimeline, timelineType, writer);
+            
+            writer.close();
+            
+            JOptionPane.showMessageDialog(this,
+                    "Finished writing movie script " + file.getName(),
+                    "Finished writing movie script " + file.getName(),
+                    JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+    }//GEN-LAST:event_saveScriptButtonActionPerformed
+
+    private void durationTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_durationTextFieldActionPerformed
+        // TODO add your handling code here:
+        float duration = Float.parseFloat(durationTextField.getText());
+        if (duration > 0)
+            nextFrameDuration = duration;
+    }//GEN-LAST:event_durationTextFieldActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addFrameButton;
     private javax.swing.JButton deleteFramesButton;
@@ -382,11 +449,13 @@ implements LookupListener
             addFrameButton.setEnabled(false);
             deleteFramesButton.setEnabled(false);
             saveFramesButton.setEnabled(false);
+            saveScriptButton.setEnabled(false);
         }
         else {
             boolean bHaveFrames = (movieTimeline.size() > 0);
             playButton.setEnabled(bHaveFrames);
             deleteFramesButton.setEnabled(bHaveFrames);
+            saveScriptButton.setEnabled(bHaveFrames);
             saveFramesButton.setEnabled(bHaveFrames);
             frameCountLabel.setText("Movie has " + movieTimeline.size() + " key frames");
             addFrameButton.setEnabled(true);
