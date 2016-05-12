@@ -241,23 +241,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     }
 
     @Override
-    public TmNeuron refreshFromEntityData(TmNeuron neuron) throws Exception {
-        Long workspaceId = neuron.getWorkspaceId();
-        Long neuronId = neuron.getId();
-        ensureWorkspaceEntity(workspaceId);
-        byte[] rawBuffer = 
-            ModelMgr
-                .getModelMgr()
-                .getB64DecodedEntityDataValue(
-                        workspaceId, 
-                        neuronId, 
-                        EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
-                );
-        final TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        return exchanger.deserializeNeuron(rawBuffer, neuron);
-    }
-
-    @Override
     public void deleteEntityData(TmNeuron neuron) throws Exception {
         // The lower levels of the hierarchy require an Entity Data to delete
         // but they use only its id and owner key.
