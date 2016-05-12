@@ -361,6 +361,7 @@ implements LookupListener
             GsonBuilder gsonBuilder = new GsonBuilder();
             Type timelineType = new TypeToken<Timeline<HortaViewerState>>(){}.getType();
             gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(playState.isLoop()));
+            gsonBuilder.setPrettyPrinting();
             
             Gson gson = gsonBuilder.create();
             gson.toJson(movieTimeline, timelineType, writer);

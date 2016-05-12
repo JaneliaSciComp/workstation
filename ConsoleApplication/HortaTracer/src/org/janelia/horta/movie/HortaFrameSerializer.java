@@ -30,42 +30,45 @@
 
 package org.janelia.horta.movie;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import org.janelia.geometry3d.Quaternion;
 import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 
 /**
  *
  * @author brunsc
  */
-class MovieTimelineSerializer implements JsonSerializer<Timeline<HortaViewerState>> 
+class HortaFrameSerializer implements JsonSerializer<KeyFrame<HortaViewerState>>
 {
-    private final boolean doLoop;
 
-    public MovieTimelineSerializer(boolean doLoop) {
-        this.doLoop = doLoop;
+    public HortaFrameSerializer() {
     }
 
     @Override
-    public JsonElement serialize(Timeline<HortaViewerState> t, Type type, JsonSerializationContext jsc) 
-    {
+    public JsonElement serialize(KeyFrame<HortaViewerState> t, Type type, JsonSerializationContext jsc) {
         JsonObject result = new JsonObject();
-        JsonObject timeline = new JsonObject();
-        result.add("movie", timeline);
-        timeline.addProperty("doLoop", doLoop);
-        timeline.addProperty("totalDuration", t.getTotalDuration(doLoop));
-        JsonArray frames = new JsonArray();
-        timeline.add("keyFrames", frames);
-        JsonSerializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameSerializer();
-        Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
-        for (KeyFrame<HortaViewerState> keyFrame : t) {
-            frames.add(hortaFrameSerializer.serialize(keyFrame, frameType, jsc));
-        }
+        
+        result.addProperty("followingInterval", t.getFollowingIntervalDuration());
+        HortaViewerState state = t.getViewerState();
+        result.addProperty("zoom", state.getCameraSceneUnitsPerViewportHeight());
+        float rot[] = state.getCameraRotation().asArray();
+        JsonArray quat = new JsonArray();
+        for (int i = 0; i < 4; ++i)
+            quat.add(new JsonPrimitive(rot[i]));
+        result.add("quaternionRotation", quat);
+        JsonArray focus = new JsonArray();
+        float f[] = state.getCameraFocus();
+        for (int i = 0; i < 3; ++i)
+            focus.add(new JsonPrimitive(f[i]));
+        result.add("focusXyz", focus);
+        
         return result;
     }
     

@@ -44,7 +44,7 @@ public class Quaternion {
      * 
      * @return reference to internal float array
      */
-    float[] asArray() {
+    public float[] asArray() {
         return data;
     }
 
