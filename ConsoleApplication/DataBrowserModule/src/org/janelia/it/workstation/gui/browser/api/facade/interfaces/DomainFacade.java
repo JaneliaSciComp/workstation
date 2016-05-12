@@ -94,10 +94,9 @@ public interface DomainFacade {
 
     /**
      *
-     * For individual cases, adds support to update an existing DomainObject
+     * For individual cases, adds support to create a new DomainObject or update an exisiting one
      * @param  domainObject domain object to update
      * @throws Exception
      */
-    public DomainObject update(DomainObject domainObject) throws Exception;
-
+    public DomainObject save(DomainObject domainObject) throws Exception;
 }

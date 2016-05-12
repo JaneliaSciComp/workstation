@@ -57,7 +57,7 @@ public class DomainFacadeImpl implements DomainFacade {
     }
 
     @Override
-    public DomainObject update(DomainObject domainObject) throws Exception {
+    public DomainObject save(DomainObject domainObject) throws Exception {
         String subjectKey = AccessManager.getSubjectKey();
         if (dao.getDomainObject(subjectKey, domainObject)!=null) {
             return updateIndex(dao.save(AccessManager.getSubjectKey(), domainObject));
