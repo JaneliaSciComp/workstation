@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -18,8 +19,10 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,9 +80,31 @@ public class DomainHelper {
         return returnList;
     }
     
+    /** Creates a board, and returns its ID. */
+    public AlignmentBoard createAlignmentBoard(AlignmentBoard board) throws Exception {
+        AlignmentBoard rtnVal = null;
+        if (board != null) {
+            final DomainModel model = DomainMgr.getDomainMgr().getModel();
+            rtnVal = (AlignmentBoard)model.save(board);
+            if (rtnVal == null) {
+                handleException("Failed to create an alignment board.  Null value returned.");
+            }
+        }
+        return rtnVal;
+    }
+    
+    public AlignmentBoard fetchAlignmentBoard(Long alignmentBoardId) throws Exception {
+        return (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
+    }
+    
     public Sample getSampleForNeuron(NeuronFragment nf) {
         Reference sampleRef = nf.getSample();
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+    }
+    
+    private void handleException(String message) {
+        Exception ex = new Exception(message);
+        SessionMgr.getSessionMgr().handleException(ex);
     }
             
 }

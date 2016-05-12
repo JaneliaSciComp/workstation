@@ -51,6 +51,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
@@ -189,6 +190,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
         try {
+            alignmentBoard = abContext.getAlignmentBoard();
+            if (alignmentBoard == null) {
+                throw new Exception("No alignment board in event for context " + event.getAlignmentBoardContext());
+            }
             preExistingBoard = UserSettingSerializer.settingsExist( alignmentBoard );
             
             // Carry out any steps to prepare GUI for presence of this panel.
