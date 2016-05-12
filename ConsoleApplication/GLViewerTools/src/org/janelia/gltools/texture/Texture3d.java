@@ -87,10 +87,12 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
     @Override
     public void dispose(GL3 gl) {
+        log.info("dispose() begin");
         super.dispose(gl);
         int[] pbos = {pixelBufferObject};
         gl.glDeleteBuffers(1, pbos, 0);
         pixelBufferObject = 0;
+        log.info("dispose() end");
     }
 
     @Override

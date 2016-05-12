@@ -789,6 +789,22 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
+        final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
+        useHttpCheckbox.setSelected(HttpDataSource.useHttp());
+        useHttpCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    useHttpCheckbox.setSelected(false);
+                    HttpDataSource.setUseHttp(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    useHttpCheckbox.setSelected(true);
+                    HttpDataSource.setUseHttp(true);
+                }
+            }
+        });
+        buttonsPanel.add(useHttpCheckbox);
+
         buttonsPanel.add(new TileStackCacheStatusPanel());
 
 		Component verticalGlue = Box.createVerticalGlue();

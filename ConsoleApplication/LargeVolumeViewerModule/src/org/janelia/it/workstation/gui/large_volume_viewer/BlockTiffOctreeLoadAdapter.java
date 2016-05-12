@@ -132,6 +132,9 @@ extends AbstractTextureLoadAdapter
 	public static TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders, int channelCount)
 	throws TileLoadError
     {
+
+        HttpDataSource.getSample2DTile(1, 2, 3);
+
 		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[channelCount];
         boolean emptyChannel = false;
