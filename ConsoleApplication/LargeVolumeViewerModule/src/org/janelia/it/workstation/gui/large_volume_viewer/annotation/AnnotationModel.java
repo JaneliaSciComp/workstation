@@ -168,30 +168,6 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void updateCurrentWorkspace() {
-        try {
-            // Updating this does not refresh any neurons.
-            currentWorkspace = modelMgr.loadWorkspace(currentWorkspace.getId());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void refreshNeuronInWorkspace(TmNeuron neuron) {
-        try {
-            if (neuron.getId() == null) {
-                log.warn("Null ID in neuron {}.", getCurrentNeuron());
-            } else {
-                currentWorkspace.getNeuronList().remove(neuron);
-                neuron = neuronManager.refreshFromData(neuron);
-                currentWorkspace.getNeuronList().add(neuron);
-            }
-        } catch (Exception ex) {
-            log.error(ex.getMessage());
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
-
     public synchronized void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
             currentWorkspace = workspace;
@@ -691,7 +667,7 @@ called from a  SimpleWorker thread.
         //  use annModel.moveNeurite() because we don't want those updates & signals yet
         if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
             // log.info("Two different neurons.");
-            neuronManager.moveNeuriteInMem(sourceAnnotation, sourceNeuron, targetNeuron);
+            neuronManager.moveNeurite(sourceAnnotation, sourceNeuron, targetNeuron);
         }
 
 
@@ -763,10 +739,8 @@ called from a  SimpleWorker thread.
         }
         TmNeuron sourceNeuron = getNeuronFromNeuronID(annotation.getNeuronId());
         neuronManager.moveNeurite(annotation, sourceNeuron, destNeuron);
-
-        // updates
-        refreshNeuronInWorkspace(sourceNeuron);
-        refreshNeuronInWorkspace(destNeuron);
+        neuronManager.saveNeuronData(sourceNeuron);
+        neuronManager.saveNeuronData(destNeuron);
 
         final TmWorkspace workspace = getCurrentWorkspace();
         final TmNeuron currentNeuron = getCurrentNeuron();
