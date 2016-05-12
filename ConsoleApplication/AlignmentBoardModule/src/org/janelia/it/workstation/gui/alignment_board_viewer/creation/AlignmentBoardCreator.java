@@ -104,7 +104,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                         board.setImageSize(alignmentContext.getImageSize());
                         board.setOpticalResolution(alignmentContext.getOpticalResolution());
                         board.setName(boardName);                        
-                        newBoard = board;
+                        newBoard = new DomainHelper().createAlignmentBoard(board);
                         
                         AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(board, alignmentContext);
                         // Presence of a sample member implies that single child of
@@ -125,7 +125,6 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                             @Override
                             public void run() {
                                 // Need to reflect the selection in the browse panel.
-                                //entityOutline.selectEntityByUniqueId(newBoard.getUniqueId());
                                 Launcher launcher = new Launcher();
                                 launcher.launch(newBoard.getId());
                             }
