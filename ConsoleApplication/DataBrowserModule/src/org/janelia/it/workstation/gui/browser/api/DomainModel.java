@@ -834,10 +834,10 @@ public class DomainModel {
         notifyDomainObjectRemoved(release);
     }
 
-    public DomainObject update(DomainObject domainObject) throws Exception {
+    public DomainObject save(DomainObject domainObject) throws Exception {
         DomainObject canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(domainFacade.update(domainObject));
+            canonicalObject = putOrUpdate(domainFacade.save(domainObject));
         }
         return canonicalObject;
     }

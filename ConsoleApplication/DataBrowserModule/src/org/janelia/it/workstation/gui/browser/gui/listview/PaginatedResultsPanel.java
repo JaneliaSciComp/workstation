@@ -466,7 +466,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                         }
                         else {
                             // Attempt to reselect the previously selected items
-                            log.info("Reselecting {} objects",selectedRefs.size());
+                            log.debug("Reselecting {} objects",selectedRefs.size());
                             List<DomainObject> domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectedRefs);
                             resultsView.selectDomainObjects(domainObjects, true, true, false);
                         }

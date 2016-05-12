@@ -24,6 +24,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
+import javax.swing.SwingUtilities;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -498,5 +499,22 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     public SearchProvider getSearchProvider() {
         return searchProvider;
+    }
+
+    public String saveState() {
+        int horizontalScrollValue = getDynamicTable().getScrollPane().getHorizontalScrollBar().getModel().getValue();
+        log.debug("Saving horizontalScrollValue={}",horizontalScrollValue);
+        return ""+horizontalScrollValue;
+    }
+
+    public void restoreState(String viewerState) {
+        final int horizontalScrollValue = Integer.parseInt(viewerState);
+        SwingUtilities.invokeLater(new Runnable() {
+               public void run() {
+                   log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
+                   getDynamicTable().getScrollPane().getHorizontalScrollBar().setValue(horizontalScrollValue);
+               }
+           }
+        );
     }
 }

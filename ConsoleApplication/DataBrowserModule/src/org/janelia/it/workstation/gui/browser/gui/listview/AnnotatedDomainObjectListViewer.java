@@ -104,4 +104,8 @@ public interface AnnotatedDomainObjectListViewer {
      * @param select select if true, deselect if false
      */
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select);
+
+    public String saveState();
+
+    public void restoreState(String viewerState);
 }

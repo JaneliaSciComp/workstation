@@ -362,4 +362,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public SearchProvider getSearchProvider() {
         return searchProvider;
     }
+
+    public String saveState() {
+        return null;
+    }
+
+    public void restoreState(String viewerState) {
+
+    }
 }

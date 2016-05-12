@@ -9,6 +9,7 @@ import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -18,11 +19,16 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> implements AnnotationView {
 
     @Override
-    protected void showPopupMenu(final MouseEvent e, final Annotation tag) {        
-        JPopupMenu popupMenu = getPopupMenu(tag);
-        if (popupMenu!=null) {
-            popupMenu.show(e.getComponent(), e.getX(), e.getY());
-            e.consume();
+    protected void showPopupMenu(final MouseEvent e, final Annotation tag) {
+        try {
+            JPopupMenu popupMenu = getPopupMenu(tag);
+            if (popupMenu!=null) {
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
     
