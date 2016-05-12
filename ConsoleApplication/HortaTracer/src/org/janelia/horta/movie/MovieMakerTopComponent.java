@@ -33,8 +33,11 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -86,7 +89,7 @@ implements LookupListener
     private float nextFrameDuration = 2.0f; // seconds
     private final Interpolator<HortaViewerState> defaultInterpolator;
     private final SaveFramesPanel saveFramesPanel = new SaveFramesPanel();
-    private final JFileChooser saveScriptChooser = new JFileChooser();
+    private final JFileChooser movieScriptChooser = new JFileChooser();
 
     public MovieMakerTopComponent() {
         initComponents();
@@ -94,7 +97,7 @@ implements LookupListener
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
         defaultInterpolator = new HortaViewerStateInterpolator();
         FileNameExtensionFilter jsonFilter = new FileNameExtensionFilter("JSON Files", "json");
-        saveScriptChooser.setFileFilter(jsonFilter);
+        movieScriptChooser.setFileFilter(jsonFilter);
     }
 
     /**
@@ -117,6 +120,7 @@ implements LookupListener
         jPanel3 = new javax.swing.JPanel();
         saveFramesButton = new javax.swing.JButton();
         saveScriptButton = new javax.swing.JButton();
+        loadScriptButton = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         deleteFramesButton = new javax.swing.JButton();
 
@@ -230,6 +234,13 @@ implements LookupListener
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(loadScriptButton, org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.loadScriptButton.text")); // NOI18N
+        loadScriptButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadScriptButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -237,7 +248,8 @@ implements LookupListener
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(saveFramesButton)
-                    .addComponent(saveScriptButton))
+                    .addComponent(saveScriptButton)
+                    .addComponent(loadScriptButton))
                 .addGap(0, 0, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
@@ -245,7 +257,9 @@ implements LookupListener
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(saveFramesButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(saveScriptButton))
+                .addComponent(saveScriptButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(loadScriptButton))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(MovieMakerTopComponent.class, "MovieMakerTopComponent.jPanel4.border.title"))); // NOI18N
@@ -293,9 +307,9 @@ implements LookupListener
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -344,10 +358,10 @@ implements LookupListener
 
     private void saveScriptButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveScriptButtonActionPerformed
         try {
-            int saveDialogResult = saveScriptChooser.showSaveDialog(this);
+            int saveDialogResult = movieScriptChooser.showSaveDialog(this);
             if (saveDialogResult != JFileChooser.APPROVE_OPTION)
                 return;
-            File file = saveScriptChooser.getSelectedFile();
+            File file = movieScriptChooser.getSelectedFile();
             Writer writer;
             try {
                 writer = new FileWriter(file);
@@ -385,6 +399,44 @@ implements LookupListener
             nextFrameDuration = duration;
     }//GEN-LAST:event_durationTextFieldActionPerformed
 
+    private void loadScriptButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadScriptButtonActionPerformed
+        // TODO add your handling code here:
+        int loadScriptResult = movieScriptChooser.showOpenDialog(this);
+        if (loadScriptResult != JFileChooser.APPROVE_OPTION)
+            return;
+        File file = movieScriptChooser.getSelectedFile();
+        if (! file.exists()) {
+            JOptionPane.showMessageDialog(this, 
+                    "No such file " + file.getAbsolutePath(),
+                    "File not found",
+                    JOptionPane.WARNING_MESSAGE);            
+            return;
+        }
+        Reader jsonReader;
+        try {
+            jsonReader = new FileReader(file);
+        } catch (FileNotFoundException ex) {
+            Exceptions.printStackTrace(ex);
+            JOptionPane.showMessageDialog(this, 
+                    "Failed to open file " + file.getAbsolutePath(),
+                    "Failed to open file " + file.getAbsolutePath(),
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        Type timelineType = new TypeToken<Timeline<HortaViewerState>>(){}.getType();
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        boolean doLoop = false;
+        if (playState != null)
+            doLoop = playState.isLoop();
+        gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(doLoop));
+        Gson gson = gsonBuilder.create();
+        Timeline<HortaViewerState> timeline = gson.fromJson(jsonReader, timelineType);
+        movieTimeline = timeline;
+        if (movieSource != null)
+            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
+        updateGui();
+    }//GEN-LAST:event_loadScriptButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addFrameButton;
     private javax.swing.JButton deleteFramesButton;
@@ -397,6 +449,7 @@ implements LookupListener
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
+    private javax.swing.JButton loadScriptButton;
     private javax.swing.JButton playButton;
     private javax.swing.JButton saveFramesButton;
     private javax.swing.JButton saveScriptButton;

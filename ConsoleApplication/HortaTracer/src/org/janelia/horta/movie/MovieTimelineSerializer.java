@@ -32,8 +32,11 @@ package org.janelia.horta.movie;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
@@ -43,7 +46,8 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  *
  * @author brunsc
  */
-class MovieTimelineSerializer implements JsonSerializer<Timeline<HortaViewerState>> 
+class MovieTimelineSerializer 
+implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline<HortaViewerState>>
 {
     private final boolean doLoop;
 
@@ -66,6 +70,29 @@ class MovieTimelineSerializer implements JsonSerializer<Timeline<HortaViewerStat
         for (KeyFrame<HortaViewerState> keyFrame : t) {
             frames.add(hortaFrameSerializer.serialize(keyFrame, frameType, jsc));
         }
+        return result;
+    }
+
+    @Override
+    public Timeline<HortaViewerState> deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
+    {
+        JsonObject movie = je.getAsJsonObject();
+        JsonObject timeline = movie.get("movie").getAsJsonObject();
+        boolean doLoop = timeline.getAsJsonPrimitive("doLoop").getAsBoolean();
+        float totalDuration = timeline.getAsJsonPrimitive("totalDuration").getAsFloat();
+        
+        // TODO - serialize/deserialize interpolator
+        Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
+        Timeline<HortaViewerState> result = new BasicMovieTimeline<>(defaultInterpolator);
+        JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameSerializer();
+        Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
+        JsonArray frames = timeline.getAsJsonArray("keyFrames");
+        for (int i = 0; i < frames.size(); ++i) {
+            JsonElement f = frames.get(i);
+            KeyFrame<HortaViewerState> keyFrame = hortaFrameSerializer.deserialize(f, frameType, jdc);
+            result.add(keyFrame);
+        }
+        
         return result;
     }
     

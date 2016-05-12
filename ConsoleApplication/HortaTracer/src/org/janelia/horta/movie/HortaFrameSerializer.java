@@ -31,8 +31,11 @@
 package org.janelia.horta.movie;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
@@ -45,7 +48,8 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  *
  * @author brunsc
  */
-class HortaFrameSerializer implements JsonSerializer<KeyFrame<HortaViewerState>>
+class HortaFrameSerializer 
+implements JsonSerializer<KeyFrame<HortaViewerState>>, JsonDeserializer<KeyFrame<HortaViewerState>>
 {
 
     public HortaFrameSerializer() {
@@ -69,6 +73,32 @@ class HortaFrameSerializer implements JsonSerializer<KeyFrame<HortaViewerState>>
             focus.add(new JsonPrimitive(f[i]));
         result.add("focusXyz", focus);
         
+        return result;
+    }
+
+    @Override
+    public KeyFrame<HortaViewerState> deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
+    {
+        JsonObject frame = je.getAsJsonObject();
+        float interval = frame.getAsJsonPrimitive("followingInterval").getAsFloat();
+        float zoom = frame.getAsJsonPrimitive("zoom").getAsFloat();
+        JsonArray quat = frame.getAsJsonArray("quaternionRotation");
+        JsonArray focus = frame.getAsJsonArray("focusXyz");
+        float[] f = new float[] {
+            focus.get(0).getAsFloat(),
+            focus.get(1).getAsFloat(),
+            focus.get(2).getAsFloat()};
+        Quaternion q = new Quaternion();
+        q.set(
+            quat.get(0).getAsFloat(),
+            quat.get(1).getAsFloat(),
+            quat.get(2).getAsFloat(),
+            quat.get(3).getAsFloat());
+        HortaViewerState state = new HortaViewerState(
+                f[0], f[1], f[2],
+                q,
+                zoom);
+        KeyFrame<HortaViewerState> result = new BasicKeyFrame<>(state, interval);
         return result;
     }
     
