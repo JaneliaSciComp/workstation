@@ -81,12 +81,12 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                 }
                 
                 // Pick an alignment context for the new board
-                AlignmentContext values[] = new AlignmentContext[contexts.size()];
-                contexts.toArray(values);
-                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
+                DisplayWrapper values[] = formatContexts(contexts);
+                final DisplayWrapper displayWrapper = (DisplayWrapper)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
-                        values, values[0]);
-                if (alignmentContext==null) return;
+                        values, values[0]);                
+                if (displayWrapper==null) return;
+                final AlignmentContext alignmentContext = displayWrapper.getContext();
                 
                 // Pick a name for the new board
                 final String boardName = (String) JOptionPane.showInputDialog(mainFrame, "Board Name:\n",
@@ -193,5 +193,34 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
     private DomainObject getDomainObject() {
         return domainObject;
     }
+    
+    private DisplayWrapper[] formatContexts(List<AlignmentContext> contexts) {
+        DisplayWrapper[] values = new DisplayWrapper[contexts.size()];
+        int i = 0;
+        for (AlignmentContext context: contexts) {
+            values[ i++ ] = new DisplayWrapper(context, String.format("%s: %s %s", context.getAlignmentSpace(), context.getImageSize(), context.getOpticalResolution()));
+        }
+        
+        return values;
+    }
 
+    private static class DisplayWrapper {
+        private AlignmentContext context;
+        private String description;
+
+        public DisplayWrapper(AlignmentContext context, String description) {
+            this.context = context;
+            this.description = description;
+        }
+        
+        @Override
+        public String toString() {
+            return description;
+        }
+        
+        public AlignmentContext getContext() {
+            return context;
+        }
+    }
+    
 }

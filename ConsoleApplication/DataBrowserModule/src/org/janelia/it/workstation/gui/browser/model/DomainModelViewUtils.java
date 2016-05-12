@@ -41,8 +41,8 @@ public class DomainModelViewUtils {
     public static HasFiles getResult(Sample sample, ResultDescriptor result) {
         
         log.debug("Getting result '{}' from {}",result,sample.getName());
-        log.debug("  Result name prefix: {}",result.getResultNamePrefix());
-        log.debug("  Group name: {}",result.getGroupName());
+        log.trace("  Result name prefix: {}",result.getResultNamePrefix());
+        log.trace("  Group name: {}",result.getGroupName());
 
         HasFiles chosenResult = null;
 
@@ -66,8 +66,6 @@ public class DomainModelViewUtils {
                 }
             }
 
-            log.debug("Got result: "+chosenResult);
-
             if (chosenResult instanceof HasFileGroups) {
                 HasFileGroups hasGroups = (HasFileGroups)chosenResult;
                 // Pick the first group, since there is no way to tell which is latest
@@ -83,7 +81,7 @@ public class DomainModelViewUtils {
             SamplePipelineRun run = objSample.getLatestSuccessfulRun();
             if (run==null || run.getResults()==null) return null;
             for(PipelineResult pipelineResult : run.getResults()) {
-                if (pipelineResult instanceof HasFileGroups) {
+                if (result.getGroupName() != null && pipelineResult instanceof HasFileGroups) {
                     HasFileGroups hasGroups = (HasFileGroups)pipelineResult;
                     for(String groupKey : hasGroups.getGroupKeys()) {
                         if (pipelineResult.getName().equals(result.getResultNamePrefix()) && groupKey.equals(result.getGroupName())) {
@@ -100,7 +98,8 @@ public class DomainModelViewUtils {
                 }
             }
         }
-        
+
+        log.debug("Got result: "+chosenResult);
         return chosenResult;
     }
 

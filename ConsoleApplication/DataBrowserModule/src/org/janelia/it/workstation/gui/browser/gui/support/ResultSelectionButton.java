@@ -12,6 +12,8 @@ import javax.swing.ButtonGroup;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
@@ -19,11 +21,9 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.util.Icons;
-
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,8 +83,8 @@ public class ResultSelectionButton extends DropDownButton {
                                 countedResultNames.add(name);
                             }
                         }
-                        else {
-                            String name = objectiveSample.getObjective()+" "+result.getName();
+                        if (!DomainUtils.get2dTypeNames(result).isEmpty()) {
+                            String name = objectiveSample.getObjective() + " " + result.getName();
                             countedResultNames.add(name);
                         }
                     }

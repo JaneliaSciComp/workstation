@@ -162,19 +162,18 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 DomainListViewManager.getInstance();
                 // Init the global selection model
                 GlobalDomainObjectSelectionModel.getInstance();
-                // Select the root node
-                showRootNode();
-                // Expand the top-level workspace nodes
-                for(Node node : root.getChildren().getNodes()) {
-                    beanTreeView.expandNode(node);
-                    break; // For now, we'll only expand the user's default workspace
-                }
-                synchronized (DomainExplorerTopComponent.this) {
-                    if (pathsToExpand!=null) {
-                        beanTreeView.expand(pathsToExpand);
-                        pathsToExpand = null;
+                // Load the data
+                refresh(false, false, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        if (pathsToExpand!=null) {
+                            log.info("Restoring serialized expanded state");
+                            beanTreeView.expand(pathsToExpand);
+                            pathsToExpand = null;
+                        }
+                        return null;
                     }
-                }
+                });
             }
 
             @Override
@@ -391,9 +390,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             protected void hadSuccess() {
                 try {
                     showRootNode();
+                    int numExpanded = 0;
                     if (restoreState) {
-                        beanTreeView.expand(expanded);
+                        numExpanded = beanTreeView.expand(expanded);
                         beanTreeView.selectPaths(selected);
+                    }
+                    if (numExpanded==0) {
+                        log.info("Expanding first node");
+                        for(Node node : root.getChildren().getNodes()) {
+                            beanTreeView.expandNode(node);
+                            break; // For now, we'll only expand first node
+                        }
                     }
                     beanTreeView.grabFocus();
                     debouncer.success();

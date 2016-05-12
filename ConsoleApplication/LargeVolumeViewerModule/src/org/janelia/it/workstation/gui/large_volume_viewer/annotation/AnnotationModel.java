@@ -1592,9 +1592,7 @@ called from a  SimpleWorker thread.
 
         if (selectOnCompletion) {
             // update workspace; update and select new neuron; this will draw points as well
-            updateCurrentWorkspace();
             final TmWorkspace workspace = getCurrentWorkspace();
-            neuronManager.loadWorkspaceNeurons(workspace);
 
             setCurrentNeuron(neuron);
             final TmNeuron updateNeuron = getCurrentNeuron();
@@ -1602,6 +1600,7 @@ called from a  SimpleWorker thread.
                 @Override
                 public void run() {
                     fireWorkspaceLoaded(workspace);
+                    fireWsEntityChanged();
                     fireNeuronSelected(updateNeuron);
                 }
             });
@@ -1631,17 +1630,12 @@ called from a  SimpleWorker thread.
     }
 
     public synchronized void postWorkspaceUpdate() throws Exception {
-        updateCurrentWorkspace();
         final TmWorkspace workspace = getCurrentWorkspace();
-        // This has been shown to be required. Without this load-back,
-        // the SWC import will not show the very latest neuron(s) added.
-        // In fact, not having called this consistently, was shown to be a bug.
-        // LLF, 4/29/2016
-        neuronManager.loadWorkspaceNeurons(workspace);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
+                fireWsEntityChanged();
             }
         });
     }

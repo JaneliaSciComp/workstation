@@ -808,6 +808,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
                     log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
                     refreshSearchResults(false);
+                    return;
                 }
             }
         }
