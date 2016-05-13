@@ -1135,6 +1135,25 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
                     
                     stereoMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Right Eye View") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                sceneWindow.getRenderer().getStereo3dMode() 
+                                        == SceneRenderer.Stereo3dMode.RIGHT);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            sceneWindow.getRenderer().setStereo3dMode(
+                                    SceneRenderer.Stereo3dMode.RIGHT);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
+                            sceneWindow.redrawNow();
+                        }
+                    }));
+                    
+                    stereoMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Red/Cyan Anaglyph") 
                     {
                         {  
