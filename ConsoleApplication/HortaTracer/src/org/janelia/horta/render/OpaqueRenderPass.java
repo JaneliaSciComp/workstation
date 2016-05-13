@@ -204,15 +204,18 @@ public class OpaqueRenderPass extends RenderPass
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO
         gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
-        if (camera instanceof SlabbableCamera) {
-            ConstViewSlab slab = new BasicViewSlab(relativeZNear, relativeZFar);
-            ((SlabbableCamera)camera).pushInternalViewSlab(slab);
+        try {
+            if (camera instanceof SlabbableCamera) {
+                ConstViewSlab slab = new BasicViewSlab(relativeZNear, relativeZFar);
+                ((SlabbableCamera)camera).pushInternalViewSlab(slab);
+            }
+
+            super.renderScene(gl, camera);
         }
-        
-        super.renderScene(gl, camera);
-        
-        if (camera instanceof SlabbableCamera) {
-            ((SlabbableCamera)camera).popInternalViewSlab();
+        finally {
+            if (camera instanceof SlabbableCamera) {
+                ((SlabbableCamera)camera).popInternalViewSlab();
+            }
         }
 
         for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget /* , pickTarget */ }) 

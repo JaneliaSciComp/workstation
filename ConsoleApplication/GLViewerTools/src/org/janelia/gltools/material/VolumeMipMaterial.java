@@ -305,13 +305,17 @@ public class VolumeMipMaterial extends BasicMaterial
         ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative() / 10.0f, vp.getzFarRelative() + 100.0f);
         // PerspectiveCamera generousCamera = new PerspectiveCamera(camera.getVantage(), generousViewport);
         // TODO: Cache modified camera so we don't have to perform full copy every time.
-        camera.pushInternalViewSlab(slab);
-        Matrix4 projectionMatrix = camera.getProjectionMatrix();
+        try {
+            camera.pushInternalViewSlab(slab);
+            Matrix4 projectionMatrix = camera.getProjectionMatrix();
 
-        gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
-        
-        displayNoMatrices(gl, mesh, camera, modelViewMatrix);
-        camera.popInternalViewSlab();
+            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
+
+            displayNoMatrices(gl, mesh, camera, modelViewMatrix);
+        }
+        finally {
+            camera.popInternalViewSlab();
+        }
     }
 
     @Override
