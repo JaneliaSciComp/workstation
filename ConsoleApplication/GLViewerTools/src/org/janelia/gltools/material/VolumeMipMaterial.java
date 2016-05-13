@@ -288,27 +288,16 @@ public class VolumeMipMaterial extends BasicMaterial
                 AbstractCamera camera,
                 Matrix4 modelViewMatrix) 
     {
-        if (modelViewMatrix == null)
-            modelViewMatrix = new Matrix4(camera.getViewMatrix());
-        gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
         
-        // Replace "official" camera with one that has very generous clip planes, 
-        // because we need to show entire brick bounding volume, and later clip in fragment shader.
-        // Viewport generousViewport = new Viewport();
         Viewport vp = camera.getViewport();
-        // generousViewport.setHeightPixels(vp.getHeightPixels());
-        // generousViewport.setWidthPixels(vp.getWidthPixels());
-        // generousViewport.setOriginXPixels(vp.getOriginXPixels());
-        // generousViewport.setOriginYPixels(vp.getOriginYPixels());
-        // generousViewport.setzNearRelative(vp.getzNearRelative() / 10.0f);
-        // generousViewport.setzFarRelative(vp.getzFarRelative() + 100.0f);
         ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative() / 10.0f, vp.getzFarRelative() + 100.0f);
-        // PerspectiveCamera generousCamera = new PerspectiveCamera(camera.getVantage(), generousViewport);
-        // TODO: Cache modified camera so we don't have to perform full copy every time.
         try {
             camera.pushInternalViewSlab(slab);
+            if (modelViewMatrix == null)
+                modelViewMatrix = new Matrix4(camera.getViewMatrix());
+            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
+        
             Matrix4 projectionMatrix = camera.getProjectionMatrix();
-
             gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
 
             displayNoMatrices(gl, mesh, camera, modelViewMatrix);

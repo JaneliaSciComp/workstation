@@ -33,8 +33,9 @@ import javax.media.opengl.DebugGL3;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.LateralOffsetCamera;
-import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.camera.BasicFrustumShift;
+import org.janelia.geometry3d.camera.ConstFrustumShift;
+import org.janelia.geometry3d.camera.ShiftableCamera;
 import org.janelia.scenewindow.SceneRenderer;
 
 /**
@@ -43,9 +44,6 @@ import org.janelia.scenewindow.SceneRenderer;
  */
 public class LeftEyeRenderer implements StereoRenderer 
 {
-    private AbstractCamera leftCamera = null;
-    private AbstractCamera rightCamera = null;
-    private PerspectiveCamera monoCamera = null;
     private float ipdPixels = 120.0f; // TODO - rational choice of stereo parameters
 
     public LeftEyeRenderer(float ipdPixels) {
@@ -55,16 +53,21 @@ public class LeftEyeRenderer implements StereoRenderer
     @Override
     public void renderScene(GLAutoDrawable glDrawable, SceneRenderer renderer, boolean swapEyes) 
     {
-        GL3 gl = new DebugGL3(glDrawable.getGL().getGL3());
-        if (renderer.getCamera() != monoCamera) {
-            monoCamera = (PerspectiveCamera) renderer.getCamera();
-            leftCamera = new LateralOffsetCamera(monoCamera, -0.5f * ipdPixels);
-            rightCamera = new LateralOffsetCamera(monoCamera, +0.5f * ipdPixels);
-        }
-        
+        float shift = -0.5f * ipdPixels;
         if (swapEyes)
-            renderer.renderScene(gl, rightCamera);
-        else 
-            renderer.renderScene(gl, leftCamera);
+            shift = -shift;
+        ConstFrustumShift frustumShift = new BasicFrustumShift(shift, 0);
+        
+        AbstractCamera camera = renderer.getCamera();
+        GL3 gl = new DebugGL3(glDrawable.getGL().getGL3());
+        try {
+            if (camera instanceof ShiftableCamera)
+                ((ShiftableCamera)camera).pushFrustumShift(frustumShift);
+            renderer.renderScene(gl, camera);
+        }
+        finally {
+            if (camera instanceof ShiftableCamera)
+                ((ShiftableCamera)camera).popFrustumShift();            
+        }
     }
 }

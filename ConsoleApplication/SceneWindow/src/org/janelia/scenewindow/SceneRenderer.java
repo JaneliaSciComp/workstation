@@ -203,6 +203,10 @@ implements GLEventListener
         switch (stereo3dMode) { 
             case LEFT:
                 stereoRenderer = new LeftEyeRenderer(120f);
+                break;
+            case RIGHT:
+                stereoRenderer = new LeftEyeRenderer(-120f);
+                break;
             case GREEN_MAGENTA:
                 stereoRenderer = new AnaglyphRenderer(false, true, false);
                 break;

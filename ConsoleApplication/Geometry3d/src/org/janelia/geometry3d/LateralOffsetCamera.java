@@ -117,15 +117,15 @@ implements GeneralCamera
                 / viewport.getHeightPixels();
         final float eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() 
                 / viewport.getHeightPixels();
-        final float frustumShiftX = 
-                eyeShiftSceneX * viewport.getzNearRelative();
-        final float frustumShiftY = 
-                eyeShiftSceneY * viewport.getzNearRelative();
-                // 0.0f;
-        final float focusDistance = getCameraFocusDistance();
         final ConstViewSlab slab = getEffectiveViewSlab();
+        final float focusDistance = getCameraFocusDistance();
         final float zNear = slab.getzNearRelative() * focusDistance;
         final float zFar = slab.getzFarRelative() * focusDistance;
+        final float frustumShiftX = 
+                eyeShiftSceneX * slab.getzNearRelative();
+        final float frustumShiftY = 
+                eyeShiftSceneY * slab.getzFarRelative();
+                // 0.0f;
         final float top = zNear * (float)Math.tan(0.5 * getFovRadians());
         final float right = viewport.getAspect() * top;
         // The centering translation should be on modelview (view) matrix,
