@@ -1,25 +1,18 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.actor.ActorSharedResource;
-import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
 import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.DatasetModel;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GL4SimpleActor;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLDisplayUpdateCallback;
 import org.janelia.it.workstation.gui.geometric_search.viewer.gl.GLModel;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gl.oitarr.*;
 import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.RenderableModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL4;
 import java.util.*;
 
 /**

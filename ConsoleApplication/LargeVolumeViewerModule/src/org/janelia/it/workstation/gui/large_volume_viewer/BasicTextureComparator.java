@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.jacs.shared.lvv.TileIndex;
+
 import java.util.Comparator;
 
 /**

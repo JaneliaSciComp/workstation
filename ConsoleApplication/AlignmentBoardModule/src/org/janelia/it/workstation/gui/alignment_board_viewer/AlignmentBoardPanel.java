@@ -55,7 +55,7 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.openide.util.lookup.ServiceProvider;

@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.matrix_support;
 
 import Jama.Matrix;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

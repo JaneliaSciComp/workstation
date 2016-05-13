@@ -2,8 +2,8 @@ package org.janelia.it.workstation.gui.viewer3d;
 
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;
 import org.janelia.it.workstation.gui.viewer3d.mesh.MeshViewer;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.MeshDrawActor;
@@ -89,7 +89,7 @@ public class TestMeshRender {
              *  have such a natural source.
              */
             // NOTE: bounding box must match conditions in attributes mgr.
-            BoundingBox3d bb = new BoundingBox3d();
+            org.janelia.it.jacs.shared.viewer3d.BoundingBox3d bb = new org.janelia.it.jacs.shared.viewer3d.BoundingBox3d();
             bb.setMin( 73000, 47000, 17000 );
             bb.setMax( 75000, 49000, 21000 );
             configurator.setBoundingBox( bb );

@@ -15,7 +15,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.FullScreenMode;
 import org.janelia.it.workstation.gui.TrackballInteractor;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;

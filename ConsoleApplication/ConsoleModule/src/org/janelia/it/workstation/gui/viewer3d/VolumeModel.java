@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 

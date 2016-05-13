@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import java.awt.event.ActionEvent;

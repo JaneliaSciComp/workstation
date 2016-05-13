@@ -3,8 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 /**
  * Created by murphys on 11/6/2015.
  */
-import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.lvv.*;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

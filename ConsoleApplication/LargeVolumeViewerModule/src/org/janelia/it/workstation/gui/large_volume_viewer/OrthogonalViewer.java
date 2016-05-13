@@ -1,8 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
@@ -30,7 +31,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Vector;
 import org.apache.commons.lang.SystemUtils;

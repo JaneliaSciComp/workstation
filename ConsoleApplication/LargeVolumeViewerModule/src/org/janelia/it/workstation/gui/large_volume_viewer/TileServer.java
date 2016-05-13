@@ -11,7 +11,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.LoadStatusListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.StatusUpdateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;

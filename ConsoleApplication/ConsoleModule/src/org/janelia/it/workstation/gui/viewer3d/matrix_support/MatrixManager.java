@@ -7,8 +7,8 @@
 package org.janelia.it.workstation.gui.viewer3d.matrix_support;
 
 import javax.media.opengl.GL2GL3;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import static org.janelia.it.workstation.gui.viewer3d.BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 

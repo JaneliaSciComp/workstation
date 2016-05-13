@@ -10,7 +10,7 @@ import javax.media.opengl.GL2GL3;
 
 import org.janelia.it.workstation.gui.opengl.shader.BasicShader;
 import org.janelia.it.workstation.gui.opengl.shader.SolidColor120Shader;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 
 /**
  * Should work for both GL2 and GL3

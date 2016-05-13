@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
-import org.janelia.it.workstation.octree.ZoomLevel;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
