@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -33,6 +34,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class DomainHelper {
+    public static final String ALIGNMENT_BOARDS_FOLDER = "Alignment Boards";
+
     private Logger log = LoggerFactory.getLogger(DomainHelper.class);
     public List<AlignmentContext> getAvailableAlignmentContexts(Sample sample) throws Exception {
         List<AlignmentContext> rtnVal = new ArrayList<>();
@@ -89,6 +92,24 @@ public class DomainHelper {
             if (rtnVal == null) {
                 handleException("Failed to create an alignment board.  Null value returned.");
             }
+            // Next step: add this new board appropriately to its parent.
+            // Get the parent.
+            List<TreeNode> nodes = (List<TreeNode>)model.getDomainObjects(TreeNode.class, ALIGNMENT_BOARDS_FOLDER);
+            TreeNode alignmentBoardsFolder = null;
+            if (nodes != null  &&  !nodes.isEmpty()) {
+                for (TreeNode nextNode: nodes) {
+                    if (nextNode.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+                        alignmentBoardsFolder = nextNode;
+                    }
+                }
+            }
+            else {
+                // Must create the folder.
+                alignmentBoardsFolder = new TreeNode();
+                alignmentBoardsFolder.setName(ALIGNMENT_BOARDS_FOLDER);
+                alignmentBoardsFolder = model.create(alignmentBoardsFolder);
+            }
+            model.addChild(alignmentBoardsFolder, rtnVal);
         }
         return rtnVal;
     }
