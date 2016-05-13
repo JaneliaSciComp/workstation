@@ -78,11 +78,13 @@
                 <package>org.janelia.it.jacs.shared.blast</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
+                <package>org.janelia.it.jacs.shared.exception</package>
                 <package>org.janelia.it.jacs.shared.export</package>
                 <package>org.janelia.it.jacs.shared.fasta</package>
                 <package>org.janelia.it.jacs.shared.ffmpeg</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
+                <package>org.janelia.it.jacs.shared.geom</package>
                 <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
                 <package>org.janelia.it.jacs.shared.image.stream</package>
@@ -90,19 +92,23 @@
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
+                <package>org.janelia.it.jacs.shared.lvv</package>
                 <package>org.janelia.it.jacs.shared.mesh_loader</package>
                 <package>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</package>
                 <package>org.janelia.it.jacs.shared.node</package>
+                <package>org.janelia.it.jacs.shared.octree</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.sample_discovery</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
                 <package>org.janelia.it.jacs.shared.solr</package>
                 <package>org.janelia.it.jacs.shared.swc</package>
                 <package>org.janelia.it.jacs.shared.tasks</package>
+                <package>org.janelia.it.jacs.shared.units</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
                 <package>org.janelia.it.jacs.shared.utils.zeiss</package>
+                <package>org.janelia.it.jacs.shared.viewer3d</package>
             </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>

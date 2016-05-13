@@ -148,7 +148,7 @@ public class TileTexture
 	public synchronized boolean loadImageToRam() {
 		setLoadStatus(LoadStatus.RAM_LOADING);
 		try {
-			textureData = loadAdapter.loadToRam(index);
+			textureData = new TextureData2dGL(loadAdapter.loadToRam(index));
 		} catch (AbstractTextureLoadAdapter.TileLoadError e) {
 			setLoadStatus(LoadStatus.LOAD_FAILED); // error
 			return false;

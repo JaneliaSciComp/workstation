@@ -3,8 +3,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 /**
  * Created by murphys on 11/6/2015.
  */
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.shared.lvv.*;
 import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +42,14 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         if (remoteBasePath!=null) {
             blockTiffOctreeLoadAdapter.setRemoteBasePath(remoteBasePath);
         }
-        blockTiffOctreeLoadAdapter.setTopFolder(topFolder);
+        blockTiffOctreeLoadAdapter.setTopFolderAndCoordinateSource(topFolder, new CoordinateToRawTransformFileSource() {
+            @Override
+            public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
+                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+            }
 
-        tileStackCacheController.setTileFormat(tileFormat);
+        });
         tileStackCacheController.setFilesystemConfiguration(remoteBasePath, topFolder);
-
     }
 
     private void shutdown() {
@@ -65,7 +70,7 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
             return result;
         } else {
-            return blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+            return new TextureData2dGL(blockTiffOctreeLoadAdapter.loadToRam(tileIndex));
         }
     }
 
