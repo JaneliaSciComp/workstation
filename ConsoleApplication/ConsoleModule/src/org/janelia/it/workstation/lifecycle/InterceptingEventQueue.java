@@ -6,6 +6,12 @@
 
 package org.janelia.it.workstation.lifecycle;
 
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgrActivityLogging;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+
 import java.awt.AWTEvent;
 import java.awt.EventQueue;
 import java.awt.event.MouseEvent;
@@ -40,9 +46,13 @@ public class InterceptingEventQueue extends EventQueue implements MessageSource 
         try {
             super.dispatchEvent(event);
         } catch (Throwable t) {
-            System.err.println("Error happened in intercepting event queue.  Suppressing for continuity.  Some event has gone awry.  Here's the memory free value." + Runtime.getRuntime().freeMemory());
-            System.err.println("Event at fault is: " + event.getClass().toString());
+            String message = "InterceptingEventQueue Error:" + SystemInfo.getFreeSystemMemory() + "/" + SystemInfo.getTotalSystemMemory();
+            System.err.println(message);
+            System.err.println("Event is: " + event.getClass().toString());
+            SessionMgrActivityLogging activityLogging = new SessionMgrActivityLogging();
+            activityLogging.logToolEvent(new ToolString("EventQueue"), new CategoryString("excep:mem"), new ActionString(message));
             t.printStackTrace();
+            throw t;
         }
     }
     
