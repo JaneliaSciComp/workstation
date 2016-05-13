@@ -41,6 +41,7 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.OrthographicCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -103,7 +104,8 @@ implements GLEventListener
                 break;
             case PERSPECTIVE:
             default:
-                this.camera = new PerspectiveCamera(vantage, viewport);
+                this.camera = new LateralOffsetCamera(vantage, viewport);
+                // this.camera = new PerspectiveCamera(vantage, viewport);
                 break;
         }
     }

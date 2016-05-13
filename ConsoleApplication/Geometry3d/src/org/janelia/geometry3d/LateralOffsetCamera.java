@@ -29,22 +29,39 @@
  */
 package org.janelia.geometry3d;
 
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.Observable;
 import java.util.Observer;
+import org.janelia.geometry3d.camera.BasicFrustumShift;
+import org.janelia.geometry3d.camera.ConstFrustumShift;
 import org.janelia.geometry3d.camera.ConstViewSlab;
+import org.janelia.geometry3d.camera.GeneralCamera;
 
 /**
  * Left or right eye camera, based on a centered parent camera
  * 
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public class LateralOffsetCamera extends PerspectiveCamera {
+public class LateralOffsetCamera extends PerspectiveCamera 
+implements GeneralCamera
+{
     private final PerspectiveCamera parentCamera;
-    private final float offsetPixels;
+    // private final float offsetPixels;
     private final float relX;
     private final float relY;
     private final float relWidth;
     private final float relHeight;
+    private final Deque<ConstFrustumShift> shiftStack = new LinkedList<>();
+    
+    public LateralOffsetCamera(Vantage vantage, Viewport viewport) 
+    {
+        super(vantage, viewport);
+        this.relX = 0f; this.relY = 0f;
+        this.relWidth = 1.0f; this.relHeight = 1.0f;
+        parentCamera = null;
+        shiftStack.push(new BasicFrustumShift(0, 0));
+    }
     
     public LateralOffsetCamera(final PerspectiveCamera parentCamera, 
             // Subset viewport
@@ -52,7 +69,8 @@ public class LateralOffsetCamera extends PerspectiveCamera {
             float relWidth, float relHeight) 
     {
         super(parentCamera.getVantage(), new Viewport());
-        this.offsetPixels = offsetPixels;
+        shiftStack.push(new BasicFrustumShift(offsetPixels, 0));
+        // this.offsetPixels = offsetPixels;
         this.parentCamera = parentCamera;
         this.relX = relX; this.relY = relY;
         this.relWidth = relWidth; this.relHeight = relHeight;
@@ -80,7 +98,8 @@ public class LateralOffsetCamera extends PerspectiveCamera {
         this.relX = 0f; this.relY = 0f;
         this.relWidth = 1.0f; this.relHeight = 1.0f;
         this.parentCamera = parentCamera;
-        this.offsetPixels = offsetPixels;
+        shiftStack.push(new BasicFrustumShift(offsetPixels, 0));
+        // this.offsetPixels = offsetPixels;
         parentCamera.getChangeObservable().addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
@@ -90,16 +109,18 @@ public class LateralOffsetCamera extends PerspectiveCamera {
         });
     }
 
-    public float getOffsetPixels() {
-        return offsetPixels;
-    }
-
     @Override
-    protected void updateProjectionMatrix() {
-        final float eyeShiftScene = offsetPixels * vantage.getSceneUnitsPerViewportHeight() 
+    protected void updateProjectionMatrix() 
+    {
+        final ConstFrustumShift shift = shiftStack.peek();
+        final float eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() 
                 / viewport.getHeightPixels();
-        final float frustumShift = 
-                eyeShiftScene * viewport.getzNearRelative();
+        final float eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() 
+                / viewport.getHeightPixels();
+        final float frustumShiftX = 
+                eyeShiftSceneX * viewport.getzNearRelative();
+        final float frustumShiftY = 
+                eyeShiftSceneY * viewport.getzNearRelative();
                 // 0.0f;
         final float focusDistance = getCameraFocusDistance();
         final ConstViewSlab slab = getEffectiveViewSlab();
@@ -112,8 +133,8 @@ public class LateralOffsetCamera extends PerspectiveCamera {
         // pj.translate(new Vector3(eyeShiftScene, 0, 0)); // Do this in view matrix
         projectionMatrix.makeFrustum(
         // projectionMatrix.makeFrustum(
-                -right + frustumShift, right + frustumShift,
-                -top, top,
+                -right + frustumShiftX, right + frustumShiftX,
+                -top + frustumShiftY, top + frustumShiftY,
                 zNear, zFar);
         // System.out.println("projectionMatrix 1 = "+projectionMatrix);
         // projectionMatrix.translate(new Vector3(eyeShiftScene, 0, 0));
@@ -125,10 +146,31 @@ public class LateralOffsetCamera extends PerspectiveCamera {
     @Override
     protected void updateViewMatrix() {
         // TODO - viewer-fixed lights not at infinity need this translation too...
-        viewMatrix.copy(parentCamera.getViewMatrix());
-        float eyeShiftScene = offsetPixels * vantage.getSceneUnitsPerViewportHeight() 
+        if (parentCamera != null)
+            viewMatrix.copy(parentCamera.getViewMatrix());
+        else
+            super.updateViewMatrix();
+        final ConstFrustumShift shift = shiftStack.peek();
+        float eyeShiftSceneX = shift.getShiftXPixels() * vantage.getSceneUnitsPerViewportHeight() 
                 / viewport.getHeightPixels();
-        viewMatrix.translate(new Vector3(eyeShiftScene, 0, 0));
+        float eyeShiftSceneY = shift.getShiftYPixels() * vantage.getSceneUnitsPerViewportHeight() 
+                / viewport.getHeightPixels();
+        viewMatrix.translate(new Vector3(eyeShiftSceneX, eyeShiftSceneY, 0));
         viewMatrixNeedsUpdate = false;
+    }
+
+    @Override
+    public void pushFrustumShift(ConstFrustumShift shift) {
+        viewMatrixNeedsUpdate = true;
+        projectionMatrixNeedsUpdate = true;
+        shiftStack.push(shift);
+    }
+
+    @Override
+    public ConstFrustumShift popFrustumShift() {
+        ConstFrustumShift result = shiftStack.pop();
+        viewMatrixNeedsUpdate = true;
+        projectionMatrixNeedsUpdate = true;
+        return result;
     }
 }
