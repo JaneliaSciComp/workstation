@@ -31,6 +31,7 @@ package org.janelia.geometry3d;
 
 import java.util.Observable;
 import java.util.Observer;
+import org.janelia.geometry3d.camera.ConstViewSlab;
 
 /**
  * Left or right eye camera, based on a centered parent camera
@@ -89,6 +90,10 @@ public class LateralOffsetCamera extends PerspectiveCamera {
         });
     }
 
+    public float getOffsetPixels() {
+        return offsetPixels;
+    }
+
     @Override
     protected void updateProjectionMatrix() {
         final float eyeShiftScene = offsetPixels * vantage.getSceneUnitsPerViewportHeight() 
@@ -97,8 +102,9 @@ public class LateralOffsetCamera extends PerspectiveCamera {
                 eyeShiftScene * viewport.getzNearRelative();
                 // 0.0f;
         final float focusDistance = getCameraFocusDistance();
-        final float zNear = viewport.getzNearRelative() * focusDistance;
-        final float zFar = viewport.getzFarRelative() * focusDistance;
+        final ConstViewSlab slab = getEffectiveViewSlab();
+        final float zNear = slab.getzNearRelative() * focusDistance;
+        final float zFar = slab.getzFarRelative() * focusDistance;
         final float top = zNear * (float)Math.tan(0.5 * getFovRadians());
         final float right = viewport.getAspect() * top;
         // The centering translation should be on modelview (view) matrix,

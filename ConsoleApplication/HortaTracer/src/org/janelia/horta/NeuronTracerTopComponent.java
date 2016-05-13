@@ -776,7 +776,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             @Override
             public void update(Observable o, Object arg) {
                 Viewport vp = sceneWindow.getCamera().getViewport();
-                logger.info("zNearRelative = " + vp.getzNearRelative());
+                // logger.info("zNearRelative = " + vp.getzNearRelative());
                 // TODO: should that be updateRelativeSlabThickness?
                 neuronMPRenderer.setRelativeSlabThickness(vp.getzNearRelative(), vp.getzFarRelative());
                 redrawNow();
@@ -1116,6 +1116,25 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
                     
                     stereoMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Left Eye View") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                sceneWindow.getRenderer().getStereo3dMode() 
+                                        == SceneRenderer.Stereo3dMode.LEFT);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            sceneWindow.getRenderer().setStereo3dMode(
+                                    SceneRenderer.Stereo3dMode.LEFT);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
+                            sceneWindow.redrawNow();
+                        }
+                    }));
+                    
+                    stereoMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Red/Cyan Anaglyph") 
                     {
                         {  
@@ -1185,7 +1204,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 FileDialog.SAVE);
                         chooser.setFile("*.png");
                         chooser.setVisible(true);
-                        logger.info("Screen shot file name = " + chooser.getFile());
+                        // logger.info("Screen shot file name = " + chooser.getFile());
                         if (chooser.getFile() == null) {
                             return;
                         }
@@ -1434,11 +1453,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vantage v = sceneWindow.getVantage();
         if (doCubifyVoxels) {
             v.setWorldScaleHack(1, 1, 0.4f);
-            logger.info("distort");
+            // logger.info("distort");
         }
         else {
             v.setWorldScaleHack(1, 1, 1);
-            logger.info("undistort");
+            // logger.info("undistort");
         }
         v.notifyObservers();
         sceneWindow.redrawNow();

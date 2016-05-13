@@ -42,6 +42,7 @@
             <public-packages>
                 <package>org.janelia.geometry.util</package>
                 <package>org.janelia.geometry3d</package>
+                <package>org.janelia.geometry3d.camera</package>
             </public-packages>
         </data>
     </configuration>

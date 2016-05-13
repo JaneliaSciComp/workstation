@@ -65,6 +65,7 @@ public class BasicScene implements Scene {
         return index;
     }
 
+    @Override
     public Vantage getVantage() {
         return cameras.get(0);
     }

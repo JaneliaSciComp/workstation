@@ -30,6 +30,7 @@
 package org.janelia.geometry3d;
 
 import java.util.Arrays;
+import org.janelia.geometry3d.camera.ConstRotation;
 
 /**
  * Represents a 3x3 rotation matrix of floats.
@@ -37,13 +38,19 @@ import java.util.Arrays;
  * library in the SimTK toolkit http://simtk.org/
  * @author brunsc
  */
-public class Rotation {
+public class Rotation implements ConstRotation
+{
     private final float[] data;
     
     private static final float EPSILON = 1e-7f;
 
     public float[] convertRotationToAngleAxis() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public float getMatrixElement(int i) {
+        return data[i];
     }
 
     /**
@@ -498,9 +505,9 @@ public class Rotation {
         data[3*i +j] = value;
     }
     
-    public void copy(Rotation other) {
+    public void copy(ConstRotation other) {
         for (int i = 0; i < 9; ++i) {
-            data[i] = other.data[i];
+            data[i] = other.getMatrixElement(i);
         }
     }
 
@@ -526,7 +533,7 @@ public class Rotation {
         data[8] = i8;
     }
 
-    public Rotation setFromAxisAngle(Vector3 axis, float theta) {
+    public Rotation setFromAxisAngle(ConstVector3 axis, float theta) {
         Quaternion q;
         q = new Quaternion().setFromAxisAngle(axis, theta);
         Rotation result = setFromQuaternion(q);

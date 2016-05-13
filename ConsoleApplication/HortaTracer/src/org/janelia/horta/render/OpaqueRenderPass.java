@@ -35,6 +35,7 @@ import java.nio.ByteBuffer;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.gltools.Framebuffer;
@@ -144,7 +145,13 @@ public class OpaqueRenderPass extends RenderPass
     {
         // Create local copy of camera, so we can fuss with the slab thickness
         if ( (localCamera == null) || (localCamera.getVantage() != camera.getVantage()) ) {
-            localCamera = new PerspectiveCamera(camera.getVantage(), localViewport);
+            if (camera instanceof LateralOffsetCamera) { // might be stereo 3d, and we should preserve that
+                float offset = ((LateralOffsetCamera)camera).getOffsetPixels();
+                localCamera = new LateralOffsetCamera((PerspectiveCamera)camera, offset);
+            }
+            else {
+                localCamera = new PerspectiveCamera(camera.getVantage(), localViewport);
+            }
         }
         Viewport vp = camera.getViewport();
         localViewport.setWidthPixels(vp.getWidthPixels());

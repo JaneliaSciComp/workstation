@@ -33,7 +33,8 @@ package org.janelia.geometry3d;
  *
  * @author cmbruns
  */
-public class Quaternion {
+public class Quaternion
+{
     private final float[] data;
     
     public Quaternion() {
@@ -90,14 +91,14 @@ public class Quaternion {
         return this;
     }
     
-    public Quaternion setFromAxisAngle(Vector3 axis, float theta) {
+    public Quaternion setFromAxisAngle(ConstVector3 axis, float theta) {
         float ca2 = (float)Math.cos(theta/2), sa2 = (float)Math.sin(theta/2);
         // Multiplying an entire quaternion by -1 produces the same Rotation matrix
         // (each element of the Rotation element involves the product of two quaternion elements).
         // The canonical form is to make the first element of the quaternion positive.
         if( ca2 < 0 ) { ca2 = -ca2; sa2 = -sa2; }
         data[3] = ca2;
-        float[] v = axis.toArray();
+        float[] v = axis.toNewArray();
         for (int i = 0; i < 3; ++i)
             data[i] = v[i] * sa2;
         return this;

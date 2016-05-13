@@ -30,13 +30,14 @@
 package org.janelia.geometry3d;
 
 import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.geometry3d.camera.ConstViewport;
 
 /**
  * Rectangular viewing window region where scene rendering occurs
  * 
  * @author brunsc
  */
-public class Viewport implements ViewSlab
+public class Viewport implements ViewSlab, ConstViewport
 {
     private int originXPixels = 0;
     private int originYPixels = 0;

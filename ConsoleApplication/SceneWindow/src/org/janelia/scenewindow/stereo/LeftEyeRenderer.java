@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,22 +27,44 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.janelia.scenewindow.stereo;
 
-package org.janelia.geometry3d;
-
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.geometry3d.camera.ConstViewSlab;
+import javax.media.opengl.DebugGL3;
+import javax.media.opengl.GL3;
+import javax.media.opengl.GLAutoDrawable;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.LateralOffsetCamera;
+import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.scenewindow.SceneRenderer;
 
 /**
  *
- * @author brunsc
+ * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public interface ViewSlab extends ConstViewSlab {
+public class LeftEyeRenderer implements StereoRenderer 
+{
+    private AbstractCamera leftCamera = null;
+    private AbstractCamera rightCamera = null;
+    private PerspectiveCamera monoCamera = null;
+    private float ipdPixels = 120.0f; // TODO - rational choice of stereo parameters
 
-    ComposableObservable getChangeObservable();
-
-    void setzFarRelative(float zFarRelative);
-
-    void setzNearRelative(float zNearRelative);
+    public LeftEyeRenderer(float ipdPixels) {
+        this.ipdPixels = ipdPixels;
+    }
     
+    @Override
+    public void renderScene(GLAutoDrawable glDrawable, SceneRenderer renderer, boolean swapEyes) 
+    {
+        GL3 gl = new DebugGL3(glDrawable.getGL().getGL3());
+        if (renderer.getCamera() != monoCamera) {
+            monoCamera = (PerspectiveCamera) renderer.getCamera();
+            leftCamera = new LateralOffsetCamera(monoCamera, -0.5f * ipdPixels);
+            rightCamera = new LateralOffsetCamera(monoCamera, +0.5f * ipdPixels);
+        }
+        
+        if (swapEyes)
+            renderer.renderScene(gl, rightCamera);
+        else 
+            renderer.renderScene(gl, leftCamera);
+    }
 }
