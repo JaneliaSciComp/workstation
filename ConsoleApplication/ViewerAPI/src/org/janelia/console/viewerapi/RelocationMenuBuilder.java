@@ -153,6 +153,9 @@ public class RelocationMenuBuilder {
         @Override
         public void actionPerformed(ActionEvent e) {
             SampleLocation sampleLocation = provider.getSampleLocation();
+            if (sampleLocation == null) {
+                JOptionPane.showMessageDialog(null, "No sample location available. Please check that " + provider.getProviderDescription() + " is available.");
+            }
             double[] focusCoords = new double[] {
                 sampleLocation.getFocusXUm(),
                 sampleLocation.getFocusYUm(),
