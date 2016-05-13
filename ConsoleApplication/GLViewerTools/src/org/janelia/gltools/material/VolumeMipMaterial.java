@@ -40,6 +40,8 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.VolumeTextureMesh;
+import org.janelia.geometry3d.camera.BasicViewSlab;
+import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderProgram;
@@ -292,21 +294,24 @@ public class VolumeMipMaterial extends BasicMaterial
         
         // Replace "official" camera with one that has very generous clip planes, 
         // because we need to show entire brick bounding volume, and later clip in fragment shader.
-        Viewport generousViewport = new Viewport();
+        // Viewport generousViewport = new Viewport();
         Viewport vp = camera.getViewport();
-        generousViewport.setHeightPixels(vp.getHeightPixels());
-        generousViewport.setWidthPixels(vp.getWidthPixels());
-        generousViewport.setOriginXPixels(vp.getOriginXPixels());
-        generousViewport.setOriginYPixels(vp.getOriginYPixels());
-        generousViewport.setzNearRelative(vp.getzNearRelative() / 10.0f);
-        generousViewport.setzFarRelative(vp.getzFarRelative() + 100.0f);
-        PerspectiveCamera generousCamera = new PerspectiveCamera(camera.getVantage(), generousViewport);
+        // generousViewport.setHeightPixels(vp.getHeightPixels());
+        // generousViewport.setWidthPixels(vp.getWidthPixels());
+        // generousViewport.setOriginXPixels(vp.getOriginXPixels());
+        // generousViewport.setOriginYPixels(vp.getOriginYPixels());
+        // generousViewport.setzNearRelative(vp.getzNearRelative() / 10.0f);
+        // generousViewport.setzFarRelative(vp.getzFarRelative() + 100.0f);
+        ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative() / 10.0f, vp.getzFarRelative() + 100.0f);
+        // PerspectiveCamera generousCamera = new PerspectiveCamera(camera.getVantage(), generousViewport);
         // TODO: Cache modified camera so we don't have to perform full copy every time.
-        Matrix4 projectionMatrix = generousCamera.getProjectionMatrix();
+        camera.pushInternalViewSlab(slab);
+        Matrix4 projectionMatrix = camera.getProjectionMatrix();
 
         gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
         
-        displayNoMatrices(gl, mesh, generousCamera, modelViewMatrix);
+        displayNoMatrices(gl, mesh, camera, modelViewMatrix);
+        camera.popInternalViewSlab();
     }
 
     @Override
