@@ -38,6 +38,9 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.camera.BasicViewSlab;
+import org.janelia.geometry3d.camera.ConstViewSlab;
+import org.janelia.geometry3d.camera.SlabbableCamera;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
@@ -66,8 +69,8 @@ public class OpaqueRenderPass extends RenderPass
     private float cachedZNear = 1e-2f;
     private float cachedZFar = 1e4f;
     
-    private PerspectiveCamera localCamera; // local version of camera with custom slab
-    private final Viewport localViewport = new Viewport(); // local version of camera with custom slab
+    // private PerspectiveCamera localCamera; // local version of camera with custom slab
+    // private final Viewport localViewport = new Viewport(); // local version of camera with custom slab
     
     // private float slabThickness = 0.50f; // Half of view height
     private float relativeZNear = 0.92f;
@@ -130,6 +133,7 @@ public class OpaqueRenderPass extends RenderPass
         relativeZNear = zNear;
         relativeZFar = zFar;
         setBuffersDirty();
+        /*
         if (localCamera != null) {
             localViewport.setzNearRelative(zNear); // TODO
             localViewport.setzFarRelative(zFar);
@@ -138,11 +142,13 @@ public class OpaqueRenderPass extends RenderPass
             cachedZFar = zFar * focusDistance;
             localViewport.getChangeObservable().notifyObservers();
         }
+        */
     }
     
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
+        /*
         // Create local copy of camera, so we can fuss with the slab thickness
         if ( (localCamera == null) || (localCamera.getVantage() != camera.getVantage()) ) {
             if (camera instanceof LateralOffsetCamera) { // might be stereo 3d, and we should preserve that
@@ -173,10 +179,14 @@ public class OpaqueRenderPass extends RenderPass
         float relFar = relativeZFar;
         localViewport.setzNearRelative(relNear);
         localViewport.setzFarRelative(relFar);
+        */
+
+        Viewport vp = camera.getViewport();
+        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
         
         // Store camera parameters for use by volume rendering pass
-        cachedZNear = relNear * focusDistance;
-        cachedZFar = relFar * focusDistance;
+        cachedZNear = relativeZNear * focusDistance;
+        cachedZFar = relativeZFar * focusDistance;
         
         if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);
@@ -194,7 +204,16 @@ public class OpaqueRenderPass extends RenderPass
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO
         gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
-        super.renderScene(gl, localCamera);
+        if (camera instanceof SlabbableCamera) {
+            ConstViewSlab slab = new BasicViewSlab(relativeZNear, relativeZFar);
+            ((SlabbableCamera)camera).pushInternalViewSlab(slab);
+        }
+        
+        super.renderScene(gl, camera);
+        
+        if (camera instanceof SlabbableCamera) {
+            ((SlabbableCamera)camera).popInternalViewSlab();
+        }
 
         for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget /* , pickTarget */ }) 
         {
@@ -257,9 +276,11 @@ public class OpaqueRenderPass extends RenderPass
     
     public float getZFocus() 
     {
+        /*
         if (localCamera != null) {
             return localCamera.getCameraFocusDistance();
         }
+        */
         // float ratio = 0.5f; // zero means focus at zNear, 1.0 means focus at zFar
         float ratio = (1.0f - relativeZNear) / (relativeZFar - relativeZNear);
         return (1.0f - ratio) * getZNear() + ratio * getZFar();
