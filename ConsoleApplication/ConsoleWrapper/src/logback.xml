@@ -26,6 +26,7 @@
     <logger name="org.janelia.it.workstation.gui.browser.gui.support" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.nodes" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.model" level="INFO"/>
+    <logger name="org.janelia.it.workstation.gui.browser.api.navigation" level="INFO"/>
 
     <!--  perf4j loggers must be set to DEBUG to log performance benchmarks-->
     <logger name="org.janelia.it.workstation.shared.util.Utils" level="INFO"/>

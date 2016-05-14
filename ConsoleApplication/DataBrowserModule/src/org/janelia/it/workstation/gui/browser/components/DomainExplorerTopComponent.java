@@ -33,6 +33,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
+import org.janelia.it.workstation.gui.browser.nb_action.NavigateBack;
+import org.janelia.it.workstation.gui.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
@@ -53,6 +55,7 @@ import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.actions.CallableSystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
@@ -186,7 +189,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         };
         
         worker.execute();
-        
     }
     
 //    private void bindKeys() {

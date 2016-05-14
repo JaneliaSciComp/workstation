@@ -31,6 +31,8 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
+import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -38,6 +40,7 @@ import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -355,19 +358,44 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
     }
 
+    @Override
     public void setSearchProvider(SearchProvider searchProvider) {
         this.searchProvider = searchProvider;
     }
 
-    public SearchProvider getSearchProvider() {
-        return searchProvider;
+    @Override
+    public ListViewerState saveState() {
+        int maxImageWidth = imagesPanel.getMaxImageWidth();
+        log.debug("Saving maxImageWidth={}",maxImageWidth);
+        IconGridViewerState state = new IconGridViewerState(maxImageWidth);
+        return state;
     }
 
-    public String saveState() {
-        return null;
+    @Override
+    public void restoreState(ListViewerState viewerState) {
+        final IconGridViewerState tableViewerState = (IconGridViewerState) viewerState;
+        SwingUtilities.invokeLater(new Runnable() {
+               public void run() {
+                   int maxImageWidth = tableViewerState.getMaxImageWidth();
+                   log.debug("Restoring maxImageWidth={}", maxImageWidth);
+                   // TODO: this needs to update the toolbar and trigger a repaint
+                   imagesPanel.setMaxImageWidth(maxImageWidth);
+               }
+           }
+        );
     }
 
-    public void restoreState(String viewerState) {
+    private class IconGridViewerState extends ListViewerState {
 
+        private int maxImageWidth;
+
+        public IconGridViewerState(int maxImageWidth) {
+            super(ListViewerType.IconViewer);
+            this.maxImageWidth = maxImageWidth;
+        }
+
+        public int getMaxImageWidth() {
+            return maxImageWidth;
+        }
     }
 }

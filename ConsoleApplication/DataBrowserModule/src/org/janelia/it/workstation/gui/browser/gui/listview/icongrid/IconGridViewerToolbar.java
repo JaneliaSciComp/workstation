@@ -87,12 +87,6 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         });
     }
 
-    protected abstract void showTitlesButtonPressed();
-
-    protected abstract void showTagsButtonPressed();
-
-    protected abstract void currImageSizeChanged(int imageSize);
-
     public boolean areTitlesVisible() {
         return showTitlesButton.isSelected();
     }
@@ -120,4 +114,11 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     public void addCustomComponent(JComponent component) {
         toolbar.add(component, null, customComponentIndex++);
     }
+
+    protected abstract void showTitlesButtonPressed();
+
+    protected abstract void showTagsButtonPressed();
+
+    protected abstract void currImageSizeChanged(int imageSize);
+
 }

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
+import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
@@ -9,14 +10,17 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectSelectionEditor;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectNodeSelectionEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -64,7 +68,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
-    private DomainObjectSelectionEditor editor;
+    private DomainObjectNodeSelectionEditor editor;
     private FindContext findContext;
     private boolean active = false;
     
@@ -151,17 +155,18 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (TC_VERSION.equals(version) && objectStrRef!=null) {
 
             SimpleWorker worker = new SimpleWorker() {
-                DomainObject object;
+                DomainObjectNode node;
                 
                 @Override
                 protected void doStuff() throws Exception {
-                    object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                    DomainObject object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
+                    // wait for Explorer to expand its nodes and then find the node
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    if (object!=null) {
-                        loadDomainObject(object, false);
+                    if (node!=null) {
+                        loadDomainObjectNode(node, false);
                     }
                 }
 
@@ -200,7 +205,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         return true;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectSelectionEditor> editorClass) {
+    public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor> editorClass) {
         try {
             
             if (editor!=null) {
@@ -223,14 +228,16 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
     
-    public DomainObjectSelectionEditor getEditor() {
+    public DomainObjectNodeSelectionEditor getEditor() {
         return editor;
     }
     
-    public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
-        
+    public void loadDomainObjectNode(DomainObjectNode domainObjectNode, boolean isUserDriven) {
+
+        final DomainObject domainObject = domainObjectNode.getDomainObject();
+
         // Can view display this object?
-        final Class<? extends DomainObjectSelectionEditor> editorClass = getEditorClass(domainObject);
+        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;
         }
@@ -243,11 +250,44 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        editor.loadDomainObject(domainObject, isUserDriven, null);
+
+        editor.loadDomainObjectNode(domainObjectNode, isUserDriven, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                DomainObjectEditorState state = editor.saveState();
+                state.setTopComponent(DomainListViewTopComponent.this);
+                StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
+                return null;
+            }
+        });
         setName(editor.getName());
     }
 
-    private static Class<? extends DomainObjectSelectionEditor> getEditorClass(DomainObject domainObject) {
+    public void loadState(DomainObjectEditorState state) {
+
+        DomainObjectNode domainObjectNode = state.getDomainObjectNode();
+        DomainObject domainObject = domainObjectNode.getDomainObject();
+
+        // Can view display this object?
+        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
+        if (editorClass==null) {
+            return;
+        }
+
+        // Do we already have the given node loaded?
+        if (!setCurrent(domainObject)) {
+            return;
+        }
+
+        if (editor==null || !editor.getClass().equals(editorClass)) {
+            setEditorClass(editorClass);
+        }
+
+        editor.loadState(state);
+        setName(editor.getName());
+    }
+
+    private static Class<? extends DomainObjectNodeSelectionEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Filter) {
             return FilterEditorPanel.class;
         }
