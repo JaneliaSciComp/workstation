@@ -47,8 +47,8 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
                 return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
             }
-
         });
+        tileStackCacheController.setTileFormat(tileFormat);
         tileStackCacheController.setFilesystemConfiguration(remoteBasePath, topFolder);
     }
 
