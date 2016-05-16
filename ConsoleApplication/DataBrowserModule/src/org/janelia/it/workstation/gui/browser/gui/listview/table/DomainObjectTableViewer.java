@@ -42,12 +42,14 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -501,20 +503,38 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return searchProvider;
     }
 
-    public String saveState() {
+    @Override
+    public ListViewerState saveState() {
         int horizontalScrollValue = getDynamicTable().getScrollPane().getHorizontalScrollBar().getModel().getValue();
         log.debug("Saving horizontalScrollValue={}",horizontalScrollValue);
-        return ""+horizontalScrollValue;
+        TableViewerState state = new TableViewerState(horizontalScrollValue);
+        return state;
     }
 
-    public void restoreState(String viewerState) {
-        final int horizontalScrollValue = Integer.parseInt(viewerState);
+    @Override
+    public void restoreState(ListViewerState viewerState) {
+        final TableViewerState tableViewerState = (TableViewerState)viewerState;
         SwingUtilities.invokeLater(new Runnable() {
                public void run() {
+                   int horizontalScrollValue = tableViewerState.getHorizontalScrollValue();
                    log.debug("Restoring horizontalScrollValue={}",horizontalScrollValue);
                    getDynamicTable().getScrollPane().getHorizontalScrollBar().setValue(horizontalScrollValue);
                }
            }
         );
+    }
+
+    private class TableViewerState extends ListViewerState {
+
+        private int horizontalScrollValue;
+
+        public TableViewerState(int horizontalScrollValue) {
+            super(ListViewerType.TableViewer);
+            this.horizontalScrollValue = horizontalScrollValue;
+        }
+
+        public int getHorizontalScrollValue() {
+            return horizontalScrollValue;
+        }
     }
 }

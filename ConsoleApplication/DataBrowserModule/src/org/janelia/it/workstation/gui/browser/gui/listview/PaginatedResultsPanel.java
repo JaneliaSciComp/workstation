@@ -186,13 +186,33 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     setViewerType(type);
+
+                    final List<DomainObject> selectedDomainObjects = new ArrayList<>();
+                    DomainModel model = getDomainMgr().getModel();
+                    for(Reference id : selectionModel.getSelectedIds()) {
+                        DomainObject domainObject = model.getDomainObject(id);
+                        if (domainObject!=null) {
+                            selectedDomainObjects.add(domainObject);
+                        }
+                    }
+
+                    // Set user driven to false in order to avoid selecting the first item
+                    updateResultsView(new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            // Reselect the items that were selected
+                            log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),type.getName());
+                            resultsView.selectDomainObjects(selectedDomainObjects, true, true, true);
+                            return null;
+                        }
+                    });
                 }
             });
             popupMenu.add(viewItem);
         }
     }
     
-    private void setViewerType(final ListViewerType viewerType) {
+    public void setViewerType(final ListViewerType viewerType) {
         this.viewTypeButton.setText(viewerType.getName());
         try {
             if (viewerType.getViewerClass()==null) {
@@ -208,27 +228,6 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             log.error("Error instantiating viewer class",e);
             setViewer(null);
         }
-
-        final List<DomainObject> selectedDomainObjects = new ArrayList<>(); 
-        DomainModel model = getDomainMgr().getModel();
-        for(Reference id : selectionModel.getSelectedIds()) {
-            DomainObject domainObject = model.getDomainObject(id);
-            if (domainObject!=null) {
-                selectedDomainObjects.add(domainObject);
-            }
-        }
-        
-        // Set user driven to false in order to avoid selecting the first item
-        updateResultsView(new Callable<Void>() {   
-            @Override
-            public Void call() throws Exception {
-                // Reselect the items that were selected
-                log.info("Reselecting {} domain objects in the {} viewer",selectedDomainObjects.size(),viewerType.getName());
-                resultsView.selectDomainObjects(selectedDomainObjects, true, true, true);
-                return null;
-            }
-        });
-        
     }
 
     public void activate() {
@@ -244,9 +243,9 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
-        viewer.setSelectionModel(selectionModel);
-        viewer.setSearchProvider(searchProvider);
         this.resultsView = viewer;
+        resultsView.setSelectionModel(selectionModel);
+        resultsView.setSearchProvider(searchProvider);
     }
 
     private void updatePagingStatus() {
@@ -355,7 +354,11 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             selectionButtonContainer.setVisible(s==pn && tn>pn);
         }
     }
-    
+
+    public int getCurrPage() {
+        return currPage;
+    }
+
     private synchronized void goPrevPage() {
         this.currPage -= 1;
         if (currPage < 0) {
@@ -497,7 +500,6 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     protected abstract ResultPage getPage(SearchResults searchResults, int page) throws Exception;
-
 
     @Override
     public void showFindUI() {

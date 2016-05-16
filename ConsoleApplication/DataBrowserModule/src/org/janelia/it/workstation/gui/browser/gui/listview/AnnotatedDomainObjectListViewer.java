@@ -10,6 +10,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.
@@ -28,7 +29,7 @@ public interface AnnotatedDomainObjectListViewer {
      * Configure the search provider for re-sorting, etc. 
      */
     public void setSearchProvider(SearchProvider searchProvider);
-    
+
     /**
      * Configure the selection model to use in the list viewer. 
      * @param selectionModel selection model
@@ -105,7 +106,15 @@ public interface AnnotatedDomainObjectListViewer {
      */
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select);
 
-    public String saveState();
+    /**
+     * Save the current state of the viewer.
+     * @return the current state
+     */
+    public ListViewerState saveState();
 
-    public void restoreState(String viewerState);
+    /**
+     * Restore the given state of the viewer.
+     * @param viewerState state to restore
+     */
+    public void restoreState(ListViewerState viewerState);
 }

@@ -2,16 +2,15 @@ package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.Component;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Manages the life cycle of domain list viewers based on user generated selected events. This manager
@@ -61,7 +60,7 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
     }
 
     @Subscribe
-    public void domainObjectsSelected(DomainObjectSelectionEvent event) {
+    public void domainObjectNodeSelected(DomainObjectSelectionEvent event) {
 
         // We only care about single selections
         DomainObject domainObject = event.getObjectIfSingle();
@@ -81,10 +80,15 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
             return;
         }
 
-        
+        DomainObjectNode node = event.getDomainObjectNode();
+
+        if (node==null) {
+            log.error("Explorer selection event contains no node: {}",event);
+            return;
+        }
+
         log.info("domainObjectSelected({})",Reference.createFor(domainObject));
-        
-        DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor"); 
-        targetViewer.loadDomainObject(domainObject, false);
+        DomainListViewTopComponent targetViewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
+        targetViewer.loadDomainObjectNode(node, false);
     }
 }

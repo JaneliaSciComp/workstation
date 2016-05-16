@@ -57,6 +57,7 @@ import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
+import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -446,7 +447,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
 
         // Save the scroll horizontal position on the table, so that users can compare attribuets more easily
-        final String viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
+        final ListViewerState viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
 
         currRunMap.clear();
         configPanel.setTitle(sample.getName());
