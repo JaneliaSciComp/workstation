@@ -26,6 +26,7 @@ import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderActio
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
@@ -60,6 +61,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
+    private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     private SearchProvider searchProvider;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
@@ -313,7 +315,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void objectDoubleClick(DomainObject object) {
-        getContextualPopupMenu().runDefaultAction();
+        if (domainObjectProviderHelper.isSupported(object)) {
+            domainObjectProviderHelper.service(object);
+        }
+        else {
+            getContextualPopupMenu().runDefaultAction();            
+        }
     }
     
     @Override
