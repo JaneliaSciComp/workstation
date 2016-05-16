@@ -86,7 +86,7 @@ implements LookupListener
 {
     private Timeline<HortaViewerState> movieTimeline;
     private MoviePlayState<HortaViewerState> playState;
-    private float nextFrameDuration = 2.0f; // seconds
+    private float nextFrameDuration = 8.0f; // seconds
     private final Interpolator<HortaViewerState> defaultInterpolator;
     private final SaveFramesPanel saveFramesPanel = new SaveFramesPanel();
     private final JFileChooser movieScriptChooser = new JFileChooser();
