@@ -44,7 +44,7 @@ import org.janelia.scenewindow.SceneRenderer;
  */
 public class LeftEyeRenderer implements StereoRenderer 
 {
-    private float ipdPixels = 120.0f; // TODO - rational choice of stereo parameters
+    private float ipdPixels = 80.0f; // TODO - rational choice of stereo parameters
 
     public LeftEyeRenderer(float ipdPixels) {
         this.ipdPixels = ipdPixels;

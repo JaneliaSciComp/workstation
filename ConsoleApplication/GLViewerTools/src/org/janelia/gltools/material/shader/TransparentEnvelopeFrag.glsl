@@ -48,8 +48,8 @@ void main(void)
   vec3 specular = specularScale * specularIntensity * specularColor;
 
   // Only show edges viewed obliquely, revealing a transparent outline
-  const float angleCosineCutoff = 0.9;
-  const float maxOpacity = 0.75;
+  const float angleCosineCutoff = 0.8;
+  const float maxOpacity = 0.70;
   float straight_on_ness = abs(dot(n, eyeDirection)) / angleCosineCutoff;
   straight_on_ness = clamp(straight_on_ness, 0, 1);
   if (straight_on_ness >= 1.0) discard; // Don't even draw viewed-face-on geometry
