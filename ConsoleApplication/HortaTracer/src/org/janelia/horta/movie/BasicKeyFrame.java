@@ -30,13 +30,15 @@
 
 package org.janelia.horta.movie;
 
+import com.google.gson.JsonObject;
+
 /**
  *
  * @author brunsc
  */
-class BasicKeyFrame<T extends ViewerState> implements KeyFrame<T>
+public class BasicKeyFrame<T extends ViewerState> implements KeyFrame<T>
 {
-    private T viewerState;
+    private final T viewerState;
     private float followingIntervalDuration;
 
     public BasicKeyFrame(T viewerState, float followingIntervalDuration) 
@@ -59,5 +61,12 @@ class BasicKeyFrame<T extends ViewerState> implements KeyFrame<T>
     public void setFollowingIntervalDuration(float seconds) {
         this.followingIntervalDuration = seconds;
     }
-    
+
+    @Override
+    public JsonObject serializeJson() {
+        JsonObject result = getViewerState().serialize();
+        result.addProperty("followingInterval", followingIntervalDuration);
+        return result;
+    }
+
 }

@@ -29,6 +29,10 @@
  */
 package org.janelia.horta;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.CenterCrossHairActor;
@@ -132,6 +136,8 @@ import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
+import org.janelia.horta.movie.BasicKeyFrame;
+import org.janelia.horta.movie.KeyFrame;
 import org.janelia.horta.movie.MovieRenderer;
 import org.janelia.horta.movie.MovieSource;
 import org.janelia.horta.movie.ViewerState;
@@ -1702,6 +1708,26 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         public float getCameraSceneUnitsPerViewportHeight() {
             return cameraZoom;
+        }
+
+        @Override
+        public JsonObject serialize() {
+            JsonObject result = new JsonObject();
+
+            HortaViewerState state = this;
+            result.addProperty("zoom", state.getCameraSceneUnitsPerViewportHeight());
+            float rot[] = state.getCameraRotation().asArray();
+            JsonArray quat = new JsonArray();
+            for (int i = 0; i < 4; ++i)
+                quat.add(new JsonPrimitive(rot[i]));
+            result.add("quaternionRotation", quat);
+            JsonArray focus = new JsonArray();
+            float f[] = state.getCameraFocus();
+            for (int i = 0; i < 3; ++i)
+                focus.add(new JsonPrimitive(f[i]));
+            result.add("focusXyz", focus);
+
+            return result;
         }
     }
 

@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import com.google.gson.JsonObject;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
@@ -368,6 +369,16 @@ implements Timeline<T>
                 t0, t1, t2, t3);
         
         return result;
+    }
+
+    @Override
+    public JsonObject serializeKeyFrame(KeyFrame<T> state) {
+        return state.serializeJson();
+    }
+
+    @Override
+    public KeyFrame<T> deserializeKeyFrame(JsonObject json) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

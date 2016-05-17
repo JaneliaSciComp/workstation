@@ -65,10 +65,8 @@ implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline
         timeline.addProperty("totalDuration", t.getTotalDuration(doLoop));
         JsonArray frames = new JsonArray();
         timeline.add("keyFrames", frames);
-        JsonSerializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameSerializer();
-        Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
         for (KeyFrame<HortaViewerState> keyFrame : t) {
-            frames.add(hortaFrameSerializer.serialize(keyFrame, frameType, jsc));
+            frames.add(keyFrame.serializeJson());
         }
         return result;
     }
@@ -84,8 +82,10 @@ implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline
         // TODO - serialize/deserialize interpolator
         Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
         Timeline<HortaViewerState> result = new BasicMovieTimeline<>(defaultInterpolator);
+        
         JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameSerializer();
         Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
+        
         JsonArray frames = timeline.getAsJsonArray("keyFrames");
         for (int i = 0; i < frames.size(); ++i) {
             JsonElement f = frames.get(i);

@@ -30,6 +30,7 @@
 
 package org.janelia.horta.movie;
 
+import com.google.gson.JsonObject;
 import java.util.Deque;
 
 /**
@@ -43,4 +44,7 @@ public interface Timeline<T extends ViewerState> extends Deque<KeyFrame<T>>
     // Returns duration of entire animation, in seconds.
     // If "doLoop" is true, the duration of the final key frame is included in the total.
     public float getTotalDuration(boolean doLoop);
+    JsonObject serializeKeyFrame(KeyFrame<T> state);
+    KeyFrame<T> deserializeKeyFrame(JsonObject json);
+
 }

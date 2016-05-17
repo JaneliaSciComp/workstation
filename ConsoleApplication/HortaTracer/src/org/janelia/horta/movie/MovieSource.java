@@ -40,5 +40,7 @@ public interface MovieSource<T extends ViewerState>
 {
     T getViewerState();
     void setViewerState(T state); // For interactive display playback
+    // JsonObject serializeKeyFrame(KeyFrame<T> state);
+    // KeyFrame<T> deserializeKeyFrame(JsonObject json);
     ObservableInterface getViewerStateUpdatedObservable();
 }
