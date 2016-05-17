@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Date;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -70,7 +71,26 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
             return result;
         } else {
-            return new TextureData2dGL(blockTiffOctreeLoadAdapter.loadToRam(tileIndex));
+
+            TextureData2d textureData2d=null;
+
+            //long startTime=new Date().getTime();
+
+            if (HttpDataSource.useHttp()) {
+                textureData2d = HttpDataSource.getSample2DTile(tileIndex);
+            } else {
+                textureData2d = blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+            }
+
+            //long loadTime=new Date().getTime()-startTime;
+
+            //log.info("loadToRam() timeMs="+loadTime);
+
+            if (textureData2d!=null) {
+                return new TextureData2dGL(textureData2d);
+            } else {
+                return null;
+            }
         }
     }
 

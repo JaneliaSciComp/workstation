@@ -44,6 +44,12 @@ public class LargeVolumeViewViewer extends JPanel {
     private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
+    private static long currentSampleId=0L;
+
+    public static long getCurrentSampleId() {
+        return currentSampleId;
+    }
+
     public LargeVolumeViewViewer() {
         super();
         setLayout(new BorderLayout());
@@ -110,6 +116,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
                     try {
                         sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                        currentSampleId=sliceSample.getId(); // to support HttpDataSource performance
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -296,5 +303,7 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }
+
+    public Entity getSliceSample() { return sliceSample; }
     
 }
