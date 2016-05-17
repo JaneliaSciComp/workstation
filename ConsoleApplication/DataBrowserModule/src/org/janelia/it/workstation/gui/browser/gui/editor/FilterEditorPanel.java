@@ -30,10 +30,15 @@ import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
@@ -62,6 +67,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
+import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -71,8 +78,6 @@ import org.openide.util.datatransfer.ExTransferable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
-
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -81,7 +86,8 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEditor<Filter>, SearchProvider {
+public class FilterEditorPanel extends JPanel
+        implements DomainObjectNodeSelectionEditor<FilterNode>, SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -107,6 +113,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private final JButton infoButton;
 
     // State
+    private FilterNode filterNode;
     private Filter filter;    
     private boolean dirty = false;
     private SearchConfiguration searchConfig;
@@ -116,7 +123,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     
     public FilterEditorPanel() {
-        
+
         this.saveButton = new JButton("Save");
         saveButton.addActionListener(new ActionListener() {
             @Override
@@ -277,7 +284,7 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         dt.setDefaultActions(DnDConstants.ACTION_COPY);
         dt.setActive(true);
     }
-     
+
     private void setFilter(Filter filter) {
         this.filter = filter;
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
@@ -291,8 +298,13 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
     }
     
     @Override
+    public void loadDomainObjectNode(FilterNode filterNode, final boolean isUserDriven, final Callable<Void> success) {
+        this.filterNode = filterNode;
+        loadDomainObject(filterNode.getFilter(), isUserDriven, success);
+    }
+
     public void loadDomainObject(Filter filter, final boolean isUserDriven, final Callable<Void> success) {
-        
+
         if (filter==null) return;
         
         if (!debouncer.queue(success)) {
@@ -301,11 +313,11 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
+
         selectionModel.setParentObject(filter);
-        
         this.dirty = false;
         setFilter(filter);
-        
+
         try {
             updateView();
             
@@ -620,52 +632,6 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
     }
 
-    @Override
-    public void setSortField(String sortCriteria) {
-        this.filter.setSort(sortCriteria);
-    }
-
-    @Override
-    public void search() {
-        refreshSearchResults(true);
-    }
-
-    @Override
-    public void export() {
-
-        SimpleWorker worker = new SimpleWorker() {
-                
-            private SearchResults exportSearchResults = searchResults;
-                
-            @Override
-            protected void doStuff() throws Exception {
-                if (!searchResults.isAllLoaded()) {
-                    // If anything is unloaded, we create a new search that uses a larger page size, in order to batch the export faster.
-                    SearchConfiguration exportSearchConfig = new SearchConfiguration(filter, EXPORT_PAGE_SIZE);
-                    exportSearchResults = exportSearchConfig.performSearch();
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                DomainObjectTableViewer viewer = null;
-                if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
-                    viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
-                }
-                ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
-                action.doAction();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
-        worker.execute();
-    }
-
     private void removeAttributeCriteria(String attrName) {
         if (filter.hasCriteria()) {
             for (Iterator<Criteria> i = filter.getCriteriaList().iterator(); i.hasNext(); ) {
@@ -802,7 +768,10 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
                     Filter updatedFilter = DomainMgr.getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-                    loadDomainObject(updatedFilter, false, null);
+                    if (updatedFilter!=null) {
+                        filterNode.update(updatedFilter);
+                        loadDomainObjectNode(filterNode, false, null);
+                    }
                     break;
                 }
                 else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
@@ -821,4 +790,66 @@ public class FilterEditorPanel extends JPanel implements DomainObjectSelectionEd
         }
     }
 
+    @Override
+    public void setSortField(String sortCriteria) {
+        this.filter.setSort(sortCriteria);
+    }
+
+    @Override
+    public void search() {
+        refreshSearchResults(true);
+    }
+
+    @Override
+    public void export() {
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private SearchResults exportSearchResults = searchResults;
+
+            @Override
+            protected void doStuff() throws Exception {
+                if (!searchResults.isAllLoaded()) {
+                    // If anything is unloaded, we create a new search that uses a larger page size, in order to batch the export faster.
+                    SearchConfiguration exportSearchConfig = new SearchConfiguration(filter, EXPORT_PAGE_SIZE);
+                    exportSearchResults = exportSearchConfig.performSearch();
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                DomainObjectTableViewer viewer = null;
+                if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
+                    viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
+                }
+                ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
+                action.doAction();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
+        worker.execute();
+    }
+
+    @Override
+    public DomainObjectEditorState saveState() {
+        DomainObjectEditorState state = new DomainObjectEditorState(
+                filterNode,
+                resultsPanel.getCurrPage(),
+                resultsPanel.getViewer().saveState(),
+                selectionModel.getSelectedIds());
+        return state;
+    }
+
+    @Override
+    public void loadState(DomainObjectEditorState state) {
+        // TODO: do a better job of restoring the state
+        resultsPanel.setViewerType(state.getListViewerState().getType());
+        loadDomainObjectNode((FilterNode)state.getDomainObjectNode(), true, null);
+    }
 }

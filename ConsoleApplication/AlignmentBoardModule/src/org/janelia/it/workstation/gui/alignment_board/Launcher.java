@@ -7,10 +7,10 @@
 package org.janelia.it.workstation.gui.alignment_board;
 
 import javax.swing.JOptionPane;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import org.janelia.it.workstation.nb_action.EntityAcceptor;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
@@ -21,8 +21,8 @@ import org.openide.windows.WindowManager;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = EntityAcceptor.class, path=EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH)
-public class Launcher implements EntityAcceptor  {
+@ServiceProvider(service = DomainObjectAcceptor.class, path=DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
+public class Launcher implements DomainObjectAcceptor  {
     
     private static final int MENU_ORDER = 200;
     
@@ -65,8 +65,8 @@ public class Launcher implements EntityAcceptor  {
     }
 
     @Override
-    public void acceptEntity(Entity e) {
-        launch( e.getId() );
+    public void acceptDomainObject(DomainObject dObj) {
+        launch( dObj.getId() );
     }
 
     @Override
@@ -75,8 +75,9 @@ public class Launcher implements EntityAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(Entity e) {
-        return e.getEntityTypeName().equals( EntityConstants.TYPE_ALIGNMENT_BOARD );
+    public boolean isCompatible(DomainObject dObj) {
+        java.util.logging.Logger.getLogger("Launcher").info(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
+        return dObj instanceof AlignmentBoard;
     }
     
     @Override
@@ -93,5 +94,18 @@ public class Launcher implements EntityAcceptor  {
     public boolean isSucceededBySeparator() {
         return false;
     }
-    
+
+    // May find use elsewhere...
+    private String expectedTypeForClass(Class clazz) {
+        String simpleName = clazz.getSimpleName();
+        String[] capWords = simpleName.split("[A-Z]");
+        StringBuilder rtnVal = new StringBuilder();
+        for (String capWord: capWords) {
+            if (rtnVal.length() > 0) {
+                rtnVal.append(" ");
+            }
+            rtnVal.append(capWord);
+        }
+        return rtnVal.toString();
+    }
 }

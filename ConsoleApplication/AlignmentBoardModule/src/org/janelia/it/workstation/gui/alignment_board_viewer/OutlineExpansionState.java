@@ -5,9 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.tree.TreePath;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
-import org.janelia.it.workstation.model.domain.EntityWrapper;
+import javax.swing.tree.TreePath;
 import org.netbeans.swing.outline.Outline;
 import org.netbeans.swing.outline.OutlineModel;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class OutlineExpansionState {
     private static final Logger log = LoggerFactory.getLogger(OutlineExpansionState.class);
     
     private Outline outline;
-	private final Set<List<Long>> expanded = new HashSet<List<Long>>();
+	private final Set<List<Long>> expanded = new HashSet<>();
 	private Integer selectedRow;
 	
 	boolean startedAllWorkers = false;
@@ -43,12 +44,27 @@ public class OutlineExpansionState {
     	TreePath rootPath = new TreePath(outline.getOutlineModel().getRoot());
 
     	for(TreePath treePath : outline.getOutlineModel().getTreePathSupport().getExpandedDescendants(rootPath)) {
-    	    List<Long> path = new ArrayList<Long>();
+    	    List<Long> path = new ArrayList<>();
     	    for(Object obj : treePath.getPath()) {
-    	        EntityWrapper wrapper = (EntityWrapper)obj;
-    	        path.add(wrapper.getId());
+                if (obj instanceof AlignmentBoardContext) {
+                    AlignmentBoardContext ctx = (AlignmentBoardContext)obj;
+                    if (ctx.getAlignmentBoard() != null) {
+                        path.add(ctx.getAlignmentBoard().getId());
+                    }
+                    else {
+                        path.add((long)ctx.hashCode());
+                        log.warn("No alignment board found in context {}.", ctx);
+                    }
+                }
+                else if (obj instanceof AlignmentBoardItem) {
+                    AlignmentBoardItem item = (AlignmentBoardItem)obj;
+                    path.add(item.getTarget().getTargetId());
+                }
+                else {
+                    log.warn("Unexpected type in tree path {}.", obj.getClass());
+                }
     	    }
-    	    log.trace("  expanded: "+path);
+    	    log.trace("  expanded: {}", path);
     	    expanded.add(path);
     	}
         
@@ -72,11 +88,11 @@ public class OutlineExpansionState {
         OutlineModel outlineModel = outline.getOutlineModel();
         log.trace(indent+"restoreExpansionState: "+treePath);
         
-        EntityWrapper nodeObject = (EntityWrapper)treePath.getLastPathComponent();
+        AlignmentBoardContext nodeObject = (AlignmentBoardContext)treePath.getLastPathComponent();
         
-        Set<List<Long>> relativeExpandedIds = new HashSet<List<Long>>();
+        Set<List<Long>> relativeExpandedIds = new HashSet<>();
         for(List<Long> expandedPath : expandedIds) {
-            if (expandedPath.get(0).equals(nodeObject.getId())) {
+            if (expandedPath.get(0).equals(nodeObject.getAlignmentBoard().getId())) {
                 outlineModel.getTreePathSupport().expandPath(treePath);
                 List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
                 if (!relativePath.isEmpty()) {

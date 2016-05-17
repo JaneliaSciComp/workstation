@@ -319,7 +319,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         public void actionPerformed(ActionEvent e) {
             DomainListViewTopComponent viewer = ViewerUtils.createNewViewer(DomainListViewManager.getInstance(), "editor");
             viewer.requestActive();
-            viewer.loadDomainObject(getDomainObject(), true);
+            viewer.loadDomainObjectNode(DomainObjectNode.this, true);
         }
 
         @Override

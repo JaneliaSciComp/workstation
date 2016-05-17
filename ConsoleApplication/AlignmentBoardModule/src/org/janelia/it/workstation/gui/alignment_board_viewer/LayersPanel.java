@@ -372,7 +372,7 @@ public class LayersPanel extends JPanel implements Refreshable {
 //                if (abRootedEntity==null) {
 //                    throw new IllegalStateException("Alignment board does not exist");
 //                }
-                AlignmentBoard aboard = (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getName(), alignmentBoardId);
+                AlignmentBoard aboard = (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
                 AlignmentContext alignmentContext = new AlignmentContext();
                 alignmentContext.setAlignmentSpace( aboard.getAlignmentSpace() );
                 alignmentContext.setImageSize( aboard.getImageSize() );

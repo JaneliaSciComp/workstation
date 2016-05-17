@@ -140,6 +140,8 @@
                 <package>org.janelia.it.workstation.gui.browser.events.selection</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.listview.icongrid</package>
+                <package>org.janelia.it.workstation.gui.browser.nb_action</package>
+                <package>org.janelia.it.workstation.gui.browser.nodes</package>
             </public-packages>
         </data>
     </configuration>

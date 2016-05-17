@@ -174,6 +174,15 @@ public class AlignmentBoardContext {
         return this.getAlignmentBoard().getChildren();
     }
     
+    /** Easily check what this context is about. */
+    @Override
+    public String toString() {
+        return context.getAlignmentSpace() + " " + context.getImageSize() +
+               " " + context.getOpticalResolution() + 
+               this.alignmentBoard == null ? " NULL Alignment Board ":(" " +
+               alignmentBoard.getName());
+    }
+    
     /**
      * Sufficient for fairly small data.  Re-implementation would require
      * adding parent pointer to the object, or caching the tree structure.
@@ -373,7 +382,7 @@ public class AlignmentBoardContext {
 
         return true;
     }
-
+    
 //    private Collection<AlignmentBoardEvent> handleChildWrapper(DomainObject wrapper) throws Exception {
 //        
 //        Collection<AlignmentBoardEvent> events = new ArrayList<>();

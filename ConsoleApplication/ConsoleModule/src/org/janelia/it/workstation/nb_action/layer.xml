@@ -122,12 +122,14 @@
         </folder>
     </folder>
     <folder name="Toolbars">
+        <folder name="Navigation"></folder>
         <file name="Clipboard_hidden"/>
         <file name="File_hidden"/>
         <file name="Memory_hidden"/>
         <file name="Standard.xml_hidden"/>
         <file name="UndoRedo_hidden"/>
         <file name="QuickSearch_hidden"/>
+        <file name="Debug_hidden"/>
     </folder>
     <folder name="Windows2">
         <folder name="Modes">

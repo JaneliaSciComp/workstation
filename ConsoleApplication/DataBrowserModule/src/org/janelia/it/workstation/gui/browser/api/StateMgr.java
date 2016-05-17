@@ -7,9 +7,9 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
+import org.janelia.it.workstation.gui.browser.api.navigation.NavigationHistory;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -38,15 +38,20 @@ public class StateMgr {
     public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     public static final String CATEGORY_SORT_CRITERIA = "SortCriteria:";
-    
+
+    private final NavigationHistory navigationHistory = new NavigationHistory();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
     private OntologyTerm errorOntology;
-    
+
     private StateMgr() {
     }
-    
+
+    public NavigationHistory getNavigationHistory() {
+        return navigationHistory;
+    }
+
     public UserColorMapping getUserColorMapping() {
         return userColorMapping;
     }
