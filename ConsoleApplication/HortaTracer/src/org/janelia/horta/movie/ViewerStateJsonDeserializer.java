@@ -36,8 +36,6 @@ import com.google.gson.JsonObject;
  *
  * @author brunsc
  */
-public interface ViewerState {
-    JsonObject serialize();
-    String getStateType();
-    int getStateVersion();
+public interface ViewerStateJsonDeserializer {
+    ViewerState deserializeJson(JsonObject json);
 }

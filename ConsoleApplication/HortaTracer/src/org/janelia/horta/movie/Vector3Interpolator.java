@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-class Vector3Interpolator implements Interpolator<Vector3> 
+public class Vector3Interpolator implements Interpolator<Vector3> 
 {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     private final PrimitiveInterpolator interpolator;

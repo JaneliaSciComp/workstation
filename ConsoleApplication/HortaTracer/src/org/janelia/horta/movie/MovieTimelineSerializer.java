@@ -40,23 +40,25 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
-import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 
 /**
  *
  * @author brunsc
  */
 class MovieTimelineSerializer 
-implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline<HortaViewerState>>
+implements JsonSerializer<Timeline>
+, JsonDeserializer<Timeline>
 {
     private final boolean doLoop;
+    private final MovieSource movieSource;
 
-    public MovieTimelineSerializer(boolean doLoop) {
+    public MovieTimelineSerializer(boolean doLoop, MovieSource movieSource) {
         this.doLoop = doLoop;
+        this.movieSource = movieSource;
     }
 
     @Override
-    public JsonElement serialize(Timeline<HortaViewerState> t, Type type, JsonSerializationContext jsc) 
+    public JsonElement serialize(Timeline t, Type type, JsonSerializationContext jsc) 
     {
         JsonObject result = new JsonObject();
         JsonObject timeline = new JsonObject();
@@ -65,31 +67,32 @@ implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline
         timeline.addProperty("totalDuration", t.getTotalDuration(doLoop));
         JsonArray frames = new JsonArray();
         timeline.add("keyFrames", frames);
-        for (KeyFrame<HortaViewerState> keyFrame : t) {
+        for (KeyFrame keyFrame : t) {
             frames.add(keyFrame.serializeJson());
         }
         return result;
     }
 
     @Override
-    public Timeline<HortaViewerState> deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
+    public Timeline deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
     {
-        JsonObject movie = je.getAsJsonObject();
-        JsonObject timeline = movie.get("movie").getAsJsonObject();
-        boolean doLoop = timeline.getAsJsonPrimitive("doLoop").getAsBoolean();
-        float totalDuration = timeline.getAsJsonPrimitive("totalDuration").getAsFloat();
+        JsonObject timeline = je.getAsJsonObject().get("movie").getAsJsonObject();
+        boolean doLoop = timeline.getAsJsonPrimitive("doLoop").getAsBoolean(); // not used
+        float totalDuration = timeline.getAsJsonPrimitive("totalDuration").getAsFloat(); // not used
         
         // TODO - serialize/deserialize interpolator
-        Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
-        Timeline<HortaViewerState> result = new BasicMovieTimeline<>(defaultInterpolator);
+        // Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
+        Timeline result = new BasicMovieTimeline(movieSource.getDefaultInterpolator());
+        // JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameDeserializer();
+        // Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
         
-        JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameDeserializer();
-        Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
-        
+        ViewerStateJsonDeserializer stateDeserializer = movieSource.getStateDeserializer();
         JsonArray frames = timeline.getAsJsonArray("keyFrames");
         for (int i = 0; i < frames.size(); ++i) {
-            JsonElement f = frames.get(i);
-            KeyFrame<HortaViewerState> keyFrame = hortaFrameSerializer.deserialize(f, frameType, jdc);
+            JsonObject frame = frames.get(i).getAsJsonObject();
+            ViewerState viewerState = stateDeserializer.deserializeJson(frame);
+            float interval = frame.getAsJsonPrimitive("followingInterval").getAsFloat();
+            KeyFrame keyFrame = new BasicKeyFrame(viewerState, interval);
             result.add(keyFrame);
         }
         

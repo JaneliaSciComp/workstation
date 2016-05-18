@@ -36,19 +36,19 @@ import com.google.gson.JsonObject;
  *
  * @author brunsc
  */
-public class BasicKeyFrame<T extends ViewerState> implements KeyFrame<T>
+public class BasicKeyFrame implements KeyFrame
 {
-    private final T viewerState;
+    private final ViewerState viewerState;
     private float followingIntervalDuration;
 
-    public BasicKeyFrame(T viewerState, float followingIntervalDuration) 
+    public BasicKeyFrame(ViewerState viewerState, float followingIntervalDuration) 
     {
         this.viewerState = viewerState;
         this.followingIntervalDuration = followingIntervalDuration;
     }
 
     @Override
-    public T getViewerState() {
+    public ViewerState getViewerState() {
         return viewerState;
     }
 

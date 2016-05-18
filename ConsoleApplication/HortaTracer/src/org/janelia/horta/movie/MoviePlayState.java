@@ -37,8 +37,8 @@ import org.janelia.console.viewerapi.GenericObservable;
  *
  * @author brunsc
  */
-public interface MoviePlayState<T extends ViewerState> 
-extends GenericObservable<T>
+public interface MoviePlayState
+extends GenericObservable<ViewerState>
 {
     BufferedImage getCurrentFrameImageNow(); // must be called from GUI thread
     float getFramesPerSecond();

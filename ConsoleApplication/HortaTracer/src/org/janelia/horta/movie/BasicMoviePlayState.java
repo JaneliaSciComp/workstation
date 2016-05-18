@@ -31,7 +31,6 @@
 package org.janelia.horta.movie;
 
 import java.awt.image.BufferedImage;
-import java.util.Deque;
 import java.util.Observable;
 import java.util.Observer;
 import javax.swing.SwingUtilities;
@@ -43,13 +42,12 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayState<T>
+public class BasicMoviePlayState implements MoviePlayState
 {
-    private final Timeline<T> timeline;
+    private final Timeline timeline;
     private boolean doLoop = false;
     private float framesPerSecond;
-    private final MovieSource<T> movieSource;
-    private final MovieRenderer<T> movieRenderer;
+    private final MovieSource movieSource;
     
     private double previousFrameStartTimeInLab = System.nanoTime() / 1.0e9;
     private double currentFrameTimeInVideo = 0;
@@ -59,13 +57,11 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BasicMoviePlayState(
-            Timeline<T> timeline, 
-            MovieSource<T> movieSource,
-            MovieRenderer<T> movieRenderer) 
+            Timeline timeline, 
+            MovieSource movieSource) 
     {
         this.timeline = timeline;
         this.movieSource = movieSource;
-        this.movieRenderer = movieRenderer;
         
         // Here what we do when the viewer signals it has updated the previous frame:
         movieSource.getViewerStateUpdatedObservable().addObserver(new Observer() {
@@ -136,7 +132,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     }
 
     @Override
-    public void addObserver(GenericObserver<T> observer) {
+    public void addObserver(GenericObserver observer) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -146,7 +142,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     }
 
     @Override
-    public void deleteObserver(GenericObserver<T> observer) {
+    public void deleteObserver(GenericObserver observer) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -184,8 +180,8 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
     // Must be run in GUI thread
     @Override
     public BufferedImage getCurrentFrameImageNow() {
-        T state = timeline.viewerStateForTime((float)currentFrameTimeInVideo, doLoop);
-        BufferedImage result = movieRenderer.getRenderedFrame(state);
+        ViewerState state = timeline.viewerStateForTime((float)currentFrameTimeInVideo, doLoop);
+        BufferedImage result = movieSource.getRenderedFrame(state);
         return result;
     }
     
@@ -248,7 +244,7 @@ public class BasicMoviePlayState<T extends ViewerState> implements MoviePlayStat
                     nextFrameTime = totalDuration;
                 }
             }
-            final T state = timeline.viewerStateForTime((float)nextFrameTime, doLoop);
+            final ViewerState state = timeline.viewerStateForTime((float)nextFrameTime, doLoop);
 
             // Update internal state
             previousFrameStartTimeInLab = now;

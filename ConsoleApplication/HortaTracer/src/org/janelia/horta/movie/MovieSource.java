@@ -36,11 +36,12 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author brunsc
  */
-public interface MovieSource<T extends ViewerState> 
+public interface MovieSource extends MovieRenderer
 {
-    T getViewerState();
-    void setViewerState(T state); // For interactive display playback
-    // JsonObject serializeKeyFrame(KeyFrame<T> state);
-    // KeyFrame<T> deserializeKeyFrame(JsonObject json);
+    ViewerState getViewerState();
+    void setViewerState(ViewerState state); // For interactive display playback
     ObservableInterface getViewerStateUpdatedObservable();
+    ViewerStateJsonDeserializer getStateDeserializer();
+    String getViewerStateType();
+    Interpolator<ViewerState> getDefaultInterpolator();
 }

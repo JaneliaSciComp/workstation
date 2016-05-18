@@ -137,10 +137,17 @@ import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
 import org.janelia.horta.movie.BasicKeyFrame;
+import org.janelia.horta.movie.CatmullRomSplineKernel;
+import org.janelia.horta.movie.Interpolator;
+import org.janelia.horta.movie.InterpolatorKernel;
 import org.janelia.horta.movie.KeyFrame;
+import org.janelia.horta.movie.LinearInterpolatorKernel;
 import org.janelia.horta.movie.MovieRenderer;
 import org.janelia.horta.movie.MovieSource;
+import org.janelia.horta.movie.PrimitiveInterpolator;
+import org.janelia.horta.movie.Vector3Interpolator;
 import org.janelia.horta.movie.ViewerState;
+import org.janelia.horta.movie.ViewerStateJsonDeserializer;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
@@ -191,8 +198,7 @@ import org.slf4j.LoggerFactory;
 })
 public final class NeuronTracerTopComponent extends TopComponent
         implements VolumeProjection, YamlStreamLoader,
-        MovieSource<HortaViewerState>,
-        MovieRenderer<HortaViewerState>
+        MovieSource
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
@@ -1599,7 +1605,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public void setViewerState(HortaViewerState state) {
+    public void setViewerState(ViewerState state0) {
+        HortaViewerState state = (HortaViewerState)state0;
         float [] focus = state.getCameraFocus(); // translation
         sceneWindow.getVantage().setFocus(focus[0], focus[1], focus[2]);
         sceneWindow.getVantage().setRotationInGround( // rotation
@@ -1615,7 +1622,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
     
     @Override
-    public BufferedImage getRenderedFrame(HortaViewerState state) 
+    public BufferedImage getRenderedFrame(ViewerState state) 
     {
         setViewerState(state);
         
@@ -1643,7 +1650,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     @Override
-    public BufferedImage getRenderedFrame(HortaViewerState state, int imageWidth, int imageHeight) {
+    public BufferedImage getRenderedFrame(ViewerState state, int imageWidth, int imageHeight) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -1661,6 +1668,21 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void addMeshActor(GL3Actor meshActor) {
         neuronMPRenderer.addMeshActor(meshActor);
+    }
+
+    @Override
+    public ViewerStateJsonDeserializer getStateDeserializer() {
+        return new HortaViewerState.JsonDeserializer();
+    }
+
+    @Override
+    public String getViewerStateType() {
+        return "HortaViewerState";
+    }
+
+    @Override
+    public Interpolator<ViewerState> getDefaultInterpolator() {
+        return new HortaViewerState.StateInterpolator();
     }
     
     /**
@@ -1711,6 +1733,16 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
 
         @Override
+        public String getStateType() {
+            return "HortaViewerState";
+        }
+
+        @Override
+        public int getStateVersion() {
+            return 2; // increment this when internal implementation changes
+        }
+        
+        @Override
         public JsonObject serialize() {
             JsonObject result = new JsonObject();
 
@@ -1728,6 +1760,143 @@ public final class NeuronTracerTopComponent extends TopComponent
             result.add("focusXyz", focus);
 
             return result;
+        }
+
+        public static class JsonDeserializer implements ViewerStateJsonDeserializer
+        {
+            @Override
+            public ViewerState deserializeJson(JsonObject frame) {
+                float zoom = frame.getAsJsonPrimitive("zoom").getAsFloat();
+                JsonArray quat = frame.getAsJsonArray("quaternionRotation");
+                JsonArray focus = frame.getAsJsonArray("focusXyz");
+                float[] f = new float[] {
+                    focus.get(0).getAsFloat(),
+                    focus.get(1).getAsFloat(),
+                    focus.get(2).getAsFloat()};
+                Quaternion q = new Quaternion();
+                q.set(
+                    quat.get(0).getAsFloat(),
+                    quat.get(1).getAsFloat(),
+                    quat.get(2).getAsFloat(),
+                    quat.get(3).getAsFloat());
+                HortaViewerState state = new HortaViewerState(
+                        f[0], f[1], f[2],
+                        q,
+                        zoom);
+                return state;
+            }   
+        }
+        
+        public static class StateInterpolator implements Interpolator<ViewerState>
+        {
+            private final InterpolatorKernel defaultKernel = 
+                    // new LinearInterpolatorKernel();
+                    new CatmullRomSplineKernel();
+            private final InterpolatorKernel linearKernel = 
+                    new LinearInterpolatorKernel();
+            private final Interpolator<Vector3> vec3Interpolator = new Vector3Interpolator(defaultKernel);
+            private final PrimitiveInterpolator primitiveInterpolator = new PrimitiveInterpolator(defaultKernel);
+            private final Interpolator<Quaternion> rotationInterpolator = new PrimitiveInterpolator(defaultKernel);
+            private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+            public StateInterpolator() {
+            }
+
+            @Override
+            public ViewerState interpolate_equidistant(
+                    double ofTheWay, 
+                    ViewerState p0arg, ViewerState p1arg, ViewerState p2arg, ViewerState p3arg) 
+            {
+                HortaViewerState p0 = (HortaViewerState)p0arg;
+                HortaViewerState p1 = (HortaViewerState)p1arg;
+                HortaViewerState p2 = (HortaViewerState)p2arg;
+                HortaViewerState p3 = (HortaViewerState)p3arg;
+
+                Vector3 focus = vec3Interpolator.interpolate_equidistant(ofTheWay, 
+                        new Vector3(p0.getCameraFocus()), 
+                        new Vector3(p1.getCameraFocus()), 
+                        new Vector3(p2.getCameraFocus()), 
+                        new Vector3(p3.getCameraFocus()));
+
+                Quaternion rotation = rotationInterpolator.interpolate_equidistant(
+                        ofTheWay,
+                        p0.getCameraRotation(), 
+                        p1.getCameraRotation(), 
+                        p2.getCameraRotation(), 
+                        p3.getCameraRotation()
+                );
+
+                float zoom = primitiveInterpolator.interpolate_equidistant(
+                        ofTheWay,
+                        p0.getCameraSceneUnitsPerViewportHeight(),
+                        p1.getCameraSceneUnitsPerViewportHeight(),
+                        p2.getCameraSceneUnitsPerViewportHeight(),
+                        p3.getCameraSceneUnitsPerViewportHeight());
+
+                HortaViewerState result = new HortaViewerState(
+                        focus.getX(), focus.getY(), focus.getZ(),
+                        rotation,
+                        zoom
+                );
+
+                return result;
+            }
+
+            @Override
+            public ViewerState interpolate(
+                    double ofTheWay, 
+                    ViewerState p0arg, ViewerState p1arg, ViewerState p2arg, ViewerState p3arg, 
+                    double t0, double t1, double t2, double t3) 
+            {
+                HortaViewerState p0 = (HortaViewerState)p0arg;
+                HortaViewerState p1 = (HortaViewerState)p1arg;
+                HortaViewerState p2 = (HortaViewerState)p2arg;
+                HortaViewerState p3 = (HortaViewerState)p3arg;
+                
+                Vector3 focus = vec3Interpolator.interpolate(ofTheWay, 
+                        new Vector3(p0.getCameraFocus()), 
+                        new Vector3(p1.getCameraFocus()), 
+                        new Vector3(p2.getCameraFocus()), 
+                        new Vector3(p3.getCameraFocus()), 
+                        t0, t1, t2, t3);
+
+                Quaternion rotation = rotationInterpolator.interpolate(
+                        ofTheWay,
+                        p0.getCameraRotation(), 
+                        p1.getCameraRotation(), 
+                        p2.getCameraRotation(), 
+                        p3.getCameraRotation(), 
+                        t0, t1, t2, t3
+                );
+
+                float zoom = unpackZoom(primitiveInterpolator.interpolate(
+                        ofTheWay,
+                        packZoom(p0.getCameraSceneUnitsPerViewportHeight()),
+                        packZoom(p1.getCameraSceneUnitsPerViewportHeight()),
+                        packZoom(p2.getCameraSceneUnitsPerViewportHeight()),
+                        packZoom(p3.getCameraSceneUnitsPerViewportHeight()), 
+                        t0, t1, t2, t3));
+
+                // logger.info("ofTheWay = "+ofTheWay);
+                // logger.info("zoom = "+zoom);
+
+                HortaViewerState result = new HortaViewerState(
+                        focus.getX(), focus.getY(), focus.getZ(),
+                        rotation,
+                        zoom
+                );
+
+                return result;
+            }
+
+            // Transform zoom so log(zoom) gets interpolated, not linear zoom
+            private double packZoom(float zoom) {
+                return Math.log(zoom);
+            }
+
+            private float unpackZoom(double logZoom) {
+                return (float)Math.exp(logZoom);
+            }
         }
     }
 

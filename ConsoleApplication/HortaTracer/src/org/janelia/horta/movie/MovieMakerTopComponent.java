@@ -44,7 +44,6 @@ import java.util.Collection;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -84,10 +83,10 @@ public final class MovieMakerTopComponent
 extends TopComponent 
 implements LookupListener
 {
-    private Timeline<HortaViewerState> movieTimeline;
-    private MoviePlayState<HortaViewerState> playState;
+    private Timeline movieTimeline;
+    private MoviePlayState playState;
     private float nextFrameDuration = 8.0f; // seconds
-    private final Interpolator<HortaViewerState> defaultInterpolator;
+    // private Interpolator defaultInterpolator = null;
     private final SaveFramesPanel saveFramesPanel = new SaveFramesPanel();
     private final JFileChooser movieScriptChooser = new JFileChooser();
 
@@ -95,7 +94,7 @@ implements LookupListener
         initComponents();
         setName(Bundle.CTL_MovieMakerTopComponent());
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
-        defaultInterpolator = new HortaViewerStateInterpolator();
+        // defaultInterpolator = new HortaViewerStateInterpolator();
         FileNameExtensionFilter jsonFilter = new FileNameExtensionFilter("JSON Files", "json");
         movieScriptChooser.setFileFilter(jsonFilter);
     }
@@ -316,10 +315,10 @@ implements LookupListener
     private void addFrameButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addFrameButtonActionPerformed
         if (movieSource == null)
             return;
-        HortaViewerState viewerState = movieSource.getViewerState();
+        ViewerState viewerState = movieSource.getViewerState();
         if (viewerState == null)
             return;
-        KeyFrame<HortaViewerState> keyFrame = new BasicKeyFrame<HortaViewerState>(viewerState, nextFrameDuration);
+        KeyFrame keyFrame = new BasicKeyFrame(viewerState, nextFrameDuration);
         if (! movieTimeline.add(keyFrame))
             return;
         updateGui();
@@ -373,8 +372,8 @@ implements LookupListener
                 return;
             }
             GsonBuilder gsonBuilder = new GsonBuilder();
-            Type timelineType = new TypeToken<Timeline<HortaViewerState>>(){}.getType();
-            gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(playState.isLoop()));
+            Type timelineType = new TypeToken<Timeline>(){}.getType();
+            gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(playState.isLoop(), movieSource));
             gsonBuilder.setPrettyPrinting();
             
             Gson gson = gsonBuilder.create();
@@ -423,17 +422,24 @@ implements LookupListener
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-        Type timelineType = new TypeToken<Timeline<HortaViewerState>>(){}.getType();
+        Type timelineType = new TypeToken<Timeline>(){}.getType();
         GsonBuilder gsonBuilder = new GsonBuilder();
         boolean doLoop = false;
         if (playState != null)
             doLoop = playState.isLoop();
-        gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(doLoop));
+        if (movieSource == null) {
+            JOptionPane.showMessageDialog(this, 
+                    "Error: Cannot load a movie script without a viewer attached. (Try clicking in the Horta window first...)",
+                    "Error: Cannot load a movie script without a viewer attached",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        gsonBuilder.registerTypeAdapter(timelineType, new MovieTimelineSerializer(doLoop, movieSource));
         Gson gson = gsonBuilder.create();
-        Timeline<HortaViewerState> timeline = gson.fromJson(jsonReader, timelineType);
+        Timeline timeline = gson.fromJson(jsonReader, timelineType);
         movieTimeline = timeline;
         if (movieSource != null)
-            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
+            playState = new BasicMoviePlayState(movieTimeline, movieSource);
         updateGui();
     }//GEN-LAST:event_loadScriptButtonActionPerformed
 
@@ -458,15 +464,6 @@ implements LookupListener
     public void componentOpened() {
         // add custom code on component opening
         
-        // Movie Renderers
-        movieRenderersResult = Utilities.actionsGlobalContext().lookupResult(MovieRenderer.class);
-        movieRenderersResult.addLookupListener(this);
-        Collection<? extends MovieRenderer> allRenderers = movieRenderersResult.allInstances();
-        if (allRenderers.isEmpty())
-            setMovieRenderer(null);
-        else
-            setMovieRenderer((MovieRenderer<HortaViewerState>)allRenderers.iterator().next());
-        
         // Movie Sources
         movieSourcesResult = Utilities.actionsGlobalContext().lookupResult(MovieSource.class);
         movieSourcesResult.addLookupListener(this);
@@ -474,13 +471,11 @@ implements LookupListener
         if (allSources.isEmpty())
             setMovieSource(null);
         else
-            setMovieSource((MovieSource<HortaViewerState>)allSources.iterator().next());
+            setMovieSource((MovieSource)allSources.iterator().next());
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
-        movieRenderersResult.removeLookupListener(this);
         movieSourcesResult.removeLookupListener(this);
     }
 
@@ -516,39 +511,14 @@ implements LookupListener
         }
     }
     
-    private Lookup.Result<MovieRenderer> movieRenderersResult = null;
-    private MovieRenderer<HortaViewerState> movieRenderer = null;
-    
     private Lookup.Result<MovieSource> movieSourcesResult = null;
-    private MovieSource<HortaViewerState> movieSource = null;
+    private MovieSource movieSource = null;
 
-    public MovieSource<HortaViewerState> getMovieSource() {
+    public MovieSource getMovieSource() {
         return movieSource;
     }
 
-    public void setMovieRenderer(MovieRenderer<HortaViewerState> movieRenderer) 
-    {
-        if ((movieRenderer == null) && (this.movieRenderer == null)) 
-        {
-            addFrameButton.setEnabled(false); // disable controls
-            return;
-        }
-        if (this.movieRenderer == movieRenderer)
-            return; // no change
-        if (movieRenderer == null)
-            return; // remember the old source, when the new one seems to be null
-        this.movieRenderer = movieRenderer;
-        
-        if (movieTimeline == null)
-            movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
-        movieTimeline.clear();
-        if (movieSource != null)
-            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
-        
-        updateGui();
-    }
-
-    public void setMovieSource(MovieSource<HortaViewerState> movieSource) 
+    public void setMovieSource(MovieSource movieSource) 
     {
         if ((movieSource == null) && (this.movieSource == null)) 
         {
@@ -562,10 +532,9 @@ implements LookupListener
         this.movieSource = movieSource;
         
         if (movieTimeline == null)
-            movieTimeline = new BasicMovieTimeline<>(defaultInterpolator);
+            movieTimeline = new BasicMovieTimeline(movieSource.getDefaultInterpolator());
         movieTimeline.clear();
-        if (movieRenderer != null)
-            playState = new BasicMoviePlayState<>(movieTimeline, movieSource, movieRenderer);
+        playState = new BasicMoviePlayState(movieTimeline, movieSource);
         
         updateGui();
     }
@@ -580,16 +549,7 @@ implements LookupListener
     
     @Override
     public void resultChanged(LookupEvent le) 
-    {
-        // MovieRenderers
-        if (movieRenderersResult == null)
-            return;
-        Collection<? extends MovieRenderer> renderers = movieRenderersResult.allInstances();
-        if (renderers.isEmpty())
-            setMovieRenderer(null);
-        else
-            setMovieRenderer((MovieRenderer<HortaViewerState>)renderers.iterator().next());
-        
+    {   
         // MovieSources
         if (movieSourcesResult == null)
             return;
@@ -597,6 +557,6 @@ implements LookupListener
         if (sources.isEmpty())
             setMovieSource(null);
         else
-            setMovieSource((MovieSource<HortaViewerState>)sources.iterator().next());
+            setMovieSource((MovieSource)sources.iterator().next());
     }
 }

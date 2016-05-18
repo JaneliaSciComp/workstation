@@ -49,7 +49,7 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  */
 class HortaFrameDeserializer 
 implements // JsonSerializer<KeyFrame<HortaViewerState>>, 
-        JsonDeserializer<KeyFrame<HortaViewerState>>
+        JsonDeserializer<KeyFrame>
 {
 
     public HortaFrameDeserializer() {
@@ -79,7 +79,7 @@ implements // JsonSerializer<KeyFrame<HortaViewerState>>,
     */
 
     @Override
-    public KeyFrame<HortaViewerState> deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
+    public KeyFrame deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
     {
         JsonObject frame = je.getAsJsonObject();
         float interval = frame.getAsJsonPrimitive("followingInterval").getAsFloat();
@@ -100,7 +100,7 @@ implements // JsonSerializer<KeyFrame<HortaViewerState>>,
                 f[0], f[1], f[2],
                 q,
                 zoom);
-        KeyFrame<HortaViewerState> result = new BasicKeyFrame<>(state, interval);
+        KeyFrame result = new BasicKeyFrame(state, interval);
         return result;
     }
     

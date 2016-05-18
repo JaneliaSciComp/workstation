@@ -45,13 +45,13 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     }
     
     // Assumes points are spaced equally
-    double interpolate_equidistant(double t, double p0, double p1, double p2, double p3)
+    public double interpolate_equidistant(double t, double p0, double p1, double p2, double p3)
     {
         return kernel.interpolate_equidistant(t, p0, p1, p2, p3);
     }
     
     // General case does not require points to be spaced equally
-    double interpolate(double t, // t in range [0-1], between points p1 and p2
+    public double interpolate(double t, // t in range [0-1], between points p1 and p2
             double p0, double p1, double p2, double p3, // values at 4 points
             double t0, double t1, double t2, double t3) // distribution of 4 points along x axis
     {
@@ -77,11 +77,11 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     }
     
     // Specialization for floats
-    float interpolate_equidistant(double t, float p0, float p1, float p2, float p3)
+    public float interpolate_equidistant(double t, float p0, float p1, float p2, float p3)
     {
         return (float) interpolate_equidistant(t, (double)p0, (double)p1, (double)p2, (double)p3);
     }
-    float interpolate(double t, 
+    public float interpolate(double t, 
             float p0, float p1, float p2, float p3,
             double t0, double t1, double t2, double t3) 
     {
@@ -91,11 +91,11 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     }
     
     // Specialization for integers
-    int interpolate_equidistant(double t, int p0, int p1, int p2, int p3)
+    public int interpolate_equidistant(double t, int p0, int p1, int p2, int p3)
     {
         return (int)Math.round(interpolate_equidistant(t, (double)p0, (double)p1, (double)p2, (double)p3));
     }
-    int interpolate(double t, 
+    public int interpolate(double t, 
             int p0, int p1, int p2, int p3,
             double t0, double t1, double t2, double t3) 
     {
@@ -105,7 +105,7 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     }
     
     // Specialization for boolean values
-    boolean interpolate_equidistant(double t, boolean p0, boolean p1, boolean p2, boolean p3)
+    public boolean interpolate_equidistant(double t, boolean p0, boolean p1, boolean p2, boolean p3)
     {
         double d0 = p0 ? 1.0 : 0.0;
         double d1 = p0 ? 1.0 : 0.0;
@@ -114,7 +114,7 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
         double result = interpolate_equidistant(t, d0, d1, d2, d3);
         return result >= 0.5;
     }
-    boolean interpolate(double t, 
+    public boolean interpolate(double t, 
             boolean p0, boolean p1, boolean p2, boolean p3,
             double t0, double t1, double t2, double t3) 
     {

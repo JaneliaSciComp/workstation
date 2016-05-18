@@ -30,7 +30,6 @@
 
 package org.janelia.horta.movie;
 
-import com.google.gson.JsonObject;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
@@ -42,89 +41,89 @@ import org.slf4j.LoggerFactory;
  *
  * @author brunsc
  */
-class BasicMovieTimeline<T extends ViewerState> 
-implements Timeline<T>
+class BasicMovieTimeline
+implements Timeline
 {
-    private final Deque<KeyFrame<T>> keyFrames = new ConcurrentLinkedDeque<>();
-    private final Interpolator<T> interpolator;
+    private final Deque<KeyFrame> keyFrames = new ConcurrentLinkedDeque<>();
+    private final Interpolator<ViewerState> interpolator;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public BasicMovieTimeline(Interpolator<T> interpolator) {
+    public BasicMovieTimeline(Interpolator<ViewerState> interpolator) {
         this.interpolator = interpolator;
     }
 
     @Override
     public float getTotalDuration(boolean doLoop) {
-        Deque<KeyFrame<T>> f = this;
+        Deque<KeyFrame> f = this;
         float totalDuration = 0;
-        for (KeyFrame<T> keyFrame : f) {
+        for (KeyFrame keyFrame : f) {
             totalDuration += keyFrame.getFollowingIntervalDuration();
         }
         // Don't include final frame duration, unless movie is a loop
         if ( (! doLoop) && (f.size() > 0) ) {
-            KeyFrame<T> finalFrame = f.getLast();
+            KeyFrame finalFrame = f.getLast();
             totalDuration -= finalFrame.getFollowingIntervalDuration();
         }
         return totalDuration;
     }
 
     @Override
-    public void addFirst(KeyFrame<T> e) {
+    public void addFirst(KeyFrame e) {
         keyFrames.addFirst(e);
     }
 
     @Override
-    public void addLast(KeyFrame<T> e) {
+    public void addLast(KeyFrame e) {
         keyFrames.addLast(e);
     }
 
     @Override
-    public boolean offerFirst(KeyFrame<T> e) {
+    public boolean offerFirst(KeyFrame e) {
         return keyFrames.offerFirst(e);
     }
 
     @Override
-    public boolean offerLast(KeyFrame<T> e) {
+    public boolean offerLast(KeyFrame e) {
         return keyFrames.offerLast(e);
     }
 
     @Override
-    public KeyFrame<T> removeFirst() {
+    public KeyFrame removeFirst() {
         return keyFrames.removeFirst();
     }
 
     @Override
-    public KeyFrame<T> removeLast() {
+    public KeyFrame removeLast() {
         return keyFrames.removeLast();
     }
 
     @Override
-    public KeyFrame<T> pollFirst() {
+    public KeyFrame pollFirst() {
         return keyFrames.pollFirst();
     }
 
     @Override
-    public KeyFrame<T> pollLast() {
+    public KeyFrame pollLast() {
         return keyFrames.pollLast();
     }
 
     @Override
-    public KeyFrame<T> getFirst() {
+    public KeyFrame getFirst() {
         return keyFrames.getFirst();
     }
 
     @Override
-    public KeyFrame<T> getLast() {
+    public KeyFrame getLast() {
         return keyFrames.getLast();
     }
 
     @Override
-    public KeyFrame<T> peekFirst() {
+    public KeyFrame peekFirst() {
         return keyFrames.peekFirst();
     }
 
     @Override
-    public KeyFrame<T> peekLast() {
+    public KeyFrame peekLast() {
         return keyFrames.peekLast();
     }
 
@@ -139,42 +138,42 @@ implements Timeline<T>
     }
 
     @Override
-    public boolean add(KeyFrame<T> e) {
+    public boolean add(KeyFrame e) {
         return keyFrames.add(e);
     }
 
     @Override
-    public boolean offer(KeyFrame<T> e) {
+    public boolean offer(KeyFrame e) {
         return keyFrames.offer(e);
     }
 
     @Override
-    public KeyFrame<T> remove() {
+    public KeyFrame remove() {
         return keyFrames.remove();
     }
 
     @Override
-    public KeyFrame<T> poll() {
+    public KeyFrame poll() {
         return keyFrames.poll();
     }
 
     @Override
-    public KeyFrame<T> element() {
+    public KeyFrame element() {
         return keyFrames.element();
     }
 
     @Override
-    public KeyFrame<T> peek() {
+    public KeyFrame peek() {
         return keyFrames.peek();
     }
 
     @Override
-    public void push(KeyFrame<T> e) {
+    public void push(KeyFrame e) {
         keyFrames.push(e);
     }
 
     @Override
-    public KeyFrame<T> pop() {
+    public KeyFrame pop() {
         return keyFrames.pop();
     }
 
@@ -194,12 +193,12 @@ implements Timeline<T>
     }
 
     @Override
-    public Iterator<KeyFrame<T>> iterator() {
+    public Iterator<KeyFrame> iterator() {
         return keyFrames.iterator();
     }
 
     @Override
-    public Iterator<KeyFrame<T>> descendingIterator() {
+    public Iterator<KeyFrame> descendingIterator() {
         return keyFrames.descendingIterator();
     }
 
@@ -214,17 +213,12 @@ implements Timeline<T>
     }
 
     @Override
-    public <T> T[] toArray(T[] a) {
-        return keyFrames.toArray(a);
-    }
-
-    @Override
     public boolean containsAll(Collection<?> c) {
         return keyFrames.containsAll(c);
     }
 
     @Override
-    public boolean addAll(Collection<? extends KeyFrame<T>> c) {
+    public boolean addAll(Collection<? extends KeyFrame> c) {
         return keyFrames.addAll(c);
     }
 
@@ -259,25 +253,25 @@ implements Timeline<T>
     }
     
     @Override
-    public T viewerStateForTime(float timeInSeconds, boolean doLoop) 
+    public ViewerState viewerStateForTime(float timeInSeconds, boolean doLoop) 
     {
         if (isEmpty())
             return null; // There are no keyframes to interpolate
         
         // Find four frame neighborhood for interpolation
-        KeyFrame<T> k0, k1, k2, k3;
+        KeyFrame k0, k1, k2, k3;
         k0 = k1 = k2 = k3 = null;
         
         float currentKeyFrameHeadPosition = 0;
         float partialFrameInterval = 0; // seconds into inter-frame interval
-        Iterator<KeyFrame<T>> it = this.iterator();
-        KeyFrame<T> previousKeyFrame = null;
-        KeyFrame<T> previousKeyFrame2 = null;
+        Iterator<KeyFrame> it = this.iterator();
+        KeyFrame previousKeyFrame = null;
+        KeyFrame previousKeyFrame2 = null;
         
         // This loop finds first three key frames
         boolean doBreak = false;
         while (it.hasNext()) {
-            KeyFrame<T> keyFrame = it.next();
+            KeyFrame keyFrame = it.next();
             if (currentKeyFrameHeadPosition > timeInSeconds) {
                 k2 = keyFrame;
                 k1 = previousKeyFrame;
@@ -364,7 +358,7 @@ implements Timeline<T>
         if (k2 == k3)
             t3 = t2;
         
-        T result = interpolator.interpolate(t, 
+        ViewerState result = interpolator.interpolate(t, 
                 k0.getViewerState(), k1.getViewerState(), k2.getViewerState(), k3.getViewerState(),
                 t0, t1, t2, t3);
         
@@ -372,8 +366,8 @@ implements Timeline<T>
     }
 
     @Override
-    public JsonObject serializeKeyFrame(KeyFrame<T> state) {
-        return state.serializeJson();
+    public <T> T[] toArray(T[] a) {
+        return keyFrames.toArray(a);
     }
 
 }
