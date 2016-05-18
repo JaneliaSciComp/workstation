@@ -30,6 +30,7 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
@@ -346,7 +347,7 @@ implements BrickInfo
 
             texture.setOptionalFileStreamSource(new FileStreamSource() {
                 @Override
-                public InputStream getStreamForFile(String filepath) throws Exception {
+                public GetMethod getStreamForFile(String filepath) throws Exception {
                     return HttpDataSource.getMouseLightTiffStream(filepath);
                 }
             });

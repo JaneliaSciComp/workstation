@@ -55,6 +55,8 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import javax.media.opengl.GL3;
+
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
@@ -81,6 +83,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     short[] shortBytes;
     FileByteSource optionalFileByteSource;
     FileStreamSource optionalFileStreamSource;
+    GetMethod getMethod=null;
 
     public Texture3d() {
         textureTarget = GL3.GL_TEXTURE_3D;
@@ -171,7 +174,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
         Texture3d result = loadStack(slices);
         float t2=timer.reportMsAndRestart();
         System.out.println("Tiff RenderedImages to Buffer took "+t2+" ms");
-        System.out.println("loadTiffStack() total time="+(t1+t2)+" ms");
+        System.out.println(">>> loadTiffStack() total time="+(t1+t2)+" ms");
         return result;
     }
 
@@ -249,6 +252,10 @@ public class Texture3d extends BasicTexture implements GL3Resource
         }
 
         System.out.println("Getting Rasters from RenderedImages took "+timer.reportMsAndRestart()+" ms");
+
+        if (getMethod!=null) {
+            getMethod.releaseConnection();
+        }
 
         if (bytesPerIntensity<2) { // 8-bit
             pixels.rewind();
@@ -859,9 +866,14 @@ public class Texture3d extends BasicTexture implements GL3Resource
             try {
                 String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
                 log.info("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath="+httpPathFromFilePath);
-                SeekableStream s = new MemoryCacheSeekableStream(optionalFileStreamSource.getStreamForFile(httpPathFromFilePath));
+                getMethod=optionalFileStreamSource.getStreamForFile(httpPathFromFilePath);
+                SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
                 decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            } catch (Exception ex) { ex.printStackTrace(); }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                getMethod.releaseConnection();
+                getMethod = null;
+            }
         }
         else if (optionalFileByteSource!=null) {
             byte[] bytes=null;
