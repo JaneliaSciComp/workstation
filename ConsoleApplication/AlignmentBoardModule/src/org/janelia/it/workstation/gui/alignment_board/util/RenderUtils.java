@@ -25,7 +25,7 @@ public class RenderUtils {
      * @return T: type is pass-through.
      */
     public static boolean isPassthroughRendering(AlignmentBoardItem item) {
-        return item.getRenderMethod().equals(RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE);
+        return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(item.getRenderMethod());
     }
 
     /**
@@ -46,7 +46,12 @@ public class RenderUtils {
      * @return AWT converted color.
      */
     public static Color getColorFromRGBStr(String rgbStr) {
-        return Color.decode("0x" + rgbStr);
+        if (rgbStr == null) {
+            return null;
+        }
+        else {
+            return Color.decode("0x" + rgbStr);
+        }
     }
     
     public static String getRGBStrFromColor(Color color) {

@@ -32,6 +32,7 @@ import java.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.*;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 
 /**
@@ -440,7 +441,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             RenderableBean bean = data.getBean();
             if ( bean != null  &&
                     bean.getReference() != null  &&
-                    bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
+                    bean.getType().equals( NeuronFragment.class.getSimpleName() )
                     ) {
 
                 AlignmentBoardItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignmentBoardItemWithId(bean.getAlignedItemId());

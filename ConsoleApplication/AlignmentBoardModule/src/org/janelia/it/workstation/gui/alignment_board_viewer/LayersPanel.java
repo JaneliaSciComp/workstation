@@ -414,17 +414,13 @@ public class LayersPanel extends JPanel implements Refreshable {
 
                 if ( ! hasCompartmentSet ) {
                     AlignmentContext targetSpace = abContext.getAlignmentContext();
-                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getName());
+                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getSimpleName());
                     if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
 
                         for(DomainObject compartmentSetDO : compartmentSets) {
                             AlignmentContext compartmentSetSpace = new AlignmentContext();
                             CompartmentSet compartmentSet = (CompartmentSet)compartmentSetDO;
                             compartmentSetSpace.setAlignmentSpace(compartmentSet.getAlignmentSpace());
-//                                    compartmentSetDO.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
-//                                    compartmentSetDO.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
-//                                    compartmentSetDO.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
-//                            );
 
                             if (targetSpace.equals(compartmentSetSpace)) {
                                 if (!compartmentSet.getCompartments().isEmpty()) {

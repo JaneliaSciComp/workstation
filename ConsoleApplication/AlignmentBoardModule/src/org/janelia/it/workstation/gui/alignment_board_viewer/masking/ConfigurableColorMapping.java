@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 
 /**
  * Created with IntelliJ IDEA.
@@ -275,7 +276,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 for ( int i = 0; i < colorAverages.length; i++ ) {
                     rtnVal[ i ] = (byte)(256.0 * colorAverages[ i ]);
                 }
-                if ( bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                if ( bean.getType().equals( NeuronFragment.class.getSimpleName() ) ) {
                     rtnVal[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
                 }
                 else {
