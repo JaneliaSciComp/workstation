@@ -1,5 +1,6 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -43,12 +44,6 @@ public class LargeVolumeViewViewer extends JPanel {
     private ModelMgrObserver modelMgrObserver;
     private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
-
-    private static long currentSampleId=0L;
-
-    public static long getCurrentSampleId() {
-        return currentSampleId;
-    }
 
     public LargeVolumeViewViewer() {
         super();
@@ -116,7 +111,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
                     try {
                         sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
-                        currentSampleId=sliceSample.getId(); // to support HttpDataSource performance
+                        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }

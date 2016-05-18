@@ -5,6 +5,7 @@ import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -25,6 +26,7 @@ import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -798,6 +800,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     useHttpCheckbox.setSelected(false);
                     HttpDataSource.setUseHttp(false);
                 } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
                     useHttpCheckbox.setSelected(true);
                     HttpDataSource.setUseHttp(true);
                 }
