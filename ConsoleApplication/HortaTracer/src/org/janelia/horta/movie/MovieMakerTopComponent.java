@@ -94,7 +94,6 @@ implements LookupListener
         initComponents();
         setName(Bundle.CTL_MovieMakerTopComponent());
         setToolTipText(Bundle.HINT_MovieMakerTopComponent());
-        // defaultInterpolator = new HortaViewerStateInterpolator();
         FileNameExtensionFilter jsonFilter = new FileNameExtensionFilter("JSON Files", "json");
         movieScriptChooser.setFileFilter(jsonFilter);
     }

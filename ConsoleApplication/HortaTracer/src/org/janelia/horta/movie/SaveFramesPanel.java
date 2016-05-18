@@ -377,7 +377,7 @@ public class SaveFramesPanel extends JPanel
                         
                         // TODO: check for "Cancel" operation
                         
-                        updateProgressBar((int)Math.round(100 * progressRatio));                
+                        updateProgressBar(Math.round(100 * progressRatio));                
                     }
                     
                     // TODO: post run sanity checks

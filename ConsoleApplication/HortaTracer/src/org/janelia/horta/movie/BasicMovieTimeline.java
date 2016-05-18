@@ -269,7 +269,6 @@ implements Timeline
         KeyFrame previousKeyFrame2 = null;
         
         // This loop finds first three key frames
-        boolean doBreak = false;
         while (it.hasNext()) {
             KeyFrame keyFrame = it.next();
             if (currentKeyFrameHeadPosition > timeInSeconds) {

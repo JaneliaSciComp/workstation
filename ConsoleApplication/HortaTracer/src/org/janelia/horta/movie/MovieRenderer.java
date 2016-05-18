@@ -36,9 +36,9 @@ import java.awt.image.BufferedImage;
  *
  * @author brunsc
  */
-public interface MovieRenderer<T extends ViewerState> 
+public interface MovieRenderer
 {
-    BufferedImage getRenderedFrame(T state);
-    BufferedImage getRenderedFrame(T state, int imageWidth, int imageHeight);
+    BufferedImage getRenderedFrame(ViewerState state);
+    BufferedImage getRenderedFrame(ViewerState state, int imageWidth, int imageHeight);
     boolean supportsCustomSize();
 }

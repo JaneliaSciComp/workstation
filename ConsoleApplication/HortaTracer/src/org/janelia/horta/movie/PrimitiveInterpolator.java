@@ -57,7 +57,7 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     {
         // Logger logger = LoggerFactory.getLogger(this.class);
         
-        double result = p1;
+        double result;
 
         // Scale values to make them as-if equidistant
         double p0s = p0;

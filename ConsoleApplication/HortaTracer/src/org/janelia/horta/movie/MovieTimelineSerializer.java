@@ -30,7 +30,6 @@
 
 package org.janelia.horta.movie;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -77,14 +76,11 @@ implements JsonSerializer<Timeline>
     public Timeline deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 
     {
         JsonObject timeline = je.getAsJsonObject().get("movie").getAsJsonObject();
-        boolean doLoop = timeline.getAsJsonPrimitive("doLoop").getAsBoolean(); // not used
-        float totalDuration = timeline.getAsJsonPrimitive("totalDuration").getAsFloat(); // not used
+        // boolean doLoop = timeline.getAsJsonPrimitive("doLoop").getAsBoolean(); // not used
+        // float totalDuration = timeline.getAsJsonPrimitive("totalDuration").getAsFloat(); // not used
         
         // TODO - serialize/deserialize interpolator
-        // Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
         Timeline result = new BasicMovieTimeline(movieSource.getDefaultInterpolator());
-        // JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameDeserializer();
-        // Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
         
         ViewerStateJsonDeserializer stateDeserializer = movieSource.getStateDeserializer();
         JsonArray frames = timeline.getAsJsonArray("keyFrames");

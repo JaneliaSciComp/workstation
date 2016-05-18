@@ -54,7 +54,7 @@ public class BasicMoviePlayState implements MoviePlayState
     private boolean bIsRunning = false;
     
     private double minFrameDuration = 1.0 / 5.0;
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public BasicMoviePlayState(
             Timeline timeline, 
@@ -122,46 +122,6 @@ public class BasicMoviePlayState implements MoviePlayState
     }
 
     @Override
-    public void setChanged() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void clearChanged() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void addObserver(GenericObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public int countObservers() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void deleteObserver(GenericObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void deleteObservers() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean hasChanged() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void notifyObservers(ViewerState data) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public float getFramesPerSecond() {
         return framesPerSecond;
     }
@@ -171,6 +131,7 @@ public class BasicMoviePlayState implements MoviePlayState
         this.framesPerSecond = framesPerSecond;
     }
     
+    @Override
     public void reset() {
         bIsRunning = false;
         currentFrameTimeInVideo = 0;
