@@ -59,6 +59,7 @@ import org.apache.commons.io.IOUtils;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
+import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +80,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     byte[] pixelBytes;
     short[] shortBytes;
     FileByteSource optionalFileByteSource;
+    FileStreamSource optionalFileStreamSource;
 
     public Texture3d() {
         textureTarget = GL3.GL_TEXTURE_3D;
@@ -818,6 +820,10 @@ public class Texture3d extends BasicTexture implements GL3Resource
         this.optionalFileByteSource=fileByteSource;
     }
 
+    public void setOptionalFileStreamSource(FileStreamSource fileStreamSource) {
+        this.optionalFileStreamSource=fileStreamSource;
+    }
+
     private String getHttpPathFromFilePath(String filePath) {
         int startPosition=0;
         int colonPosition=filePath.indexOf(":");
@@ -832,7 +838,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
         PerformanceTimer timer = new PerformanceTimer();
         // FileSeekableStream is the fastest load method I tested, by far
 
-        ImageDecoder decoder;
+        ImageDecoder decoder=null;
 
         // Performance results for various load strategies below. NOTE: ALL STEPS INCLUDING:
         //   1) Decoder creation (here)
@@ -849,11 +855,19 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         final boolean useFilesReadAllBytesAndByteArraySeekableStream = true; // BY FAR THE FASTEST
 
-        if (optionalFileByteSource!=null) {
+        if (optionalFileStreamSource!=null) {
+            try {
+                String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
+                log.info("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath="+httpPathFromFilePath);
+                SeekableStream s = new MemoryCacheSeekableStream(optionalFileStreamSource.getStreamForFile(httpPathFromFilePath));
+                decoder = ImageCodec.createImageDecoder("tiff", s, null);
+            } catch (Exception ex) { ex.printStackTrace(); }
+        }
+        else if (optionalFileByteSource!=null) {
             byte[] bytes=null;
             try {
                 String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
-                log.info("renderedImagesFromTiffStack - using httpPathFromFilePath="+httpPathFromFilePath);
+                log.info("renderedImagesFromTiffStack - optionalFileByteSource - using httpPathFromFilePath="+httpPathFromFilePath);
                 bytes = optionalFileByteSource.loadBytesForFile(httpPathFromFilePath);
                 System.out.println("Texture3D HTTP byte load time ms="+timer.reportMsAndRestart());
             } catch (Exception ex) { ex.printStackTrace(); }

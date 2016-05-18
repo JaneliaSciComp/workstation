@@ -39,6 +39,7 @@ import org.janelia.horta.volume.VoxelIndex;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.Objects;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
 import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
+import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -341,12 +343,20 @@ implements BrickInfo
         } else {
             tileFile=new File(folderPath, "default."+colorChannelIndex);
             log.info("loadBrick() http using tileFile="+tileFile.getAbsolutePath());
-            texture.setOptionalFileByteSource(new FileByteSource() {
+
+            texture.setOptionalFileStreamSource(new FileStreamSource() {
                 @Override
-                public byte[] loadBytesForFile(String filepath) throws Exception {
-                    return HttpDataSource.getMouseLightTiffBytes(filepath);
+                public InputStream getStreamForFile(String filepath) throws Exception {
+                    return HttpDataSource.getMouseLightTiffStream(filepath);
                 }
             });
+
+//            texture.setOptionalFileByteSource(new FileByteSource() {
+//                @Override
+//                public byte[] loadBytesForFile(String filepath) throws Exception {
+//                    return HttpDataSource.getMouseLightTiffBytes(filepath);
+//                }
+//            });
 
         }
 
