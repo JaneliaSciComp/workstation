@@ -47,13 +47,15 @@ import org.janelia.horta.NeuronTracerTopComponent.HortaViewerState;
  *
  * @author brunsc
  */
-class HortaFrameSerializer 
-implements JsonSerializer<KeyFrame<HortaViewerState>>, JsonDeserializer<KeyFrame<HortaViewerState>>
+class HortaFrameDeserializer 
+implements // JsonSerializer<KeyFrame<HortaViewerState>>, 
+        JsonDeserializer<KeyFrame<HortaViewerState>>
 {
 
-    public HortaFrameSerializer() {
+    public HortaFrameDeserializer() {
     }
 
+    /*
     @Override
     public JsonElement serialize(KeyFrame<HortaViewerState> t, Type type, JsonSerializationContext jsc) {
         JsonObject result = new JsonObject();
@@ -74,6 +76,7 @@ implements JsonSerializer<KeyFrame<HortaViewerState>>, JsonDeserializer<KeyFrame
         
         return result;
     }
+    */
 
     @Override
     public KeyFrame<HortaViewerState> deserialize(JsonElement je, Type type, JsonDeserializationContext jdc) throws JsonParseException 

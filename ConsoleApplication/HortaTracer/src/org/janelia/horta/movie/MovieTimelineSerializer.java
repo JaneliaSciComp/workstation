@@ -83,7 +83,7 @@ implements JsonSerializer<Timeline<HortaViewerState>>, JsonDeserializer<Timeline
         Interpolator<HortaViewerState> defaultInterpolator = new HortaViewerStateInterpolator();
         Timeline<HortaViewerState> result = new BasicMovieTimeline<>(defaultInterpolator);
         
-        JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameSerializer();
+        JsonDeserializer<KeyFrame<HortaViewerState>> hortaFrameSerializer = new HortaFrameDeserializer();
         Type frameType = new TypeToken<KeyFrame<HortaViewerState>>(){}.getType();
         
         JsonArray frames = timeline.getAsJsonArray("keyFrames");

@@ -376,9 +376,4 @@ implements Timeline<T>
         return state.serializeJson();
     }
 
-    @Override
-    public KeyFrame<T> deserializeKeyFrame(JsonObject json) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
 }

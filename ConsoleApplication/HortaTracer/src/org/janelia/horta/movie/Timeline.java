@@ -45,6 +45,4 @@ public interface Timeline<T extends ViewerState> extends Deque<KeyFrame<T>>
     // If "doLoop" is true, the duration of the final key frame is included in the total.
     public float getTotalDuration(boolean doLoop);
     JsonObject serializeKeyFrame(KeyFrame<T> state);
-    KeyFrame<T> deserializeKeyFrame(JsonObject json);
-
 }

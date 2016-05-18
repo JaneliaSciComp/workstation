@@ -1670,11 +1670,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static class HortaViewerState implements ViewerState 
     {
         // TODO: Expand the set of tracked parameters
-        private final float cameraFocusX;
-        private final float cameraFocusY;
-        private final float cameraFocusZ;
-        private final Quaternion cameraRotation;
-        private final float cameraZoom;
+        private float cameraFocusX;
+        private float cameraFocusY;
+        private float cameraFocusZ;
+        private Quaternion cameraRotation;
+        private float cameraZoom;
         
         public HortaViewerState(
                 float cameraFocusX, float cameraFocusY, float cameraFocusZ,
