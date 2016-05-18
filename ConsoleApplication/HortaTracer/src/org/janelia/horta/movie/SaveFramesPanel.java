@@ -37,6 +37,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -347,6 +349,12 @@ public class SaveFramesPanel extends JPanel
                             // smidgen added to round up to one from zero for zero-duration, single-frame movies
                             + 0.2/frameRate)); 
                     
+                    ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();
+                    ImageWriteParam param = writer.getDefaultWriteParam();
+                    param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                    // float oldQuality = param.getCompressionQuality(); // default seems to be 0.75
+                    param.setCompressionQuality(0.95f); // use rather high quality
+                    
                     for (int f = 0; f < frameCount; ++f) {
                         float progressRatio = 0;
                         if (f > 0) // avoid divide by zero
@@ -357,11 +365,13 @@ public class SaveFramesPanel extends JPanel
                         playState.skipToTime(frameInstant);
                         
                         try {
-                            // TODO: actually collect and save the frames
+                            // Collect and save the frames
                             BufferedImage frameImage = getFrame(playState);
                             if (frameImage != null) {
                                 try {
-                                    ImageIO.write(frameImage, "JPG", imageFile);
+                                    writer.setOutput(ImageIO.createImageOutputStream(imageFile));
+                                    writer.write(frameImage);
+                                    // ImageIO.write(frameImage, "JPG", imageFile);
                                 } catch (IOException ex) {
                                     reportError(ex.getMessage());
                                     return;
