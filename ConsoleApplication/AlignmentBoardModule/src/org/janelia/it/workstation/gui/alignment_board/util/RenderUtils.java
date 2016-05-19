@@ -50,7 +50,10 @@ public class RenderUtils {
             return null;
         }
         else {
-            return Color.decode("0x" + rgbStr);
+            if (rgbStr.length() > 6) {
+                rgbStr = rgbStr.substring(rgbStr.length() - 6);
+            }
+            return Color.decode("0x" + rgbStr.toUpperCase());
         }
     }
     

@@ -4,7 +4,6 @@ import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -30,6 +29,7 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemC
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.domain.Compartment;
 import org.janelia.it.workstation.model.domain.VolumeImage;
+import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * AB Context that is domain-object friendly.
  * @author fosterl
  */
-public class AlignmentBoardContext {
+public class AlignmentBoardContext extends AlignmentBoardItem {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardContext.class);
 
@@ -64,7 +64,7 @@ public class AlignmentBoardContext {
                domainObject instanceof Sample  ||
                domainObject instanceof Image;
     }
-
+    
     /**
      * Add a new aligned entity to the board. This method must be called from a worker thread.
      * This is the dispatcher, called with abstract instance.
@@ -101,7 +101,7 @@ public class AlignmentBoardContext {
                 addItem(CompartmentSet.class, compartmentSet, events);                
             }
             else {
-                events.add(new AlignmentBoardItemChangeEvent(this, domainObject, ChangeType.VisibilityChange));
+                events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignmentBoardItem, ChangeType.VisibilityChange));
             }
 
         }
@@ -183,6 +183,32 @@ public class AlignmentBoardContext {
                alignmentBoard.getName());
     }
     
+    //=========================================Overrides AlignmentBoardItem
+    @Override
+    public List<AlignmentBoardItem> getChildren() {
+        return alignmentBoard.getChildren();
+    }
+
+    @Override
+    public Reference getTarget() {
+        return null;
+    }
+
+    @Override
+    public String getInclusionStatus() {
+        return InclusionStatus.In.toString();
+    }
+
+    @Override
+    public String getColor() {
+        return null;
+    }
+
+    @Override
+    public String getRenderMethod() {
+        return null;
+    }
+
     /**
      * Sufficient for fairly small data.  Re-implementation would require
      * adding parent pointer to the object, or caching the tree structure.
@@ -226,7 +252,7 @@ public class AlignmentBoardContext {
         if (nfItem == null) {
             addSubItem(NeuronFragment.class, sampleItem, neuronFragment, events);
         } else {
-            events.add(new AlignmentBoardItemChangeEvent(this, domainObject, ChangeType.VisibilityChange));
+            events.add(new AlignmentBoardItemChangeEvent(this, sampleItem, ChangeType.VisibilityChange));
         }
         return true;
     }
@@ -257,7 +283,7 @@ public class AlignmentBoardContext {
             }
         }
         else {
-            events.add(new AlignmentBoardItemChangeEvent(this, domainObject, ChangeType.VisibilityChange));
+            events.add(new AlignmentBoardItemChangeEvent(this, oldSampleItem, ChangeType.VisibilityChange));
         }
         return true;
     }
@@ -292,7 +318,7 @@ public class AlignmentBoardContext {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         alignmentBoard.getChildren().add(alignmentBoardItem);
-        events.add(new AlignmentBoardItemChangeEvent(this, domainObject, ChangeType.Added));
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;
     }
 
@@ -300,7 +326,7 @@ public class AlignmentBoardContext {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
-        events.add(new AlignmentBoardItemChangeEvent(this, domainObject, ChangeType.Added));
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;
     }
 

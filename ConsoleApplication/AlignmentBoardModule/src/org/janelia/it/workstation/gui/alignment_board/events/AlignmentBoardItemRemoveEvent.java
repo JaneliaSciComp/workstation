@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board.events;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
@@ -12,7 +13,7 @@ public class AlignmentBoardItemRemoveEvent extends AlignmentBoardItemChangeEvent
     
     private Integer previousOrderIndex;
     
-	public AlignmentBoardItemRemoveEvent(AlignmentBoardContext alignmentBoardContext, DomainObject domainObject, Integer previousOrderIndex) {
+	public AlignmentBoardItemRemoveEvent(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem domainObject, Integer previousOrderIndex) {
 		super(alignmentBoardContext, domainObject, ChangeType.Removed);		
 		this.previousOrderIndex = previousOrderIndex;
 	}
