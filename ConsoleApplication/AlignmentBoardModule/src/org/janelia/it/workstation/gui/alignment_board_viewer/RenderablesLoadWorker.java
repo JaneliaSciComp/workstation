@@ -444,7 +444,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                     bean.getType().equals( NeuronFragment.class.getSimpleName() )
                     ) {
 
-                AlignmentBoardItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignmentBoardItemWithId(bean.getAlignedItemId());
+                AlignmentBoardItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignmentBoardItemWithId(bean.getId());
                 if ( item != null ) {
                     try {
                         if ( targetData != null ) {
