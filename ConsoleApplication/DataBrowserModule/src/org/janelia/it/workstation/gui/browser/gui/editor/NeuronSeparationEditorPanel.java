@@ -39,9 +39,16 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
+import org.janelia.it.jacs.model.tasks.neuronSeparator.NeuronWeightsTask;
+import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.V3dSignalFileLoader;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
@@ -62,6 +69,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
+import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,7 +220,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     
     private void enterEditMode() {
         List<DomainObject> neuronFrags = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
-
         // get the visibility preference from the domainmgr
         Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
                 Long.toString(separation.getId()));
