@@ -285,7 +285,6 @@ implements BrickInfo
 
         File folderPath = new File(parentPath, localPath);
 
-
         //log.info("BrainTileInfo loadBrick() using folderPath=" + folderPath.getAbsolutePath());
 
         File tileFile = null;
@@ -342,6 +341,7 @@ implements BrickInfo
             }
 
         } else {
+
             tileFile=new File(folderPath, "default."+colorChannelIndex);
             log.info("loadBrick() http using tileFile="+tileFile.getAbsolutePath());
 
