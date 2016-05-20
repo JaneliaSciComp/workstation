@@ -21,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -33,7 +35,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
     // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
-    public static final String FILE_SEP = System.getProperty("file.separator");
     private final AlignmentBoardContext context;
 
     private Sample currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
@@ -181,11 +182,14 @@ public class ABContextDataSource implements RenderableDataSourceI {
         nfRenderable.setCompartment( isCompartment );
         
         String maskPath = getMaskPath( dobj );
-        if (maskPath != null  &&  basePath != null) {
-            maskPath = basePath + FILE_SEP + maskPath;
+        String channelPath = getChanPath(dobj);
+        if (!(StringUtils.isEmpty(maskPath) || StringUtils.isEmpty(basePath))) {
+            maskPath = basePath + File.separator + maskPath;
+            channelPath = basePath + File.separator + channelPath;
+        } else {
+            logger.error("Base path empty for " + item.getTarget().getTargetClassName() + " " + item.getTarget().getTargetId());
         }
         nfRenderable.setMaskPath( maskPath );
-        String channelPath = getChanPath( dobj );
         nfRenderable.setChannelPath( channelPath );
 
         int liveFileCount = getCorrectFilesFoundCount(
