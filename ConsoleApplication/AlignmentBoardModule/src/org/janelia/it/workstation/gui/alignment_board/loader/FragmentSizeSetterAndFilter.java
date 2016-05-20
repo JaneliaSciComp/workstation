@@ -124,14 +124,14 @@ public class FragmentSizeSetterAndFilter {
                         AlignmentBoardItem alignmentBoardItem = AlignmentBoardMgr.getInstance().getLayersPanel()
                                 .getAlignmentBoardContext()
                                 .getAlignmentBoardItemWithId(
-                                        bean.getAlignedItemId()
+                                        bean.getId()
                                 );
                         
                         if ( alignmentBoardItem != null ) {
                             AlignmentBoardItem parent = AlignmentBoardMgr.getInstance().getLayersPanel()
                                 .getAlignmentBoardContext()
                                 .getAlignmentBoardItemParent(
-                                        bean.getAlignedItemId()
+                                        bean.getId()
                                 );
                             if ( parent != null ) {
                                 long parentId = parent.getTarget().getTargetId();
@@ -153,7 +153,7 @@ public class FragmentSizeSetterAndFilter {
                 if ( rtnVal ) {
                     logger.debug(
                             "Keeping {}, with {} voxels.",
-                            data.getBean().getAlignedItemId(), voxelCount
+                            data.getBean().getId(), voxelCount
                     );
                 }
             }
