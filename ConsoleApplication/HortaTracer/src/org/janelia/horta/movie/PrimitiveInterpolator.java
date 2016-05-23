@@ -108,9 +108,9 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
     public boolean interpolate_equidistant(double t, boolean p0, boolean p1, boolean p2, boolean p3)
     {
         double d0 = p0 ? 1.0 : 0.0;
-        double d1 = p0 ? 1.0 : 0.0;
-        double d2 = p0 ? 1.0 : 0.0;
-        double d3 = p0 ? 1.0 : 0.0;
+        double d1 = p1 ? 1.0 : 0.0;
+        double d2 = p2 ? 1.0 : 0.0;
+        double d3 = p3 ? 1.0 : 0.0;
         double result = interpolate_equidistant(t, d0, d1, d2, d3);
         return result >= 0.5;
     }
@@ -119,9 +119,9 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
             double t0, double t1, double t2, double t3) 
     {
         double d0 = p0 ? 1.0 : 0.0;
-        double d1 = p0 ? 1.0 : 0.0;
-        double d2 = p0 ? 1.0 : 0.0;
-        double d3 = p0 ? 1.0 : 0.0;
+        double d1 = p1 ? 1.0 : 0.0;
+        double d2 = p2 ? 1.0 : 0.0;
+        double d3 = p3 ? 1.0 : 0.0;
         double result = interpolate(t, d0, d1, d2, d3, t0, t1, t2, t3);
         return result >= 0.5;
     }
