@@ -693,7 +693,7 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
     CoreStatus coreStatus = CoreStatus(false, 0, 0); // For finding neurite centroid
     // 2) March along the ray, one voxel at a time
     int stepCount = 0;
-    const int maxStepCount = 400; // protect against infinite loops or oversize volumes
+    const int maxStepCount = 800; // protect against infinite loops or oversize volumes
     while(true) {
         if (ray_complete(voxelRayState, rayBounds, integratedIntensity, coreStatus))
             return integratedIntensity; // DONE, we made it to the far side of the volume
