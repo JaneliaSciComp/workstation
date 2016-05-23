@@ -65,7 +65,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
@@ -115,6 +117,7 @@ import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
@@ -1580,6 +1583,38 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // API for use by external HortaMovieSource class
+    
+    public boolean setVisibleActors(Collection<String> visibleActorNames)
+    {
+        // TODO: This is just neurons for now...
+        for (NeuronSet neuronSet : metaWorkspace.getNeuronSets()) {
+            for (NeuronModel neuron : neuronSet) {
+                String n = neuron.getName();
+                boolean bWas = neuron.isVisible();
+                boolean bIs = visibleActorNames.contains(n);
+                if (bWas == bIs)
+                    continue;
+                neuron.setVisible(bIs);
+                neuron.getVisibilityChangeObservable().notifyObservers();
+            }
+        }
+        
+        return false;
+    }
+    
+    public Collection<String> getVisibleActorNames() {
+        Collection<String> result = new HashSet<>();
+
+        // TODO: This is just neurons for now...
+        for (NeuronSet neuronSet : metaWorkspace.getNeuronSets()) {
+            for (NeuronModel neuron : neuronSet) {
+                if (neuron.isVisible())
+                    result.add(neuron.getName());
+            }
+        }
+        
+        return result;
+    }
     
     public Vantage getVantage() {
         return sceneWindow.getVantage();

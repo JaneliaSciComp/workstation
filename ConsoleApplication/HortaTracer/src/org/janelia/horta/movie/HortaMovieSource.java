@@ -34,6 +34,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.geometry3d.Quaternion;
@@ -74,6 +77,7 @@ public class HortaMovieSource implements MovieSource
                 new Rotation().setFromQuaternion(state.getCameraRotation()));
         vantage.setSceneUnitsPerViewportHeight( // zoom
             state.getCameraSceneUnitsPerViewportHeight());
+        horta.setVisibleActors(state.getVisibleActorNames());
         
         vantage.notifyObservers();
         horta.redrawNow();
@@ -133,17 +137,20 @@ public class HortaMovieSource implements MovieSource
         private final float cameraFocusZ;
         private final Quaternion cameraRotation;
         private final float cameraZoom;
+        private final Collection<String> visibleActors = new ArrayList<>();
         
         public HortaViewerState(
                 float cameraFocusX, float cameraFocusY, float cameraFocusZ,
                 Quaternion cameraRotation,
-                float cameraSceneUnitsPerViewportHeight) 
+                float cameraSceneUnitsPerViewportHeight,
+                Collection<String> visibleActorNames) 
         {
             this.cameraFocusX = cameraFocusX;
             this.cameraFocusY = cameraFocusY;
             this.cameraFocusZ = cameraFocusZ;
             this.cameraRotation = cameraRotation;
             this.cameraZoom = cameraSceneUnitsPerViewportHeight;
+            this.visibleActors.addAll(visibleActorNames);
         }
         
         public HortaViewerState(NeuronTracerTopComponent horta) 
@@ -155,6 +162,7 @@ public class HortaMovieSource implements MovieSource
             cameraFocusZ = focus[2];
             cameraRotation = vantage.getRotationInGround().convertRotationToQuaternion();
             cameraZoom = vantage.getSceneUnitsPerViewportHeight();
+            this.visibleActors.addAll(horta.getVisibleActorNames());
         }        
         
         public float[] getCameraFocus() {
@@ -168,6 +176,10 @@ public class HortaMovieSource implements MovieSource
         public float getCameraSceneUnitsPerViewportHeight() {
             return cameraZoom;
         }
+        
+        public Collection<String> getVisibleActorNames() {
+            return visibleActors;
+        }
 
         @Override
         public String getStateType() {
@@ -176,7 +188,7 @@ public class HortaMovieSource implements MovieSource
 
         @Override
         public int getStateVersion() {
-            return 3;
+            return 4;
         }
         
         @Override
@@ -195,6 +207,11 @@ public class HortaMovieSource implements MovieSource
             for (int i = 0; i < 3; ++i)
                 focus.add(new JsonPrimitive(f[i]));
             result.add("focusXyz", focus);
+            JsonArray actorNames = new JsonArray();
+            for (String actorName : visibleActors) {
+                actorNames.add(new JsonPrimitive(actorName));
+            }
+            result.add("visibleActors", actorNames);
 
             return result;
         }
@@ -216,10 +233,18 @@ public class HortaMovieSource implements MovieSource
                     quat.get(1).getAsFloat(),
                     quat.get(2).getAsFloat(),
                     quat.get(3).getAsFloat());
+                Collection<String> v = new ArrayList<>();
+                JsonArray visibleActors = frame.getAsJsonArray("visibleActors");
+                for (int i = 0; i < visibleActors.size(); ++i) {
+                    String actorName = visibleActors.get(i).getAsString();
+                    v.add(actorName);
+                }
                 HortaViewerState state = new HortaViewerState(
                         f[0], f[1], f[2],
                         q,
-                        zoom);
+                        zoom,
+                        v
+                );
                 return state;
             }   
         }
@@ -270,10 +295,28 @@ public class HortaMovieSource implements MovieSource
                         p2.getCameraSceneUnitsPerViewportHeight(),
                         p3.getCameraSceneUnitsPerViewportHeight());
 
+                Collection<String> allActors = new HashSet<>();
+                for (HortaViewerState kf : new HortaViewerState[] {p0, p1, p2, p3}) {
+                    for (String actorName : kf.getVisibleActorNames()) {
+                        allActors.add(actorName);
+                    }
+                }
+                Collection<String> visibleActors = new ArrayList<>();
+                for (String actorName : allActors) {
+                    boolean b0 = p0.getVisibleActorNames().contains(actorName);
+                    boolean b1 = p1.getVisibleActorNames().contains(actorName);
+                    boolean b2 = p2.getVisibleActorNames().contains(actorName);
+                    boolean b3 = p3.getVisibleActorNames().contains(actorName);
+                    boolean bShowActor = primitiveInterpolator.interpolate_equidistant(ofTheWay, b0, b1, b2, b3);
+                    if (bShowActor)
+                        visibleActors.add(actorName);
+                }
+                
                 HortaViewerState result = new HortaViewerState(
                         focus.getX(), focus.getY(), focus.getZ(),
                         rotation,
-                        zoom
+                        zoom,
+                        visibleActors
                 );
 
                 return result;
@@ -314,13 +357,33 @@ public class HortaMovieSource implements MovieSource
                         packZoom(p3.getCameraSceneUnitsPerViewportHeight()), 
                         t0, t1, t2, t3));
 
+                Collection<String> allActors = new HashSet<>();
+                for (HortaViewerState kf : new HortaViewerState[] {p0, p1, p2, p3}) {
+                    for (String actorName : kf.getVisibleActorNames()) {
+                        allActors.add(actorName);
+                    }
+                }
+                Collection<String> visibleActors = new ArrayList<>();
+                for (String actorName : allActors) {
+                    boolean b0 = p0.getVisibleActorNames().contains(actorName);
+                    boolean b1 = p1.getVisibleActorNames().contains(actorName);
+                    boolean b2 = p2.getVisibleActorNames().contains(actorName);
+                    boolean b3 = p3.getVisibleActorNames().contains(actorName);
+                    boolean bShowActor = primitiveInterpolator.interpolate(
+                            ofTheWay, 
+                            b0, b1, b2, b3,
+                            t0, t1, t2, t3);
+                    if (bShowActor)
+                        visibleActors.add(actorName);
+                }
                 // logger.info("ofTheWay = "+ofTheWay);
                 // logger.info("zoom = "+zoom);
 
                 HortaViewerState result = new HortaViewerState(
                         focus.getX(), focus.getY(), focus.getZ(),
                         rotation,
-                        zoom
+                        zoom,
+                        visibleActors
                 );
 
                 return result;
