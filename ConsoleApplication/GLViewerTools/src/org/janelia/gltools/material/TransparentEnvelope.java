@@ -73,6 +73,8 @@ public class TransparentEnvelope extends BasicMaterial
     public void load(GL3 gl, AbstractCamera camera) {
         super.load(gl, camera);
         gl.glEnable(GL3.GL_BLEND);
+        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glBlendEquation(GL3.GL_FUNC_ADD);
         gl.glDepthMask(false);
         gl.glUniform3fv(colorIndex, 1, diffuseColor, 0);
     }

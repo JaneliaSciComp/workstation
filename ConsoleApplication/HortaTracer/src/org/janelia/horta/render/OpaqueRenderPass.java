@@ -210,7 +210,27 @@ public class OpaqueRenderPass extends RenderPass
                 ((SlabbableCamera)camera).pushInternalViewSlab(slab);
             }
 
+            // Hack to draw neurons last, because transparent compartments aren't blending well
+            // and I'm in a hurry [CMB]
+            GL3Actor swcActor = null;
+            for (GL3Actor actor : getActors()) {
+                if (actor instanceof NeuronMPRenderer.AllSwcActor) {
+                    swcActor = actor;
+                    break;
+                }
+            }
+            boolean swcWasVisible = false;
+            if (swcActor != null) {
+                swcWasVisible = swcActor.isVisible();
+                swcActor.setVisible(false);
+            }
+
             super.renderScene(gl, camera);
+
+            if ((swcActor != null) && swcWasVisible) {
+                swcActor.setVisible(true);
+                swcActor.display(gl, camera, null);
+            }
         }
         finally {
             if (camera instanceof SlabbableCamera) {

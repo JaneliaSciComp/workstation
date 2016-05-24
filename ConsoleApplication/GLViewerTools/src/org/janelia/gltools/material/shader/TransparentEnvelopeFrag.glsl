@@ -16,7 +16,7 @@ const vec4 lightPosition = vec4(-10, 20, 6, 0);
 const vec3 lightColor = vec3(1, 1, 1);
 const float ambientScale = 0.7; // unshaded component vs diffuse
 // const float diffuseScale = 0.5; // shaded component, = 1 - ambientScale
-const float specularScale = 0.25; // shininess component
+const float specularScale = 0.2; // shininess component
 const float specularPower = 15.0;
 vec3 specularColor = lightColor;
 vec3 diffuseColor1 = 
@@ -46,11 +46,12 @@ void main(void)
   vec3 specReflect = reflect(L, n);
   float cosAlpha = max(0, dot(eyeDirection, specReflect));
   float specularIntensity = pow(cosAlpha, specularPower);
+  specularIntensity = clamp(specularIntensity, 0, 1);
   vec3 specular = specularScale * specularIntensity * specularColor;
 
   // Only show edges viewed obliquely, revealing a transparent outline
-  const float angleCosineCutoff = 0.9;
-  const float maxOpacity = 0.50;
+  const float angleCosineCutoff = 0.95;
+  const float maxOpacity = 0.60;
   float straight_on_ness = abs(dot(n, eyeDirection)) / angleCosineCutoff;
   straight_on_ness = clamp(straight_on_ness, 0, 1);
   if (straight_on_ness >= 1.0) discard; // Don't even draw viewed-face-on geometry
