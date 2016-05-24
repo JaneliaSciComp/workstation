@@ -66,10 +66,16 @@ public class PrimitiveInterpolator implements Interpolator<Quaternion>
             result = (p1 + p2)/2.0;
         }
         else {
-            if (t0 != t1) // avoid giving infinity weight to duplicated points
-                p0s *= (t2-t1)/(t1-t0);
-            if (t2 != t3)
-                p3s *= (t2-t1)/(t3-t2);
+            if (t0 != t1) { // avoid giving infinity weight to duplicated points
+                double dp = p1 - p0;
+                dp *= (t2-t1)/(t1-t0);
+                p0s = p1 - dp;
+            }
+            if (t2 != t3) {
+                // p3s *= (t2-t1)/(t3-t2);
+                double dp = p3 - p2;
+                dp *= (t2-t1)/(t3-t2);
+                p3s = p2 + dp;            }
             result = interpolate_equidistant(t, p0s, p1, p2, p3s);
         }
         // logger.info("Interpolating "+t+" ["+p0s+"("+p0+"),"+p1+","+p2+","+p3s+"("+p3+")] to "+result);
