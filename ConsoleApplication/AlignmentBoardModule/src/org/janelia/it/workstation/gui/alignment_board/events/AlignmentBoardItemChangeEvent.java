@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.events;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 /**
@@ -19,16 +19,16 @@ public class AlignmentBoardItemChangeEvent extends AlignmentBoardEvent {
         FilterLevelChange
     }
     
-    private final DomainObject domainObject;
+    private final AlignmentBoardItem domainObject;
     private final ChangeType changeType;
     
-	public AlignmentBoardItemChangeEvent(AlignmentBoardContext alignmentBoardContext, DomainObject domainObject, ChangeType changeType) {
+	public AlignmentBoardItemChangeEvent(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem item, ChangeType changeType) {
 		super(alignmentBoardContext);		
-		this.domainObject = domainObject;
+		this.domainObject = item;
         this.changeType = changeType;
 	}
     
-    public DomainObject getDomainObject() {
+    public AlignmentBoardItem getItem() {
         return domainObject;
     }
 

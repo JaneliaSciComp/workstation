@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 
 import java.util.ArrayList;
@@ -15,15 +17,14 @@ import java.util.Random;
  */
 public class RenderableBeanCollection {
     public List<RenderableBean> createCollection() {
-        List<RenderableBean> rtnVal = new ArrayList<RenderableBean>();
-        int nextItemId = 11111111;
+        List<RenderableBean> rtnVal = new ArrayList<>();
         int nextLabelNum = 22;
         String[] validTypes = {
-                EntityConstants.TYPE_NEURON_FRAGMENT,
-                EntityConstants.TYPE_COMPARTMENT,
-                EntityConstants.TYPE_SAMPLE,
+                NeuronFragment.class.getSimpleName(),
+                Compartment.class.getSimpleName(),
+                Sample.class.getSimpleName(),
                 "Reference",
-                EntityConstants.TYPE_COMPARTMENT_SET
+                CompartmentSet.class.getSimpleName()
         };
         Random random = new Random( new Date().getTime() );
         String nextEntityName = "AnEntity__";

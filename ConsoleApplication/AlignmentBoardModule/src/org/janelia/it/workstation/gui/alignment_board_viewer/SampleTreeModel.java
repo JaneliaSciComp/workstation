@@ -9,10 +9,10 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
+import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +26,9 @@ public class SampleTreeModel implements TreeModel {
     private static final Logger log = LoggerFactory.getLogger(SampleTreeModel.class);
     public static final String ITEMS_OMITTED_MENU_ITEM_TEXT = " items below cutoff";
 
-    private AlignmentBoardContext alignmentBoardContext;
+    private final AlignmentBoardContext alignmentBoardContext;
     
-    private List<TreeModelListener> listeners = new ArrayList<TreeModelListener>();
+    private final List<TreeModelListener> listeners = new ArrayList<>();
     
     public SampleTreeModel(AlignmentBoardContext alignmentBoardContext) {
         this.alignmentBoardContext = alignmentBoardContext;
@@ -38,14 +38,14 @@ public class SampleTreeModel implements TreeModel {
     @Override
     public Object getChild(Object parent, int index) {
         Object child = null;
-        AlignedItem item = (AlignedItem)parent;
+        AlignmentBoardItem item = (AlignmentBoardItem)parent;
         if ( item != null ) {
             if ( item.getChildren() != null ) {
-                List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
+                List<AlignmentBoardItem> nonExcludedChildren = getNonExcludedChildren( item );
                 if ( index == nonExcludedChildren.size() ) {
                     // Special case: the warning blurb.
                     int count = item.getChildren().size() - nonExcludedChildren.size();
-                    child = new String( count + ITEMS_OMITTED_MENU_ITEM_TEXT );
+                    child = count + ITEMS_OMITTED_MENU_ITEM_TEXT;
                 }
                 else if ( index < nonExcludedChildren.size() ) {
                     child = nonExcludedChildren.get( index );
@@ -79,16 +79,14 @@ public class SampleTreeModel implements TreeModel {
     @Override
     public int getChildCount(Object parent) {
         int count = 0;
-        if ( parent instanceof AlignedItem ) {
-            AlignedItem item = (AlignedItem)parent;
-            if (item != null) {
-                if ( item.getChildren() != null ) {
-                    List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
-                    count = nonExcludedChildren.size();
-                    // Anything actually excluded -> add one more item.
-                    if ( nonExcludedChildren.size() < item.getChildren().size() ) {
-                        count ++;
-                    }
+        if ( parent != null  &&   parent instanceof AlignmentBoardItem ) {
+            AlignmentBoardItem item = (AlignmentBoardItem) parent;
+            if (item.getChildren() != null) {
+                List<AlignmentBoardItem> nonExcludedChildren = getNonExcludedChildren(item);
+                count = nonExcludedChildren.size();
+                // Anything actually excluded -> add one more item.
+                if (nonExcludedChildren.size() < item.getChildren().size()) {
+                    count++;
                 }
             }
         }
@@ -98,11 +96,11 @@ public class SampleTreeModel implements TreeModel {
 
     @Override
     public int getIndexOfChild(Object parent, Object child) {
-        AlignedItem item = (AlignedItem)parent;
+        AlignmentBoardItem item = (AlignmentBoardItem)parent;
         int index = 0;
         if (item != null) {
             if ( item.getChildren() != null ) {
-                List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
+                List<AlignmentBoardItem> nonExcludedChildren = getNonExcludedChildren( item );
                 index = nonExcludedChildren.indexOf( child );
                 if ( index == -1  &&  ("" + child).endsWith( ITEMS_OMITTED_MENU_ITEM_TEXT ) ) {
                     return nonExcludedChildren.size();
@@ -138,14 +136,14 @@ public class SampleTreeModel implements TreeModel {
         throw new AssertionError("This method should never be called");
     }
 
-    private List<EntityWrapper> getNonExcludedChildren( AlignedItem item ) {
-        List<EntityWrapper> rtnVal = new ArrayList<EntityWrapper>();
+    private List<AlignmentBoardItem> getNonExcludedChildren( AlignmentBoardItem item ) {
+        List<AlignmentBoardItem> rtnVal = new ArrayList<>();
         if ( item.getChildren() != null ) {
             // Pushing to new connection to avoid concurrent modification.
-            for ( EntityWrapper nextChild: new ArrayList<EntityWrapper>( item.getChildren() ) ) {
-                if ( nextChild instanceof AlignedItem ) {
-                    AlignedItem nextItem = (AlignedItem)nextChild;
-                    if ( AlignedItem.InclusionStatus.In.equals( nextItem.getInclusionStatus() ) ) {
+            for ( AlignmentBoardItem nextChild: new ArrayList<>( item.getChildren() ) ) {
+                if ( nextChild instanceof AlignmentBoardItem ) {
+                    AlignmentBoardItem nextItem = (AlignmentBoardItem)nextChild;
+                    if ( InclusionStatus.In == InclusionStatus.get(nextItem.getInclusionStatus()) ) {
                         rtnVal.add( nextChild );
                     }
                 }

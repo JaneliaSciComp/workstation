@@ -227,13 +227,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 
                 // Need to turn off all the items which do not stack in
                 // same space as the indicated value.
-                DomainObject overlapGuide = event.getDomainObject();
+                AlignmentBoardItem overlapGuide = event.getItem();
                 Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
                 
                 Collection<Integer> overlappingMasks = null;
                 for ( MaskChanRenderableData renderableData: renderableDatas ) {
                     if ( renderableData.getBean() != null  &&
-                         renderableData.getBean().getId() == overlapGuide.getId() ) {
+                         renderableData.getBean().getId() == overlapGuide.getTarget().getTargetId() ) {
                         overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
                     }
                     else {
@@ -250,7 +250,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                         try {
                             AlignmentBoardContext ctx
                                 = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-                            AlignmentBoardItem ai = ctx.getAlignmentBoardItemWithId(renderableData.getBean().getAlignedItemId());
+                            AlignmentBoardItem ai = ctx.getAlignmentBoardItemWithId(renderableData.getBean().getId());
                             if ( ai != null ) {
                                 ai.setVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
                             }

@@ -46,12 +46,12 @@ public class LayerContextMenu extends JPopupMenu {
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignmentBoardItem alignmentBoardItem;
     protected final DomainObject alignedItemTarget;
-    protected final List<DomainObject> multiSelectionItems;
+    protected final List<AlignmentBoardItem> multiSelectionItems;
 
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem alignmentBoardItem, List<DomainObject> multiSelectionItems) {
+    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem alignmentBoardItem, List<AlignmentBoardItem> multiSelectionItems) {
         this.alignmentBoardContext = alignmentBoardContext;
         this.alignmentBoardItem = alignmentBoardItem;
         this.alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
@@ -177,7 +177,7 @@ public class LayerContextMenu extends JPopupMenu {
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, RenderUtils.getObjectForItem(alignmentBoardItem), ChangeType.ColorChange);
+                                alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -207,7 +207,7 @@ public class LayerContextMenu extends JPopupMenu {
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItemTarget, ChangeType.ColorChange);
+                                alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -238,7 +238,7 @@ public class LayerContextMenu extends JPopupMenu {
                     @Override
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItemTarget, ChangeType.OverlapFilter);
+                                alignmentBoardContext, alignmentBoardItem, ChangeType.OverlapFilter);
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
 
@@ -297,9 +297,9 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected JMenuItem getDeleteUnderClickItem() {
 
-        List<DomainObject> domainObjectList = new ArrayList<>();
+        List<AlignmentBoardItem> domainObjectList = new ArrayList<>();
+        domainObjectList.add(alignmentBoardItem);
         DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
-        domainObjectList.add(dObj);
         String name = dObj.getName();
         if ( name.length() > 15 ) {
             name = name.substring( 0, 6 ) + "..." + name.substring( name.length() - 6 );
@@ -309,16 +309,16 @@ public class LayerContextMenu extends JPopupMenu {
     }
 
     private JMenuItem getDeleteMultiSelectionItem() {
-        List<DomainObject> domainObjectList = new ArrayList<>();
-        for ( DomainObject item: multiSelectionItems ) {
-            domainObjectList.add(item);
+        List<AlignmentBoardItem> abiList = new ArrayList<>();
+        for ( AlignmentBoardItem item: multiSelectionItems ) {
+            abiList.add(item);
         }
         String text = String.format("  Remove %d items from Alignment Board", multiSelectionItems.size() );
-        return getDeleteListItem(domainObjectList, text);
+        return getDeleteListItem(abiList, text);
     }
     
     /** TODO: This is no longer using the Entity Delete List action.  But it does nothing. */
-    private JMenuItem getDeleteListItem(final List<DomainObject> domainObjects, String text) {
+    private JMenuItem getDeleteListItem(final List<AlignmentBoardItem> alignmentBoardItems, String text) {
         final Action action = new Action() { //new RemoveEntityAction(domainObjects, false, false, new Callable<Void>() {
             @Override
             public String getName() {
@@ -336,8 +336,8 @@ public class LayerContextMenu extends JPopupMenu {
             //@Override
             public Void call() throws Exception {
                 AlignmentBoardItemRemoveEvent abEvent;
-                if ( domainObjects.size() == 1 ) {
-                    DomainObject nextDomainObject = domainObjects.get( 0 );
+                if ( alignmentBoardItems.size() == 1 ) {
+                    AlignmentBoardItem nextDomainObject = alignmentBoardItems.get( 0 );
                     log.debug("The removed entity was an aligned item, firing alignment board event...");
                     abEvent = new AlignmentBoardItemRemoveEvent(
                             alignmentBoardContext, nextDomainObject, 0); // Q: order index required?
@@ -360,12 +360,14 @@ public class LayerContextMenu extends JPopupMenu {
             }
         });
         
-        for (DomainObject dObj : domainObjects) {
+        for (AlignmentBoardItem item : alignmentBoardItems) {
             DomainObject parent = null; // TODO: get parent. dObj.get; //???
             
             boolean canDelete = true;
             // User can't delete if they don't have write access
             String subject = SessionMgr.getSubjectKey();
+            DomainObject dObj = RenderUtils.getObjectForItem(item);
+
             if (!dObj.getWriters().contains(subject)) {
                 canDelete = false;
                 // Unless they own the parent
