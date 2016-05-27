@@ -118,7 +118,9 @@ public class HortaVolumeCache
             return;
         Texture3d texture = ((VolumeMipMaterial)actor.getMaterial()).getTexture();
         synchronized(actualDisplayTiles) {
+            nearVolumeMetadata.clear();
             nearVolumeMetadata.add(actor.getBrainTile());
+            nearVolumeInRam.clear();
             nearVolumeInRam.put(actor.getBrainTile(), texture);
             actualDisplayTiles.clear();
             actualDisplayTiles.put(actor.getBrainTile(), actor);
