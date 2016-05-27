@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;

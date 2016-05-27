@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
@@ -110,7 +112,17 @@ public class DomainMgr {
         DomainUtils.sortSubjects(subjects);
         return subjects;
     }
-    
+
+    private void loadPreferences() {
+        if (preferenceMap==null) {
+            preferenceMap = new HashMap<>();
+            log.info(subjectFacade.getPreferences().toString());
+            for (Preference preference : subjectFacade.getPreferences()) {
+                preferenceMap.put(getPreferenceMapKey(preference), preference);
+            }
+            log.info("Loaded {} user preferences", preferenceMap.size());
+        }
+    }
     /**
      * Queries the backend and returns the list of preferences for the given subject.
      * @param category
@@ -118,16 +130,20 @@ public class DomainMgr {
      * @return
      */
     public Preference getPreference(String category, String key) {
-        if (preferenceMap==null) {
-            preferenceMap = new HashMap<>();
-            log.info(subjectFacade.getPreferences().toString());
-            for(Preference preference : subjectFacade.getPreferences()) {
-                preferenceMap.put(getPreferenceMapKey(preference), preference);
-            }
-            log.info("Loaded {} user preferences",preferenceMap.size());
-        }
+        loadPreferences();
         String mapKey = category+":"+key;
         return preferenceMap.get(mapKey);
+    }
+
+    public List<Preference> getPreferences(String category) {
+        loadPreferences();
+        List<Preference> categoryPreferences = new ArrayList<>();
+        for(Preference preference : preferenceMap.values()) {
+            if (preference.getCategory().equals(category)) {
+                categoryPreferences.add(preference);
+            }
+        }
+        return categoryPreferences;
     }
     
     /**
@@ -139,8 +155,35 @@ public class DomainMgr {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
+        log.debug("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
-    
+
+    public static Map<String,String> loadPreferencesAsMap(String category) {
+        List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
+        Map<String,String> map = new HashMap<>();
+        for(Preference preference : titlePreferences) {
+            map.put(preference.getKey(), (String)preference.getValue());
+        }
+        return map;
+    }
+
+    public static void saveMapAsPreferences(Map<String,String> map, String category) throws Exception {
+        for(String key : map.keySet()) {
+            String value = map.get(key);
+            if (!StringUtils.isEmpty(value)) {
+                Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
+                if (preference==null) {
+                    preference = new Preference(AccessManager.getSubjectKey(), category, key, value);
+                    DomainMgr.getDomainMgr().savePreference(preference);
+                }
+                else if (!StringUtils.areEqual(preference.getValue(), value)) {
+                    preference.setValue(value);
+                    DomainMgr.getDomainMgr().savePreference(preference);
+                }
+            }
+        }
+    }
+
     private String getPreferenceMapKey(Preference preference) {
         return preference.getCategory()+":"+preference.getKey();
     }

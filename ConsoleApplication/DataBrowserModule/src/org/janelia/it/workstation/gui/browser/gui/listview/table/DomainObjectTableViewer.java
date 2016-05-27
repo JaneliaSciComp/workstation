@@ -34,6 +34,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -43,7 +44,9 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.TableViewerConfigDialo
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.browser.gui.support.DynamicDomainObjectProxy;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
@@ -65,13 +68,14 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
 
+    private IconGridViewerConfiguration config;
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
     private final Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private SearchProvider searchProvider;
-
     private List<DomainObjectAttribute> attrs;
+
     private String sortField;
     private boolean ascending = true;
 
@@ -99,8 +103,19 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         @Override
-        public String getImageLabel(DomainObject domainObject) {
-            return domainObject.getName();
+        public String getImageTitle(DomainObject domainObject) {
+            String titlePattern = config.getDomainClassTitle(domainObject.getClass().getSimpleName());
+            if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+            return StringUtils.replaceVariablePattern(titlePattern, proxy);
+        }
+
+        @Override
+        public String getImageSubtitle(DomainObject domainObject) {
+            String subtitlePattern = config.getDomainClassSubtitle(domainObject.getClass().getSimpleName());
+            if (StringUtils.isEmpty(subtitlePattern)) return null;
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+            return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
         }
 
         @Override
@@ -137,34 +152,15 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
+        this.config = IconGridViewerConfiguration.loadConfig();
+
         this.domainObjectList = domainObjectList;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
 
         attributeMap.clear();
 
-        Set<DomainObjectAttribute> attrSet = new HashSet<>();
-        attrSet.add(annotationAttr);
-
-        Set<Class<? extends DomainObject>> domainClasses = new HashSet<>();
-        for(DomainObject domainObject : domainObjectList.getDomainObjects()) {
-            domainClasses.add(domainObject.getClass());
-        }
-
-        for(Class<? extends DomainObject> domainClass : domainClasses) {
-            for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {
-                if (attr.isDisplay()) {
-                    attrSet.add(attr);
-                }
-            }
-        }
-
-        attrs = new ArrayList<>(attrSet);
-        Collections.sort(attrs, new Comparator<DomainObjectAttribute>() {
-            @Override
-            public int compare(DomainObjectAttribute o1, DomainObjectAttribute o2) {
-                return o1.getLabel().compareTo(o2.getLabel());
-            }
-        });
+        attrs = ClientDomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
+        attrs.add(0, annotationAttr);
 
         TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
 

@@ -154,6 +154,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
 
             @Override
+            protected void configButtonPressed() {
+                IconGridViewerPanel.this.configButtonPressed();
+            }
+
+            @Override
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
                 imagesPanel.recalculateGrid();
@@ -326,6 +331,8 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     protected abstract void moreAnnotationsButtonDoubleClicked(T userObject);
     
     protected abstract JPopupMenu getAnnotationPopupMenu(Annotation annotation);
+
+    protected abstract void configButtonPressed();
 
     protected void updateHud(boolean toggle) {}
 

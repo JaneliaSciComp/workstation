@@ -218,7 +218,6 @@ public class FilterEditorPanel extends JPanel
         this.typeCriteriaButton = new DropDownButton();
         
         ButtonGroup typeGroup = new ButtonGroup();
-        
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
             final String label = searchClass.getAnnotation(SearchType.class).label();
             JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(DEFAULT_SEARCH_CLASS));
