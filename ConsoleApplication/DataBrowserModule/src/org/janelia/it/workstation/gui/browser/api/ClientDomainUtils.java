@@ -64,13 +64,16 @@ public class ClientDomainUtils {
     }
 
     public static List<DomainObjectAttribute> getUniqueAttributes(Collection<DomainObject> domainObjects) {
-
-        Set<DomainObjectAttribute> attrSet = new HashSet<>();
-
         Set<Class<? extends DomainObject>> domainClasses = new HashSet<>();
         for(DomainObject domainObject : domainObjects) {
             domainClasses.add(domainObject.getClass());
         }
+        return getUniqueAttributes(domainClasses.toArray(new Class[domainClasses.size()]));
+    }
+
+    public static List<DomainObjectAttribute> getUniqueAttributes(Class<? extends DomainObject>... domainClasses) {
+
+        Set<DomainObjectAttribute> attrSet = new HashSet<>();
 
         for(Class<? extends DomainObject> domainClass : domainClasses) {
             for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainClass)) {

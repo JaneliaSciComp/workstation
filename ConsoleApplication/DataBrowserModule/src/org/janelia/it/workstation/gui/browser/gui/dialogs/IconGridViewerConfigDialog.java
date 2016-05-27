@@ -7,24 +7,36 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 
 import net.miginfocom.swing.MigLayout;
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ShorthandCompletion;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
-import org.janelia.it.workstation.gui.browser.gui.support.AutoCompleteTextField;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
+import org.janelia.it.workstation.gui.browser.gui.support.TemplateEditorTextbox;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
 
@@ -34,6 +46,8 @@ import static org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPane
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconGridViewerConfigDialog extends ModalDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(IconGridViewerConfigDialog.class);
 
     private static final String DEFAULT_TITLE_VALUE = "{Name}";
     private static final String DEFAULT_SUBTITLE_VALUE = "";
@@ -46,43 +60,43 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
     private final DropDownButton typeCriteriaButton;
     private final JPanel attrPanel;
-    private final JTextField titleInputBox;
-    private final JTextField subtitleInputBox;
+    private final TemplateEditorTextbox titleInputBox;
+    private final TemplateEditorTextbox subtitleInputBox;
 
     private final IconGridViewerConfiguration config;
 
     private Class<? extends DomainObject> resultClass;
 
-    public IconGridViewerConfigDialog(List<DomainObjectAttribute> attrs) {
+    private static final String PATTERN_HELP =
+            "<html><font color='#959595' size='-1'>These templates are used to create the title and subtitle for each item. " +
+            "You can use Ctrl-Space to show property suggestions. Properties must be surrounded in braces. " +
+            "You can also use the | character to specify default values, for example: {Qi Score|\"None\"}"
+                    + "</font></html>";
+
+    public IconGridViewerConfigDialog(Class<? extends DomainObject> defaultResultClass) {
 
         this.config = IconGridViewerConfiguration.loadConfig();
+
         setTitle("Table Configuration");
 
-        attrPanel = new JPanel(new MigLayout("wrap 2, ins 20, fillx","[grow 0, growprio 0][grow 100, growprio 100]"));
+        attrPanel = new JPanel(new MigLayout("wrap 2, ins 20", "[grow 0, growprio 0][grow 100, growprio 100]"));
 
         this.typeCriteriaButton = new DropDownButton();
         attrPanel.add(typeCriteriaButton,"gap para, span 2");
 
-        List<String> keywords = new ArrayList<>();
-        for(DomainObjectAttribute attr : attrs) {
-            keywords.add("{"+attr.getLabel()+"}");
-        }
+        attrPanel.add(new JLabel(PATTERN_HELP),"gap para, span 2, width 100:400:600, height 50:100:150, growx, ay top");
 
-        titleInputBox = new JTextField();
-        //AutoCompleteTextField.addAutoComplete(titleInputBox, keywords);
-
-        subtitleInputBox = new JTextField();
-        //AutoCompleteTextField.addAutoComplete(subtitleInputBox, keywords);
-
+        titleInputBox = new TemplateEditorTextbox();
+        subtitleInputBox = new TemplateEditorTextbox();
         JLabel titleLabel = new JLabel("Title format: ");
         titleLabel.setLabelFor(titleInputBox);
         attrPanel.add(titleLabel,"gap para");
-        attrPanel.add(titleInputBox,"gap para, width 100:300:600, grow");
+        attrPanel.add(titleInputBox,"gap para, width 100:400:600, growx");
 
         JLabel subtitleLabel = new JLabel("Subtitle format: ");
         subtitleLabel.setLabelFor(subtitleInputBox);
         attrPanel.add(subtitleLabel,"gap para");
-        attrPanel.add(subtitleInputBox,"gap para, width 100:300:600, grow");
+        attrPanel.add(subtitleInputBox,"gap para, width 100:400:600, growx");
 
         add(attrPanel, BorderLayout.CENTER);
 
@@ -136,24 +150,23 @@ public class IconGridViewerConfigDialog extends ModalDialog {
             typeCriteriaButton.getPopupMenu().add(menuItem);
         }
 
-        setResultType(Sample.class);
+        setResultType(defaultResultClass);
     }
 
     private void addCurrentConfig() {
-        String title = titleInputBox.getText();
-        if (!StringUtils.isEmpty(title) && !DEFAULT_TITLE_VALUE.equals(title)) {
-            config.setDomainClassTitle(resultClass.getSimpleName(), title);
-        }
-        String subtitle = subtitleInputBox.getText();
-        if (!StringUtils.isEmpty(subtitle) && !DEFAULT_SUBTITLE_VALUE.equals(subtitle)) {
-            config.setDomainClassSubtitle(resultClass.getSimpleName(), subtitle);
-        }
+        config.setDomainClassTitle(resultClass.getSimpleName(), titleInputBox.getText());
+        config.setDomainClassSubtitle(resultClass.getSimpleName(), subtitleInputBox.getText());
     }
 
     private void setResultType(Class<? extends DomainObject> resultClass) {
         this.resultClass = resultClass;
         SearchType searchTypeAnnot = resultClass.getAnnotation(SearchType.class);
         typeCriteriaButton.setText("Result Type: " + searchTypeAnnot.label());
+
+        // Install completion providers for the current result type
+        CompletionProvider provider = createCompletionProvider(resultClass);
+        titleInputBox.setCompletionProvider(provider);
+        subtitleInputBox.setCompletionProvider(provider);
 
         String title = config.getDomainClassTitle(resultClass.getSimpleName());
         if (StringUtils.isEmpty(title)) {
@@ -170,6 +183,15 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         else {
             subtitleInputBox.setText(subtitle);
         }
+    }
+
+    private CompletionProvider createCompletionProvider(Class<? extends DomainObject> resultClass) {
+        List<DomainObjectAttribute> attrs = ClientDomainUtils.getUniqueAttributes(resultClass);
+        DefaultCompletionProvider provider = new DefaultCompletionProvider();
+        for(DomainObjectAttribute attr : attrs) {
+            provider.addCompletion(new ShorthandCompletion(provider, attr.getLabel(), "{"+attr.getLabel()+"}", ""));
+        }
+        return provider;
     }
 
     public int showDialog(Component parent) throws HeadlessException {

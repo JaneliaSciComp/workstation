@@ -78,6 +78,7 @@ import org.openide.util.datatransfer.ExTransferable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.janelia.it.workstation.gui.browser.api.DomainMgr.getDomainMgr;
 
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
@@ -134,7 +135,21 @@ public class FilterEditorPanel extends JPanel
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        savedFilter = DomainMgr.getDomainMgr().getModel().save(filter);
+                        Filter filterToSave = filter;
+                        if (filterToSave.getId()!=null) {
+                            // What we have is a clone of a filter, so we need to get the canonical instance
+                            filterToSave = DomainMgr.getDomainMgr().getModel().getDomainObject(filter);
+                            filterToSave.setCriteriaList(filter.getCriteriaList());
+                            filterToSave.setSearchClass(filter.getSearchClass());
+                            filterToSave.setSearchString(filter.getSearchString());
+                            filterToSave.setSort(filter.getSort());
+                            log.info("Saving filter '{}' with id {}",filterToSave.getName(),filterToSave.getId());
+                        }
+                        else {
+                            log.info("Creating filter '{}'",filterToSave.getName());
+                        }
+
+                        savedFilter = DomainMgr.getDomainMgr().getModel().save(filterToSave);
                     }
 
                     @Override
@@ -186,7 +201,7 @@ public class FilterEditorPanel extends JPanel
                             savedFilter = DomainUtils.cloneFilter(filter);
                         }
                         savedFilter.setName(finalName);
-                        DomainModel model = DomainMgr.getDomainMgr().getModel();
+                        DomainModel model = getDomainMgr().getModel();
                         savedFilter = model.save(savedFilter);
                         model.addChild(model.getDefaultWorkspace(), savedFilter);
                         setFilter(savedFilter);
@@ -216,25 +231,7 @@ public class FilterEditorPanel extends JPanel
         });
         
         this.typeCriteriaButton = new DropDownButton();
-        
-        ButtonGroup typeGroup = new ButtonGroup();
-        for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
-            final String label = searchClass.getAnnotation(SearchType.class).label();
-            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(DEFAULT_SEARCH_CLASS));
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    dirty = true;
-                    searchConfig.setSearchClass(searchClass);
-                    updateView();
-                    refreshSearchResults(true);
-                }
-            });
-            typeGroup.add(menuItem);
-            typeCriteriaButton.getPopupMenu().add(menuItem);
-        }
-        
         this.addCriteriaButton = new DropDownButton("Add Criteria...");
-        
         this.searchBox = new SmartSearchBox("SEARCH_HISTORY");
 
         infoButton = new JButton(Icons.getIcon("info.png"));
@@ -284,8 +281,10 @@ public class FilterEditorPanel extends JPanel
         dt.setActive(true);
     }
 
-    private void setFilter(Filter filter) {
-        this.filter = filter;
+    private void setFilter(Filter canonicalFilter) {
+        // Clone the filter so that we don't modify the one in the cache
+        this.filter = DomainUtils.cloneFilter(canonicalFilter);
+        filter.setId(canonicalFilter.getId());
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
     }
     
@@ -452,7 +451,24 @@ public class FilterEditorPanel extends JPanel
 
     	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
         typeCriteriaButton.setText("Result Type: " + searchTypeAnnot.label());
-        
+
+        typeCriteriaButton.getPopupMenu().removeAll();
+        ButtonGroup typeGroup = new ButtonGroup();
+        for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
+            final String label = searchClass.getAnnotation(SearchType.class).label();
+            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(searchConfig.getSearchClass()));
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    dirty = true;
+                    searchConfig.setSearchClass(searchClass);
+                    updateView();
+                    refreshSearchResults(true);
+                }
+            });
+            typeGroup.add(menuItem);
+            typeCriteriaButton.getPopupMenu().add(menuItem);
+        }
+
         configPanel.setTitle(filter.getName());
         
         // Update filters
@@ -766,7 +782,7 @@ public class FilterEditorPanel extends JPanel
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
-                    Filter updatedFilter = DomainMgr.getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
+                    Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
                     if (updatedFilter!=null) {
                         filterNode.update(updatedFilter);
                         loadDomainObjectNode(filterNode, false, null);

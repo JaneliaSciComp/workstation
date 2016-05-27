@@ -1412,6 +1412,17 @@
                 <package>org.eclipse.jetty.util.ssl</package>
                 <package>org.eclipse.jetty.util.statistic</package>
                 <package>org.eclipse.jetty.util.thread</package>
+                <package>org.fife.io</package>
+                <package>org.fife.print</package>
+                <package>org.fife.ui.autocomplete</package>
+                <package>org.fife.ui.rsyntaxtextarea</package>
+                <package>org.fife.ui.rsyntaxtextarea.focusabletip</package>
+                <package>org.fife.ui.rsyntaxtextarea.folding</package>
+                <package>org.fife.ui.rsyntaxtextarea.modes</package>
+                <package>org.fife.ui.rsyntaxtextarea.parser</package>
+                <package>org.fife.ui.rsyntaxtextarea.templates</package>
+                <package>org.fife.ui.rtextarea</package>
+                <package>org.fife.util</package>
                 <package>org.glassfish.hk2.api</package>
                 <package>org.glassfish.hk2.api.messaging</package>
                 <package>org.glassfish.hk2.extension</package>
@@ -1884,6 +1895,10 @@
                 <binary-origin>release/modules/ext/jibx-run-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jackson-module-jaxb-annotations-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-module-jaxb-annotations-2.5.4.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/xuggle-xuggler-5.4.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xuggle-xuggler-5.4.jar</binary-origin>
             </class-path-extension>
@@ -1912,6 +1927,10 @@
                 <binary-origin>release/modules/ext/beansbinding-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/juli-6.0.16.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/juli-6.0.16.jar</binary-origin>
             </class-path-extension>
@@ -1930,6 +1949,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/ffmpeg-windows-x86_64.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/ffmpeg-windows-x86_64.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-jaxrs-json-provider-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-jaxrs-json-provider-2.5.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaClassy.jar</runtime-relative-path>
@@ -1962,6 +1985,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-fastinfoset-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-fastinfoset-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-jaxrs-base-2.5.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-jaxrs-base-2.5.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/reflections-0.9.9-RC1.jar</runtime-relative-path>
@@ -2020,6 +2047,10 @@
                 <binary-origin>release/modules/ext/syntheticaAddonsWithThemes.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaOrangeMetallic.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaOrangeMetallic.jar</binary-origin>
             </class-path-extension>
@@ -2030,6 +2061,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/xalan-2.7.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xalan-2.7.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jersey-guava-2.22.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-guava-2.22.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueIce.jar</runtime-relative-path>
@@ -2094,6 +2129,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/javacpp.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/javacpp.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaGreenDream.jar</runtime-relative-path>
@@ -2252,6 +2291,10 @@
                 <binary-origin>release/modules/ext/axis2-saaj-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/autocomplete-2.6.0-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/autocomplete-2.6.0-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-jta_1.1_spec-1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-jta_1.1_spec-1.1.jar</binary-origin>
             </class-path-extension>
@@ -2396,6 +2439,10 @@
                 <binary-origin>release/modules/ext/jython.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jersey-entity-filtering-2.22.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jersey-entity-filtering-2.22.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
             </class-path-extension>
@@ -2410,6 +2457,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jackson-annotations-2.4.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jackson-annotations-2.4.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/rsyntaxtextarea-2.6.0-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
@@ -2430,6 +2481,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/hibernate-annotations.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/hibernate-annotations.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.annotation-api-1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.annotation-api-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jongo-1.2.jar</runtime-relative-path>
@@ -2466,6 +2521,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/owlapi-bin.jar</runtime-relative-path>
@@ -2574,50 +2633,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-servlet-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-servlet-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javax.ws.rs-api-2.0.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.ws.rs-api-2.0.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hk2-api-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-api-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hk2-utils-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-utils-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/hk2-locator-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/hk2-locator-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-guava-2.22.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-guava-2.22.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jersey-entity-filtering-2.22.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jersey-entity-filtering-2.22.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/javax.annotation-api-1.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/javax.annotation-api-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-jaxrs-json-provider-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-jaxrs-json-provider-2.5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-jaxrs-base-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-jaxrs-base-2.5.4.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-module-jaxb-annotations-2.5.4.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-module-jaxb-annotations-2.5.4.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>

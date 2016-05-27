@@ -1,9 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 
 import java.awt.image.BufferedImage;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.ImageIcon;
@@ -20,8 +18,8 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
@@ -38,7 +36,6 @@ import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
-import org.janelia.it.workstation.gui.browser.gui.support.DynamicDomainObjectProxy;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -359,8 +356,17 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     protected void configButtonPressed() {
-        List<DomainObjectAttribute> attrs = ClientDomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
-        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(attrs);
+
+        DomainObject firstObject;
+        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        if (selectedObjects.isEmpty()) {
+            firstObject = domainObjectList.getDomainObjects().get(0);
+        }
+        else {
+            firstObject = selectedObjects.get(0);
+        }
+
+        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
         if (configDialog.showDialog(this)==1) {
             this.config = IconGridViewerConfiguration.loadConfig();
             refresh();

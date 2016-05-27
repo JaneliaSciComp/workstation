@@ -69,7 +69,6 @@ public class SearchConfiguration {
 
     public final void setSearchClass(Class<? extends DomainObject> searchClass) {
 
-        log.info("Setting search class: {}",searchClass);
     	this.searchClass = searchClass;
        
         // Clear
@@ -78,7 +77,7 @@ public class SearchConfiguration {
         facetValues.clear();
         
         if (searchClass==null) return;
-               
+
         filter.setSearchClass(searchClass.getName());
  
         for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(searchClass)) {
