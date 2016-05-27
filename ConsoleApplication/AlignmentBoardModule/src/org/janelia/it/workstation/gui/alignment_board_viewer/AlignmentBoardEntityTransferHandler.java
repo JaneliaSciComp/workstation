@@ -19,6 +19,7 @@ import javax.swing.*;
 import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
 import java.util.List;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
@@ -86,8 +87,9 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
 
                 for ( RootedEntity rootedEntity: rootedEntities ) {
                     if ( abContext.isAcceptedType(null)) {   // *** !!! Plug in the Domain Object
-                        typeIsFragment = rootedEntity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
-                        typeIsSample = rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE);
+                        typeIsFragment = rootedEntity.getType().equals(NeuronFragment.class.getSimpleName());
+                        typeIsSample = rootedEntity.getType().equals(Sample.class.getSimpleName());
+                        // TODO: what type is our 3d now?
                         typeIsRef = rootedEntity.getType().equals(EntityConstants.TYPE_IMAGE_3D) && rootedEntity.getName().startsWith("Reference");
                         if ( typeIsFragment  ||  typeIsRef ) {
                             sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);

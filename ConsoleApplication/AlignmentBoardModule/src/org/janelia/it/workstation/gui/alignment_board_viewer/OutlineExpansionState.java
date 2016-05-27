@@ -87,19 +87,18 @@ public class OutlineExpansionState {
 
         OutlineModel outlineModel = outline.getOutlineModel();
         log.trace(indent+"restoreExpansionState: "+treePath);
-        
-        AlignmentBoardContext nodeObject = (AlignmentBoardContext)treePath.getLastPathComponent();
-        
+        Object lastPathComponentObject = treePath.getLastPathComponent();
+        AlignmentBoardItem nodeObject = (AlignmentBoardItem)lastPathComponentObject;
         Set<List<Long>> relativeExpandedIds = new HashSet<>();
         for(List<Long> expandedPath : expandedIds) {
-            if (expandedPath.get(0).equals(nodeObject.getAlignmentBoard().getId())) {
-                outlineModel.getTreePathSupport().expandPath(treePath);
-                List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
-                if (!relativePath.isEmpty()) {
-                    relativeExpandedIds.add(relativePath);
-                    log.trace(indent+"  relative expanded: "+relativePath);
-                }
-            }
+//            if (expandedPath.get(0).equals(nodeObject.getTarget().getTargetId())) {
+//                outlineModel.getTreePathSupport().expandPath(treePath);
+//                List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
+//                if (!relativePath.isEmpty()) {
+//                    relativeExpandedIds.add(relativePath);
+//                    log.trace(indent+"  relative expanded: "+relativePath);
+//                }
+//            }
         }
         
         if (!relativeExpandedIds.isEmpty()) {

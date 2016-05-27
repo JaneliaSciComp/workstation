@@ -15,14 +15,15 @@ import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -77,7 +78,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                     for ( AlignmentBoardItem childItem: childItems ) {
                         DomainObject childDobj = domainModel.getDomainObject(childItem.getTarget());
                         if ( childDobj instanceof NeuronFragment) {
-                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
+                            liveFileCount += getNeuronFragmentRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
                         else if ( childDobj instanceof VolumeImage) {
                             VolumeImage image = (VolumeImage)childDobj;
@@ -87,7 +88,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 }
             }
             else if ( dobj instanceof NeuronFragment) {
-                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, false, alignmentBoardItem);
+                liveFileCount += getNeuronFragmentRenderableData(rtnVal, nextTranslatedNum, false, alignmentBoardItem);
             }
             else if ( dobj instanceof CompartmentSet) {
                 currentSample = null;
@@ -103,6 +104,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 compartmentAlignmentContext.setAlignmentSpace(currentCompartmentSet.getAlignmentSpace());
                 compartmentAlignmentContext.setImageSize(currentCompartmentSet.getImageSize());
                 compartmentAlignmentContext.setOpticalResolution(currentCompartmentSet.getOpticalResolution());
+                String basePath = currentCompartmentSet.getFilepath();
 
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
@@ -111,7 +113,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                         if ( childDobj instanceof Compartment) {
                             Compartment compartment = (Compartment)childDobj;
                             if ( targetAlignmentContext.equals( compartmentAlignmentContext ) ) {
-                                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
+                                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, basePath, item);
                             }
                         }
                     }
@@ -119,7 +121,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
             }
             else if ( dobj instanceof Compartment) {
-                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignmentBoardItem);
+                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, null, alignmentBoardItem);
             }
         }
 
@@ -171,16 +173,23 @@ public class ABContextDataSource implements RenderableDataSourceI {
             Collection<MaskChanRenderableData> maskChanRenderableDatas,
             int nextTranslatedNum,
             boolean isCompartment,
+            String basePath,
             AlignmentBoardItem item) {
         DomainObject dobj = RenderUtils.getObjectForItem(item);
         RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
         nfRenderable.setCompartment( isCompartment );
-
+        
         String maskPath = getMaskPath( dobj );
+        String channelPath = getChanPath(dobj);
+        if (!(StringUtils.isEmpty(maskPath) || StringUtils.isEmpty(basePath))) {
+            maskPath = basePath + File.separator + maskPath;
+            channelPath = basePath + File.separator + channelPath;
+        } else {
+            logger.error("Base path empty for " + item.getTarget().getTargetClassName() + " " + item.getTarget().getTargetId());
+        }
         nfRenderable.setMaskPath( maskPath );
-        String channelPath = getChanPath( dobj );
         nfRenderable.setChannelPath( channelPath );
 
         int liveFileCount = getCorrectFilesFoundCount(
@@ -189,6 +198,28 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         maskChanRenderableDatas.add( nfRenderable );
         return liveFileCount;
+    }
+
+    /**
+     * Create a neuron-fragment-specific renderable data.
+     *
+     * @param maskChanRenderableDatas to this collection will be added the new
+     * renderable data.
+     * @param nextTranslatedNum will be the target render-method id for this
+     * data
+     * @param isCompartment for special treatment of compartments.
+     * @param item being wrapped.
+     * @return number of correct files found for this "translated number".
+     */
+    private int getNeuronFragmentRenderableData(
+            Collection<MaskChanRenderableData> maskChanRenderableDatas,
+            int nextTranslatedNum,
+            boolean isCompartment,
+            AlignmentBoardItem item) {
+        
+        DomainObject dobj = RenderUtils.getObjectForItem(item);
+        String basePath = ((NeuronFragment)dobj).getFilepath();
+        return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, basePath, item);
     }
 
     private int getRenderableData(
@@ -255,18 +286,18 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setName(dobj.getName());
         renderableBean.setId(dobj.getId());
         renderableBean.setReference(item.getTarget());
+        renderableBean.setType(item.getTarget().getTargetClassName());
         if ( isCompartment ) {
             renderableBean.setInvertedY( false );
-            renderableBean.setType(EntityConstants.TYPE_COMPARTMENT );
         }
         else {
             renderableBean.setInvertedY( true );
         }
 
         // If a simplistic value has been set, change it.  Otherwise, would be something more specific.
-        if ( renderableBean.getType().equals( EntityConstants.TYPE_ALIGNED_ITEM ) ) {
-            renderableBean.setType(EntityConstants.TYPE_NEURON_FRAGMENT);
-        }
+//        if ( renderableBean.getType().equals( EntityConstants.TYPE_ALIGNED_ITEM ) ) {
+//            renderableBean.setType(EntityConstants.TYPE_NEURON_FRAGMENT);
+//        }
         setAppearance(isCompartment, item, renderableBean);
 
         return renderableBean;
@@ -285,7 +316,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         return rtnVal;
     }
     
-    private String getMaskPath(DomainObject domainObj) {
+    private String getMaskPath(DomainObject domainObj) {        
         return getTypedPath(domainObj, FileType.MaskFile);
     }
     

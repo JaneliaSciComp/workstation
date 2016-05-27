@@ -149,10 +149,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
                                 final String entityTypeName = bbc.getEntity().getEntityTypeName();
                                 String domainObjectClass = null;
                                 if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-                                    domainObjectClass = NeuronFragment.class.getName();
+                                    domainObjectClass = NeuronFragment.class.getSimpleName();
                                 }
                                 else if (entityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
-                                    domainObjectClass = Sample.class.getName();
+                                    domainObjectClass = Sample.class.getSimpleName();
                                 }
                                 DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getEntity().getId());
                                 context.addDomainObject(dobj, "63x");

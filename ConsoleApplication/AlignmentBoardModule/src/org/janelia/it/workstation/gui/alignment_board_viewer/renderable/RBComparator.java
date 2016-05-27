@@ -6,6 +6,10 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,14 +21,14 @@ import java.util.Map;
  */
 public class RBComparator implements Comparator<RenderableBean> {
 
-    private Map<String,Integer> rankMapping;
+    private final Map<String,Integer> rankMapping;
     {
-        rankMapping = new HashMap<String,Integer>();
-        rankMapping.put( EntityConstants.TYPE_NEURON_FRAGMENT, 1 );
-        rankMapping.put( "Reference", 2 );      //todo move this to EntityConstants
-        rankMapping.put( EntityConstants.TYPE_COMPARTMENT, 3 );
-        rankMapping.put( EntityConstants.TYPE_SAMPLE, 9 );
-        rankMapping.put( EntityConstants.TYPE_COMPARTMENT_SET, 10 );
+        rankMapping = new HashMap<>();
+        rankMapping.put( NeuronFragment.class.getSimpleName(), 1 );
+        rankMapping.put( "Reference", 2 );      //todo consider using Image class name
+        rankMapping.put( Compartment.class.getSimpleName(), 3 );
+        rankMapping.put( Sample.class.getSimpleName(), 9 );
+        rankMapping.put( CompartmentSet.class.getSimpleName(), 10 );
     }
 
     /**
@@ -52,6 +56,9 @@ public class RBComparator implements Comparator<RenderableBean> {
         }
         else {
             String firstTypeName = first.getType();
+            if (null == rankMapping.get(firstTypeName)) {
+                java.util.logging.Logger.getLogger("RBComparator").warning("Value " + firstTypeName + " not found in rank mapping.  " + first.getName() + " id " + first.getId());
+            }
             int typeRankFirst = rankMapping.get(firstTypeName);
             String secondTypeName = second.getType();
             int typeRankSecond = rankMapping.get(secondTypeName);

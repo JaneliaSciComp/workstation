@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.renderable;
 
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,8 +16,6 @@ public class RenderableBean {
     private byte[] rgb;
     private Long id;
     private String name;
-    private long alignedItemId;
-    private AlignedItem alignedItem;
     private boolean invertedY;
     private String type;
     private Long voxelCount = 0L; // Never null.
@@ -99,20 +96,6 @@ public class RenderableBean {
 
     public void setVoxelCount(Long voxelCount) {
         this.voxelCount = voxelCount;
-    }
-
-    public long getAlignedItemId() {
-        return alignedItemId;
-    }
-
-    public AlignedItem getAlignedItem() {
-        return this.alignedItem;
-    }
-
-    public void setAlignedItem( AlignedItem item ) {
-        this.alignedItem = item;
-        if ( item != null )
-            this.alignedItemId = item.getId();
     }
 
     public void setReference( Reference reference ) {

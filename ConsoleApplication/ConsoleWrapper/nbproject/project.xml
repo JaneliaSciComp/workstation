@@ -259,18 +259,6 @@
                 <package>com.jgoodies.forms.factories</package>
                 <package>com.jgoodies.forms.layout</package>
                 <package>com.jgoodies.forms.util</package>
-                <package>com.jogamp.common</package>
-                <package>com.jogamp.common.jvm</package>
-                <package>com.jogamp.common.net</package>
-                <package>com.jogamp.common.net.asset</package>
-                <package>com.jogamp.common.nio</package>
-                <package>com.jogamp.common.os</package>
-                <package>com.jogamp.common.type</package>
-                <package>com.jogamp.common.util</package>
-                <package>com.jogamp.common.util.awt</package>
-                <package>com.jogamp.common.util.cache</package>
-                <package>com.jogamp.common.util.locks</package>
-                <package>com.jogamp.gluegen.runtime</package>
                 <package>com.kenai.jaffl</package>
                 <package>com.kenai.jaffl.annotations</package>
                 <package>com.kenai.jaffl.byref</package>
