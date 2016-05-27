@@ -96,6 +96,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private final DropDownButton resultButton;
     private final JButton editModeButton;
     private final JButton openInNAButton;
+    private final JButton fragmentSortButton;
     private final JButton editOkButton;
     private final JButton editCancelButton;
     private final PaginatedResultsPanel resultsPanel;
@@ -152,6 +153,17 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         
+        fragmentSortButton = new JButton();
+        fragmentSortButton.setIcon(Icons.getIcon("sort_descending.png"));
+        fragmentSortButton.setFocusable(false);
+        fragmentSortButton.setToolTipText("Sort the neuron fragments by voxel weight (largest->first)");
+        fragmentSortButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                sortByFragmentWeight();
+            }
+        });
+
         openInNAButton = new JButton();
         openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
@@ -164,6 +176,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         });
         
         configPanel = new ConfigPanel(true);
+        configPanel.addTitleComponent(fragmentSortButton, true, true);
         configPanel.addTitleComponent(openInNAButton, true, true);
         configPanel.addConfigComponent(resultButton);
         configPanel.addConfigComponent(editModeButton);
@@ -279,6 +292,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private void openInNA() {
         NamedAction action = new OpenInNeuronAnnotatorAction(separation);
         action.doAction();
+    }
+
+    private void sortByFragmentWeight() {
+        setSortField("-voxelWeight");
     }
     
     private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {

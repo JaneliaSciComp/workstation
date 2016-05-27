@@ -30,6 +30,17 @@ of adapter.
         </ant>
     </target>
 
+    <target name="deploy-ng-nbms">
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation_ng"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav1"/>
+        </antcall>
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation_ng"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav2"/>
+        </antcall>
+    </target>
+
     <target name="deploy-nbms-staging">
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="staging"/>
