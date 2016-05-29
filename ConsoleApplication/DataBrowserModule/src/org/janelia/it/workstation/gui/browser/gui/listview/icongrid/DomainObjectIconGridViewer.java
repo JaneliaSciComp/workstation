@@ -19,7 +19,9 @@ import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
@@ -29,11 +31,11 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainObjectProviderHelper;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
-import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -60,7 +62,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     private ResultSelectionButton resultButton;
     private ImageTypeSelectionButton typeButton;
-    
+
+    private IconGridViewerConfiguration config;
     private AnnotatedDomainObjectList domainObjectList;
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
@@ -107,10 +110,21 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
         
         @Override
-        public String getImageLabel(DomainObject domainObject) {
-            return domainObject.getName();
+        public String getImageTitle(DomainObject domainObject) {
+            String titlePattern = config.getDomainClassTitle(domainObject.getClass().getSimpleName());
+            if (StringUtils.isEmpty(titlePattern)) return domainObject.getName();
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+            return StringUtils.replaceVariablePattern(titlePattern, proxy);
         }
-        
+
+        @Override
+        public String getImageSubtitle(DomainObject domainObject) {
+            String subtitlePattern = config.getDomainClassSubtitle(domainObject.getClass().getSimpleName());
+            if (StringUtils.isEmpty(subtitlePattern)) return null;
+            DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
+            return StringUtils.replaceVariablePattern(subtitlePattern, proxy);
+        }
+
         @Override
         public List<Annotation> getAnnotations(DomainObject domainObject) {
             return domainObjectList.getAnnotations(domainObject.getId());
@@ -228,6 +242,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
+        this.config = IconGridViewerConfiguration.loadConfig();
+
         this.domainObjectList = objects;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
         
@@ -279,7 +295,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
 
-        String name = getImageModel().getImageLabel(domainObject);
+        String name = getImageModel().getImageTitle(domainObject);
         if (name.toUpperCase().contains(text.toUpperCase())) {
             return true;
         }
@@ -336,6 +352,24 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
                 action.doAction();
             }
+        }
+    }
+
+    protected void configButtonPressed() {
+
+        DomainObject firstObject;
+        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        if (selectedObjects.isEmpty()) {
+            firstObject = domainObjectList.getDomainObjects().get(0);
+        }
+        else {
+            firstObject = selectedObjects.get(0);
+        }
+
+        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
+        if (configDialog.showDialog(this)==1) {
+            this.config = IconGridViewerConfiguration.loadConfig();
+            refresh();
         }
     }
 

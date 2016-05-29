@@ -13,7 +13,9 @@ public interface ImageModel<T,S> {
     
     public String getImageFilepath(T imageObject);
     
-    public String getImageLabel(T imageObject);
+    public String getImageTitle(T imageObject);
+
+    public String getImageSubtitle(T imageObject);
 
     public BufferedImage getStaticIcon(T imageObject);
     

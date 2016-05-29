@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
@@ -23,6 +24,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     protected JToggleButton showTitlesButton;
     protected JToggleButton showTagsButton;
+    protected JButton configButton;
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
@@ -58,6 +60,21 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         });
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
         toolbar.add(showTagsButton);
+
+        toolbar.addSeparator();
+
+        configButton = new JButton();
+        configButton.setIcon(Icons.getIcon("cog.png"));
+        configButton.setFocusable(false);
+        configButton.setToolTipText("Configure the icon viewer.");
+        configButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                configButtonPressed();
+            }
+        });
+        configButton.addMouseListener(new MouseForwarder(toolbar, "ConfigButton->JToolBar"));
+        toolbar.add(configButton);
 
         toolbar.addSeparator();
 
@@ -118,6 +135,8 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     protected abstract void showTitlesButtonPressed();
 
     protected abstract void showTagsButtonPressed();
+
+    protected abstract void configButtonPressed();
 
     protected abstract void currImageSizeChanged(int imageSize);
 
