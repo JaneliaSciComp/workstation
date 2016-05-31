@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -125,7 +126,7 @@ public class DomainHelper {
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
     
-    public ReverseReference getNeuronRRefForSample(Sample sample, String objective) {  
+    public ReverseReference getNeuronRRefForSample(Sample sample, String objective, AlignmentContext context) {  
         ReverseReference rtnVal = null;
         for (ObjectiveSample oSample: sample.getObjectiveSamples()) {
             SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
@@ -133,21 +134,29 @@ public class DomainHelper {
                 log.info("No latest run for {}.", sample.getName());
                 return null;
             }
-            
+
+            Date latestDate = null;
             for (SampleAlignmentResult sar: latestRun.getResultsOfType(SampleAlignmentResult.class)) {
                 // Pre-emptive bail: after this, we are _known_ to have the
                 // correct objective.
-                if (!sar.getObjective().equals(objective)) {
+                if (!sar.getObjective().equals(objective)  ||
+                    !sar.getOpticalResolution().equals(context.getOpticalResolution())  ||
+                    !sar.getAlignmentSpace().equals(context.getAlignmentSpace())  ||
+                    !sar.getImageSize().equals(context.getImageSize())) {
+                    log.info("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
                     continue;
                 }
                 log.info("Found result with target objective.");
                 NeuronSeparation nResult = sar.getLatestSeparationResult();
                 if (nResult == null) {
                     log.info("No neuron separation for {}.", sample.getName());
-                    return null;
                 } else {
-                    rtnVal = nResult.getFragmentsReference();
-                    break;
+                    Date sarDate = sar.getCreationDate();
+                    if (latestDate == null  ||  sarDate.after(latestDate)) {
+                        rtnVal = nResult.getFragmentsReference();
+                        latestDate = sarDate;
+                        log.info("Found matching sep result. Returning ref.");
+                    }                    
                 }
             }
             
