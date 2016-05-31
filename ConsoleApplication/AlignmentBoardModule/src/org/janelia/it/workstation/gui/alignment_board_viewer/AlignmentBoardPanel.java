@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
+import java.awt.dnd.DropTarget;
 import java.util.Collection;
 
 import javax.media.opengl.GLCapabilities;
@@ -17,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
@@ -123,11 +125,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         multiMaskTracker.setFileStats( fileStats );
         renderMapping = new ConfigurableColorMapping( multiMaskTracker, fileStats );
         setLayout(new BorderLayout());
-        
         setTransferHandler(new AlignmentBoardDomainObjectTransferHandler((ImageModel<DomainObject, Reference>) null, (DomainObjectSelectionModel) null) {
             //@Override
             public JComponent getDropTargetComponent() {
-                logger.warn("Exploiting unimplemented feature: Drag-and-Drop.");
                 return AlignmentBoardPanel.this;
             }
         });

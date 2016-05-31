@@ -1,11 +1,13 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
+import java.awt.datatransfer.DataFlavor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.Iterator;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -23,7 +25,6 @@ import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.TransferableDomainObjectList;
@@ -49,8 +50,29 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
     }
 
     @Override
+    public boolean importData(TransferHandler.TransferSupport support) {
+        boolean rtnVal = true;
+        log.info("Import data has been called.");
+        
+        Transferable transferable = support.getTransferable();
+        try {
+            List<DomainObject> transferData = (List<DomainObject>) transferable.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
+            log.info("Got transfer data {}.", transferData.size());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            rtnVal = false;
+        }
+        return rtnVal;
+    }
+    
+    @Override
+    public int getSourceActions(JComponent sourceComponent) {
+        return COPY;
+    }
+    
+    @Override
     protected Transferable createTransferable(JComponent sourceComponent) {
-
+        /*
         log.debug("createTransferable sourceComponent={}", sourceComponent);
 
         DomainHelper domainHelper = new DomainHelper();
@@ -62,6 +84,9 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
             log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
             return null;
         }
+        */
+        // Not transfering anything OUT of the alignment board as of now.
+        return null;
     }
     
     @Override
@@ -116,9 +141,7 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
                             sample = (Sample)domainObject;
                             boolean compatible = isSampleCompatible(standardContext, sample);
                             if ( compatible ) {
-                                ReverseReference fragmentsRRef = domainHelper.getNeuronRRefForSample(
-                                        sample, domainHelper.getObjectiveForAlignmentContext(standardContext), standardContext
-                                );
+                                ReverseReference fragmentsRRef = domainHelper.getNeuronRRefForSample(sample, standardContext);
                                 if (fragmentsRRef != null) {
                                     fragmentCount += fragmentsRRef.getCount();
                                     rtnVal = true;

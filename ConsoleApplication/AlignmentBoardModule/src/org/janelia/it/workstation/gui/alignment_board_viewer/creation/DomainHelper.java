@@ -126,7 +126,8 @@ public class DomainHelper {
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
     
-    public ReverseReference getNeuronRRefForSample(Sample sample, String objective, AlignmentContext context) {  
+    public ReverseReference getNeuronRRefForSample(Sample sample, AlignmentContext context) {  
+        String objective = getObjectiveForAlignmentContext(context);
         ReverseReference rtnVal = null;
         for (ObjectiveSample oSample: sample.getObjectiveSamples()) {
             SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
@@ -143,7 +144,7 @@ public class DomainHelper {
                     !sar.getOpticalResolution().equals(context.getOpticalResolution())  ||
                     !sar.getAlignmentSpace().equals(context.getAlignmentSpace())  ||
                     !sar.getImageSize().equals(context.getImageSize())) {
-                    log.info("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
+                    log.debug("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
                     continue;
                 }
                 log.info("Found result with target objective.");
@@ -155,7 +156,7 @@ public class DomainHelper {
                     if (latestDate == null  ||  sarDate.after(latestDate)) {
                         rtnVal = nResult.getFragmentsReference();
                         latestDate = sarDate;
-                        log.info("Found matching sep result. Returning ref.");
+                        log.debug("Found matching sep result. Returning ref.");
                     }                    
                 }
             }
@@ -210,8 +211,3 @@ public class DomainHelper {
     }
       
 }
-
-//                for (PipelineResult pResult: pipelineRun.getResults()) {
-//                    NeuronSeparation ns = pResult.getLatestSeparationResult();
-//                    // This will get me the fragments, later as needed.
-//                }
