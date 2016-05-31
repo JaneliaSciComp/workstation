@@ -58,16 +58,14 @@ public class DomainHelper {
                             String opticalResolution = sar.getOpticalResolution();
                             
                             // Find out if this one has been "blessed".
-                            AlignmentContext ctx = new AlignmentContext();
-                            ctx.setAlignmentSpace(alignmentSpace);
-                            ctx.setOpticalResolution(opticalResolution);
-                            ctx.setImageSize(imageSize);
-
-                            if (completeList.contains(ctx)) {
-                                rtnVal.add(ctx);
-                            }
-                            else {
-                                log.warn("Failed to find context {} among existing.  Rejecting.", ctx);
+                            for (DomainObject dObj: completeList) {
+                                AlignmentContext nextCtx = (AlignmentContext)dObj;
+                                if (nextCtx.getAlignmentSpace().equals(alignmentSpace)  &&
+                                    nextCtx.getImageSize().equals(imageSize)  &&
+                                    nextCtx.getOpticalResolution().equals(opticalResolution)) {
+                                    
+                                    rtnVal.add(nextCtx);
+                                }
                             }
                         }
                     }
@@ -127,12 +125,47 @@ public class DomainHelper {
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
     
-    public ReverseReference getNeuronRRefForSample(Sample sample, String objective) {
+    public ReverseReference getNeuronRRefForSample(Sample sample, String objective) {        
         ObjectiveSample oSample = sample.getObjectiveSample(objective);
-        SamplePipelineRun latestRun = oSample.getLatestRun();
+        if (oSample == null) {
+            log.info("No sample for {}.", objective);
+            return null;
+        }
+        SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
+        if (latestRun == null) {
+            log.info("No latest run for {}.", sample.getName());
+            return null;
+        }
         PipelineResult pResult = latestRun.getLatestResult();
+        if (pResult == null) {
+            log.info("No pipeline result for {}.", sample.getName());
+            return null;
+        }
         NeuronSeparation nResult = pResult.getLatestSeparationResult();
+        if (nResult == null) {
+            log.info("No neuron separation for {}.", sample.getName());
+            return null;
+        }
         return nResult.getFragmentsReference();
+    }
+    
+    public String getObjectiveForAlignmentContext(AlignmentContext context) {
+        String alignmentSpace = context.getAlignmentSpace();
+        int xPos = alignmentSpace.indexOf('x');
+        int digitPos = xPos;
+        if (xPos > -1) {
+            digitPos = xPos;
+            while (digitPos > 0  &&  Character.isDigit(alignmentSpace.charAt(digitPos - 1))) {
+                digitPos --;
+            }
+        }
+        if (digitPos > -1) {
+            return alignmentSpace.substring(digitPos, xPos + 1);
+        }
+        else {
+            log.warn("Failed to find objective string from alignment context {}.", context.getAlignmentSpace());
+            return "";
+        }
     }
     
     /**
