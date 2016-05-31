@@ -156,7 +156,7 @@ public class DomainInspectorPanel extends JPanel {
         attributesTable.addColumn(ATTRIBUTES_COLUMN_KEY, ATTRIBUTES_COLUMN_KEY, true, false, false, true);
         attributesTable.addColumn(ATTRIBUTES_COLUMN_VALUE, ATTRIBUTES_COLUMN_VALUE, true, false, false, true);
 
-        tabbedPane.addTab(TAB_NAME_ATTRIBUTES, Icons.getIcon("table.png"), attributesPanel, "The data entity's attributes");
+        tabbedPane.addTab(TAB_NAME_ATTRIBUTES, Icons.getIcon("table.png"), attributesPanel, "The selected item's attributes");
 
         // Permissions tab
         permissionsLoadingLabel = createLoadingLabel();
@@ -294,14 +294,14 @@ public class DomainInspectorPanel extends JPanel {
         permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
         permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
 
-        tabbedPane.addTab("Permissions", Icons.getIcon("group.png"), permissionsPanel, "Who has access to the this data entity");
+        tabbedPane.addTab("Permissions", Icons.getIcon("group.png"), permissionsPanel, "Who has access to the selected item");
 
         // Annotations tab
         annotationsLoadingLabel = createLoadingLabel();
         annotationsPanel = new JPanel(new BorderLayout());
         annotationsView = new AnnotationTablePanel();
 
-        tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "The user annotations");
+        tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "Annotations on the selected item");
     }
 
     public void showNothing() {
