@@ -1,34 +1,9 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
-import net.miginfocom.swing.MigLayout;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.gui.support.DownloadItem;
-import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
-import org.janelia.it.workstation.gui.browser.gui.support.FileDownloadWorker;
-import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
-import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.browser.model.search.SolrSearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -40,6 +15,34 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import javax.swing.*;
+
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Multiset;
+import net.miginfocom.swing.MigLayout;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.gui.support.DownloadItem;
+import org.janelia.it.workstation.gui.browser.gui.support.FileDownloadWorker;
+import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
+import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
+import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
+import org.janelia.it.workstation.gui.browser.model.search.SolrSearchResults;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for exporting data. Supports exporting hierarchies of files in various ways. 

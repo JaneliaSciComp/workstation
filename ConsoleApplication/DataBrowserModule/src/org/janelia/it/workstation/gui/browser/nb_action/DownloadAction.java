@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.openide.nodes.Node;
 

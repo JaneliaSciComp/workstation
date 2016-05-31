@@ -20,6 +20,8 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
@@ -40,8 +42,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButt
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -82,7 +82,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             HasFiles result = null;
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
-                result = DomainModelViewUtils.getResult(sample, resultButton.getResultDescriptor());
+                result = SampleUtils.getResult(sample, resultButton.getResultDescriptor());
             }
             else if (domainObject instanceof HasFiles) {
                 result = (HasFiles)domainObject;

@@ -22,7 +22,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

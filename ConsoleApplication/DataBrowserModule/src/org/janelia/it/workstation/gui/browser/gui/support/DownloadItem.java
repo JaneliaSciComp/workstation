@@ -13,11 +13,11 @@ import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class DownloadItem {
             Sample sample = (Sample)domainObject;
             if (resultDescriptor==ResultDescriptor.LATEST) {
                 // Get the actual result descriptor, for file naming purposes
-                ResultDescriptor actualDescriptor = DomainModelViewUtils.getLatestResultDescriptor(sample);
+                ResultDescriptor actualDescriptor = SampleUtils.getLatestResultDescriptor(sample);
                 if (actualDescriptor!=null) {
                     resultName = actualDescriptor.getResultKey();
                 }
@@ -79,7 +79,7 @@ public class DownloadItem {
             else {
                 resultName = resultDescriptor.getResultKey();
             }
-            fileProvider = DomainModelViewUtils.getResult(sample, resultDescriptor);   
+            fileProvider = SampleUtils.getResult(sample, resultDescriptor);
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;

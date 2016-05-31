@@ -23,6 +23,8 @@ import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -33,15 +35,18 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.browser.components.*;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerManager;
+import org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
+import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
+import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -231,7 +236,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        separation = DomainModelViewUtils.getNeuronSeparation(sample, neuronFragment);
+                        separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
                     }
 
                     @Override
@@ -938,7 +943,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         HasFiles result = null;
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            result = DomainModelViewUtils.getResult(sample, resultDescriptor);
+            result = SampleUtils.getResult(sample, resultDescriptor);
         }
         else if (domainObject instanceof HasFiles) {
             result = (HasFiles)domainObject;

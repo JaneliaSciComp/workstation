@@ -15,19 +15,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -36,10 +27,12 @@ import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -56,9 +49,6 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 
 
 /**
@@ -421,6 +411,19 @@ public class DomainInspectorPanel extends JPanel {
                     log.error("Error getting value for attribute: " + attr.getName(), e);
                 }
                 addProperty(attr.getLabel(), value);
+            }
+        }
+
+        if (domainObject instanceof Sample) {
+
+            Sample sample = (Sample)domainObject;
+            Map<AlignmentScoreType, String> scores = SampleUtils.getLatestAlignmentScores(sample);
+
+            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
+                String value = scores.get(alignmentScoreType);
+                if (value!=null) {
+                    addProperty(alignmentScoreType.getLabel(), value);
+                }
             }
         }
 

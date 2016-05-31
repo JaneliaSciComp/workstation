@@ -24,6 +24,8 @@ import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.ShorthandCompletion;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
@@ -190,6 +192,11 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         DefaultCompletionProvider provider = new DefaultCompletionProvider();
         for(DomainObjectAttribute attr : attrs) {
             provider.addCompletion(new ShorthandCompletion(provider, attr.getLabel(), "{"+attr.getLabel()+"}", ""));
+        }
+        if (resultClass.equals(Sample.class)) {
+            for (AlignmentScoreType alignmentScoreType : AlignmentScoreType.values()) {
+                provider.addCompletion(new ShorthandCompletion(provider, alignmentScoreType.getLabel(), "{"+alignmentScoreType.getLabel()+"}", ""));
+            }
         }
         return provider;
     }
