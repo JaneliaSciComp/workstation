@@ -125,28 +125,34 @@ public class DomainHelper {
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
     
-    public ReverseReference getNeuronRRefForSample(Sample sample, String objective) {        
-        ObjectiveSample oSample = sample.getObjectiveSample(objective);
-        if (oSample == null) {
-            log.info("No sample for {}.", objective);
-            return null;
+    public ReverseReference getNeuronRRefForSample(Sample sample, String objective) {  
+        ReverseReference rtnVal = null;
+        for (ObjectiveSample oSample: sample.getObjectiveSamples()) {
+            SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
+            if (latestRun == null) {
+                log.info("No latest run for {}.", sample.getName());
+                return null;
+            }
+            
+            for (SampleAlignmentResult sar: latestRun.getResultsOfType(SampleAlignmentResult.class)) {
+                // Pre-emptive bail: after this, we are _known_ to have the
+                // correct objective.
+                if (!sar.getObjective().equals(objective)) {
+                    continue;
+                }
+                log.info("Found result with target objective.");
+                NeuronSeparation nResult = sar.getLatestSeparationResult();
+                if (nResult == null) {
+                    log.info("No neuron separation for {}.", sample.getName());
+                    return null;
+                } else {
+                    rtnVal = nResult.getFragmentsReference();
+                    break;
+                }
+            }
+            
         }
-        SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
-        if (latestRun == null) {
-            log.info("No latest run for {}.", sample.getName());
-            return null;
-        }
-        PipelineResult pResult = latestRun.getLatestResult();
-        if (pResult == null) {
-            log.info("No pipeline result for {}.", sample.getName());
-            return null;
-        }
-        NeuronSeparation nResult = pResult.getLatestSeparationResult();
-        if (nResult == null) {
-            log.info("No neuron separation for {}.", sample.getName());
-            return null;
-        }
-        return nResult.getFragmentsReference();
+        return rtnVal;
     }
     
     public String getObjectiveForAlignmentContext(AlignmentContext context) {
