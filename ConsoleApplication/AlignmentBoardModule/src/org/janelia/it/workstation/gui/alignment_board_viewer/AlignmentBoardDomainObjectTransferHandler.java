@@ -116,7 +116,9 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
                             sample = (Sample)domainObject;
                             boolean compatible = isSampleCompatible(standardContext, sample);
                             if ( compatible ) {
-                                ReverseReference fragmentsRRef = domainHelper.getNeuronRRefForSample(sample, domainHelper.getObjectiveForAlignmentContext(standardContext));
+                                ReverseReference fragmentsRRef = domainHelper.getNeuronRRefForSample(
+                                        sample, domainHelper.getObjectiveForAlignmentContext(standardContext), standardContext
+                                );
                                 if (fragmentsRRef != null) {
                                     fragmentCount += fragmentsRRef.getCount();
                                     rtnVal = true;
