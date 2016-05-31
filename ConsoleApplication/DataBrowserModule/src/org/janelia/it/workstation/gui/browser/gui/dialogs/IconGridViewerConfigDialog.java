@@ -77,7 +77,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
         this.config = IconGridViewerConfiguration.loadConfig();
 
-        setTitle("Table Configuration");
+        setTitle("Image View Configuration");
 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20", "[grow 0, growprio 0][grow 100, growprio 100]"));
 
