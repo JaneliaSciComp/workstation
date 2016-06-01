@@ -16,27 +16,17 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
@@ -200,7 +190,7 @@ public class Hud extends ModalDialog {
 
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            fileProvider = DomainModelViewUtils.getResult(sample, resultButton.getResultDescriptor());
+            fileProvider = SampleUtils.getResult(sample, resultButton.getResultDescriptor());
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;

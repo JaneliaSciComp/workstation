@@ -58,7 +58,7 @@ public class TableViewerConfigDialog extends ModalDialog {
     public TableViewerConfigDialog(List<DomainObjectAttribute> attrs) {
 
         this.config = TableViewerConfiguration.loadConfig();
-        setTitle("Table Configuration");
+        setTitle("Table View Configuration");
 
         JButton checkAllButton = new JButton("Check all");
         checkAllButton.setFocusable(false);

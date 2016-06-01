@@ -17,8 +17,8 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +73,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
             Object source = domainObject;
             if (domainObject instanceof Sample) {
                 Sample sample = (Sample)domainObject;
-                HasFiles result = DomainModelViewUtils.getResult(sample, currResult);
+                HasFiles result = SampleUtils.getResult(sample, currResult);
                 if (result!=null) {
                     source = result;
                 }
