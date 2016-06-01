@@ -121,6 +121,10 @@ public class DomainHelper {
         return (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
     }
     
+    public void saveAilgnmentBoard(AlignmentBoard alignmentBoard) throws Exception {
+        DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
+    }
+    
     public Sample getSampleForNeuron(NeuronFragment nf) {
         Reference sampleRef = nf.getSample();
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);

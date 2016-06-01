@@ -237,7 +237,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return rtnVal;
     }
 
-    private boolean addNewNeuronFragment(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws HeadlessException {
+    private boolean addNewNeuronFragment(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         NeuronFragment neuronFragment = (NeuronFragment) domainObject;
         Reference sampleRef = neuronFragment.getSample();
         Sample sample = DomainMgr.getDomainMgr().getModel().<Sample>getDomainObject(Sample.class, sampleRef.getTargetId());
@@ -261,7 +261,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private boolean addNewSample(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) {
+    private boolean addNewSample(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) throws Exception {
         Sample sample = (Sample)domainObject;
         if (! compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
@@ -323,11 +323,12 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return alignmentBoardItem;
     }
 
-    private AlignmentBoardItem addSubItem(Class modelClass, AlignmentBoardItem parentItem, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
+    private AlignmentBoardItem addSubItem(Class modelClass, AlignmentBoardItem parentItem, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
-        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
+        domainHelper.saveAilgnmentBoard(alignmentBoard);
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));        
         return alignmentBoardItem;
     }
 
@@ -335,7 +336,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
         Reference reference = new Reference();
         reference.setTargetId(domainObject.getId());
-        reference.setTargetClassName(modelClass.getName());
+        reference.setTargetClassName(modelClass.getSimpleName());
         alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
         alignmentBoardItem.setTarget(reference);

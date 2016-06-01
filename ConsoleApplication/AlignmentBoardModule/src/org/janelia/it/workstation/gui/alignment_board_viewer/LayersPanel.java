@@ -46,7 +46,6 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.util.ColorSwatch;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -64,6 +63,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -89,11 +89,13 @@ public class LayersPanel extends JPanel implements Refreshable {
     private Outline outline;
     private SampleTreeModel sampleTreeModel;
     private FileStats fileStats;
+    private DomainHelper domainHelper;
     
     private AlignmentBoardContext alignmentBoardContext;
     private SimpleWorker worker;
     
     public LayersPanel() {
+        domainHelper = new DomainHelper();
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
         treesPanel = new JPanel(new BorderLayout());
@@ -404,7 +406,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 for ( AlignmentBoardItem child: context.getAlignmentBoardItems() ) {
                     DomainObject dObj = RenderUtils.getObjectForItem(child);
                     if ( dObj.getName().startsWith("Compartment Set") ) {
-                        log.trace("Context has a compartment set called {}.", dObj.getName());
+                        log.info("Context has a compartment set called {}.", dObj.getName());
                         hasCompartmentSet = true;
                     }
                 }
@@ -421,7 +423,7 @@ public class LayersPanel extends JPanel implements Refreshable {
 
                             if (targetSpace.equals(compartmentSetSpace)) {
                                 if (!compartmentSet.getCompartments().isEmpty()) {
-                                    abContext.addDomainObject(compartmentSet, HARDCODED_BS_OBJECTIVE);
+                                    abContext.addDomainObject(compartmentSet, domainHelper.getObjectiveForAlignmentContext(targetSpace));
                                     return;
                                 }
                             }
@@ -925,12 +927,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     }
 
                     if ( affectedEntities.size() > 0 ) {
-// TODO How to save the values?                        
-//                        ModelMgr.getModelMgr().setOrUpdateValues( 
-//                                affectedEntities, 
-//                                EntityConstants.ATTRIBUTE_VISIBILITY,
-//                                Boolean.toString(isVisible) 
-//                        );
+                        domainHelper.saveAilgnmentBoard(alignmentBoardContext.getAlignmentBoard());
                     }
                 }
                 
