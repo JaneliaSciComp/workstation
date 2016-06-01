@@ -26,6 +26,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.domain.Compartment;
 import org.janelia.it.workstation.model.domain.VolumeImage;
@@ -43,6 +44,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 
     private AlignmentContext context;
     private AlignmentBoard alignmentBoard;
+    private CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
     
     public AlignmentBoardContext(AlignmentBoard alignmentBoard, AlignmentContext alignmentContext) {
         this.context = alignmentContext;
@@ -241,7 +243,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron fragment is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
-        if (!sampleIsCompatible(sample)) {
+        if (!compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
         }
         AlignmentBoardItem sampleItem = getPreviouslyAddedItem(sample);
@@ -259,7 +261,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 
     private boolean addNewSample(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) {
         Sample sample = (Sample)domainObject;
-        if (! sampleIsCompatible(sample)) {
+        if (! compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
         }
         ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
@@ -363,81 +365,50 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return compartmentSetAlignmentBoardItem;
     }
     
-    private boolean sampleIsCompatible(Sample sample) {
-        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
-        boolean foundAcceptableSpace = false;
-        for (ObjectiveSample objectiveSample : objectiveSamples) {
-            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                for (SampleAlignmentResult result : run.getAlignmentResults()) {
-                    String sampleAlignmentSpace = result.getAlignmentSpace();
-                    String sampleImageSize = result.getImageSize();
-                    String sampleOpticalResolution = result.getOpticalResolution();
-                    if (verifyCompatability(sampleAlignmentSpace, sampleImageSize, sampleOpticalResolution, true)) {
-                        foundAcceptableSpace = true;
-                    }
-                }
-            }
-        }
-        return foundAcceptableSpace;
-    }
-
-    private boolean verifyCompatability(String alignmentSpaceName, String opticalResolution, String pixelResolution, boolean immediateReport) {
-        if (context == null) {
-            return true;
-        }
-
-        if (!context.getAlignmentSpace().equals(alignmentSpaceName)) {
-            if (immediateReport) {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-                        "Neuron is not aligned to a compatible alignment space (" + context.getAlignmentSpace() + "!=" + alignmentSpaceName + ")", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-            return false;
-        } else if (!context.getOpticalResolution().equals(opticalResolution)) {
-            if (immediateReport) {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-                        "Neuron is not aligned to a compatible optical resolution (" + context.getOpticalResolution() + "!=" + opticalResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-            return false;
-        } else if (!context.getImageSize().equals(pixelResolution)) {
-            if (immediateReport) {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-                        "Neuron is not aligned to a compatible pixel resolution (" + context.getImageSize() + "!=" + pixelResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-            return false;
-        }
-
-        return true;
-    }
-    
-//    private Collection<AlignmentBoardEvent> handleChildWrapper(DomainObject wrapper) throws Exception {
-//        
-//        Collection<AlignmentBoardEvent> events = new ArrayList<>();
-//        
-//        EntityWrapper child = wrapper;
-//        EntityWrapper parent = wrapper.getParent();
-//
-//        AlignedItem parentAlignedItem = getAlignedItemWithEntityId(parent.getId());
-//        if (parentAlignedItem==null) {
-//            parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent, true);
-//            parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
-//            log.debug("No parent found for {}.", parent.getName());
+//    private boolean sampleIsCompatible(Sample sample) {
+//        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
+//        boolean foundAcceptableSpace = false;
+//        for (ObjectiveSample objectiveSample : objectiveSamples) {
+//            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
+//                for (SampleAlignmentResult result : run.getAlignmentResults()) {
+//                    String sampleAlignmentSpace = result.getAlignmentSpace();
+//                    String sampleImageSize = result.getImageSize();
+//                    String sampleOpticalResolution = result.getOpticalResolution();
+//                    if (verifyCompatability(sampleAlignmentSpace, sampleImageSize, sampleOpticalResolution, false)) {
+//                        foundAcceptableSpace = true;
+//                    }
+//                }
+//            }
 //        }
-//        else {
-//            log.debug("Found parent item for {}, of {}.", parent.getName(), parentAlignedItem.getName() );
-//        }
-//
-//        AlignedItem childAlignedItem = parentAlignedItem.getAlignedItemWithEntityId(child.getId());
-//        if (childAlignedItem == null) {
-//            childAlignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child, true);
-//            childAlignedItem.loadContextualizedChildren(getAlignmentContext());
-//            events.add(new AlignmentBoardItemChangeEvent(this, childAlignedItem, ChangeType.Added));
-//        }
-//        else {
-//            childAlignedItem.setIsVisible(true);
-//            events.add(new AlignmentBoardItemChangeEvent(this, childAlignedItem, ChangeType.VisibilityChange));
-//        }
-//        
-//        return events;
+//        return foundAcceptableSpace;
 //    }
+
+//    private boolean verifyCompatability(String alignmentSpaceName, String opticalResolution, String pixelResolution, boolean immediateReport) {
+//        if (context == null) {
+//            return true;
+//        }
 //
+//        if (!context.getAlignmentSpace().equals(alignmentSpaceName)) {
+//            if (immediateReport) {
+//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+//                        "Neuron is not aligned to a compatible alignment space (" + context.getAlignmentSpace() + "!=" + alignmentSpaceName + ")", "Error", JOptionPane.ERROR_MESSAGE);
+//            }
+//            return false;
+//        } else if (!context.getOpticalResolution().equals(opticalResolution)) {
+//            if (immediateReport) {
+//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+//                        "Neuron is not aligned to a compatible optical resolution (" + context.getOpticalResolution() + "!=" + opticalResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
+//            }
+//            return false;
+//        } else if (!context.getImageSize().equals(pixelResolution)) {
+//            if (immediateReport) {
+//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+//                        "Neuron is not aligned to a compatible pixel resolution (" + context.getImageSize() + "!=" + pixelResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
+//            }
+//            return false;
+//        }
+//
+//        return true;
+//    }
+    
 }

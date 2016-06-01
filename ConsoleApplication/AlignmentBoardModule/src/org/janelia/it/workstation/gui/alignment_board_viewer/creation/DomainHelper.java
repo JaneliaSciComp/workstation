@@ -7,9 +7,13 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -17,6 +21,7 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+//import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -54,16 +59,14 @@ public class DomainHelper {
                             String opticalResolution = sar.getOpticalResolution();
                             
                             // Find out if this one has been "blessed".
-                            AlignmentContext ctx = new AlignmentContext();
-                            ctx.setAlignmentSpace(alignmentSpace);
-                            ctx.setOpticalResolution(opticalResolution);
-                            ctx.setImageSize(imageSize);
-
-                            if (completeList.contains(ctx)) {
-                                rtnVal.add(ctx);
-                            }
-                            else {
-                                log.warn("Failed to find context {} among existing.  Rejecting.", ctx);
+                            for (DomainObject dObj: completeList) {
+                                AlignmentContext nextCtx = (AlignmentContext)dObj;
+                                if (nextCtx.getAlignmentSpace().equals(alignmentSpace)  &&
+                                    nextCtx.getImageSize().equals(imageSize)  &&
+                                    nextCtx.getOpticalResolution().equals(opticalResolution)) {
+                                    
+                                    rtnVal.add(nextCtx);
+                                }
                             }
                         }
                     }
@@ -123,14 +126,88 @@ public class DomainHelper {
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
     
+    public ReverseReference getNeuronRRefForSample(Sample sample, AlignmentContext context) {  
+        String objective = getObjectiveForAlignmentContext(context);
+        ReverseReference rtnVal = null;
+        for (ObjectiveSample oSample: sample.getObjectiveSamples()) {
+            SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
+            if (latestRun == null) {
+                log.info("No latest run for {}.", sample.getName());
+                return null;
+            }
+
+            Date latestDate = null;
+            for (SampleAlignmentResult sar: latestRun.getResultsOfType(SampleAlignmentResult.class)) {
+                // Pre-emptive bail: after this, we are _known_ to have the
+                // correct objective.
+                if (!sar.getObjective().equals(objective)  ||
+                    !sar.getOpticalResolution().equals(context.getOpticalResolution())  ||
+                    !sar.getAlignmentSpace().equals(context.getAlignmentSpace())  ||
+                    !sar.getImageSize().equals(context.getImageSize())) {
+                    log.debug("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
+                    continue;
+                }
+                log.info("Found result with target objective.");
+                NeuronSeparation nResult = sar.getLatestSeparationResult();
+                if (nResult == null) {
+                    log.info("No neuron separation for {}.", sample.getName());
+                } else {
+                    Date sarDate = sar.getCreationDate();
+                    if (latestDate == null  ||  sarDate.after(latestDate)) {
+                        rtnVal = nResult.getFragmentsReference();
+                        latestDate = sarDate;
+                        log.debug("Found matching sep result. Returning ref.");
+                    }                    
+                }
+            }
+            
+        }
+        return rtnVal;
+    }
+    
+    public String getObjectiveForAlignmentContext(AlignmentContext context) {
+        String alignmentSpace = context.getAlignmentSpace();
+        int xPos = alignmentSpace.indexOf('x');
+        int digitPos = xPos;
+        if (xPos > -1) {
+            digitPos = xPos;
+            while (digitPos > 0  &&  Character.isDigit(alignmentSpace.charAt(digitPos - 1))) {
+                digitPos --;
+            }
+        }
+        if (digitPos > -1) {
+            return alignmentSpace.substring(digitPos, xPos + 1);
+        }
+        else {
+            log.warn("Failed to find objective string from alignment context {}.", context.getAlignmentSpace());
+            return "";
+        }
+    }
+    
+    /**
+     * Finds all refs in list which are compatible with an alignment board, and
+     * inflates them back into the output list.
+     *
+     * @param ids list of reference ids to check.
+     * @return compatible/inflated set of values.
+     */
+    public List<DomainObject> selectAndInflateCandidateObjects(List<Reference> ids) {
+        List<DomainObject> domainObjects = new ArrayList<>();
+        for (Reference id : ids) {
+            if (id.getTargetClassName().equals(Sample.class.getSimpleName()) ||
+                id.getTargetClassName().equals(NeuronFragment.class.getSimpleName()) ||
+                id.getTargetClassName().equals(CompartmentSet.class.getSimpleName()) || 
+                id.getTargetClassName().equals(Compartment.class.getSimpleName())) {
+                
+                domainObjects.add(DomainMgr.getDomainMgr().getModel().getDomainObject(id));
+            }
+        }
+        return domainObjects;
+    }
+
     private void handleException(String message) {
         Exception ex = new Exception(message);
         SessionMgr.getSessionMgr().handleException(ex);
     }
-            
+      
 }
-
-//                for (PipelineResult pResult: pipelineRun.getResults()) {
-//                    NeuronSeparation ns = pResult.getLatestSeparationResult();
-//                    // This will get me the fragments, later as needed.
-//                }

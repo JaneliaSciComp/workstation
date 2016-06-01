@@ -18,7 +18,7 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author fosterl
  */
-//@ServiceProvider(service=DropAcceptor.class, path=DropAcceptor.LOOKUP_PATH)
+@ServiceProvider(service=DropAcceptor.class, path=DropAcceptor.LOOKUP_PATH)
 public class AlignmentBoardPopulator implements DropAcceptor {
 
     /**

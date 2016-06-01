@@ -34,6 +34,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -54,7 +55,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
@@ -921,9 +921,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             String title = run.getParent().getObjective()+" "+errorClass;
             label.setText(title);
             subLabel.setText(error.getDescription());
-
-            // TODO: after populating creation date for all errors, we can use this:
-            //subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            subLabel.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
 
             JPanel titlePanel = new JPanel(new BorderLayout());
             titlePanel.add(label, BorderLayout.PAGE_START);

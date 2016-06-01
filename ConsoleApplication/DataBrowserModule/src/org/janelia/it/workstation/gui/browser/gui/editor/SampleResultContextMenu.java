@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
@@ -23,7 +24,6 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.model.ResultDescriptor;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 
 /**

@@ -192,14 +192,17 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
     public final void refresh(T imageObject) {
 
-        StringBuilder tsb = new StringBuilder();
+        String title = null;
+        String subtitle = null;
         if (imageModel!=null) {
-            tsb.append(imageModel.getImageLabel(imageObject));
+            title = imageModel.getImageTitle(imageObject);
+            subtitle = imageModel.getImageSubtitle(imageObject);
         }
         else {
-            tsb.append(imageObject.toString());
+            title = imageObject.toString();
         }
-        setTitle(tsb.toString(), 100);
+        setTitle(title, 100);
+        setSubtitle(subtitle, 100);
         setAnnotations(imageModel.getAnnotations(imageObject));
     }
 

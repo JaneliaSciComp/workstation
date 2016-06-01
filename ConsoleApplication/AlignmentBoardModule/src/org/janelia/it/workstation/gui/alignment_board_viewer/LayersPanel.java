@@ -239,12 +239,15 @@ public class LayersPanel extends JPanel implements Refreshable {
 
         });
         
-        setTransferHandler(new EntityTransferHandler() {
+        setTransferHandler(new AlignmentBoardDomainObjectTransferHandler(null, null));
+        /*
+        {
             @Override
             public JComponent getDropTargetComponent() {
                 return LayersPanel.this;
             }
         });
+        */
        
         addComponentListener(new ComponentAdapter() {
             @Override

@@ -52,4 +52,12 @@ public class DomainObjectTransferHandler extends TransferHandler {
     public int getSourceActions(JComponent sourceComponent) {
         return LINK;
     }
+    
+    protected DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+    
+    protected ImageModel getImageModel() {
+        return imageModel;
+    }
 }

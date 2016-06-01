@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 import javax.swing.tree.TreePath;
@@ -90,15 +91,24 @@ public class OutlineExpansionState {
         Object lastPathComponentObject = treePath.getLastPathComponent();
         AlignmentBoardItem nodeObject = (AlignmentBoardItem)lastPathComponentObject;
         Set<List<Long>> relativeExpandedIds = new HashSet<>();
+        Long alignmentBoardId = -1L;
+        if (nodeObject instanceof AlignmentBoardContext) {
+            AlignmentBoardContext actx = (AlignmentBoardContext)nodeObject;
+            AlignmentBoard alignmentBoard = actx.getAlignmentBoard();
+            alignmentBoardId = alignmentBoard.getId();
+        }
+        if (alignmentBoardId == -1L) {
+            log.warn("Never did find that alignment board id.");
+        }
         for(List<Long> expandedPath : expandedIds) {
-//            if (expandedPath.get(0).equals(nodeObject.getTarget().getTargetId())) {
-//                outlineModel.getTreePathSupport().expandPath(treePath);
-//                List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
-//                if (!relativePath.isEmpty()) {
-//                    relativeExpandedIds.add(relativePath);
-//                    log.trace(indent+"  relative expanded: "+relativePath);
-//                }
-//            }
+            if (expandedPath.get(0).equals(alignmentBoardId)) {
+                outlineModel.getTreePathSupport().expandPath(treePath);
+                List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
+                if (!relativePath.isEmpty()) {
+                    relativeExpandedIds.add(relativePath);
+                    log.trace(indent+"  relative expanded: "+relativePath);
+                }
+            }
         }
         
         if (!relativeExpandedIds.isEmpty()) {
