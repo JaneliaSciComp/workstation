@@ -27,6 +27,7 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.domain.Compartment;
 import org.janelia.it.workstation.model.domain.VolumeImage;
@@ -45,6 +46,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     private AlignmentContext context;
     private AlignmentBoard alignmentBoard;
     private CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
+    private DomainHelper domainHelper = new DomainHelper();
     
     public AlignmentBoardContext(AlignmentBoard alignmentBoard, AlignmentContext alignmentContext) {
         this.context = alignmentContext;
@@ -76,7 +78,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      */
     public void addDomainObject(DomainObject domainObject, String objective) throws Exception {
 
-        log.info("Adding new aligned entity: {}", domainObject.getName());
+        log.info("Adding new aligned entity: {}, under objective {}.", domainObject.getName(), objective);
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<>();
         
@@ -264,25 +266,22 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         if (! compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
         }
-        ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-        if (objectiveSample == null) {
-            return false;
-        }
         AlignmentBoardItem oldSampleItem = this.getPreviouslyAddedItem(sample);
         if (oldSampleItem == null) {
-            // Need to add the sample to the board.
-            AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
-            
-            for (SamplePipelineRun pipelineRun : objectiveSample.getPipelineRuns()) {
-                for (PipelineResult result : pipelineRun.getResults()) {
-                    ReverseReference fragmentsReference = result.getLatestSeparationResult().getFragmentsReference();
-                    List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
-                    for (DomainObject fragmentDO : fragments) {
-                        // Need to add neuron to sample.
-                        addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
-                    }
+            ReverseReference fragmentsReference = domainHelper.getNeuronRRefForSample(sample, context);
+            if (fragmentsReference == null) {
+                log.warn("No rev-ref found for sample {}.", sample.getName());
+                return false;
+            }
+            else {
+                List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
+                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
+                for (DomainObject fragmentDO : fragments) {
+                    // Need to add neuron to sample.
+                    addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
                 }
             }
+
         }
         else {
             events.add(new AlignmentBoardItemChangeEvent(this, oldSampleItem, ChangeType.VisibilityChange));
@@ -337,7 +336,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         Reference reference = new Reference();
         reference.setTargetId(domainObject.getId());
         reference.setTargetClassName(modelClass.getName());
-        //compSetItem.setInclusionStatus(true);
+        alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
         alignmentBoardItem.setTarget(reference);
         return alignmentBoardItem;
@@ -364,51 +363,5 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
         return compartmentSetAlignmentBoardItem;
     }
-    
-//    private boolean sampleIsCompatible(Sample sample) {
-//        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
-//        boolean foundAcceptableSpace = false;
-//        for (ObjectiveSample objectiveSample : objectiveSamples) {
-//            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-//                for (SampleAlignmentResult result : run.getAlignmentResults()) {
-//                    String sampleAlignmentSpace = result.getAlignmentSpace();
-//                    String sampleImageSize = result.getImageSize();
-//                    String sampleOpticalResolution = result.getOpticalResolution();
-//                    if (verifyCompatability(sampleAlignmentSpace, sampleImageSize, sampleOpticalResolution, false)) {
-//                        foundAcceptableSpace = true;
-//                    }
-//                }
-//            }
-//        }
-//        return foundAcceptableSpace;
-//    }
-
-//    private boolean verifyCompatability(String alignmentSpaceName, String opticalResolution, String pixelResolution, boolean immediateReport) {
-//        if (context == null) {
-//            return true;
-//        }
-//
-//        if (!context.getAlignmentSpace().equals(alignmentSpaceName)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible alignment space (" + context.getAlignmentSpace() + "!=" + alignmentSpaceName + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        } else if (!context.getOpticalResolution().equals(opticalResolution)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible optical resolution (" + context.getOpticalResolution() + "!=" + opticalResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        } else if (!context.getImageSize().equals(pixelResolution)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible pixel resolution (" + context.getImageSize() + "!=" + pixelResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        }
-//
-//        return true;
-//    }
     
 }
