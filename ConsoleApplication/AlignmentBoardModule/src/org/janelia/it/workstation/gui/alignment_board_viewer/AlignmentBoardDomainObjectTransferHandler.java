@@ -8,6 +8,8 @@ import javax.swing.*;
 
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -16,9 +18,6 @@ import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.jacs.model.domain.sample.Image;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
@@ -29,6 +28,8 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObject
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.TransferableDomainObjectList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.nb_action.DropAcceptor;
+import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 
 /**
  * Created with IntelliJ IDEA.
@@ -56,8 +57,21 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
         
         Transferable transferable = support.getTransferable();
         try {
+            DomainHelper domainHelper = new DomainHelper();
             List<DomainObject> transferData = (List<DomainObject>) transferable.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
             log.info("Got transfer data {}.", transferData.size());
+            
+            // Find drop acceptors, and figure out which are compatible.
+            ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();            
+            Collection<DropAcceptor> targets = saHelper.findHandler(support.getComponent(), DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+            final AlignmentBoardMgr alignmentBoardMgr = AlignmentBoardMgr.getInstance();                
+            AlignmentBoardContext abContext = alignmentBoardMgr.getLayersPanel().getAlignmentBoardContext();
+            //AlignmentBoard alignmentBoard = abContext.getAlignmentBoard();
+            String objective = domainHelper.getObjectiveForAlignmentContext(abContext.getAlignmentContext());
+
+            for (DropAcceptor acceptor : targets) {
+                acceptor.drop(transferData, objective);
+            }
         } catch (Exception ex) {
             ex.printStackTrace();
             rtnVal = false;
@@ -93,74 +107,26 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
     public boolean canImport(TransferHandler.TransferSupport support) {
         boolean rtnVal = true;//super.canImport( support );
         log.debug("Enter can-import...");
-
-        DomainHelper domainHelper = new DomainHelper();
+        CompatibilityChecker checker = new CompatibilityChecker();
         if ( rtnVal ) {
             try {
                 // Get the target entity.
                 Transferable transferable = support.getTransferable();
-                final AlignmentBoardMgr alignmentBoardMgr = AlignmentBoardMgr.getInstance();                
 
-                // Need check for alignment context compatibility.
+                final AlignmentBoardMgr alignmentBoardMgr = AlignmentBoardMgr.getInstance();
                 AlignmentBoardContext abContext = alignmentBoardMgr.getLayersPanel().getAlignmentBoardContext();
                 AlignmentBoard alignmentBoard = abContext.getAlignmentBoard();
-                List<DomainObject> transferData = (List<DomainObject>)transferable.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
-                AlignmentContext standardContext = abContext.getAlignmentContext();
+                List<DomainObject> transferData = (List<DomainObject>) transferable.getTransferData(DomainObjectFlavor.LIST_FLAVOR);
+                int compatibleFragmentCount = checker.getCompatibleFragmentCount(abContext, transferData);
 
-                boolean typeIsFragment;
-                boolean typeIsSample;
-                boolean typeIsRef;
-
-                Sample sample;
-
-                int fragmentCount = 0;
-
-                // Flip assumptions: turn this back on if something matches.
-                rtnVal = false;
-                
-                for ( DomainObject domainObject: transferData ) {
-                    if ( abContext.isAcceptedType(domainObject)) {
-                        typeIsFragment = domainObject.getType().equals(NeuronFragment.class.getSimpleName());
-                        typeIsSample = domainObject.getType().equals(Sample.class.getSimpleName());
-                        // TODO: what type is our 3d now?
-                        typeIsRef = domainObject.getType().equals(Image.class.getSimpleName()) && domainObject.getName().startsWith("Reference");
-                        if ( typeIsFragment  ||  typeIsRef ) {
-                            sample = domainHelper.getSampleForNeuron((NeuronFragment)domainObject);
-                            if ( sample == null ) {
-                                rtnVal = false;
-                            }
-                            else {
-                                boolean compatible = isSampleCompatible( standardContext, sample );
-                                if ( compatible ) {
-                                    fragmentCount++;
-                                    rtnVal = true;
-                                }
-                            }
-                        }
-                        else if ( typeIsSample ) {
-                            sample = (Sample)domainObject;
-                            boolean compatible = isSampleCompatible(standardContext, sample);
-                            if ( compatible ) {
-                                ReverseReference fragmentsRRef = domainHelper.getNeuronRRefForSample(sample, standardContext);
-                                if (fragmentsRRef != null) {
-                                    fragmentCount += fragmentsRRef.getCount();
-                                    rtnVal = true;
-                                    log.info("Sample {} is compatible.", sample.getName());
-                                }
-                            }
-                        }
-                    }
-                }
-                // Nothing acceptable.
-                if ( fragmentCount == 0 ) {
+                // NOTE: if cap test (FW-2012) becomes ill-advised, it can be removed by commenting/removing
+                // only the call below.
+                if (compatibleFragmentCount == 0) {
                     rtnVal = false;
                 }
                 else {
-                    // NOTE: if cap test (FW-2012) becomes ill-advised, it can be removed by commenting/removing
-                    // only the call below.
-                    rtnVal = checkAvailableCapacity(rtnVal, alignmentBoard, fragmentCount);
+                    rtnVal = checkAvailableCapacity(rtnVal, alignmentBoard, compatibleFragmentCount);
                 }
-
             } catch ( Exception ex ) {
                 rtnVal = false;
                 ex.printStackTrace();
@@ -206,32 +172,6 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
         }
 
         return MAX_FRAGMENT_CAPACITY - visibleItemCount;
-    }
-
-    /** Check if this sample has a context compatible with the 'one of momentum'. */
-    private boolean isSampleCompatible(AlignmentContext standardContext, Sample sample) throws Exception {
-        boolean rtnVal;
-        boolean foundMatch = false;
-        DomainHelper domainHelper = new DomainHelper();
-        List< AlignmentContext> contexts = domainHelper.getAvailableAlignmentContexts(sample);
-        if (contexts.isEmpty()) {
-            log.warn("No available contexts in sample {}.", sample.getName());
-        }
-        Iterator<AlignmentContext> contextIterator = contexts.iterator();
-
-        while ( contextIterator.hasNext() && (! foundMatch) ) {
-            AlignmentContext nextContext = contextIterator.next();
-            if ( standardContext.getImageSize().equals( nextContext.getImageSize() )  &&
-                 standardContext.getAlignmentSpace().equals( nextContext.getAlignmentSpace() )  &&
-                 standardContext.getOpticalResolution().equals( nextContext.getOpticalResolution() )) {
-
-                foundMatch = true;
-            }
-
-        }
-
-        rtnVal = foundMatch;
-        return rtnVal;
     }
 
 }
