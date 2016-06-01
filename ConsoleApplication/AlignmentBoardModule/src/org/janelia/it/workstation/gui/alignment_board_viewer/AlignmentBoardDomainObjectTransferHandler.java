@@ -110,7 +110,7 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
         CompatibilityChecker checker = new CompatibilityChecker();
         if ( rtnVal ) {
             try {
-                // Get the target entity.
+                // Get the target.
                 Transferable transferable = support.getTransferable();
 
                 final AlignmentBoardMgr alignmentBoardMgr = AlignmentBoardMgr.getInstance();

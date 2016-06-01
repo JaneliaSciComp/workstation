@@ -15,11 +15,7 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -27,6 +23,7 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.domain.Compartment;
 import org.janelia.it.workstation.model.domain.VolumeImage;
@@ -45,6 +42,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     private AlignmentContext context;
     private AlignmentBoard alignmentBoard;
     private CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
+    private DomainHelper domainHelper = new DomainHelper();
     
     public AlignmentBoardContext(AlignmentBoard alignmentBoard, AlignmentContext alignmentContext) {
         this.context = alignmentContext;
@@ -76,12 +74,12 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      */
     public void addDomainObject(DomainObject domainObject, String objective) throws Exception {
 
-        log.info("Adding new aligned entity: {}", domainObject.getName());
+        log.info("Adding new aligned entity: {}, under objective {}.", domainObject.getName(), objective);
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<>();
         
         if (domainObject instanceof Sample) {
-            if (! addNewSample(domainObject, objective, events))
+            if (! addNewSample(domainObject, events))
                 return;
         }
         else if (domainObject instanceof VolumeImage  &&  domainObject instanceof Image) {
@@ -235,7 +233,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return rtnVal;
     }
 
-    private boolean addNewNeuronFragment(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws HeadlessException {
+    private boolean addNewNeuronFragment(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         NeuronFragment neuronFragment = (NeuronFragment) domainObject;
         Reference sampleRef = neuronFragment.getSample();
         Sample sample = DomainMgr.getDomainMgr().getModel().<Sample>getDomainObject(Sample.class, sampleRef.getTargetId());
@@ -259,30 +257,27 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private boolean addNewSample(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) {
+    private boolean addNewSample(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         Sample sample = (Sample)domainObject;
         if (! compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
         }
-        ObjectiveSample objectiveSample = sample.getObjectiveSample(objective);
-        if (objectiveSample == null) {
-            return false;
-        }
         AlignmentBoardItem oldSampleItem = this.getPreviouslyAddedItem(sample);
         if (oldSampleItem == null) {
-            // Need to add the sample to the board.
-            AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
-            
-            for (SamplePipelineRun pipelineRun : objectiveSample.getPipelineRuns()) {
-                for (PipelineResult result : pipelineRun.getResults()) {
-                    ReverseReference fragmentsReference = result.getLatestSeparationResult().getFragmentsReference();
-                    List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
-                    for (DomainObject fragmentDO : fragments) {
-                        // Need to add neuron to sample.
-                        addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
-                    }
+            ReverseReference fragmentsReference = domainHelper.getNeuronRRefForSample(sample, context);
+            if (fragmentsReference == null) {
+                log.warn("No rev-ref found for sample {}.", sample.getName());
+                return false;
+            }
+            else {
+                List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
+                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
+                for (DomainObject fragmentDO : fragments) {
+                    // Need to add neuron to sample.
+                    addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
                 }
             }
+
         }
         else {
             events.add(new AlignmentBoardItemChangeEvent(this, oldSampleItem, ChangeType.VisibilityChange));
@@ -324,11 +319,12 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return alignmentBoardItem;
     }
 
-    private AlignmentBoardItem addSubItem(Class modelClass, AlignmentBoardItem parentItem, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
+    private AlignmentBoardItem addSubItem(Class modelClass, AlignmentBoardItem parentItem, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
-        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
+        domainHelper.saveAlignmentBoard(alignmentBoard);
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));        
         return alignmentBoardItem;
     }
 
@@ -336,8 +332,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
         Reference reference = new Reference();
         reference.setTargetId(domainObject.getId());
-        reference.setTargetClassName(modelClass.getName());
-        //compSetItem.setInclusionStatus(true);
+        reference.setTargetClassName(modelClass.getSimpleName());
+        alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
         alignmentBoardItem.setTarget(reference);
         return alignmentBoardItem;
@@ -364,51 +360,5 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
         return compartmentSetAlignmentBoardItem;
     }
-    
-//    private boolean sampleIsCompatible(Sample sample) {
-//        List<ObjectiveSample> objectiveSamples = sample.getObjectiveSamples();
-//        boolean foundAcceptableSpace = false;
-//        for (ObjectiveSample objectiveSample : objectiveSamples) {
-//            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-//                for (SampleAlignmentResult result : run.getAlignmentResults()) {
-//                    String sampleAlignmentSpace = result.getAlignmentSpace();
-//                    String sampleImageSize = result.getImageSize();
-//                    String sampleOpticalResolution = result.getOpticalResolution();
-//                    if (verifyCompatability(sampleAlignmentSpace, sampleImageSize, sampleOpticalResolution, false)) {
-//                        foundAcceptableSpace = true;
-//                    }
-//                }
-//            }
-//        }
-//        return foundAcceptableSpace;
-//    }
-
-//    private boolean verifyCompatability(String alignmentSpaceName, String opticalResolution, String pixelResolution, boolean immediateReport) {
-//        if (context == null) {
-//            return true;
-//        }
-//
-//        if (!context.getAlignmentSpace().equals(alignmentSpaceName)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible alignment space (" + context.getAlignmentSpace() + "!=" + alignmentSpaceName + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        } else if (!context.getOpticalResolution().equals(opticalResolution)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible optical resolution (" + context.getOpticalResolution() + "!=" + opticalResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        } else if (!context.getImageSize().equals(pixelResolution)) {
-//            if (immediateReport) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-//                        "Neuron is not aligned to a compatible pixel resolution (" + context.getImageSize() + "!=" + pixelResolution + ")", "Error", JOptionPane.ERROR_MESSAGE);
-//            }
-//            return false;
-//        }
-//
-//        return true;
-//    }
     
 }

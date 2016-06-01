@@ -41,16 +41,29 @@ public class CompatibilityChecker {
         int fragmentCount = 0;
         for (DomainObject domainObject : itemList) {
             if (abContext.isAcceptedType(domainObject)) {
-                typeIsFragment = domainObject.getType().equals(NeuronFragment.class.getSimpleName());
-                typeIsSample = domainObject.getType().equals(Sample.class.getSimpleName());
-                typeIsRef = domainObject.getType().equals(Image.class.getSimpleName()) && domainObject.getName().startsWith("Reference");
+                typeIsFragment = domainObject instanceof NeuronFragment;
+                typeIsSample = domainObject instanceof Sample;
+                typeIsRef = domainObject instanceof Image && domainObject.getName().startsWith("Reference");
                 if (typeIsFragment || typeIsRef) {
-                    sample = domainHelper.getSampleForNeuron((NeuronFragment) domainObject);
+                    NeuronFragment fragment = (NeuronFragment) domainObject;
+                    sample = domainHelper.getSampleForNeuron(fragment);
                     if (sample == null) {
                         fragmentCount = 0;
                         break;
                     } else {
                         boolean compatible = isSampleCompatibleThrowsEx(standardContext, sample);
+                        // Must establish that the fragment's separation is
+                        // also compatible.
+                        AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, fragment);
+                        if (neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
+                            neuronFC.getImageSize().equals(standardContext.getImageSize())  &&
+                            neuronFC.getOpticalResolution().equals(standardContext.getOpticalResolution())) {
+                            
+                            compatible = true;
+                        }
+                        else {
+                            compatible = false;
+                        }
                         if (compatible) {
                             fragmentCount++;
                         }

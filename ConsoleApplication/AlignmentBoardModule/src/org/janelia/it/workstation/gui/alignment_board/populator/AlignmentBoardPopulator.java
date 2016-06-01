@@ -31,7 +31,7 @@ public class AlignmentBoardPopulator implements DropAcceptor {
         try {
             AlignmentBoardContext ctx
                     = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-            addEntitiesToAlignmentBoard(ctx, domainObjects, objective);
+            addToAlignmentBoard(ctx, domainObjects, objective);
         } catch ( Exception ex ) {
             ModelMgr.getModelMgr().handleException( ex );
         }
@@ -55,7 +55,7 @@ public class AlignmentBoardPopulator implements DropAcceptor {
      * @param alignmentBoardContext this receives the entities.
      * @param domainObjects these are added to that alignment board.
      */
-    protected void addEntitiesToAlignmentBoard(
+    protected void addToAlignmentBoard(
             AlignmentBoardContext alignmentBoardContext, 
             List<DomainObject> domainObjects,
             String objective) throws Exception {
