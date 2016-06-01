@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JAX-RS"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jersey"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/RSyntaxTextArea"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
