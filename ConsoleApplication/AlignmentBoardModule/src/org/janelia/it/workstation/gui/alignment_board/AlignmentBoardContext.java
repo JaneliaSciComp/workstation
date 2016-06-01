@@ -15,11 +15,7 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -83,7 +79,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         final Collection<AlignmentBoardEvent> events = new ArrayList<>();
         
         if (domainObject instanceof Sample) {
-            if (! addNewSample(domainObject, objective, events))
+            if (! addNewSample(domainObject, events))
                 return;
         }
         else if (domainObject instanceof VolumeImage  &&  domainObject instanceof Image) {
@@ -261,7 +257,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private boolean addNewSample(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) throws Exception {
+    private boolean addNewSample(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         Sample sample = (Sample)domainObject;
         if (! compatibilityChecker.isSampleCompatible(context, sample)) {
             return false;
@@ -327,7 +323,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
-        domainHelper.saveAilgnmentBoard(alignmentBoard);
+        domainHelper.saveAlignmentBoard(alignmentBoard);
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));        
         return alignmentBoardItem;
     }

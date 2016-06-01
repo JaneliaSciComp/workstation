@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -76,6 +77,45 @@ public class DomainHelper {
         return rtnVal;
     }
     
+    /** Must walk up to the separation and back down to find this. */
+    public AlignmentContext getNeuronFragmentAlignmentContext(Sample sample, NeuronFragment neuronFragment) {
+        // TODO: this is nearly mimicked by the SampleUtils, but that somehow is not accessible.  Need find out why.
+        NeuronSeparation separation = null;
+        OUTER:
+        for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
+            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
+                if (run != null && run.getResults() != null) {
+                    for (PipelineResult result : run.getResults()) {
+                        if (result != null && result.getResults() != null) {
+                            for (PipelineResult secondaryResult : result.getResults()) {
+                                if (secondaryResult != null && secondaryResult instanceof NeuronSeparation) {
+                                    separation = (NeuronSeparation) secondaryResult;
+                                    if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
+                                        break OUTER;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        AlignmentContext rtnVal = null;
+        if (separation != null) {
+            SamplePipelineRun spr = separation.getParentRun();
+            List<SampleAlignmentResult> lars = spr.getAlignmentResults();
+            if (lars != null  &&  lars.size() > 0) {
+                rtnVal = new AlignmentContext();
+                SampleAlignmentResult firstResult = lars.get(0);
+                rtnVal.setAlignmentSpace(firstResult.getAlignmentSpace());
+                rtnVal.setImageSize(firstResult.getImageSize());
+                rtnVal.setOpticalResolution(firstResult.getOpticalResolution());
+            }
+        }
+        return rtnVal;
+    }
+    
     public List<AlignmentContext> getAllAlignmentContexts() throws Exception {
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         List<DomainObject> completeList = model.getAllDomainObjectsByClass(AlignmentContext.class.getName());
@@ -121,7 +161,7 @@ public class DomainHelper {
         return (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
     }
     
-    public void saveAilgnmentBoard(AlignmentBoard alignmentBoard) throws Exception {
+    public void saveAlignmentBoard(AlignmentBoard alignmentBoard) throws Exception {
         DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
     }
     

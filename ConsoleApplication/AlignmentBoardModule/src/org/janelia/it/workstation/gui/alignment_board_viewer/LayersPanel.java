@@ -927,7 +927,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     }
 
                     if ( affectedEntities.size() > 0 ) {
-                        domainHelper.saveAilgnmentBoard(alignmentBoardContext.getAlignmentBoard());
+                        domainHelper.saveAlignmentBoard(alignmentBoardContext.getAlignmentBoard());
                     }
                 }
                 
