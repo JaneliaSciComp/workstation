@@ -55,7 +55,8 @@ public class CompatibilityChecker {
                         // Must establish that the fragment's separation is
                         // also compatible.
                         AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, fragment);
-                        if (neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
+                        if (neuronFC != null  &&
+                            neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
                             neuronFC.getImageSize().equals(standardContext.getImageSize())  &&
                             neuronFC.getOpticalResolution().equals(standardContext.getOpticalResolution())) {
                             

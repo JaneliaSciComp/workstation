@@ -25,6 +25,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 //import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -81,19 +82,25 @@ public class DomainHelper {
     /** Must walk up to the separation and back down to find this. */
     public AlignmentContext getNeuronFragmentAlignmentContext(Sample sample, NeuronFragment neuronFragment) {
         NeuronSeparation separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
-        AlignmentContext rtnVal = null;
-        if (separation != null) {
-            SamplePipelineRun spr = separation.getParentRun();
-            List<SampleAlignmentResult> lars = spr.getAlignmentResults();
-            if (lars != null && lars.size() > 0) {
-                rtnVal = new AlignmentContext();
-                SampleAlignmentResult firstResult = lars.get(0);
-                rtnVal.setAlignmentSpace(firstResult.getAlignmentSpace());
-                rtnVal.setImageSize(firstResult.getImageSize());
-                rtnVal.setOpticalResolution(firstResult.getOpticalResolution());
+        PipelineResult parentResult = separation.getParentResult();
+        SampleAlignmentResult sar = null;
+        if (parentResult instanceof SampleAlignmentResult) {
+            sar = (SampleAlignmentResult) separation.getParentResult();
+        }
+        else if (parentResult instanceof SampleProcessingResult) {
+            List<SampleAlignmentResult> alignmentResults = parentResult.getParentRun().getAlignmentResults();
+            if (alignmentResults != null  &&  !alignmentResults.isEmpty()) {
+                sar = alignmentResults.get(0);
             }
         }
-
+        if (sar == null) {
+            log.warn("Found no sample alignment result for fragment {} under sample {}.", neuronFragment.getName(), sample.getName());
+            return null;
+        }
+        AlignmentContext rtnVal = new AlignmentContext();
+        rtnVal.setAlignmentSpace(sar.getAlignmentSpace());
+        rtnVal.setImageSize(sar.getImageSize());
+        rtnVal.setOpticalResolution(sar.getOpticalResolution());
         return rtnVal;
     }
     

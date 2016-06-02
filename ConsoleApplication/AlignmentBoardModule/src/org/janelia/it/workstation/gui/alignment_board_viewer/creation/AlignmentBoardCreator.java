@@ -81,6 +81,9 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                 
                 // Pick an alignment context for the new board
                 DisplayWrapper values[] = formatContexts(contexts);
+                if (values.length == 0) {
+                    throw new RuntimeException("No alignment contexts available.  Please contact Janelia Workstation support.");
+                }
                 final DisplayWrapper displayWrapper = (DisplayWrapper)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
                         values, values[0]);                
