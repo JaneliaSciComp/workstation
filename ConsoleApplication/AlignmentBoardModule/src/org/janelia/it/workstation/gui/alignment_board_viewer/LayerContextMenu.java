@@ -7,29 +7,25 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
-import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDetailsDialog;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +41,7 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignmentBoardItem alignmentBoardItem;
-    protected final DomainObject alignedItemTarget;
+    protected final ABItem alignedItemTarget;
     protected final List<AlignmentBoardItem> multiSelectionItems;
 
     // Internal state
@@ -54,7 +50,7 @@ public class LayerContextMenu extends JPopupMenu {
     public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem alignmentBoardItem, List<AlignmentBoardItem> multiSelectionItems) {
         this.alignmentBoardContext = alignmentBoardContext;
         this.alignmentBoardItem = alignmentBoardItem;
-        this.alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
+        this.alignedItemTarget = RenderUtils.getObjectForItem(alignmentBoardItem);
         this.multiSelectionItems = multiSelectionItems;
     }
 
@@ -299,7 +295,7 @@ public class LayerContextMenu extends JPopupMenu {
 
         List<AlignmentBoardItem> domainObjectList = new ArrayList<>();
         domainObjectList.add(alignmentBoardItem);
-        DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
+        ABItem dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
         String name = dObj.getName();
         if ( name.length() > 15 ) {
             name = name.substring( 0, 6 ) + "..." + name.substring( name.length() - 6 );
@@ -366,9 +362,9 @@ public class LayerContextMenu extends JPopupMenu {
             boolean canDelete = true;
             // User can't delete if they don't have write access
             String subject = SessionMgr.getSubjectKey();
-            DomainObject dObj = RenderUtils.getObjectForItem(item);
+            ABItem dObj = RenderUtils.getObjectForItem(item);
 
-            if (!dObj.getWriters().contains(subject)) {
+            if (!dObj.canWrite(subject)) {
                 canDelete = false;
                 // Unless they own the parent
                 if (parent!=null && parent.getId()!=null && parent.getWriters().contains(subject)) {

@@ -12,10 +12,13 @@ import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -131,17 +134,17 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             return null;
         }
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
+            ABItem abItem = RenderUtils.getObjectForItem(item);
             if ( item.getTarget() != null
-                    && item.getTarget().getTargetId() != null
-                    && item.getTarget().getTargetId().equals(id)) {
+                    && abItem.getId() != null
+                    && abItem.getId().equals(id)) {
                 return item;
             } else {
                 // Step in one more level.
                 for (AlignmentBoardItem childItem : item.getChildren()) {
-                    if (childItem instanceof AlignmentBoardItem) {
-                        if (childItem.getTarget().getTargetId().equals(id)) {
-                            return childItem;
-                        }
+                    ABItem abChildItem = RenderUtils.getObjectForItem(item);
+                    if (abChildItem.getId().equals(id)) {
+                        return childItem;
                     }
                 }
             }
@@ -157,7 +160,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     public AlignmentBoardItem getAlignmentBoardItemParent(Long childId) {
         AlignmentBoardItem rtnVal = null;
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
-            if (item.getTarget().getTargetId().equals(childId)) {
+            ABItem abItem = RenderUtils.getObjectForItem(item);
+            if (abItem.getId().equals(childId)) {
                 return null;
             }
             rtnVal = getAlignmentBoardItemParent(childId, item);
@@ -190,7 +194,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     }
 
     @Override
-    public Reference getTarget() {
+    public AlignmentBoardReference getTarget() {
         return null;
     }
 
@@ -220,7 +224,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     private AlignmentBoardItem getAlignmentBoardItemParent(Long childId, AlignmentBoardItem currentParent) {
         AlignmentBoardItem rtnVal = null;
         for (AlignmentBoardItem item: currentParent.getChildren()) {
-            if (item.getTarget().getTargetId().equals(childId)) {
+            ABItem abItem = RenderUtils.getObjectForItem(item);
+            if (abItem.getId().equals(childId)) {
                 rtnVal = currentParent;
             }
             else {
@@ -304,7 +309,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 //            }
             // TODO add the new aligned entity.
 //            sample.loadContextualizedChildren(context);
-//            VolumeImage volumeImage = sample.getReference();
+//            VolumeImage volumeImage = sample.getItem();
 //            if ( volumeImage != null ) {
 //                addNewAlignedEntity( volumeImage );
 //            }
@@ -335,7 +340,10 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         reference.setTargetClassName(modelClass.getSimpleName());
         alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
-        alignmentBoardItem.setTarget(reference);
+        AlignmentBoardReference abRef = new AlignmentBoardReference();
+        // TODO: populate abRef
+
+        alignmentBoardItem.setTarget(abRef);
         return alignmentBoardItem;
     }
 
@@ -343,7 +351,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         // Add the compartments and the compartment set itself.
         AlignmentBoardItem compartmentSetAlignmentBoardItem = null;
         for (AlignmentBoardItem abi: alignmentBoard.getChildren()) {
-            if (abi.getTarget().getTargetId().equals(domainObject.getId())) {
+            if (abi.getTarget().getObjectRef().getTargetId().equals(domainObject.getId())) {
                 compartmentSetAlignmentBoardItem = abi;
             }
         }
@@ -354,7 +362,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         // Add the compartments and the compartment set itself.
         AlignmentBoardItem compartmentSetAlignmentBoardItem = null;
         for (AlignmentBoardItem abi: parent.getChildren()) {
-            if (abi.getTarget().getTargetId().equals(domainObject.getId())) {
+            if (abi.getTarget().getObjectRef().getTargetId().equals(domainObject.getId())) {
                 compartmentSetAlignmentBoardItem = abi;
             }
         }

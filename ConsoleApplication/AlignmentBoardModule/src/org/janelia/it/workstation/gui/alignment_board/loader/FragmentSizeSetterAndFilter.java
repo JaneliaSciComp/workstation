@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
@@ -134,7 +136,9 @@ public class FragmentSizeSetterAndFilter {
                                         bean.getId()
                                 );
                             if ( parent != null ) {
-                                long parentId = parent.getTarget().getTargetId();
+
+                                ABItem abItem = RenderUtils.getObjectForItem(parent);
+                                long parentId = abItem.getId();
 
                                 Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
                                 if ( countForParent == null ) {

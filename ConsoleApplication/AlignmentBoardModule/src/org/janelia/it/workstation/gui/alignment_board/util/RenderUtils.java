@@ -1,17 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.alignment_board.util;
 
 import java.awt.Color;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for formatting and other niceties, in a standard way.
@@ -19,6 +20,9 @@ import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
  * @author fosterl
  */
 public class RenderUtils {
+
+    private final static Logger log = LoggerFactory.getLogger(RenderUtils.class);
+
     /**
      * Tells if passthrough is used for this item.
      * @param item has a rendering type.
@@ -87,9 +91,33 @@ public class RenderUtils {
         return niceBuilder.toString();
     }
     
-    public static DomainObject getObjectForItem(AlignmentBoardItem item) {
+    public static ABItem getObjectForItem(AlignmentBoardItem item) {
+        AlignmentBoardReference ref = item.getTarget();
+        if (ref==null) {
+            log.warn("Null reference in item {}",item.getName());
+            return null;
+        }
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
-        return domainModel.getDomainObject(item.getTarget());
+        DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+        if (domainObject==null) {
+            return null;
+        }
+        if (domainObject instanceof CompartmentSet) {
+            CompartmentSet cs = (CompartmentSet)domainObject;
+            if (ref.getItemId()!=null) {
+                return new ABCompartment(cs.getCompartment(ref.getItemId()));
+            }
+            else {
+                return new ABCompartmentSet(cs);
+            }
+        }
+        else if (domainObject instanceof Sample) {
+            return new ABSample((Sample)domainObject);
+        }
+        else if (domainObject instanceof NeuronFragment) {
+            return new ABNeuronFragment((NeuronFragment)domainObject);
+        }
+        throw new IllegalStateException("Unrecognized item type: "+domainObject.getType());
     }
 
 }

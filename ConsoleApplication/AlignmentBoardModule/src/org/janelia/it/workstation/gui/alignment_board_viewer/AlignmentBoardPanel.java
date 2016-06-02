@@ -27,6 +27,8 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
@@ -222,13 +224,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 
                 // Need to turn off all the items which do not stack in
                 // same space as the indicated value.
-                AlignmentBoardItem overlapGuide = event.getItem();
+                ABItem overlapGuide = RenderUtils.getObjectForItem(event.getItem());
                 Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
                 
                 Collection<Integer> overlappingMasks = null;
                 for ( MaskChanRenderableData renderableData: renderableDatas ) {
                     if ( renderableData.getBean() != null  &&
-                         renderableData.getBean().getId() == overlapGuide.getTarget().getTargetId() ) {
+                         renderableData.getBean().getId() == overlapGuide.getId() ) {
                         overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
                     }
                     else {

@@ -29,6 +29,8 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
@@ -64,6 +66,9 @@ import com.google.common.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+
+import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
+import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.getObjectForItem;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -404,7 +409,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 // Add the compartment set, lazily, if it is not already under this board.
                 boolean hasCompartmentSet = false;
                 for ( AlignmentBoardItem child: context.getAlignmentBoardItems() ) {
-                    DomainObject dObj = RenderUtils.getObjectForItem(child);
+                    ABItem dObj = getObjectForItem(child);
                     if ( dObj.getName().startsWith("Compartment Set") ) {
                         log.info("Context has a compartment set called {}.", dObj.getName());
                         hasCompartmentSet = true;
@@ -652,7 +657,6 @@ public class LayersPanel extends JPanel implements Refreshable {
     public void chooseColor(final AlignmentBoardItem alignedItem) {
 
         Color currColor = RenderUtils.getColorFromRGBStr(alignedItem.getColor());
-        final DomainObject alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignedItem.getTarget());
         final Color newColor = JColorChooser.showDialog(SessionMgr.getMainFrame(), "Choose color", currColor);
         if (newColor==null) return;
         
@@ -704,16 +708,16 @@ public class LayersPanel extends JPanel implements Refreshable {
             
             if (value instanceof AlignmentBoardItem) {
                 AlignmentBoardItem alignmentBoardItem = (AlignmentBoardItem)value;
-                DomainObject alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
-                if (alignedItemTarget == null) {
-                    log.info("Null target for {} of type {}." + alignmentBoardItem.getTarget().getTargetId(), alignmentBoardItem.getTarget().getTargetClassName() );
+                ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+                if (item == null) {
+                    log.info("Null target for {}" , alignmentBoardItem.getTarget());
                 }
-                if (alignmentBoardItem == null  ||  alignedItemTarget == null) {
+                if (alignmentBoardItem == null  ||  item == null) {
                     label.setText("Item is null");
                     label.setIcon(null);
                 }
                 else {
-                    label.setText(alignedItemTarget.getName());
+                    label.setText(item.getName());
 //TODO workout where to get icon                    label.setIcon(Icons.getIcon(alignedItem));
                 }
             }
@@ -759,8 +763,9 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
-                    if ( fileStats != null  &&  alignmentBoardItem != null  &&  ( !alignmentBoardItem.getTarget().getTargetClassName().toLowerCase().contains("compartment") ) ) {
-                        final Long itemId = alignmentBoardItem.getTarget().getTargetId();
+                    ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+                    if ( fileStats != null  &&  alignmentBoardItem != null  &&  ( !(item instanceof ABCompartment) ) ) {
+                        final Long itemId = item.getId();
                         double[] colorRGB = fileStats.getChannelAverages(itemId);
                         if ( colorRGB == null ) {
                             // Happens with reference channels.
@@ -884,26 +889,27 @@ public class LayersPanel extends JPanel implements Refreshable {
             SimpleWorker worker = new SimpleWorker() {
                 
                 private AlignmentBoardItem parent;
-                private DomainObject parentObject;
-                private DomainObject target = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
-                
+                private ABItem parentObject;
+
                 @Override
                 protected void doStuff() throws Exception {
                     alignmentBoardItem.setVisible(isVisible);
 
-                    Collection<DomainObject> affectedEntities = new ArrayList<>();
+                    ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+
+                    Collection<ABItem> affectedEntities = new ArrayList<>();
 
                     for(AlignmentBoardItem child : alignmentBoardItem.getChildren()) {
-                        DomainObject innerChild = DomainMgr.getDomainMgr().getModel().getDomainObject(child.getTarget());
-                        affectedEntities.add( innerChild );
+                        ABItem childItem = RenderUtils.getObjectForItem(child);
+                        affectedEntities.add( childItem );
                     }
 
                     // HOW to get the parent?
                     AlignmentBoardItem parentWrapper = null; //alignedItem.getParent();
-                    parentObject = RenderUtils.getObjectForItem(alignmentBoardItem);
+                    parentObject = getObjectForItem(alignmentBoardItem);
                     if (parentWrapper!=null) {                        
                         if (parentWrapper instanceof AlignmentBoardItem) {
-                            parent = (AlignmentBoardItem)parentWrapper;
+                            parent = parentWrapper;
                             if ( ! isVisible ) {
                                 // Check children of this parent: any of them
                                 // on?

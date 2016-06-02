@@ -1,33 +1,42 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.volume_export;
 
+import java.awt.Graphics2D;
+import java.awt.Window;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.FileExportLoadWorker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.*;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -161,10 +170,10 @@ public class VolumeWritebackHandler {
         AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
         List<AlignmentBoardItem> children = abContext.getAlignmentBoard().getChildren();
         for ( AlignmentBoardItem nextChild: children ) {
-            DomainObject dobj = RenderUtils.getObjectForItem(nextChild);
+            ABItem dobj = RenderUtils.getObjectForItem(nextChild);
             pw.println("Container Item: NAME=" + dobj.getName() + ", ID=" + dobj.getId());
             for ( AlignmentBoardItem grandChild: nextChild.getChildren() ) {
-                DomainObject gcDObj = RenderUtils.getObjectForItem(grandChild);
+                ABItem gcDObj = RenderUtils.getObjectForItem(grandChild);
                 pw.println("Neuron: ID=" + gcDObj.getId() + " NAME=" + gcDObj.getName() + " TYPE=" + gcDObj.getType() + " OWNER=" + gcDObj.getOwnerKey());
             }
         }

@@ -243,7 +243,7 @@ public class MaskSingleFileLoader {
         }
 
         // Channel only available if presence of acceptors signalled its read.
-        if ( channelAcceptors.size() > 0  &&  renderableBean.getReference() != null  &&  fileStats != null ) {
+        if ( channelAcceptors.size() > 0  &&  renderableBean.getItem() != null  &&  fileStats != null ) {
             if ( logger.isDebugEnabled() ) {
                 StringBuilder averages = new StringBuilder( "Average values for " )
                         .append( renderableBean.getName() ).append( " at total voxels of " )

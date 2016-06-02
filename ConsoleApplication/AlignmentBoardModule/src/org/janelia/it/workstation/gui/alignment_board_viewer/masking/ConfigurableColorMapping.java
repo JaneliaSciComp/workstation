@@ -1,17 +1,20 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.masking;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 
 /**
  * Created with IntelliJ IDEA.
@@ -195,9 +198,9 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             if ( rgb == null  ||  rgbValsZero ) {
-                Reference reference = renderableBean.getReference();
+                Object item = renderableBean.getItem();
                 rgb = rgbCopy( COLOR_WHEEL[ translatedNum % COLOR_WHEEL.length ] );
-                if ( reference != null ) {
+                if ( item != null ) {
                     if ( rgbValsZero ) {
                         // Special case: user has turned down colors to minimum, on purpose.
                         rgb = rgbCopy( TRANSPARENT_RENDER );
@@ -220,7 +223,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             // Placing this here, to benefit from null-catch of RGB array above.
-            if ( renderableBean.getReference() != null && guidToRenderMethod != null ) {
+            if ( renderableBean.getItem() != null && guidToRenderMethod != null ) {
                 Long entityId = renderableBean.getId();
                 Integer renderMethodNum = guidToRenderMethod.get( entityId );
                 if ( renderMethodNum != null ) {
@@ -269,7 +272,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private byte[] setRgbFromAverageColor(RenderableBean bean) {
         byte[] rtnVal = null;
         // Taking average voxels into account.
-        if ( bean.getReference() != null  &&  fileStats != null ) {
+        if ( bean.getItem() != null  &&  fileStats != null ) {
             double[] colorAverages = fileStats.getChannelAverages( bean.getId() );
             if ( colorAverages != null ) {
                 rtnVal = new byte[ 4 ];

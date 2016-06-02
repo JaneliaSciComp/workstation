@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.texture;
 
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
@@ -15,15 +20,14 @@ import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.File;
 import java.util.*;
-import org.apache.commons.lang3.StringUtils;
+
+import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.getObjectForItem;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -37,8 +41,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
     private final AlignmentBoardContext context;
 
-    private Sample currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
-    private CompartmentSet currentCompartmentSet;
+    private ABSample currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
+    private ABCompartmentSet currentCompartmentSet;
     private AlignmentBoardItem sampleABItem;
     private AlignmentBoardItem compartmentSetABItem;
 
@@ -58,14 +62,12 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<>();
 
         int nextTranslatedNum = 1;
-
         int liveFileCount = 0;
-        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
 
         for ( AlignmentBoardItem alignmentBoardItem : context.getAlignmentBoardItems() ) {
-            DomainObject dobj = domainModel.getDomainObject(alignmentBoardItem.getTarget());
-            if (dobj instanceof Sample) {                
-                currentSample = (Sample)dobj;
+            ABItem dobj = getObjectForItem(alignmentBoardItem);
+            if (dobj instanceof ABSample) {
+                currentSample = (ABSample)dobj;
                 sampleABItem = alignmentBoardItem;
                 currentCompartmentSet = null;
 
@@ -76,23 +78,24 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
                     for ( AlignmentBoardItem childItem: childItems ) {
-                        DomainObject childDobj = domainModel.getDomainObject(childItem.getTarget());
-                        if ( childDobj instanceof NeuronFragment) {
+                        ABItem childDobj = getObjectForItem(childItem);
+                        if ( childDobj instanceof ABNeuronFragment) {
                             liveFileCount += getNeuronFragmentRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
-                        else if ( childDobj instanceof VolumeImage) {
-                            VolumeImage image = (VolumeImage)childDobj;
-                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
-                        }
+                        // TODO: make this work
+//                        else if ( childDobj instanceof VolumeImage) {
+//                            VolumeImage image = (VolumeImage)childDobj;
+//                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
+//                        }
                     }
                 }
             }
-            else if ( dobj instanceof NeuronFragment) {
+            else if ( dobj instanceof ABNeuronFragment) {
                 liveFileCount += getNeuronFragmentRenderableData(rtnVal, nextTranslatedNum, false, alignmentBoardItem);
             }
-            else if ( dobj instanceof CompartmentSet) {
+            else if ( dobj instanceof ABCompartmentSet) {
                 currentSample = null;
-                currentCompartmentSet = (CompartmentSet)dobj;
+                currentCompartmentSet = (ABCompartmentSet)dobj;
                 compartmentSetABItem = alignmentBoardItem;
 
                 MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(dobj, alignmentBoardItem);
@@ -104,24 +107,23 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 compartmentAlignmentContext.setAlignmentSpace(currentCompartmentSet.getAlignmentSpace());
                 compartmentAlignmentContext.setImageSize(currentCompartmentSet.getImageSize());
                 compartmentAlignmentContext.setOpticalResolution(currentCompartmentSet.getOpticalResolution());
-                String basePath = currentCompartmentSet.getFilepath();
 
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
                     for ( AlignmentBoardItem item: childItems ) {
-                        DomainObject childDobj = domainModel.getDomainObject(item.getTarget());
-                        if ( childDobj instanceof Compartment) {
-                            Compartment compartment = (Compartment)childDobj;
+                        ABItem childDobj = getObjectForItem(item);
+                        if ( childDobj instanceof ABCompartment) {
+                            ABCompartment compartment = (ABCompartment)childDobj;
                             if ( targetAlignmentContext.equals( compartmentAlignmentContext ) ) {
-                                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, basePath, item);
+                                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
                             }
                         }
                     }
                 }
 
             }
-            else if ( dobj instanceof Compartment) {
-                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, null, alignmentBoardItem);
+            else if ( dobj instanceof ABCompartment) {
+                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignmentBoardItem);
             }
         }
 
@@ -141,7 +143,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * Creates a container renderable which will not be shown.  It exists for its children's reference.
      * @return the renderable being created.
      */
-    private MaskChanRenderableData getNonRenderingRenderableData(DomainObject dobj, AlignmentBoardItem item) {
+    private MaskChanRenderableData getNonRenderingRenderableData(ABItem dobj, AlignmentBoardItem item) {
         RenderableBean containerDataBean = new RenderableBean();
         containerDataBean.setLabelFileNum(0);
         containerDataBean.setTranslatedNum(0); // Always zero for any sample.
@@ -150,7 +152,10 @@ public class ABContextDataSource implements RenderableDataSourceI {
                         NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, RenderMappingI.NON_RENDERING
                 }
         );
-        containerDataBean.setReference(item.getTarget());
+
+        ABItem abItem = getObjectForItem(item);
+        containerDataBean.setType(abItem.getType());
+        containerDataBean.setItem(abItem);
         containerDataBean.setId(dobj.getId());
         containerDataBean.setName(dobj.getName());
 
@@ -173,22 +178,15 @@ public class ABContextDataSource implements RenderableDataSourceI {
             Collection<MaskChanRenderableData> maskChanRenderableDatas,
             int nextTranslatedNum,
             boolean isCompartment,
-            String basePath,
             AlignmentBoardItem item) {
-        DomainObject dobj = RenderUtils.getObjectForItem(item);
+        ABItem dobj = getObjectForItem(item);
         RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
         nfRenderable.setCompartment( isCompartment );
         
-        String maskPath = getMaskPath( dobj );
-        String channelPath = getChanPath(dobj);
-        if (!(StringUtils.isEmpty(maskPath) || StringUtils.isEmpty(basePath))) {
-            maskPath = basePath + File.separator + maskPath;
-            channelPath = basePath + File.separator + channelPath;
-        } else {
-            logger.error("Base path empty for " + item.getTarget().getTargetClassName() + " " + item.getTarget().getTargetId());
-        }
+        String maskPath = dobj.getMaskPath();
+        String channelPath = dobj.getChanPath();
         nfRenderable.setMaskPath( maskPath );
         nfRenderable.setChannelPath( channelPath );
 
@@ -217,9 +215,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
             boolean isCompartment,
             AlignmentBoardItem item) {
         
-        DomainObject dobj = RenderUtils.getObjectForItem(item);
-        String basePath = ((NeuronFragment)dobj).getFilepath();
-        return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, basePath, item);
+        ABItem dobj = getObjectForItem(item);
+        return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, item);
     }
 
     private int getRenderableData(
@@ -228,14 +225,16 @@ public class ABContextDataSource implements RenderableDataSourceI {
         VolumeImage volumeImage,
         AlignmentBoardItem item
     ) {
+        ABItem abItem = getObjectForItem(item);
+
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setInvertedY(false);
         renderableBean.setLabelFileNum(nextTranslatedNum);
         renderableBean.setTranslatedNum(nextTranslatedNum);
-        renderableBean.setType("Reference");     //todo move this to EntityConstants
         renderableBean.setName(volumeImage.getName()); //???
-        renderableBean.setId(item.getTarget().getTargetId());
-        renderableBean.setReference(item.getTarget());
+        renderableBean.setId(abItem.getId());
+        renderableBean.setType("Reference");     //todo move this to EntityConstants
+        renderableBean.setItem(abItem);
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
@@ -273,10 +272,10 @@ public class ABContextDataSource implements RenderableDataSourceI {
     }
 
     private RenderableBean createRenderableBean( int translatedNum, boolean isCompartment, AlignmentBoardItem item ) {
-        DomainObject dobj = RenderUtils.getObjectForItem(item);
+        ABItem dobj = getObjectForItem(item);
         int maskIndex = getOriginalMaskNumber(dobj);
         logger.debug(
-                "Creating Renderable Bean for: " + item.getTarget().getTargetClassName() + "/" + item.getTarget().getTargetId() + " original index=" + maskIndex +
+                "Creating Renderable Bean for: " + item.getTarget() + " original index=" + maskIndex +
                         " new index=" + translatedNum
         );
 
@@ -285,8 +284,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(translatedNum);
         renderableBean.setName(dobj.getName());
         renderableBean.setId(dobj.getId());
-        renderableBean.setReference(item.getTarget());
-        renderableBean.setType(item.getTarget().getTargetClassName());
+        renderableBean.setType(dobj.getType());
+        renderableBean.setItem(dobj);
         if ( isCompartment ) {
             renderableBean.setInvertedY( false );
         }
@@ -303,38 +302,15 @@ public class ABContextDataSource implements RenderableDataSourceI {
         return renderableBean;
     }
     
-    private int getOriginalMaskNumber(DomainObject domainObj) {
+    private int getOriginalMaskNumber(ABItem domainObj) {
         int rtnVal = -1;
-        if (domainObj instanceof NeuronFragment) {
-            NeuronFragment nf = (NeuronFragment)domainObj;
+        if (domainObj instanceof ABNeuronFragment) {
+            ABNeuronFragment nf = (ABNeuronFragment)domainObj;
             rtnVal = nf.getNumber();
         }
-        else if (domainObj instanceof Compartment) {
-            Compartment compartment = (Compartment)domainObj;
+        else if (domainObj instanceof ABCompartment) {
+            ABCompartment compartment = (ABCompartment)domainObj;
             rtnVal = compartment.getNumber();
-        }
-        return rtnVal;
-    }
-    
-    private String getMaskPath(DomainObject domainObj) {        
-        return getTypedPath(domainObj, FileType.MaskFile);
-    }
-    
-    private String getChanPath(DomainObject domainObj) {
-        return getTypedPath(domainObj, FileType.ChanFile);
-    }
-    
-    private String getTypedPath(DomainObject domainObj, FileType type) {
-        String rtnVal = null;
-        Map<FileType,String> files = null;
-        if (domainObj instanceof NeuronFragment) {
-             files = ((NeuronFragment)domainObj).getFiles();
-        }
-        else if (domainObj instanceof Compartment) {
-             files = ((Compartment)domainObj).getFiles();            
-        }
-        if (files != null) {
-            rtnVal = files.get(type);
         }
         return rtnVal;
     }
@@ -364,13 +340,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 renderableBean.setRgb(rgb);
             }
             else if ( isCompartment ) {
-                Compartment compartment = (Compartment)RenderUtils.getObjectForItem(item);
+                ABCompartment compartment = (ABCompartment) getObjectForItem(item);
                 byte[] rgb = new byte[ 4 ];
                 if ( RenderUtils.isPassthroughRendering(compartmentSetABItem) ) {
                     setPassthroughRGB( rgb );
                 }
                 else {
-                    Color color = RenderUtils.getColorFromRGBStr(compartment.getColor());
+                    Color color = RenderUtils.getColorFromRGBStr(compartment.getDefaultColor());
                     int[] rawColor = new int[] { color.getRed(), color.getGreen(), color.getBlue() };
                     for ( int i = 0; i < 3; i++ ) {
                         rgb[ i ] = (byte)rawColor[ i ];
@@ -381,7 +357,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             }
         }
         else {
-            logger.debug( "Render color is {} for {}.", renderColor, item.getTarget().getTargetId() );
+            logger.debug( "Render color is {} for {}.", renderColor, item.getTarget() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
             setRgbFromColor(renderColor, rgb);
