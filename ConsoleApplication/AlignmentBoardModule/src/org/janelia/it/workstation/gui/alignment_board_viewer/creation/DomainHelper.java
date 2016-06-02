@@ -25,6 +25,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 //import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -79,33 +80,12 @@ public class DomainHelper {
     
     /** Must walk up to the separation and back down to find this. */
     public AlignmentContext getNeuronFragmentAlignmentContext(Sample sample, NeuronFragment neuronFragment) {
-        // TODO: this is nearly mimicked by the SampleUtils, but that somehow is not accessible.  Need find out why.
-        NeuronSeparation separation = null;
-        OUTER:
-        for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                if (run != null && run.getResults() != null) {
-                    for (PipelineResult result : run.getResults()) {
-                        if (result != null && result.getResults() != null) {
-                            for (PipelineResult secondaryResult : result.getResults()) {
-                                if (secondaryResult != null && secondaryResult instanceof NeuronSeparation) {
-                                    separation = (NeuronSeparation) secondaryResult;
-                                    if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
-                                        break OUTER;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+        NeuronSeparation separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
         AlignmentContext rtnVal = null;
         if (separation != null) {
             SamplePipelineRun spr = separation.getParentRun();
             List<SampleAlignmentResult> lars = spr.getAlignmentResults();
-            if (lars != null  &&  lars.size() > 0) {
+            if (lars != null && lars.size() > 0) {
                 rtnVal = new AlignmentContext();
                 SampleAlignmentResult firstResult = lars.get(0);
                 rtnVal.setAlignmentSpace(firstResult.getAlignmentSpace());
@@ -113,6 +93,7 @@ public class DomainHelper {
                 rtnVal.setOpticalResolution(firstResult.getOpticalResolution());
             }
         }
+
         return rtnVal;
     }
     
