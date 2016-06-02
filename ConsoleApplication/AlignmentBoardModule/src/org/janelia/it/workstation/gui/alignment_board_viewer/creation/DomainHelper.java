@@ -84,23 +84,14 @@ public class DomainHelper {
         NeuronSeparation separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
         PipelineResult parentResult = separation.getParentResult();
         SampleAlignmentResult sar = null;
+        AlignmentContext rtnVal = null;
         if (parentResult instanceof SampleAlignmentResult) {
             sar = (SampleAlignmentResult) separation.getParentResult();
+            rtnVal = new AlignmentContext();
+            rtnVal.setAlignmentSpace(sar.getAlignmentSpace());
+            rtnVal.setImageSize(sar.getImageSize());
+            rtnVal.setOpticalResolution(sar.getOpticalResolution());
         }
-        else if (parentResult instanceof SampleProcessingResult) {
-            List<SampleAlignmentResult> alignmentResults = parentResult.getParentRun().getAlignmentResults();
-            if (alignmentResults != null  &&  !alignmentResults.isEmpty()) {
-                sar = alignmentResults.get(0);
-            }
-        }
-        if (sar == null) {
-            log.warn("Found no sample alignment result for fragment {} under sample {}.", neuronFragment.getName(), sample.getName());
-            return null;
-        }
-        AlignmentContext rtnVal = new AlignmentContext();
-        rtnVal.setAlignmentSpace(sar.getAlignmentSpace());
-        rtnVal.setImageSize(sar.getImageSize());
-        rtnVal.setOpticalResolution(sar.getOpticalResolution());
         return rtnVal;
     }
     
