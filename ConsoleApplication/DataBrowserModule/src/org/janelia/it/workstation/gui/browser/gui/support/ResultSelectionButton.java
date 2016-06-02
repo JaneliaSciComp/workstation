@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
@@ -67,7 +68,7 @@ public class ResultSelectionButton extends DropDownButton {
             this.currResult = ResultDescriptor.LATEST;
         }
         
-        Multiset<String> countedResultNames = LinkedHashMultiset.create();
+        Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {
             if (domainObject instanceof Sample) {
@@ -79,13 +80,13 @@ public class ResultSelectionButton extends DropDownButton {
                         if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
                             for(String groupKey : hasGroups.getGroupKeys()) {
-                                String name = objectiveSample.getObjective()+" "+result.getName()+" ("+groupKey+")";
-                                countedResultNames.add(name);
+                                ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName()).setGroupName(groupKey);
+                                countedResultNames.add(rd);
                             }
                         }
                         if (!DomainUtils.get2dTypeNames(result).isEmpty()) {
-                            String name = objectiveSample.getObjective() + " " + result.getName();
-                            countedResultNames.add(name);
+                            ResultDescriptor rd = ResultDescriptor.create().setObjective(objectiveSample.getObjective()).setResultName(result.getName());
+                            countedResultNames.add(rd);
                         }
                     }
                 }
@@ -96,21 +97,23 @@ public class ResultSelectionButton extends DropDownButton {
         getPopupMenu().removeAll();
         
         // Sort in alphanumeric order, with Latest first
-        List<String> sortedResultNames = new ArrayList<>(countedResultNames.elementSet());
-        Collections.sort(sortedResultNames);
-        
-        List<ResultDescriptor> sortedResults = new ArrayList<>();
-        for(String resultName : sortedResultNames)  {
-            sortedResults.add(new ResultDescriptor(resultName));
-        }
+        List<ResultDescriptor> sortedResults = new ArrayList<>(countedResultNames.elementSet());
+        Collections.sort(sortedResults, new Comparator<ResultDescriptor>() {
+            @Override
+            public int compare(ResultDescriptor o1, ResultDescriptor o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
 
+        sortedResults.add(0, ResultDescriptor.LATEST_ALIGNED);
+        sortedResults.add(0, ResultDescriptor.LATEST_UNALIGNED);
         sortedResults.add(0, ResultDescriptor.LATEST);
         
         ButtonGroup group = new ButtonGroup();
         
         for(final ResultDescriptor resultDescriptor : sortedResults) {
-            String resultName = resultDescriptor.getResultKey();
-            JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.getResultKey()));
+            String resultName = resultDescriptor.toString();
+            JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.toString()));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultDescriptor(resultDescriptor);

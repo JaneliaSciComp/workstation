@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ClientDomainUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(ClientDomainUtils.class);
 
     /**
      * Returns true if the current user owns the given domain object.

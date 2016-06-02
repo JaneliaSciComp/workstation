@@ -69,15 +69,19 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
      * Factory method for creating AnnotatedImageButtons. 
      */
     public static <U,S> AnnotatedImageButton<U,S> create(U imageObject, ImageModel<U,S> imageModel, SelectionModel<U,S> selectionModel, ImagesPanel<U,S> imagesPanel) {
-        if (imageModel.getImageFilepath(imageObject) != null) {
-            return new DynamicImageButton<>(imageObject, imageModel, selectionModel, imagesPanel);
+        String filepath = imageModel.getImageFilepath(imageObject);
+        // The filepath is passed through because it's kind of expensive to calculate. 
+        // But it's kind of redundant with the image model, and it doesn't make sense for static icons, 
+        // so we could use some refactoring here to make this cleaner. 
+        if (filepath != null) {
+            return new DynamicImageButton<>(imageObject, imageModel, selectionModel, imagesPanel, filepath);
         }
         else {
-            return new StaticImageButton<>(imageObject, imageModel, selectionModel, imagesPanel);
+            return new StaticImageButton<>(imageObject, imageModel, selectionModel, imagesPanel, filepath);
         }
     }
 
-    protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, final ImagesPanel<T,S> imagesPanel) {
+    protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, final ImagesPanel<T,S> imagesPanel, String filepath) {
         this.imageObject = imgObject;
         this.imageModel = imageModel;
         this.selectionModel = selectionModel;
@@ -184,7 +188,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         imagesPanel.ensureCorrectAnnotationView(this);
 
         mainPanel.removeAll();
-        this.innerComponent = init(imageObject, imageModel);
+        this.innerComponent = init(imageObject, imageModel, filepath);
         mainPanel.add(innerComponent);
         
         refresh(imageObject);
@@ -231,7 +235,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         subtitleLabel.setVisible(true);
     }
 
-    public abstract JComponent init(T imageObject, final ImageModel<T,S> imageModel);
+    public abstract JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath);
 
     public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
