@@ -241,20 +241,22 @@ public class DomainHelper {
             log.warn("Null reference in item {}", item.getName());
             return null;
         }
-        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
-        if (ref == null || ref.getObjectRef() == null) {
+        if (ref.getObjectRef() == null) {
             log.error("No object ref, or no target for item " + item.getName());
             return null;
         }
+        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
-        if (domainObject == null) {
-            return null;
-        }
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
-            if (ref.getItemId() != null) {
-                return new ABCompartment(cs.getCompartment(ref.getItemId()));
-            } else {
+            AlignmentBoardReference abRef = item.getTarget();
+            if (! abRef.getItemId().equals(cs.getId())) {
+                // Got compartment
+                Compartment comp = cs.getCompartment(abRef.getItemId());
+                ABCompartment abComp = new ABCompartment(comp);
+                return abComp;
+            }
+            else {
                 return new ABCompartmentSet(cs);
             }
         } else if (domainObject instanceof Sample) {
@@ -262,7 +264,13 @@ public class DomainHelper {
         } else if (domainObject instanceof NeuronFragment) {
             return new ABNeuronFragment((NeuronFragment) domainObject);
         }
-        throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
+        if (domainObject == null) {
+            log.warn("No domain object found for ref {}.", ref.getItemId());
+        }
+        else {
+            throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
+        }
+        return null;
     }
     private void handleException(String message) {
         Exception ex = new Exception(message);

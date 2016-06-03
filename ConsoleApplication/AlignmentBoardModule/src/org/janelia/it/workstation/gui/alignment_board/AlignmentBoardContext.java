@@ -302,8 +302,9 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         if (oldItem == null) {
             List<Compartment> compartments = compartmentSet.getCompartments();
             AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events);
+            compartmentSetItem.setName(compartmentSet.getName());
             for (Compartment compartment: compartments) {
-                addCompartment(Compartment.class, compartmentSetItem, compartment, events);
+                addCompartment(compartmentSetItem, compartment, events);
             }            
             
         } else {
@@ -354,8 +355,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return alignmentBoardItem;
     }
 
-    private AlignmentBoardItem addCompartment(Class modelClass, AlignmentBoardItem parentItem, Compartment domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
-        AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
+    private AlignmentBoardItem addCompartment(AlignmentBoardItem parentItem, Compartment compartment, final Collection<AlignmentBoardEvent> events) throws Exception {
+        AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItemForCompartment(compartment.getParent(), compartment);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
@@ -366,8 +367,22 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return createAlignmentBoardItem(domainObject.getId(), modelClass);
     }
     
-    private AlignmentBoardItem createAlignmentBoardItem(Compartment compartment, Class modelClass) {
-        return createAlignmentBoardItem(compartment.getId(), modelClass);
+    private AlignmentBoardItem createAlignmentBoardItemForCompartment(CompartmentSet compartmentSet, Compartment compartment) {
+        AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
+        alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
+        alignmentBoardItem.setVisible(true);
+
+        Reference alignmentBoardObjectRef = new Reference();
+        alignmentBoardObjectRef.setTargetClassName(CompartmentSet.class.getSimpleName());
+        alignmentBoardObjectRef.setTargetId(compartmentSet.getId());
+
+        AlignmentBoardReference abRef = new AlignmentBoardReference();
+        abRef.setObjectRef(alignmentBoardObjectRef);
+        // Item ID finds the compartment for us.
+        abRef.setItemId(compartment.getId());
+        alignmentBoardItem.setTarget(abRef);
+        
+        return alignmentBoardItem;
     }
     
     private AlignmentBoardItem createAlignmentBoardItem(Long id, Class modelClass) {
@@ -378,8 +393,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
         AlignmentBoardReference abRef = new AlignmentBoardReference();
-        // TODO: populate abRef
-
+        abRef.setItemId(id);
+        abRef.setObjectRef(reference);
         alignmentBoardItem.setTarget(abRef);
         return alignmentBoardItem;
     }
