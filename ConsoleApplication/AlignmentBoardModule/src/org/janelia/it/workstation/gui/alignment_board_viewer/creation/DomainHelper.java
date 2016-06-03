@@ -15,6 +15,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
@@ -253,6 +254,21 @@ public class DomainHelper {
             if (! abRef.getItemId().equals(cs.getId())) {
                 // Got compartment
                 Compartment comp = cs.getCompartment(abRef.getItemId());
+                try {
+                    if (comp.getNumber() == null) {
+                        // Expecting mask path to be a string like compartment_59.mask
+                        String maskPath = comp.getFiles().get(FileType.MaskFile);
+                        int underPos = maskPath.indexOf("_");
+                        if (underPos > -1) {
+                            int dotPos = maskPath.indexOf(underPos, '.');
+                            comp.setNumber(Integer.parseInt(maskPath.substring(underPos + 1, dotPos)));
+                        }
+
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to parse number out of mask file.");
+                    comp.setNumber(0);
+                }
                 ABCompartment abComp = new ABCompartment(comp);
                 return abComp;
             }

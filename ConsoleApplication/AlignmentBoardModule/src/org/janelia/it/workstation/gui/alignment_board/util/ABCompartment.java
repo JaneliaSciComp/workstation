@@ -22,7 +22,7 @@ public class ABCompartment extends ABItem {
     }
 
     public Integer getNumber() {
-        return ((Compartment)domainObject).getNumber();
+        return compartment.getNumber();
     }
 
     public String getDefaultColor() {
@@ -31,12 +31,12 @@ public class ABCompartment extends ABItem {
 
     @Override
     public String getMaskPath() {
-        return DomainUtils.getFilepath((NeuronFragment)domainObject, FileType.MaskFile);
+        return compartment.getFiles().get(FileType.MaskFile).toString();
     }
 
     @Override
     public String getChanPath() {
-        return DomainUtils.getFilepath((NeuronFragment)domainObject, FileType.ChanFile);
+        return compartment.getFiles().get(FileType.ChanFile).toString();
     }
 
     @Override

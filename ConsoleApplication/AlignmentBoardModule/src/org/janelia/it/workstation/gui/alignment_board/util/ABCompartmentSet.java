@@ -24,4 +24,15 @@ public class ABCompartmentSet extends ABItem {
     public String getOpticalResolution() {
         return ((CompartmentSet)domainObject).getOpticalResolution();
     }
+    
+    @Override
+    public String getMaskPath() {
+        return ((CompartmentSet)domainObject).getFilepath();
+    }
+
+    @Override
+    public String getChanPath() {
+        return ((CompartmentSet) domainObject).getFilepath();
+    }
+
 }

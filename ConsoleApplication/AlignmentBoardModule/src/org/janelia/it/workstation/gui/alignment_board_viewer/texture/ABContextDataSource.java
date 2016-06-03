@@ -19,7 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.*;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -104,11 +106,11 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
+                    CompatibilityChecker checker = new CompatibilityChecker();
                     for ( AlignmentBoardItem item: childItems ) {
                         ABItem childDobj = domainHelper.getObjectForItem(item);
                         if ( childDobj instanceof ABCompartment) {
-                            ABCompartment compartment = (ABCompartment)childDobj;
-                            if ( targetAlignmentContext.equals( compartmentAlignmentContext ) ) {
+                            if ( checker.isEqual(targetAlignmentContext, compartmentAlignmentContext ) ) {
                                 liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
                             }
                         }
@@ -181,9 +183,17 @@ public class ABContextDataSource implements RenderableDataSourceI {
         
         String maskPath = dobj.getMaskPath();
         String channelPath = dobj.getChanPath();
+        if (isCompartment) {
+            if (currentCompartmentSet != null) {
+                channelPath = currentCompartmentSet.getChanPath() + File.separator + channelPath;
+                maskPath = currentCompartmentSet.getMaskPath() + File.separator + maskPath;
+            }
+
+        }
+
         nfRenderable.setMaskPath( maskPath );
         nfRenderable.setChannelPath( channelPath );
-
+        
         int liveFileCount = getCorrectFilesFoundCount(
                 "" + renderableBean.getId(), maskPath, channelPath
         );
@@ -209,7 +219,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
             boolean isCompartment,
             AlignmentBoardItem item) {
         
-        ABItem dobj = domainHelper.getObjectForItem(item);
         return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, item);
     }
 
