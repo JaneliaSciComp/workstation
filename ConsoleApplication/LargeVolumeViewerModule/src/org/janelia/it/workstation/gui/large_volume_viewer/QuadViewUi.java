@@ -792,7 +792,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         buttonsPanel.add(gotoLocationButton);
 
         final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
-        useHttpCheckbox.setSelected(HttpDataSource.useHttp());
+        if(HttpDataSource.useHttp()) {
+            HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
+            useHttpCheckbox.setSelected(true);
+        } else {
+            useHttpCheckbox.setSelected(false);
+        }
         useHttpCheckbox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
