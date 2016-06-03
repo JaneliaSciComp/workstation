@@ -10,15 +10,8 @@ import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.slf4j.Logger;
@@ -26,8 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.*;
-
-import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.getObjectForItem;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -45,10 +37,12 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private ABCompartmentSet currentCompartmentSet;
     private AlignmentBoardItem sampleABItem;
     private AlignmentBoardItem compartmentSetABItem;
+    private DomainHelper domainHelper;
 
     private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
+        this.domainHelper = new DomainHelper();
     }
 
     @Override
@@ -65,7 +59,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         int liveFileCount = 0;
 
         for ( AlignmentBoardItem alignmentBoardItem : context.getAlignmentBoardItems() ) {
-            ABItem dobj = getObjectForItem(alignmentBoardItem);
+            ABItem dobj = domainHelper.getObjectForItem(alignmentBoardItem);
             if (dobj instanceof ABSample) {
                 currentSample = (ABSample)dobj;
                 sampleABItem = alignmentBoardItem;
@@ -78,7 +72,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
                     for ( AlignmentBoardItem childItem: childItems ) {
-                        ABItem childDobj = getObjectForItem(childItem);
+                        ABItem childDobj = domainHelper.getObjectForItem(childItem);
                         if ( childDobj instanceof ABNeuronFragment) {
                             liveFileCount += getNeuronFragmentRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
@@ -111,7 +105,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
                 if ( childItems != null ) {
                     for ( AlignmentBoardItem item: childItems ) {
-                        ABItem childDobj = getObjectForItem(item);
+                        ABItem childDobj = domainHelper.getObjectForItem(item);
                         if ( childDobj instanceof ABCompartment) {
                             ABCompartment compartment = (ABCompartment)childDobj;
                             if ( targetAlignmentContext.equals( compartmentAlignmentContext ) ) {
@@ -153,7 +147,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 }
         );
 
-        ABItem abItem = getObjectForItem(item);
+        ABItem abItem = domainHelper.getObjectForItem(item);
         containerDataBean.setType(abItem.getType());
         containerDataBean.setItem(abItem);
         containerDataBean.setId(dobj.getId());
@@ -179,7 +173,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             int nextTranslatedNum,
             boolean isCompartment,
             AlignmentBoardItem item) {
-        ABItem dobj = getObjectForItem(item);
+        ABItem dobj = domainHelper.getObjectForItem(item);
         RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
@@ -215,7 +209,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             boolean isCompartment,
             AlignmentBoardItem item) {
         
-        ABItem dobj = getObjectForItem(item);
+        ABItem dobj = domainHelper.getObjectForItem(item);
         return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, item);
     }
 
@@ -225,7 +219,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         VolumeImage volumeImage,
         AlignmentBoardItem item
     ) {
-        ABItem abItem = getObjectForItem(item);
+        ABItem abItem = domainHelper.getObjectForItem(item);
 
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setInvertedY(false);
@@ -272,7 +266,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     }
 
     private RenderableBean createRenderableBean( int translatedNum, boolean isCompartment, AlignmentBoardItem item ) {
-        ABItem dobj = getObjectForItem(item);
+        ABItem dobj = domainHelper.getObjectForItem(item);
         int maskIndex = getOriginalMaskNumber(dobj);
         logger.debug(
                 "Creating Renderable Bean for: " + item.getTarget() + " original index=" + maskIndex +
@@ -340,7 +334,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 renderableBean.setRgb(rgb);
             }
             else if ( isCompartment ) {
-                ABCompartment compartment = (ABCompartment) getObjectForItem(item);
+                ABCompartment compartment = (ABCompartment) domainHelper.getObjectForItem(item);
                 byte[] rgb = new byte[ 4 ];
                 if ( RenderUtils.isPassthroughRendering(compartmentSetABItem) ) {
                     setPassthroughRGB( rgb );

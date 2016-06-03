@@ -24,6 +24,7 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemR
 import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDetailsDialog;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -39,6 +40,7 @@ public class LayerContextMenu extends JPopupMenu {
 
     private static final Logger log = LoggerFactory.getLogger(LayerContextMenu.class);
 
+    private final DomainHelper domainHelper;
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignmentBoardItem alignmentBoardItem;
     protected final ABItem alignedItemTarget;
@@ -50,7 +52,8 @@ public class LayerContextMenu extends JPopupMenu {
     public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignmentBoardItem alignmentBoardItem, List<AlignmentBoardItem> multiSelectionItems) {
         this.alignmentBoardContext = alignmentBoardContext;
         this.alignmentBoardItem = alignmentBoardItem;
-        this.alignedItemTarget = RenderUtils.getObjectForItem(alignmentBoardItem);
+        this.domainHelper = new DomainHelper();
+        this.alignedItemTarget = domainHelper.getObjectForItem(alignmentBoardItem);
         this.multiSelectionItems = multiSelectionItems;
     }
 
@@ -295,7 +298,7 @@ public class LayerContextMenu extends JPopupMenu {
 
         List<AlignmentBoardItem> domainObjectList = new ArrayList<>();
         domainObjectList.add(alignmentBoardItem);
-        ABItem dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
+        ABItem dObj = domainHelper.getObjectForItem(alignmentBoardItem);
         String name = dObj.getName();
         if ( name.length() > 15 ) {
             name = name.substring( 0, 6 ) + "..." + name.substring( name.length() - 6 );
@@ -362,7 +365,7 @@ public class LayerContextMenu extends JPopupMenu {
             boolean canDelete = true;
             // User can't delete if they don't have write access
             String subject = SessionMgr.getSubjectKey();
-            ABItem dObj = RenderUtils.getObjectForItem(item);
+            ABItem dObj = domainHelper.getObjectForItem(item);
 
             if (!dObj.canWrite(subject)) {
                 canDelete = false;

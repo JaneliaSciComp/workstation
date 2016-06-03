@@ -68,7 +68,6 @@ import java.util.ArrayList;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
-import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.getObjectForItem;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -409,7 +408,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 // Add the compartment set, lazily, if it is not already under this board.
                 boolean hasCompartmentSet = false;
                 for ( AlignmentBoardItem child: context.getAlignmentBoardItems() ) {
-                    ABItem dObj = getObjectForItem(child);
+                    ABItem dObj = domainHelper.getObjectForItem(child);
                     if ( dObj.getName().startsWith("Compartment Set") ) {
                         log.info("Context has a compartment set called {}.", dObj.getName());
                         hasCompartmentSet = true;
@@ -708,7 +707,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             
             if (value instanceof AlignmentBoardItem) {
                 AlignmentBoardItem alignmentBoardItem = (AlignmentBoardItem)value;
-                ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+                ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
                 if (item == null) {
                     log.info("Null target for {}" , alignmentBoardItem.getTarget());
                 }
@@ -763,7 +762,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
-                    ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+                    ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
                     if ( fileStats != null  &&  alignmentBoardItem != null  &&  ( !(item instanceof ABCompartment) ) ) {
                         final Long itemId = item.getId();
                         double[] colorRGB = fileStats.getChannelAverages(itemId);
@@ -895,18 +894,18 @@ public class LayersPanel extends JPanel implements Refreshable {
                 protected void doStuff() throws Exception {
                     alignmentBoardItem.setVisible(isVisible);
 
-                    ABItem item = RenderUtils.getObjectForItem(alignmentBoardItem);
+                    ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
 
                     Collection<ABItem> affectedEntities = new ArrayList<>();
 
                     for(AlignmentBoardItem child : alignmentBoardItem.getChildren()) {
-                        ABItem childItem = RenderUtils.getObjectForItem(child);
+                        ABItem childItem = domainHelper.getObjectForItem(child);
                         affectedEntities.add( childItem );
                     }
 
                     // HOW to get the parent?
                     AlignmentBoardItem parentWrapper = null; //alignedItem.getParent();
-                    parentObject = getObjectForItem(alignmentBoardItem);
+                    parentObject = domainHelper.getObjectForItem(alignmentBoardItem);
                     if (parentWrapper!=null) {                        
                         if (parentWrapper instanceof AlignmentBoardItem) {
                             parent = parentWrapper;

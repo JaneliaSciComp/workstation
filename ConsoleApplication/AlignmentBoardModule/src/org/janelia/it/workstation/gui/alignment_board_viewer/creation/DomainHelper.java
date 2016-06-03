@@ -16,6 +16,8 @@ import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -28,6 +30,11 @@ import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -228,6 +235,34 @@ public class DomainHelper {
         return domainObjects;
     }
 
+    public ABItem getObjectForItem(AlignmentBoardItem item) {
+        AlignmentBoardReference ref = item.getTarget();
+        if (ref == null) {
+            log.warn("Null reference in item {}", item.getName());
+            return null;
+        }
+        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
+        if (ref == null || ref.getObjectRef() == null) {
+            throw new IllegalStateException("No object ref, or no target for item " + item.getName());
+        }
+        DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+        if (domainObject == null) {
+            return null;
+        }
+        if (domainObject instanceof CompartmentSet) {
+            CompartmentSet cs = (CompartmentSet) domainObject;
+            if (ref.getItemId() != null) {
+                return new ABCompartment(cs.getCompartment(ref.getItemId()));
+            } else {
+                return new ABCompartmentSet(cs);
+            }
+        } else if (domainObject instanceof Sample) {
+            return new ABSample((Sample) domainObject);
+        } else if (domainObject instanceof NeuronFragment) {
+            return new ABNeuronFragment((NeuronFragment) domainObject);
+        }
+        throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
+    }
     private void handleException(String message) {
         Exception ex = new Exception(message);
         SessionMgr.getSessionMgr().handleException(ex);

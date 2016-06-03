@@ -114,6 +114,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     private final AlignmentBoardSettings settingsData;
     private final ShutdownListener shutdownListener;
+    private final DomainHelper domainHelper = new DomainHelper();
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
     private final FileStats fileStats;
@@ -224,7 +225,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 
                 // Need to turn off all the items which do not stack in
                 // same space as the indicated value.
-                ABItem overlapGuide = RenderUtils.getObjectForItem(event.getItem());
+                ABItem overlapGuide = domainHelper.getObjectForItem(event.getItem());
                 Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
                 
                 Collection<Integer> overlappingMasks = null;

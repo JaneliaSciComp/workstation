@@ -134,7 +134,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             return null;
         }
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
-            ABItem abItem = RenderUtils.getObjectForItem(item);
+            ABItem abItem = domainHelper.getObjectForItem(item);
             if ( item.getTarget() != null
                     && abItem.getId() != null
                     && abItem.getId().equals(id)) {
@@ -142,7 +142,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             } else {
                 // Step in one more level.
                 for (AlignmentBoardItem childItem : item.getChildren()) {
-                    ABItem abChildItem = RenderUtils.getObjectForItem(item);
+                    ABItem abChildItem = domainHelper.getObjectForItem(item);
                     if (abChildItem.getId().equals(id)) {
                         return childItem;
                     }
@@ -160,7 +160,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     public AlignmentBoardItem getAlignmentBoardItemParent(Long childId) {
         AlignmentBoardItem rtnVal = null;
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
-            ABItem abItem = RenderUtils.getObjectForItem(item);
+            ABItem abItem = domainHelper.getObjectForItem(item);
             if (abItem.getId().equals(childId)) {
                 return null;
             }
@@ -224,7 +224,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     private AlignmentBoardItem getAlignmentBoardItemParent(Long childId, AlignmentBoardItem currentParent) {
         AlignmentBoardItem rtnVal = null;
         for (AlignmentBoardItem item: currentParent.getChildren()) {
-            ABItem abItem = RenderUtils.getObjectForItem(item);
+            ABItem abItem = domainHelper.getObjectForItem(item);
             if (abItem.getId().equals(childId)) {
                 rtnVal = currentParent;
             }

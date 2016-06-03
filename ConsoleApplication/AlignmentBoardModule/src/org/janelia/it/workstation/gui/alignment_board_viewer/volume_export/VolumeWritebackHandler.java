@@ -20,8 +20,8 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.FileExportLoadWorker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
@@ -56,6 +56,7 @@ public class VolumeWritebackHandler {
     private double gammaFactor;
     private byte[] backgroundColorArr;
     private File writeBackFile;
+    private DomainHelper domainHelper;
 
     private final Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
 
@@ -68,7 +69,7 @@ public class VolumeWritebackHandler {
             int filterSize,
             int maxNeurons
     ) {
-
+        this.domainHelper = new DomainHelper();
         this.cropCoords = cropCoords;
         this.renderMapping = renderMapping;
         this.completionListener = completionListener;
@@ -170,10 +171,10 @@ public class VolumeWritebackHandler {
         AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
         List<AlignmentBoardItem> children = abContext.getAlignmentBoard().getChildren();
         for ( AlignmentBoardItem nextChild: children ) {
-            ABItem dobj = RenderUtils.getObjectForItem(nextChild);
+            ABItem dobj = domainHelper.getObjectForItem(nextChild);
             pw.println("Container Item: NAME=" + dobj.getName() + ", ID=" + dobj.getId());
             for ( AlignmentBoardItem grandChild: nextChild.getChildren() ) {
-                ABItem gcDObj = RenderUtils.getObjectForItem(grandChild);
+                ABItem gcDObj = domainHelper.getObjectForItem(grandChild);
                 pw.println("Neuron: ID=" + gcDObj.getId() + " NAME=" + gcDObj.getName() + " TYPE=" + gcDObj.getType() + " OWNER=" + gcDObj.getOwnerKey());
             }
         }

@@ -12,7 +12,7 @@ import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.netbeans.swing.outline.Outline;
 import org.netbeans.swing.outline.OutlineModel;
 import org.slf4j.Logger;
@@ -29,6 +29,7 @@ public class OutlineExpansionState {
     
     private Outline outline;
 	private final Set<List<Long>> expanded = new HashSet<>();
+    private final DomainHelper domainHelper = new DomainHelper();
 	private Integer selectedRow;
 	
 	boolean startedAllWorkers = false;
@@ -62,7 +63,7 @@ public class OutlineExpansionState {
                 }
                 else if (obj instanceof AlignmentBoardItem) {
                     AlignmentBoardItem item = (AlignmentBoardItem)obj;
-                    ABItem abItem = RenderUtils.getObjectForItem(item);
+                    ABItem abItem = domainHelper.getObjectForItem(item);
                     path.add(abItem.getId());
                 }
                 else {

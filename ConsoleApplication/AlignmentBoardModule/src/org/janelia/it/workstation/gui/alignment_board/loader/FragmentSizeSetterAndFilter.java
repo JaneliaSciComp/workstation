@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
@@ -15,6 +14,7 @@ import java.io.FileInputStream;
 import java.util.*;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,6 +29,7 @@ public class FragmentSizeSetterAndFilter {
     private Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
     private long thresholdVoxelCount;
     private long thresholdNeuronCount;
+    private DomainHelper domainHelper = new DomainHelper();
 
     private Map<Long,Long> renDataBeanItemParentIdToChildCount;
 
@@ -137,7 +138,7 @@ public class FragmentSizeSetterAndFilter {
                                 );
                             if ( parent != null ) {
 
-                                ABItem abItem = RenderUtils.getObjectForItem(parent);
+                                ABItem abItem = domainHelper.getObjectForItem(parent);
                                 long parentId = abItem.getId();
 
                                 Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
