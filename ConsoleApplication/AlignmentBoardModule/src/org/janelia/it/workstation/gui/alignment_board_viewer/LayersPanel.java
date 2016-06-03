@@ -367,14 +367,6 @@ public class LayersPanel extends JPanel implements Refreshable {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("load alignment board with id: {}",alignmentBoardId);
-// TODO : must implement prior to any board able to open.                
-//                Entity commonRoot = ModelMgr.getModelMgr().getOwnedCommonRootByName(ALIGNMENT_BOARDS_FOLDER);
-//                ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
-//                RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
-//                RootedEntity abRootedEntity = commonRootedEntity.getChildById(alignmentBoardId);
-//                if (abRootedEntity==null) {
-//                    throw new IllegalStateException("Alignment board does not exist");
-//                }
                 AlignmentBoard aboard = (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
                 AlignmentContext alignmentContext = new AlignmentContext();
                 alignmentContext.setAlignmentSpace( aboard.getAlignmentSpace() );
@@ -384,56 +376,6 @@ public class LayersPanel extends JPanel implements Refreshable {
                 log.debug("Loading ancestors for alignment board: {}", abContext);
                 //See Below: loadAncestors(abContext);
                 loadCompartmentSet(abContext);
-            }
-
-//TODO: not convinced this is necessary in DomainObject paradigm.            
-//            private void loadAncestors(EntityWrapper wrapper) throws Exception {
-//                log.trace("loadAncestors: {}",wrapper);
-//                if ( wrapper == null || abContext == null ) {
-//                    log.error("Null wrapper {} or abContext {}.", wrapper, abContext);
-//                    return;
-//                }
-//                wrapper.loadContextualizedChildren(abContext.getAlignmentContext());
-//                for(EntityWrapper childWrapper : wrapper.getChildren()) {
-//                    loadAncestors(childWrapper);
-//                    if (childWrapper instanceof AlignedItem) {
-//                        AlignedItem alignedItem = (AlignedItem)childWrapper;
-//                        loadAncestors(alignedItem.getItemWrapper());
-//                    }
-//                }
-//            }
-
-            private void loadCompartmentSet(AlignmentBoardContext context) throws Exception {
-                log.trace("loadCompartmentSet: {}", context);
-                // Add the compartment set, lazily, if it is not already under this board.
-                boolean hasCompartmentSet = false;
-                for ( AlignmentBoardItem child: context.getAlignmentBoardItems() ) {
-                    ABItem dObj = domainHelper.getObjectForItem(child);
-                    if ( dObj.getName().startsWith("Compartment Set") ) {
-                        log.info("Context has a compartment set called {}.", dObj.getName());
-                        hasCompartmentSet = true;
-                    }
-                }
-
-                if ( ! hasCompartmentSet ) {
-                    AlignmentContext targetSpace = abContext.getAlignmentContext();
-                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getSimpleName());
-                    if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
-
-                        for(DomainObject compartmentSetDO : compartmentSets) {
-                            AlignmentContext compartmentSetSpace = new AlignmentContext();
-                            CompartmentSet compartmentSet = (CompartmentSet)compartmentSetDO;
-                            compartmentSetSpace.setAlignmentSpace(compartmentSet.getAlignmentSpace());
-
-                            if (targetSpace.equals(compartmentSetSpace)) {
-                                if (!compartmentSet.getCompartments().isEmpty()) {
-                                    abContext.addDomainObject(compartmentSet, domainHelper.getObjectiveForAlignmentContext(targetSpace));
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             @Override
@@ -460,6 +402,44 @@ public class LayersPanel extends JPanel implements Refreshable {
                 loadInProgress.set(false);
                 showNothing();
             }
+            
+            private void loadCompartmentSet(AlignmentBoardContext context) throws Exception {
+                log.info("loadCompartmentSet: {}", context);
+                // Add the compartment set, lazily, if it is not already under this board.
+                boolean hasCompartmentSet = false;
+                for (AlignmentBoardItem child : context.getAlignmentBoardItems()) {
+                    ABItem dObj = domainHelper.getObjectForItem(child);
+                    if (dObj.getName().startsWith("Compartment Set")) {
+                        log.info("Context has a compartment set called {}.", dObj.getName());
+                        hasCompartmentSet = true;
+                    }
+                }
+
+                if (!hasCompartmentSet) {
+                    log.info("No compartment set found");
+                    AlignmentContext targetSpace = abContext.getAlignmentContext();
+                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getSimpleName());
+                    if (compartmentSets != null && compartmentSets.size() > 0) {
+
+                        CompatibilityChecker checker = new CompatibilityChecker();
+                        for (DomainObject compartmentSetDO : compartmentSets) {
+                            AlignmentContext compartmentSetSpace = new AlignmentContext();
+                            CompartmentSet compartmentSet = (CompartmentSet) compartmentSetDO;
+                            compartmentSetSpace.setAlignmentSpace(compartmentSet.getAlignmentSpace());
+                            compartmentSetSpace.setImageSize(compartmentSet.getImageSize());
+                            compartmentSetSpace.setOpticalResolution(compartmentSet.getOpticalResolution());
+                            if (checker.isEqual(targetSpace, compartmentSetSpace)) {
+                                log.info("Adding compartment set for space {}.", compartmentSetSpace.getAlignmentSpace());
+                                if (!compartmentSet.getCompartments().isEmpty()) {
+                                    abContext.addDomainObject(compartmentSet, domainHelper.getObjectiveForAlignmentContext(targetSpace));
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         };
         
         // Wait for any EDT operations to finish first

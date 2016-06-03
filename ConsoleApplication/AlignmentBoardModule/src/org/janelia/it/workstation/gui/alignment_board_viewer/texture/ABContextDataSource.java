@@ -7,6 +7,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.*;
-import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -37,7 +37,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private ABCompartmentSet currentCompartmentSet;
     private AlignmentBoardItem sampleABItem;
     private AlignmentBoardItem compartmentSetABItem;
-    private DomainHelper domainHelper;
+    private final DomainHelper domainHelper;
 
     private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {

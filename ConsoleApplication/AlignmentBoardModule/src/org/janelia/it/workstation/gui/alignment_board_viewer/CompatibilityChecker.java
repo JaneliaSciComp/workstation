@@ -84,6 +84,13 @@ public class CompatibilityChecker {
         }
         return fragmentCount;
     }
+    
+    /** Equality convenience method, since changing equals() is impractical on domain objects. */
+    public boolean isEqual(AlignmentContext contextA, AlignmentContext contextB) {
+        return contextA.getImageSize().equals(contextB.getImageSize())  &&
+               contextA.getAlignmentSpace().equals(contextB.getAlignmentSpace())  &&               
+               contextA.getOpticalResolution().equals(contextB.getOpticalResolution());
+    }
 
     /**
      * Check if this sample has a context compatible with the 'one of momentum'.  Trap any exceptions.
