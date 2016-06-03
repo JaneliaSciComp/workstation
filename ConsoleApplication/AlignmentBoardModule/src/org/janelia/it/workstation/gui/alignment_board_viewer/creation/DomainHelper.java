@@ -243,7 +243,8 @@ public class DomainHelper {
         }
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         if (ref == null || ref.getObjectRef() == null) {
-            throw new IllegalStateException("No object ref, or no target for item " + item.getName());
+            log.error("No object ref, or no target for item " + item.getName());
+            return null;
         }
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
         if (domainObject == null) {

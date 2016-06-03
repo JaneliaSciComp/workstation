@@ -8,6 +8,7 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
@@ -26,7 +27,6 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemC
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.model.domain.Compartment;
 import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
@@ -78,7 +78,8 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         log.info("Adding new aligned entity: {}, under objective {}.", domainObject.getName(), objective);
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<>();
-        
+
+        boolean itemsAdded = true;
         if (domainObject instanceof Sample) {
             if (! addNewSample(domainObject, events))
                 return;
@@ -86,12 +87,12 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         else if (domainObject instanceof VolumeImage  &&  domainObject instanceof Image) {
             log.warn("Not handling reference " + domainObject.getName() + ".  Not yet supported.");
             if (! addNewReference(domainObject, objective, events)) {
-                return;
+                itemsAdded = false;
             }
         }
         else if (domainObject instanceof NeuronFragment) {
             if (! addNewNeuronFragment(domainObject, events)) {
-                return;
+                itemsAdded = false;
             }
         }
         else if (domainObject instanceof CompartmentSet) {
@@ -99,7 +100,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             AlignmentBoardItem compartmentSetAlignmentBoardItem = getPreviouslyAddedItem(compartmentSet);
             
             if (compartmentSetAlignmentBoardItem == null) {
-                addItem(CompartmentSet.class, compartmentSet, events);                
+                addNewCompartmentSet(compartmentSet, events);                
             }
             else {
                 events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignmentBoardItem, ChangeType.VisibilityChange));
@@ -107,10 +108,15 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 
         }
         else if (domainObject instanceof Compartment) {
+            itemsAdded = false;
             log.warn("Not handling compartment " + domainObject.getName() + ".  Not yet supported.");
         }
         else {
             throw new IllegalStateException("Cannot add entity of type "+domainObject.getType()+" to the alignment board.");
+        }
+
+        if (itemsAdded) {
+            domainHelper.saveAlignmentBoard(alignmentBoard);
         }
 
         // Queue up all events accumulated above.
@@ -288,6 +294,24 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
+    private boolean addNewCompartmentSet(CompartmentSet compartmentSet, final Collection<AlignmentBoardEvent> events) throws Exception {
+        if (!compatibilityChecker.isCompartmentSetCompatible(context, compartmentSet)) {
+            return false;
+        }
+        AlignmentBoardItem oldItem = this.getPreviouslyAddedItem(compartmentSet);
+        if (oldItem == null) {
+            List<Compartment> compartments = compartmentSet.getCompartments();
+            AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events);
+            for (Compartment compartment: compartments) {
+                addCompartment(Compartment.class, compartmentSetItem, compartment, events);
+            }            
+            
+        } else {
+            events.add(new AlignmentBoardItemChangeEvent(this, oldItem, ChangeType.VisibilityChange));
+        }
+        return true;
+    }
+
     private boolean addNewReference(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) {
 // TODO find the sample entity.
 // Holding off on this.  Let's get some neurons first.
@@ -326,15 +350,30 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
         parentItem.getChildren().add(alignmentBoardItem);
-        domainHelper.saveAlignmentBoard(alignmentBoard);
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));        
         return alignmentBoardItem;
     }
 
+    private AlignmentBoardItem addCompartment(Class modelClass, AlignmentBoardItem parentItem, Compartment domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
+        AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
+        // set color?  set inclusion status?
+        parentItem.getChildren().add(alignmentBoardItem);
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
+        return alignmentBoardItem;
+    }
+
     private AlignmentBoardItem createAlignmentBoardItem(DomainObject domainObject, Class modelClass) {
+        return createAlignmentBoardItem(domainObject.getId(), modelClass);
+    }
+    
+    private AlignmentBoardItem createAlignmentBoardItem(Compartment compartment, Class modelClass) {
+        return createAlignmentBoardItem(compartment.getId(), modelClass);
+    }
+    
+    private AlignmentBoardItem createAlignmentBoardItem(Long id, Class modelClass) {
         AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
         Reference reference = new Reference();
-        reference.setTargetId(domainObject.getId());
+        reference.setTargetId(id);
         reference.setTargetClassName(modelClass.getSimpleName());
         alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
