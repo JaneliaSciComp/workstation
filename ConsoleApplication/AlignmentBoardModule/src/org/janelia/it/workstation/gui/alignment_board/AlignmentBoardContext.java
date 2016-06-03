@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.alignment_board;
 
-import java.awt.HeadlessException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +17,6 @@ import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
