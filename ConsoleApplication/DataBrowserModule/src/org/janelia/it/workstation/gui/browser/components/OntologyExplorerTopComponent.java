@@ -40,6 +40,7 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AutoAnnotationPermissionDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.BulkAnnotationPermissionDialog;
@@ -90,7 +91,6 @@ import com.google.common.eventbus.Subscribe;
 )
 @TopComponent.Description(
         preferredID = OntologyExplorerTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true, position = 500)
@@ -225,8 +225,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         
         // Prepare the key binding dialog box
         this.keyBindDialog = new KeyBindDialog();
-        keyBindDialog.pack();
-
         keyBindDialog.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentHidden(ComponentEvent e) {
@@ -371,7 +369,18 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         }
     }
-    
+
+    @Subscribe
+    public void objectDeleted(DomainObjectRemoveEvent event) {
+        if (event.getDomainObject() instanceof Ontology) {
+            Ontology deletedOntology = (Ontology)event.getDomainObject();
+            ontologies.remove(deletedOntology);
+            if (ontologyNode!=null && ontologyNode.getId().equals(deletedOntology.getId())) {
+                showOntology(null, false);
+            }
+        }
+    }
+
     @Subscribe
     public void objectCreated(DomainObjectCreateEvent event) {
         final DomainObject domainObject = event.getDomainObject();
