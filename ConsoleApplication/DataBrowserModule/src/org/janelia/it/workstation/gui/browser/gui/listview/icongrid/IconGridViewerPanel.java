@@ -283,8 +283,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 if (!button.isSelected()) {
                     buttonSelection(button, false, false);
                 }
-                getContextualPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-                e.consume();
+                JPopupMenu popupMenu = getContextualPopupMenu();
+                if (popupMenu!=null) {
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    e.consume();
+                }
             }
         }
 

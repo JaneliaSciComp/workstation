@@ -89,10 +89,12 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
 
         Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
-            this.source = new DragSource();
-            source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
-            // TODO: this class should not know about DomainObjects
-            setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel));
+            if (selectionModel instanceof DomainObjectSelectionModel) {
+                this.source = new DragSource();
+                source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
+                // TODO: this class should not know about DomainObjects
+                setTransferHandler(new DomainObjectTransferHandler((ImageModel<DomainObject,Reference>)imageModel, (DomainObjectSelectionModel)selectionModel));
+            }
         }
 
         GridBagConstraints c = new GridBagConstraints();

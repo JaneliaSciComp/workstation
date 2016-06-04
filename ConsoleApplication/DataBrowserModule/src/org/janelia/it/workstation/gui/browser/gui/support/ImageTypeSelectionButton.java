@@ -61,7 +61,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         populate(Arrays.asList(domainObject));
     }
     
-    public void populate(Collection<DomainObject> domainObjects) {
+    public void populate(Collection<? extends Object> sourceList) {
         
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
@@ -69,16 +69,15 @@ public class ImageTypeSelectionButton extends DropDownButton {
         
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
             
-        for(DomainObject domainObject : domainObjects) {
-            Object source = domainObject;
-            if (domainObject instanceof Sample) {
-                Sample sample = (Sample)domainObject;
+        for(Object source : sourceList) {
+            if (source instanceof Sample) {
+                Sample sample = (Sample)source;
+                log.debug("Source is sample: {}",sample.getId());
                 HasFiles result = SampleUtils.getResult(sample, currResult);
                 if (result!=null) {
                     source = result;
                 }
             }
-            log.debug("Source: {} of {}",currResult,domainObject.getId());
             if (source instanceof HasFileGroups) {
                 Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFileGroups) source);
                 log.debug("Source has file groups: {}",typeNames);
@@ -96,7 +95,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         
         ButtonGroup group = new ButtonGroup();
         
-        log.debug("{} domain objects have {} type names",domainObjects.size(),countedTypeNames.elementSet().size());
+        log.debug("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
             log.trace("Type {} has count={}",typeName,countedTypeNames.count(typeName));
@@ -119,6 +118,18 @@ public class ImageTypeSelectionButton extends DropDownButton {
         // Default type
         if (currImageType == null) {
             this.currImageType = FileType.SignalMip.name();
+            // If there are no signal MIPs, try something else
+            if (countedTypeNames.count(currImageType)==0) {
+                log.info("No signal MIPs, looking for another default");
+                for (FileType fileType : FileType.values()) {
+                    if (countedTypeNames.count(fileType)>0) {
+                        this.currImageType = fileType.name();
+                        log.info("Choosing default image type: {}",currImageType);
+                        break;
+                    }
+                }
+            }
+
         }
     }
     

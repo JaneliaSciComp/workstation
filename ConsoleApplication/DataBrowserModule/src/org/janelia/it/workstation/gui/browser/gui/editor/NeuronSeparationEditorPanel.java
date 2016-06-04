@@ -3,17 +3,11 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -21,14 +15,13 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.jackrabbit.webdav.WebdavRequest;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -39,16 +32,7 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.tasks.neuronSeparator.NeuronWeightsTask;
-import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
-import org.janelia.it.jacs.shared.img_3d_loader.V3dSignalFileLoader;
 import org.janelia.it.jacs.shared.utils.ReflectionUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
@@ -68,15 +52,9 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
-import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -211,15 +189,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
         });
         configPanel.addConfigComponent(enableVisibilityCheckBox);
-        openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
-        openInNAButton.setFocusable(false);
-        openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
-        openInNAButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openInNA();
-            }
-        });
 
         resultsPanel = new PaginatedResultsPanel(selectionModel, this) {
             @Override
