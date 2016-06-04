@@ -5,7 +5,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
@@ -54,6 +53,8 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                 // Worry more about this later.
                 if (domainObject!=null) {
                     if (domainObject instanceof Sample) {
+						this.sampleMember = domainObject;
+						this.sample = (Sample)domainObject;
                         this.contexts = new DomainHelper().getAvailableAlignmentContexts(sample);
                     }
                     else if (domainObject instanceof NeuronFragment) {
