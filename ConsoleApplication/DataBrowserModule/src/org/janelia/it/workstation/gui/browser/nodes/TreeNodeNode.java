@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
+import org.janelia.it.workstation.gui.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -161,6 +162,8 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
+        actions.add(new OpenInNewViewerAction());
+        actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
@@ -168,6 +171,7 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
+        actions.add(SearchHereAction.get());
         actions.add(DownloadAction.get());
         return actions.toArray(new Action[0]);
     }

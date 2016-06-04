@@ -27,7 +27,7 @@ public abstract class NodePresenterAction extends NodeAction {
     public HelpCtx getHelpCtx() {
         return new HelpCtx("");
     }
-    
+
     @Override
     protected void performAction (Node[] activatedNodes) {
         // Implemented by popup presenter
