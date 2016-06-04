@@ -5,13 +5,18 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import javax.swing.JComponent;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -48,8 +53,10 @@ import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
@@ -140,11 +147,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-//        for ( JComponent item: getOpenForContextItems() ) {
-//            add(item);
-//        }
-//        add(getWrapEntityItem());
-//
+        for ( JComponent item: getOpenForContextItems() ) {
+            add(item);
+        }
+        //add(getWrapEntityItem());
         
         add(getSpecialAnnotationSession());
     }
@@ -868,76 +874,74 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return specialAnnotationSession;
     }
 
-//  /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-//  public Collection<JComponent> getOpenForContextItems() {
-//      TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
-//      if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-//          final Entity entity = rootedEntity.getEntity();
-//          if (entity!=null) {
-//
-//              final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-//              Collection<EntityAcceptor> entityAcceptors
-//                      = helper.findHandler(
-//                              entity, 
-//                              EntityAcceptor.class,
-//                              EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
-//                      );
-//              boolean lastItemWasSeparator = false;
-//              int expectedCount = 0;
-//              List<JComponent> actionItemList = new ArrayList<>();
-//              for ( EntityAcceptor entityAcceptor: entityAcceptors ) {                    
-//                  final Integer order = entityAcceptor.getOrder();
-//                  if (entityAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
-//                      orderedMap.put(order - 1, new JSeparator());
-//                      expectedCount ++;
-//                  }
-//                  JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
-//                  item.addActionListener( new EntityAcceptorActionListener( entityAcceptor ) );
-//                  orderedMap.put(order, item);
-//                  actionItemList.add( item ); // Bail alternative if ordering fails.
-//                  expectedCount ++;
-//                  if (entityAcceptor.isSucceededBySeparator()) {
-//                      orderedMap.put(order + 1, new JSeparator());
-//                      expectedCount ++;
-//                      lastItemWasSeparator = true;
-//                  }
-//                  else {
-//                      lastItemWasSeparator = false;
-//                  }
-//              }
-//              
-//              // This is the bail strategy for order key clashes.
-//              if ( orderedMap.size() < expectedCount) {
-//                  log.warn("With menu items and separators, expected {} but added {} open-for-context items." +
-//                          "  This indicates an order key clash.  Please check the getOrder methods of all impls." +
-//                          "  Returning an unordered version of item list.",
-//                          expectedCount, orderedMap.size());
-//                  return actionItemList;
-//              }
-//          }
-//      }
-//      return orderedMap.values();
-//  }
-//    public class EntityAcceptorActionListener implements ActionListener {
-//
-//        private EntityAcceptor entityAcceptor;
-//
-//        public EntityAcceptorActionListener(EntityAcceptor entityAcceptor) {
-//            this.entityAcceptor = entityAcceptor;
-//        }
-//
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            try {
-//                Entity entity = rootedEntity.getEntity();
-//                // Pickup the sought value.
-//                entityAcceptor.acceptEntity(entity);
-//            } catch (Exception ex) {
-//                ModelMgr.getModelMgr().handleException(ex);
-//            }
-//
-//        }
-//    }
+	/**
+	 * Makes the item for showing the domain object in its own viewer iff the
+	 * object type is correct.
+	 */
+	public Collection<JComponent> getOpenForContextItems() {
+		TreeMap<Integer, JComponent> orderedMap = new TreeMap<>();
+		if (contextObject != null) {
+
+			final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
+			Collection<DomainObjectAcceptor> domainObjectAcceptors
+					= helper.findHandler(
+							contextObject,
+							DomainObjectAcceptor.class,
+							DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH
+					);
+			boolean lastItemWasSeparator = false;
+			int expectedCount = 0;
+			List<JComponent> actionItemList = new ArrayList<>();
+			for (DomainObjectAcceptor entityAcceptor : domainObjectAcceptors) {
+				final Integer order = entityAcceptor.getOrder();
+				if (entityAcceptor.isPrecededBySeparator() && (!lastItemWasSeparator)) {
+					orderedMap.put(order - 1, new JSeparator());
+					expectedCount++;
+				}
+				JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
+				item.addActionListener(new DomainObjectAcceptorActionListener(entityAcceptor));
+				orderedMap.put(order, item);
+				actionItemList.add(item); // Bail alternative if ordering fails.
+				expectedCount++;
+				if (entityAcceptor.isSucceededBySeparator()) {
+					orderedMap.put(order + 1, new JSeparator());
+					expectedCount++;
+					lastItemWasSeparator = true;
+				} else {
+					lastItemWasSeparator = false;
+				}
+			}
+
+			// This is the bail strategy for order key clashes.
+			if (orderedMap.size() < expectedCount) {
+				java.util.logging.Logger.getLogger("ContextMenu").log(Level.WARNING, "With menu items and separators, expected {0} but added {1}" + " open-for-context items."
+						+ "  This indicates an order key clash.  Please check the getOrder methods of all impls."
+						+ "  Returning an unordered version of item list.", new Object[]{expectedCount, orderedMap.size()});
+				return actionItemList;
+			}
+		}
+		return orderedMap.values();
+	}
+
+	public class DomainObjectAcceptorActionListener implements ActionListener {
+
+		private DomainObjectAcceptor domainObjectAcceptor;
+
+		public DomainObjectAcceptorActionListener(DomainObjectAcceptor domainObjectAcceptor) {
+			this.domainObjectAcceptor = domainObjectAcceptor;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				// Pickup the sought value.
+				domainObjectAcceptor.acceptDomainObject(domainObject);
+			} catch (Exception ex) {
+				ModelMgr.getModelMgr().handleException(ex);
+			}
+
+		}
+	}
 
     private HasFiles getSingleResult() {
         HasFiles result = null;

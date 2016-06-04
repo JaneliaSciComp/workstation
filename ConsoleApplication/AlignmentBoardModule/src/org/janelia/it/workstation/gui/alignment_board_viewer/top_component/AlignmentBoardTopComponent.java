@@ -60,7 +60,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         setName(Bundle.CTL_AlignmentBoardTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
-        establishEntityAcceptor();
+        establishDomainObjectAcceptor();
     }
 
     @SuppressWarnings("unused")
@@ -76,7 +76,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     }
 
     //------------------------------------------HELPERS
-    private void establishEntityAcceptor() {
+    private void establishDomainObjectAcceptor() {
         Launcher launcher = new Launcher();
         this.associateLookup( Lookups.singleton( launcher ) );
         logger.info("Established acceptor");
