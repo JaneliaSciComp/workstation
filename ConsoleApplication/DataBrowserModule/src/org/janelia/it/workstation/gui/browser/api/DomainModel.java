@@ -137,7 +137,17 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject) {
-        return putOrUpdate(domainObject, false);
+        return putOrUpdate(Arrays.asList(domainObject), false).get(0);
+    }
+
+    /**
+     * Call putOrUpdate(domainObjects, invalidateTree)
+     *
+     * @param domainObject
+     * @return canonical domain object instance
+     */
+    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
+        return putOrUpdate(Arrays.asList(domainObject), invalidateTree).get(0);
     }
 
     /**
@@ -147,39 +157,48 @@ public class DomainModel {
      * If the cache is updated, the object will be invalidated. If invalidateTree is true, then all of its descendants
      * will also be invalidated.
      *
-     * @param domainObject
+     * @param domainObjects
      * @param invalidateTree
      * @param <T>
      * @return
      */
-    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
-        if (domainObject == null) {
+    private <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects, boolean invalidateTree) {
+        if (domainObjects == null || domainObjects.isEmpty()) {
             // This is a null object, which cannot go into the cache
             log.debug("putOrUpdate: object is null");
             return null;
         }
+        List<T> canonicalObjects = new ArrayList<>();
+        List<T> invalidatedObjects = new ArrayList<>();
         synchronized (this) {
-            Reference id = Reference.createFor(domainObject);
-            DomainObject canonicalObject = objectCache.getIfPresent(id);
-            if (canonicalObject != null) {
-                if (canonicalObject!=domainObject) {
-                    canonicalObject = domainObject;
-                    log.debug("putOrUpdate: Updating cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
-                    objectCache.put(id, domainObject);
-                    notifyDomainObjectInvalidated(canonicalObject, invalidateTree);
+            for(T domainObject : domainObjects) {
+                Reference id = Reference.createFor(domainObject);
+                T canonicalObject = (T)objectCache.getIfPresent(id);
+                if (canonicalObject != null) {
+                    if (canonicalObject != domainObject) {
+                        canonicalObject = domainObject;
+                        log.debug("putOrUpdate: Updating cached instance: {} {}", id, DomainUtils.identify(canonicalObject));
+                        objectCache.put(id, domainObject);
+                        invalidatedObjects.add(domainObject);
+                    }
+                    else {
+                        log.debug("putOrUpdate: Returning cached instance: {} {}", id, DomainUtils.identify(canonicalObject));
+                    }
                 }
                 else {
-                    log.debug("putOrUpdate: Returning cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
+                    canonicalObject = domainObject;
+                    log.debug("putOrUpdate: Caching: {} {}", id, DomainUtils.identify(canonicalObject));
+                    objectCache.put(id, domainObject);
                 }
-            }
-            else {
-                canonicalObject = domainObject;
-                log.debug("putOrUpdate: Caching: {} {}",id,DomainUtils.identify(canonicalObject));
-                objectCache.put(id, domainObject);
+
+                canonicalObjects.add(canonicalObject);
             }
 
-            return (T)canonicalObject;
+            if (!invalidatedObjects.isEmpty()) {
+                notifyDomainObjectsInvalidated(invalidatedObjects, invalidateTree);
+            }
         }
+        return canonicalObjects;
     }
 
     /**
@@ -227,7 +246,7 @@ public class DomainModel {
         for (DomainObject domainObject : objects) {
             invalidateInternal(domainObject);
         }
-        notifyDomainObjectsInvalidated(objects);
+        notifyDomainObjectsInvalidated(objects, false);
     }
 
     private void invalidateInternal(DomainObject domainObject) {
@@ -386,16 +405,17 @@ public class DomainModel {
         for(Reference ref : references) {
             T domainObject = map.get(ref);
             if (domainObject!=null) {
-                domainObjects.add(putOrUpdate(domainObject));
+                domainObjects.add(domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
             }
         }
 
+        List<T> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) if (TIMER) w.stop("getDomainObjects(references)");
-        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
-        return domainObjects;
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedRefs.size());
+        return canonicalObjects;
     }
 
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
@@ -896,26 +916,24 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
     }
 
-    private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects) {
+    private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());
         }
-        Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(objects));
-    }
 
-    private void notifyDomainObjectInvalidated(DomainObject domainObject, boolean invalidateTree) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating EntityInvalidationEvent for {}", DomainUtils.identify(domainObject));
-        }
         Collection<DomainObject> invalidated = new ArrayList<>();
         if (invalidateTree) {
-            addTree(invalidated, domainObject);
+            for(DomainObject domainObject : objects) {
+                addTree(invalidated, domainObject);
+            }
         }
         else {
-            invalidated.add(domainObject);
+            invalidated.addAll(objects);
         }
 
-        Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
+        if (!invalidated.isEmpty()) {
+            Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
+        }
     }
 
     private void addTree(Collection<DomainObject> objects, DomainObject domainObject) {

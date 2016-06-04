@@ -251,7 +251,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         this.domainObjectList = objects;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
-        
+
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
@@ -305,17 +305,26 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+        log.debug("Searching {} for {}",domainObject.getName(),text);
+
+        String tupper = text.toUpperCase();
+
+        // Exact matches on id or name always work
+        if (domainObject.getId().toString().equals(text) || domainObject.getName().toUpperCase().equals(tupper)) {
+            return true;
+        }
 
         String name = getImageModel().getImageTitle(domainObject);
-        if (name.toUpperCase().contains(text.toUpperCase())) {
+        if (name!=null && name.toUpperCase().contains(tupper)) {
             return true;
         }
 
         for(Annotation annotation : resultPage.getAnnotations(domainObject.getId())) {
-            if (annotation.getName().toUpperCase().contains(text.toUpperCase())) {
+            if (annotation.getName().toUpperCase().contains(tupper)) {
                 return true;
             }
         }
+
         return false;
     }
 

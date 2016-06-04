@@ -367,7 +367,7 @@ public class FilterEditorPanel extends JPanel
 
     public synchronized void performSearch(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
 
-        log.info("Performing search");
+        log.debug("Performing search with isUserDriven={}",isUserDriven);
         if (searchConfig.getSearchClass()==null) return;
 
         SimpleWorker worker = new SimpleWorker() {
@@ -779,6 +779,7 @@ public class FilterEditorPanel extends JPanel
             refreshSearchResults(false);
         }
         else {
+            log.info("{} objects invalidated",event.getDomainObjects().size());
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
@@ -792,7 +793,7 @@ public class FilterEditorPanel extends JPanel
                 else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
                     log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
                     refreshSearchResults(false);
-                    return;
+                    break;
                 }
             }
         }

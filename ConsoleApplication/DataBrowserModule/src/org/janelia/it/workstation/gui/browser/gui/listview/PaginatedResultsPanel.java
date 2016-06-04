@@ -556,6 +556,9 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 searcher = new ResultIteratorFind(resultIterator) {
                     @Override
                     protected boolean matches(ResultPage resultPage, DomainObject currObject) {
+                        if (userRequestedCancel()) {
+                            return true;
+                        }
                         return resultsView.matches(resultPage, currObject, text);
                     }
                 };
@@ -590,6 +593,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             }
         };
 
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving filter results...", ""));
         worker.execute();
 
     }
