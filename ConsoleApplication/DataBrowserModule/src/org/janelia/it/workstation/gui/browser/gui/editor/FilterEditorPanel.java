@@ -735,7 +735,6 @@ public class FilterEditorPanel extends JPanel
             refreshSearchResults(false);
         }
         else {
-            log.info("{} objects invalidated",event.getDomainObjects().size());
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
