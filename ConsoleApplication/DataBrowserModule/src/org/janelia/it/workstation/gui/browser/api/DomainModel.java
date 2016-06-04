@@ -202,20 +202,6 @@ public class DomainModel {
     }
 
     /**
-     * Call putOrUpdate on all the objects in a given collection.
-     *
-     * @param objects
-     * @return canonical domain object instances
-     */
-    private List<DomainObject> putOrUpdateAll(Collection<? extends DomainObject> objects) {
-        List<DomainObject> putObjects = new ArrayList<>();
-        for (DomainObject domainObject : objects) {
-            putObjects.add(putOrUpdate(domainObject));
-        }
-        return putObjects;
-    }
-
-    /**
      * Clear the entire cache without raising any events. This is basically only useful for changing logins.
      */
     public void invalidateAll() {
@@ -334,7 +320,7 @@ public class DomainModel {
                 DomainObject domainObject = loadDomainObject(id);
                 if (domainObject!=null) objs.add(domainObject);
             }
-            return putOrUpdateAll(objs);
+            return putOrUpdate(objs, false);
         }
     }
 
@@ -479,16 +465,17 @@ public class DomainModel {
             Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
-                domainObjects.add(putOrUpdate(domainObject));
+                domainObjects.add(domainObject);
             }
             else {
                 unsatisfiedIds.add(id);
             }
         }
 
+        List<DomainObject> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) w.stop("getDomainObjects(className,ids)");
-        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
-        return domainObjects;
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedIds.size());
+        return canonicalObjects;
     }
     
     public List<DomainObject> getAllDomainObjectsByClass(String className) {
@@ -550,14 +537,12 @@ public class DomainModel {
     }
 
     public List<DataSet> getDataSets() {
-        List<DataSet> dataSets = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (DataSet dataSet : sampleFacade.getDataSets()) {
-            dataSets.add(putOrUpdate(dataSet));
-        }
-        Collections.sort(dataSets, new DomainObjectComparator());
+        List<DataSet> dataSets = new ArrayList<>(sampleFacade.getDataSets());
+        List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
+        Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getDataSets");
-        return dataSets;
+        return canonicalDataSets;
     }
     
     public List<LSMImage> getLsmsForSample(Sample sample) {
@@ -600,14 +585,12 @@ public class DomainModel {
      * @return collection of ontologies
      */
     public List<Ontology> getOntologies() {
-        List<Ontology> ontologies = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (Ontology ontology : ontologyFacade.getOntologies()) {
-            ontologies.add(putOrUpdate(ontology));
-        }
-        Collections.sort(ontologies, new DomainObjectComparator());
+        Collection<Ontology> ontologies = ontologyFacade.getOntologies();
+        List<Ontology> canonicalOntologies = putOrUpdate(ontologies, false);
+        Collections.sort(canonicalOntologies, new DomainObjectComparator());
         if (TIMER) w.stop("getOntologies");
-        return ontologies;
+        return canonicalOntologies;
     }
 
     /**
@@ -821,14 +804,12 @@ public class DomainModel {
     }
 
     public List<LineRelease> getLineReleases() {
-        List<LineRelease> releases = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (LineRelease release : sampleFacade.getLineReleases()) {
-            releases.add(putOrUpdate(release));
-        }
-        Collections.sort(releases, new DomainObjectComparator());
+        List<LineRelease> releases = sampleFacade.getLineReleases();
+        List<LineRelease> canonicalReleases = putOrUpdate(releases, false);
+        Collections.sort(canonicalReleases, new DomainObjectComparator());
         if (TIMER) w.stop("getLineReleases");
-        return releases;
+        return canonicalReleases;
     }
 
     public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeFinal, List<String> dataSets) throws Exception {
