@@ -163,12 +163,12 @@ public class DomainModel {
      * @return
      */
     private <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects, boolean invalidateTree) {
+        List<T> canonicalObjects = new ArrayList<>();
         if (domainObjects == null || domainObjects.isEmpty()) {
             // This is a null object, which cannot go into the cache
             log.debug("putOrUpdate: object is null");
-            return null;
+            return canonicalObjects;
         }
-        List<T> canonicalObjects = new ArrayList<>();
         List<T> invalidatedObjects = new ArrayList<>();
         synchronized (this) {
             for(T domainObject : domainObjects) {
