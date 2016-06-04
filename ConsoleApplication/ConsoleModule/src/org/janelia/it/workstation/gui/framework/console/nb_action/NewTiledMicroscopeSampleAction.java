@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
@@ -26,7 +21,7 @@ import org.openide.windows.WindowManager;
 @ActionReferences({
     @ActionReference(path = "Menu/File/New", position = 1400)
 })
-@Messages("CTL_NewTiledMicroscopeSampleAction=Add Tiled Microscope Sample")
+@Messages("CTL_NewTiledMicroscopeSampleAction=Tiled Microscope Sample")
 public final class NewTiledMicroscopeSampleAction implements ActionListener {
 
     @Override
