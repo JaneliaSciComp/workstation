@@ -8,6 +8,7 @@ import javax.swing.JPopupMenu;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
@@ -36,7 +37,7 @@ public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> 
 
     @Override
     protected String getTagTitle(Annotation tag) {
-        return tag.getName();
+        return StringUtils.abbreviate(tag.getName(), 40);
     }
     
     @Override
@@ -44,7 +45,7 @@ public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> 
         JLabel label = super.createTagLabel(tag);
         label.setBackground(StateMgr.getStateMgr().getUserColorMapping().getColor(tag.getOwnerKey()));
         String owner = DomainUtils.getNameFromSubjectKey(tag.getOwnerKey());
-        label.setToolTipText("This annotation was made by "+owner);
+        label.setToolTipText(tag.getName()+" ("+owner+")");
         return label;
     }
 
