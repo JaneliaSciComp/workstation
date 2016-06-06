@@ -9,6 +9,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -112,7 +113,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         DomainListViewManager.getInstance().activate(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
-            FindContextManager.getInstance().activateContext((FindContext)findContext);
+            FindContextManager.getInstance().activateContext(findContext);
         }
         // Select the object in the Explorer
         DomainObject domainObject = getCurrent();
@@ -128,7 +129,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     protected void componentDeactivated() {
         this.active = false;
         if (findContext!=null) {
-            FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+            FindContextManager.getInstance().deactivateContext(findContext);
         }
         if (editor!=null) {
             editor.deactivate();
@@ -152,7 +153,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         String version = p.getProperty("version");
         final String objectStrRef = p.getProperty("objectRef");
         log.info("Reading state: {}",objectStrRef);
-        if (TC_VERSION.equals(version) && objectStrRef!=null) {
+        if (TC_VERSION.equals(version) && !StringUtils.isEmpty(objectStrRef)) {
 
             SimpleWorker worker = new SimpleWorker() {
                 DomainObjectNode node;
