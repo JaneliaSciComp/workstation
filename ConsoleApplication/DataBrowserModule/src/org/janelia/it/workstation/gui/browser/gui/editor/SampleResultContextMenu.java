@@ -13,6 +13,7 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
@@ -75,7 +76,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
     public void runDefaultAction() {
         if (result.getLatestSeparationResult()==null) return;
         SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
-        if (viewer==null || !DomainUtils.equals(viewer.getCurrent(), result)) {
+        if (viewer==null || !SampleUtils.equals(viewer.getCurrent(), result)) {
             viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
             viewer.requestActive();
             viewer.loadSampleResult(result, true, null);

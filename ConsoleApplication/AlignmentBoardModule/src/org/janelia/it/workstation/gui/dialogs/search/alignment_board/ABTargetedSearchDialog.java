@@ -129,6 +129,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
         return searchParamsPanel;
     }
 
+	/**
+	 * @todo fix references to entities.
+	 */
     private JPanel initDisposeGui() {
         JButton addToBoardBtn = new JButton("Add to Alignment Board");
         addToBoardBtn.addActionListener( new ActionListener() {
@@ -155,7 +158,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
                                     domainObjectClass = Sample.class.getSimpleName();
                                 }
                                 DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getEntity().getId());
-                                context.addDomainObject(dobj, "63x");
+                                context.addDomainObject(dobj);
                                 //context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
                             } catch ( Exception ex ) {
                                 logger.error(

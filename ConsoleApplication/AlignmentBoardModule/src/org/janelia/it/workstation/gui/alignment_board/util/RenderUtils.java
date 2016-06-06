@@ -1,17 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.alignment_board.util;
 
 import java.awt.Color;
-import org.janelia.it.jacs.model.domain.DomainObject;
+
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for formatting and other niceties, in a standard way.
@@ -19,6 +13,9 @@ import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
  * @author fosterl
  */
 public class RenderUtils {
+
+    private final static Logger log = LoggerFactory.getLogger(RenderUtils.class);
+
     /**
      * Tells if passthrough is used for this item.
      * @param item has a rendering type.
@@ -87,9 +84,5 @@ public class RenderUtils {
         return niceBuilder.toString();
     }
     
-    public static DomainObject getObjectForItem(AlignmentBoardItem item) {
-        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
-        return domainModel.getDomainObject(item.getTarget());
-    }
 
 }

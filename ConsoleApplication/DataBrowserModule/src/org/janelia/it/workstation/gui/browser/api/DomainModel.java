@@ -137,7 +137,17 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject) {
-        return putOrUpdate(domainObject, false);
+        return putOrUpdate(Arrays.asList(domainObject), false).get(0);
+    }
+
+    /**
+     * Call putOrUpdate(domainObjects, invalidateTree)
+     *
+     * @param domainObject
+     * @return canonical domain object instance
+     */
+    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
+        return putOrUpdate(Arrays.asList(domainObject), invalidateTree).get(0);
     }
 
     /**
@@ -147,53 +157,48 @@ public class DomainModel {
      * If the cache is updated, the object will be invalidated. If invalidateTree is true, then all of its descendants
      * will also be invalidated.
      *
-     * @param domainObject
+     * @param domainObjects
      * @param invalidateTree
      * @param <T>
      * @return
      */
-    private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
-        if (domainObject == null) {
+    private <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects, boolean invalidateTree) {
+        List<T> canonicalObjects = new ArrayList<>();
+        if (domainObjects == null || domainObjects.isEmpty()) {
             // This is a null object, which cannot go into the cache
             log.debug("putOrUpdate: object is null");
-            return null;
+            return canonicalObjects;
         }
+        List<T> invalidatedObjects = new ArrayList<>();
         synchronized (this) {
-            Reference id = Reference.createFor(domainObject);
-            DomainObject canonicalObject = objectCache.getIfPresent(id);
-            if (canonicalObject != null) {
-                if (canonicalObject!=domainObject) {
-                    canonicalObject = domainObject;
-                    log.debug("putOrUpdate: Updating cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
-                    objectCache.put(id, domainObject);
-                    notifyDomainObjectInvalidated(canonicalObject, invalidateTree);
+            for(T domainObject : domainObjects) {
+                Reference id = Reference.createFor(domainObject);
+                T canonicalObject = (T)objectCache.getIfPresent(id);
+                if (canonicalObject != null) {
+                    if (canonicalObject != domainObject) {
+                        canonicalObject = domainObject;
+                        log.debug("putOrUpdate: Updating cached instance: {} {}", id, DomainUtils.identify(canonicalObject));
+                        objectCache.put(id, domainObject);
+                        invalidatedObjects.add(domainObject);
+                    }
+                    else {
+                        log.debug("putOrUpdate: Returning cached instance: {} {}", id, DomainUtils.identify(canonicalObject));
+                    }
                 }
                 else {
-                    log.debug("putOrUpdate: Returning cached instance: {} {}",id,DomainUtils.identify(canonicalObject));
+                    canonicalObject = domainObject;
+                    log.debug("putOrUpdate: Caching: {} {}", id, DomainUtils.identify(canonicalObject));
+                    objectCache.put(id, domainObject);
                 }
-            }
-            else {
-                canonicalObject = domainObject;
-                log.debug("putOrUpdate: Caching: {} {}",id,DomainUtils.identify(canonicalObject));
-                objectCache.put(id, domainObject);
+
+                canonicalObjects.add(canonicalObject);
             }
 
-            return (T)canonicalObject;
+            if (!invalidatedObjects.isEmpty()) {
+                notifyDomainObjectsInvalidated(invalidatedObjects, invalidateTree);
+            }
         }
-    }
-
-    /**
-     * Call putOrUpdate on all the objects in a given collection.
-     *
-     * @param objects
-     * @return canonical domain object instances
-     */
-    private List<DomainObject> putOrUpdateAll(Collection<? extends DomainObject> objects) {
-        List<DomainObject> putObjects = new ArrayList<>();
-        for (DomainObject domainObject : objects) {
-            putObjects.add(putOrUpdate(domainObject));
-        }
-        return putObjects;
+        return canonicalObjects;
     }
 
     /**
@@ -227,7 +232,7 @@ public class DomainModel {
         for (DomainObject domainObject : objects) {
             invalidateInternal(domainObject);
         }
-        notifyDomainObjectsInvalidated(objects);
+        notifyDomainObjectsInvalidated(objects, false);
     }
 
     private void invalidateInternal(DomainObject domainObject) {
@@ -315,7 +320,7 @@ public class DomainModel {
                 DomainObject domainObject = loadDomainObject(id);
                 if (domainObject!=null) objs.add(domainObject);
             }
-            return putOrUpdateAll(objs);
+            return putOrUpdate(objs, false);
         }
     }
 
@@ -386,16 +391,17 @@ public class DomainModel {
         for(Reference ref : references) {
             T domainObject = map.get(ref);
             if (domainObject!=null) {
-                domainObjects.add(putOrUpdate(domainObject));
+                domainObjects.add(domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
             }
         }
 
+        List<T> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) if (TIMER) w.stop("getDomainObjects(references)");
-        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedRefs.size());
-        return domainObjects;
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedRefs.size());
+        return canonicalObjects;
     }
 
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
@@ -459,16 +465,17 @@ public class DomainModel {
             Reference ref = Reference.createFor(className, id);
             DomainObject domainObject = map.get(ref);
             if (domainObject!=null) {
-                domainObjects.add(putOrUpdate(domainObject));
+                domainObjects.add(domainObject);
             }
             else {
                 unsatisfiedIds.add(id);
             }
         }
 
+        List<DomainObject> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) w.stop("getDomainObjects(className,ids)");
-        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",domainObjects.size(),unsatisfiedIds.size());
-        return domainObjects;
+        log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedIds.size());
+        return canonicalObjects;
     }
     
     public List<DomainObject> getAllDomainObjectsByClass(String className) {
@@ -530,14 +537,12 @@ public class DomainModel {
     }
 
     public List<DataSet> getDataSets() {
-        List<DataSet> dataSets = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (DataSet dataSet : sampleFacade.getDataSets()) {
-            dataSets.add(putOrUpdate(dataSet));
-        }
-        Collections.sort(dataSets, new DomainObjectComparator());
+        List<DataSet> dataSets = new ArrayList<>(sampleFacade.getDataSets());
+        List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
+        Collections.sort(canonicalDataSets, new DomainObjectComparator());
         if (TIMER) w.stop("getDataSets");
-        return dataSets;
+        return canonicalDataSets;
     }
     
     public List<LSMImage> getLsmsForSample(Sample sample) {
@@ -580,14 +585,12 @@ public class DomainModel {
      * @return collection of ontologies
      */
     public List<Ontology> getOntologies() {
-        List<Ontology> ontologies = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (Ontology ontology : ontologyFacade.getOntologies()) {
-            ontologies.add(putOrUpdate(ontology));
-        }
-        Collections.sort(ontologies, new DomainObjectComparator());
+        Collection<Ontology> ontologies = ontologyFacade.getOntologies();
+        List<Ontology> canonicalOntologies = putOrUpdate(ontologies, false);
+        Collections.sort(canonicalOntologies, new DomainObjectComparator());
         if (TIMER) w.stop("getOntologies");
-        return ontologies;
+        return canonicalOntologies;
     }
 
     /**
@@ -801,14 +804,12 @@ public class DomainModel {
     }
 
     public List<LineRelease> getLineReleases() {
-        List<LineRelease> releases = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for (LineRelease release : sampleFacade.getLineReleases()) {
-            releases.add(putOrUpdate(release));
-        }
-        Collections.sort(releases, new DomainObjectComparator());
+        List<LineRelease> releases = sampleFacade.getLineReleases();
+        List<LineRelease> canonicalReleases = putOrUpdate(releases, false);
+        Collections.sort(canonicalReleases, new DomainObjectComparator());
         if (TIMER) w.stop("getLineReleases");
-        return releases;
+        return canonicalReleases;
     }
 
     public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeFinal, List<String> dataSets) throws Exception {
@@ -896,26 +897,24 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
     }
 
-    private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects) {
+    private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectInvalidationEvent with {} entities", objects.size());
         }
-        Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(objects));
-    }
 
-    private void notifyDomainObjectInvalidated(DomainObject domainObject, boolean invalidateTree) {
-        if (log.isTraceEnabled()) {
-            log.trace("Generating EntityInvalidationEvent for {}", DomainUtils.identify(domainObject));
-        }
         Collection<DomainObject> invalidated = new ArrayList<>();
         if (invalidateTree) {
-            addTree(invalidated, domainObject);
+            for(DomainObject domainObject : objects) {
+                addTree(invalidated, domainObject);
+            }
         }
         else {
-            invalidated.add(domainObject);
+            invalidated.addAll(objects);
         }
 
-        Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
+        if (!invalidated.isEmpty()) {
+            Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent(invalidated));
+        }
     }
 
     private void addTree(Collection<DomainObject> objects, DomainObject domainObject) {

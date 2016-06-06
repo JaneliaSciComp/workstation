@@ -3,18 +3,11 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Insets;
-import java.awt.Point;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
-import java.awt.dnd.DropTargetDragEvent;
-import java.awt.dnd.DropTargetDropEvent;
-import java.awt.dnd.DropTargetEvent;
-import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -32,7 +25,6 @@ import javax.swing.*;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
@@ -44,7 +36,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -55,7 +46,6 @@ import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopCompon
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.EditCriteriaDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
@@ -74,7 +64,6 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.util.datatransfer.ExTransferable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,11 +263,6 @@ public class FilterEditorPanel extends JPanel
         setLayout(new BorderLayout());
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
-
-        MyDropTargetListener dtl = new MyDropTargetListener();
-        DropTarget dt = new DropTarget(this, dtl);
-        dt.setDefaultActions(DnDConstants.ACTION_COPY);
-        dt.setActive(true);
     }
 
     private void setFilter(Filter canonicalFilter) {
@@ -290,7 +274,6 @@ public class FilterEditorPanel extends JPanel
     
     public void loadNewFilter() {
         Filter newFilter = new Filter();
-        newFilter.setName(DEFAULT_FILTER_NAME);
         newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
         loadDomainObject(newFilter, true, null);
     }
@@ -308,6 +291,10 @@ public class FilterEditorPanel extends JPanel
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
+        }
+        
+        if (filter.getName()==null) {
+            filter.setName(DEFAULT_FILTER_NAME);
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
@@ -367,7 +354,7 @@ public class FilterEditorPanel extends JPanel
 
     public synchronized void performSearch(final boolean isUserDriven, final Callable<Void> success, final Callable<Void> failure) {
 
-        log.info("Performing search");
+        log.debug("Performing search with isUserDriven={}",isUserDriven);
         if (searchConfig.getSearchClass()==null) return;
 
         SimpleWorker worker = new SimpleWorker() {
@@ -399,20 +386,6 @@ public class FilterEditorPanel extends JPanel
 
         resultsPanel.showLoadingIndicator();
         worker.execute();
-    }
-
-    public void dropDomainObject(DomainObject obj) {
-        if (obj instanceof TreeNode) {
-            Reference reference = Reference.createFor(TreeNode.class, obj.getId());
-
-            TreeNodeCriteria criteria = new TreeNodeCriteria();
-            criteria.setTreeNodeName(obj.getName());
-            criteria.setTreeNodeReference(reference);
-            filter.addCriteria(criteria);
-
-            dirty = true;
-            refreshSearchResults(true);
-        }
     }
 
     private void refreshSearchResults(boolean isUserDriven) {
@@ -476,7 +449,16 @@ public class FilterEditorPanel extends JPanel
         configPanel.addConfigComponent(typeCriteriaButton);
         configPanel.addConfigComponent(searchBox);
         configPanel.addConfigComponent(infoButton);
-        
+
+        for (Criteria criteria : filter.getCriteriaList()) {
+            if (criteria instanceof TreeNodeCriteria) {
+                DropDownButton customCriteriaButton = createCustomCriteriaButton((TreeNodeCriteria)criteria);
+                if (customCriteriaButton!=null) {
+                    configPanel.addConfigComponent(customCriteriaButton);
+                }
+            }
+        }
+
         for(DomainObjectAttribute attr : searchConfig.getDomainObjectAttributes()) {
             if (attr.getFacetKey()!=null) {
                 log.debug("Adding facet: {}",attr.getLabel());
@@ -495,13 +477,11 @@ public class FilterEditorPanel extends JPanel
             }
         }
 
-        if (filter.hasCriteria()) {
-            for (Criteria criteria : filter.getCriteriaList()) {
-                if (criteria instanceof AttributeCriteria) {
-                    DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
-                    if (customCriteriaButton!=null) {
-                    	configPanel.addConfigComponent(customCriteriaButton);
-                    }
+        for (Criteria criteria : filter.getCriteriaList()) {
+            if (criteria instanceof AttributeCriteria) {
+                DropDownButton customCriteriaButton = createCustomCriteriaButton((AttributeCriteria)criteria);
+                if (customCriteriaButton!=null) {
+                    configPanel.addConfigComponent(customCriteriaButton);
                 }
             }
         }
@@ -555,10 +535,30 @@ public class FilterEditorPanel extends JPanel
         configPanel.addConfigComponent(addCriteriaButton);
         configPanel.updateUI();
     }
-    
+
+    private DropDownButton createCustomCriteriaButton(final TreeNodeCriteria criteria) {
+
+        DropDownButton facetButton = new DropDownButton("In: "+criteria.getTreeNodeName());
+
+        JPopupMenu popupMenu = facetButton.getPopupMenu();
+        popupMenu.removeAll();
+
+        final JMenuItem removeMenuItem = new JMenuItem("Remove");
+        removeMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                removeTreeNodeCriteria(criteria.getTreeNodeName());
+                dirty = true;
+                refreshSearchResults(true);
+            }
+        });
+        popupMenu.add(removeMenuItem);
+
+        return facetButton;
+    }
+
     private DropDownButton createCustomCriteriaButton(final AttributeCriteria criteria) {
         
-        String label = null;
+        String label;
         final DomainObjectAttribute attr = searchConfig.getDomainObjectAttribute(criteria.getAttributeName());
         
         if (criteria instanceof AttributeValueCriteria) {
@@ -647,6 +647,21 @@ public class FilterEditorPanel extends JPanel
         }
     }
 
+    private void removeTreeNodeCriteria(String treeNodeName) {
+        if (filter.hasCriteria()) {
+            for (Iterator<Criteria> i = filter.getCriteriaList().iterator(); i.hasNext(); ) {
+                Criteria criteria = i.next();
+                if (criteria instanceof TreeNodeCriteria) {
+                    TreeNodeCriteria tnc = (TreeNodeCriteria) criteria;
+                    if (tnc.getTreeNodeName().equals(treeNodeName)) {
+                        // Remove facet entirely
+                        i.remove();
+                    }
+                }
+            }
+        }
+    }
+
     private void removeAttributeCriteria(String attrName) {
         if (filter.hasCriteria()) {
             for (Iterator<Criteria> i = filter.getCriteriaList().iterator(); i.hasNext(); ) {
@@ -712,65 +727,6 @@ public class FilterEditorPanel extends JPanel
         }
         return new HashSet<>();
     }
-    
-    public class MyDropTargetListener implements DropTargetListener {
-
-        public void dragEnter(DropTargetDragEvent dtde) {
-        }
-
-        public void dragExit(DropTargetEvent dtde) {
-        }
-
-        public void dragOver(DropTargetDragEvent dtde) {
-        }
-
-        public void dropActionChanged(DropTargetDragEvent dtde) {
-        }
-
-        public void drop(DropTargetDropEvent dtde) {
-            
-            Point point = dtde.getLocation();
-            if (!configPanel.getBounds().contains(point)) {
-                log.warn("Dropped outside of filter panel");
-                dtde.rejectDrop();
-                dtde.dropComplete(false);
-                return;
-            }
-            
-            if (dtde.isDataFlavorSupported(DomainObjectFlavor.SINGLE_FLAVOR)) {
-                try {
-                    Object transData = dtde.getTransferable().getTransferData(DomainObjectFlavor.SINGLE_FLAVOR);
-                    if (transData instanceof DomainObject) {
-                        dtde.acceptDrop(DnDConstants.ACTION_COPY);
-                        DomainObject obj = (DomainObject)transData;
-                        dropDomainObject(obj);
-                        dtde.dropComplete(true);
-                    }
-                }
-                catch (UnsupportedFlavorException e) {
-                    log.warn("Flavor not supported",e);
-                    dtde.rejectDrop();
-                    dtde.dropComplete(true);
-                }
-                catch (IOException e) {
-                    log.warn("Error dropping domain object",e);
-                    dtde.rejectDrop();
-                    dtde.dropComplete(false);
-                }
-            }
-            else if (dtde.isDataFlavorSupported(ExTransferable.multiFlavor)) {
-                // TODO: support multidrop
-                log.warn("Multi flavor!");
-                dtde.rejectDrop();
-                dtde.dropComplete(false);
-            }
-            else {
-                log.warn("Flavor not supported");
-                dtde.rejectDrop();
-                dtde.dropComplete(false);
-            }
-        }
-    }
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
@@ -792,7 +748,7 @@ public class FilterEditorPanel extends JPanel
                 else if (domainObject.getClass().equals(searchConfig.getSearchClass())) {
                     log.info("some objects of class "+searchConfig.getSearchClass().getSimpleName()+" were invalidated, reloading...");
                     refreshSearchResults(false);
-                    return;
+                    break;
                 }
             }
         }

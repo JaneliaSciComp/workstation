@@ -203,7 +203,6 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
-        actions.add(null);
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());

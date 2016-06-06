@@ -23,7 +23,7 @@ public class AlignmentBoardPopulator implements DropAcceptor {
 
     /**
      * Accept drops for the alignment board.
-     * @param domainObjects list of things bound for board.
+     * @param domainObjects list of things bound for board. Not used.
      * @param objective specific instance of applicable sample.
      */
     @Override
@@ -61,7 +61,7 @@ public class AlignmentBoardPopulator implements DropAcceptor {
             String objective) throws Exception {
         
         for(DomainObject domainObject : domainObjects) {
-            alignmentBoardContext.addDomainObject(domainObject, objective);
+            alignmentBoardContext.addDomainObject(domainObject);
         }
 
     }    

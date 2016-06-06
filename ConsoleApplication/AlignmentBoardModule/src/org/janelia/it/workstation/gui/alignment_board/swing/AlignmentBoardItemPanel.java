@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.alignment_board.swing;
 
 import java.awt.BorderLayout;
@@ -16,7 +10,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.util.ColorSwatch;
 
 /**
@@ -68,13 +64,15 @@ public class AlignmentBoardItemPanel extends JPanel {
         private JLabel renderMethod = new JLabel();
         private JTable childrenTable;
         private JLabel refType = new JLabel();
+        private DomainHelper domainHelper = new DomainHelper();
 
         public ABIControls(AlignmentBoardItem item) {
+            ABItem abItem = domainHelper.getObjectForItem(item);
             visible.setSelected(item.isVisible());
             inclusionStatus.setText(item.getInclusionStatus());
             colorSwatch.setColor(RenderUtils.getColorFromRGBStr(item.getColor()));
             renderMethod.setText(item.getRenderMethod());
-            refType.setText(item.getTarget().getTargetClassName());
+            refType.setText(abItem.getType());
             
             // Establish the children table.
             if ( item.getChildren() != null  &&  item.getChildren().size() > 0 ) {
@@ -88,12 +86,13 @@ public class AlignmentBoardItemPanel extends JPanel {
                 // TODO: eventually WILL need a better column model, to deal
                 // with color swatches.
                 for (AlignmentBoardItem childItem: item.getChildren()) {
+                    ABItem abChildItem = domainHelper.getObjectForItem(childItem);
                     Vector<String> row = new Vector<>();
                     row.add(childItem.getColor());
                     try {
-                        row.add(RenderUtils.getViewableClassName(childItem.getTarget().getTargetClassName()));
+                        row.add(RenderUtils.getViewableClassName(abChildItem.getType()));
                     } catch (ClassNotFoundException cnfe) {
-                        row.add(childItem.getTarget().getTargetClassName());
+                        row.add(abChildItem.getType());
                     }
                     row.add(Boolean.toString(childItem.isVisible()));
                     row.add(childItem.getInclusionStatus());

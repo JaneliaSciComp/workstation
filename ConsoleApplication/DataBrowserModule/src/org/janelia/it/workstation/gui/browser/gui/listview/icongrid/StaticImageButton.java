@@ -23,12 +23,12 @@ public class StaticImageButton<T,S> extends AnnotatedImageButton<T,S> {
     private BufferedImage staticIcon;
     private JLabel label;
 
-    public StaticImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
-        super(imageObject, imageModel, selectionModel, imagesPanel);
+    public StaticImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel, String filepath) {
+        super(imageObject, imageModel, selectionModel, imagesPanel, filepath);
     }
 
     @Override
-    public JComponent init(final T imageObject, final ImageModel<T,S> imageModel) {
+    public JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath) {
         this.label = new JLabel(Icons.getLoadingIcon());
         return label;
     }

@@ -61,8 +61,6 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
         toolbar.add(showTagsButton);
 
-        toolbar.addSeparator();
-
         configButton = new JButton();
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
@@ -118,6 +116,10 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     public JToggleButton getShowTagsButton() {
         return showTagsButton;
+    }
+
+    public JButton getConfigButton() {
+        return configButton;
     }
 
     public JSlider getImageSizeSlider() {

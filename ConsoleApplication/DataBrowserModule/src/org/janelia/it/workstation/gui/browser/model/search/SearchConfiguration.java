@@ -112,10 +112,6 @@ public class SearchConfiguration {
         return searchAttrs.values();
     }
 
-    public Collection<DomainObjectAttribute> getVisibleDomainObjectAttributes() {
-        return searchAttrs.values();
-    }
-    
     public DomainObjectAttribute getDomainObjectAttribute(String name) {
         return searchAttrs.get(name);
     }
@@ -143,7 +139,7 @@ public class SearchConfiguration {
         }
         
         if (filter.getSearchString()!=null) {
-            log.info("Setting query string: {}",filter.getSearchString());
+            log.debug("Setting query string: {}",filter.getSearchString());
             builder.setSearchString(filter.getSearchString());
         }
 
@@ -241,32 +237,32 @@ public class SearchConfiguration {
                 else if (criteria instanceof TreeNodeCriteria) {
                     TreeNodeCriteria sc = (TreeNodeCriteria) criteria;
                     Reference ref = sc.getTreeNodeReference();
-                    log.info("Setting query root: {}",ref.getTargetId());
+                    log.debug("Setting query root: {}",ref.getTargetId());
                     builder.setRootId(ref.getTargetId());
                 }
             }
         }
         
         if (aux.length()>0) {
-            log.info("Adding aux query string: {}",aux);
+            log.debug("Adding aux query string: {}",aux);
             builder.setAuxString(aux.toString());
         }
         
         if (auxAnnot.length()>0) {
-            log.info("Adding aux annotation query string: {}",auxAnnot);
+            log.debug("Adding aux annotation query string: {}",auxAnnot);
             builder.setAuxAnnotationQueryString(auxAnnot.toString());
         }
         
-        log.info("Adding facets: {}",facets);
+        log.debug("Adding facets: {}",facets);
         builder.getFacets().addAll(facets);
         
-        log.info("Adding facet filters: {}",filters);
+        log.debug("Adding facet filters: {}",filters);
         builder.getFilters().putAll(filters);
 
         String sortCriteria = filter.getSort();
         if (!StringUtils.isEmpty(sortCriteria)) {
             String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            log.info("Setting sort: {}",sortCriteria);
+            log.debug("Setting sort: {}",sortCriteria);
             DomainObjectAttribute sortAttr = searchAttrs.get(sortField);
             builder.setSortField(sortAttr.getSearchKey());
             builder.setAscending(!sortCriteria.startsWith("-"));

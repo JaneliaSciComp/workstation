@@ -15,7 +15,10 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
@@ -25,7 +28,14 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 //import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
+import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -79,39 +89,16 @@ public class DomainHelper {
     
     /** Must walk up to the separation and back down to find this. */
     public AlignmentContext getNeuronFragmentAlignmentContext(Sample sample, NeuronFragment neuronFragment) {
-        // TODO: this is nearly mimicked by the SampleUtils, but that somehow is not accessible.  Need find out why.
-        NeuronSeparation separation = null;
-        OUTER:
-        for (ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
-            for (SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                if (run != null && run.getResults() != null) {
-                    for (PipelineResult result : run.getResults()) {
-                        if (result != null && result.getResults() != null) {
-                            for (PipelineResult secondaryResult : result.getResults()) {
-                                if (secondaryResult != null && secondaryResult instanceof NeuronSeparation) {
-                                    separation = (NeuronSeparation) secondaryResult;
-                                    if (separation.getFragmentsReference().getReferenceId().equals(neuronFragment.getSeparationId())) {
-                                        break OUTER;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
+        NeuronSeparation separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
+        PipelineResult parentResult = separation.getParentResult();
+        SampleAlignmentResult sar = null;
         AlignmentContext rtnVal = null;
-        if (separation != null) {
-            SamplePipelineRun spr = separation.getParentRun();
-            List<SampleAlignmentResult> lars = spr.getAlignmentResults();
-            if (lars != null  &&  lars.size() > 0) {
-                rtnVal = new AlignmentContext();
-                SampleAlignmentResult firstResult = lars.get(0);
-                rtnVal.setAlignmentSpace(firstResult.getAlignmentSpace());
-                rtnVal.setImageSize(firstResult.getImageSize());
-                rtnVal.setOpticalResolution(firstResult.getOpticalResolution());
-            }
+        if (parentResult instanceof SampleAlignmentResult) {
+            sar = (SampleAlignmentResult) separation.getParentResult();
+            rtnVal = new AlignmentContext();
+            rtnVal.setAlignmentSpace(sar.getAlignmentSpace());
+            rtnVal.setImageSize(sar.getImageSize());
+            rtnVal.setOpticalResolution(sar.getOpticalResolution());
         }
         return rtnVal;
     }
@@ -249,6 +236,58 @@ public class DomainHelper {
         return domainObjects;
     }
 
+    public ABItem getObjectForItem(AlignmentBoardItem item) {
+        AlignmentBoardReference ref = item.getTarget();
+        if (ref == null) {
+            log.warn("Null reference in item {}", item.getName());
+            return null;
+        }
+        if (ref.getObjectRef() == null) {
+            log.error("No object ref, or no target for item " + item.getName());
+            return null;
+        }
+        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
+        DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+        if (domainObject instanceof CompartmentSet) {
+            CompartmentSet cs = (CompartmentSet) domainObject;
+            AlignmentBoardReference abRef = item.getTarget();
+            if (! abRef.getItemId().equals(cs.getId())) {
+                // Got compartment
+                Compartment comp = cs.getCompartment(abRef.getItemId());
+                try {
+                    if (comp.getNumber() == null) {
+                        // Expecting mask path to be a string like compartment_59.mask
+                        String maskPath = comp.getFiles().get(FileType.MaskFile);
+                        int underPos = maskPath.indexOf("_");
+                        if (underPos > -1) {
+                            int dotPos = maskPath.indexOf(underPos, '.');
+                            comp.setNumber(Integer.parseInt(maskPath.substring(underPos + 1, dotPos)));
+                        }
+
+                    }
+                } catch (Exception ex) {
+                    log.warn("Failed to parse number out of mask file.");
+                    comp.setNumber(0);
+                }
+                ABCompartment abComp = new ABCompartment(comp);
+                return abComp;
+            }
+            else {
+                return new ABCompartmentSet(cs);
+            }
+        } else if (domainObject instanceof Sample) {
+            return new ABSample((Sample) domainObject);
+        } else if (domainObject instanceof NeuronFragment) {
+            return new ABNeuronFragment((NeuronFragment) domainObject);
+        }
+        if (domainObject == null) {
+            log.warn("No domain object found for ref {}.", ref.getItemId());
+        }
+        else {
+            throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
+        }
+        return null;
+    }
     private void handleException(String message) {
         Exception ex = new Exception(message);
         SessionMgr.getSessionMgr().handleException(ex);

@@ -29,8 +29,9 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
@@ -39,7 +40,6 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemC
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
@@ -64,6 +64,8 @@ import com.google.common.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+
+import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -363,14 +365,6 @@ public class LayersPanel extends JPanel implements Refreshable {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("load alignment board with id: {}",alignmentBoardId);
-// TODO : must implement prior to any board able to open.                
-//                Entity commonRoot = ModelMgr.getModelMgr().getOwnedCommonRootByName(ALIGNMENT_BOARDS_FOLDER);
-//                ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
-//                RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
-//                RootedEntity abRootedEntity = commonRootedEntity.getChildById(alignmentBoardId);
-//                if (abRootedEntity==null) {
-//                    throw new IllegalStateException("Alignment board does not exist");
-//                }
                 AlignmentBoard aboard = (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
                 AlignmentContext alignmentContext = new AlignmentContext();
                 alignmentContext.setAlignmentSpace( aboard.getAlignmentSpace() );
@@ -380,56 +374,6 @@ public class LayersPanel extends JPanel implements Refreshable {
                 log.debug("Loading ancestors for alignment board: {}", abContext);
                 //See Below: loadAncestors(abContext);
                 loadCompartmentSet(abContext);
-            }
-
-//TODO: not convinced this is necessary in DomainObject paradigm.            
-//            private void loadAncestors(EntityWrapper wrapper) throws Exception {
-//                log.trace("loadAncestors: {}",wrapper);
-//                if ( wrapper == null || abContext == null ) {
-//                    log.error("Null wrapper {} or abContext {}.", wrapper, abContext);
-//                    return;
-//                }
-//                wrapper.loadContextualizedChildren(abContext.getAlignmentContext());
-//                for(EntityWrapper childWrapper : wrapper.getChildren()) {
-//                    loadAncestors(childWrapper);
-//                    if (childWrapper instanceof AlignedItem) {
-//                        AlignedItem alignedItem = (AlignedItem)childWrapper;
-//                        loadAncestors(alignedItem.getItemWrapper());
-//                    }
-//                }
-//            }
-
-            private void loadCompartmentSet(AlignmentBoardContext context) throws Exception {
-                log.trace("loadCompartmentSet: {}", context);
-                // Add the compartment set, lazily, if it is not already under this board.
-                boolean hasCompartmentSet = false;
-                for ( AlignmentBoardItem child: context.getAlignmentBoardItems() ) {
-                    DomainObject dObj = RenderUtils.getObjectForItem(child);
-                    if ( dObj.getName().startsWith("Compartment Set") ) {
-                        log.info("Context has a compartment set called {}.", dObj.getName());
-                        hasCompartmentSet = true;
-                    }
-                }
-
-                if ( ! hasCompartmentSet ) {
-                    AlignmentContext targetSpace = abContext.getAlignmentContext();
-                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getSimpleName());
-                    if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
-
-                        for(DomainObject compartmentSetDO : compartmentSets) {
-                            AlignmentContext compartmentSetSpace = new AlignmentContext();
-                            CompartmentSet compartmentSet = (CompartmentSet)compartmentSetDO;
-                            compartmentSetSpace.setAlignmentSpace(compartmentSet.getAlignmentSpace());
-
-                            if (targetSpace.equals(compartmentSetSpace)) {
-                                if (!compartmentSet.getCompartments().isEmpty()) {
-                                    abContext.addDomainObject(compartmentSet, domainHelper.getObjectiveForAlignmentContext(targetSpace));
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
             }
 
             @Override
@@ -456,6 +400,45 @@ public class LayersPanel extends JPanel implements Refreshable {
                 loadInProgress.set(false);
                 showNothing();
             }
+            
+            private void loadCompartmentSet(AlignmentBoardContext context) throws Exception {
+                log.info("loadCompartmentSet: {}", context);
+                // Add the compartment set, lazily, if it is not already under this board.
+                boolean hasCompartmentSet = false;
+                for (AlignmentBoardItem child : context.getAlignmentBoardItems()) {
+                    ABItem dObj = domainHelper.getObjectForItem(child);
+                    if (dObj.getName().startsWith("Compartment Set")) {
+                        log.info("Context has a compartment set called {}.", dObj.getName());
+                        hasCompartmentSet = true;
+                    }
+                }
+
+                if (!hasCompartmentSet) {
+                    log.info("No compartment set found");
+                    AlignmentContext targetSpace = abContext.getAlignmentContext();
+                    List<DomainObject> compartmentSets = DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(CompartmentSet.class.getSimpleName());
+                    if (compartmentSets != null && compartmentSets.size() > 0) {
+
+                        CompatibilityChecker checker = new CompatibilityChecker();
+                        for (DomainObject compartmentSetDO : compartmentSets) {
+                            CompartmentSet compartmentSet = (CompartmentSet) compartmentSetDO;
+                            if (checker.isEqual(
+									targetSpace,
+									compartmentSet.getAlignmentSpace(),
+									compartmentSet.getOpticalResolution(),
+									compartmentSet.getImageSize())
+							) {
+                                log.info("Adding compartment set for space {} to alignment board {}/context={}.", compartmentSet.getAlignmentSpace(), abContext.getAlignmentBoard().getId(), abContext);
+                                if (!compartmentSet.getCompartments().isEmpty()) {
+									abContext.addDomainObject(compartmentSet);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
         };
         
         // Wait for any EDT operations to finish first
@@ -652,7 +635,6 @@ public class LayersPanel extends JPanel implements Refreshable {
     public void chooseColor(final AlignmentBoardItem alignedItem) {
 
         Color currColor = RenderUtils.getColorFromRGBStr(alignedItem.getColor());
-        final DomainObject alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignedItem.getTarget());
         final Color newColor = JColorChooser.showDialog(SessionMgr.getMainFrame(), "Choose color", currColor);
         if (newColor==null) return;
         
@@ -704,16 +686,16 @@ public class LayersPanel extends JPanel implements Refreshable {
             
             if (value instanceof AlignmentBoardItem) {
                 AlignmentBoardItem alignmentBoardItem = (AlignmentBoardItem)value;
-                DomainObject alignedItemTarget = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
-                if (alignedItemTarget == null) {
-                    log.info("Null target for {} of type {}." + alignmentBoardItem.getTarget().getTargetId(), alignmentBoardItem.getTarget().getTargetClassName() );
+                ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
+                if (item == null) {
+                    log.info("Null target for {}" , alignmentBoardItem.getTarget());
                 }
-                if (alignmentBoardItem == null  ||  alignedItemTarget == null) {
+                if (alignmentBoardItem == null  ||  item == null) {
                     label.setText("Item is null");
                     label.setIcon(null);
                 }
                 else {
-                    label.setText(alignedItemTarget.getName());
+                    label.setText(item.getName());
 //TODO workout where to get icon                    label.setIcon(Icons.getIcon(alignedItem));
                 }
             }
@@ -759,8 +741,9 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
-                    if ( fileStats != null  &&  alignmentBoardItem != null  &&  ( !alignmentBoardItem.getTarget().getTargetClassName().toLowerCase().contains("compartment") ) ) {
-                        final Long itemId = alignmentBoardItem.getTarget().getTargetId();
+                    ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
+                    if ( fileStats != null  &&  alignmentBoardItem != null  &&  ( !(item instanceof ABCompartment) ) ) {
+                        final Long itemId = item.getId();
                         double[] colorRGB = fileStats.getChannelAverages(itemId);
                         if ( colorRGB == null ) {
                             // Happens with reference channels.
@@ -884,26 +867,27 @@ public class LayersPanel extends JPanel implements Refreshable {
             SimpleWorker worker = new SimpleWorker() {
                 
                 private AlignmentBoardItem parent;
-                private DomainObject parentObject;
-                private DomainObject target = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget());
-                
+                private ABItem parentObject;
+
                 @Override
                 protected void doStuff() throws Exception {
                     alignmentBoardItem.setVisible(isVisible);
 
-                    Collection<DomainObject> affectedEntities = new ArrayList<>();
+                    ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
+
+                    Collection<ABItem> affectedEntities = new ArrayList<>();
 
                     for(AlignmentBoardItem child : alignmentBoardItem.getChildren()) {
-                        DomainObject innerChild = DomainMgr.getDomainMgr().getModel().getDomainObject(child.getTarget());
-                        affectedEntities.add( innerChild );
+                        ABItem childItem = domainHelper.getObjectForItem(child);
+                        affectedEntities.add( childItem );
                     }
 
                     // HOW to get the parent?
                     AlignmentBoardItem parentWrapper = null; //alignedItem.getParent();
-                    parentObject = RenderUtils.getObjectForItem(alignmentBoardItem);
+                    parentObject = domainHelper.getObjectForItem(alignmentBoardItem);
                     if (parentWrapper!=null) {                        
                         if (parentWrapper instanceof AlignmentBoardItem) {
-                            parent = (AlignmentBoardItem)parentWrapper;
+                            parent = parentWrapper;
                             if ( ! isVisible ) {
                                 // Check children of this parent: any of them
                                 // on?

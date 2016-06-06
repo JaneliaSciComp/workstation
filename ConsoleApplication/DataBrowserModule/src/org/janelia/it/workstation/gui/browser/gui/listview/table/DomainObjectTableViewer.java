@@ -306,13 +306,21 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching "+domainObject.getName());
+        log.debug("Searching {} for {}",domainObject.getName(),text);
+
+        String tupper = text.toUpperCase();
+
+        // Exact matches on id or name always work
+        if (domainObject.getId().toString().equals(text) || domainObject.getName().toUpperCase().equals(tupper)) {
+            return true;
+        }
+
         for(DynamicColumn column : getColumns()) {
             if (column.isVisible()) {
                 log.trace("Searching column "+column.getLabel());
                 Object value = getValue(resultPage, domainObject, column.getName());
                 if (value != null) {
-                    if (value.toString().toUpperCase().contains(text.toUpperCase())) {
+                    if (value.toString().toUpperCase().contains(tupper)) {
                         log.trace("Found match in column {}: {}",column.getLabel(),value);
                         return true;
                     }

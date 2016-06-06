@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.viewer3d.renderable;
 
-import org.janelia.it.jacs.model.domain.Reference;
-
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -19,7 +17,7 @@ public class RenderableBean {
     private boolean invertedY;
     private String type;
     private Long voxelCount = 0L; // Never null.
-    private Reference reference;
+    private Object item;
 
     public int getLabelFileNum() {
         return labelFileNum;
@@ -88,6 +86,16 @@ public class RenderableBean {
     /** Call this to override a simplistic type picked up from the entity itself. */
     public void setType( String type ) {
         this.type = type;
+        // CAUTION: Dependency on name of class.
+        if (type.equals(type.contains("Fragment"))) {
+            String[] nameParts = name.trim().split(" ");
+            // In establishing the label file number, must add one to account for 0-based neuron numbering
+            // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
+            // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
+            if (labelFileNum == -1) {
+                labelFileNum = (Integer.parseInt(nameParts[ nameParts.length - 1])) + 1;
+            }
+        }
     }
 
     public Long getVoxelCount() {
@@ -98,26 +106,12 @@ public class RenderableBean {
         this.voxelCount = voxelCount;
     }
 
-    public void setReference( Reference reference ) {
-        String typeName = reference.getTargetClassName();
-        if (this.type == null) {
-            this.type = typeName;
-        }
-        // CAUTION: Dependency on name of class.
-        if (typeName.equals(typeName.contains("NeuronFragment"))) {
-            String[] nameParts = name.trim().split(" ");
-            // In establishing the label file number, must add one to account for 0-based neuron numbering
-            // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
-            // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
-            if (labelFileNum == -1) {
-                labelFileNum = (Integer.parseInt(nameParts[ nameParts.length - 1])) + 1;
-            }
-        }
-        this.reference = reference;
+    public void setItem(Object item ) {
+        this.item = item;
     }
     
-    public Reference getReference() {
-        return reference;
+    public Object getItem() {
+        return item;
     }
     
     /**

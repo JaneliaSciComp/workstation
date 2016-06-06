@@ -5,16 +5,30 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectNodeSelectionEditor;
+import org.janelia.it.workstation.gui.browser.gui.editor.FileGroupEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
+import org.janelia.it.workstation.gui.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
+import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.domain.Neuron;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -24,6 +38,8 @@ import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static groovy.xml.Entity.euro;
 
 /**
  * Top component which displays neuron separations for a single result. 
@@ -70,7 +86,6 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         setName(Bundle.CTL_SampleResultViewerTopComponent());
         setToolTipText(Bundle.HINT_SampleResultViewerTopComponent());
         associateLookup(new AbstractLookup(content));
-        setEditorClass(NeuronSeparationEditorPanel.class);
     }
 
     /**
@@ -182,13 +197,40 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     }
 
     public void loadSampleResult(PipelineResult result, boolean isUserDriven, Callable<Void> success) {
-        
+
+        // Can view display this object?
+        final Class<? extends SampleResultEditor> editorClass = getEditorClass(result);
+        if (editorClass==null) {
+            return;
+        }
+
         // Do we already have the given node loaded?
         if (!setCurrent(result)) {
             return;
         }
+
+        if (editor==null || !editor.getClass().equals(editorClass)) {
+            setEditorClass(editorClass);
+        }
         
         editor.loadSampleResult(result, isUserDriven, success);
-        setName("Neurons for "+StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18));
+
+        String sampleName = StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18);
+        if (editor instanceof NeuronSeparationEditorPanel) {
+            setName("Neurons for " + sampleName);
+        }
+        else {
+            setName("Results for " + sampleName);
+        }
+    }
+
+    private static Class<? extends SampleResultEditor> getEditorClass(PipelineResult result) {
+        if (result instanceof SampleAlignmentResult || result instanceof SampleProcessingResult) {
+            return NeuronSeparationEditorPanel.class;
+        }
+        else if (result instanceof HasFileGroups) {
+            return FileGroupEditorPanel.class;
+        }
+        return null;
     }
 }

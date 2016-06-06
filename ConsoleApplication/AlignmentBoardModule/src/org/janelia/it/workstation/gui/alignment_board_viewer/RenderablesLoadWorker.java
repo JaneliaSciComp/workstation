@@ -23,7 +23,6 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.Rend
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -440,7 +439,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             MaskChanRenderableData targetData = idToData.get(data.getBean());
             RenderableBean bean = data.getBean();
             if ( bean != null  &&
-                    bean.getReference() != null  &&
+                    bean.getItem() != null  &&
                     bean.getType().equals( NeuronFragment.class.getSimpleName() )
                     ) {
 

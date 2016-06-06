@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ReverseReference;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -55,7 +56,8 @@ public class CompatibilityChecker {
                         // Must establish that the fragment's separation is
                         // also compatible.
                         AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, fragment);
-                        if (neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
+                        if (neuronFC != null  &&
+                            neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
                             neuronFC.getImageSize().equals(standardContext.getImageSize())  &&
                             neuronFC.getOpticalResolution().equals(standardContext.getOpticalResolution())) {
                             
@@ -83,6 +85,29 @@ public class CompatibilityChecker {
         }
         return fragmentCount;
     }
+    
+    /** Equality convenience method, since changing equals() is impractical on domain objects. */
+    public boolean isEqual(AlignmentContext contextA, AlignmentContext contextB) {
+        return contextA.getImageSize().equals(contextB.getImageSize())  &&
+               contextA.getAlignmentSpace().equals(contextB.getAlignmentSpace())  &&               
+               contextA.getOpticalResolution().equals(contextB.getOpticalResolution());
+    }
+
+    /**
+     * Convenience method not requiring the pre-creation of an alignment space.
+     * Caution: please get the strings in the right order!
+     * 
+     * @param contextA the "standard" space
+     * @param alignmentSpace same value one might set on an alignment context.
+     * @param opticalResolution ditto
+     * @param imageSize ditto
+     * @return 
+     */
+    public boolean isEqual(AlignmentContext contextA, String alignmentSpace, String opticalResolution, String imageSize) {
+        return contextA.getImageSize().equals(imageSize)
+                && contextA.getAlignmentSpace().equals(alignmentSpace)
+                && contextA.getOpticalResolution().equals(opticalResolution);
+    }
 
     /**
      * Check if this sample has a context compatible with the 'one of momentum'.  Trap any exceptions.
@@ -90,6 +115,19 @@ public class CompatibilityChecker {
     public boolean isSampleCompatible(AlignmentContext standardContext, Sample sample) {
         try {
             return isSampleCompatibleThrowsEx(standardContext, sample);
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+            return false;
+        }
+    }
+
+    /**
+     * Check if this compartment set has a context compatible with the 'one of momentum'.
+     * Trap any exceptions.
+     */
+    public boolean isCompartmentSetCompatible(AlignmentContext standardContext, CompartmentSet compartmentSet) {
+        try {
+            return isEqual(standardContext, compartmentSet.getAlignmentSpace(), compartmentSet.getOpticalResolution(), compartmentSet.getImageSize());
         } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
             return false;

@@ -129,11 +129,13 @@ public class FindToolbar extends JPanel {
     }
 
     private void prevMatch(boolean skipStartingNode) {
+        if (textField.getText().isEmpty()) return;
         findContext.findPrevMatch(textField.getText(), skipStartingNode);
         takeFocus();
     }
 
     private void nextMatch(boolean skipStartingNode) {
+        if (textField.getText().isEmpty()) return;
         findContext.findNextMatch(textField.getText(), skipStartingNode);
         takeFocus();
     }

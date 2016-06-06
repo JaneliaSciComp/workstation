@@ -5,7 +5,6 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
@@ -36,7 +35,6 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
     
     private DomainObject domainObject;
-    private String objective;
     
     public void execute() {
 
@@ -45,19 +43,22 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
         SimpleWorker worker = new SimpleWorker() {
             
             private Sample sample;
-            private DomainObject sampleMember;
+			// The member-of-sample is some domain object that is part of
+			// a sample.  It may be a Neuron Fragment or a Volume Image.
+			// If it is not given, it means the whole sample is to be added.
+            private DomainObject memberOfSample = null;
             private List<AlignmentContext> contexts;
             
             @Override
             protected void doStuff() throws Exception {
-                // Initially, there will never be a domain object.
-                // Worry more about this later.
                 if (domainObject!=null) {
                     if (domainObject instanceof Sample) {
+						this.sample = (Sample)domainObject;
                         this.contexts = new DomainHelper().getAvailableAlignmentContexts(sample);
                     }
                     else if (domainObject instanceof NeuronFragment) {
                         NeuronFragment nf = (NeuronFragment)domainObject;
+						this.memberOfSample = domainObject;
                         sample = new DomainHelper().getSampleForNeuron(nf);
                         if (sample == null) {
                             throw new Exception("No sample ancestor found for neuron fragment " + domainObject.getId());
@@ -81,6 +82,9 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                 
                 // Pick an alignment context for the new board
                 DisplayWrapper values[] = formatContexts(contexts);
+                if (values.length == 0) {
+                    throw new RuntimeException("No alignment contexts available.  Please contact Janelia Workstation support.");
+                }
                 final DisplayWrapper displayWrapper = (DisplayWrapper)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
                         values, values[0]);                
@@ -98,24 +102,20 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                     
                     @Override
                     protected void doStuff() throws Exception { 
-                        AlignmentBoard board = new AlignmentBoard();                        
-                        board.setAlignmentSpace(alignmentContext.getAlignmentSpace());
-                        board.setImageSize(alignmentContext.getImageSize());
-                        board.setOpticalResolution(alignmentContext.getOpticalResolution());
-                        board.setName(boardName);                        
-                        newBoard = new DomainHelper().createAlignmentBoard(board);
+						constructAlignmentBoardObject();
                         
-                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(board, alignmentContext);
+                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext((AlignmentBoard)newBoard, alignmentContext);
                         // Presence of a sample member implies that single child of
                         // the sample must be added without its siblings.
-                        if (sampleMember!=null) {
-                            alignmentBoardContext.addDomainObject(sampleMember, objective);
+                        if (memberOfSample!=null) {
+                            alignmentBoardContext.addDomainObject(memberOfSample);
                         }
                         else if (sample!=null) {
-                            alignmentBoardContext.addDomainObject(sample, objective);
+							log.info("Adding sample {} to alignment board {}, with id={}", sample.getName(), newBoard.getName(), newBoard.getId());
+                            alignmentBoardContext.addDomainObject(sample);
                         }
                     }
-                    
+
                     @Override
                     protected void hadSuccess() {
                         // Update Tree UI
@@ -125,6 +125,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                             public void run() {
                                 // Need to reflect the selection in the browse panel.
                                 Launcher launcher = new Launcher();
+								log.info("Launching with alignment board {}, with id={}", newBoard.getName(), newBoard.getId());
                                 launcher.launch(newBoard.getId());
                             }
                         });
@@ -134,6 +135,18 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                     protected void hadError(Throwable error) {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
+
+					private void constructAlignmentBoardObject() throws Exception {
+						AlignmentBoard board = new AlignmentBoard();
+						board.setAlignmentSpace(alignmentContext.getAlignmentSpace());
+						board.setImageSize(alignmentContext.getImageSize());
+						board.setOpticalResolution(alignmentContext.getOpticalResolution());
+						board.setName(boardName);
+						newBoard = new DomainHelper().createAlignmentBoard(board);
+						board = null;
+						log.info("Created new alignment board {}, with id={}", newBoard.getName(), newBoard.getId());
+					}
+
                 };
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing alignment board...", ""));
                 worker.execute();
@@ -156,7 +169,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
 
     @Override
     public boolean isCompatible(DomainObject domainObject) {
-        setDomainObject(domainObject, "");
+        setDomainObject(domainObject);
         if ( domainObject == null ) {
             log.debug("Just nulled-out the domain object to ABCreator");
             return true;
@@ -180,9 +193,8 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
     /**
      * @param domainObject the domain object to set.
      */
-    private void setDomainObject(DomainObject domainObject, String objective) {
+    private void setDomainObject(DomainObject domainObject) {
         this.domainObject = domainObject;
-        this.objective = objective;
     }
 
     /**

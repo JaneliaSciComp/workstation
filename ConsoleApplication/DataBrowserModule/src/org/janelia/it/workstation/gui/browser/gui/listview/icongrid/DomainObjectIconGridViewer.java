@@ -51,6 +51,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.hibernate.util.IdentityMap.deserialize;
+
 /**
  * An IconGridViewer implementation for viewing domain objects. 
  *
@@ -71,7 +73,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private SearchProvider searchProvider;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
-        
+
         @Override
         public Reference getImageUniqueId(DomainObject domainObject) {
             return Reference.createFor(domainObject);
@@ -137,9 +139,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             @Override
             protected void resultChanged(ResultDescriptor resultDescriptor) {
                 log.info("Setting result preference: "+resultDescriptor.toString());
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, resultDescriptor.toString());
-                typeButton.setResultDescriptor(resultDescriptor);
-                typeButton.populate(domainObjectList.getDomainObjects());
+                try {
+                    setPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, ResultDescriptor.serialize(resultDescriptor));
+                }
+                catch (Exception e) {
+                    log.error("Error serializing sample result preference: "+resultDescriptor,e);
+                }
             }
         };
         typeButton = new ImageTypeSelectionButton() {
@@ -246,13 +251,19 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         this.domainObjectList = objects;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
-        
+
         final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
         if (parentObject!=null && parentObject.getId()!=null) {
             Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
             log.info("Got result preference: "+preference);
             if (preference!=null) {
-                resultButton.setResultDescriptor(new ResultDescriptor((String)preference.getValue()));
+                try {
+                    ResultDescriptor resultDescriptor = ResultDescriptor.deserialize((String) preference.getValue());
+                    resultButton.setResultDescriptor(resultDescriptor);
+                }
+                catch (Exception e) {
+                    log.error("Error deserializing preference "+preference.getId(),e);
+                }
             }
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
             log.info("Got image type preference: "+preference2);
@@ -294,17 +305,26 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
+        log.debug("Searching {} for {}",domainObject.getName(),text);
+
+        String tupper = text.toUpperCase();
+
+        // Exact matches on id or name always work
+        if (domainObject.getId().toString().equals(text) || domainObject.getName().toUpperCase().equals(tupper)) {
+            return true;
+        }
 
         String name = getImageModel().getImageTitle(domainObject);
-        if (name.toUpperCase().contains(text.toUpperCase())) {
+        if (name!=null && name.toUpperCase().contains(tupper)) {
             return true;
         }
 
         for(Annotation annotation : resultPage.getAnnotations(domainObject.getId())) {
-            if (annotation.getName().toUpperCase().contains(text.toUpperCase())) {
+            if (annotation.getName().toUpperCase().contains(tupper)) {
                 return true;
             }
         }
+
         return false;
     }
 

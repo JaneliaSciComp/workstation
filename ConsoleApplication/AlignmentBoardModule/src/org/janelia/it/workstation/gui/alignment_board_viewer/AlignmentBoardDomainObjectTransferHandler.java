@@ -1,35 +1,31 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
-import java.awt.datatransfer.DataFlavor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-
 import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.TransferHandler;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.TransferableDomainObjectList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.nb_action.DropAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -165,8 +161,8 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
         int visibleItemCount = 0;
         // Some entities would make it onto the board.  Let's get the remaining capacity of that board.
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
-            if (! item.getTarget().getTargetClassName().equals(CompartmentSet.class.getSimpleName())  &&
-                ! item.getTarget().getTargetClassName().equals(Sample.class.getSimpleName())) {
+            if (! item.getTarget().getObjectRef().getTargetClassName().equals(CompartmentSet.class.getSimpleName())  &&
+                ! item.getTarget().getObjectRef().getTargetClassName().equals(Sample.class.getSimpleName())) {
                 visibleItemCount ++;
             }
         }

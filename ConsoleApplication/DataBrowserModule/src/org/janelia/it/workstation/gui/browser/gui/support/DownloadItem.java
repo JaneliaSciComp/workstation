@@ -73,11 +73,11 @@ public class DownloadItem {
                 // Get the actual result descriptor, for file naming purposes
                 ResultDescriptor actualDescriptor = SampleUtils.getLatestResultDescriptor(sample);
                 if (actualDescriptor!=null) {
-                    resultName = actualDescriptor.getResultKey();
+                    resultName = actualDescriptor.getResultName();
                 }
             }
             else {
-                resultName = resultDescriptor.getResultKey();
+                resultName = resultDescriptor.getResultName();
             }
             fileProvider = SampleUtils.getResult(sample, resultDescriptor);
         }

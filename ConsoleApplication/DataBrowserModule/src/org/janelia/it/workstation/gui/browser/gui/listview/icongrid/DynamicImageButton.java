@@ -16,22 +16,11 @@ public class DynamicImageButton<T,S> extends AnnotatedImageButton<T,S> {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel) {
-        super(imageObject, imageModel, selectionModel, imagesPanel);
+    public DynamicImageButton(T imageObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, ImagesPanel<T,S> imagesPanel, String filepath) {
+        super(imageObject, imageModel, selectionModel, imagesPanel, filepath);
     }
 
-    public JComponent init(final T imageObject, final ImageModel<T,S> imageModel) {
-
-        String filepath = imageModel.getImageFilepath(imageObject);
-        if (filepath == null) {
-            throw new IllegalStateException("Entity has no filepath");
-        }
-        else if (filepath.equals("null")) {
-            throw new IllegalStateException("Entity has null filepath");
-        }
-
-        // send original file path so that file path translation or local caching occurs
-        // asynchronously within the the load image worker
+    public JComponent init(T imageObject, ImageModel<T,S> imageModel, String filepath) {
         this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH);
         return dynamicImagePanel;
     }
