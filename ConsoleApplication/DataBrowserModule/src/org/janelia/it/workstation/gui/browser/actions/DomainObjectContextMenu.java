@@ -147,7 +147,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         //for ( JComponent item: getOpenForContextItems() ) {
         //    add(item);
         //}
-        for (JMenuItem item: this.getWrapOjbectItems()) {
+        for (JMenuItem item: this.getWrapObjectItems()) {
 			add(item);
 		}
         
@@ -922,11 +922,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //		return orderedMap.values();
 //	}
 
-	public List<JMenuItem> getWrapOjbectItems() {
+	public List<JMenuItem> getWrapObjectItems() {
 		if (multiple) {
 			return Collections.EMPTY_LIST;
 		}
-		return new WrapperCreatorItemFactory().makeWrapperCreatorItems(contextObject);
+		return new WrapperCreatorItemFactory().makeWrapperCreatorItems(domainObject);
 	}
 
 	public class DomainObjectAcceptorActionListener implements ActionListener {
