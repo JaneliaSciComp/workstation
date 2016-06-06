@@ -265,7 +265,7 @@ public class DomainHelper {
                         String maskPath = comp.getFiles().get(FileType.MaskFile);
                         int underPos = maskPath.indexOf("_");
                         if (underPos > -1) {
-                            int dotPos = maskPath.indexOf(underPos, '.');
+                            int dotPos = maskPath.indexOf('.', underPos);
                             comp.setNumber(Integer.parseInt(maskPath.substring(underPos + 1, dotPos)));
                         }
 

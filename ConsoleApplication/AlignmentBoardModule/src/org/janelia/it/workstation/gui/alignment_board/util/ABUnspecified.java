@@ -2,9 +2,9 @@ package org.janelia.it.workstation.gui.alignment_board.util;
 
 import java.awt.Color;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.enums.FileType;
 
 public class ABUnspecified extends ABItem {
+    public static final String UNSPECIFIED_NAME_TYPE = "Unspecified";
     private static int _numberCounter = 1;
     private DomainObject wrappedObject;
     private int number;
@@ -20,7 +20,7 @@ public class ABUnspecified extends ABItem {
     }
 
     public String getName() {
-        return "Unspecified";
+        return UNSPECIFIED_NAME_TYPE;
     }
 
     public Integer getNumber() {
@@ -45,5 +45,4 @@ public class ABUnspecified extends ABItem {
     public String getType() {
         return UNSPECIFIED_NAME_TYPE;
     }
-    public static final String UNSPECIFIED_NAME_TYPE = "Unspecified";
 }

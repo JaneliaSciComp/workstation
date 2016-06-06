@@ -10,6 +10,8 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 
 import javax.swing.tree.TreePath;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
 
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
@@ -96,17 +98,22 @@ public class OutlineExpansionState {
         Object lastPathComponentObject = treePath.getLastPathComponent();
         AlignmentBoardItem nodeObject = (AlignmentBoardItem)lastPathComponentObject;
         Set<List<Long>> relativeExpandedIds = new HashSet<>();
-        Long alignmentBoardId = -1L;
+        Long lastComponentId = -1L;
         if (nodeObject instanceof AlignmentBoardContext) {
-            AlignmentBoardContext actx = (AlignmentBoardContext)nodeObject;
-            AlignmentBoard alignmentBoard = actx.getAlignmentBoard();
-            alignmentBoardId = alignmentBoard.getId();
+            lastComponentId = ((AlignmentBoardContext)nodeObject).getAlignmentBoard().getId();
         }
-        if (alignmentBoardId == -1L) {
-            log.warn("Never did find that alignment board id.");
+        else if (nodeObject instanceof AlignmentBoardItem) {
+            AlignmentBoardItem abi = (AlignmentBoardItem)nodeObject;
+            AlignmentBoardReference tgt = abi.getTarget();
+            if (tgt != null) {
+                lastComponentId = tgt.getObjectRef().getTargetId();
+            }
+            else {
+                log.warn("No target for " + nodeObject.getName() + " type=" + nodeObject.getClass().getName());
+            }
         }
         for(List<Long> expandedPath : expandedIds) {
-            if (expandedPath.get(0).equals(alignmentBoardId)) {
+            if (expandedPath.get(0).equals(lastComponentId)) {
                 outlineModel.getTreePathSupport().expandPath(treePath);
                 List<Long> relativePath = expandedPath.subList(1, expandedPath.size());
                 if (!relativePath.isEmpty()) {
