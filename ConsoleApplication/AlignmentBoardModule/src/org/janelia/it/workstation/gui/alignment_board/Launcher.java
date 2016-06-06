@@ -29,7 +29,7 @@ public class Launcher implements DomainObjectAcceptor  {
     public Launcher() {
     }
 
-    public void launch( long entityId ) {
+    public void launch( long domainObjectId ) {
         TopComponentGroup group = 
                 WindowManager.getDefault().findTopComponentGroup(
                         "alignment_board_plugin"
@@ -56,7 +56,7 @@ public class Launcher implements DomainObjectAcceptor  {
                 }
             }
 
-            AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( entityId );
+            AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( domainObjectId );
         }
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");

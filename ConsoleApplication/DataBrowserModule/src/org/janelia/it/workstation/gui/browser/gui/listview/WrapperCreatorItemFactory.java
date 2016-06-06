@@ -37,7 +37,7 @@ public class WrapperCreatorItemFactory {
      * @param domainObject build another domain object around this; may be null.
      * @return the menu item suitable for add to menu.
      */
-    public List<JMenuItem> makeWrapperCreatorItem(final DomainObject domainObject) {
+    public List<JMenuItem> makeWrapperCreatorItems(final DomainObject domainObject) {
         List<JMenuItem> rtnVal = new ArrayList<>();
         final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
         Collection<DomainObjectCreator> wrapperCreators

@@ -73,34 +73,29 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      * @param domainObject to be added to the board
      * @throws Exception
      */
-    public void addDomainObject(DomainObject domainObject, String objective) throws Exception {
+    public void addDomainObject(DomainObject domainObject) throws Exception {
 
-        log.info("Adding new aligned entity: {}, under objective {}.", domainObject.getName(), objective);
+        log.info("Adding new aligned domain object: {} to alignment board {}, in ab-context {}.", domainObject.getName(), alignmentBoard.getId(), this);
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<>();
 
         boolean itemsAdded = true;
         if (domainObject instanceof Sample) {
-            if (! addNewSample(domainObject, events))
-                return;
+            itemsAdded = addNewSample(domainObject, events);
         }
         else if (domainObject instanceof VolumeImage  &&  domainObject instanceof Image) {
             log.warn("Not handling reference " + domainObject.getName() + ".  Not yet supported.");
-            if (! addNewReference(domainObject, objective, events)) {
-                itemsAdded = false;
-            }
+            itemsAdded = addNewReference(domainObject, events);
         }
         else if (domainObject instanceof NeuronFragment) {
-            if (! addNewNeuronFragment(domainObject, events)) {
-                itemsAdded = false;
-            }
+            itemsAdded = addNewNeuronFragment(domainObject, events);
         }
         else if (domainObject instanceof CompartmentSet) {
             CompartmentSet compartmentSet = (CompartmentSet) domainObject;
             AlignmentBoardItem compartmentSetAlignmentBoardItem = getPreviouslyAddedItem(compartmentSet);
             
             if (compartmentSetAlignmentBoardItem == null) {
-                addNewCompartmentSet(compartmentSet, events);                
+                itemsAdded = addNewCompartmentSet(compartmentSet, events);                
             }
             else {
                 events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignmentBoardItem, ChangeType.VisibilityChange));
@@ -116,6 +111,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
 
         if (itemsAdded) {
+			log.info("Saving alignment board.");
             domainHelper.saveAlignmentBoard(alignmentBoard);
         }
 
@@ -313,7 +309,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private boolean addNewReference(DomainObject domainObject, String objective, final Collection<AlignmentBoardEvent> events) {
+    private boolean addNewReference(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
 // TODO find the sample entity.
 // Holding off on this.  Let's get some neurons first.
 
@@ -350,7 +346,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     private AlignmentBoardItem addSubItem(Class modelClass, AlignmentBoardItem parentItem, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
-        parentItem.getChildren().add(alignmentBoardItem);
+        parentItem.getChildren().add(alignmentBoardItem);		
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));        
         return alignmentBoardItem;
     }

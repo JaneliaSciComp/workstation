@@ -32,7 +32,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
@@ -41,7 +40,6 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemC
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
@@ -423,15 +421,16 @@ public class LayersPanel extends JPanel implements Refreshable {
 
                         CompatibilityChecker checker = new CompatibilityChecker();
                         for (DomainObject compartmentSetDO : compartmentSets) {
-                            AlignmentContext compartmentSetSpace = new AlignmentContext();
                             CompartmentSet compartmentSet = (CompartmentSet) compartmentSetDO;
-                            compartmentSetSpace.setAlignmentSpace(compartmentSet.getAlignmentSpace());
-                            compartmentSetSpace.setImageSize(compartmentSet.getImageSize());
-                            compartmentSetSpace.setOpticalResolution(compartmentSet.getOpticalResolution());
-                            if (checker.isEqual(targetSpace, compartmentSetSpace)) {
-                                log.info("Adding compartment set for space {}.", compartmentSetSpace.getAlignmentSpace());
+                            if (checker.isEqual(
+									targetSpace,
+									compartmentSet.getAlignmentSpace(),
+									compartmentSet.getOpticalResolution(),
+									compartmentSet.getImageSize())
+							) {
+                                log.info("Adding compartment set for space {} to alignment board {}/context={}.", compartmentSet.getAlignmentSpace(), abContext.getAlignmentBoard().getId(), abContext);
                                 if (!compartmentSet.getCompartments().isEmpty()) {
-                                    abContext.addDomainObject(compartmentSet, domainHelper.getObjectiveForAlignmentContext(targetSpace));
+									abContext.addDomainObject(compartmentSet);
                                     return;
                                 }
                             }

@@ -5,19 +5,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
-import javax.swing.JComponent;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -931,7 +926,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 		if (multiple) {
 			return Collections.EMPTY_LIST;
 		}
-		return new WrapperCreatorItemFactory().makeWrapperCreatorItem(contextObject);
+		return new WrapperCreatorItemFactory().makeWrapperCreatorItems(contextObject);
 	}
 
 	public class DomainObjectAcceptorActionListener implements ActionListener {
