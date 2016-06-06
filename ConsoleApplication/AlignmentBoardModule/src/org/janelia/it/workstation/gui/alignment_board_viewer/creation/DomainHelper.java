@@ -36,6 +36,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -240,7 +241,7 @@ public class DomainHelper {
         AlignmentBoardReference ref = item.getTarget();
         if (ref == null) {
             log.warn("Null reference in item {}", item.getName());
-            return null;
+            return createDummyItem(item);
         }
         if (ref.getObjectRef() == null) {
             log.error("No object ref, or no target for item " + item.getName());
@@ -251,7 +252,11 @@ public class DomainHelper {
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
             AlignmentBoardReference abRef = item.getTarget();
-            if (! abRef.getItemId().equals(cs.getId())) {
+            if (abRef.getItemId() == null  ||  abRef.getItemId().equals(cs.getId())) {
+                // Got compartment set
+                return new ABCompartmentSet(cs);
+            }
+            else {
                 // Got compartment
                 Compartment comp = cs.getCompartment(abRef.getItemId());
                 try {
@@ -272,9 +277,6 @@ public class DomainHelper {
                 ABCompartment abComp = new ABCompartment(comp);
                 return abComp;
             }
-            else {
-                return new ABCompartmentSet(cs);
-            }
         } else if (domainObject instanceof Sample) {
             return new ABSample((Sample) domainObject);
         } else if (domainObject instanceof NeuronFragment) {
@@ -286,8 +288,13 @@ public class DomainHelper {
         else {
             throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
         }
-        return null;
+        return createDummyItem(item);
     }
+    
+    private ABItem createDummyItem(AlignmentBoardItem item) {
+        return new ABUnspecified(null);
+    }
+    
     private void handleException(String message) {
         Exception ex = new Exception(message);
         SessionMgr.getSessionMgr().handleException(ex);

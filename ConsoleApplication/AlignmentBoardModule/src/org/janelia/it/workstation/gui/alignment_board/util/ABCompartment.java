@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.alignment_board.util;
 
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 
 public class ABCompartment extends ABItem {
     private Compartment compartment;
