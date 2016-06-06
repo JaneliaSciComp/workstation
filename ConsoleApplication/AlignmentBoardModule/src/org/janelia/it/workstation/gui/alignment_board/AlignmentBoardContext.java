@@ -142,7 +142,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             } else {
                 // Step in one more level.
                 for (AlignmentBoardItem childItem : item.getChildren()) {
-                    ABItem abChildItem = domainHelper.getObjectForItem(item);
+                    ABItem abChildItem = domainHelper.getObjectForItem(childItem);
                     if (abChildItem.getId().equals(id)) {
                         return childItem;
                     }
