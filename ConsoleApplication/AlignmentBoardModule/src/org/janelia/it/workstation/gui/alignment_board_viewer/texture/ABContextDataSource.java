@@ -275,8 +275,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
     }
 
     private RenderableBean createRenderableBean( int translatedNum, boolean isCompartment, AlignmentBoardItem item ) {
-        ABItem dobj = domainHelper.getObjectForItem(item);
-        int maskIndex = getOriginalMaskNumber(dobj);
+        ABItem abItem = domainHelper.getObjectForItem(item);
+        int maskIndex = getOriginalMaskNumber(abItem);
         logger.debug(
                 "Creating Renderable Bean for: " + item.getTarget() + " original index=" + maskIndex +
                         " new index=" + translatedNum
@@ -285,10 +285,10 @@ public class ABContextDataSource implements RenderableDataSourceI {
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setLabelFileNum(maskIndex);
         renderableBean.setTranslatedNum(translatedNum);
-        renderableBean.setName(dobj.getName());
-        renderableBean.setId(dobj.getId());
-        renderableBean.setType(dobj.getType());
-        renderableBean.setItem(dobj);
+        renderableBean.setName(abItem.getName());
+        renderableBean.setId(abItem.getId());
+        renderableBean.setType(abItem.getType());
+        renderableBean.setItem(abItem);
         if ( isCompartment ) {
             renderableBean.setInvertedY( false );
         }

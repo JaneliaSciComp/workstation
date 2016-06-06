@@ -157,14 +157,20 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      * @param childId whose parent to find.
      * @return parent of this child.
      */
-    public AlignmentBoardItem getAlignmentBoardItemParent(Long childId) {
-        AlignmentBoardItem rtnVal = null;
+    public AlignmentBoardItem getAlignmentBoardItemParent(ABItem soughtItem) {
+        AlignmentBoardItem rtnVal = null;        
         for (AlignmentBoardItem item: alignmentBoard.getChildren()) {
-            ABItem abItem = domainHelper.getObjectForItem(item);
-            if (abItem.getId().equals(childId)) {
+            ABItem parentAbItem = domainHelper.getObjectForItem(item);
+            if (parentAbItem.getId().equals(soughtItem.getId())) {
                 return null;
             }
-            rtnVal = getAlignmentBoardItemParent(childId, item);
+            rtnVal = getAlignmentBoardItemParent(soughtItem, item);
+            if (rtnVal != null) {
+                break;
+            }
+        }
+        if (rtnVal == null) {
+            log.warn("No alignment board item parent found for {}:{}.", soughtItem.getName(), soughtItem.getId());
         }
         return rtnVal;
     }
@@ -217,21 +223,26 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      * Sufficient for fairly small data.  Re-implementation would require
      * adding parent pointer to the object, or caching the tree structure.
      * 
-     * @param childId whose parent to look for.
+     * @param soughtItem whose parent to look for.
      * @param currentParent candidate as parent of the child id.
      * @return whatever parent is found, or null to signal: keep searching.
      */
-    private AlignmentBoardItem getAlignmentBoardItemParent(Long childId, AlignmentBoardItem currentParent) {
+    private AlignmentBoardItem getAlignmentBoardItemParent(ABItem soughtItem, AlignmentBoardItem currentParent) {
         AlignmentBoardItem rtnVal = null;
-        for (AlignmentBoardItem item: currentParent.getChildren()) {
-            ABItem abItem = domainHelper.getObjectForItem(item);
-            if (abItem.getId().equals(childId)) {
+        if (soughtItem.getId() == null) {
+            log.warn("Item {} has null id. Returning null alignment board item parent.", soughtItem.getName());
+            return null;
+        }
+        for (AlignmentBoardItem descendentItem: currentParent.getChildren()) {
+            ABItem descendentAbItem = domainHelper.getObjectForItem(descendentItem);
+            if (descendentAbItem.getId().equals(soughtItem.getId())) {
                 rtnVal = currentParent;
             }
             else {
-                rtnVal = getAlignmentBoardItemParent(childId, item);
+                rtnVal = getAlignmentBoardItemParent(soughtItem, descendentItem);
             }
             if (rtnVal != null) {
+                log.trace("Success!  Found {} under child ab id {}.", soughtItem.getId(), descendentAbItem.getId());
                 break;
             }
         }

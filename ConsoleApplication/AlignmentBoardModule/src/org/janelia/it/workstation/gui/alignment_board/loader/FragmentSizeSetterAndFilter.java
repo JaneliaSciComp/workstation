@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
@@ -26,10 +27,10 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelp
  * some threshold. All beans which have passed through the filter will have their voxel counts set to the found value.
  */
 public class FragmentSizeSetterAndFilter {
-    private Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
-    private long thresholdVoxelCount;
-    private long thresholdNeuronCount;
-    private DomainHelper domainHelper = new DomainHelper();
+    private final Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
+    private final long thresholdVoxelCount;
+    private final long thresholdNeuronCount;
+    private final DomainHelper domainHelper = new DomainHelper();
 
     private Map<Long,Long> renDataBeanItemParentIdToChildCount;
 
@@ -51,7 +52,6 @@ public class FragmentSizeSetterAndFilter {
      * @return limited list, with only acceptable values.
      */
     public Collection<MaskChanRenderableData> filter( Collection<MaskChanRenderableData> rawList ) {
-
         // For each data, read up its voxel count.
         FileResolver resolver = new CacheFileResolver();
         for ( MaskChanRenderableData data: rawList ) {
@@ -81,12 +81,12 @@ public class FragmentSizeSetterAndFilter {
             }
         }
 
-        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<>();
         sortedRenderableDatas.addAll( rawList );
         Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Now discard based on filtering criteria.
-        List<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> rtnVal = new ArrayList<>();
         int discardCount = 0;
         for ( MaskChanRenderableData data: sortedRenderableDatas ) {
             if ( filter(data) ) {
@@ -95,7 +95,7 @@ public class FragmentSizeSetterAndFilter {
             else {
                 discardCount ++;
                 logger.debug(
-                        "Not keeping {}, entity {}, because it has too few voxels.",
+                        "Not keeping {}, id {}, because it has too few voxels.",
                         data.getBean().getLabelFileNum(),
                         data.getBean().getId()
                 );
@@ -124,18 +124,12 @@ public class FragmentSizeSetterAndFilter {
                 if ( renDataBeanItemParentIdToChildCount != null ) {
                     rtnVal = false;
                     if ( bean.getId() != null ) {
-                        AlignmentBoardItem alignmentBoardItem = AlignmentBoardMgr.getInstance().getLayersPanel()
-                                .getAlignmentBoardContext()
-                                .getAlignmentBoardItemWithId(
-                                        bean.getId()
-                                );
-                        
+                        final AlignmentBoardContext alignmentBoardContext = 
+                                AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+                        AlignmentBoardItem alignmentBoardItem = alignmentBoardContext.getAlignmentBoardItemWithId(bean.getId());                        
                         if ( alignmentBoardItem != null ) {
-                            AlignmentBoardItem parent = AlignmentBoardMgr.getInstance().getLayersPanel()
-                                .getAlignmentBoardContext()
-                                .getAlignmentBoardItemParent(
-                                        bean.getId()
-                                );
+                            ABItem item = (ABItem)bean.getItem();
+                            AlignmentBoardItem parent = alignmentBoardContext.getAlignmentBoardItemParent(item);
                             if ( parent != null ) {
 
                                 ABItem abItem = domainHelper.getObjectForItem(parent);
