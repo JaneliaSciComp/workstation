@@ -867,6 +867,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     );
                     loadWorker.setLoadFilesFlag( Boolean.FALSE );
                     loadWorker.execute();
+					domainHelper.saveAlignmentBoardAsync(alignmentBoard);
                 }
             }
         } catch ( Throwable th ) {
