@@ -4,11 +4,9 @@ import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.dialogs.search.SearchParametersPanel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.BaseballCardPanel;
-import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
-import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCardPanel;
+import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCard;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +17,6 @@ import java.awt.event.ActionListener;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -32,7 +29,6 @@ import org.janelia.it.workstation.model.domain.Sample;
  * User: fosterl
  * Date: 12/13/13
  * Time: 9:53 AM
- * @todo move fully away from Entities.
  *
  * This specialized search dialog's output will be targeted at the alignment board.
  */
@@ -41,7 +37,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private static final int DEFAULT_ROWS_PER_PAGE = 10;
 
     private AlignmentBoardContext context;
-    private Entity searchRoot;
+    private DomainObject searchRoot;
     private SearchParametersPanel searchParamsPanel;
     private BaseballCardPanel baseballCardPanel;
     private Logger logger = LoggerFactory.getLogger( ABTargetedSearchDialog.class );
@@ -68,7 +64,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     /** Launch with/without search-here starting point. */
-    public void showDialog( Entity searchRoot ) {
+    public void showDialog( DomainObject searchRoot ) {
         this.searchRoot = searchRoot;
         packAndShow();
     }
@@ -149,21 +145,21 @@ public class ABTargetedSearchDialog extends ModalDialog {
                             logger.info("Adding entity {}.", bbc.toString());
                             try {
                                 DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                final String entityTypeName = bbc.getEntity().getEntityTypeName();
+                                final String type = bbc.getDomainObject().getType();
                                 String domainObjectClass = null;
-                                if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+                                if (type.equals("Neuron Fragment")) {
                                     domainObjectClass = NeuronFragment.class.getSimpleName();
                                 }
-                                else if (entityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
+                                else if (type.equals("Sample")) {
                                     domainObjectClass = Sample.class.getSimpleName();
                                 }
-                                DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getEntity().getId());
+                                DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getDomainObject().getId());
                                 context.addDomainObject(dobj);
                                 //context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
                             } catch ( Exception ex ) {
                                 logger.error(
                                         "Failed to add entity {} to alignment board context {}.",
-                                        bbc.getEntity(),
+                                        bbc.getDomainObject(),
                                         context.getAlignmentBoard().getName()
                                 );
                             }

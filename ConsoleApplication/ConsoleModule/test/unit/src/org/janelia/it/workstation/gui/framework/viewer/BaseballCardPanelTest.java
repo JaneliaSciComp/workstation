@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCardPanel;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -18,7 +19,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.browser.WorkstationEnvironment;
-import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.junit.experimental.categories.Category;
@@ -76,7 +77,7 @@ public class BaseballCardPanelTest extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 for ( BaseballCard card: panel.getSelectedCards() ) {
-                    logger.info("Entity is " + card.getEntity().getId() + "/" + card.getEntity().getName());
+                    logger.info("Entity is " + card.getDomainObject().getId() + "/" + card.getDomainObject().getName());
                 }
             }
         });

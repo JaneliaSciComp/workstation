@@ -1,12 +1,14 @@
-package org.janelia.it.workstation.gui.framework.viewer;
+package org.janelia.it.workstation.gui.browser.baseball_card;
 
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.exchange.DomainObjectReceiver;
+import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,10 +28,10 @@ import java.util.concurrent.Callable;
  * Date: 12/5/13
  * Time: 10:30 AM
  *
- * Presents information about an Entity as a Baseball-card like configuration.  On the left side will be the default
+ * Presents information about an object as a Baseball-card like configuration.  On the left side will be the default
  * 2D image (if it exists), and on right part, will be tag/value table of information.  Makes an internal JTable.
  */
-public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
+public class BaseballCardPanel extends JPanel implements DomainObjectReceiver {
     public static final String IMAGE_COLUMN_HEADER = "Image";
     public static final String DETAILS_COLUMN_HEADER = "Details";
 
@@ -43,7 +45,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private int nextEntityNum;
     private DynamicTable cardTable;
     private ControlCallback controlCallback;
-    private List<RootedEntity> rootedEntities;
+    private List<DomainObject> domainObjects;
     private JLabel statusLabel;
     private SolrResultsMetaData solrResultsMetaData;
 
@@ -65,15 +67,15 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     @Override
-    public void setRootedEntities(
-            List<RootedEntity> rootedEntities, SolrResultsMetaData solrResultsMetaData
+    public void setDomainObjects(
+            List<DomainObject> domainObjects, SolrResultsMetaData solrResultsMetaData
     ) {
-        this.rootedEntities = rootedEntities;
+        this.domainObjects = domainObjects;
         this.solrResultsMetaData = solrResultsMetaData;
         cards = new ArrayList<>();
-        for ( nextEntityNum = 0; nextEntityNum < rowsPerPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum ++ ) {
-            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            cards.add( new BaseballCard( rootedEntity.getEntity() ) );
+        for ( nextEntityNum = 0; nextEntityNum < rowsPerPage  &&  nextEntityNum < domainObjects.size(); nextEntityNum ++ ) {
+            DomainObject domainObject = domainObjects.get( nextEntityNum );
+            cards.add( new BaseballCard( domainObject ) );
         }
         establishGui();
         requestRedraw();
@@ -81,9 +83,9 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     public void showAnotherPage() {
         int endOfPage = nextEntityNum + rowsPerPage;
-        for ( ; nextEntityNum < endOfPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
-            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
+        for ( ; nextEntityNum < endOfPage  &&  nextEntityNum < domainObjects.size(); nextEntityNum++ ) {
+            DomainObject domainObject = domainObjects.get( nextEntityNum );
+            BaseballCard card = new BaseballCard(domainObject);
             cards.add( card );
             cardTable.addRow( card );
         }
@@ -93,9 +95,9 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     public void showAll() {
-        for ( ; nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
-            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
+        for ( ; nextEntityNum < domainObjects.size(); nextEntityNum++ ) {
+            DomainObject domainObject = domainObjects.get( nextEntityNum );
+            BaseballCard card = new BaseballCard(domainObject);
             cards.add( card );
             cardTable.addRow( card );
         }
@@ -176,7 +178,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
                     final BaseballCard value = cards.get(target.getSelectedRow());
 
-                    JMenuItem titleMenuItem = new JMenuItem(value.getEntity().getName());
+                    JMenuItem titleMenuItem = new JMenuItem(value.getDomainObject().getName());
                     titleMenuItem.setEnabled(false);
                     popupMenu.add(titleMenuItem);
 
@@ -188,9 +190,13 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                             // Signal caller we are taking the screen.
                             controlCallback.callerRequiresFocus();
                             // Show in HUD/Light Box
-                            Entity entity = value.getEntity();
+                            DomainObject domainObject = value.getDomainObject();
                             Hud.getSingletonInstance().hideDialog(); // Ensure: one-way trip
-                            Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
+                            ResultDescriptor resultDescriptor = new ResultDescriptor();
+                            resultDescriptor.setAligned(true);
+                            resultDescriptor.setResultName(domainObject.getName());                            
+                            resultDescriptor.setObjective(getObjectiveForObj(domainObject));
+                            Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, domainObject.getType());
                         }
                     });
                     popupMenu.add(copyMenuItem);
@@ -228,7 +234,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             addCardToTable(detailsSize, imageSize, card);
         }
         cardTable.setMaxColWidth( Math.max( detailsSize.width, imageSize.width ) );
-        cardTable.setMoreResults( rootedEntities.size() > rowsPerPage );
+        cardTable.setMoreResults( domainObjects.size() > rowsPerPage );
 
         this.setLayout(new BorderLayout());
         this.add(cardTable, BorderLayout.CENTER);
@@ -291,7 +297,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             Component component = this.getComponent( i );
             if ( component instanceof DynamicTable) {
                 DynamicTable table = (DynamicTable)component;
-                table.setMoreResults( nextEntityNum < rootedEntities.size() );
+                table.setMoreResults( nextEntityNum < domainObjects.size() );
             }
         }
         updateStatus();
@@ -301,6 +307,11 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         validate();
         invalidate();
         repaint();
+    }
+
+    /** Unsure how else to do this.  20x is the most common.  Can I return null? */
+    private String getObjectiveForObj(DomainObject domainObject) {
+        return "20x";
     }
 
     /**

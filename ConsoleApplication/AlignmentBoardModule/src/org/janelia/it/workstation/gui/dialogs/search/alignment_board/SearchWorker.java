@@ -11,20 +11,17 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.RootedEntityReceiver;
+import org.janelia.it.workstation.gui.browser.exchange.DomainObjectReceiver;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
-import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
-import org.janelia.it.workstation.model.domain.Sample;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +39,7 @@ public class SearchWorker extends SimpleWorker {
 
     private Logger logger = LoggerFactory.getLogger(ABTargetedSearchDialog.class);
     private SearchWorkerParam param;
-    private List<RootedEntity> rootedResults;
+    private List<DomainObject> rootedResults;
     private SolrResultsMetaData resultsMetaData;
     private SolrQueryBuilder queryBuilder;
     private AlignmentBoardContext context;
@@ -67,8 +64,8 @@ public class SearchWorker extends SimpleWorker {
 
         Map<String,Set<String>> filters = new HashMap<>();
         Set<String> filterValues = new HashSet<>();
-        filterValues.add( EntityConstants.TYPE_SAMPLE );
-        filterValues.add( EntityConstants.TYPE_NEURON_FRAGMENT );
+        filterValues.add( "Sample" );
+        filterValues.add( "Neuron Fragment" );
         filters.put( "entity_type", filterValues );
 
         queryBuilder.setFilters( filters );
@@ -77,7 +74,7 @@ public class SearchWorker extends SimpleWorker {
         query.setRows(maxQueryRows);
 
         SolrResults results = ModelMgr.getModelMgr().searchSolr( query );
-        List<Entity> resultList = results.getResultList();
+        List<DomainObject> resultList = null; //results.getResultList();
         rootedResults = getCompatibleRootedEntities( resultList );
 
         resultsMetaData = new SolrResultsMetaData();
@@ -91,8 +88,8 @@ public class SearchWorker extends SimpleWorker {
     @Override
     protected void hadSuccess() {
         // Accept results and populate.
-        RootedEntityReceiver receiver = param.getReceiver();
-        receiver.setRootedEntities(
+        DomainObjectReceiver receiver = param.getReceiver();
+        receiver.setDomainObjects(
                 rootedResults,
                 resultsMetaData
         );
@@ -108,15 +105,15 @@ public class SearchWorker extends SimpleWorker {
      * Finds only the results that can be added to the context provided.  Also, moves up the hierarchy
      * from raw entities to their rooted entities.
      *
-     * @param entities from possibly many alingment contexts
+     * @param domainObjects from possibly many alignment contexts
      * @return those from specific context.
      */
-    private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) throws Exception {
-        logger.info("Found {} raw entities.", entities.size());
-        List<RootedEntity> rtnVal = new ArrayList<>();
+    private List<DomainObject> getCompatibleRootedEntities( Collection<DomainObject> domainObjects ) throws Exception {
+        logger.info("Found {} raw entities.", domainObjects.size());
+        List<DomainObject> rtnVal = new ArrayList<>();
 
         List<Long> guids = new ArrayList<>();
-        for ( Entity entity: entities ) {
+        for ( DomainObject entity: domainObjects ) {
             guids.add( entity.getId() );
         }
         String opticalRes = context.getAlignmentContext().getOpticalResolution();
@@ -128,40 +125,39 @@ public class SearchWorker extends SimpleWorker {
         int incorrectTypeCount = 0;
         Set<String> incorrectTypes = new HashSet<>();
         // Next, walk each entity's tree looking for proper info.
-        for ( Entity entity: entities ) {
+        for ( DomainObject domainObject: domainObjects ) {
             try {
                 // Now, to "prowl" the trees of the result list, to find out what can be added, here.
-                switch (entity.getEntityTypeName()) {
-                    case EntityConstants.TYPE_SAMPLE:
-                        RootedEntity rootedEntity;
-                        Entity childEntity = ModelMgrUtils.getAccessibleChildren(entity).iterator().next();
-                        rootedEntity =
-                                new RootedEntity(ModelMgr.getModelMgr().getAncestorWithType(childEntity, EntityConstants.TYPE_SAMPLE));
-
-                        if (rootedEntity == null) {
-                            logger.warn("Did not find child/parent.  Instead wrapping with new rooted entity.");
-                            rootedEntity = new RootedEntity(entity);
-                        }
-
-                        if (isSampleCompatible(param.getContext(), rootedEntity)) {
-                            rtnVal.add(rootedEntity);
-                        } else {
-                            nonCompatibleSampleCount++;
-                        }
-                        break;
-                    case EntityConstants.TYPE_NEURON_FRAGMENT:
-                        // Find ancestor to figure out if it is compatible.
-                        if (isNeuronCompatible(entity, compatibleList)) {
-                            rtnVal.add(new RootedEntity(entity));
-                        } else {
-                            nonCompatibleNeuronCount++;
-                        }
-
-                        break;
-                    default:
-                        incorrectTypes.add(entity.getEntityTypeName());
-                        incorrectTypeCount++;
-                        break;
+                switch (domainObject.getType()) {
+//                    case EntityConstants.TYPE_SAMPLE:
+//                        Entity childEntity = ModelMgrUtils.getAccessibleChildren(domainObject).iterator().next();
+//                        rootedEntity =
+//                                new RootedEntity(ModelMgr.getModelMgr().getAncestorWithType(childEntity, EntityConstants.TYPE_SAMPLE));
+//
+//                        if (rootedEntity == null) {
+//                            logger.warn("Did not find child/parent.  Instead wrapping with new rooted entity.");
+//                            rootedEntity = new RootedEntity(domainObject);
+//                        }
+//
+//                        if (isSampleCompatible(param.getContext(), rootedEntity)) {
+//                            rtnVal.add(rootedEntity);
+//                        } else {
+//                            nonCompatibleSampleCount++;
+//                        }
+//                        break;
+//                    case EntityConstants.TYPE_NEURON_FRAGMENT:
+//                        // Find ancestor to figure out if it is compatible.
+//                        if (isNeuronCompatible(domainObject, compatibleList)) {
+//                            rtnVal.add(new RootedEntity(domainObject));
+//                        } else {
+//                            nonCompatibleNeuronCount++;
+//                        }
+//
+//                        break;
+//                    default:
+//                        incorrectTypes.add(domainObject.getEntityTypeName());
+//                        incorrectTypeCount++;
+//                        break;
                 }
 
             } catch ( Exception ex ) {
@@ -189,11 +185,14 @@ public class SearchWorker extends SimpleWorker {
         return rtnVal;
     }
 
-    private boolean isSampleCompatible(AlignmentContext standardContext, RootedEntity entity) throws Exception {
+    private boolean isSampleCompatible(AlignmentContext standardContext, DomainObject domainObject) throws Exception {
         boolean rtnVal;
         boolean foundMatch = false;
-        Sample wrapper = (Sample) EntityWrapperFactory.wrap(entity);
+        Sample sample = (Sample)domainObject;
         List<AlignmentContext> contexts = Collections.EMPTY_LIST;
+        
+//TODO: get the alignment contexts for the sample...
+
         //List<AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
         Iterator<AlignmentContext> contextIterator = contexts.iterator();
 
@@ -209,22 +208,22 @@ public class SearchWorker extends SimpleWorker {
         return rtnVal;
     }
 
-    private boolean isNeuronCompatible(Entity entity, List<Long> compatibleList) throws Exception {
-        return ( compatibleList.contains( entity.getId() ) );
+    private boolean isNeuronCompatible(DomainObject domainObject, List<Long> compatibleList) throws Exception {
+        return ( compatibleList.contains( domainObject.getId() ) );
     }
 
     public static class SearchWorkerParam {
-        private RootedEntityReceiver receiver;
+        private DomainObjectReceiver receiver;
         private Long searchRootId;
         private AlignmentContext context;
         private SearchErrorHandler errorHandler;
         private int startingRow;
 
-        public RootedEntityReceiver getReceiver() {
+        public DomainObjectReceiver getReceiver() {
             return receiver;
         }
 
-        public void setReceiver(RootedEntityReceiver receiver) {
+        public void setReceiver(DomainObjectReceiver receiver) {
             this.receiver = receiver;
         }
 
