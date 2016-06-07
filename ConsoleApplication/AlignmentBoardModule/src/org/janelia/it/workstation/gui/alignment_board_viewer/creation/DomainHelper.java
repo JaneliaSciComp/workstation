@@ -7,9 +7,11 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -25,17 +27,17 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-//import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.util.ThreadUtils.CustomNamedThreadFactory;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -51,6 +53,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DomainHelper {
     public static final String ALIGNMENT_BOARDS_FOLDER = "Alignment Boards";
+	private ExecutorService savebackExecutor = Executors.newFixedThreadPool(1, new CustomNamedThreadFactory("AlignmentBoardSave"));
 
     private Logger log = LoggerFactory.getLogger(DomainHelper.class);
     public List<AlignmentContext> getAvailableAlignmentContexts(Sample sample) throws Exception {
@@ -152,6 +155,10 @@ public class DomainHelper {
         DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
     }
     
+	public void saveAlignmentBoardAsync(final AlignmentBoard alignmentBoard) throws Exception {
+		savebackExecutor.submit(new SaverCallable(alignmentBoard));
+	}
+
     public Sample getSampleForNeuron(NeuronFragment nf) {
         Reference sampleRef = nf.getSample();
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
@@ -240,7 +247,7 @@ public class DomainHelper {
         AlignmentBoardReference ref = item.getTarget();
         if (ref == null) {
             log.warn("Null reference in item {}", item.getName());
-            return null;
+            return createDummyItem(item);
         }
         if (ref.getObjectRef() == null) {
             log.error("No object ref, or no target for item " + item.getName());
@@ -251,7 +258,11 @@ public class DomainHelper {
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
             AlignmentBoardReference abRef = item.getTarget();
-            if (! abRef.getItemId().equals(cs.getId())) {
+            if (abRef.getItemId() == null  ||  abRef.getItemId().equals(cs.getId())) {
+                // Got compartment set
+                return new ABCompartmentSet(cs);
+            }
+            else {
                 // Got compartment
                 Compartment comp = cs.getCompartment(abRef.getItemId());
                 try {
@@ -260,7 +271,7 @@ public class DomainHelper {
                         String maskPath = comp.getFiles().get(FileType.MaskFile);
                         int underPos = maskPath.indexOf("_");
                         if (underPos > -1) {
-                            int dotPos = maskPath.indexOf(underPos, '.');
+                            int dotPos = maskPath.indexOf('.', underPos);
                             comp.setNumber(Integer.parseInt(maskPath.substring(underPos + 1, dotPos)));
                         }
 
@@ -271,9 +282,6 @@ public class DomainHelper {
                 }
                 ABCompartment abComp = new ABCompartment(comp);
                 return abComp;
-            }
-            else {
-                return new ABCompartmentSet(cs);
             }
         } else if (domainObject instanceof Sample) {
             return new ABSample((Sample) domainObject);
@@ -286,11 +294,35 @@ public class DomainHelper {
         else {
             throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
         }
-        return null;
+        return createDummyItem(item);
     }
+    
+    private ABItem createDummyItem(AlignmentBoardItem item) {
+        return new ABUnspecified(null);
+    }
+    
     private void handleException(String message) {
         Exception ex = new Exception(message);
         SessionMgr.getSessionMgr().handleException(ex);
     }
       
+	private static class SaverCallable implements Callable<Void> {
+
+		private AlignmentBoard alignmentBoard;
+
+		public SaverCallable(AlignmentBoard alignmentBoard) {
+			this.alignmentBoard = alignmentBoard;
+		}
+
+		@Override
+		public Void call() throws Exception {
+			try {
+				DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
+			} catch (Exception ex) {
+				SessionMgr.getSessionMgr().handleException(ex);
+			}
+			return null;
+		}
+	}
+
 }

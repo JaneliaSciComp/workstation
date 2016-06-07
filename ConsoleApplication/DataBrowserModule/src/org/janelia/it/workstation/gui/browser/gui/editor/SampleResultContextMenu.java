@@ -7,6 +7,7 @@ import java.util.Arrays;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -54,6 +55,7 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getCopyIdToClipboardItem());
         
         setNextAddRequiresSeparator(true);
+        add(getResultsInNewViewer());
         add(getOpenSeparationInNewViewer());
         
         setNextAddRequiresSeparator(true);
@@ -74,12 +76,13 @@ public class SampleResultContextMenu extends PopupContextMenu {
     }
     
     public void runDefaultAction() {
-        if (result.getLatestSeparationResult()==null) return;
-        SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
-        if (viewer==null || !SampleUtils.equals(viewer.getCurrent(), result)) {
-            viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
-            viewer.requestActive();
-            viewer.loadSampleResult(result, true, null);
+        if (result.getLatestSeparationResult()!=null || result instanceof HasFileGroups) {
+            SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
+            if (viewer == null || !SampleUtils.equals(viewer.getCurrent(), result)) {
+                viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+                viewer.requestActive();
+                viewer.loadSampleResult(result, true, null);
+            }
         }
     }
     
@@ -97,7 +100,21 @@ public class SampleResultContextMenu extends PopupContextMenu {
     protected JMenuItem getCopyIdToClipboardItem() {
         return getNamedActionItem(new CopyToClipboardAction("GUID",result.getId().toString()));
     }
-    
+
+    protected JMenuItem getResultsInNewViewer() {
+        if (!(result instanceof HasFileGroups)) return null;
+        JMenuItem copyMenuItem = new JMenuItem("  Open Results In New Viewer");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+                viewer.requestActive();
+                viewer.loadSampleResult(result, true, null);
+            }
+        });
+        return copyMenuItem;
+    }
+
     protected JMenuItem getOpenSeparationInNewViewer() {
         if (result.getLatestSeparationResult()==null) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");

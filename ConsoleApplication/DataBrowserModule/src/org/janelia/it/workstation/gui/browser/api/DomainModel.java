@@ -172,6 +172,7 @@ public class DomainModel {
         List<T> invalidatedObjects = new ArrayList<>();
         synchronized (this) {
             for(T domainObject : domainObjects) {
+                if (domainObject==null) continue;
                 Reference id = Reference.createFor(domainObject);
                 T canonicalObject = (T)objectCache.getIfPresent(id);
                 if (canonicalObject != null) {
