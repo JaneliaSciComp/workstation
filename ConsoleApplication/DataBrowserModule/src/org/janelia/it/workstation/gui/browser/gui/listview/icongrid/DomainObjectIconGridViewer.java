@@ -161,6 +161,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     private void setPreference(final String name, final String value) {
 
+        Utils.setMainFrameCursorWaitStatus(true);
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -180,11 +182,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void hadSuccess() {
-                showDomainObjects(domainObjectList, null);
+                showDomainObjects(domainObjectList, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        Utils.setMainFrameCursorWaitStatus(false);
+                        return null;
+                    }
+                });
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setMainFrameCursorWaitStatus(false);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
