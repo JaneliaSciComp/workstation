@@ -1277,8 +1277,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 break;
             case NEXT_PARALLEL:
             case PREV_PARALLEL:
-                // easy case first: on root with one child, nothing
-                if (ann.isRoot() && neuron.getChildrenOf(ann).size() == 1) {
+                // easy case first: on root with zero or one child, nothing
+                if (ann.isRoot() && neuron.getChildrenOf(ann).size() <= 1) {
                     break;
                 }
 
