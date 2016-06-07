@@ -22,7 +22,7 @@
     <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.events.selection" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.components" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.gui.listview.icongrid" level="INFO"/>
+    <logger name="org.janelia.it.workstation.gui.browser.gui.listview" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.gui.support" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.nodes" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.model" level="INFO"/>

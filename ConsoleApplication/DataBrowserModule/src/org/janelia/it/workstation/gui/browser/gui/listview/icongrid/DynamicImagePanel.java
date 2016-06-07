@@ -140,22 +140,22 @@ public class DynamicImagePanel extends JPanel {
      */
     public synchronized void setViewable(final boolean wantViewable, final Callable success) {
         
-        log.debug("setViewable({}->{},{})",viewable,wantViewable,imageFilename);
+        log.trace("setViewable({}->{},{})",viewable,wantViewable,imageFilename);
         
         if (imageFilename != null) {
             if (wantViewable) {
                 if (!this.viewable) {
 
-                    log.debug("LoadImageWorker: {}",imageFilename);
+                    log.trace("LoadImageWorker: {}",imageFilename);
                     loadWorker = new LoadImageWorker(imageFilename, getDisplaySize()) {
 
                         @Override
                         protected void hadSuccess() {
 
-                            log.debug("Load complete: {}",imageFilename);
+                            log.trace("Load complete: {}",imageFilename);
                             
                             if (isCancelled()) {
-                                log.info("Load was cancelled");
+                                log.debug("Load was cancelled");
                                 return;
                             }
 

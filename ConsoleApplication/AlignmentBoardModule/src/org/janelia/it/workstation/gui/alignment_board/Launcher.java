@@ -10,11 +10,14 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is to launch the whole Alignment Board suite of views.
@@ -23,6 +26,8 @@ import org.openide.windows.WindowManager;
  */
 @ServiceProvider(service = DomainObjectAcceptor.class, path=DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
 public class Launcher implements DomainObjectAcceptor  {
+    
+    private static final Logger log = LoggerFactory.getLogger(Launcher.class);
     
     private static final int MENU_ORDER = 200;
     
@@ -76,7 +81,7 @@ public class Launcher implements DomainObjectAcceptor  {
 
     @Override
     public boolean isCompatible(DomainObject dObj) {
-        java.util.logging.Logger.getLogger("Launcher").info(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
+        log.trace(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
         return dObj instanceof AlignmentBoard;
     }
     
