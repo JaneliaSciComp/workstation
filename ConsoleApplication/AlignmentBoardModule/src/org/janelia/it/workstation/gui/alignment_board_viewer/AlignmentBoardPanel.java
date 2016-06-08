@@ -715,11 +715,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
      * as needed.
      */
     private void createMip3d() {
-        //if ( settings != null ) {
-        //    settings.removeAllSettingsListeners();
-        //}
         tearDownToolbar();
         if ( mip3d != null ) {
+            serialize();
             mip3d.releaseMenuActions();
         }
         LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
@@ -818,7 +816,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
 
-        toolbar.add(controls.getSearch());
+        // Search-to-add is done externally, now.
+        //toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());

@@ -151,10 +151,6 @@ public class DomainHelper {
         return (AlignmentBoard)DomainMgr.getDomainMgr().getModel().getDomainObject(AlignmentBoard.class.getSimpleName(), alignmentBoardId);
     }
     
-    public void saveAlignmentBoard(AlignmentBoard alignmentBoard) throws Exception {
-        DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
-    }
-    
 	public void saveAlignmentBoardAsync(final AlignmentBoard alignmentBoard) throws Exception {
 		savebackExecutor.submit(new SaverCallable(alignmentBoard));
 	}
@@ -317,12 +313,17 @@ public class DomainHelper {
 		@Override
 		public Void call() throws Exception {
 			try {
-				DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
+				saveAlignmentBoard(alignmentBoard);
 			} catch (Exception ex) {
 				SessionMgr.getSessionMgr().handleException(ex);
 			}
 			return null;
 		}
+
+        private void saveAlignmentBoard(AlignmentBoard alignmentBoard) throws Exception {
+            DomainMgr.getDomainMgr().getModel().save(alignmentBoard);
+        }
+
 	}
 
 }

@@ -112,7 +112,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 
         if (itemsAdded) {
 			log.info("Saving alignment board.");
-            domainHelper.saveAlignmentBoard(alignmentBoard);
+            domainHelper.saveAlignmentBoardAsync(alignmentBoard);
         }
 
         // Queue up all events accumulated above.

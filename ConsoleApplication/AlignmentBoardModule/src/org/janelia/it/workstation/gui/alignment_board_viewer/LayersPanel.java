@@ -567,26 +567,6 @@ public class LayersPanel extends JPanel implements Refreshable {
             log.debug("All aligned items changed with change type {}", change);
         }
         
-// TODO: need to look at whether parent-add is needed now.        
-//        if (change==ChangeType.Added) {
-//            try {
-//                // Recreate the contextualized wrappers
-//                EntityWrapper parent = event.getAlignedItem().getParent();
-//                if (parent==null) {
-//                    log.error("Aligned item has null parent: "+event.getAlignedItem().getName());
-//                }
-//                else {
-//                    parent.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());    
-//                }
-//            }
-//            catch (Exception e) {
-//                SessionMgr.getSessionMgr().handleException(e);
-//            }
-//        }
-//        else {
-//            // No need to do anything for other changes, they've all been handled through other means
-//        }
-
         // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
         // so we just recreate the model here.
         recreateModel();
@@ -848,7 +828,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         }
 
         /**
-         * The value "set" here is the checbox selected state.
+         * The value "set" here is the checkbox selected state.
          * 
          * @param node model for this checkbox.
          * @param column column number for the checkbox.
@@ -911,7 +891,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     }
 
                     if ( affectedEntities.size() > 0 ) {
-                        domainHelper.saveAlignmentBoard(alignmentBoardContext.getAlignmentBoard());
+                        domainHelper.saveAlignmentBoardAsync(alignmentBoardContext.getAlignmentBoard());
                     }
                 }
                 

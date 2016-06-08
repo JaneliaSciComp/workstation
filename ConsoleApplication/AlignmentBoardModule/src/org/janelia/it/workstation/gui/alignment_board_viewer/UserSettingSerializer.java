@@ -6,6 +6,9 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +17,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 
 public class UserSettingSerializer implements Serializable {
     private static final String SELECTION_BOUNDS_SETTING = "SelectionBounds";
@@ -34,6 +36,7 @@ public class UserSettingSerializer implements Serializable {
 
     private final SerializationAdapter serializationAdapter;
     private AlignmentBoard alignmentBoard;
+    private DomainHelper domainHelper = new DomainHelper();
 
     private final Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
 
@@ -86,9 +89,7 @@ public class UserSettingSerializer implements Serializable {
 
             // Write back.
             alignmentBoard.setEncodedUserSettings(settingsString);
-            //DomainMgr.getDomainMgr().getModel().create(alignmentBoard);
-            //  TODO use David's new generic or otherwise, method.
-// **** ******** ******** !!!!!!!!!!
+            domainHelper.saveAlignmentBoardAsync(alignmentBoard);
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
@@ -101,7 +102,7 @@ public class UserSettingSerializer implements Serializable {
      */
     public synchronized void deserializeSettings() {
         try {
-            String settingString = getSettingsString( this.alignmentBoard );
+            String settingString = getSettingsString( alignmentBoard );
             logger.info( "Read-Up Setting string: {} deserialized, from {}", settingString, alignmentBoard.getId() );
 
             if ( settingString != null ) {
