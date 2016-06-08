@@ -36,6 +36,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -161,9 +162,36 @@ public class DomainHelper {
     }
     
     public ReverseReference getNeuronRRefForSample(Sample sample, AlignmentContext context) {  
-        String objective = getObjectiveForAlignmentContext(context);
         ReverseReference rtnVal = null;
-        for (ObjectiveSample oSample: sample.getObjectiveSamples()) {
+        NeuronSeparation latestNeuronSeparation = getNeuronSeparationForSample(sample, context);
+        if (latestNeuronSeparation != null) {
+            rtnVal = latestNeuronSeparation.getFragmentsReference();
+        }
+        return rtnVal;
+    }
+
+    public String getRefChannelPath(Sample sample, AlignmentContext context) {
+        String rtnVal = null;
+        NeuronSeparation latestNeuronSeparation = getNeuronSeparationForSample(sample, context);
+        if (latestNeuronSeparation != null) {
+            rtnVal = latestNeuronSeparation.getFilepath() + "/Reference.chan";
+        }
+        return rtnVal;
+    }
+
+    public String getRefMaskPath(Sample sample, AlignmentContext context) {
+        String rtnVal = null;
+        NeuronSeparation latestNeuronSeparation = getNeuronSeparationForSample(sample, context);
+        if (latestNeuronSeparation != null) {
+            rtnVal = latestNeuronSeparation.getFilepath() + "/Reference.mask";
+        }
+        return rtnVal;
+    }
+
+    public NeuronSeparation getNeuronSeparationForSample(Sample sample, AlignmentContext context) {
+        String objective = getObjectiveForAlignmentContext(context);
+        NeuronSeparation rtnVal = null;
+        for (ObjectiveSample oSample : sample.getObjectiveSamples()) {
             SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
             if (latestRun == null) {
                 log.info("No latest run for {}.", sample.getName());
@@ -171,30 +199,20 @@ public class DomainHelper {
             }
 
             Date latestDate = null;
-            for (SampleAlignmentResult sar: latestRun.getResultsOfType(SampleAlignmentResult.class)) {
-                // Pre-emptive bail: after this, we are _known_ to have the
-                // correct objective.
-                if (!sar.getObjective().equals(objective)  ||
-                    !sar.getOpticalResolution().equals(context.getOpticalResolution())  ||
-                    !sar.getAlignmentSpace().equals(context.getAlignmentSpace())  ||
-                    !sar.getImageSize().equals(context.getImageSize())) {
-                    log.debug("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
-                    continue;
-                }
-                log.info("Found result with target objective.");
-                NeuronSeparation nResult = sar.getLatestSeparationResult();
-                if (nResult == null) {
-                    log.info("No neuron separation for {}.", sample.getName());
+            for (SampleAlignmentResult sar : latestRun.getResultsOfType(SampleAlignmentResult.class)) {
+                checkSampleAlignmentResult(sar, objective, context);
+                NeuronSeparation ns = sar.getLatestSeparationResult();
+                if (ns == null) {
+                    log.info("No neuron separation for {}, objective {}.", sample.getName(), sar.getObjective());
                 } else {
                     Date sarDate = sar.getCreationDate();
-                    if (latestDate == null  ||  sarDate.after(latestDate)) {
-                        rtnVal = nResult.getFragmentsReference();
+                    if (latestDate == null || sarDate.after(latestDate)) {
                         latestDate = sarDate;
-                        log.debug("Found matching sep result. Returning ref.");
-                    }                    
+                        rtnVal = ns;
+                    }
                 }
             }
-            
+
         }
         return rtnVal;
     }
@@ -249,8 +267,15 @@ public class DomainHelper {
             log.error("No object ref, or no target for item " + item.getName());
             return null;
         }
+
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+        if (item.getName().equals(ABReferenceChannel.REF_CHANNEL_TYPE_NAME)) {
+            log.info("Got a Ref Channel.");
+            Sample sample = (Sample)domainObject;
+            return new ABReferenceChannel(sample);
+        }
+        
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
             AlignmentBoardReference abRef = item.getTarget();
@@ -293,6 +318,20 @@ public class DomainHelper {
         return createDummyItem(item);
     }
     
+    private boolean checkSampleAlignmentResult(SampleAlignmentResult sar, String objective, AlignmentContext context) {
+        // Pre-emptive bail: after this, we are _known_ to have the
+        // correct objective.
+        if (!sar.getObjective().equals(objective)
+                || !sar.getOpticalResolution().equals(context.getOpticalResolution())
+                || !sar.getAlignmentSpace().equals(context.getAlignmentSpace())
+                || !sar.getImageSize().equals(context.getImageSize())) {
+            log.debug("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
+            return true;
+        }
+        log.trace("Found result with target objective.");
+        return false;
+    }
+
     private ABItem createDummyItem(AlignmentBoardItem item) {
         return new ABUnspecified(null);
     }

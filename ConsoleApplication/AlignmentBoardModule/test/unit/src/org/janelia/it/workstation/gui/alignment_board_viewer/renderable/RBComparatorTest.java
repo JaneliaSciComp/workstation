@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 import static org.junit.Assert.*;
 
@@ -62,14 +63,14 @@ public class RBComparatorTest {
             );
             assertFalse(
                     "Should not encounter Neuron Fragments at this phase.",
-                    phase.getRank() > Phase.REFERENCE.getRank() && bean.getType().equals("Reference")
+                    phase.getRank() > Phase.REFERENCE.getRank() && bean.getType().equals(ABReferenceChannel.REF_CHANNEL_TYPE_NAME)
             );
             assertFalse(
                     "Should not encounter Compartments at this phase.",
                     phase.getRank() > Phase.COMPARTMENT.getRank() && bean.getType().equals( Compartment.class.getSimpleName() )
             );
 
-            if ( bean.getType().equals( "Reference" ) ) {
+            if ( bean.getType().equals( ABReferenceChannel.REF_CHANNEL_TYPE_NAME ) ) {
                 phase = Phase.REFERENCE;
             }
             else if ( bean.getType().equals( Sample.class.getSimpleName() ) ) {

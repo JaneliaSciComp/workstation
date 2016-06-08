@@ -24,6 +24,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -82,10 +83,6 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         boolean itemsAdded = true;
         if (domainObject instanceof Sample) {
             itemsAdded = addNewSample(domainObject, events);
-        }
-        else if (domainObject instanceof VolumeImage  &&  domainObject instanceof Image) {
-            log.warn("Not handling reference " + domainObject.getName() + ".  Not yet supported.");
-            itemsAdded = addNewReference(domainObject, events);
         }
         else if (domainObject instanceof NeuronFragment) {
             itemsAdded = addNewNeuronFragment(domainObject, events);
@@ -280,14 +277,21 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
         AlignmentBoardItem oldSampleItem = this.getPreviouslyAddedItem(sample);
         if (oldSampleItem == null) {
+            String refChannelPath = domainHelper.getRefChannelPath(sample, context);
+            
             ReverseReference fragmentsReference = domainHelper.getNeuronRRefForSample(sample, context);
-            if (fragmentsReference == null) {
-                log.warn("No rev-ref found for sample {}.", sample.getName());
+            if (fragmentsReference == null  &&  refChannelPath == null) {
+                log.warn("No fragments or ref channel found for sample {}.", sample.getName());
                 return false;
             }
             else {
-                List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
                 AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
+
+                // Settle the Reference channel, if it exists.
+                addReferenceChannel(sampleItem, events);
+
+                // Settle any fragments available in the sample.
+                List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
                 for (DomainObject fragmentDO : fragments) {
                     // Need to add neuron to sample.
                     addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
@@ -320,32 +324,6 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private boolean addNewReference(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
-// TODO find the sample entity.
-// Holding off on this.  Let's get some neurons first.
-
-//            DomainObject sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(domainObject.getEntity(), EntityConstants.TYPE_SAMPLE);
-//            Sample sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
-//
-//            Entity separationEntity = getPipelineAncestor(domainObject);
-//            Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
-//            if (alignmentEntity==null) {
-//                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
-//                return;
-//            }
-            // TODO is it compatible?
-//            if ( ! isCompatibleAlignmentSpace(domainObject, separationEntity, alignmentEntity) ) {
-//                return;
-//            }
-            // TODO add the new aligned entity.
-//            sample.loadContextualizedChildren(context);
-//            VolumeImage volumeImage = sample.getItem();
-//            if ( volumeImage != null ) {
-//                addNewAlignedEntity( volumeImage );
-//            }
-        return false; // Not yet implemented.
-    }
-    
     private AlignmentBoardItem addItem(Class modelClass, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
@@ -364,7 +342,18 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 
     private AlignmentBoardItem addCompartment(AlignmentBoardItem parentItem, Compartment compartment, final Collection<AlignmentBoardEvent> events) throws Exception {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItemForCompartment(compartment.getParent(), compartment);
-        // set color?  set inclusion status?
+        parentItem.getChildren().add(alignmentBoardItem);
+        events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
+        return alignmentBoardItem;
+    }
+
+    private AlignmentBoardItem addReferenceChannel(AlignmentBoardItem parentItem, final Collection<AlignmentBoardEvent> events) throws Exception {
+        AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
+        alignmentBoardItem.setTarget(parentItem.getTarget());
+        alignmentBoardItem.setName(ABReferenceChannel.REF_CHANNEL_TYPE_NAME);
+        alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
+        alignmentBoardItem.setVisible(true);
+        // There will be no reference from a Reference Channel.
         parentItem.getChildren().add(alignmentBoardItem);
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;

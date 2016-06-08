@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,7 +26,7 @@ public class RBComparator implements Comparator<RenderableBean> {
     {
         rankMapping = new HashMap<>();
         rankMapping.put( NeuronFragment.class.getSimpleName(), 1 );
-        rankMapping.put( "Reference", 2 );      //todo consider using Image class name
+        rankMapping.put( ABReferenceChannel.REF_CHANNEL_TYPE_NAME, 2 );
         rankMapping.put( Compartment.class.getSimpleName(), 3 );
         rankMapping.put( Sample.class.getSimpleName(), 9 );
         rankMapping.put( CompartmentSet.class.getSimpleName(), 10 );

@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class CompatibilityChecker {
             if (abContext.isAcceptedType(domainObject)) {
                 typeIsFragment = domainObject instanceof NeuronFragment;
                 typeIsSample = domainObject instanceof Sample;
-                typeIsRef = domainObject instanceof Image && domainObject.getName().startsWith("Reference");
+                typeIsRef = domainObject instanceof Image && domainObject.getName().startsWith(ABReferenceChannel.REF_CHANNEL_TYPE_NAME);
                 if (typeIsFragment || typeIsRef) {
                     NeuronFragment fragment = (NeuronFragment) domainObject;
                     sample = domainHelper.getSampleForNeuron(fragment);

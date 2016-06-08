@@ -5,6 +5,7 @@ import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +24,7 @@ public class RenderableBeanCollection {
                 NeuronFragment.class.getSimpleName(),
                 Compartment.class.getSimpleName(),
                 Sample.class.getSimpleName(),
-                "Reference",
+                ABReferenceChannel.REF_CHANNEL_TYPE_NAME,
                 CompartmentSet.class.getSimpleName()
         };
         Random random = new Random( new Date().getTime() );

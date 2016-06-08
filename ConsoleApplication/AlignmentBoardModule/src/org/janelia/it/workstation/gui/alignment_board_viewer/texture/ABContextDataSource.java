@@ -5,23 +5,26 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
-import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
+import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.workstation.model.domain.VolumeImage;
+import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+//import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
 import java.util.*;
-import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -78,11 +81,9 @@ public class ABContextDataSource implements RenderableDataSourceI {
                         if ( childDobj instanceof ABNeuronFragment) {
                             liveFileCount += getNeuronFragmentRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
-                        // TODO: make this work
-//                        else if ( childDobj instanceof VolumeImage) {
-//                            VolumeImage image = (VolumeImage)childDobj;
-//                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
-//                        }
+                        else if ( childDobj instanceof ABReferenceChannel) {
+                            liveFileCount += getReferenceChannelRenderableData( rtnVal, nextTranslatedNum++, childItem );
+                        }
                     }
                 }
             }
@@ -222,29 +223,25 @@ public class ABContextDataSource implements RenderableDataSourceI {
         return getRenderableData(maskChanRenderableDatas, nextTranslatedNum, isCompartment, item);
     }
 
-    private int getRenderableData(
+    private int getReferenceChannelRenderableData(
         Collection<MaskChanRenderableData> maskChanRenderableDatas,
         int nextTranslatedNum,
-        VolumeImage volumeImage,
         AlignmentBoardItem item
     ) {
-        ABItem abItem = domainHelper.getObjectForItem(item);
-
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setInvertedY(false);
         renderableBean.setLabelFileNum(nextTranslatedNum);
         renderableBean.setTranslatedNum(nextTranslatedNum);
-        renderableBean.setName(volumeImage.getName()); //???
-        renderableBean.setId(abItem.getId());
-        renderableBean.setType("Reference");     //todo move this to EntityConstants
-        renderableBean.setItem(abItem);
+        renderableBean.setName(ABReferenceChannel.REF_CHANNEL_TYPE_NAME);
+        renderableBean.setType(ABReferenceChannel.REF_CHANNEL_TYPE_NAME);
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
         data.setCompartment( true ); // For render characteristics
 
-        String maskPath = volumeImage.getMask3dImageFilepath();
-        String channelPath = volumeImage.getChan3dImageFilepath();
+        Sample referencedSample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(item.getTarget().getObjectRef());
+        String maskPath = domainHelper.getRefChannelPath(referencedSample, context.getAlignmentContext());
+        String channelPath = domainHelper.getRefMaskPath(referencedSample, context.getAlignmentContext());
         if ( maskPath == null || channelPath == null ) {
             logger.warn("No mask and/or channel pat for reference {}:{}.", renderableBean.getName(), renderableBean.getId() );
         }

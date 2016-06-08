@@ -863,7 +863,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     }
 
                     // HOW to get the parent?
-                    AlignmentBoardItem parentWrapper = null; //alignedItem.getParent();
+                    AlignmentBoardItem parentWrapper = null;
                     parentObject = domainHelper.getObjectForItem(alignmentBoardItem);
                     if (parentWrapper!=null) {                        
                         if (parentWrapper instanceof AlignmentBoardItem) {
