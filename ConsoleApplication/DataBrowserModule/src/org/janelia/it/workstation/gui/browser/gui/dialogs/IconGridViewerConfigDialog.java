@@ -140,8 +140,8 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         
         ButtonGroup typeGroup = new ButtonGroup();
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
-            final String label = searchClass.getAnnotation(SearchType.class).label();
-            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(DEFAULT_SEARCH_CLASS));
+            final String type = DomainUtils.getTypeName(searchClass);
+            JMenuItem menuItem = new JRadioButtonMenuItem(type, searchClass.equals(DEFAULT_SEARCH_CLASS));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     addCurrentConfig();
@@ -162,8 +162,9 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
     private void setResultType(Class<? extends DomainObject> resultClass) {
         this.resultClass = resultClass;
-        SearchType searchTypeAnnot = resultClass.getAnnotation(SearchType.class);
-        typeCriteriaButton.setText("Result Type: " + searchTypeAnnot.label());
+        
+        String type = DomainUtils.getTypeName(resultClass);
+        typeCriteriaButton.setText("Result Type: " + type);
 
         // Install completion providers for the current result type
         CompletionProvider provider = createCompletionProvider(resultClass);
