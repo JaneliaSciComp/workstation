@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
-import org.janelia.it.workstation.gui.alignment_board.util.ABReference;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -299,7 +299,7 @@ public class DomainHelper {
                     log.warn("No neuron separation found for ref {}.", ref.getItemId());
                 }
                 else {
-                    return new ABReference(separations.get(0));
+                    return new ABReferenceChannel(separations.get(0));
                 }
             }
         } else if (domainObject instanceof NeuronFragment) {

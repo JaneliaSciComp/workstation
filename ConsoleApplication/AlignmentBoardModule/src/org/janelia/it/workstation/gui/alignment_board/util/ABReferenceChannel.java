@@ -2,10 +2,10 @@ package org.janelia.it.workstation.gui.alignment_board.util;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 
-public class ABReference extends ABItem {
+public class ABReferenceChannel extends ABItem {
     private NeuronSeparation separation;
 
-    public ABReference(NeuronSeparation separation) {
+    public ABReferenceChannel(NeuronSeparation separation) {
         super(separation.getParentRun().getParent().getParent());
         this.separation = separation;
     }
