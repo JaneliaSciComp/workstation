@@ -101,7 +101,7 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
 //                            public void run() {
 //                                // Need to reflect the selection in the browse panel.
 //                                Launcher launcher = new Launcher();
-//								log.info("Launching with alignment board {}, with id={}", board.getName(), board.getId());
+//								log.info("Re-launching with alignment board {}, with id={}", board.getName(), board.getId());
 //                                launcher.launch(board.getId());
 //                            }
 //                        });
