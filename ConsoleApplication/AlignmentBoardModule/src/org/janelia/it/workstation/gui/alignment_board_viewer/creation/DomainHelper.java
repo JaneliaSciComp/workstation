@@ -273,7 +273,7 @@ public class DomainHelper {
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
         if (ABReferenceChannel.REF_CHANNEL_TYPE_NAME.equals(item.getName())) {
-            log.info("Got a Ref Channel.");
+            log.trace("Got a Ref Channel.");
             Sample sample = (Sample)domainObject;
             return new ABReferenceChannel(sample);
         }
