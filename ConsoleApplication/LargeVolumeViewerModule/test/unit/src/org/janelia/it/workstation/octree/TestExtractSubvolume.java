@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.MalformedURLException;
 
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.jacs.model.TestCategories;
@@ -18,7 +20,7 @@ public class TestExtractSubvolume {
     public void testExtractUpperRightBackValue() {
         // I see a neurite going from one of these points to another in data set AAV 4/25/2013
         ZoomLevel zoomLevel = new ZoomLevel(0);
-        ZoomedVoxelIndex v1 = new ZoomedVoxelIndex(zoomLevel, 29952, 24869, 1243); // upper right back corner
+        org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex v1 = new ZoomedVoxelIndex(zoomLevel, 29952, 24869, 1243); // upper right back corner
         ZoomedVoxelIndex v2 = new ZoomedVoxelIndex(zoomLevel, 29753, 25609, 1233); // lower left front corner
         SharedVolumeImage wholeImage = new SharedVolumeImage();
         // TODO - this only works on Windows with mousebrainmicro drive mounted as M:

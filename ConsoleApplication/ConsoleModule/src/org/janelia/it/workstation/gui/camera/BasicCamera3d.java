@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.camera;
 
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

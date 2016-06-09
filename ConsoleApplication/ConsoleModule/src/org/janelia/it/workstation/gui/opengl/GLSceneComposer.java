@@ -7,8 +7,8 @@ import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.stereo3d.MonoStereoMode;
 import org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode;

@@ -1,5 +1,6 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -110,6 +111,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
                     try {
                         sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -296,5 +298,7 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }
+
+    public Entity getSliceSample() { return sliceSample; }
     
 }

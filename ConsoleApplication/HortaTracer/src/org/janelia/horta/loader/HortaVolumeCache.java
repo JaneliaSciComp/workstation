@@ -367,14 +367,7 @@ public class HortaVolumeCache
             }
         }
         
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                for (TileDisplayObserver observer : observers) {
-                    observer.update(actor, actualDisplayTiles.keySet());
-                }
-            }
-        });
+        fireUpdateInEDT(actor);
     }
 
     public void addObserver(TileDisplayObserver observer) {
@@ -405,5 +398,16 @@ public class HortaVolumeCache
     
     public static interface TileDisplayObserver {
         public void update(BrickActor newTile, Collection<? extends BrickInfo> allTiles);
+    }
+
+    private void fireUpdateInEDT(final BrickActor actor) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (TileDisplayObserver observer : observers) {
+                    observer.update(actor, actualDisplayTiles.keySet());
+                }
+            }
+        });
     }
 }

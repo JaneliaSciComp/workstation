@@ -4,8 +4,8 @@ import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 
 // Click and drag mouse to drag the image in X and Y
 public class PanMode

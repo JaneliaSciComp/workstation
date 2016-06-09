@@ -1,10 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.janelia.it.workstation.geom.Vec3;
+
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -7,7 +7,7 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
  * Creates an adapter with GL2-like methods for either OpenGL versions GL2 or GL3

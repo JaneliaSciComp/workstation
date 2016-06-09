@@ -33,6 +33,7 @@ package org.janelia.horta.volume;
 import org.janelia.geometry3d.Box3;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.OsFilePathRemapper;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.netbeans.api.progress.ProgressHandle;
 import org.yaml.snakeyaml.Yaml;
 
@@ -65,10 +66,16 @@ implements StaticVolumeBrickSource
 
         // Correct base path for OS network access, before populating tiles.
         String parentPath = (String) tilebase.get("path");
-        parentPath = OsFilePathRemapper.remapLinuxPath(parentPath); // Convert to OS-specific file path
+
+        if (HttpDataSource.useHttp()) {
+            System.out.println("MouseLightYamlBrickSource - not changing original parentPath="+parentPath);
+        } else {
+            parentPath = OsFilePathRemapper.remapLinuxPath(parentPath); // Convert to OS-specific file path
+            System.out.println("MouseLightYamlBrickSource - modified parentPath="+parentPath);
+        }
 
         // Error if folder STILL does not exist
-        if (! new File(parentPath).exists()) {
+        if (!HttpDataSource.useHttp() && ! new File(parentPath).exists()) {
             throw new RuntimeException("No such folder " + parentPath);
         }
 

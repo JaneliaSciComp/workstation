@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import javax.media.opengl.GL2;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 

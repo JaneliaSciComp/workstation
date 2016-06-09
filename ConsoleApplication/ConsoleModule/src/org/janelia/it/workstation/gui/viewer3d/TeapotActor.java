@@ -4,7 +4,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.gl2.GLUT;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GL3Actor;
 import org.janelia.it.workstation.gui.opengl.GLActorContext;
 import org.janelia.it.workstation.gui.opengl.GLError;
@@ -13,8 +13,8 @@ public class TeapotActor implements GL3Actor
 {
     private GLUT glut = new GLUT();
 
-	public BoundingBox3d getBoundingBox3d() {
-		BoundingBox3d result = new BoundingBox3d();
+	public org.janelia.it.jacs.shared.viewer3d.BoundingBox3d getBoundingBox3d() {
+		org.janelia.it.jacs.shared.viewer3d.BoundingBox3d result = new org.janelia.it.jacs.shared.viewer3d.BoundingBox3d();
 		result.include(new Vec3(1,1,1));
 		result.include(new Vec3(-1,-1,-1));
 		return result;

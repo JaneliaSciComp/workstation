@@ -30,6 +30,7 @@
 package org.janelia.horta;
 
 import Jama.Matrix;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
@@ -39,6 +40,7 @@ import org.janelia.horta.volume.VoxelIndex;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +48,9 @@ import java.util.Map;
 import java.util.Objects;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
+import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
+import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +90,7 @@ implements BrickInfo
     
     public BrainTileInfo(Map<String, Object> yamlFragment, String parentPath, boolean leverageCompressedFiles) throws ParseException 
     {
+        //log.info("BrainTileInfo() parentPath="+parentPath);
         this.parentPath = parentPath;
         this.leverageCompressedFiles = leverageCompressedFiles;
         Map<String, Object> aabb = (Map<String, Object>)yamlFragment.get("aabb");
@@ -269,57 +275,94 @@ implements BrickInfo
         setColorChannelIndex(colorChannel);
         return loadBrick(maxEdgePadWidth);
     }
-            
+
     @Override
     public Texture3d loadBrick(double maxEdgePadWidth) throws IOException
     {
         // OS specific path should have already been translated in MouseLightYamlBrickSource
+
+        //log.info("BrainTileInfo loadBrick() parentPath="+parentPath+" localPath="+localPath);
+
         File folderPath = new File(parentPath, localPath);
-        //System.out.println(folderPath.getAbsolutePath());
-        if (! folderExists())
-            throw new IOException("no such tile folder "+folderPath.getAbsolutePath());
-        
-        CompressedFileResolverI resolver = FrameworkImplProvider.getCompressedFileResolver();
-        
-        if (leverageCompressedFiles  &&  resolver == null) {
-            throw new IOException("Failed to find compression resolver.");
-        }
-        
-        // That path is just a folder. Now find the actual files.
-        // TODO - this just loads the first channel.
-        String imageSuffix = "." + Integer.toString(colorChannelIndex); // + ".tif";
-        File compressedTileFile = null;
+
+        //log.info("BrainTileInfo loadBrick() using folderPath=" + folderPath.getAbsolutePath());
+
         File tileFile = null;
-        for (File file : folderPath.listFiles()) {
-            if (leverageCompressedFiles  &&  file.getName().contains(imageSuffix)  &&  resolver.canDecompress(file)) {
-                File decompressedName = resolver.getDecompressedNameForFile(file);
-                if (decompressedName != null  &&  decompressedName.getName().endsWith(imageSuffix)) {
-                    log.info("Starting with compressed version of file {}.", file);
-                    compressedTileFile = file;
+
+        Texture3d texture = new Texture3d();
+
+        if (!HttpDataSource.useHttp()) {
+
+            //System.out.println(folderPath.getAbsolutePath());
+            if (!folderExists())
+                throw new IOException("no such tile folder " + folderPath.getAbsolutePath());
+
+            CompressedFileResolverI resolver = FrameworkImplProvider.getCompressedFileResolver();
+
+            if (leverageCompressedFiles && resolver == null) {
+                throw new IOException("Failed to find compression resolver.");
+            }
+
+            // That path is just a folder. Now find the actual files.
+            // TODO - this just loads the first channel.
+            String imageSuffix = "." + Integer.toString(colorChannelIndex); // + ".tif";
+            File compressedTileFile = null;
+            for (File file : folderPath.listFiles()) {
+                if (leverageCompressedFiles && file.getName().contains(imageSuffix) && resolver.canDecompress(file)) {
+                    File decompressedName = resolver.getDecompressedNameForFile(file);
+                    if (decompressedName != null && decompressedName.getName().endsWith(imageSuffix)) {
+                        log.info("Starting with compressed version of file {}.", file);
+                        compressedTileFile = file;
+                        break;
+                    }
+                }
+                // Use the first channel file
+                if (file.getName().endsWith(imageSuffix + ".tif")) {
+                    log.info("Using never-compressed version of file {}.", file);
+                    tileFile = file;
                     break;
                 }
             }
-            // Use the first channel file
-            if (file.getName().endsWith(imageSuffix + ".tif")) {
-                log.info("Using never-compressed version of file {}.", file);
-                tileFile = file;
-                break;
+            if (compressedTileFile != null) {
+                try {
+                    log.info("Decompressing...");
+                    tileFile = resolver.decompressToFile(compressedTileFile);
+                    log.info("Decompressed as {}.", tileFile);
+                }
+                catch (Exception ex) {
+                    ex.printStackTrace();
+                    throw new IOException("Decompression step failed. " + compressedTileFile, ex);
+                }
             }
-        }
-        if (compressedTileFile != null) {
-            try {
-                log.info("Decompressing...");
-                tileFile = resolver.decompressToFile(compressedTileFile);
-                log.info("Decompressed as {}.", tileFile);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                throw new IOException("Decompression step failed. " + compressedTileFile, ex);
+            if (tileFile == null){
+                throw new IOException("No channel tiff file found");
+            } else {
+                System.out.println("BrainTileInfo loadBrick() - using tileFile="+tileFile.getAbsolutePath());
             }
+
+        } else {
+
+            tileFile=new File(folderPath, "default."+colorChannelIndex);
+            log.info("loadBrick() http using tileFile="+tileFile.getAbsolutePath());
+
+            texture.setOptionalFileStreamSource(new FileStreamSource() {
+                @Override
+                public GetMethod getStreamForFile(String filepath) throws Exception {
+                    return HttpDataSource.getMouseLightTiffStream(filepath);
+                }
+            });
+
+//            texture.setOptionalFileByteSource(new FileByteSource() {
+//                @Override
+//                public byte[] loadBytesForFile(String filepath) throws Exception {
+//                    return HttpDataSource.getMouseLightTiffBytes(filepath);
+//                }
+//            });
+
         }
-        if (tileFile == null)
-            throw new IOException("No channel tiff file found");
-        Texture3d texture = new Texture3d();
+
         texture.loadTiffStack(tileFile);
+
         return texture;
     }
 

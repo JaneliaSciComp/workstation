@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

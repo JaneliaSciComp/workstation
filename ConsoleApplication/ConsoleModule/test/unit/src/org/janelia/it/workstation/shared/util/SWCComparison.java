@@ -11,7 +11,7 @@ import org.janelia.it.jacs.shared.swc.SWCData;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
  * Simplistic comparison: expects points in same order in both files.

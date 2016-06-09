@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.buffering;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;

@@ -3,8 +3,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 /**
  * Created by murphys on 11/6/2015.
  */
-import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.shared.lvv.*;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +42,14 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         if (remoteBasePath!=null) {
             blockTiffOctreeLoadAdapter.setRemoteBasePath(remoteBasePath);
         }
-        blockTiffOctreeLoadAdapter.setTopFolder(topFolder);
-
+        blockTiffOctreeLoadAdapter.setTopFolderAndCoordinateSource(topFolder, new CoordinateToRawTransformFileSource() {
+            @Override
+            public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
+                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+            }
+        });
         tileStackCacheController.setTileFormat(tileFormat);
         tileStackCacheController.setFilesystemConfiguration(remoteBasePath, topFolder);
-
     }
 
     private void shutdown() {
@@ -65,7 +70,26 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
             }
             return result;
         } else {
-            return blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+
+            TextureData2d textureData2d=null;
+
+            //long startTime=new Date().getTime();
+
+            if (HttpDataSource.useHttp()) {
+                textureData2d = HttpDataSource.getSample2DTile(tileIndex);
+            } else {
+                textureData2d = blockTiffOctreeLoadAdapter.loadToRam(tileIndex);
+            }
+
+            //long loadTime=new Date().getTime()-startTime;
+
+            //log.info("loadToRam() timeMs="+loadTime);
+
+            if (textureData2d!=null) {
+                return new TextureData2dGL(textureData2d);
+            } else {
+                return null;
+            }
         }
     }
 

@@ -6,7 +6,7 @@ import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.Tile2d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileConsumer;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.ViewTileManager;

@@ -50,6 +50,7 @@ import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -168,26 +169,30 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     "Tilebase File Problem",
                     JOptionPane.ERROR_MESSAGE);
         }
+
+        logger.info("Finished creating volumeSource from yaml file");
         
         if (null == volumeSource)
             return volumeSource;
         
         // Test for location of first tile, as a sanity check
-        Double res = volumeSource.getAvailableResolutions().iterator().next();
-        BrickInfoSet bricks = volumeSource.getAllBrickInfoForResolution(res);
-        BrickInfo b = bricks.iterator().next();
-        BrainTileInfo bti = (BrainTileInfo)b;
-        String path = bti.getParentPath() + "/" + bti.getLocalPath();
-        File brickFolder = new File(bti.getParentPath(), bti.getLocalPath());
-        if (! brickFolder.exists()) {
-            JOptionPane.showMessageDialog(nttc, 
-                    "Problem Finding First Raw Tile Folder at " + brickFolder.getAbsolutePath()
-                    + "\n  Is the raw tile folder drive mounted?"
-                    + "\n  Did someone change the folder structure of the raw tiles?"
-                    ,
-                    "Raw Tile Location Problem",
-                    JOptionPane.ERROR_MESSAGE);
-            volumeSource = null; // Don't use this data source
+        if (!HttpDataSource.useHttp()) {
+            Double res = volumeSource.getAvailableResolutions().iterator().next();
+            BrickInfoSet bricks = volumeSource.getAllBrickInfoForResolution(res);
+            BrickInfo b = bricks.iterator().next();
+            BrainTileInfo bti = (BrainTileInfo) b;
+            String path = bti.getParentPath() + "/" + bti.getLocalPath();
+            File brickFolder = new File(bti.getParentPath(), bti.getLocalPath());
+            if (!brickFolder.exists()) {
+                JOptionPane.showMessageDialog(nttc,
+                        "Problem Finding First Raw Tile Folder at " + brickFolder.getAbsolutePath()
+                                + "\n  Is the raw tile folder drive mounted?"
+                                + "\n  Did someone change the folder structure of the raw tiles?"
+                        ,
+                        "Raw Tile Location Problem",
+                        JOptionPane.ERROR_MESSAGE);
+                volumeSource = null; // Don't use this data source
+            }
         }
         
         return volumeSource;

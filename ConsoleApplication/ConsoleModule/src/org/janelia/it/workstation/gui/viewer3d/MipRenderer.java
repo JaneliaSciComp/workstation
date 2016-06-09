@@ -4,12 +4,11 @@ import java.awt.Color;
 import java.util.ArrayList;
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GLAutoDrawable;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
 import org.janelia.it.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import static org.janelia.it.workstation.gui.viewer3d.ActorRenderer.UP_IN_CAMERA;
 import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 
 class MipRenderer 
