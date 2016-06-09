@@ -48,10 +48,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.hibernate.util.IdentityMap.deserialize;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -135,6 +135,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
+        this.config = IconGridViewerConfiguration.loadConfig();
         resultButton = new ResultSelectionButton() {
             @Override
             protected void resultChanged(ResultDescriptor resultDescriptor) {
@@ -160,6 +161,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     private void setPreference(final String name, final String value) {
 
+        Utils.setMainFrameCursorWaitStatus(true);
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -179,11 +182,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void hadSuccess() {
-                showDomainObjects(domainObjectList, null);
+                showDomainObjects(domainObjectList, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        Utils.setMainFrameCursorWaitStatus(false);
+                        return null;
+                    }
+                });
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setMainFrameCursorWaitStatus(false);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -247,36 +257,54 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
-        this.config = IconGridViewerConfiguration.loadConfig();
-
         this.domainObjectList = objects;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
 
-        final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-        if (parentObject!=null && parentObject.getId()!=null) {
-            Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
-            log.info("Got result preference: "+preference);
-            if (preference!=null) {
-                try {
-                    ResultDescriptor resultDescriptor = ResultDescriptor.deserialize((String) preference.getValue());
-                    resultButton.setResultDescriptor(resultDescriptor);
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                StopWatch stopWatch = new LoggingStopWatch();
+
+                final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
+                if (parentObject!=null && parentObject.getId()!=null) {
+                    Preference preference = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SAMPLE_RESULT, parentObject.getId().toString());
+                    log.debug("Got result preference: "+preference);
+                    if (preference!=null) {
+                        try {
+                            ResultDescriptor resultDescriptor = ResultDescriptor.deserialize((String) preference.getValue());
+                            resultButton.setResultDescriptor(resultDescriptor);
+                        }
+                        catch (Exception e) {
+                            log.error("Error deserializing preference "+preference.getId(),e);
+                        }
+                    }
+                    Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+                    log.info("Got image type preference: "+preference2);
+                    if (preference2!=null) {
+                        typeButton.setImageType((String)preference2.getValue());
+                    }
                 }
-                catch (Exception e) {
-                    log.error("Error deserializing preference "+preference.getId(),e);
-                }
+
+                resultButton.populate(domainObjectList.getDomainObjects());
+                typeButton.setResultDescriptor(resultButton.getResultDescriptor());
+                typeButton.populate(domainObjectList.getDomainObjects());
+
+                stopWatch.stop("showDomainObjects");
             }
-            Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
-            log.info("Got image type preference: "+preference2);
-            if (preference2!=null) {
-                typeButton.setImageType((String)preference2.getValue());
+
+            @Override
+            protected void hadSuccess() {
+                showObjects(domainObjectList.getDomainObjects(), success);
             }
-        }
-        
-        resultButton.populate(objects.getDomainObjects());
-        typeButton.setResultDescriptor(resultButton.getResultDescriptor());
-        typeButton.populate(domainObjectList.getDomainObjects());
-                
-        showObjects(domainObjectList.getDomainObjects(), success);
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
     
     @Override

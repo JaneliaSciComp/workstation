@@ -136,8 +136,10 @@
             </module-dependencies>
             <public-packages>
                 <package>org.janelia.it.workstation.gui.browser.api</package>
+                <package>org.janelia.it.workstation.gui.browser.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.browser.events</package>
                 <package>org.janelia.it.workstation.gui.browser.events.selection</package>
+                <package>org.janelia.it.workstation.gui.browser.exchange</package>
                 <package>org.janelia.it.workstation.gui.browser.flavors</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.listview.icongrid</package>

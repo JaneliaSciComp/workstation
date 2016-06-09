@@ -529,6 +529,9 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         // Actually display everything
         showAll();
 
+        // Finally, we're done, we can call the success callback
+        ConcurrentUtils.invokeAndHandleExceptions(success);
+
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -536,9 +539,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
                 imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
                 imagesPanel.setScrollLoadingEnabled(true);
-                
-                // Finally, we're done, we can call the success callback
-                ConcurrentUtils.invokeAndHandleExceptions(success);
             }
         });
     }

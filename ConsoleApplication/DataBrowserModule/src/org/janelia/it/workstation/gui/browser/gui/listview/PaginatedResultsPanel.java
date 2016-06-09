@@ -33,9 +33,12 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -431,6 +434,8 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     
     protected void showCurrPage(final boolean isUserDriven) {
 
+        log.debug("showCurrPage(isUserDriven={})",isUserDriven);
+
         showLoadingIndicator();
         updatePagingStatus();
                 
@@ -447,6 +452,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
             @Override
             protected void hadSuccess() {
+                log.debug("Got results, updating view");
                 final ArrayList<Reference> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
                 updateResultsView(new Callable<Void>() {   
                     @Override
@@ -464,6 +470,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                             List<DomainObject> objects = resultPage.getDomainObjects();
                             if (!objects.isEmpty()) {
                                 // This selection is NOT user driven though, it's automatic.
+                                log.debug("Auto-selecting first object");
                                 resultsView.selectDomainObjects(Arrays.asList(objects.get(0)), true, true, false);
                             }
                         }
@@ -491,8 +498,14 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     private void updateResultsView(final Callable<Void> success) {
         selectionModel.reset();
         if (resultPage!=null) {
-            resultsView.showDomainObjects(resultPage, success);
-            showResultsView();
+            resultsView.showDomainObjects(resultPage, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    showResultsView();
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
+                    return null;
+                }
+            });
         }
         else {
             showNothing();

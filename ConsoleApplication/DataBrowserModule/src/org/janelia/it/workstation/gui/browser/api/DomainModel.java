@@ -137,7 +137,7 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject) {
-        return putOrUpdate(Arrays.asList(domainObject), false).get(0);
+        return putOrUpdate(domainObject, false);
     }
 
     /**
@@ -147,7 +147,9 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     private <T extends DomainObject> T putOrUpdate(T domainObject, boolean invalidateTree) {
-        return putOrUpdate(Arrays.asList(domainObject), invalidateTree).get(0);
+        List<T> canonicalObjects = putOrUpdate(Arrays.asList(domainObject), invalidateTree);
+        if (canonicalObjects.isEmpty()) return null;
+        return canonicalObjects.get(0);
     }
 
     /**

@@ -492,7 +492,7 @@ public class Utils {
     /**
      * Adapted from http://netbeans-org.1045718.n5.nabble.com/Setting-wait-cursor-td3026613.html
      */
-    private static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
+    public static void setMainFrameCursorWaitStatus(final boolean isWaiting) {
         try {
             JFrame mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
             Component glassPane = mainFrame.getGlassPane();

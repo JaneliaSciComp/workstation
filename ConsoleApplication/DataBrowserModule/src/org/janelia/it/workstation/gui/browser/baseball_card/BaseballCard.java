@@ -1,13 +1,12 @@
-package org.janelia.it.workstation.gui.framework.viewer.baseball_card;
+package org.janelia.it.workstation.gui.browser.baseball_card;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImagesPanel;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +17,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 
 /**
  * Created with IntelliJ IDEA.
@@ -32,21 +34,23 @@ public class BaseballCard {
     private static final String DEFAULT_IMAGE_PATH = "/nrs/jacs/jacsData/filestore/nerna/Alignment/819/554/1874649241884819554/align/Aligned63xScale_signal.png"; // Get Stacy's black watermark.
     public static final int IMAGE_WIDTH = 100;
     public static final int IMAGE_HEIGHT = 100;
-    private Entity entity;
+    private DomainObject domainObject;
+    private DomainMgr domainMgr;
     private DynamicImagePanel dynamicImagePanel;
     private JPanel textDetailsPanel;
     private Logger logger = LoggerFactory.getLogger( BaseballCard.class );
 
     public BaseballCard() {
+        domainMgr = DomainMgr.getDomainMgr();
         textDetailsPanel = new ToolTipRelayPanel();
         ToolTipManager.sharedInstance().registerComponent(textDetailsPanel);
         textDetailsPanel.setLayout(new BorderLayout());
         textDetailsPanel.setOpaque( true );
     }
 
-    public BaseballCard( Entity entity ) {
+    public BaseballCard( DomainObject domainObject ) {
         this();
-        loadEntity( entity );
+        load( domainObject );
     }
 
     public void setBackground( Color color ) {
@@ -55,30 +59,24 @@ public class BaseballCard {
 
     @Override
     public String toString() {
-        if ( entity == null ) {
+        if ( domainObject == null ) {
             return null;
         }
         else {
-            return entity.getName();
+            return domainObject.getName();
         }
     }
 
-    public void loadEntity( final Entity entity ) {
+    public void load( final DomainObject domainObject ) {
         textDetailsPanel.removeAll();
-        this.entity = entity;
+        this.domainObject = domainObject;
 
         SimpleWorker annotationsLoadingWorker = new SimpleWorker() {
-            List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
+            List<Annotation> annotations = null;
 
             @Override
             protected void doStuff() throws Exception {
-                for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
-                    OntologyAnnotation annotation = new OntologyAnnotation();
-                    annotation.init(entityAnnot);
-                    if(null!=annotation.getTargetEntityId())
-                        annotations.add(annotation);
-                }
-
+                annotations = domainMgr.getModel().getAnnotations(domainObject);
             }
 
             @Override
@@ -88,21 +86,21 @@ public class BaseballCard {
                 JPanel entityNamePanel = new JPanel();
                 entityNamePanel.setLayout( new FlowLayout( FlowLayout.LEADING ) );
 
-                String entityNameDesignation = entity.getName();
-                if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                String nameDesignation = domainObject.getName();
+                if ( domainObject instanceof NeuronFragment ) {
                     try {
-                        Entity entityParent = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                        if ( entityParent == null ) {
-                            entityNameDesignation = "Mock-Parent / " + entityNameDesignation;
+                        Sample sample = (Sample)domainMgr.getModel().getDomainObject(((NeuronFragment)domainObject).getSample());
+                        if ( sample == null ) {
+                            nameDesignation = "Mock-Parent / " + nameDesignation;
                         }
                         else {
-                            entityNameDesignation = entityParent.getName() + " / " + entityNameDesignation;
+                            nameDesignation = sample.getName() + " / " + nameDesignation;
                         }
                     } catch ( Exception ex ) {
-                        logger.error( "Exception when fetching parent sample of fragment " + entityNameDesignation );
+                        logger.error( "Exception when fetching parent sample of fragment " + nameDesignation );
                     }
                 }
-                JLabel entityNameLabel = makeLabelWithTip(entityNameDesignation, "Entity: " + entity.getId(), true );
+                JLabel entityNameLabel = makeLabelWithTip(nameDesignation, "Entity: " + domainObject.getId(), true );
                 entityNamePanel.add( new JLabel( "Name" ) );
                 entityNamePanel.add( entityNameLabel );
                 textDetailsPanel.add( entityNamePanel, BorderLayout.NORTH );
@@ -113,11 +111,11 @@ public class BaseballCard {
                 subheaderLabel.setFont( subheaderLabel.getFont().deriveFont( subheaderLabel.getFont().getSize() + 1 ));
                 annotationPanel.add( subheaderLabel );
                 if ( annotations != null && annotations.size() > 0 ) {
-                    for ( OntologyAnnotation annotation: annotations ) {
+                    for ( Annotation annotation: annotations ) {
                         annotationPanel.add(
                                 makeLabelWithTip(
-                                        getLabelText( annotation.getKeyString(), annotation.getValueString() ),
-                                        getTooltipText( annotation.getKeyString(), annotation.getValueString() ),
+                                        getLabelText( annotation.getKey(), annotation.getValue() ),
+                                        getTooltipText( annotation.getKey(), annotation.getValue() ),
                                         false
                                 )
                         );
@@ -159,15 +157,15 @@ public class BaseballCard {
 
         annotationsLoadingWorker.execute();
 
-        String imagePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+        String imagePath = getImagePath(domainObject);
         if ( imagePath == null ) {
             imagePath = DEFAULT_IMAGE_PATH;
         }
         dynamicImagePanel = getDynamicImagePanel(imagePath);
     }
 
-    public Entity getEntity() {
-        return entity;
+    public DomainObject getDomainObject() {
+        return domainObject;
     }
 
     public JPanel getEntityDetailsPanel() {
@@ -190,9 +188,11 @@ public class BaseballCard {
         final DynamicImagePanel rtnVal = new DynamicImagePanel(
                 imageFilePath, ImagesPanel.MAX_IMAGE_WIDTH
         ) {
+            @Override
             protected void syncToViewerState() {
             }
 
+            @Override
             public String toString() {
                 return getToolTipText();
             }
@@ -214,7 +214,7 @@ public class BaseballCard {
             }
 
         });
-        rtnVal.setToolTipText( entity.getName() );
+        rtnVal.setToolTipText( domainObject.getName() );
         return rtnVal;
     }
 
@@ -290,5 +290,15 @@ public class BaseballCard {
             }
         }
 
+    }
+    
+    private String getImagePath(DomainObject domainObject) {
+        //EntityUtils.getImageFilePath(domainObject, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE)
+        String rtnVal = null;
+        if (domainObject instanceof HasFiles) {
+            HasFiles hasFiles = (HasFiles)domainObject;
+            rtnVal = hasFiles.getFiles().get(FileType.Unclassified2d);
+        }
+        return rtnVal;
     }
 }

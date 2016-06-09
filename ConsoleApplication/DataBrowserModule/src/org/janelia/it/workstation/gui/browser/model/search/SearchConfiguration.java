@@ -27,6 +27,8 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -309,6 +311,8 @@ public class SearchConfiguration {
             throw new RuntimeException("SearchConfiguration.performSearch called in the EDT");
         }
 
+        StopWatch stopWatch = new LoggingStopWatch();
+
         query.setStart(pageSize * page);
         query.setRows(pageSize);
         DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -352,9 +356,14 @@ public class SearchConfiguration {
             }
         }
 
+        stopWatch.lap("performSolrSearch");
+
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
         log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
+
+        stopWatch.stop("performMongoSearch");
+
         return new ResultPage(domainObjects, annotations, numFound);
     }
 }
