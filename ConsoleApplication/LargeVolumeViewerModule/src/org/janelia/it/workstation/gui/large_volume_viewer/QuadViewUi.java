@@ -791,6 +791,28 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
+        final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
+        if(HttpDataSource.useHttp()) {
+            HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
+            useHttpCheckbox.setSelected(true);
+        } else {
+            useHttpCheckbox.setSelected(false);
+        }
+        useHttpCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    useHttpCheckbox.setSelected(false);
+                    HttpDataSource.setUseHttp(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
+                    useHttpCheckbox.setSelected(true);
+                    HttpDataSource.setUseHttp(true);
+                }
+            }
+        });
+        buttonsPanel.add(useHttpCheckbox);
+
         buttonsPanel.add(new TileStackCacheStatusPanel());
 
 		Component verticalGlue = Box.createVerticalGlue();
@@ -1461,6 +1483,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getSampleId() {
+        if (annotationModel == null  ||  annotationModel.getCurrentWorkspace() == null) {
+            return null;
+        }
         return this.annotationModel.getCurrentWorkspace().getSampleID();
     }
 
