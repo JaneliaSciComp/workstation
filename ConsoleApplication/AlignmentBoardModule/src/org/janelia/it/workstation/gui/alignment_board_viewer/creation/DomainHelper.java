@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardReference;
@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartmentSet;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
-import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReference;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -272,11 +272,6 @@ public class DomainHelper {
 
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
-        if (ABReferenceChannel.REF_CHANNEL_TYPE_NAME.equals(item.getName())) {
-            log.trace("Got a Ref Channel.");
-            Sample sample = (Sample)domainObject;
-            return new ABReferenceChannel(sample);
-        }
 
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
@@ -288,26 +283,25 @@ public class DomainHelper {
             else {
                 // Got compartment
                 Compartment comp = cs.getCompartment(abRef.getItemId());
-                try {
-                    if (comp.getNumber() == null) {
-                        // Expecting mask path to be a string like compartment_59.mask
-                        String maskPath = comp.getFiles().get(FileType.MaskFile);
-                        int underPos = maskPath.indexOf("_");
-                        if (underPos > -1) {
-                            int dotPos = maskPath.indexOf('.', underPos);
-                            comp.setNumber(Integer.parseInt(maskPath.substring(underPos + 1, dotPos)));
-                        }
-
-                    }
-                } catch (Exception ex) {
-                    log.warn("Failed to parse number out of mask file.");
-                    comp.setNumber(0);
-                }
-                ABCompartment abComp = new ABCompartment(comp);
-                return abComp;
+                return new ABCompartment(comp);
             }
         } else if (domainObject instanceof Sample) {
-            return new ABSample((Sample) domainObject);
+            if (ref.getItemId() == null) {
+                // Got sample
+                return new ABSample((Sample) domainObject);
+            }
+            else {
+                // Got reference channel
+                log.trace("Got a Ref Channel.");
+                Sample sample = (Sample)domainObject;
+                List<NeuronSeparation> separations = sample.getResultsById(NeuronSeparation.class, ref.getItemId());
+                if (separations.isEmpty()) {
+                    log.warn("No neuron separation found for ref {}.", ref.getItemId());
+                }
+                else {
+                    return new ABReference(separations.get(0));
+                }
+            }
         } else if (domainObject instanceof NeuronFragment) {
             return new ABNeuronFragment((NeuronFragment) domainObject);
         }
