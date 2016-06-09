@@ -11,10 +11,16 @@ import java.nio.ShortBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.CoordinateToRawTransformFileSource;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 
 import com.sun.media.jai.codec.ImageDecoder;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 /**
  * Convert block tiff octree render artifacts to slice pam/lz4 artifacts.
@@ -39,7 +45,11 @@ public class TiffToPam {
 		TiffToPam tiffToPam = new TiffToPam();
 		tiffToPam.loadAdapter = new BlockTiffOctreeLoadAdapter();
 		try {
-			tiffToPam.loadAdapter.setTopFolder(inputTiffFolder);
+			tiffToPam.loadAdapter.setTopFolderAndCoordinateSource(inputTiffFolder, new CoordinateToRawTransformFileSource() {
+				public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
+					return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+				}
+			});
 			tiffToPam.convertFolder(inputTiffFolder, outputPamFolder);
 		} catch (DataSourceInitializeException e) {
 			e.printStackTrace();
@@ -83,7 +93,7 @@ public class TiffToPam {
 		 */
 		for (int z = 0; z < sz; ++z) {
 			try {
-				TextureData2dGL tex = loadAdapter.loadSlice(z, decoder, decoder.length);
+				TextureData2dGL tex = new TextureData2dGL(loadAdapter.loadSlice(z, decoder, decoder.length));
 				// Write pam file
 				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam");
 				// System.out.println(pamFile.getAbsolutePath());
@@ -130,6 +140,12 @@ public class TiffToPam {
 					out.put(in);
 					bb = swap;
 				}
+				//
+				//
+				// NOTE: If the PamOctreeLoadAdapter below is ever used, it must call setSwapBytes(true)
+				// for resultant TextureData2dGL
+				//
+				//
 				// bb = PamOctreeLoadAdapter.unpackChannels(bb, tex.getChannelCount(), tex.getBitDepth()/8);
 				// bb = PamOctreeLoadAdapter.packChannels(bb, tex.getChannelCount(), tex.getBitDepth()/8); // control
 				pamStream0.write(bb);

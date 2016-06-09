@@ -2,10 +2,11 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.shared.lvv.ChannelBrightnessStats;
+import org.janelia.it.jacs.shared.lvv.ImageBrightnessStats;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
@@ -22,7 +23,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListe
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
@@ -40,7 +41,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
-import java.text.DecimalFormat;
 import java.util.List;
 import org.apache.commons.lang.SystemUtils;
 import org.slf4j.Logger;

@@ -163,6 +163,9 @@ extends MultipassRenderer
     }
     
     public void clearVolumeActors() {
+        for (GL3Actor actor: volumeRenderPass.getActors()) {
+            obsoleteGLResources.add(actor);
+        }
         volumeRenderPass.clearActors();
         setIntensityBufferDirty();
     }

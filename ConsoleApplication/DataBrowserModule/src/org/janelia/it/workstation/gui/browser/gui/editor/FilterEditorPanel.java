@@ -422,14 +422,14 @@ public class FilterEditorPanel extends JPanel
     
     private void updateView() {
 
-    	SearchType searchTypeAnnot = searchConfig.getSearchClass().getAnnotation(SearchType.class);
-        typeCriteriaButton.setText("Result Type: " + searchTypeAnnot.label());
+        final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
+        typeCriteriaButton.setText("Result Type: " + currType);
 
         typeCriteriaButton.getPopupMenu().removeAll();
         ButtonGroup typeGroup = new ButtonGroup();
         for (final Class<? extends DomainObject> searchClass : DomainUtils.getSearchClasses()) {
-            final String label = searchClass.getAnnotation(SearchType.class).label();
-            JMenuItem menuItem = new JRadioButtonMenuItem(label, searchClass.equals(searchConfig.getSearchClass()));
+            final String type = DomainUtils.getTypeName(searchClass);
+            JMenuItem menuItem = new JRadioButtonMenuItem(type, searchClass.equals(searchConfig.getSearchClass()));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     dirty = true;

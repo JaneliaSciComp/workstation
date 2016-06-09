@@ -23,12 +23,12 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
@@ -48,7 +48,6 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
@@ -717,7 +716,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private void createMip3d() {
         tearDownToolbar();
         if ( mip3d != null ) {
-            serialize();
             mip3d.releaseMenuActions();
         }
         LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
@@ -816,8 +814,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
 
-        // Search-to-add is done externally, now.
-        //toolbar.add(controls.getSearch());
+        toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());

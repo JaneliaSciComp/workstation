@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.vendor_demo;
 
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.UnitVec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.UnitVec3;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;

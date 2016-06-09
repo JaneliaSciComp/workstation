@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.animate;
 
-import org.janelia.it.workstation.geom.Quaternion;
+import org.janelia.it.jacs.shared.geom.Quaternion;
 
 /**
  * Interpolator of discreet values that uses continuous values internally.

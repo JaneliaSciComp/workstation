@@ -11,6 +11,7 @@ import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorith
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Date;
 import org.apache.commons.io.FileUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
@@ -27,6 +28,7 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
 //    public static final String DECOMPRESSION_BINARY = "R:\\decompress_forLes\\decompressForLes.exe";
     public static final String ASSUMED_OUTPUT_TYPE_EXT = ".tif";
     public static final String DECOMPRESSION_BINARY = "\"C:\\Program Files\\JaneliaWorkstation\\bin\\decompressForLes.exe\"";
+    public static final String TMPDIR_ROOT="C:\\Program Files\\JaneliaWorkstation\\tmp";
             //"C:\\Users\\FOSTERL\\gitfiles\\master\\janelia-workstation\\jpeg2000\\forLes\\decompress_forLes\\decompressForLes.exe";
     public static final String BUILD_RAMDISK_COMMAND = "C:\\Windows\\system32\\imdisk.exe -a -t vm -s 1G -p \"/fs:ntfs /q /y\" -m R:";
     //public static final File RAMDISK_ROOT = new File("C:\\data\\for_mj2\\"); //new File("R:\\data\\");
@@ -40,6 +42,8 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
     private int zDepth = 251;
     
     private String decompBinaryLocation = DECOMPRESSION_BINARY;
+
+    private static boolean tmpInitialized=false;
     
     public Mj2ExecutableCompressionAlgorithm() {
         File rDrive = new File("R:\\");
@@ -226,5 +230,50 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
     private String getCompressedFileNameSuffix() {
         return FILE_MID_STR + Integer.toString(compressionLevel) + TARGET_EXTENSION;
     }
+
+    private static synchronized void createTmpDir() throws CompressionException {
+        File mj2TmpDir=new File(TMPDIR_ROOT, "mj2");
+        File tmpDir=new File(TMPDIR_ROOT);
+        if (!tmpDir.exists()) {
+            if (!tmpDir.mkdir()) {
+                throw new CompressionException("Could not create dir="+TMPDIR_ROOT);
+            }
+        }
+        if (!mj2TmpDir.exists()) {
+            if (!mj2TmpDir.mkdir()) {
+                throw new CompressionException("Could not create dir="+mj2TmpDir.getAbsolutePath());
+            }
+        }
+    }
+
+    public static byte[] decompressAsBytesInTmpDir(byte[] inBytes, int zDepth) throws Exception {
+        File mj2TmpDir=new File(TMPDIR_ROOT, "mj2");
+        if (!tmpInitialized) {
+            createTmpDir();
+            tmpInitialized=true;
+        }
+        String uniqueDirName=new Long(System.nanoTime()).toString();
+        File tmpDir=new File(mj2TmpDir, uniqueDirName);
+        if (!tmpDir.mkdir()) {
+            throw new CompressionException("Could not create tmpDir="+tmpDir.getAbsolutePath());
+        }
+        File dataInFile=new File(tmpDir, "data.mj2");
+        File dataOutFile=new File(tmpDir, "data.tif");
+        FileUtils.writeByteArrayToFile(dataInFile, inBytes);
+
+        SystemCall sysCall = new SystemCall();
+        final String commandLine = DECOMPRESSION_BINARY + " " + dataInFile.getAbsolutePath() + " " + dataOutFile.getAbsolutePath() + " " + zDepth;
+        int cmdRtn = sysCall.emulateCommandLine(commandLine, false);
+        if (cmdRtn != 0) {
+            throw new Exception(commandLine + " failed with error code " + cmdRtn);
+        }
+
+        byte[] result=Files.readAllBytes(dataOutFile.toPath());
+        FileUtils.cleanDirectory(tmpDir);
+        tmpDir.delete();
+
+        return result;
+    }
+
 
 }

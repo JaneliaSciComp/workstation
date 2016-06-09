@@ -1,16 +1,19 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.cache;
+package org.janelia.it.workstation.gui.large_volume_viewer;
 
 /**
  * Created by murphys on 11/6/2015.
  */
 import com.sun.media.jai.codec.ImageDecoder;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
 import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.lvv.*;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +33,6 @@ import java.util.concurrent.*;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -113,14 +115,19 @@ public class TileStackCacheController {
     public boolean isInitialized() { return initialized; }
 
     private void initFilesystemMetadata() throws DataSourceInitializeException {
-        final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat);
+        final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat, new CoordinateToRawTransformFileSource() {
+            @Override
+            public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
+                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+            }
+        });
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
         octreeMetadataSniffer.sniffMetadata(topFolder);
         sliceSize = octreeMetadataSniffer.getSliceSize(); // maybe 16-bit
         log.info("initFilesystemMetadata()");
         folderOpenTimestamp = new Date().getTime();
         SessionMgr.getSessionMgr().logToolEvent(
-                LVV_LOGSTAMP_ID,
+                LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
                 LTT_SESSION_CATEGORY_STRING,
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
         );
@@ -447,12 +454,12 @@ public class TileStackCacheController {
     private TextureData2dGL createTextureData2dGLFromCacheVolume(ByteBuffer stackBuffer, int zSlice) {
         //long t1=System.nanoTime();
         int[] tileSize=tileFormat.getTileSize();
-        TextureData2dGL result = new TextureData2dGL();
+        TextureData2d result = new TextureData2d();
         result.load8bitStackSliceByteBufferTo16bitTexture(tileSize[0], tileSize[1], tileSize[2], 2, zSlice, MIN_RAW_VAL, (MAX_RAW_VAL-MIN_RAW_VAL), stackBuffer);
         //long t2=System.nanoTime();
         //long report2=(t2-t1)/1000000;
         //log.info("load8bitStackSliceByteBufferTo16bitTexture ms="+report2);
-        return result;
+        return new TextureData2dGL(result);
 
 //
 //        long[] timings=new long[4];
@@ -746,7 +753,7 @@ public class TileStackCacheController {
                 File topFolder = tileStackCacheController.getTopFolder();
                 String specificPart = file.toString().substring(topFolder.toString().length());
                 SessionMgr.getSessionMgr().logToolEvent(
-                    LVV_LOGSTAMP_ID,
+                    LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
                     LTT_CATEGORY_STRING,
                     new ActionString(
                             tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms="+elapsedMs
@@ -863,9 +870,9 @@ public class TileStackCacheController {
                 pb.addSource(image);
             }
             RenderedImage composite = JAI.create("bandmerge", pb);
-            TextureData2dGL result = new TextureData2dGL();
+            TextureData2d result = new TextureData2d();
             result.loadRenderedImage(composite);
-            return result;
+            return new TextureData2dGL(result);
         } catch (NoClassDefFoundError exc) {
             exc.printStackTrace();
             return null;

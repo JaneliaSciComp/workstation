@@ -6,6 +6,12 @@
 
 package org.janelia.it.workstation.lifecycle;
 
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgrActivityLogging;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+
 import java.awt.AWTEvent;
 import java.awt.EventQueue;
 import java.awt.event.MouseEvent;

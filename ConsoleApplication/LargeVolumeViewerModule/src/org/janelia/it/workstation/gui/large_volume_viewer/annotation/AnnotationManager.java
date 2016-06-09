@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -19,7 +19,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;

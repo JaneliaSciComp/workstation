@@ -5,7 +5,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.components;
  */
 
 import org.janelia.it.workstation.gui.large_volume_viewer.VolumeCache;
-import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileStackCacheController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

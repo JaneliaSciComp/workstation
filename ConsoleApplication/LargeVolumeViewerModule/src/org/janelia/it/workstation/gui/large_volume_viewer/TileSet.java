@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.jacs.shared.lvv.TileIndex;
+
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -103,7 +105,7 @@ extends HashSet<Tile2d>
 
 	// Start loading textures to quickly populate these tiles, even if the
 	// textures are not the optimal resolution
-	public Set<TileIndex> getFastNeededTextures() 
+	public Set<TileIndex> getFastNeededTextures()
 	{
 		// Which tiles need to be textured?
 		Set<Tile2d> untexturedTiles = new HashSet<Tile2d>();

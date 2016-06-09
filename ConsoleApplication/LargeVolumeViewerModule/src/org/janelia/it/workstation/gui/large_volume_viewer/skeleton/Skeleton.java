@@ -3,12 +3,12 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

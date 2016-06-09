@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
