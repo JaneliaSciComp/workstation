@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardRefere
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -28,7 +29,6 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -288,7 +288,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
                 AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
 
                 // Settle the Reference channel, if it exists.
-                addReferenceChannel(sampleItem, events);
+                addReferenceChannel(sampleItem, sample, events);
 
                 // Settle any fragments available in the sample.
                 List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
@@ -347,13 +347,17 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return alignmentBoardItem;
     }
 
-    private AlignmentBoardItem addReferenceChannel(AlignmentBoardItem parentItem, final Collection<AlignmentBoardEvent> events) throws Exception {
+    private AlignmentBoardItem addReferenceChannel(AlignmentBoardItem parentItem, final Sample sample, final Collection<AlignmentBoardEvent> events) throws Exception {
         AlignmentBoardItem alignmentBoardItem = new AlignmentBoardItem();
-        alignmentBoardItem.setTarget(parentItem.getTarget());
+        AlignmentBoardReference abRef = new AlignmentBoardReference();
+        abRef.setObjectRef(parentItem.getTarget().getObjectRef());
+        // Need to get the id of the sample's neuron sep.
+        NeuronSeparation targetItem = domainHelper.getNeuronSeparationForSample(sample, context);
+        abRef.setItemId(targetItem.getId());
+        alignmentBoardItem.setTarget(abRef);
         alignmentBoardItem.setName(ABReferenceChannel.REF_CHANNEL_TYPE_NAME);
         alignmentBoardItem.setInclusionStatus(InclusionStatus.In.name());
         alignmentBoardItem.setVisible(true);
-        // There will be no reference from a Reference Channel.
         parentItem.getChildren().add(alignmentBoardItem);
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;

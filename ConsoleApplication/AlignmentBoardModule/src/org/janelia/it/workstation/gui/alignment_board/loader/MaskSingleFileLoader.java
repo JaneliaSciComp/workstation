@@ -469,7 +469,7 @@ public class MaskSingleFileLoader {
             slowestSrcVaryingCoord = 0;
         }
         else {
-            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
+            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected. " + renderableBean.getName() );
         }
 
     }

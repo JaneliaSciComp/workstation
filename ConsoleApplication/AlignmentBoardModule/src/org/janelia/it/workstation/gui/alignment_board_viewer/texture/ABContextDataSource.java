@@ -237,11 +237,11 @@ public class ABContextDataSource implements RenderableDataSourceI {
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
-        data.setCompartment( true ); // For render characteristics
+        data.setCompartment( true ); // For render characteristics        
 
         Sample referencedSample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(item.getTarget().getObjectRef());
-        String maskPath = domainHelper.getRefChannelPath(referencedSample, context.getAlignmentContext());
-        String channelPath = domainHelper.getRefMaskPath(referencedSample, context.getAlignmentContext());
+        String maskPath = domainHelper.getRefMaskPath(referencedSample, context.getAlignmentContext());
+        String channelPath = domainHelper.getRefChannelPath(referencedSample, context.getAlignmentContext());
         if ( maskPath == null || channelPath == null ) {
             logger.warn("No mask and/or channel pat for reference {}:{}.", renderableBean.getName(), renderableBean.getId() );
         }

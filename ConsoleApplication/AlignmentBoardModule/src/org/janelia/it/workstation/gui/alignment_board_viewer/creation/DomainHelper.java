@@ -170,11 +170,13 @@ public class DomainHelper {
         return rtnVal;
     }
 
+    private static final String MASK_CHAN_SUBPATH = "/archive/maskChan/";
     public String getRefChannelPath(Sample sample, AlignmentContext context) {
         String rtnVal = null;
         NeuronSeparation latestNeuronSeparation = getNeuronSeparationForSample(sample, context);
         if (latestNeuronSeparation != null) {
-            rtnVal = latestNeuronSeparation.getFilepath() + "/Reference.chan";
+            // Expect "separate" as final leg in file path.
+            rtnVal = latestNeuronSeparation.getFilepath() + MASK_CHAN_SUBPATH + "ref.chan";
         }
         return rtnVal;
     }
@@ -183,7 +185,7 @@ public class DomainHelper {
         String rtnVal = null;
         NeuronSeparation latestNeuronSeparation = getNeuronSeparationForSample(sample, context);
         if (latestNeuronSeparation != null) {
-            rtnVal = latestNeuronSeparation.getFilepath() + "/Reference.mask";
+            rtnVal = latestNeuronSeparation.getFilepath() + MASK_CHAN_SUBPATH + "ref.mask";
         }
         return rtnVal;
     }
@@ -270,12 +272,12 @@ public class DomainHelper {
 
         DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
         DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
-        if (item.getName().equals(ABReferenceChannel.REF_CHANNEL_TYPE_NAME)) {
+        if (ABReferenceChannel.REF_CHANNEL_TYPE_NAME.equals(item.getName())) {
             log.info("Got a Ref Channel.");
             Sample sample = (Sample)domainObject;
             return new ABReferenceChannel(sample);
         }
-        
+
         if (domainObject instanceof CompartmentSet) {
             CompartmentSet cs = (CompartmentSet) domainObject;
             AlignmentBoardReference abRef = item.getTarget();
