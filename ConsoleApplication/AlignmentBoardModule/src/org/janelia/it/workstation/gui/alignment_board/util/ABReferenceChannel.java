@@ -3,6 +3,9 @@ package org.janelia.it.workstation.gui.alignment_board.util;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 
 public class ABReferenceChannel extends ABItem {
+
+    public static final String REF_CHANNEL_TYPE_NAME = "Reference";
+
     private NeuronSeparation separation;
 
     public ABReferenceChannel(NeuronSeparation separation) {
@@ -15,7 +18,7 @@ public class ABReferenceChannel extends ABItem {
     }
 
     public String getName() {
-        return "Reference";
+        return REF_CHANNEL_TYPE_NAME;
     }
 
     @Override
@@ -30,6 +33,6 @@ public class ABReferenceChannel extends ABItem {
 
     @Override
     public String getType() {
-        return "Reference";
+        return REF_CHANNEL_TYPE_NAME;
     }
 }
