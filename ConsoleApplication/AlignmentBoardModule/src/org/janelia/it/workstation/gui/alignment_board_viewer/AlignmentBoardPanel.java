@@ -22,7 +22,9 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
@@ -47,7 +49,6 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
@@ -61,8 +62,6 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.model.domain.AlignmentContext;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,7 +250,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                                 = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
                             AlignmentBoardItem ai = ctx.getAlignmentBoardItemWithId(renderableData.getBean().getId());
                             if ( ai != null ) {
-                                ai.setVisible(overlappingMasks.contains(renderableData.getBean().getTranslatedNum()));
+                                ai.setVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
                             }
                         } catch ( Exception ex ) {
                             ModelMgr.getModelMgr().handleException(ex);
