@@ -815,7 +815,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
 
-        toolbar.add(controls.getSearch());
+        //toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());

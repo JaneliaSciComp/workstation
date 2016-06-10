@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
-import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
 import org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
@@ -99,7 +98,7 @@ public class AlignmentBoardControls {
     private JButton searchSave;
     private JButton colorSave;
     private JButton screenShot;
-    private JButton search;
+    //private JButton search;
     private AbstractButton connectEvents;
 
     private JButton commitButton;
@@ -387,9 +386,9 @@ public class AlignmentBoardControls {
         return screenShot;
     }
 
-    public AbstractButton getSearch() {
-        return search;
-    }
+    //public AbstractButton getSearch() {
+    //    return search;
+    //}
 
     public AbstractButton getConnectEvents() {
         return connectEvents;
@@ -754,22 +753,22 @@ public class AlignmentBoardControls {
             }
         });
 
-        search = new JButton( Icons.getIcon( "find.png" ) );
-        search.setText("Add to Board");
-        search.setToolTipText("Add data to current Alignment Board");
-        search.setText("Add Data to Board");
-        // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
-        search.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed( ActionEvent ae ) {
-                if ( searchDialog == null ) {
-                    searchDialog = new ABTargetedSearchDialog(
-                            AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
-                    );
-                }
-                searchDialog.showDialog();
-            }
-        });
+        //search = new JButton( Icons.getIcon( "find.png" ) );
+        //search.setText("Add to Board");
+        //search.setToolTipText("Add data to current Alignment Board");
+        //search.setText("Add Data to Board");
+        //    NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
+        //search.addActionListener(new ActionListener() {
+        //    @Override
+        //    public void actionPerformed( ActionEvent ae ) {
+        //        if ( searchDialog == null ) {
+        //            searchDialog = new ABTargetedSearchDialog(
+        //                    AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
+        //            );
+        //        }
+        //        searchDialog.showDialog();
+        //    }
+        //});
 
         clearButton = new JButton( CLEAR_BUTTON_LABEL );
         clearButton.setToolTipText( CLEAR_BUTTON_TOOLTIP_TEXT );

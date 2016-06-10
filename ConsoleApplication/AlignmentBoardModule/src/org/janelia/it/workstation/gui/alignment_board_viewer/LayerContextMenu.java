@@ -336,6 +336,11 @@ public class LayerContextMenu extends JPopupMenu {
             //@Override
             public Void call() throws Exception {
                 AlignmentBoardItemRemoveEvent abEvent;
+				// Let's take them off the board.
+				for (AlignmentBoardItem alignmentBoardItem: alignmentBoardItems) {
+					alignmentBoardContext.getAlignmentBoard().getChildren().remove(alignmentBoardItem);
+				}
+				
                 if ( alignmentBoardItems.size() == 1 ) {
                     AlignmentBoardItem nextDomainObject = alignmentBoardItems.get( 0 );
                     log.debug("The removed entity was an aligned item, firing alignment board event...");
@@ -359,19 +364,6 @@ public class LayerContextMenu extends JPopupMenu {
                 action.doAction();
             }
         });
-        
-        for (AlignmentBoardItem item : alignmentBoardItems) {            
-            boolean canDelete = true;
-			// This check is probably unnecessary, unless people open each
-			// other's boards.
-            String subject = SessionMgr.getSubjectKey();
-            ABItem abItem = domainHelper.getObjectForItem(item);
-            if (!abItem.canWrite(subject)) {
-                canDelete = false;
-            }
-            
-            if (!canDelete) deleteItem.setEnabled(false);
-        }
         
         return deleteItem;
     }
