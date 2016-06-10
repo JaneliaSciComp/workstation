@@ -28,11 +28,11 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
@@ -65,8 +65,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.ArrayList;
-import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -676,8 +674,16 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setIcon(null);
                 }
                 else {
-                    label.setText(item.getName());
-//TODO workout where to get icon                    label.setIcon(Icons.getIcon(alignedItem));
+					if (alignmentBoardItem.getName() == null) {
+						label.setText(item.getName());
+					}
+					else {
+						label.setText(alignmentBoardItem.getName());
+					}					
+					/*
+					DomainObject dObj = DomainMgr.getDomainMgr().getModel().getDomainObject(alignmentBoardItem.getTarget().getObjectRef());
+					label.setIcon(Icons.getIcon(dObj));
+					*/
                 }
             }
             else if (value instanceof String) {
