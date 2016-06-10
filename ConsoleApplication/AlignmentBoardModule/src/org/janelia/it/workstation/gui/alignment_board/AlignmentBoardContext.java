@@ -20,7 +20,6 @@ import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
@@ -28,6 +27,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
@@ -137,6 +137,51 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
 			Events.getInstance().postOnEventBus(event);
 		}
     }
+	
+	public void removeDomainObjectRefs(List<AlignmentBoardItem> alignmentBoardItems) {
+		for (AlignmentBoardItem alignmentBoardItem: alignmentBoardItems) {
+			removeDomainObjectRef(alignmentBoardItem);
+		}
+		AlignmentBoardEvent abEvent = null;
+		if (alignmentBoardItems.size() == 1) {
+			AlignmentBoardItem nextDomainObject = alignmentBoardItems.get(0);
+			log.debug("Firing alignment board removal event...");
+			abEvent = new AlignmentBoardItemRemoveEvent(
+					this, nextDomainObject, 0); // Q: order index required?
+		} else {
+			log.debug("Firing alignment board multi removal event...");
+			abEvent = new AlignmentBoardItemRemoveEvent(
+					this, null, null
+			);
+		}
+		Events.getInstance().postOnEventBus(abEvent);
+	}
+	
+	/**
+	 * Checks if the thing is here at all, among top or 2nd level, and if so
+	 * will delete it from that list.
+	 * 
+	 * @param alignmentBoardItem what not to keep.
+	 * @return T if removed.
+	 */
+	public boolean removeDomainObjectRef(AlignmentBoardItem alignmentBoardItem) {
+		boolean rtnVal = false;
+		List<AlignmentBoardItem> containingList = getAlignmentBoard().getChildren();
+		if (! containingList.contains(alignmentBoardItem)) {
+			containingList = null;
+			for (AlignmentBoardItem parentItem: getAlignmentBoard().getChildren()) {
+				if (parentItem.getChildren().contains(alignmentBoardItem)) {					
+					containingList = parentItem.getChildren();					
+					break;
+				}
+			}
+		}
+		if (containingList != null) {
+			containingList.remove(alignmentBoardItem);			
+			rtnVal = true;
+		}
+		return rtnVal;
+	}
 
     /**
      * Returns the child item with the given id.

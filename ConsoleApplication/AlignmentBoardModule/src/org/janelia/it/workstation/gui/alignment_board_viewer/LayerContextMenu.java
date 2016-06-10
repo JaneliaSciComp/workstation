@@ -13,19 +13,15 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDetailsDialog;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -335,24 +331,8 @@ public class LayerContextMenu extends JPopupMenu {
             
             //@Override
             public Void call() throws Exception {
-                AlignmentBoardItemRemoveEvent abEvent;
 				// Let's take them off the board.
-				for (AlignmentBoardItem alignmentBoardItem: alignmentBoardItems) {
-					alignmentBoardContext.getAlignmentBoard().getChildren().remove(alignmentBoardItem);
-				}
-				
-                if ( alignmentBoardItems.size() == 1 ) {
-                    AlignmentBoardItem nextDomainObject = alignmentBoardItems.get( 0 );
-                    log.debug("The removed entity was an aligned item, firing alignment board event...");
-                    abEvent = new AlignmentBoardItemRemoveEvent(
-                            alignmentBoardContext, nextDomainObject, 0); // Q: order index required?
-                }
-                else {
-                    abEvent = new AlignmentBoardItemRemoveEvent(
-                            alignmentBoardContext, null, null
-                    );
-                }
-                Events.getInstance().postOnEventBus(abEvent);
+				alignmentBoardContext.removeDomainObjectRefs(alignmentBoardItems);				
                 return null;
             }
         };
