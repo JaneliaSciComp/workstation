@@ -2,7 +2,9 @@ package org.janelia.it.workstation.gui.alignment_board;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -114,9 +116,26 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
 
         // Queue up all events accumulated above.
+		Map<ChangeType,AlignmentBoardEvent> uniqueEventTypeMap = new HashMap<>();
         for (AlignmentBoardEvent event : events) {
-            Events.getInstance().postOnEventBus(event);
+			// Since some domain object is being added, and the net effect
+			// is to just reload the board after having it refresh its
+			// state, there is no need to send all the events.  Rather,
+			// this will take only one of the add events to propagate.
+			if (event instanceof AlignmentBoardItemChangeEvent) {
+				AlignmentBoardItemChangeEvent changeEvent = (AlignmentBoardItemChangeEvent)event;
+				uniqueEventTypeMap.put(changeEvent.getChangeType(), changeEvent);
+			}
+			else {
+				log.info("Non change-event {}", event.getClass().getSimpleName());
+				Events.getInstance().postOnEventBus(event);
+			}
         }
+		for (ChangeType changeType : uniqueEventTypeMap.keySet()) {
+			AlignmentBoardEvent event = uniqueEventTypeMap.get(changeType);
+			log.info("Posting type {}.", changeType);
+			Events.getInstance().postOnEventBus(event);
+		}
     }
 
     /**
