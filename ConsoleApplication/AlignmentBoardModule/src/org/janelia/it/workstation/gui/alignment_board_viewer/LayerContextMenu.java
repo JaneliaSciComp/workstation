@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDe
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -317,12 +318,11 @@ public class LayerContextMenu extends JPopupMenu {
         return getDeleteListItem(abiList, text);
     }
     
-    /** TODO: This is no longer using the Entity Delete List action.  But it does nothing. */
     private JMenuItem getDeleteListItem(final List<AlignmentBoardItem> alignmentBoardItems, String text) {
         final Action action = new Action() { //new RemoveEntityAction(domainObjects, false, false, new Callable<Void>() {
             @Override
             public String getName() {
-                return "Dummy Delete List";
+                return "Delete List";
             }
             @Override
             public void doAction() {
@@ -360,27 +360,15 @@ public class LayerContextMenu extends JPopupMenu {
             }
         });
         
-        for (AlignmentBoardItem item : alignmentBoardItems) {
-            DomainObject parent = null; // TODO: get parent. dObj.get; //???
-            
+        for (AlignmentBoardItem item : alignmentBoardItems) {            
             boolean canDelete = true;
-            // User can't delete if they don't have write access
+			// This check is probably unnecessary, unless people open each
+			// other's boards.
             String subject = SessionMgr.getSubjectKey();
-            ABItem dObj = domainHelper.getObjectForItem(item);
-
-            if (!dObj.canWrite(subject)) {
+            ABItem abItem = domainHelper.getObjectForItem(item);
+            if (!abItem.canWrite(subject)) {
                 canDelete = false;
-                // Unless they own the parent
-                if (parent!=null && parent.getId()!=null && parent.getWriters().contains(subject)) {
-                    canDelete = true;
-                }
             }
-            
-            // Can never delete protected entities
-            //TODO : figure out how these are protected.
-//            if (DomainMgr.getDomainMgr().getModel().isProtected(dObj)) {
-                canDelete = false;
-//            }
             
             if (!canDelete) deleteItem.setEnabled(false);
         }
