@@ -266,13 +266,15 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-//                        DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
-//                        ModelMgr.getModelMgr().renameEntity(alignedItemTarget, newName);
+						alignmentBoardItem.setName(newName);
                     }
                     
                     @Override
                     protected void hadSuccess() {
-                        // Updates are driven by the entity model
+                        //Need to notify.  Call it a visibility change for now.
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+								alignmentBoardContext, alignmentBoardItem, ChangeType.NameChange);
+						Events.getInstance().postOnEventBus(event);
                     }
                     
                     @Override
