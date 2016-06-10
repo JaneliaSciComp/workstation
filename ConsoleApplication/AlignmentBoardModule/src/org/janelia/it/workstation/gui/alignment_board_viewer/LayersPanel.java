@@ -29,11 +29,13 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
@@ -65,7 +67,6 @@ import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
-import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -107,13 +108,13 @@ public class LayersPanel extends JPanel implements Refreshable {
 
     public void activate() {
         log.info("Activating");
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+        Events.getInstance().registerOnEventBus(this);
         refresh();
     }
 
     public void deactivate() {
         log.info("Deactivating");
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        Events.getInstance().unregisterOnEventBus(this);
     }
     
     /** Show an empty panel.  Marked final because called by c'tor. */
@@ -155,7 +156,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             public Void call() throws Exception {
                 AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
                 log.info("Posting AB-Open");                
-                ModelMgr.getModelMgr().postOnEventBus(event);
+                Events.getInstance().postOnEventBus(event);
                 return null;
             }
         });
@@ -628,7 +629,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             protected void hadSuccess() {
                 AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                         alignmentBoardContext, alignedItem, ChangeType.ColorChange);
-                ModelMgr.getModelMgr().postOnEventBus(event);
+                Events.getInstance().postOnEventBus(event);
             }
             
             @Override
@@ -908,7 +909,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                         event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.VisibilityChange);
                     }
-                    ModelMgr.getModelMgr().postOnEventBus(event);
+                    Events.getInstance().postOnEventBus(event);
                 }
                 
                 @Override

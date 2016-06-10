@@ -25,6 +25,7 @@ import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDe
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -177,7 +178,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -207,7 +208,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -238,7 +239,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.OverlapFilter);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -346,7 +347,7 @@ public class LayerContextMenu extends JPopupMenu {
                             alignmentBoardContext, null, null
                     );
                 }
-                ModelMgr.getModelMgr().postOnEventBus(abEvent);
+                Events.getInstance().postOnEventBus(abEvent);
                 return null;
             }
         };
