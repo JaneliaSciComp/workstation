@@ -286,7 +286,7 @@ public class DomainHelper {
                 return new ABCompartment(comp);
             }
         } else if (domainObject instanceof Sample) {
-            if (ref.getItemId() == null) {
+            if (ref.getItemId() == null  ||  ref.getItemId().equals(domainObject.getId())) {
                 // Got sample
                 return new ABSample((Sample) domainObject);
             }
@@ -297,6 +297,7 @@ public class DomainHelper {
                 List<NeuronSeparation> separations = sample.getResultsById(NeuronSeparation.class, ref.getItemId());
                 if (separations.isEmpty()) {
                     log.warn("No neuron separation found for ref {}.", ref.getItemId());
+                    return createDummyItem(item);
                 }
                 else {
                     return new ABReferenceChannel(separations.get(0));
