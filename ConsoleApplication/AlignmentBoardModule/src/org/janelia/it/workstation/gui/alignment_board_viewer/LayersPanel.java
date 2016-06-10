@@ -862,11 +862,11 @@ public class LayersPanel extends JPanel implements Refreshable {
 
                     ABItem item = domainHelper.getObjectForItem(alignmentBoardItem);
 
-                    Collection<ABItem> affectedEntities = new ArrayList<>();
+                    Collection<ABItem> affectedItems = new ArrayList<>();
 
                     for(AlignmentBoardItem child : alignmentBoardItem.getChildren()) {
                         ABItem childItem = domainHelper.getObjectForItem(child);
-                        affectedEntities.add( childItem );
+                        affectedItems.add( childItem );
                     }
 
                     // HOW to get the parent?
@@ -886,18 +886,18 @@ public class LayersPanel extends JPanel implements Refreshable {
                                     }
                                 }
                                 if ( ! childVisible ) {
-                                    affectedEntities.add(parentObject);
+                                    affectedItems.add(parentObject);
                                 }
                             }
                             else if ( ! parent.isVisible() ) {
                                 // May have to read uncached visibility flag.
                                 // But could non-incur whole writeback cost.
-                                affectedEntities.add(parentObject);
+                                affectedItems.add(parentObject);
                             }
                         }
                     }
 
-                    if ( affectedEntities.size() > 0 ) {
+                    if ( affectedItems.size() > 0 ) {
                         domainHelper.saveAlignmentBoardAsync(alignmentBoardContext.getAlignmentBoard());
                     }
                 }

@@ -324,7 +324,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
         AlignmentBoardItem sampleItem = getPreviouslyAddedItem(sample);
         if (sampleItem == null) {
-            sampleItem = addItem(Sample.class, sample, events);
+            sampleItem = addItem(Sample.class, sample, events, false);
         }
         AlignmentBoardItem nfItem = getPreviouslyAddedSubItem(sampleItem, neuronFragment);
         if (nfItem == null) {
@@ -350,7 +350,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
                 return false;
             }
             else {
-                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
+                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events, false);
 
                 // Settle the Reference channel, if it exists.
                 addReferenceChannel(sampleItem, sample, events);
@@ -377,7 +377,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem oldItem = this.getPreviouslyAddedItem(compartmentSet);
         if (oldItem == null) {
             List<Compartment> compartments = compartmentSet.getCompartments();
-            AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events);
+            AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events, true);
             compartmentSetItem.setName(compartmentSet.getName());
             for (Compartment compartment: compartments) {
                 addCompartment(compartmentSetItem, compartment, events);
@@ -389,10 +389,16 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private AlignmentBoardItem addItem(Class modelClass, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
+	/** At the top level, compartment sets should always be listed first. */
+    private AlignmentBoardItem addItem(Class modelClass, DomainObject domainObject, final Collection<AlignmentBoardEvent> events, boolean first) {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
-        alignmentBoard.getChildren().add(alignmentBoardItem);
+		if (first) {
+			alignmentBoard.getChildren().add(0, alignmentBoardItem);
+		}
+		else {
+			alignmentBoard.getChildren().add(alignmentBoardItem);
+		}
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;
     }
