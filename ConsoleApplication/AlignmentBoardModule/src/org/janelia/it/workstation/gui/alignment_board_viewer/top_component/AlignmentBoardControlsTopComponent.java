@@ -54,6 +54,7 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setTopComponent( new JLabel( "" ));
         splitPane.setBottomComponent( new JLabel( "" ));
+        splitPane.setResizeWeight(0.5);
         jPanel1.add( splitPane, BorderLayout.CENTER );
 
         setName(Bundle.CTL_AlignmentBoardControlsTopComponent());
