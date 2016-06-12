@@ -315,6 +315,27 @@ public class DomainHelper {
         return createDummyItem(item);
     }
     
+	public boolean isSample(AlignmentBoardItem nextItem) {
+		return isInstance(nextItem, Sample.class);
+	}
+
+	public boolean isCompartmentSet(AlignmentBoardItem nextItem) {
+		return isInstance(nextItem, CompartmentSet.class);
+	}
+
+	public boolean isNeuronFragment(AlignmentBoardItem alignmentBoardItem) {
+		return isInstance(alignmentBoardItem, NeuronFragment.class);
+	}
+
+	public boolean isReference(AlignmentBoardItem alignmentBoardItem) {
+		ABItem item = getObjectForItem(alignmentBoardItem);
+		return(item instanceof ABReferenceChannel);
+	}
+
+	private boolean isInstance(AlignmentBoardItem nextItem, Class clazz) {
+		return nextItem.getTarget().getObjectRef().getTargetClassName().equals(clazz.getSimpleName());
+	}
+
     private boolean checkSampleAlignmentResult(SampleAlignmentResult sar, String objective, AlignmentContext context) {
         // Pre-emptive bail: after this, we are _known_ to have the
         // correct objective.
