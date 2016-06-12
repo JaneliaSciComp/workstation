@@ -82,19 +82,6 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
     
     @Override
     protected Transferable createTransferable(JComponent sourceComponent) {
-        /*
-        log.debug("createTransferable sourceComponent={}", sourceComponent);
-
-        DomainHelper domainHelper = new DomainHelper();
-        if (sourceComponent instanceof AnnotatedImageButton) {
-            List<DomainObject> domainObjects = domainHelper.selectAndInflateCandidateObjects(getSelectionModel().getSelectedIds());
-            return new TransferableDomainObjectList(sourceComponent, domainObjects);
-        }
-        else {
-            log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
-            return null;
-        }
-        */
         // Not transfering anything OUT of the alignment board as of now.
         return null;
     }
