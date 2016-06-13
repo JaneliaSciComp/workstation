@@ -105,9 +105,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
                     @Override
                     protected void doStuff() throws Exception { 
                         AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(board, alignmentContext);
-						for (DomainObject domainObject: domainObjects) {
-							alignmentBoardContext.addDomainObject(domainObject);
-						}
+                        alignmentBoardContext.addDomainObjects(domainObjects);
                     }
 
                     @Override

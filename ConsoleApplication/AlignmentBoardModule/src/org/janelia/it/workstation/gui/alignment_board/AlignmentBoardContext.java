@@ -78,66 +78,33 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
      * @throws Exception
      */
     public void addDomainObject(DomainObject domainObject) throws Exception {
-
-        log.info("Adding new aligned domain object: {} to alignment board {}, in ab-context {}.", domainObject.getName(), alignmentBoard.getId(), this);
-        
-        final Collection<AlignmentBoardEvent> events = new ArrayList<>();
-
-        boolean itemsAdded = true;
-        if (domainObject instanceof Sample) {
-            itemsAdded = addNewSample(domainObject, events);
-        }
-        else if (domainObject instanceof NeuronFragment) {
-            itemsAdded = addNewNeuronFragment(domainObject, events);
-        }
-        else if (domainObject instanceof CompartmentSet) {
-            CompartmentSet compartmentSet = (CompartmentSet) domainObject;
-            AlignmentBoardItem compartmentSetAlignmentBoardItem = getPreviouslyAddedItem(compartmentSet);
-            
-            if (compartmentSetAlignmentBoardItem == null) {
-                itemsAdded = addNewCompartmentSet(compartmentSet, events);                
-            }
-            else {
-                events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignmentBoardItem, ChangeType.VisibilityChange));
-            }
-
-        }
-        else if (domainObject instanceof Compartment) {
-            itemsAdded = false;
-            log.warn("Not handling compartment " + domainObject.getName() + ".  Not yet supported.");
-        }
-        else {
-            throw new IllegalStateException("Cannot add entity of type "+domainObject.getType()+" to the alignment board.");
-        }
-
-        if (itemsAdded) {
-			log.info("Saving alignment board.");
-            domainHelper.saveAlignmentBoardAsync(alignmentBoard);
-        }
-
-        // Queue up all events accumulated above.
-		Map<ChangeType,AlignmentBoardEvent> uniqueEventTypeMap = new HashMap<>();
-        for (AlignmentBoardEvent event : events) {
-			// Since some domain object is being added, and the net effect
-			// is to just reload the board after having it refresh its
-			// state, there is no need to send all the events.  Rather,
-			// this will take only one of the add events to propagate.
-			if (event instanceof AlignmentBoardItemChangeEvent) {
-				AlignmentBoardItemChangeEvent changeEvent = (AlignmentBoardItemChangeEvent)event;
-				uniqueEventTypeMap.put(changeEvent.getChangeType(), changeEvent);
-			}
-			else {
-				log.info("Non change-event {}", event.getClass().getSimpleName());
-				Events.getInstance().postOnEventBus(event);
-			}
-        }
+        Map<ChangeType, AlignmentBoardEvent> uniqueEventTypeMap = addDomainObjectUnposted(domainObject);
 		for (ChangeType changeType : uniqueEventTypeMap.keySet()) {
 			AlignmentBoardEvent event = uniqueEventTypeMap.get(changeType);
 			log.info("Posting type {}.", changeType);
 			Events.getInstance().postOnEventBus(event);
 		}
     }
-	
+
+    /**
+     * Add a new aligned entity to the board. This method must be called from a
+     * worker thread. This is the dispatcher, called with abstract instance.
+     *
+     * @param domainObject to be added to the board
+     * @throws Exception
+     */
+    public void addDomainObjects(List<DomainObject> domainObjects) throws Exception {
+        Map<ChangeType, AlignmentBoardEvent> uniqueEventTypeMap = new HashMap<>();
+        for (DomainObject domainObject: domainObjects) {
+            uniqueEventTypeMap.putAll(addDomainObjectUnposted(domainObject));            
+        }
+        for (ChangeType changeType : uniqueEventTypeMap.keySet()) {
+            AlignmentBoardEvent event = uniqueEventTypeMap.get(changeType);
+            log.info("Posting type {}.", changeType);
+            Events.getInstance().postOnEventBus(event);
+        }
+    }
+
 	public void removeDomainObjectRefs(List<AlignmentBoardItem> alignmentBoardItems) {
 		for (AlignmentBoardItem alignmentBoardItem: alignmentBoardItems) {
 			removeDomainObjectRef(alignmentBoardItem);
@@ -309,6 +276,52 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             }
         }
         return rtnVal;
+    }
+
+    private Map<ChangeType, AlignmentBoardEvent> addDomainObjectUnposted(DomainObject domainObject) throws Exception {
+        log.info("Adding new aligned domain object: {} to alignment board {}, in ab-context {}.", domainObject.getName(), alignmentBoard.getId(), this);
+        final Collection<AlignmentBoardEvent> events = new ArrayList<>();
+        boolean itemsAdded = true;
+        if (domainObject instanceof Sample) {
+            itemsAdded = addNewSample(domainObject, events);
+        } else if (domainObject instanceof NeuronFragment) {
+            itemsAdded = addNewNeuronFragment(domainObject, events);
+        } else if (domainObject instanceof CompartmentSet) {
+            CompartmentSet compartmentSet = (CompartmentSet) domainObject;
+            AlignmentBoardItem compartmentSetAlignmentBoardItem = getPreviouslyAddedItem(compartmentSet);
+
+            if (compartmentSetAlignmentBoardItem == null) {
+                itemsAdded = addNewCompartmentSet(compartmentSet, events);
+            } else {
+                events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignmentBoardItem, ChangeType.VisibilityChange));
+            }
+
+        } else if (domainObject instanceof Compartment) {
+            itemsAdded = false;
+            log.warn("Not handling compartment " + domainObject.getName() + ".  Not yet supported.");
+        } else {
+            throw new IllegalStateException("Cannot add entity of type " + domainObject.getType() + " to the alignment board.");
+        }
+        if (itemsAdded) {
+            log.info("Saving alignment board.");
+            domainHelper.saveAlignmentBoardAsync(alignmentBoard);
+        }
+        // Queue up all events accumulated above.
+        Map<ChangeType, AlignmentBoardEvent> uniqueEventTypeMap = new HashMap<>();
+        for (AlignmentBoardEvent event : events) {
+            // Since some domain object is being added, and the net effect
+            // is to just reload the board after having it refresh its
+            // state, there is no need to send all the events.  Rather,
+            // this will take only one of the add events to propagate.
+            if (event instanceof AlignmentBoardItemChangeEvent) {
+                AlignmentBoardItemChangeEvent changeEvent = (AlignmentBoardItemChangeEvent) event;
+                uniqueEventTypeMap.put(changeEvent.getChangeType(), changeEvent);
+            } else {
+                log.info("Non change-event {}", event.getClass().getSimpleName());
+                Events.getInstance().postOnEventBus(event);
+            }
+        }
+        return uniqueEventTypeMap;
     }
 
     private boolean addNewNeuronFragment(DomainObject domainObject, final Collection<AlignmentBoardEvent> events) throws Exception {
