@@ -183,7 +183,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         logger.info("Board Opened");
-
+        if (boardOpen) {
+            serialize();
+        }
         boardOpen = false;
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
@@ -507,10 +509,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         if ( context != null ) {
             if ( mip3d != null && settingsPanel != null ) {
                 try {
-                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                                 alignmentBoard, mip3d.getVolumeModel(), settingsData
-                        );
-                        userSettingSerializer.serializeSettings();
+                    );
+                    userSettingSerializer.serializeSettings();
                 } catch ( Throwable error ) {
                     SessionMgr.getSessionMgr().handleException( error );
                 }

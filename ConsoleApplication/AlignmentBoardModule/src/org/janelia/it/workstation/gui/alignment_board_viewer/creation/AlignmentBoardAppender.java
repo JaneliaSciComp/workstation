@@ -96,15 +96,12 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
             
             @Override
             protected void hadSuccess() {
-                final AlignmentContext alignmentContext = getAlignmentContext();
-                
                 SimpleWorker worker = new SimpleWorker() {
                     
-                    private final AlignmentBoard board = getAlignmentBoard();
-
                     @Override
-                    protected void doStuff() throws Exception { 
-                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(board, alignmentContext);
+                    protected void doStuff() throws Exception {                         
+                        domainHelper.saveAlignmentBoardAsync(getAlignmentBoard());
+                        AlignmentBoardContext alignmentBoardContext = getABContext();
                         alignmentBoardContext.addDomainObjects(domainObjects);
                     }
 
