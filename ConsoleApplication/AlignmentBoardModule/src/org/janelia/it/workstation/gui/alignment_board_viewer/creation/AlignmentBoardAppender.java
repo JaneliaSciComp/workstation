@@ -1,8 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.awt.Component;
-import javax.swing.JOptionPane;
+import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
@@ -17,22 +18,25 @@ import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
-import org.janelia.it.workstation.nb_action.DomainObjectCreator;
+import org.janelia.it.workstation.nb_action.DomainObjectAppender;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Use this with or without a known sample, to create a new Alignment Board.
+ * Use this with some selected object(s), while an alignment board is open,
+ * to add to that board.  This is the NG alternative to the old "Add to
+ * Alignment Board" functionality supported via Baseball Cards.
  * 
  * @author fosterl
  */
-@ServiceProvider(service=DomainObjectCreator.class,path=DomainObjectCreator.LOOKUP_PATH)
-public class AlignmentBoardAppender implements DomainObjectCreator {
+@ServiceProvider(service=DomainObjectAppender.class,path=DomainObjectAppender.LOOKUP_PATH)
+public class AlignmentBoardAppender implements DomainObjectAppender {
     
+	private static final String INCOMPATIBLE_MSG = "Sample is not aligned to a compatible alignment space";
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardAppender.class);
     
-    private DomainObject domainObject;
+    private List<DomainObject> domainObjects;
     private final DomainHelper domainHelper = new DomainHelper();
     private final CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
     
@@ -42,37 +46,57 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
 
         SimpleWorker worker = new SimpleWorker() {
             
-            private Sample sample;
-			// The member-of-sample is some domain object that is part of
-			// a sample.  It may be a Neuron Fragment or a Volume Image.
-			// If it is not given, it means the whole sample is to be added.
-            private DomainObject memberOfSample = null;
+			// NOTE: to support adding references, a new menu item might
+			// be added in future: add this sample's reference channel to
+			// open alignment board.  LLF
+			//
             
             @Override
             protected void doStuff() throws Exception {
-                if (domainObject!=null) {
-                    if (domainObject instanceof Sample) {
-						this.sample = (Sample)domainObject;
-                    }
-                    else if (domainObject instanceof NeuronFragment) {
-                        NeuronFragment nf = (NeuronFragment)domainObject;
-						this.memberOfSample = domainObject;
-                        sample = new DomainHelper().getSampleForNeuron(nf);
-                        if (sample == null) {
-                            throw new Exception("No sample ancestor found for neuron fragment " + domainObject.getId());
-                        }
-                    }
+                if (domainObjects!=null  &&  domainObjects.size() > 0) {
+					for (DomainObject domainObject: domainObjects) {
+						if (domainObject instanceof Sample) {
+							Sample sample = (Sample)domainObject;
+							if (!compatibilityChecker.isSampleCompatible(getAlignmentContext(), sample)) {
+								throw new Exception(INCOMPATIBLE_MSG);
+							}
+						}
+						else if (domainObject instanceof CompartmentSet) {
+							// Not sure this can happen: Only if users delete a compartment set, and then add it back
+							// before reopening??
+							CompartmentSet compartmentSet = (CompartmentSet)domainObject;
+							if (!compatibilityChecker.isCompartmentSetCompatible(getAlignmentContext(), compartmentSet)) {
+								throw new Exception(INCOMPATIBLE_MSG);
+							}
+						}
+						else if (domainObject instanceof NeuronFragment) {
+							NeuronFragment nf = (NeuronFragment) domainObject;
+							Sample sample = domainHelper.getSampleForNeuron(nf);
+							if (sample == null) {
+								throw new Exception("No sample ancestor found for neuron fragment " + domainObject.getId());
+							}
+							if (!compatibilityChecker.isSampleCompatible(getAlignmentContext(), sample)) {
+								throw new Exception(INCOMPATIBLE_MSG);
+							}
+						}
+						else if (domainObject instanceof Compartment) {
+							// Not sure this can happen.
+							Compartment compartment = (Compartment) domainObject;
+							CompartmentSet compartmentSet = compartment.getParent();
+							if (compartmentSet == null) {
+								throw new Exception("No compartment-set ancestor found for compartment " + domainObject.getId());
+							}
+							if (!compatibilityChecker.isCompartmentSetCompatible(getAlignmentContext(), compartmentSet)) {
+								throw new Exception(INCOMPATIBLE_MSG);
+							}
+						}
+					}
                 }
             }
             
             @Override
             protected void hadSuccess() {
                 final AlignmentContext alignmentContext = getAlignmentContext();
-                if (sample!=null && (!compatibilityChecker.isSampleCompatible(alignmentContext, sample))) {
-                    JOptionPane.showMessageDialog(mainFrame,
-                            "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
                 
                 SimpleWorker worker = new SimpleWorker() {
                     
@@ -81,30 +105,13 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
                     @Override
                     protected void doStuff() throws Exception { 
                         AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(board, alignmentContext);
-                        // Presence of a sample member implies that single child of
-                        // the sample must be added without its siblings.
-                        if (memberOfSample!=null) {
-                            alignmentBoardContext.addDomainObject(memberOfSample);
-                        }
-                        else if (sample!=null) {
-							log.info("Adding sample {} to alignment board {}, with id={}", sample.getName(), board.getName(), board.getId());
-                            alignmentBoardContext.addDomainObject(sample);
-                        }
+						for (DomainObject domainObject: domainObjects) {
+							alignmentBoardContext.addDomainObject(domainObject);
+						}
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        // Update Tree UI
-                        //final EntityOutline entityOutline = browser.getEntityOutline();
-//                        SwingUtilities.invokeLater(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                // Need to reflect the selection in the browse panel.
-//                                Launcher launcher = new Launcher();
-//								log.info("Re-launching with alignment board {}, with id={}", board.getName(), board.getId());
-//                                launcher.launch(board.getId());
-//                            }
-//                        });
                     }
                     
                     @Override
@@ -127,40 +134,41 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
     }
 
     @Override
-    public void useDomainObject(DomainObject e) {
-        this.domainObject = e;
+    public void useDomainObjects(List<DomainObject> e) {
+        this.domainObjects = e;
         execute();
     }
 
     @Override
-    public boolean isCompatible(DomainObject domainObject) {
+    public boolean isCompatible(List<DomainObject> domainObjects) {
         boolean rtnVal = false;
         // Establish: is the Alignment Board Viewer already open?
         AlignmentBoardContext abContext = getABContext();
-        setDomainObject(domainObject);
+        setDomainObjects(domainObjects);
         // Establish: is the domainObject incoming, an appropriate type, with alignment board open?
-        if (domainObject != null  &&  abContext != null) {
-            AlignmentContext alignmentContext = abContext.getAlignmentContext();
-            AlignmentBoard receiver = abContext.getAlignmentBoard();
-            if (domainObject instanceof Sample) {
-                rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, (Sample)domainObject);
-            }
-            else if ( domainObject instanceof NeuronFragment) {
-                Sample sample = domainHelper.getSampleForNeuron((NeuronFragment)domainObject);
-                rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, sample);
-            }
-            else if (domainObject instanceof CompartmentSet) {
-                rtnVal = true;
-                for (AlignmentBoardItem item: receiver.getChildren()) {
-                    if (item.getTarget().getObjectRef().getTargetClassName().equals(CompartmentSet.class.getSimpleName())) {
-                        rtnVal = false;
-                        break;
-                    }
-                }
-                if (rtnVal) {
-                    rtnVal = compatibilityChecker.isCompartmentSetCompatible(alignmentContext, (CompartmentSet)domainObject);
-                }
-            }
+        if (domainObjects != null  &&  abContext != null) {
+			AlignmentContext alignmentContext = abContext.getAlignmentContext();
+			AlignmentBoard receiver = abContext.getAlignmentBoard();
+			for (DomainObject domainObject: domainObjects) {
+				if (domainObject instanceof Sample) {
+					rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, (Sample) domainObject);
+				} else if (domainObject instanceof NeuronFragment) {
+					Sample sample = domainHelper.getSampleForNeuron((NeuronFragment) domainObject);
+					rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, sample);
+				} else if (domainObject instanceof CompartmentSet) {
+					rtnVal = true;
+					for (AlignmentBoardItem item : receiver.getChildren()) {
+						// Only one compartment set may be added.
+						if (domainHelper.isCompartmentSet(item)) {
+							rtnVal = false;
+							break;
+						}
+					}
+					if (rtnVal) {
+						rtnVal = compatibilityChecker.isCompartmentSetCompatible(alignmentContext, (CompartmentSet) domainObject);
+					}
+				}
+			}
         }
 
         return rtnVal;
@@ -168,7 +176,7 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
 
     @Override
     public String getActionLabel() {
-        if ( domainObject != null ) {
+        if ( domainObjects != null ) {
             AlignmentBoard alignmentBoard = getAlignmentBoard();
             if (alignmentBoard != null) {
                 return "  Add to Alignment Board '" + alignmentBoard.getName() + "'";
@@ -178,19 +186,12 @@ public class AlignmentBoardAppender implements DomainObjectCreator {
     }
 
     /**
-     * @param domainObject the domain object to set.
+     * @param domainObjects the domain object to set.
      */
-    private void setDomainObject(DomainObject domainObject) {
-        this.domainObject = domainObject;
+    private void setDomainObjects(List<DomainObject> domainObjects) {
+        this.domainObjects = domainObjects;
     }
 
-    /**
-     * @return the object of interest
-     */
-    private DomainObject getDomainObject() {
-        return domainObject;
-    }
-    
     private AlignmentBoard getAlignmentBoard() {
         AlignmentBoardContext abContext = getABContext();
         if ( abContext != null ) {

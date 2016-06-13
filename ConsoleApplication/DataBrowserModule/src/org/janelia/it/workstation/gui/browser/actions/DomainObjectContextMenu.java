@@ -150,6 +150,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         for (JMenuItem item: this.getWrapObjectItems()) {
 			add(item);
 		}
+		
+		for (JMenuItem item: this.getAppendObjectItems()) {
+			add(item);
+		}
         
         add(getSpecialAnnotationSession());
     }
@@ -873,11 +877,15 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return specialAnnotationSession;
     }
 
-	public List<JMenuItem> getWrapObjectItems() {
+	private List<JMenuItem> getWrapObjectItems() {
 		if (multiple) {
 			return Collections.EMPTY_LIST;
 		}
 		return new WrapperCreatorItemFactory().makeWrapperCreatorItems(domainObject);
+	}
+
+	private List<JMenuItem> getAppendObjectItems() {
+		return new WrapperCreatorItemFactory().makeObjectAppenderItems(domainObjectList);
 	}
 
 	public class DomainObjectAcceptorActionListener implements ActionListener {
