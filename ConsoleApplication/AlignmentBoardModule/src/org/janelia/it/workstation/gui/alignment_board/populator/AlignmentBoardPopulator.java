@@ -8,6 +8,7 @@ import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 
 import org.janelia.it.workstation.nb_action.DropAcceptor;
 import org.openide.util.lookup.ServiceProvider;
@@ -21,6 +22,8 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service=DropAcceptor.class, path=DropAcceptor.LOOKUP_PATH)
 public class AlignmentBoardPopulator implements DropAcceptor {
 
+    private final DomainHelper domainHelper = new DomainHelper();
+    
     /**
      * Accept drops for the alignment board.
      * @param domainObjects list of things bound for board. Not used.
@@ -60,9 +63,12 @@ public class AlignmentBoardPopulator implements DropAcceptor {
             List<DomainObject> domainObjects,
             String objective) throws Exception {
         
-        for(DomainObject domainObject : domainObjects) {
-            alignmentBoardContext.addDomainObject(domainObject);
-        }
+        //  Want to make sure we do not lose any of the user's work, that has
+        //  taken place prior to dragging/dropping into the board.
+        domainHelper.saveAlignmentBoardAsync(alignmentBoardContext.getAlignmentBoard());
+        
+        //  New add the object(s).
+        alignmentBoardContext.addDomainObjects(domainObjects);
 
     }    
 
