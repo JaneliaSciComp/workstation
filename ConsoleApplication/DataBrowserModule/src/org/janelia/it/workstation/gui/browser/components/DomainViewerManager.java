@@ -38,10 +38,12 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
     /* Manage the active instance of this top component */
     
     private DomainViewerTopComponent activeInstance;
-    void activate(DomainViewerTopComponent instance) {
+    @Override
+    public void activate(DomainViewerTopComponent instance) {
         activeInstance = instance;
     }
-    boolean isActive(DomainViewerTopComponent instance) {
+    @Override
+    public boolean isActive(DomainViewerTopComponent instance) {
         return activeInstance == instance;
     }
     @Override
