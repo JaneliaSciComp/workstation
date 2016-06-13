@@ -191,7 +191,6 @@ public class DomainHelper {
     }
 
     public NeuronSeparation getNeuronSeparationForSample(Sample sample, AlignmentContext context) {
-        String objective = getObjectiveForAlignmentContext(context);
         NeuronSeparation rtnVal = null;
         for (ObjectiveSample oSample : sample.getObjectiveSamples()) {
             SamplePipelineRun latestRun = oSample.getLatestSuccessfulRun();
@@ -202,7 +201,9 @@ public class DomainHelper {
 
             Date latestDate = null;
             for (SampleAlignmentResult sar : latestRun.getResultsOfType(SampleAlignmentResult.class)) {
-                checkSampleAlignmentResult(sar, objective, context);
+                if (! checkSampleAlignmentResult(sar, context)) {
+                    continue;
+                }
                 NeuronSeparation ns = sar.getLatestSeparationResult();
                 if (ns == null) {
                     log.info("No neuron separation for {}, objective {}.", sample.getName(), sar.getObjective());
@@ -336,18 +337,17 @@ public class DomainHelper {
 		return nextItem.getTarget().getObjectRef().getTargetClassName().equals(clazz.getSimpleName());
 	}
 
-    private boolean checkSampleAlignmentResult(SampleAlignmentResult sar, String objective, AlignmentContext context) {
+    private boolean checkSampleAlignmentResult(SampleAlignmentResult sar, AlignmentContext context) {
         // Pre-emptive bail: after this, we are _known_ to have the
         // correct objective.
-        if (!sar.getObjective().equals(objective)
-                || !sar.getOpticalResolution().equals(context.getOpticalResolution())
+        if (!sar.getOpticalResolution().equals(context.getOpticalResolution())
                 || !sar.getAlignmentSpace().equals(context.getAlignmentSpace())
                 || !sar.getImageSize().equals(context.getImageSize())) {
-            log.debug("Did not match up all of objective and alignment context {}.", sar.getAlignmentSpace());
-            return true;
+            log.debug("Did not match up all of alignment context {}.", sar.getAlignmentSpace());
+            return false;
         }
         log.trace("Found result with target objective.");
-        return false;
+        return true;
     }
 
     private ABItem createDummyItem(AlignmentBoardItem item) {
