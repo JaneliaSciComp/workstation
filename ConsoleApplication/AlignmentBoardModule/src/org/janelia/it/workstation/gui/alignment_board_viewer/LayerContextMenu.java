@@ -13,18 +13,16 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDetailsDialog;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -177,7 +175,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -207,7 +205,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.ColorChange);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -238,7 +236,7 @@ public class LayerContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, alignmentBoardItem, ChangeType.OverlapFilter);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        Events.getInstance().postOnEventBus(event);
                     }
 
                     @Override
@@ -268,13 +266,15 @@ public class LayerContextMenu extends JPopupMenu {
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-//                        DomainObject dObj = RenderUtils.getObjectForItem(alignmentBoardItem);
-//                        ModelMgr.getModelMgr().renameEntity(alignedItemTarget, newName);
+						alignmentBoardItem.setName(newName);
                     }
                     
                     @Override
                     protected void hadSuccess() {
-                        // Updates are driven by the entity model
+                        //Need to notify.  Call it a visibility change for now.
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+								alignmentBoardContext, alignmentBoardItem, ChangeType.NameChange);
+						Events.getInstance().postOnEventBus(event);
                     }
                     
                     @Override
@@ -316,12 +316,11 @@ public class LayerContextMenu extends JPopupMenu {
         return getDeleteListItem(abiList, text);
     }
     
-    /** TODO: This is no longer using the Entity Delete List action.  But it does nothing. */
     private JMenuItem getDeleteListItem(final List<AlignmentBoardItem> alignmentBoardItems, String text) {
         final Action action = new Action() { //new RemoveEntityAction(domainObjects, false, false, new Callable<Void>() {
             @Override
             public String getName() {
-                return "Dummy Delete List";
+                return "Delete List";
             }
             @Override
             public void doAction() {
@@ -334,19 +333,8 @@ public class LayerContextMenu extends JPopupMenu {
             
             //@Override
             public Void call() throws Exception {
-                AlignmentBoardItemRemoveEvent abEvent;
-                if ( alignmentBoardItems.size() == 1 ) {
-                    AlignmentBoardItem nextDomainObject = alignmentBoardItems.get( 0 );
-                    log.debug("The removed entity was an aligned item, firing alignment board event...");
-                    abEvent = new AlignmentBoardItemRemoveEvent(
-                            alignmentBoardContext, nextDomainObject, 0); // Q: order index required?
-                }
-                else {
-                    abEvent = new AlignmentBoardItemRemoveEvent(
-                            alignmentBoardContext, null, null
-                    );
-                }
-                ModelMgr.getModelMgr().postOnEventBus(abEvent);
+				// Let's take them off the board.
+				alignmentBoardContext.removeDomainObjectRefs(alignmentBoardItems);				
                 return null;
             }
         };
@@ -358,31 +346,6 @@ public class LayerContextMenu extends JPopupMenu {
                 action.doAction();
             }
         });
-        
-        for (AlignmentBoardItem item : alignmentBoardItems) {
-            DomainObject parent = null; // TODO: get parent. dObj.get; //???
-            
-            boolean canDelete = true;
-            // User can't delete if they don't have write access
-            String subject = SessionMgr.getSubjectKey();
-            ABItem dObj = domainHelper.getObjectForItem(item);
-
-            if (!dObj.canWrite(subject)) {
-                canDelete = false;
-                // Unless they own the parent
-                if (parent!=null && parent.getId()!=null && parent.getWriters().contains(subject)) {
-                    canDelete = true;
-                }
-            }
-            
-            // Can never delete protected entities
-            //TODO : figure out how these are protected.
-//            if (DomainMgr.getDomainMgr().getModel().isProtected(dObj)) {
-                canDelete = false;
-//            }
-            
-            if (!canDelete) deleteItem.setEnabled(false);
-        }
         
         return deleteItem;
     }

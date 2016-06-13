@@ -15,6 +15,7 @@ import javax.swing.JMenuItem;
 import org.janelia.it.jacs.model.domain.DomainObject;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.nb_action.DomainObjectAppender;
 import org.janelia.it.workstation.nb_action.DomainObjectCreator;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
@@ -49,19 +50,40 @@ public class WrapperCreatorItemFactory {
         }
         return rtnVal;
     }
+	
+	/**
+	 * Allows an abstraction layer between the action and thing being carried
+	 * out.  Here, we are letting things be appended to some other object, or
+	 * "added to".
+	 * 
+	 * @param domainObjects list of things to be provided to some receiver.
+	 * @return menu items suitable for the menu.
+	 */
+	public List<JMenuItem> makeObjectAppenderItems(final List<DomainObject> domainObjects) {
+		List<JMenuItem> rtnVal = new ArrayList<>();
+		final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
+		Collection<DomainObjectAppender> objectUsers
+				= helper.findHandler(domainObjects, DomainObjectAppender.class, DomainObjectAppender.LOOKUP_PATH);
+		for ( DomainObjectAppender appender: objectUsers ) {
+			JMenuItem item = new JMenuItem(appender.getActionLabel());
+			item.addActionListener(new AppenderActionListener( appender, domainObjects));
+			rtnVal.add(item);
+		}
+		return rtnVal;
+	}
     
     class WrapObjectActionListener implements ActionListener {
         private DomainObjectCreator wrapperCreator;
         private DomainObject domainObject;
-        public WrapObjectActionListener( DomainObjectCreator wrapperCreator, DomainObject rootedEntity ) {
+        public WrapObjectActionListener( DomainObjectCreator wrapperCreator, DomainObject domainObject ) {
             this.wrapperCreator = wrapperCreator;
-            this.domainObject = rootedEntity;
+            this.domainObject = domainObject;
         }
         @Override
         public void actionPerformed(ActionEvent e) {
             try {
                 if (wrapperCreator == null) {
-                    log.warn("No service provider for this entity.");
+                    log.warn("No service provider for this object.");
                 } else {
                     wrapperCreator.useDomainObject(domainObject);
                 }
@@ -71,5 +93,28 @@ public class WrapperCreatorItemFactory {
 
         }
     }
+	
+	class AppenderActionListener implements ActionListener {
+		private DomainObjectAppender appender;
+		private List<DomainObject> domainObjects;
+		public AppenderActionListener( DomainObjectAppender appender, List<DomainObject> domainObjects) {
+			this.appender = appender;
+			this.domainObjects = domainObjects;
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			try {
+				if (appender == null) {
+					log.warn("No service provider for this object list.");
+				}
+				else {
+					appender.useDomainObjects(domainObjects);
+				}
+			} catch (Exception ex) {
+				ModelMgr.getModelMgr().handleException(ex);
+			}
+		}
+	}
 
 }

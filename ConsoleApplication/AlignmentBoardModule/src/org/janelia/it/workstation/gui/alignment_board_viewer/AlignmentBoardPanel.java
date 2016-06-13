@@ -54,6 +54,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
@@ -399,7 +400,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                                 null,
                                 AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange
                         );
-                        ModelMgr.getModelMgr().postOnEventBus( event );
+                        Events.getInstance().postOnEventBus( event );
                     }
                 }).start();
             }
@@ -814,7 +815,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
 
-        toolbar.add(controls.getSearch());
+        //toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());

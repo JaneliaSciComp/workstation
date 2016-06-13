@@ -2,7 +2,9 @@ package org.janelia.it.workstation.gui.alignment_board;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -25,6 +27,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
@@ -113,10 +116,72 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
 
         // Queue up all events accumulated above.
+		Map<ChangeType,AlignmentBoardEvent> uniqueEventTypeMap = new HashMap<>();
         for (AlignmentBoardEvent event : events) {
-            Events.getInstance().postOnEventBus(event);
+			// Since some domain object is being added, and the net effect
+			// is to just reload the board after having it refresh its
+			// state, there is no need to send all the events.  Rather,
+			// this will take only one of the add events to propagate.
+			if (event instanceof AlignmentBoardItemChangeEvent) {
+				AlignmentBoardItemChangeEvent changeEvent = (AlignmentBoardItemChangeEvent)event;
+				uniqueEventTypeMap.put(changeEvent.getChangeType(), changeEvent);
+			}
+			else {
+				log.info("Non change-event {}", event.getClass().getSimpleName());
+				Events.getInstance().postOnEventBus(event);
+			}
         }
+		for (ChangeType changeType : uniqueEventTypeMap.keySet()) {
+			AlignmentBoardEvent event = uniqueEventTypeMap.get(changeType);
+			log.info("Posting type {}.", changeType);
+			Events.getInstance().postOnEventBus(event);
+		}
     }
+	
+	public void removeDomainObjectRefs(List<AlignmentBoardItem> alignmentBoardItems) {
+		for (AlignmentBoardItem alignmentBoardItem: alignmentBoardItems) {
+			removeDomainObjectRef(alignmentBoardItem);
+		}
+		AlignmentBoardEvent abEvent = null;
+		if (alignmentBoardItems.size() == 1) {
+			AlignmentBoardItem nextDomainObject = alignmentBoardItems.get(0);
+			log.debug("Firing alignment board removal event...");
+			abEvent = new AlignmentBoardItemRemoveEvent(
+					this, nextDomainObject, 0); // Q: order index required?
+		} else {
+			log.debug("Firing alignment board multi removal event...");
+			abEvent = new AlignmentBoardItemRemoveEvent(
+					this, null, null
+			);
+		}
+		Events.getInstance().postOnEventBus(abEvent);
+	}
+	
+	/**
+	 * Checks if the thing is here at all, among top or 2nd level, and if so
+	 * will delete it from that list.
+	 * 
+	 * @param alignmentBoardItem what not to keep.
+	 * @return T if removed.
+	 */
+	public boolean removeDomainObjectRef(AlignmentBoardItem alignmentBoardItem) {
+		boolean rtnVal = false;
+		List<AlignmentBoardItem> containingList = getAlignmentBoard().getChildren();
+		if (! containingList.contains(alignmentBoardItem)) {
+			containingList = null;
+			for (AlignmentBoardItem parentItem: getAlignmentBoard().getChildren()) {
+				if (parentItem.getChildren().contains(alignmentBoardItem)) {					
+					containingList = parentItem.getChildren();					
+					break;
+				}
+			}
+		}
+		if (containingList != null) {
+			containingList.remove(alignmentBoardItem);			
+			rtnVal = true;
+		}
+		return rtnVal;
+	}
 
     /**
      * Returns the child item with the given id.
@@ -259,7 +324,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         }
         AlignmentBoardItem sampleItem = getPreviouslyAddedItem(sample);
         if (sampleItem == null) {
-            sampleItem = addItem(Sample.class, sample, events);
+            sampleItem = addItem(Sample.class, sample, events, false);
         }
         AlignmentBoardItem nfItem = getPreviouslyAddedSubItem(sampleItem, neuronFragment);
         if (nfItem == null) {
@@ -285,7 +350,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
                 return false;
             }
             else {
-                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events);
+                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events, false);
 
                 // Settle the Reference channel, if it exists.
                 addReferenceChannel(sampleItem, sample, events);
@@ -312,7 +377,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         AlignmentBoardItem oldItem = this.getPreviouslyAddedItem(compartmentSet);
         if (oldItem == null) {
             List<Compartment> compartments = compartmentSet.getCompartments();
-            AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events);
+            AlignmentBoardItem compartmentSetItem = addItem(CompartmentSet.class, compartmentSet, events, true);
             compartmentSetItem.setName(compartmentSet.getName());
             for (Compartment compartment: compartments) {
                 addCompartment(compartmentSetItem, compartment, events);
@@ -324,10 +389,16 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         return true;
     }
 
-    private AlignmentBoardItem addItem(Class modelClass, DomainObject domainObject, final Collection<AlignmentBoardEvent> events) {
+	/** At the top level, compartment sets should always be listed first. */
+    private AlignmentBoardItem addItem(Class modelClass, DomainObject domainObject, final Collection<AlignmentBoardEvent> events, boolean first) {
         AlignmentBoardItem alignmentBoardItem = createAlignmentBoardItem(domainObject, modelClass);
         // set color?  set inclusion status?
-        alignmentBoard.getChildren().add(alignmentBoardItem);
+		if (first) {
+			alignmentBoard.getChildren().add(0, alignmentBoardItem);
+		}
+		else {
+			alignmentBoard.getChildren().add(alignmentBoardItem);
+		}
         events.add(new AlignmentBoardItemChangeEvent(this, alignmentBoardItem, ChangeType.Added));
         return alignmentBoardItem;
     }

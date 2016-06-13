@@ -16,6 +16,7 @@ public class AlignmentBoardItemChangeEvent extends AlignmentBoardEvent {
         VisibilityChange,
         OverlapFilter,
         ColorChange,
+		NameChange,
         FilterLevelChange
     }
     

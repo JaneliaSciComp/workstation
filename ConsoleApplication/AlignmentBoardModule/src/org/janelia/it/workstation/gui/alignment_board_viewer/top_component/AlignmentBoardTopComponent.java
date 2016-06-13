@@ -6,11 +6,12 @@ import java.util.Properties;
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -127,13 +128,13 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+        Events.getInstance().registerOnEventBus(this);
         initMyComponents();
     }
 
     @Override
     public void componentClosed() {
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);        
+        Events.getInstance().unregisterOnEventBus(this);        
         alignmentBoardPanel.close();
         Runnable runnable = new Runnable() {
             public void run() {
