@@ -9,4 +9,8 @@ public interface ViewerManager<T extends TopComponent> {
     public Class<T> getViewerClass();
         
     public T getActiveViewer();
+
+    public void activate(T viewer);
+
+    public boolean isActive(T viewer);
 }

@@ -156,18 +156,17 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (TC_VERSION.equals(version) && !StringUtils.isEmpty(objectStrRef)) {
 
             SimpleWorker worker = new SimpleWorker() {
-                DomainObjectNode node;
+                DomainObject domainObject;
                 
                 @Override
                 protected void doStuff() throws Exception {
-                    DomainObject object = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
-                    // wait for Explorer to expand its nodes and then find the node
+                    domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(Reference.createFor(objectStrRef));
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    if (node!=null) {
-                        loadDomainObjectNode(node, false);
+                    if (domainObject!=null) {
+                        loadDomainObject(domainObject, false);
                     }
                 }
 
@@ -232,10 +231,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     public DomainObjectNodeSelectionEditor getEditor() {
         return editor;
     }
-    
+
     public void loadDomainObjectNode(DomainObjectNode domainObjectNode, boolean isUserDriven) {
 
-        final DomainObject domainObject = domainObjectNode.getDomainObject();
+        DomainObject domainObject = domainObjectNode.getDomainObject();
 
         // Can view display this object?
         final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
@@ -247,7 +246,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (!setCurrent(domainObject)) {
             return;
         }
-        
+
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
@@ -261,6 +260,27 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
                 return null;
             }
         });
+        setName(editor.getName());
+    }
+
+    public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
+
+        // Can view display this object?
+        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
+        if (editorClass==null) {
+            return;
+        }
+
+        // Do we already have the given node loaded?
+        if (!setCurrent(domainObject)) {
+            return;
+        }
+
+        if (editor==null || !editor.getClass().equals(editorClass)) {
+            setEditorClass(editorClass);
+        }
+
+        editor.loadDomainObject(domainObject, isUserDriven, null);
         setName(editor.getName());
     }
 

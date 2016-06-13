@@ -14,6 +14,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -34,6 +35,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -48,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TreeNodeEditorPanel extends JPanel
-        implements DomainObjectNodeSelectionEditor<TreeNodeNode>, SearchProvider {
+        implements DomainObjectNodeSelectionEditor<TreeNode>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
@@ -108,20 +111,25 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void loadDomainObjectNode(final TreeNodeNode treeNodeNode, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<TreeNode> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
+        this.treeNodeNode = (TreeNodeNode)treeNodeNode;
+        loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
+    }
 
-        if (treeNodeNode==null) return;
+    @Override
+    public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
+
+        if (treeNode==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
 
-        log.info("loadDomainObject(TreeNode:{})",treeNodeNode.getName());
+        log.info("loadDomainObject(TreeNode:{})",treeNode.getName());
         resultsPanel.showLoadingIndicator();
 
-        this.treeNodeNode = treeNodeNode;
-        this.treeNode = treeNodeNode.getTreeNode();
+        this.treeNode = treeNode;
         selectionModel.setParentObject(treeNode);
         
         SimpleWorker worker = new SimpleWorker() {

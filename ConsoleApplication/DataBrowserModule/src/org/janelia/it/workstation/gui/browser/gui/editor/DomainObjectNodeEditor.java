@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.util.concurrent.Callable;
 
-import org.janelia.it.workstation.gui.browser.api.navigation.NavigationHistory;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 
@@ -11,9 +11,11 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface DomainObjectNodeEditor<T extends DomainObjectNode> extends Editor {
+public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
 
-    public void loadDomainObjectNode(T domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
+    public void loadDomainObject(T domainObject, final boolean isUserDriven, final Callable<Void> success);
+
+    public void loadDomainObjectNode(DomainObjectNode<T> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
 
     public DomainObjectEditorState saveState();
 

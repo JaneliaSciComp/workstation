@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeNode extends DomainObjectNode {
+public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
@@ -111,11 +111,10 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
-    public void update(DomainObject domainObject) {
-        super.update(domainObject);
-        TreeNode treeNode = (TreeNode)domainObject;
+    public void update(TreeNode treeNode) {
+        super.update(treeNode);
         log.trace("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
-        log.debug("Refreshing children for {} (now has {} children)",domainObject.getName(),treeNode.getNumChildren());
+        log.debug("Refreshing children for {} (now has {} children)", treeNode.getName(), treeNode.getNumChildren());
         childFactory.update(treeNode);
         refreshChildren();
     }
@@ -126,7 +125,7 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     public TreeNode getTreeNode() {
-        return (TreeNode)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

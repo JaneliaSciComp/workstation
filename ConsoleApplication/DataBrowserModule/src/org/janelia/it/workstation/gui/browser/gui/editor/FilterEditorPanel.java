@@ -3,8 +3,6 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Insets;
-import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DropTarget;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -35,7 +33,6 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SearchType;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
@@ -58,6 +55,7 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -77,7 +75,7 @@ import static org.janelia.it.workstation.gui.browser.api.DomainMgr.getDomainMgr;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel extends JPanel
-        implements DomainObjectNodeSelectionEditor<FilterNode>, SearchProvider {
+        implements DomainObjectNodeSelectionEditor<Filter>, SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -277,11 +275,11 @@ public class FilterEditorPanel extends JPanel
         newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
         loadDomainObject(newFilter, true, null);
     }
-    
+
     @Override
-    public void loadDomainObjectNode(FilterNode filterNode, final boolean isUserDriven, final Callable<Void> success) {
-        this.filterNode = filterNode;
-        loadDomainObject(filterNode.getFilter(), isUserDriven, success);
+    public void loadDomainObjectNode(DomainObjectNode<Filter> filterNode, boolean isUserDriven, Callable<Void> success) {
+        this.filterNode = (FilterNode)filterNode;
+        loadDomainObject(filterNode.getDomainObject(), isUserDriven, success);
     }
 
     public void loadDomainObject(Filter filter, final boolean isUserDriven, final Callable<Void> success) {

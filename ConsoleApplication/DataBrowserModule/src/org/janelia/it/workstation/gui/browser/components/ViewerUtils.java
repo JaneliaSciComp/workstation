@@ -76,14 +76,27 @@ public class ViewerUtils {
         log.info("Provisioning viewer: {}",manager.getViewerName());
         
         T targetViewer = manager.getActiveViewer();
-        if (targetViewer==null || !targetViewer.isVisible() || !targetViewer.isOpened()) {
-            log.debug("Visible active viewer not found, creating...");
+        if (targetViewer==null) {
+            log.info("No active viewer, looking up TC by name: {}",manager.getViewerClass().getSimpleName());
+            targetViewer = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
+            if (targetViewer!=null) {
+                log.info("Found TC, activating");
+                manager.activate(targetViewer);
+            }
+        }
+
+        if (targetViewer==null) {
+            log.info("Active viewer not found, creating...");
             targetViewer = createNewViewer(manager, modeName);
         }
         else {
-            log.debug("Found active viewer");
+            log.info("Found active viewer");
             if (!targetViewer.isOpened()) {
                 targetViewer.open();
+            }
+            if (!targetViewer.isVisible()) {
+                log.info("Viewer is not visible, making active");
+                targetViewer.requestActive();
             }
         }
 
