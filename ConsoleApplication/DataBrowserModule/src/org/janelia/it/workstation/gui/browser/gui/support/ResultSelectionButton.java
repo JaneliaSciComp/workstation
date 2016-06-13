@@ -112,7 +112,9 @@ public class ResultSelectionButton extends DropDownButton {
         ButtonGroup group = new ButtonGroup();
         
         for(final ResultDescriptor resultDescriptor : sortedResults) {
+            int count = countedResultNames.count(resultDescriptor);
             String resultName = resultDescriptor.toString();
+            if (count>0) resultName += " ("+count+" items)";
             JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.toString()));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
