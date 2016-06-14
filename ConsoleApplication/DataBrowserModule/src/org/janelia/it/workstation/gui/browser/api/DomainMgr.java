@@ -29,7 +29,7 @@ import com.google.common.eventbus.Subscribe;
 /**
  * Singleton for managing the Domain Model and related data access. 
  * 
- * Listens for session events and invalidates every object in the model if the user changes. 
+ * Listens for session events and invalidates every object in the model if the current user changes.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

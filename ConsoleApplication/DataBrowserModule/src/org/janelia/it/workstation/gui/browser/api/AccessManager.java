@@ -20,6 +20,9 @@ import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manages the data access credentials and current priviledges.
+ */
 public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);

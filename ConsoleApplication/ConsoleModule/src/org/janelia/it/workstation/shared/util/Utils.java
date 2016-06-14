@@ -97,7 +97,7 @@ public class Utils {
             grabClosedIcon = Utils.getClasspathImage("grab_closed.png");
         }
         catch (FileNotFoundException e) {
-            e.printStackTrace();
+            log.error("Could not find icons in classpath",e);
         }
     }
 
@@ -378,11 +378,7 @@ public class Utils {
 
         BufferedImage resizedImg = new BufferedImage(w, h, type);
         Graphics2D g2 = resizedImg.createGraphics();
-
-//    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-//    	}
-
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         if (TIMER) {
@@ -782,39 +778,8 @@ public class Utils {
 
         return totalBytesWritten;
     }
-    
-    public static void runOffEDT(final Runnable runnable, final Runnable callbackOnEDT) {
-        try {
-            if (!SwingUtilities.isEventDispatchThread()) {
-                runnable.run();
-                SwingUtilities.invokeLater(callbackOnEDT);
-            }
-            else {
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        if (runnable!=null) runnable.run();
-                    }
-                    @Override
-                    protected void hadSuccess() {
-                        if (callbackOnEDT!=null) callbackOnEDT.run();
-                    }
-                    @Override
-                    protected void hadError(Throwable e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                };
-                worker.execute();
-            }
-        }
-        catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
 
-    private static BigDecimal divideAndScale(double numerator,
-                                             double denominator,
-                                             int scale) {
+    private static BigDecimal divideAndScale(double numerator, double denominator, int scale) {
         return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
 

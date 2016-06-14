@@ -71,7 +71,7 @@ public interface OntologyFacade {
 
     /**
      * Returns all the annotations associated with all of the domain objects given by the given references.
-     * @param targetIds collection of GUIDs
+     * @param references collection of references to domain objects
      * @return list of annotations
      */
     public List<Annotation> getAnnotations(Collection<Reference> references);

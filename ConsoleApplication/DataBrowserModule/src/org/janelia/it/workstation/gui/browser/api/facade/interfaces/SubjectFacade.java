@@ -32,7 +32,6 @@ public interface SubjectFacade {
 
     /**
      * Returns the current subject's preferences.
-     * @param subjectId
      * @return
      */
     public List<Preference> getPreferences();

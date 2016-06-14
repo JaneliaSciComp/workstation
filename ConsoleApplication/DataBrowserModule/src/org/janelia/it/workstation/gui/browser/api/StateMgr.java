@@ -97,36 +97,7 @@ public class StateMgr {
         }
         return errorOntology;
     }
-    
-    
-//    public String getSortCriteria(Long entityId) {
-//        Subject subject = SessionMgr.getSessionMgr().getSubject();
-//        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-//        String entityIdStr = entityId.toString();
-//        for (SubjectPreference pref : prefs.values()) {
-//            if (pref.getName().equals(entityIdStr)) {
-//                return pref.getValue();
-//            }
-//        }
-//        return null;
-//    }
-//
-//    public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-//        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
-//        if (StringUtils.isEmpty(sortCriteria)) {
-//            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
-//            log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
-//        }
-//        else {
-//            subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));
-//            log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
-//        }
-//        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-//        SessionMgr.getSessionMgr().setSubject(newSubject);
-//    }
-    
-    
-    
+
 //    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
 //        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
 //        DomainMgr domainMgr = DomainMgr.getDomainMgr();
