@@ -57,9 +57,10 @@ public class AnnotationContextMenu extends PopupContextMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getCopyAnnotationItem());
+        add(getViewDetailsItem());
+        addSeparator();
         add(getRemoveAnnotationItem());
-        add(getEditAnnotationItem(keyTerm)); 
-        add(getViewDetailsItem()); 
+        add(getEditAnnotationItem(keyTerm));
     }
 
     protected JMenuItem getTitleItem() {

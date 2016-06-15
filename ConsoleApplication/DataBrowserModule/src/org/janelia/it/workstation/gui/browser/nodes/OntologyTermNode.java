@@ -29,16 +29,17 @@ import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.OntologyTermNodeFlavor;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.browser.nb_action.AddOntologyTermAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -157,7 +158,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         OntologyNode ontologyNode = getOntologyNode();
         org.janelia.it.workstation.gui.framework.actions.Action action = ontologyNode.getActionForNode(this);
         if (action != null) {
-            KeyboardShortcut bind = SessionMgr.getKeyBindings().getBinding(action);
+            KeyboardShortcut bind = KeyBindings.getKeyBindings().getBinding(action);
             if (bind != null) {
                 return "(" + KeymapUtil.getShortcutText(bind) + ")";
             }

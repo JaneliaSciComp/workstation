@@ -31,4 +31,9 @@ public class RunNodeDefaultAction extends OntologyElementAction {
             a.actionPerformed(new ActionEvent(node, ActionEvent.ACTION_PERFORMED, ""));
         }
     }
+
+    @Override
+    public String toString() {
+        return "RunNodeDefaultAction{" + getUniqueId() + '}';
+    }
 }

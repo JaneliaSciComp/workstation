@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.dialogs.choose.MultiTreeEntityChooser;
-import org.janelia.it.workstation.gui.dialogs.search.SearchResultContextMenu;
 import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 import org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GoToRelatedEntityAction implements Action {
 
-    private static final Logger log = LoggerFactory.getLogger(SearchResultContextMenu.class);
+    private static final Logger log = LoggerFactory.getLogger(GoToRelatedEntityAction.class);
     
     private final Entity entity;
     private final Callable<Void> doSuccess;

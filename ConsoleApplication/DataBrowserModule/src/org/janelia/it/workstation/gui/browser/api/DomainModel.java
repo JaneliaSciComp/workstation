@@ -81,6 +81,7 @@ public class DomainModel {
     
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
+    private final Map<Reference, Ontology> ontologyCache;
 
     public DomainModel(DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
             SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade) {
@@ -97,13 +98,13 @@ public class DomainModel {
                 synchronized (DomainModel.this) {
                     Reference id = notification.getKey();
                     log.trace("removed key from cache: {}",id);
-                    if (workspaceCache.containsKey(id)) {
-                        workspaceCache.clear();
-                    }
+                    workspaceCache.remove(id);
+                    ontologyCache.remove(id);
                 }
             }
         }).build();
         this.workspaceCache = new LinkedHashMap<>();
+        this.ontologyCache = new LinkedHashMap<>();
    }
 
     /**
@@ -211,6 +212,7 @@ public class DomainModel {
         log.debug("Invalidating all objects");
         objectCache.invalidateAll();
         workspaceCache.clear();
+        ontologyCache.clear();
         Events.getInstance().postOnEventBus(new DomainObjectInvalidationEvent());
     }
 
@@ -247,6 +249,7 @@ public class DomainModel {
 
         objectCache.invalidate(ref);
         workspaceCache.remove(ref);
+        ontologyCache.remove(ref);
 
         // Reload the domain object and stick it into the cache
         DomainObject canonicalDomainObject;
@@ -522,17 +525,16 @@ public class DomainModel {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
                 StopWatch w = TIMER ? new LoggingStopWatch() : null;
-                for (Workspace workspace : workspaceFacade.getWorkspaces()) {
-                    Workspace cachedRoot = putOrUpdate(workspace);
-                    workspaceCache.put(Reference.createFor(cachedRoot), cachedRoot);
+                Collection<Workspace> ontologies = workspaceFacade.getWorkspaces();
+                List<Workspace> canonicalObjects = putOrUpdate(ontologies, false);
+                Collections.sort(canonicalObjects, new DomainObjectComparator());
+                for (Workspace workspace : canonicalObjects) {
+                    workspaceCache.put(Reference.createFor(workspace), workspace);
                 }
                 if (TIMER) w.stop("getWorkspaces");
             }
         }
-        List<Workspace> workspaces = new ArrayList<>(workspaceCache.values());
-        Collections.sort(workspaces, new DomainObjectComparator());
-        return workspaces;
-
+        return new ArrayList<>(workspaceCache.values());
     }
 
     public Workspace getDefaultWorkspace() {
@@ -588,12 +590,20 @@ public class DomainModel {
      * @return collection of ontologies
      */
     public List<Ontology> getOntologies() {
-        StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        Collection<Ontology> ontologies = ontologyFacade.getOntologies();
-        List<Ontology> canonicalOntologies = putOrUpdate(ontologies, false);
-        Collections.sort(canonicalOntologies, new DomainObjectComparator());
-        if (TIMER) w.stop("getOntologies");
-        return canonicalOntologies;
+        synchronized (this) {
+            if (ontologyCache.isEmpty()) {
+                log.debug("Getting ontologies from database");
+                StopWatch w = TIMER ? new LoggingStopWatch() : null;
+                Collection<Ontology> ontologies = ontologyFacade.getOntologies();
+                List<Ontology> canonicalObjects = putOrUpdate(ontologies, false);
+                Collections.sort(canonicalObjects, new DomainObjectComparator());
+                for (Ontology ontology : canonicalObjects) {
+                    ontologyCache.put(Reference.createFor(ontology), ontology);
+                }
+                if (TIMER) w.stop("getOntologies");
+            }
+        }
+        return new ArrayList<>(ontologyCache.values());
     }
 
     /**
@@ -642,6 +652,7 @@ public class DomainModel {
         Ontology canonicalObject;
         synchronized (this) {
             canonicalObject = putOrUpdate(ontologyFacade.create(ontology));
+            ontologyCache.put(Reference.createFor(canonicalObject), canonicalObject);
         }
         notifyDomainObjectCreated(canonicalObject);
         return canonicalObject;
@@ -683,6 +694,7 @@ public class DomainModel {
         Ontology canonicalObject = getDomainObject(Ontology.class, ontologyId);
         synchronized (this) {
             ontologyFacade.removeOntology(ontologyId);
+            ontologyCache.remove(Reference.createFor(canonicalObject));
         }
         notifyDomainObjectRemoved(canonicalObject);
     }

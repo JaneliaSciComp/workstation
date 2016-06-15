@@ -46,6 +46,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEve
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -57,8 +58,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;

@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.ws;
 
 import java.awt.Color;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +28,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
-import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
+import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;

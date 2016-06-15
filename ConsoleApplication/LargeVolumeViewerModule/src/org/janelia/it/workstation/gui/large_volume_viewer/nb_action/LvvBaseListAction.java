@@ -27,7 +27,7 @@ import static org.janelia.it.jacs.shared.sample_discovery.SampleDiscoveryConstan
 		displayName = "#CTL_LvvBaseListAction"
 )
 @ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
-@Messages("CTL_LvvBaseListAction=Large Volume Viewer Base Directory List Editor")
+@Messages("CTL_LvvBaseListAction=Mouse Light Directories")
 public final class LvvBaseListAction implements ActionListener {
     public static final String DIALOG_TITLE = "Edit Large Volume Base Paths";
     

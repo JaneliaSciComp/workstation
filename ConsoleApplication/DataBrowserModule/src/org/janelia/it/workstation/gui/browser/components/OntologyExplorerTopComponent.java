@@ -13,20 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.ActionMap;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -36,8 +27,10 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
@@ -48,6 +41,8 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
@@ -58,9 +53,6 @@ import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.actions.ImportOWLOntologyAction;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
@@ -76,8 +68,6 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -194,11 +184,11 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
                             if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
                                 // Clear the key binding
-                                SessionMgr.getKeyBindings().setBinding(null, action);
+                                KeyBindings.getKeyBindings().setBinding(null, action);
                             }
                             else {
                                 // Set the key binding
-                                SessionMgr.getKeyBindings().setBinding(shortcut, action);
+                                KeyBindings.getKeyBindings().setBinding(shortcut, action);
                             }
     
                             // Refresh the entire tree (another key bind may have been overridden)
@@ -217,7 +207,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         }
                     }
                     else {
-                        SessionMgr.getKeyBindings().executeBinding(shortcut);
+                        KeyBindings.getKeyBindings().executeBinding(shortcut);
                     }
                 }
             }
@@ -395,29 +385,15 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
     }
 
-    // TODO: in the future we may want to use fine-grained events, but for now any change fires an invalidation
-//    @Subscribe
-//    public void objectChanged(DomainObjectChangeEvent event) {
-//        final DomainObject domainObject = event.getDomainObject();
-//        if (domainObject instanceof Ontology) {
-//            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-//            final List<Long[]> selected = beanTreeView.getSelectedPaths();
-//            try {
-//                loadOntologies();
-//            }
-//            catch (Exception e) {
-//                SessionMgr.getSessionMgr().handleException(e);
-//            }
-//            selectOntology(ontologyNode.getId(), false);
-//            SwingUtilities.invokeLater(new Runnable() {
-//                @Override
-//                public void run() {
-//                    beanTreeView.expand(expanded);
-//                    beanTreeView.selectPaths(selected);
-//                }
-//            });
-//        }
-//    }
+    @Subscribe
+    public void objectChanged(DomainObjectChangeEvent event) {
+        final DomainObject domainObject = event.getDomainObject();
+        if (ontologyNode != null && ontologyNode.getId().equals(domainObject.getId())) {
+            // Current ontology has been invalidated
+            log.info("Refreshing because current ontology '{}' has been invalidated.", domainObject.getName());
+            refresh(false, true, null);
+        }
+    }
     
     private void selectOntology(Long ontologyId, boolean expandAll) {
         if (ontologyId==null) {
@@ -460,7 +436,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         else {
             this.ontologyNode = new OntologyNode(ontology);
-            SessionMgr.getKeyBindings().loadOntologyKeybinds(ontology.getId(), ontologyNode.getOntologyActionMap());
+            if (!recordingKeyBinds) {
+                KeyBindings.getKeyBindings().loadOntologyKeybinds(ontology.getId(), ontologyNode.getOntologyActionMap());
+            }
             mgr.setRootContext(ontologyNode);
         }
     }
@@ -500,9 +478,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             protected void hadSuccess() {
                 try {
                     if (ontologyNode!=null) {
-                        // Reselect the current ontology
-                        selectOntology(ontologyNode.getId(), false);
                         if (restoreState) {
+                            // Reselect the current ontology
+                            selectOntology(ontologyNode.getId(), false);
+                            // Restore tree state
                             beanTreeView.expand(expanded);
                             beanTreeView.selectPaths(selected);
                         }
@@ -600,16 +579,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     addMenuItem.setIcon(Icons.getIcon("folder_add.png"));
                     addMenuItem.addActionListener(new NewOntologyAction());
                     ontologyListMenu.add(addMenuItem);
-                    
-                    JMenuItem loadOwlItem = new JMenuItem("Load OWL File...");
-                    loadOwlItem.setIcon(Icons.getIcon("folder_add.png"));
-                    loadOwlItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            Action action = new ImportOWLOntologyAction();
-                            action.doAction();
-                        }
-                    });
-                    ontologyListMenu.add(loadOwlItem);
 
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
@@ -633,12 +602,12 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 else {
                     keyBindButton.setToolTipText("Enter key binding mode");
                     recordingKeyBinds = false;
-                    SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                    KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
                 }
             }
         });
         toolBar.add(keyBindButton);
-        
+
         final JToggleButton autoShareButton = new JToggleButton();
         autoShareButton.setIcon(Icons.getIcon("group_gear.png"));
         autoShareButton.setToolTipText("Configure annotation auto-sharing");
@@ -649,26 +618,26 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                 if (autoShareButton.isSelected()) {
                     boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
                     if (pressedOk) {
-                        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+                        PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
                         if (template!=null) {
                             JOptionPane.showMessageDialog(mainFrame,
                                 "Auto-sharing annotation with "+
-                               DomainUtils.getNameFromSubjectKey(template.getSubjectKey()), 
+                               DomainUtils.getNameFromSubjectKey(template.getSubjectKey()),
                                 "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                         }
                     }
                 }
                 else {
-                    SessionMgr.getBrowser().setAutoShareTemplate(null);
+                    StateMgr.getStateMgr().setAutoShareTemplate(null);
                     JOptionPane.showMessageDialog(mainFrame,
                         "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
                 }
-                
-                autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
+
+                autoShareButton.setSelected(StateMgr.getStateMgr().getAutoShareTemplate()!=null);
             }
-            
+
         });
-        autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
+        autoShareButton.setSelected(StateMgr.getStateMgr().getAutoShareTemplate()!=null);
         toolBar.add(autoShareButton);
                     
         final JButton bulkPermissionsButton = new JButton();

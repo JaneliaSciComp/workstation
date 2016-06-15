@@ -17,12 +17,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.gui.keybind.ShortcutTextField;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.ShortcutTextField;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * A dialog for setting a key binding to an action. THe dialog should be shown with showForAction.
@@ -47,7 +47,7 @@ public class KeyBindDialog extends ModalDialog {
                     return;
                 }
 
-                Action conflictingAction = SessionMgr.getKeyBindings().getConflict(keyboardShortcut);
+                Action conflictingAction = KeyBindings.getKeyBindings().getConflict(keyboardShortcut);
                 if (conflictingAction != null && !conflictingAction.equals(actionToBind)) {
                     conflictInfoArea.setForeground(Color.red);
                     conflictInfoArea.setText("Will replace key binding for '" + conflictingAction.getName() + "'");
@@ -86,10 +86,9 @@ public class KeyBindDialog extends ModalDialog {
                 }
 
                 KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
-                SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-                OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
-                OntologyNode ontologyNode = explorer.getOntologyNode();
-                SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                KeyBindings.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
+                OntologyNode ontologyNode = OntologyExplorerTopComponent.getInstance().getOntologyNode();
+                KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
                 setVisible(false);
             }
         });
@@ -126,7 +125,7 @@ public class KeyBindDialog extends ModalDialog {
 
     public void setActionToBind(Action action) {
         this.actionToBind = action;
-        KeyboardShortcut shortcut = SessionMgr.getKeyBindings().getBinding(action);
+        KeyboardShortcut shortcut = KeyBindings.getKeyBindings().getBinding(action);
         if (shortcut != null) {
             shortcutField.setKeyStroke(shortcut.getFirstKeyStroke());
         }

@@ -4,6 +4,12 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
+/**
+ * Console observer interface for external clients.
+ *
+ * NOTE: This class must stay in this legacy package until such time that the Neuron Annotator web service client
+ * bindings can be regenerated.
+ */
 @SOAPBinding(style = SOAPBinding.Style.RPC)
 @WebService
 public interface ConsoleObserver {

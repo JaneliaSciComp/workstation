@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,6 @@ public class SessionModel extends GenericModel {
     
     private static SessionModel sessionModel = new SessionModel();
     private List<BrowserModel> browserModels = new ArrayList<>();
-    private static KeyBindings bindings;
     private List<ExternalClient> externalClients = new ArrayList<>();
     private int portOffset = 0;
     private int portCounter = 1;
@@ -33,7 +31,6 @@ public class SessionModel extends GenericModel {
         super();
         browserModels = new ArrayList<>();
         // Load Key Bindings
-        bindings = new KeyBindings();
     }  //Singleton pattern enforcement --PED 5/13
 
     static SessionModel getSessionModel() {
@@ -160,10 +157,6 @@ public class SessionModel extends GenericModel {
     private void fireSystemExit() {
         for (GenericModelListener modelListener : modelListeners)
             ((SessionModelListener) modelListener).sessionWillExit();
-    }
-
-    public static KeyBindings getKeyBindings() {
-        return bindings;
     }
 
 }

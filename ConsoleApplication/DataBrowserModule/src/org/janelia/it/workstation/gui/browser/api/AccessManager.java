@@ -170,7 +170,9 @@ public final class AccessManager {
     private void setSubject(Subject subject) {
         this.loggedInSubject = subject;
         // TODO: This is a temporary hack to inject this information back into the old modules. It should go away eventually.
-        SessionMgr.setSubjectKey(loggedInSubject==null?null:loggedInSubject.getKey());
+        SessionMgr.getSessionMgr().setSubjectKey(
+                authenticatedSubject==null?null:authenticatedSubject.getKey(),
+                loggedInSubject==null?null:loggedInSubject.getKey());
     }
 
     public Subject getSubject() {

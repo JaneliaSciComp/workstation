@@ -20,7 +20,7 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;

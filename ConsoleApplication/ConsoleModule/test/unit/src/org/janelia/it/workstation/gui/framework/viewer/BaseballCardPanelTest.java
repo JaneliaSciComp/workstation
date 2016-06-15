@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCardPanel;
+import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCardPanel;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,7 +19,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.workstation.gui.browser.WorkstationEnvironment;
-import org.janelia.it.workstation.gui.browser.baseball_card.BaseballCard;
+import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.junit.experimental.categories.Category;
@@ -147,7 +147,8 @@ public class BaseballCardPanelTest extends JFrame {
         srmd.setNumHits( guids.length );
         srmd.setQueryStr( "Something" );
         srmd.setSearchDuration( 1000 );
-        panel.setRootedEntities( rEntities, srmd );
+        throw new IllegalStateException("This is not supported");
+        //panel.setRootedEntities( rEntities, srmd );
     }
 
     private EntityData getEntityData(String name,

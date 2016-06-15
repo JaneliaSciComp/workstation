@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.framework.console;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -18,23 +16,14 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.FlyLineReleaseListDialog;
-import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityRootComparator;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
-import org.janelia.it.workstation.gui.framework.outline.SessionOutline;
-import org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -67,7 +56,6 @@ public class Browser implements Cloneable {
     public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
     public static final String ADD_TO_SET_HISTORY = "ADD_TO_SET_HISTORY";
     private static final String VIEWERS_LINKED = "Browser.ViewersLinked";
-    private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
 
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_OUTLINES = "Outlines Section";
@@ -82,16 +70,11 @@ public class Browser implements Cloneable {
     private static final int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static final int PRINT_OVERHEAD_SIZE = 1000000;
 
-//    private JPanel allPanelsView = new JPanel();
-//    private JPanel collapsedOutlineView = new JPanel();
-//    private JPanel mainPanel = new JPanel();
     private ViewerManager viewerManager;
     private final ImageCache imageCache = new ImageCache();
-//    private CardLayout layout = new CardLayout();
     private SessionModelListener modelListener = new MySessionModelListener();
 
     private BrowserModel browserModel;
-    private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private EntityDetailsOutline entityDetailsOutline;
     private ToolsMenuModifier toolsMenuModifier;
@@ -99,18 +82,12 @@ public class Browser implements Cloneable {
 //    private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
 
-    private SearchConfiguration generalSearchConfig;
-    private GeneralSearchDialog generalSearchDialog;
-    private ScreenEvaluationDialog screenEvaluationDialog;
-    private MAASearchDialog maaSearchDialog;
-    private FlyLineReleaseListDialog flyLineReleaseListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
 
-    private PermissionTemplate autoShareTemplate;
     private List<String> searchHistory;
 
     /**
@@ -139,7 +116,6 @@ public class Browser implements Cloneable {
         ModelMgr.getModelMgr().init();
 
         // Load model properties
-        this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
         this.searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
 
         this.viewerManager = new ViewerManager();
@@ -158,8 +134,6 @@ public class Browser implements Cloneable {
 
         browserModel.addBrowserModelListener(new BrowserModelObserver());
         SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
-
-        sessionOutline = new SessionOutline(SessionMgr.getMainFrame());
 
         entityOutline = new EntityOutline() {
             @Override
@@ -209,17 +183,11 @@ public class Browser implements Cloneable {
 
             @Override
             protected void doStuff() throws Exception {
-                generalSearchConfig = new SearchConfiguration();
-                generalSearchConfig.load();
             }
 
             @Override
             protected void hadSuccess() {
-                generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
                 arbitraryMaskSearchDialog = new MaskSearchDialog();
-                screenEvaluationDialog = new ScreenEvaluationDialog();
-                maaSearchDialog = new MAASearchDialog();
-                flyLineReleaseListDialog = new FlyLineReleaseListDialog();
             }
 
             @Override
@@ -362,7 +330,6 @@ public class Browser implements Cloneable {
             }
 
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-            SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
             SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
 
         }
@@ -400,51 +367,11 @@ public class Browser implements Cloneable {
         return ontologyOutline;
     }
 
-//    public void selectRightPanel(String panelName) {
-//        rightPanel.showPanel(panelName);
-//    }
-
-    public SessionOutline getAnnotationSessionOutline() {
-        return sessionOutline;
-    }
-
-    public ScreenEvaluationDialog getScreenEvaluationDialog() {
-        return screenEvaluationDialog;
-    }
-
-    public MAASearchDialog getMAASearchDialog() {
-        return maaSearchDialog;
-    }
-
-    public FlyLineReleaseListDialog getFlyLineReleaseListDialog() {
-        return flyLineReleaseListDialog;
-    }
-
-    public SearchConfiguration getGeneralSearchConfig() {
-        return generalSearchConfig;
-    }
-
-    public GeneralSearchDialog getGeneralSearchDialog() {
-        return generalSearchDialog;
-    }
-
     public void resetView() {
-        //openOntologyComponent();
         viewerManager.clearAllViewers();
         viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
         entityDetailsOutline.showNothing();
     }
-
-// TODO: this can probably be deleted, since it's not clear what function it serves that isn't provided by the default RCP behavior. 
-//    private void openOntologyComponent() {
-//        TopComponent win = WindowLocator.getByName(OntologyViewerTopComponent.COMPONENT_NAME);
-//        if (win != null && !win.isOpened()) {
-//            Mode propertiesMode = WindowManager.getDefault().findMode("properties");
-//            if (propertiesMode != null) {
-//                propertiesMode.dockInto(win);
-//            }
-//        }
-//    }
 
     public BrowserPosition resetBrowserPosition() {
 
@@ -479,23 +406,4 @@ public class Browser implements Cloneable {
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
 
-    public PermissionTemplate getAutoShareTemplate() {
-        return autoShareTemplate;
-    }
-
-    public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
-        this.autoShareTemplate = autoShareTemplate;
-        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
-    }
-
-    public List<String> getSearchHistory() {
-        log.trace("Returning current search history: {} ",searchHistory);
-        return searchHistory;
-    }
-
-    public void setSearchHistory(List<String> searchHistory) {
-        log.trace("Saving search history: {} ",searchHistory);
-        this.searchHistory = searchHistory;
-        SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
-    }
 }

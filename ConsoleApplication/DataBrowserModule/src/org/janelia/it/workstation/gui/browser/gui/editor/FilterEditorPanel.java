@@ -54,7 +54,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.SmartSearchBox;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

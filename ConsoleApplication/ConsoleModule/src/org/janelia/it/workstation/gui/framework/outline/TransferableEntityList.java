@@ -27,7 +27,7 @@ public class TransferableEntityList implements Transferable {
     private static final DataFlavor entityFlavor = getDataFlavor(Entity.class);
     private static final DataFlavor stringFlavor = getDataFlavor(String.class);
 
-    private final Set<DataFlavor> flavors = new HashSet<DataFlavor>();
+    private final Set<DataFlavor> flavors = new HashSet<>();
 
     protected JComponent sourceComponent;
     protected List<RootedEntity> rootedEntities;
