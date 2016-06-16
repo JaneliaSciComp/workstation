@@ -9,6 +9,7 @@ import java.util.Set;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import net.miginfocom.swing.MigLayout;
 import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerStartedEvent;
@@ -30,45 +31,58 @@ import org.openide.windows.TopComponent;
 public class ProgressMeterPanel extends JPanel {
     
     private static final Logger log = LoggerFactory.getLogger(ProgressMeterPanel.class);
-    
-    private static final int PROGRESS_BAR_WIDTH = 40;
-    private static final int PROGRESS_BAR_HEIGHT = 16;
+
     private static final Font STATUS_FONT = new Font("Sans Serif", Font.PLAIN, 10);
     
     private static ProgressMeterPanel instance;
     
     private final JPanel mainPanel;
     private final JButton clearButton;
-    
+    private final JButton clearSuccessButton;
+
     private final Component glue = Box.createVerticalGlue();
     
     private ProgressMeterPanel() {
-        
+
         setLayout(new BorderLayout());
         
         this.mainPanel = new JPanel();
-                
+
         JPanel scrollLayer = new JPanel();
         scrollLayer.setLayout(new BorderLayout());
         scrollLayer.add(mainPanel, BorderLayout.CENTER);
         scrollLayer.add(Box.createVerticalStrut(20), BorderLayout.SOUTH);
-        
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
+
+        mainPanel.setLayout(new MigLayout(
+                "ins 0, flowy, fillx",
+                "[grow 1, growprio 1, fill]"
+        ));
+
+//        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(scrollLayer);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         reglueMainPanel();
-        
-        setLayout(new BorderLayout());
+
         add(scrollPane, BorderLayout.CENTER);
 
         this.clearButton = new JButton("Clear Completed");
-        clearButton.setToolTipText("Remove all finished operations");
+        clearButton.setToolTipText("Remove all operations");
         clearButton.setEnabled(false);
         clearButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                clearCompleted();
+                clearCompleted(false);
+            }
+        });
+
+        this.clearSuccessButton = new JButton("Clear Successful");
+        clearSuccessButton.setToolTipText("Remove all successful operations");
+        clearSuccessButton.setEnabled(false);
+        clearSuccessButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clearCompleted(true);
             }
         });
 
@@ -77,13 +91,14 @@ public class ProgressMeterPanel extends JPanel {
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(clearButton);
+        buttonPane.add(clearSuccessButton);
 
         add(buttonPane, BorderLayout.SOUTH);
     }
     
     private void reglueMainPanel() {
         mainPanel.remove(glue);
-        mainPanel.add(glue);
+        mainPanel.add(glue, "growy 100, growprioy 100");
     }
 
     public static ProgressMeterPanel getSingletonInstance() {
@@ -119,7 +134,7 @@ public class ProgressMeterPanel extends JPanel {
     }
     
     public void addWorker(BackgroundWorker worker) {
-        mainPanel.add(new MonitoredWorkerPanel(worker));
+        mainPanel.add(new MonitoredWorkerPanel(worker), "growy 0, growprioy 0");
         reglueMainPanel();
         refresh();
     }
@@ -134,13 +149,15 @@ public class ProgressMeterPanel extends JPanel {
         refresh();
     }
     
-    private void clearCompleted() {
+    private void clearCompleted(boolean onlySuccessful) {
         Set<MonitoredWorkerPanel> toRemove = new HashSet<>();
         for(Component child : mainPanel.getComponents()) {
             if (child instanceof MonitoredWorkerPanel) {
                 MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
                 if (workerPanel.getEndedAt()!=null) {
-                    toRemove.add(workerPanel);
+                    if (!onlySuccessful || !workerPanel.hasError()) {
+                        toRemove.add(workerPanel);
+                    }
                 }
             }
         }
@@ -155,6 +172,7 @@ public class ProgressMeterPanel extends JPanel {
             @Override
             public void run() {
                 clearButton.setEnabled(hasWorkersCompleted());
+                clearSuccessButton.setEnabled(hasWorkersCompleted());
                 mainPanel.revalidate();
                 mainPanel.repaint();
             }
@@ -224,32 +242,22 @@ public class ProgressMeterPanel extends JPanel {
         
         public MonitoredWorkerPanel(BackgroundWorker backgroundWorker) {
             this.worker = backgroundWorker;
-            
-            setAlignmentX(Component.LEFT_ALIGNMENT);
-            setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-            
-            JPanel textPanel = new JPanel();
-            textPanel.setPreferredSize(new Dimension(300, 20));
-            textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-            textPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 10));
-            add(textPanel);
-            
+
+            setLayout(new MigLayout(
+                    "ins 0, wrap 4, fillx",
+                    "[grow 10, growprio 10, fill][grow 1, growprio 5][grow 1, growprio 1][grow 1, growprio 1]"
+            ));
+
             this.nameLabel = new JLabel(worker.getName());
-            textPanel.add(nameLabel);
-            
-            this.statusLabel = new JLabel(worker.getStatus());
-            statusLabel.setFont(STATUS_FONT);
-            textPanel.add(statusLabel);
-            
+            add(nameLabel, "width 10:100:1000");
+
             this.progressBar = new JProgressBar(1, 100);
-            progressBar.setPreferredSize(new Dimension(PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT));
             progressBar.setIndeterminate(true);
             progressBar.setUI(new BasicProgressBarUI());
-            add(progressBar);
+            add(progressBar, "width 10:80:300, gapx 5 5, spany 2");
             
             this.nextButton = new JButton();
             nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
-            nextButton.setPreferredSize(new Dimension(32, 32));
             nextButton.setFocusable(false);
             nextButton.setBorderPainted(false);
             nextButton.setToolTipText("View results");
@@ -260,11 +268,10 @@ public class ProgressMeterPanel extends JPanel {
                 }
             });
             nextButton.setEnabled(false);
-            add(nextButton);
+            add(nextButton, "width 32, height 32, gap 0 0 0 0, pad 0 0 0 0, spany 2");
             
             this.closeButton = new JButton();
             closeButton.setIcon(Icons.getIcon("close_red.png"));
-            closeButton.setPreferredSize(new Dimension(32, 32));
             closeButton.setFocusable(false);
             closeButton.setBorderPainted(false);
             closeButton.setToolTipText("Cancel");
@@ -280,7 +287,11 @@ public class ProgressMeterPanel extends JPanel {
                     }
                 }
             });
-            add(closeButton);
+            add(closeButton, "width 32, height 32, gap 0 0 0 0, pad 0 0 0 0, spany 2");
+
+            this.statusLabel = new JLabel(worker.getStatus());
+            statusLabel.setFont(STATUS_FONT);
+            add(statusLabel, "width 10:100:1000");
         }
         
         public BackgroundWorker getWorker() {
@@ -289,6 +300,10 @@ public class ProgressMeterPanel extends JPanel {
         
         public Long getEndedAt() {
             return endedAt;
+        }
+
+        public boolean hasError() {
+            return worker.getError()!=null;
         }
 
         public void update() {
@@ -326,6 +341,7 @@ public class ProgressMeterPanel extends JPanel {
             statusLabel.setToolTipText(statusLabel.getText());
             
             clearButton.setEnabled(hasWorkersCompleted());
+            clearSuccessButton.setEnabled(hasWorkersCompleted());
             
             revalidate();
             repaint();
