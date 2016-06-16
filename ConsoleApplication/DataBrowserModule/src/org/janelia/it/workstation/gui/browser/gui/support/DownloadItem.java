@@ -85,9 +85,9 @@ public class DownloadItem {
             fileProvider = (HasFiles)domainObject;
         }
 
-        log.info("Domain object type: {}",domainObject.getType());
-        log.info("Domain object id: {}",domainObject.getId());
-        log.info("File provider: {}",fileProvider);
+        log.debug("Domain object type: {}",domainObject.getType());
+        log.debug("Domain object id: {}",domainObject.getId());
+        log.debug("File provider: {}",fileProvider);
         
         String sourceFilePath = DomainUtils.getDefault3dImageFilePath(fileProvider);
         if (sourceFilePath==null) {
@@ -98,8 +98,8 @@ public class DownloadItem {
         sourceFile = new File(sourceFilePath);
         sourceExtension = FileUtil.getExtension(sourceFilePath);
 
-        log.info("Source path: {}",sourceFilePath);
-        log.info("Source extension: {}",sourceExtension);
+        log.debug("Source path: {}",sourceFilePath);
+        log.debug("Source extension: {}",sourceExtension);
         
         if (this.targetExtension==null) {
             this.targetExtension = sourceExtension;
@@ -123,8 +123,8 @@ public class DownloadItem {
 
         targetFile = new File(itemDir, constructFilePath(filenamePattern));
         
-        log.info("Target path: {}",targetFile.getAbsolutePath());
-        log.info("Target extension: {}",targetExtension);
+        log.debug("Target path: {}",targetFile.getAbsolutePath());
+        log.debug("Target extension: {}",targetExtension);
     }
 
     // TODO: rewrite this to use StringUtils.replaceVariablePattern 
@@ -136,7 +136,7 @@ public class DownloadItem {
             attributeMap.put(attr.getLabel(), attr);
         }
 
-        log.info("File pattern: {}", filePattern);
+        log.debug("File pattern: {}", filePattern);
         
         Pattern pattern = Pattern.compile("\\{(.+?)\\}");
         Matcher matcher = pattern.matcher(filePattern);
@@ -144,7 +144,7 @@ public class DownloadItem {
         while (matcher.find()) {
             String template = matcher.group(1);
             String replacement = null;
-            log.info("  Matched: {}",template);
+            log.debug("  Matched: {}",template);
             for (String templatePart : template.split("\\|")) {
                 String attrLabel = templatePart.trim();
                 if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
@@ -180,7 +180,7 @@ public class DownloadItem {
 
                 if (replacement != null) {
                     matcher.appendReplacement(buffer, replacement);
-                    log.info("    '{}'->'{}' = '{}'",template,replacement,buffer);
+                    log.debug("    '{}'->'{}' = '{}'",template,replacement,buffer);
                     break;
                 }
             }
@@ -191,7 +191,7 @@ public class DownloadItem {
         }
         matcher.appendTail(buffer);
         
-        log.info("Final buffer: {}",buffer);
+        log.debug("Final buffer: {}",buffer);
         
         // Strip extension, if any. We'll re-add it at the end.
         StringBuilder filepath = new StringBuilder(FileUtil.getBasename(buffer.toString()));
@@ -203,7 +203,7 @@ public class DownloadItem {
         if (!StringUtils.isEmpty(targetExtension)) {
             filepath.append(".").append(targetExtension);
         }
-        log.info("Final file path: {}",filepath);
+        log.debug("Final file path: {}",filepath);
         return filepath.toString();
     }
 

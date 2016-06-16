@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,6 +31,7 @@ import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.DownloadItem;
 import org.janelia.it.workstation.gui.browser.gui.support.FileDownloadWorker;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
@@ -100,7 +102,7 @@ public class DownloadDialog extends ModalDialog {
     private JLabel expandedObjectCountLabel;
     private ResultSelectionButton resultButton;
 
-    private JComboBox<Format> formatCombo;
+    private JComboBox<String> formatCombo;
     private JCheckBox splitChannelCheckbox;
     private JCheckBox flattenStructureCheckbox;
     private JComboBox<String> filePatternCombo;
@@ -114,8 +116,19 @@ public class DownloadDialog extends ModalDialog {
     boolean onlySampleInputs;
     private List<DomainObject> expandedObjects;
     private List<DownloadItem> downloadItems;
-    private boolean listening;
-    
+    private final Debouncer debouncer = new Debouncer();
+
+    // If anything changes, we need to recalculate the file download list
+    private ItemListener changeListener = new ItemListener() {
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
+                log.info("Item state changed: {}", e);
+                populateDownloadItemList(null);
+            }
+        }
+    };
+
     public DownloadDialog() {
     	super(SessionMgr.getMainFrame());
         setTitle("File Download");
@@ -184,16 +197,21 @@ public class DownloadDialog extends ModalDialog {
             @Override
             public Void call() throws Exception {
                 populateUI();
-                populateExpandedObjectList();
+                populateExpandedObjectList(null);
                 return null;
             }
         });
         Component mainFrame = SessionMgr.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.3), (int) (mainFrame.getHeight() * 0.3)));
+        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.3)));
         packAndShow();
     }
-    
+
     private void findObjectsToExport(final Callable<Void> success) {
+
+        if (!debouncer.queue(success)) {
+            log.debug("Skipping findObjectsToExport, since there is an operation already in progress");
+            return;
+        }
 
         log.info("findObjectsToExport(inputObjects.size={})",inputObjects.size());
 
@@ -220,12 +238,13 @@ public class DownloadDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
             	Utils.setDefaultCursor(DownloadDialog.this);
-                ConcurrentUtils.invokeAndHandleExceptions(success);
+                debouncer.success();
             }
 
             @Override
             protected void hadError(Throwable error) {
             	Utils.setDefaultCursor(DownloadDialog.this);
+                debouncer.failure();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -319,7 +338,7 @@ public class DownloadDialog extends ModalDialog {
                         @Override
                         public Void call() throws Exception {
                             updateResultCombo();
-                            populateExpandedObjectList();
+                            populateExpandedObjectList(null);
                             return null;
                         }
                     });
@@ -335,12 +354,11 @@ public class DownloadDialog extends ModalDialog {
         expandedObjectList = new JList<>(new DefaultListModel<String>());
         expandedObjectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         expandedObjectList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:300:600, height 30:100:200, grow");
+        addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:600:800, height 30:100:200, grow");
         
         resultButton = new ResultSelectionButton(onlySampleInputs) {
             protected void resultChanged(ResultDescriptor resultDescriptor) {
-                populateDownloadItemList();
-                populateExtensions();
+                populateDownloadItemList(null);
             }
         };
         resultButton.setResultDescriptor(defaultResultDescriptor);
@@ -388,9 +406,7 @@ public class DownloadDialog extends ModalDialog {
         downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:800:1000, height 80:300:1000, grow");
-        
-        populateDownloadItemList();
+        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:1300:1300, height 80:300:1000, grow");
 
         // Add change listeners
         formatCombo.addItemListener(changeListener);
@@ -402,6 +418,8 @@ public class DownloadDialog extends ModalDialog {
         add(attrPanel, BorderLayout.CENTER);
         
         okButton.setEnabled(true);
+
+        // Repack to fit everything
         setPreferredSize(null);
         packAndShow();
     }
@@ -409,35 +427,9 @@ public class DownloadDialog extends ModalDialog {
     private void updateResultCombo() {
     	resultButton.setEnabled(onlySampleInputs && currItemsToExport.equals(ITEM_TYPE_SELF));
     }
-    
-    // If anything changes, we need to recalculate the file download list
-    ItemListener changeListener = new ItemListener() {
-        @Override
-        public void itemStateChanged(ItemEvent e) {
-            if (listening) {
-                if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-                    log.info("Item state changed: {}", e);
-                    populateDownloadItemList();
-                }
-            }
-            else {
-                log.trace("Ignoring item state change: {}", e);
-            }
-        }
-    };
-    
-    private void resumeListeners() {
-    	listening = true;
-    }
-    
-    private void stopListeners() {
-    	listening = false;
-    }
-    
-    private void populateExpandedObjectList() {
 
-        stopListeners();
-        
+    private void populateExpandedObjectList(Callable<Void> success) {
+
         DefaultListModel<String> eolm = (DefaultListModel)expandedObjectList.getModel();
         eolm.removeAllElements();
         for(DomainObject domainObject : expandedObjects) {
@@ -446,33 +438,32 @@ public class DownloadDialog extends ModalDialog {
         }
 
         expandedObjectCountLabel.setText(expandedObjects.size()+" items");
-        
-        resumeListeners();
-        populateDownloadItemList();
-    }
-    
-    private void populateDownloadItemList() {
 
-        stopListeners();
-        
+        populateDownloadItemList(success);
+    }
+
+    private void populateDownloadItemList(final Callable<Void> success) {
+
+        if (!debouncer.queue(success)) {
+            log.debug("Skipping populateDownloadItemList, since there is an operation already in progress");
+            return;
+        }
+
         final ResultDescriptor resultDescriptor = resultButton.getResultDescriptor();
         final boolean splitChannels = splitChannelCheckbox.isSelected();
         final boolean flattenStructure = flattenStructureCheckbox.isSelected();
         final String filenamePattern = (String)filePatternCombo.getSelectedItem();
-
-        final Format format = (Format)formatCombo.getSelectedItem();
-        String extension = null;
-        if (format!=null && !format.getExtension().equals(NATIVE_EXTENSION)) {
-            extension = format.getExtension();
-        }
-        final String finalExtension = extension;
-
+        final String extension = (String)formatCombo.getSelectedItem();
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 for (DownloadItem downloadItem : downloadItems) {
-                    downloadItem.init(resultDescriptor, finalExtension, splitChannels, flattenStructure, filenamePattern);
+                    String outputExtension = extension;
+                    if (NATIVE_EXTENSION.equals(extension)) {
+                        outputExtension = downloadItem.getSourceExtension();
+                    }
+                    downloadItem.init(resultDescriptor, outputExtension, splitChannels, flattenStructure, filenamePattern);
                 }
             }
 
@@ -488,15 +479,12 @@ public class DownloadDialog extends ModalDialog {
                 }
                 
                 downloadItemCountLabel.setText(count+" files");
-                
-                resumeListeners();
                 populateExtensions();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
-                resumeListeners();
                 populateExtensions();
             }
         };
@@ -505,9 +493,7 @@ public class DownloadDialog extends ModalDialog {
     }
     
     private void populateExtensions() {
-        
-        stopListeners();
-        
+
         boolean allLsms = true;
         final Multiset<String> countedExtensions = LinkedHashMultiset.create();
         for(DownloadItem downloadItem : downloadItems) {
@@ -532,26 +518,27 @@ public class DownloadDialog extends ModalDialog {
             log.trace("Extension '{}' has {} instances", extension, countedExtensions.count(extension));
         }
 
-        DefaultComboBoxModel<Format> model = (DefaultComboBoxModel) formatCombo.getModel();
-        Format currValue = (Format)model.getSelectedItem();
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel) formatCombo.getModel();
+        String currValue = (String)model.getSelectedItem();
         
         model.removeAllElements();
         for (String extension : FORMAT_EXTENSIONS) {
             if (!allLsms && extension.startsWith("lsm")) {
                 continue;
             }
-            Format format = new Format(extension, false);
-            model.addElement(format);
+            model.addElement(extension);
+            // Select the native extension by default
             if (extension.equals(NATIVE_EXTENSION)) {
-                model.setSelectedItem(format);
+                model.setSelectedItem(extension);
             }
         }
-        
+
+        // If the user already selected something, keep it selected
         if (currValue!=null) {
             model.setSelectedItem(currValue);
         }
-        
-        resumeListeners();
+
+        debouncer.success();
     }
     
     private void saveAndClose() {
@@ -584,26 +571,5 @@ public class DownloadDialog extends ModalDialog {
             setVisible(false);
         }
     }
-    
-    private class Format {
-        
-        private final String extension;
-        private final boolean isNative;
-        
-        public Format(String extension, boolean isNative) {
-            this.extension = extension;
-            this.isNative = isNative;
-        }
 
-        public String getExtension() {
-            return extension;
-        }
-
-        @Override
-        public String toString() {
-            //return extension+(isNative?"":" (Convert)");
-            return extension;
-        }
-    }
-    
 }
