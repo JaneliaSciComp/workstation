@@ -12,7 +12,7 @@ import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
-import org.janelia.it.workstation.gui.browser.WorkstationEnvironment;
+import org.janelia.it.workstation.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.mesh.MeshViewer;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.FewVoxelVtxAttribMgr;

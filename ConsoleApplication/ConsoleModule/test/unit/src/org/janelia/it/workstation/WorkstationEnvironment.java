@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser;
+package org.janelia.it.workstation;
 
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
