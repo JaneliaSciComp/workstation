@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -192,9 +193,9 @@ public class ApplyAnnotationAction extends NodeAction {
         Annotation savedAnnotation = model.create(annotation);
         log.info("Saved annotation as " + savedAnnotation.getId());
         
-        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+        PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
         if (template!=null) {
-            model.changePermissions(annotation, template.getSubjectKey(), template.getPermissions(), true);  
+            model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions(), true);
             log.info("Auto-shared annotation with " + template.getSubjectKey());
         }
     }

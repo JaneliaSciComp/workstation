@@ -4,21 +4,21 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 
-import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Interval;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * Special tree cell renderer for OntologyTerms which displays the term, its type, and its key binding. The icon
@@ -143,16 +143,6 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
 
                 // Set the key bind hint
                 keybindLabel.setText(" ");
-
-                if (ontologyOutline != null) {
-                    Action action = ontologyOutline.getActionForNode(node);
-                    if (action != null) {
-                        KeyboardShortcut bind = SessionMgr.getKeyBindings().getBinding(action);
-                        if (bind != null) {
-                            keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
-                        }
-                    }
-                }
 
                 returnValue = cellPanel;
             }

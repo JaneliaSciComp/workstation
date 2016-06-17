@@ -20,17 +20,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.LookAndFeel;
-import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 
+import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
@@ -45,8 +43,6 @@ import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
-import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
@@ -56,12 +52,8 @@ import org.janelia.it.workstation.shared.util.RendererType2D;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 
 public final class SessionMgr implements ActivityLogging {
 
@@ -99,9 +91,6 @@ public final class SessionMgr implements ActivityLogging {
     private SessionModel sessionModel = SessionModel.getSessionModel();
     
     private ImageIcon browserImageIcon;
-    private ExternalListener externalHttpListener;
-//    private EmbeddedAxisServer axisServer;
-//    private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
@@ -336,30 +325,6 @@ public final class SessionMgr implements ActivityLogging {
 
     public Object setModelProperty(Object key, Object value) {
         return sessionModel.setModelProperty(key, value);
-    }
-
-    public int addExternalClient(String newClientName) {
-        return sessionModel.addExternalClient(newClientName);
-    }
-
-    public List<ExternalClient> getExternalClientsByName(String clientName) {
-        return sessionModel.getExternalClientsByName(clientName);
-    }
-
-    public ExternalClient getExternalClientByPort(int targetPort) {
-        return sessionModel.getExternalClientByPort(targetPort);
-    }
-
-    public void removeExternalClientByPort(int targetPort) {
-        sessionModel.removeExternalClientByPort(targetPort);
-    }
-
-    public void sendMessageToExternalClients(String operationName, Map<String, Object> parameters) {
-        sessionModel.sendMessageToExternalClients(operationName, parameters);
-    }
-
-    public static KeyBindings getKeyBindings() {
-        return SessionModel.getKeyBindings();
     }
 
     public Object getModelProperty(Object key) {
@@ -787,12 +752,6 @@ public final class SessionMgr implements ActivityLogging {
         return mainFrame;
     }
 
-    public void startExternalHttpListener(int port) {
-        if (externalHttpListener == null) {
-            externalHttpListener = new ExternalListener(port);
-        }
-    }
-    
     private int axisServerPort;
 
     public int getAxisServerPort() {
@@ -813,85 +772,6 @@ public final class SessionMgr implements ActivityLogging {
         this.webServerPort = webServerPort;
     }
 
-//    public int startAxisServer(int startingPort) {
-//        int port = startingPort;
-//        try {
-//            if (axisServer == null) {
-//                axisServer = new EmbeddedAxisServer();
-//            }
-//            int tries = 0;
-//            while (true) {
-//                try {
-//                    axisServer.start(port);
-//                    log.info("Started web services on port " + port);
-//                    sessionModel.setPortOffset(port);
-//                    break;
-//                } 
-//                catch (Exception e) {
-//                    if (e instanceof BindException || e.getCause() instanceof BindException) {
-//                        log.info("Could not start web service on port: " + port);
-//                        port += PORT_INCREMENT;
-//                        tries++;
-//                        if (tries >= MAX_PORT_TRIES) {
-//                            log.error("Tried to start web service on " + MAX_PORT_TRIES + " ports, giving up.");
-//                            return -1;
-//                        }
-//                    } 
-//                    else {
-//                        log.error("Could not start web service on port: " + port);
-//                        throw e;
-//                    }
-//                }
-//            }
-//            return port;
-//        } 
-//        catch (Exception e) {
-//            SessionMgr.getSessionMgr().handleException(e);
-//            return -1;
-//        }
-//    }
-
-//    public EmbeddedAxisServer getAxisServer() {
-//        return axisServer;
-//    }
-
-//    public int startWebServer(int startingPort) {
-//        int port = startingPort;
-//        try {
-//            if (webServer == null) {
-//                webServer = new EmbeddedWebServer();
-//            }
-//            int tries = 0;
-//            while (true) {
-//                try {
-//                    webServer.start(port);
-//                    log.info("Started web server on port " + port);
-//                    break;
-//                } 
-//                catch (Exception e) {
-//                    if (e instanceof BindException || e.getCause() instanceof BindException) {
-//                        log.info("Could not start web server on port: " + port);
-//                        port += PORT_INCREMENT;
-//                        tries++;
-//                        if (tries >= MAX_PORT_TRIES) {
-//                            log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
-//                            return -1;
-//                        }
-//                    } 
-//                    else {
-//                        log.error("Could not start web server on port: " + port);
-//                        throw e;
-//                    }
-//                }
-//            }
-//            return port;
-//        } 
-//        catch (Exception e) {
-//            SessionMgr.getSessionMgr().handleException(e);
-//            return -1;
-//        }
-//    }
-    
     public void saveUserSettings() {
         writeSettings();
     }
@@ -995,23 +875,19 @@ public final class SessionMgr implements ActivityLogging {
      * This is a hack to inject the run-as subject key from an already-authenticated user in the NG world. 
      * It ties the legacy SessionMgr to the new AccessManager.
      */
-    public static void setSubjectKey(final String subjectKey) {
+    public void setSubjectKey(final String authSubjectKey, final String subjectKey) {
         try {
-            Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(subjectKey);
-            getSessionMgr().setSubject(subject);
+            authenticatedSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(authSubjectKey);
+            if (subjectKey!=null) {
+                loggedInSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(subjectKey);
+                isLoggedIn = true;
+            }
+            resetSession();
+            log.info("Completed legacy track init with authed user "+authSubjectKey+" and run as user "+subjectKey);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
-    }
-
-    private void setSubject(Subject subject) {
-        loggedInSubject = authenticatedSubject = subject;
-        if (loggedInSubject!=null) {
-            isLoggedIn = true;
-        }
-        resetSession();
-        log.info("Completed legacy track init with user "+subject.getKey());
     }
     
     public static String getSubjectKey() {
@@ -1040,7 +916,6 @@ public final class SessionMgr implements ActivityLogging {
         return authenticatedSubject;
     }
 
-
     public static String getUsername() {
         Subject subject = getSessionMgr().getSubject();
         if (subject == null) {
@@ -1049,17 +924,9 @@ public final class SessionMgr implements ActivityLogging {
         return subject.getName();
     }
 
-    public static String getUserEmail() {
-        Subject subject = getSessionMgr().getSubject();
-        if (subject == null) {
-            throw new SystemError("Not logged in");
-        }
-        return subject.getEmail();
-    }
-
     public static boolean authenticatedSubjectIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-        return subject instanceof Subject && isUserInGroup2((User) subject, groupName);
+        return subject instanceof User && isUserInGroup2((User) subject, groupName);
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
@@ -1072,78 +939,12 @@ public final class SessionMgr implements ActivityLogging {
             return false;
         }
         for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
-            if (relation.getGroup().getName().equals(targetGroup)) {
+            if (relation.getGroup().getKey().equals(targetGroup)) {
                 return true;
             }
         }
         return false;
     }
-
-//    public boolean loginSubject(String username, String password) {
-//        try {
-//            boolean relogin = false;
-//
-//            if (isLoggedIn()) {
-//                logoutUser();
-//                log.info("RELOGIN");
-//                relogin = true;
-//            }
-//
-//            findAndRemoveWindowsSplashFile();
-//            // Login and start the session
-//            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject(username, password);
-//            if (null != authenticatedSubject) {
-//                isLoggedIn = true;
-//                loggedInSubject = authenticatedSubject;
-//                log.info("Authenticated as {}", authenticatedSubject.getKey());
-//
-//                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-//                if (relogin) {
-//                    resetSession();
-//                }
-//            }
-//
-//            return isLoggedIn;
-//        }
-//        catch (Exception e) {
-//            isLoggedIn = false;
-//            log.error("Error logging in", e);
-//            throw new FatalCommError(ConsoleProperties.getInstance().getProperty("interactive.server.url"),
-//                    "Cannot authenticate login. The server may be down. Please try again later.");
-//        }
-//    }
-
-//    public boolean setRunAsUser(String runAsUser) {
-//
-//        if (!SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) && !StringUtils.isEmpty(runAsUser)) {
-//            throw new IllegalStateException("Non-admin user cannot run as another user");
-//        }
-//
-//        try {
-//            if (!StringUtils.isEmpty(runAsUser)) {
-//                Subject runAsSubject = ModelMgr.getModelMgr().getSubjectWithPreferences(runAsUser);
-//                if (runAsSubject==null) {
-//                    return false;
-//                }
-//                loggedInSubject = runAsSubject;
-//            }
-//            else {
-//                loggedInSubject = authenticatedSubject;
-//            }
-//
-//            if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-//                log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
-//            }
-//
-//            resetSession();
-//            return true;
-//        }
-//        catch (Exception e) {
-//            loggedInSubject = authenticatedSubject;
-//            handleException(e);
-//            return false;
-//        }
-//    }
 
     private void resetSession() {
         final Browser browser = SessionMgr.getBrowser();
@@ -1154,24 +955,6 @@ public final class SessionMgr implements ActivityLogging {
         log.debug("Clearing entity model");
         ModelMgr.getModelMgr().reset();
         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
-    }
-
-//    public void logoutUser() {
-//        try {
-//            if (loggedInSubject != null) {
-//                log.info("Logged out with: {}", loggedInSubject.getKey());
-//            }
-//            isLoggedIn = false;
-//            loggedInSubject = null;
-//            authenticatedSubject = null;
-//        }
-//        catch (Exception e) {
-//            log.error("Error logging out", e);
-//        }
-//    }
-
-    public boolean isLoggedIn() {
-        return isLoggedIn;
     }
 
     public Long getCurrentSessionId() {

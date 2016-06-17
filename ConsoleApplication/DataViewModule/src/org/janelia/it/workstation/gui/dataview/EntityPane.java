@@ -7,13 +7,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.dialogs.search.SearchResultsPanel;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,24 +24,14 @@ public class EntityPane extends JPanel {
     private static final Logger log = LoggerFactory.getLogger(EntityPane.class);
     
     private final EntityListPane entityListPane;
-    private final SearchResultsPanel searchResultsPanel;
-
-    private final SearchPane searchPanel;
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
 
-    public enum ResultViewType {
-        ENTITY,
-        SOLR
-    }
-    private ResultViewType currentView;
-
-    public EntityPane(final SearchConfiguration searchConfig, final SearchPane searchPanel,
+    public EntityPane(final SearchPane searchPanel,
             final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
 
         setLayout(new BorderLayout());
 
-        this.searchPanel = searchPanel;
         this.entityParentsPane = entityParentsPane;
         this.entityChildrenPane = entityChildrenPane;
 
@@ -60,39 +47,7 @@ public class EntityPane extends JPanel {
             }
         };
 
-        this.searchResultsPanel = new SearchResultsPanel(searchPanel.getSolrPanel()) {
-            @Override
-            public void entitySelected(Entity entity) {
-                populateEntityDataPanes(entity);
-            }
-
-            @Override
-            protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
-                return EntityPane.this.getPopupMenu(selectedEntites, label);
-            }
-        };
-
-        searchConfig.addConfigurationChangeListener(entityListPane);
-        searchConfig.addConfigurationChangeListener(searchResultsPanel);
-
-        setActiveView(ResultViewType.ENTITY);
-    }
-
-    public void setActiveView(ResultViewType type) {
-        if (currentView != type) {
-            removeAll();
-        }
-        this.currentView = type;
-        switch (currentView) {
-            case ENTITY:
-                add(entityListPane, BorderLayout.CENTER);
-                break;
-            case SOLR:
-                add(searchResultsPanel, BorderLayout.CENTER);
-                break;
-        }
-        revalidate();
-        repaint();
+        add(entityListPane, BorderLayout.CENTER);
     }
 
     public void populateEntityDataPanes(final Entity entity) {
@@ -197,58 +152,14 @@ public class EntityPane extends JPanel {
         searchWorker.execute();
     }
 
-    public void performSearch(boolean clear) {
-        clearEntityDataPanes();
-        setActiveView(ResultViewType.SOLR);
-        searchResultsPanel.performSearch(clear, clear, true);
-    }
-
     public void showEntity(final Entity entity) {
         clearEntityDataPanes();
-        setActiveView(ResultViewType.ENTITY);
         entityListPane.showEntity(entity);
-    }
-
-    public void showEntities(final EntityType entityType) {
-        clearEntityDataPanes();
-        setActiveView(ResultViewType.ENTITY);
-        entityListPane.showEntities(entityType);
     }
 
     public void showEntities(final List<Entity> entities) {
         clearEntityDataPanes();
-        setActiveView(ResultViewType.ENTITY);
         entityListPane.showEntities(entities);
-    }
-
-    public void runGroovyCode(String code) {
-        clearEntityDataPanes();
-        setActiveView(ResultViewType.ENTITY);
-
-        try {
-//
-//        	String[] roots = new String[] { "../groovy/src" };
-//        	GroovyScriptEngine gse = new GroovyScriptEngine(roots);
-//        	
-//        	Binding binding = new Binding();
-//        	binding.setVariable("m", ModelMgr.getModelMgr());
-//        	gse.run("hello.groovy", binding);
-//        	System.out.println(binding.getVariable("output"));
-        }
-        catch (Exception e) {
-            log.error("Error running Groovy code",e);
-        }
-
-        // TODO: implement
-//    	entityListPane.showEntities(entities);
-    }
-
-    public SearchPane getSearchPane() {
-        return searchPanel;
-    }
-
-    public SearchResultsPanel getSearchResultsPanel() {
-        return searchResultsPanel;
     }
 
     protected DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {

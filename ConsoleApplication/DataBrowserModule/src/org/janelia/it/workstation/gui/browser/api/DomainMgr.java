@@ -29,7 +29,7 @@ import com.google.common.eventbus.Subscribe;
 /**
  * Singleton for managing the Domain Model and related data access. 
  * 
- * Listens for session events and invalidates every object in the model if the user changes. 
+ * Listens for session events and invalidates every object in the model if the current user changes.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -158,7 +158,7 @@ public class DomainMgr {
         log.debug("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
 
-    public static Map<String,String> loadPreferencesAsMap(String category) {
+    public Map<String,String> loadPreferencesAsMap(String category) {
         List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
         Map<String,String> map = new HashMap<>();
         for(Preference preference : titlePreferences) {
@@ -167,7 +167,7 @@ public class DomainMgr {
         return map;
     }
 
-    public static void saveMapAsPreferences(Map<String,String> map, String category) throws Exception {
+    public void saveMapAsPreferences(Map<String,String> map, String category) throws Exception {
         for(String key : map.keySet()) {
             String value = map.get(key);
             if (!StringUtils.isEmpty(value)) {

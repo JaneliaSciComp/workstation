@@ -1,18 +1,26 @@
 package org.janelia.it.workstation.gui.browser.api;
 
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Category;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.api.navigation.NavigationHistory;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationClosing;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.OntologySelectionEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBind;
+import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,18 +42,25 @@ public class StateMgr {
     private static final Logger log = LoggerFactory.getLogger(StateMgr.class);
     
     // TODO: externalize these properties
+    private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
     public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
-    public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
-    public static final String CATEGORY_SORT_CRITERIA = "SortCriteria:";
 
     private final NavigationHistory navigationHistory = new NavigationHistory();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
     private Annotation currentSelectedOntologyAnnotation;
     private OntologyTerm errorOntology;
+    private PermissionTemplate autoShareTemplate;
 
     private StateMgr() {
+        this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
+    }
+
+    @Subscribe
+    public void cleanup(ApplicationClosing e) {
+        log.info("Saving auto-share template");
+        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
     public NavigationHistory getNavigationHistory() {
@@ -97,75 +112,58 @@ public class StateMgr {
         }
         return errorOntology;
     }
-    
-    
-//    public String getSortCriteria(Long entityId) {
-//        Subject subject = SessionMgr.getSessionMgr().getSubject();
-//        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-//        String entityIdStr = entityId.toString();
-//        for (SubjectPreference pref : prefs.values()) {
-//            if (pref.getName().equals(entityIdStr)) {
-//                return pref.getValue();
-//            }
-//        }
-//        return null;
-//    }
-//
-//    public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
-//        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
-//        if (StringUtils.isEmpty(sortCriteria)) {
-//            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
-//            log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
-//        }
-//        else {
-//            subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));
-//            log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
-//        }
-//        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-//        SessionMgr.getSessionMgr().setSubject(newSubject);
-//    }
-    
-    
-    
-//    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
-//        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-//        DomainMgr domainMgr = DomainMgr.getDomainMgr();
-//        Subject subject = domainMgr.getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
-//        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
-//
-//        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
-//        for (SubjectPreference pref : prefs.values()) {
-//            ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
-//        }
-//
-//        return ontologyKeyBindings;
-//    }
-//
-//    public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
-//
-//        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-//        Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
-//
-//        // First delete all keybinds for this ontology
-//        for (String key : subject.getCategoryPreferences(category).keySet()) {
-//            subject.getPreferenceMap().remove(category + ":" + key);
-//        }
-//
-//        // Now re-add all the current key bindings
-//        Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
-//        for (OntologyKeyBind bind : keybinds) {
-//            subject.setPreference(new SubjectPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
-//        }
-//
-//        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-//        SessionMgr.getSessionMgr().setSubject(newSubject);
-//        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());
-//    }
-//
-//    public void removeOntologyKeyBindings(long ontologyId) throws Exception {
-//        ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
-//    }
-    
-    
 
+    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
+        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
+        List<Preference> prefs = DomainMgr.getDomainMgr().getPreferences(category);
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(AccessManager.getSubjectKey(), ontologyId);
+        for (Preference pref : prefs) {
+            log.debug("Found preference: {}", pref);
+            ontologyKeyBindings.addBinding(pref.getKey(), Long.parseLong((String)pref.getValue()));
+        }
+        log.debug("Loaded {} key bindings for ontology {}", ontologyKeyBindings.getKeybinds().size(), ontologyKeyBindings.getOntologyId());
+        return ontologyKeyBindings;
+    }
+
+    public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
+        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
+        boolean changed = false;
+        Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
+        log.debug("Saving {} key bindings for ontology {}", keybinds.size(), ontologyKeyBindings.getOntologyId());
+        for (OntologyKeyBind bind : keybinds) {
+            Preference pref = DomainMgr.getDomainMgr().getPreference(category, bind.getKey());
+            String value = bind.getOntologyTermId().toString();
+            if (pref==null) {
+                // Create
+                pref = new Preference(AccessManager.getSubjectKey(), category, bind.getKey(), value);
+                log.debug("Creating new preference: {}", pref);
+                DomainMgr.getDomainMgr().savePreference(pref);
+                changed = true;
+            }
+            else if (!StringUtils.areEqual(pref.getValue(), value)) {
+                // Update
+                log.debug("Updating value for preference {}: {}={}", pref.getId(), pref.getKey(), value);
+                pref.setValue(value);
+                DomainMgr.getDomainMgr().savePreference(pref);
+                changed = true;
+            }
+            else {
+                log.debug("Preference already exists: {}", pref);
+            }
+        }
+
+        if (changed) {
+            Ontology ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyKeyBindings.getOntologyId());
+            Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(ontology));
+        }
+    }
+
+    public PermissionTemplate getAutoShareTemplate() {
+        return autoShareTemplate;
+    }
+
+    public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
+        this.autoShareTemplate = autoShareTemplate;
+        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+    }
 }

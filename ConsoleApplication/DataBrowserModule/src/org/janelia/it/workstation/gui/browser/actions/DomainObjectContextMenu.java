@@ -53,13 +53,12 @@ import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 /**
- * Context pop up menu for entities. 
+ * Pop-up menu for domain objects.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -68,9 +67,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     // Current selection
     protected DomainObject contextObject;
     protected List<DomainObject> domainObjectList;
+    protected ResultDescriptor resultDescriptor;
     protected DomainObject domainObject;
     protected boolean multiple;
-    protected ResultDescriptor resultDescriptor;
     protected String typeName;
 
     public DomainObjectContextMenu(DomainObject contextObject, List<DomainObject> domainObjectList, ResultDescriptor resultDescriptor, String typeName) {
@@ -92,7 +91,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         }
         else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path (i.e. we should use DomainObjectNode instead)
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
             DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
         }
@@ -335,7 +334,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
                             "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
                     if (value==null || value.equals("")) return;
-                    
+
                     SimpleWorker simpleWorker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
@@ -360,7 +359,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             SessionMgr.getSessionMgr().handleException(error);
                         }
                     };
-                    
+
                     simpleWorker.execute();
                 }
             });

@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 
 /**

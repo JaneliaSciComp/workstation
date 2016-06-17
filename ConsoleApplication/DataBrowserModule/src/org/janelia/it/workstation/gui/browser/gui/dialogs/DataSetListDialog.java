@@ -25,6 +25,7 @@ import javax.swing.SwingConstants;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
@@ -107,6 +108,15 @@ public class DataSetListDialog extends ModalDialog {
                         }
                     });
                     menu.add(editItem);
+
+                    JMenuItem permItem = new JMenuItem("  Change Permissions");
+                    permItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            new DomainDetailsDialog().showForDomainObject(dataSet, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
+                        }
+                    });
+                    menu.add(permItem);
 
                     JMenuItem deleteItem = new JMenuItem("  Delete");
                     deleteItem.addActionListener(new ActionListener() {
