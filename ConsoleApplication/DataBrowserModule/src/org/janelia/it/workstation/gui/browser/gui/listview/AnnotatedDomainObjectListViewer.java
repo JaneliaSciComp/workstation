@@ -87,6 +87,12 @@ public interface AnnotatedDomainObjectListViewer {
     public void toggleEditMode(boolean editMode);
 
     /**
+     * Used when you have to perform two UI actions sequentially in the same thread
+     * TODO: provide a mechanism for consistently executing UI callback queues, ala Javascript
+     */
+    public void refreshEditMode();
+
+    /**
      * Configure the edit selection model to use in the viewer.
      * @param editSelectionModel selection model
      */

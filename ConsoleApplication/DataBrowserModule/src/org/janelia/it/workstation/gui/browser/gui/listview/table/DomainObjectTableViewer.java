@@ -286,6 +286,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
+    @Override
+    public void refreshEditMode() {
+
+    }
+
     // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {

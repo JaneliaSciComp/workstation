@@ -155,7 +155,7 @@ public class DomainMgr {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
-        log.debug("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
+        log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
 
     public Map<String,String> loadPreferencesAsMap(String category) {

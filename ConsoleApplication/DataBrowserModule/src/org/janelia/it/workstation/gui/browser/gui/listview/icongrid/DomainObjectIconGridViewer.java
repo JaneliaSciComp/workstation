@@ -71,6 +71,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private DomainObjectSelectionModel editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     private SearchProvider searchProvider;
+
+    private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
 
@@ -223,17 +225,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
-        editSelectionModel.reset();
-
         if (select) {
-            this.selectEditObjects(domainObjects);
+            editSelectionModel.select(domainObjects, true, true);
         }
     }
 
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})",domainObjects.size(),select,clearAll,isUserDriven);
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})", domainObjects.size(), select, clearAll, isUserDriven);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -317,8 +317,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
     }
+
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        }
+    }
+
 
     @Override
     public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
@@ -333,7 +343,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching {} for {}",domainObject.getName(),text);
+        log.debug("Searching {} for {}", domainObject.getName(), text);
 
         String tupper = text.toUpperCase();
 
