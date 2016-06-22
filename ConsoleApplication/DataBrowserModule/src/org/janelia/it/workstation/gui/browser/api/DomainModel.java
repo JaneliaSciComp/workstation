@@ -182,7 +182,7 @@ public class DomainModel {
                     if (canonicalObject != domainObject) {
                         canonicalObject = domainObject;
                         log.debug("putOrUpdate: Updating cached instance: {} {}", id, DomainUtils.identify(canonicalObject));
-                        objectCache.put(id, domainObject);
+                        updateCaches(id, domainObject);
                         invalidatedObjects.add(domainObject);
                     }
                     else {
@@ -192,7 +192,7 @@ public class DomainModel {
                 else {
                     canonicalObject = domainObject;
                     log.debug("putOrUpdate: Caching: {} {}", id, DomainUtils.identify(canonicalObject));
-                    objectCache.put(id, domainObject);
+                    updateCaches(id, domainObject);
                 }
 
                 canonicalObjects.add(canonicalObject);
@@ -203,6 +203,16 @@ public class DomainModel {
             }
         }
         return canonicalObjects;
+    }
+
+    private void updateCaches(Reference id, DomainObject domainObject) {
+        objectCache.put(id, domainObject);
+        if (domainObject instanceof Workspace) {
+            workspaceCache.put(id, (Workspace)domainObject);
+        }
+        else if (domainObject instanceof Ontology) {
+            ontologyCache.put(id, (Ontology)domainObject);
+        }
     }
 
     /**
