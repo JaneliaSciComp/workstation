@@ -19,6 +19,7 @@ import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
@@ -48,6 +49,9 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
+import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFactory;
@@ -754,6 +758,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
 
         JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
+        NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
+        Reference sampleRef = fragment.getSample();
+        final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
 
         mergeItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {

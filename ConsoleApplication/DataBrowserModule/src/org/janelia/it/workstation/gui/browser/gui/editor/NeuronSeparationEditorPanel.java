@@ -356,6 +356,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 else {
                     domainObjects = model.getDomainObjects(separation.getFragmentsReference());
                     // TODO: set up global preference for visibility, allow users to select other user's preferences
+                    for (DomainObject domainObj: domainObjects) {
+                        log.info(domainObj.getType() + "-" + domainObj.getName());
+                    }
 
                     annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
                 }
