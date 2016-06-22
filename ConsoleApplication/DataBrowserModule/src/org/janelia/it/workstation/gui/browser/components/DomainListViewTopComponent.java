@@ -56,8 +56,8 @@ import org.slf4j.LoggerFactory;
         preferredID = DomainListViewTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_DomainListViewAction=Domain Browser",
-    "CTL_DomainListViewTopComponent=Domain Browser"
+    "CTL_DomainListViewAction=Browser",
+    "CTL_DomainListViewTopComponent=Browser"
 })
 public final class DomainListViewTopComponent extends TopComponent implements FindContextActivator {
 
