@@ -81,8 +81,8 @@ import org.slf4j.LoggerFactory;
         preferredID = DomainExplorerTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_DomainExplorerAction=Domain Explorer",
-    "CTL_DomainExplorerTopComponent=Domain Explorer"
+    "CTL_DomainExplorerAction=Data Explorer",
+    "CTL_DomainExplorerTopComponent=Data Explorer"
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener, FindContext {
 
