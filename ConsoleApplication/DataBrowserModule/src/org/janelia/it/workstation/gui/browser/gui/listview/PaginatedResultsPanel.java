@@ -266,7 +266,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     
     @Subscribe
     public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
-                
+        if (searchResults==null) return;
         for(final ResultPage page : searchResults.getPages()) {
             if (page==null) continue; // Page not yet loaded
             final Long domainObjectId = event.getDomainObject().getId();
