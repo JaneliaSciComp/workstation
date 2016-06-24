@@ -58,7 +58,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
                 .header("Authorization", credentials)
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making authenticating user against the server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Subject authSubject = response.readEntity(Subject.class);
         return authSubject;
