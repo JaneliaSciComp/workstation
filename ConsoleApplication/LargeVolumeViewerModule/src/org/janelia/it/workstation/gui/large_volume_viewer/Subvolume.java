@@ -717,7 +717,7 @@ OVERFLOW_LABEL:
         for (int d = minDepth; d < maxDepth; d++) {
             for (int w = minWidth; w <= maxWidth; ++w) {
                 for (int h = minHeight; h <= maxHeight; ++h) {
-                    int whd[] = {w, h, d};
+                    int whd[] = {w, h, d};                    
                     TileIndex key = new TileIndex(
                             whd[xyzFromWhd[0]],
                             whd[xyzFromWhd[1]],

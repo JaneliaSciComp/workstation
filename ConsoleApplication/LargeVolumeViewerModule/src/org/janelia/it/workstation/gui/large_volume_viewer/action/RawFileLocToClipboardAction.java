@@ -49,7 +49,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         this.camera = camera;
         this.axis = axis;
         this.volumeImage = volumeImage;
-        putValue(Action.NAME, "Copy Tile File Location to Clipboard");
+        putValue(Action.NAME, "Copy Raw Tile File Location to Clipboard");
     }
 
     @Override
@@ -57,7 +57,6 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         String content = statusLabel.getText();
         final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter(null);
         double[] micronLocation = micronCoordsFormatter.messageToTuple(content);
-        Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
         
         int[] micronIntCoords = new int[ micronLocation.length ];
         for (int i = 0; i < micronLocation.length; i++ ) {
