@@ -19,7 +19,7 @@ public interface SampleFacade {
      * Returns all of the datas ets that the current user owns.
      * @return list of data sets
      */
-    public Collection<DataSet> getDataSets();
+    public Collection<DataSet> getDataSets() throws Exception;
 
     /**
      * Create a new data set.
@@ -48,7 +48,7 @@ public interface SampleFacade {
      * Returns all of the LSM images for a given sample. 
      * @return list of LSM images
      */
-    public Collection<LSMImage> getLsmsForSample(Long sampleId);
+    public Collection<LSMImage> getLsmsForSample(Long sampleId) throws Exception;
 
     /**
      * Returns all the line releases.

@@ -179,12 +179,12 @@ public class DownloadDialog extends ModalDialog {
     private void addField(String label, JComponent component, String constraints) {
         JLabel attrLabel = new JLabel(label);
         attrLabel.setLabelFor(component);
-        attrPanel.add(attrLabel,"gap para, ay top");
+        attrPanel.add(attrLabel, "gap para, ay top");
         String compConstraints = "gap para, ay top";
         if (!StringUtils.isEmpty(constraints)) {
             compConstraints += ", "+constraints;
         }
-        attrPanel.add(component,compConstraints);
+        attrPanel.add(component, compConstraints);
     }
     
     public void showDialog(final List<? extends DomainObject> domainObjects, final ResultDescriptor defaultResultDescriptor) {
@@ -253,65 +253,64 @@ public class DownloadDialog extends ModalDialog {
     }
     
     private void addObjectsToExport(List<String> path, DomainObject domainObject) {
-        // TODO: this should update some kind of label so the user knows what's going on during a long load
-        log.info("addObjectsToExport({},{})",path,domainObject.getName());
-        if (domainObject instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)domainObject;
-            if (treeNode.hasChildren()) {
-                List<Reference> childRefs = treeNode.getChildren();
-                List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(childRefs);
-                List<String> childPath = new ArrayList<>(path);
-                childPath.add(domainObject.getName());
-                for(DomainObject child : children) {
-                    addObjectsToExport(childPath, child);
-                }
-            }
-        }
-        else if (domainObject instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)domainObject;
-            List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(treeNode.getChildren());
-            List<String> childPath = new ArrayList<>(path);
-            childPath.add(domainObject.getName());
-            for(DomainObject child : children) {
-                addObjectsToExport(childPath, child);
-            }
-        }
-        else if (domainObject instanceof Filter) {
-            Filter filter = (Filter)domainObject;
-            try {
-                SearchConfiguration config = new SearchConfiguration(filter, 1000);
-                SolrSearchResults searchResults = config.performSearch();
-                searchResults.loadAllResults();
-                for(ResultPage page : searchResults.getPages()) {
+        try {
+            // TODO: this should update some kind of label so the user knows what's going on during a long load
+            log.info("addObjectsToExport({},{})", path, domainObject.getName());
+            if (domainObject instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode) domainObject;
+                if (treeNode.hasChildren()) {
+                    List<Reference> childRefs = treeNode.getChildren();
+                    List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(childRefs);
                     List<String> childPath = new ArrayList<>(path);
                     childPath.add(domainObject.getName());
-                    for(DomainObject resultObject : page.getDomainObjects()) {
-                        addObjectsToExport(childPath, resultObject);
+                    for (DomainObject child : children) {
+                        addObjectsToExport(childPath, child);
                     }
                 }
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-        }
-        else {
-            if (domainObject instanceof Sample) {
-                if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
-                    for(LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample((Sample)domainObject)) {
-                        log.info("Adding expanded LSM: "+lsm.getName());
-                        downloadItems.add(new DownloadItem(path, lsm));
+            } else if (domainObject instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode) domainObject;
+                List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(treeNode.getChildren());
+                List<String> childPath = new ArrayList<>(path);
+                childPath.add(domainObject.getName());
+                for (DomainObject child : children) {
+                    addObjectsToExport(childPath, child);
+                }
+            } else if (domainObject instanceof Filter) {
+                Filter filter = (Filter) domainObject;
+                try {
+                    SearchConfiguration config = new SearchConfiguration(filter, 1000);
+                    SolrSearchResults searchResults = config.performSearch();
+                    searchResults.loadAllResults();
+                    for (ResultPage page : searchResults.getPages()) {
+                        List<String> childPath = new ArrayList<>(path);
+                        childPath.add(domainObject.getName());
+                        for (DomainObject resultObject : page.getDomainObjects()) {
+                            addObjectsToExport(childPath, resultObject);
+                        }
                     }
                 }
-                else {
-                    log.info("Adding Sample: "+domainObject.getName());
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            } else {
+                if (domainObject instanceof Sample) {
+                    if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
+                        for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample((Sample) domainObject)) {
+                            log.info("Adding expanded LSM: " + lsm.getName());
+                            downloadItems.add(new DownloadItem(path, lsm));
+                        }
+                    } else {
+                        log.info("Adding Sample: " + domainObject.getName());
+                        downloadItems.add(new DownloadItem(path, domainObject));
+                    }
+                } else {
+                    onlySampleInputs = false;
+                    log.info("Not just Samples. Adding " + domainObject.getName());
                     downloadItems.add(new DownloadItem(path, domainObject));
                 }
             }
-            else {
-                onlySampleInputs = false;
-                log.info("Not just Samples. Adding "+domainObject.getName());
-                downloadItems.add(new DownloadItem(path, domainObject));
-            }
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
     

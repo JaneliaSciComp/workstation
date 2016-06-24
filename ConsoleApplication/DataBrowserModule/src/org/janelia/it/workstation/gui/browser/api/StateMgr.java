@@ -98,15 +98,20 @@ public class StateMgr {
     public OntologyTerm getErrorOntology() {
         // TODO: use DomainDAO.getErrorOntologyCategory
         if (errorOntology == null) {
-            List<Ontology> ontologies = DomainMgr.getDomainMgr().getModel().getDomainObjects(Ontology.class, DomainConstants.ERROR_ONTOLOGY_NAME);
-            for (Ontology ontology : ontologies) {
-                if (DomainConstants.GENERAL_USER_GROUP_KEY.equals(ontology.getOwnerKey())) {
-                    OntologyTerm term = ontology.findTerm(DomainConstants.ERROR_ONTOLOGY_CATEGORY);
-                    if (term instanceof Category) {
-                        errorOntology = term;
-                        break;
+            try {
+                List<Ontology> ontologies = DomainMgr.getDomainMgr().getModel().getDomainObjects(Ontology.class, DomainConstants.ERROR_ONTOLOGY_NAME);
+
+                for (Ontology ontology : ontologies) {
+                    if (DomainConstants.GENERAL_USER_GROUP_KEY.equals(ontology.getOwnerKey())) {
+                        OntologyTerm term = ontology.findTerm(DomainConstants.ERROR_ONTOLOGY_CATEGORY);
+                        if (term instanceof Category) {
+                            errorOntology = term;
+                            break;
+                        }
                     }
                 }
+            } catch (Exception ex) {
+                SessionMgr.getSessionMgr().handleException(ex);
             }
             
         }

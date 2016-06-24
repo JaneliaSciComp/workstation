@@ -727,7 +727,6 @@ public class FilterEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (filter==null) return;
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
             refreshSearchResults(false);
@@ -736,10 +735,15 @@ public class FilterEditorPanel extends JPanel
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
-                    Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-                    if (updatedFilter!=null) {
-                        filterNode.update(updatedFilter);
-                        loadDomainObjectNode(filterNode, false, null);
+                    try {
+                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
+
+                        if (updatedFilter != null) {
+                            filterNode.update(updatedFilter);
+                            loadDomainObjectNode(filterNode, false, null);
+                        }
+                    } catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
                     }
                     break;
                 }
@@ -754,7 +758,6 @@ public class FilterEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-        if (filter==null) return;
         if (event.getDomainObject().getId().equals(filter.getId())) {
             loadNewFilter();
         }

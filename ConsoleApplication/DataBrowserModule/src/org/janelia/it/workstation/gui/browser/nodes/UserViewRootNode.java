@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -72,27 +73,32 @@ public class UserViewRootNode extends AbstractNode {
         
         @Override
         protected boolean createKeys(List<DomainObject> list) {
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
+            try {
+                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
 
-            List<Workspace> owned = new ArrayList<>();
-            for(Workspace workspace : workspaces) {
-                if (ClientDomainUtils.isOwner(workspace)) {
-                    owned.add(workspace);
+                List<Workspace> owned = new ArrayList<>();
+                for (Workspace workspace : workspaces) {
+                    if (ClientDomainUtils.isOwner(workspace)) {
+                        owned.add(workspace);
+                    }
                 }
+
+                Collections.sort(owned, new Comparator<Workspace>() {
+                    @Override
+                    public int compare(Workspace o1, Workspace o2) {
+                        return ComparisonChain.start().compare(o1.getId(), o2.getId()).result();
+                    }
+                });
+
+                // It's tempting to add directly to the list above, but it seems
+                // to perform much better when we use addAll.
+                list.addAll(owned);
+                return true;
+            } catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+                return false;
             }
-            
-            Collections.sort(owned, new Comparator<Workspace>() {
-                @Override
-                public int compare(Workspace o1, Workspace o2) {
-                    return ComparisonChain.start().compare(o1.getId(), o2.getId()).result();
-                }
-            });
-
-            // It's tempting to add directly to the list above, but it seems
-            // to perform much better when we use addAll. 
-            list.addAll(owned);
-            return true;
         }
 
         @Override

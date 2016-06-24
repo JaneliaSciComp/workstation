@@ -99,28 +99,32 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         resultsTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) return;
-                // Synchronize the table selection to the selection model
-                Set<S> selectedIds = new HashSet<>();
-                // Everything selected in the table should be selected in the model
-                for(Object object : resultsTable.getSelectedObjects()) {
-                    T obj = (T)object;
-                    S id = imageModel.getImageUniqueId(obj);
-                    selectedIds.add(id);
-                    if (!selectionModel.isSelected(id)) {
-                        selectionModel.select(obj, false, true);
-                    }
-                }
-                // Clear out everything that was not selected above
-                for(S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-                    if (!selectedIds.contains(selectedId)) {
-                        T object = imageModel.getImageByUniqueId(selectedId);
-                        if (selectionModel.isSelected(selectedId)) {
-                            selectionModel.deselect(object, true);
+                try {
+                    if (e.getValueIsAdjusting()) return;
+                    // Synchronize the table selection to the selection model
+                    Set<S> selectedIds = new HashSet<>();
+                    // Everything selected in the table should be selected in the model
+                    for (Object object : resultsTable.getSelectedObjects()) {
+                        T obj = (T) object;
+                        S id = imageModel.getImageUniqueId(obj);
+                        selectedIds.add(id);
+                        if (!selectionModel.isSelected(id)) {
+                            selectionModel.select(obj, false, true);
                         }
                     }
+                    // Clear out everything that was not selected above
+                    for (S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+                        if (!selectedIds.contains(selectedId)) {
+                            T object = imageModel.getImageByUniqueId(selectedId);
+                            if (selectionModel.isSelected(selectedId)) {
+                                selectionModel.deselect(object, true);
+                            }
+                        }
+                    }
+                    updateHud(false);
+                } catch (Exception ex) {
+                    SessionMgr.getSessionMgr().handleException(ex);
                 }
-                updateHud(false);
             }
         });
         

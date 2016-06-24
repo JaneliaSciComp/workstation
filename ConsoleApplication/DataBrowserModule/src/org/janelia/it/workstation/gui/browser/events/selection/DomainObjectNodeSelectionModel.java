@@ -27,11 +27,11 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
             DomainObjectNode domainObjectNode = domainObjectNodes.get(0);
             if (domainObjectNode instanceof TreeNodeNode) {
                 TreeNodeNode treeNodeNode = (TreeNodeNode)domainObjectNode;
-                Events.getInstance().postOnEventBus(new TreeNodeSelectionEvent(getSource(), treeNodeNode, select, clearAll, isUserDriven));
+                Events.getInstance().postOnEventBus(new TreeNodeSelectionEvent(getSource(), select, treeNodeNode, isUserDriven));
             }
             else if (domainObjectNode instanceof FilterNode) {
                 FilterNode filterNode = (FilterNode)domainObjectNode;
-                Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), filterNode, select, clearAll, isUserDriven));
+                Events.getInstance().postOnEventBus(new FilterSelectionEvent(getSource(), select, filterNode, isUserDriven));
             }
             else {
                 Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(getSource(), domainObjectNode, select, clearAll, isUserDriven));

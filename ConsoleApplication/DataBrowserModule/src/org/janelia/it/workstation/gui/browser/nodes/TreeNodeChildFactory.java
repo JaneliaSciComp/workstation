@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -51,7 +52,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
     @Override
     protected boolean createKeys(List<DomainObject> list) {
-        if (treeNode==null) return false;
+        try {
+            if (treeNode==null) return false;
+
         log.debug("Creating children keys for {}",treeNode.getName());
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -87,6 +90,10 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         }
 
         list.addAll(temp);
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+            return false;
+        }
         return true;
     }
 

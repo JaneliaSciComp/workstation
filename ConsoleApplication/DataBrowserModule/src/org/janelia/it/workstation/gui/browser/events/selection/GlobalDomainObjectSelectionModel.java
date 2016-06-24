@@ -7,8 +7,6 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.Events;
 
 import com.google.common.eventbus.Subscribe;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A selection model which tracks all domain object selections, globally across all other selection models. 
@@ -17,8 +15,6 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObject,Reference> {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalDomainObjectSelectionModel.class);
-    
     public static GlobalDomainObjectSelectionModel instance;
     
     private GlobalDomainObjectSelectionModel() {
@@ -34,7 +30,6 @@ public class GlobalDomainObjectSelectionModel extends SelectionModel<DomainObjec
 
     @Subscribe
     public void domainObjectSelected(DomainObjectSelectionEvent event) {
-        log.trace("Applying to global: {}",event);
         if (event.isSelect()) {
             select(event.getDomainObjects(), event.isClearAll(), event.isUserDriven());
         }

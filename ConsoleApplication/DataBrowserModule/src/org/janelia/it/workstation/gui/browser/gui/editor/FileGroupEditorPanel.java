@@ -111,31 +111,35 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     private void showResult(PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
+        try {
+            ObjectiveSample objectiveSample = result.getParentRun().getParent();
+            configPanel.setTitle(objectiveSample.getObjective()+" "+result.getName());
 
-        ObjectiveSample objectiveSample = result.getParentRun().getParent();
-        configPanel.setTitle(objectiveSample.getObjective()+" "+result.getName());
+            HasFileGroups hasFileGroups = (HasFileGroups)result;
 
-        HasFileGroups hasFileGroups = (HasFileGroups)result;
+            DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
 
-        DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-        Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
-        log.info("Got image type preference: "+preference2);
-        if (preference2!=null) {
-            typeButton.setImageType((String)preference2.getValue());
-        }
-        typeButton.populate(hasFileGroups.getGroups());
-
-        List<FileGroup> sortedGroups = new ArrayList<>(hasFileGroups.getGroups());
-        Collections.sort(sortedGroups, new Comparator<FileGroup>() {
-            @Override
-            public int compare(FileGroup o1, FileGroup o2) {
-                return o1.getKey().compareTo(o2.getKey());
+            Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            log.info("Got image type preference: "+preference2);
+            if (preference2!=null) {
+                typeButton.setImageType((String)preference2.getValue());
             }
-        });
+            typeButton.populate(hasFileGroups.getGroups());
 
-        log.info("Showing "+hasFileGroups.getGroupKeys().size()+" file groups");
-        resultsPanel.showObjects(sortedGroups, success);
-        showResults(isUserDriven);
+            List<FileGroup> sortedGroups = new ArrayList<>(hasFileGroups.getGroups());
+            Collections.sort(sortedGroups, new Comparator<FileGroup>() {
+                @Override
+                public int compare(FileGroup o1, FileGroup o2) {
+                    return o1.getKey().compareTo(o2.getKey());
+                }
+            });
+
+            log.info("Showing "+hasFileGroups.getGroupKeys().size()+" file groups");
+            resultsPanel.showObjects(sortedGroups, success);
+            showResults(isUserDriven);
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
     public void showResults(boolean isUserDriven) {
@@ -173,7 +177,9 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (result==null) return;
+        if (result ==null) {
+            return; // Nothing to refresh
+        } 
         if (event.isTotalInvalidation()) {
             log.info("Total invalidation, reloading...");
             refreshResult();
@@ -191,16 +197,20 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     private void refreshResult() {
-        Sample sample = result.getParentRun().getParent().getParent();
-        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-        List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
-        if (results.isEmpty()) {
-            log.info("Sample no longer has result with id: "+ result.getId());
-            showNothing();
-            return;
+        try {
+            Sample sample = result.getParentRun().getParent().getParent();
+            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+            List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
+            if (results.isEmpty()) {
+                log.info("Sample no longer has result with id: "+ result.getId());
+                showNothing();
+                return;
+            }
+            PipelineResult result = results.get(results.size()-1);
+            showResult(result, false, null);
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
-        PipelineResult result = results.get(results.size()-1);
-        showResult(result, false, null);
     }
 
     private FileGroup getFileGroup(String key) {

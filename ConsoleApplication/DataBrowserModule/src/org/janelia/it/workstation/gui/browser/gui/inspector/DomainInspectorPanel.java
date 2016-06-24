@@ -591,14 +591,17 @@ public class DomainInspectorPanel extends JPanel {
     }
 
     public void refresh() {
-        this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-        if (domainObject!=null) {
-            loadSubjects();
-            loadAttributes();
-            loadAnnotations();
-        }
-        else {
-            showNothing();
+        try {
+            this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
+            if (domainObject != null) {
+                loadSubjects();
+                loadAttributes();
+                loadAnnotations();
+            } else {
+                showNothing();
+            }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 }

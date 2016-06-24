@@ -16,25 +16,25 @@ public interface SubjectFacade {
      * Returns all the subjects (i.e. users and groups) in the system.
      * @return list of Subject objects
      */
-    public List<Subject> getSubjects();
+    public List<Subject> getSubjects() throws Exception;
 
     /**
      * Returns a specific subject given it's human-readable key
      * @return the Subject object if it exists
      */
-    public Subject getSubjectByKey(String subjectKey);
+    public Subject getSubjectByKey(String subjectKey) throws Exception;
 
     /**
      * authenticates the user against LDAP then loads the user subject
      * @return authenticated Subject
      */
-    public Subject loginSubject(String username, String password);
+    public Subject loginSubject(String username, String password) throws Exception;
 
     /**
      * Returns the current subject's preferences.
      * @return
      */
-    public List<Preference> getPreferences();
+    public List<Preference> getPreferences() throws Exception;
 
     /**
      * Saves the given preferences.

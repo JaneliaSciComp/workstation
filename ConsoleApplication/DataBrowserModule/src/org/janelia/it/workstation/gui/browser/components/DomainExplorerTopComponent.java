@@ -322,28 +322,32 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 if (!nodes.isEmpty()) {
                 log.info("Updating invalidated object: {}",domainObject.getName());
                     for(DomainObjectNode node : nodes) {
-                        DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
-                        if (refreshed==null) {
-                            log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
-                            try {
-                                node.destroy();
-                            }
-                            catch (IOException e) {
-                                log.error("  Error destroying invalidated node",e);
-                            }
-                        }
-                        else {
-                            log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
-                            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-                            final List<Long[]> selected = beanTreeView.getSelectedPaths();
-                            node.update(refreshed);
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    beanTreeView.expand(expanded);
-                                    beanTreeView.selectPaths(selected);
+                        try {
+                            DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
+                            if (refreshed==null) {
+                                log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
+                                try {
+                                    node.destroy();
                                 }
-                            });
+                                catch (IOException e) {
+                                    log.error("  Error destroying invalidated node",e);
+                                }
+                            }
+                            else {
+                                log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
+                                final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+                                final List<Long[]> selected = beanTreeView.getSelectedPaths();
+                                node.update(refreshed);
+                                SwingUtilities.invokeLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        beanTreeView.expand(expanded);
+                                        beanTreeView.selectPaths(selected);
+                                    }
+                                });
+                            }
+                        }  catch (Exception ex) {
+                            SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
                 }

@@ -69,7 +69,11 @@ public class SpecialAnnotationChooserDialog extends JFrame {
         TableColumn comboColumn = table.getColumnModel().getColumn(1);
 
         Long ontologyId = StateMgr.getStateMgr().getCurrentOntologyId();
-        this.ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
+        try {
+            this.ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
 
         iterateAndAddRows(ontology.getTerms(), 0);
 
@@ -237,45 +241,49 @@ public class SpecialAnnotationChooserDialog extends JFrame {
     }
 
     private void iterateAndAddRows(List<OntologyTerm> list, int recursionLevel) {
+        try {
+            StringBuilder tabString = new StringBuilder("");
 
-        StringBuilder tabString = new StringBuilder("");
-        for(int i = 0; i<recursionLevel; i++){
-            tabString.append("   ");
-        }
-
-        for(OntologyTerm element : list){
-            
-            if(element instanceof EnumText){
-                model.addRow(new Object[]{tabString + element.getName()});
-                Long valueEnumId = ((EnumText) element).getValueEnumId();
-                OntologyTerm valueEnum = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(new OntologyTermReference(ontology.getId(), valueEnumId));
-
-                if (valueEnum==null) {
-                    Exception error = new Exception(element.getName()+" has no supporting enumeration.");
-                    SessionMgr.getSessionMgr().handleException(error);
-                    return;
-                }
-
-                List<OntologyTerm> children = valueEnum.getTerms();
-
-                int i = 0;
-                Object[] selectionValues = new Object[children.size()];
-                for(OntologyTerm child : children) {
-                    selectionValues[i++] = child;
-                }
-
-                comboBox = new JComboBox(selectionValues);
-                OntologyTerms.add(element);
-
+            for(int i = 0; i<recursionLevel; i++){
+                tabString.append("   ");
             }
 
-            if(null!=element.getTerms()){
-                iterateAndAddRows(element.getTerms(), recursionLevel+1);
+            for(OntologyTerm element : list){
+
+                if(element instanceof EnumText){
+                    model.addRow(new Object[]{tabString + element.getName()});
+                    Long valueEnumId = ((EnumText) element).getValueEnumId();
+                    OntologyTerm valueEnum = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(new OntologyTermReference(ontology.getId(), valueEnumId));
+
+                    if (valueEnum==null) {
+                        Exception error = new Exception(element.getName()+" has no supporting enumeration.");
+                        SessionMgr.getSessionMgr().handleException(error);
+                        return;
+                    }
+
+                    List<OntologyTerm> children = valueEnum.getTerms();
+
+                    int i = 0;
+                    Object[] selectionValues = new Object[children.size()];
+                    for(OntologyTerm child : children) {
+                        selectionValues[i++] = child;
+                    }
+
+                    comboBox = new JComboBox(selectionValues);
+                    OntologyTerms.add(element);
+
+                }
+
+                if(null!=element.getTerms()){
+                    iterateAndAddRows(element.getTerms(), recursionLevel+1);
+                }
             }
-        }
-        
-        if (comboBox==null) {
-            comboBox = new JComboBox();
+
+            if (comboBox==null) {
+                comboBox = new JComboBox();
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 

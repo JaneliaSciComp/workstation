@@ -28,10 +28,10 @@ public class SubjectFacadeImpl implements SubjectFacade {
 
     @Override
     public Subject loginSubject(String username, String password) {
-        /*BasicAuthToken userInfo = new BasicAuthToken();
+       /* BasicAuthToken userInfo = new BasicAuthToken();
         userInfo.setUsername(username);
-        userInfo.setPassword(password);
-        */return dao.getSubjectByKey("user:" + username);
+        userInfo.setPassword(password);*/
+        return dao.getSubjectByKey("user:" + username);
      }
 
     @Override

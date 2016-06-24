@@ -170,33 +170,36 @@ public class TreeNodeEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (treeNodeNode==null) return;
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-            if (updatedFolder!=null) {
-                treeNodeNode.update(updatedFolder);
-                loadDomainObjectNode(treeNodeNode, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(treeNode.getId())) {
-                    log.info("tree node invalidated, reloading...");
-                    TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-                    if (updatedFolder!=null) {
-                        treeNodeNode.update(updatedFolder);
-                        loadDomainObjectNode(treeNodeNode, false, null);
-                    }
-                    break;
+        try {
+            if (treeNodeNode==null) return;
+            if (event.isTotalInvalidation()) {
+                log.info("total invalidation, reloading...");
+                TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+                if (updatedFolder!=null) {
+                    treeNodeNode.update(updatedFolder);
+                    loadDomainObjectNode(treeNodeNode, false, null);
                 }
             }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(treeNode.getId())) {
+                        log.info("tree node invalidated, reloading...");
+                        TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+                        if (updatedFolder!=null) {
+                            treeNodeNode.update(updatedFolder);
+                            loadDomainObjectNode(treeNodeNode, false, null);
+                        }
+                        break;
+                    }
+                }
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-        if (treeNode==null) return;
         if (event.getDomainObject().getId().equals(treeNode.getId())) {
             this.treeNode = null;
             domainObjects.clear();

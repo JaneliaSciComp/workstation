@@ -10,6 +10,7 @@ import javax.swing.TransferHandler;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,18 +33,22 @@ public class DomainObjectTransferHandler extends TransferHandler {
     
     @Override
     protected Transferable createTransferable(JComponent sourceComponent) {
+        try {
+            log.debug("createTransferable sourceComponent={}", sourceComponent);
 
-        log.debug("createTransferable sourceComponent={}", sourceComponent);
-
-        if (sourceComponent instanceof AnnotatedImageButton) {
-            List<DomainObject> domainObjects = new ArrayList<>();
-            for(Reference id : selectionModel.getSelectedIds()) {
-                domainObjects.add(imageModel.getImageByUniqueId(id));
+            if (sourceComponent instanceof AnnotatedImageButton) {
+                List<DomainObject> domainObjects = new ArrayList<>();
+                for(Reference id : selectionModel.getSelectedIds()) {
+                    domainObjects.add(imageModel.getImageByUniqueId(id));
+                }
+                return new TransferableDomainObjectList(sourceComponent, domainObjects);
             }
-            return new TransferableDomainObjectList(sourceComponent, domainObjects);
-        }
-        else {
-            log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+            else {
+                log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+                return null;
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
             return null;
         }
     }

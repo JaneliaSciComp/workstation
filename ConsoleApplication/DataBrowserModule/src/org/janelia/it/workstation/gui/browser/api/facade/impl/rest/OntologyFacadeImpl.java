@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -32,7 +33,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getOntologies from server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         return response.readEntity(new GenericType<List<Ontology>>() {});
     }
@@ -46,7 +47,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createOntology from server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
@@ -79,7 +80,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request addOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + terms)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
@@ -96,7 +97,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .delete();
         if (checkBadResponse(response.getStatus(), "problem making request removeOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + termId)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
@@ -120,14 +121,14 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + order)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Ontology newOntology = response.readEntity(Ontology.class);
         return newOntology;
     }
     
     @Override
-    public List<Annotation> getAnnotations(Collection<Reference> references) {
+    public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(new ArrayList<>(references));
@@ -137,7 +138,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request getAnnotations from server: " + references)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         List<Annotation> annotations = response.readEntity(new GenericType<List<Annotation>>() {
         });
@@ -159,7 +160,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createAnnotation from server: " + annotation)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Annotation newAnnotation = response.readEntity(Annotation.class);
         return newAnnotation;
@@ -174,7 +175,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateAnnotation from server: " + annotation)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Annotation newAnnotation = response.readEntity(Annotation.class);
         return newAnnotation;
@@ -187,7 +188,9 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .delete();
-        checkBadResponse(response.getStatus(), "problem making request removeAnnotation from server: " + annotation);
+        if (checkBadResponse(response.getStatus(), "problem making request removeAnnotation from server: " + annotation)) {
+            throw new WebApplicationException(response);
+        }
     }
 
     

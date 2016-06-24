@@ -8,7 +8,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -283,7 +282,7 @@ public class DomainModel {
      * @param ref
      * @return
      */
-    private DomainObject loadDomainObject(Reference ref) {
+    private DomainObject loadDomainObject(Reference ref) throws Exception {
         log.debug("loadDomainObject({})", ref);
         return domainFacade.getDomainObject(ref);
     }
@@ -346,7 +345,7 @@ public class DomainModel {
      * @param domainObject
      * @return canonical domain object instance
      */
-    public <T extends DomainObject> T getDomainObject(T domainObject) {
+    public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
         return (T)getDomainObject(Reference.createFor(domainObject));
     }
 
@@ -356,7 +355,7 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject getDomainObject(Reference ref) {
+    public DomainObject getDomainObject(Reference ref) throws Exception {
         log.debug("getDomainObject({})",ref);
         DomainObject domainObject = objectCache.getIfPresent(ref);
         if (domainObject != null) {
@@ -368,11 +367,11 @@ public class DomainModel {
         }
     }
 
-    public List<DomainObject> getDomainObjects(List<Reference> references) {
+    public List<DomainObject> getDomainObjects(List<Reference> references) throws Exception {
         return getDomainObjectsAs(DomainObject.class, references);
     }
 
-    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) {
+    public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) throws Exception {
 
         if (references==null) return new ArrayList<>();
 
@@ -421,12 +420,12 @@ public class DomainModel {
         return canonicalObjects;
     }
 
-    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) {
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception {
         List<T> list = getDomainObjects(domainClass, Arrays.asList(id));
         return list.isEmpty() ? null : list.get(0);
     }
 
-    public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) {
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) throws Exception {
         List<T> objects = new ArrayList<>();
         for(DomainObject domainObject : getDomainObjects(clazz.getSimpleName(), ids)) {
             objects.add((T)domainObject);
@@ -434,12 +433,12 @@ public class DomainModel {
         return objects;
     }
 
-    public DomainObject getDomainObject(String className, Long id) {
+    public DomainObject getDomainObject(String className, Long id) throws Exception {
         List<DomainObject> objects = getDomainObjects(className, Arrays.asList(id));
         return objects.isEmpty() ? null : objects.get(0);
     }
 
-    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) {
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
         List<T> objects = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         for(DomainObject domainObject : domainFacade.getDomainObjects(domainClass, name)) {
@@ -449,7 +448,7 @@ public class DomainModel {
         return objects;
     }
     
-    public List<DomainObject> getDomainObjects(String className, List<Long> ids) {
+    public List<DomainObject> getDomainObjects(String className, List<Long> ids) throws Exception {
 
         if (className==null || ids==null) return new ArrayList<>();
         log.debug("getDomainObjects(ids.size={})",ids.size());
@@ -495,7 +494,7 @@ public class DomainModel {
         return canonicalObjects;
     }
     
-    public List<DomainObject> getAllDomainObjectsByClass(String className) {
+    public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception {
         List<DomainObject> domainObjects = new ArrayList<>();
         if (className==null) return domainObjects;
         log.debug("getAllDomainObjectsByClass({})",className);
@@ -508,21 +507,21 @@ public class DomainModel {
         return domainObjects;
     }
 
-    public List<DomainObject> getDomainObjects(ReverseReference reverseReference) {
+    public List<DomainObject> getDomainObjects(ReverseReference reverseReference) throws Exception {
         // TODO: cache these?
         return domainFacade.getDomainObjects(reverseReference);
     }
 
-    public List<Annotation> getAnnotations(Reference reference) {
+    public List<Annotation> getAnnotations(Reference reference) throws Exception {
         // TODO: cache these?
         return ontologyFacade.getAnnotations(Arrays.asList(reference));
     }
 
-    public List<Annotation> getAnnotations(DomainObject domainObject) {
+    public List<Annotation> getAnnotations(DomainObject domainObject) throws Exception {
         return getAnnotations(Reference.createFor(domainObject));
     }
     
-    public List<Annotation> getAnnotations(Collection<Reference> references) {
+    public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception {
         if (references==null) return new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<Annotation> annotations = ontologyFacade.getAnnotations(references); 
@@ -531,7 +530,7 @@ public class DomainModel {
         return annotations;
     }
 
-    public List<Workspace> getWorkspaces() {
+    public List<Workspace> getWorkspaces() throws Exception {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces from database");
@@ -548,16 +547,11 @@ public class DomainModel {
         return new ArrayList<>(workspaceCache.values());
     }
 
-    public Workspace getDefaultWorkspace() {
-        for(Workspace workspace : getWorkspaces()) {
-            if (workspace.getOwnerKey().equals(AccessManager.getSubjectKey()) && DomainConstants.NAME_DEFAULT_WORKSPACE.equals(workspace.getName())) {
-                return workspace;
-            }
-        }
-        throw new IllegalStateException("Cannot find default workspace");
+    public Workspace getDefaultWorkspace() throws Exception {
+        return getWorkspaces().iterator().next();
     }
 
-    public List<DataSet> getDataSets() {
+    public List<DataSet> getDataSets() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<DataSet> dataSets = new ArrayList<>(sampleFacade.getDataSets());
         List<DataSet> canonicalDataSets = putOrUpdate(dataSets, false);
@@ -566,7 +560,7 @@ public class DomainModel {
         return canonicalDataSets;
     }
     
-    public List<LSMImage> getLsmsForSample(Sample sample) {
+    public List<LSMImage> getLsmsForSample(Sample sample) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<Reference> lsmRefs = new ArrayList<>();
         for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
@@ -644,7 +638,7 @@ public class DomainModel {
      * @param reference a reference to an ontology term
      * @return the ontology term 
      */
-    public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) {
+    public OntologyTerm getOntologyTermByReference(OntologyTermReference reference) throws Exception {
         Ontology ontology = getDomainObject(Ontology.class, reference.getOntologyId());
         return findTerm(ontology, reference.getOntologyTermId());
     }

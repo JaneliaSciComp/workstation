@@ -74,7 +74,7 @@ public interface OntologyFacade {
      * @param references collection of references to domain objects
      * @return list of annotations
      */
-    public List<Annotation> getAnnotations(Collection<Reference> references);
+    public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception;
     
     /**
      * Create an annotation against the given target object.

@@ -196,34 +196,36 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
         
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
-        
-        if (domainObject instanceof NeuronFragment) {
-            NeuronFragment fragment = (NeuronFragment)domainObject;
-            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-        }
-        else if (domainObject instanceof LSMImage) {
-            LSMImage lsmImage = (LSMImage)domainObject;
-            domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
-        }
+        try {
+            if (domainObject instanceof NeuronFragment) {
+                NeuronFragment fragment = (NeuronFragment) domainObject;
+                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
+            } else if (domainObject instanceof LSMImage) {
+                LSMImage lsmImage = (LSMImage) domainObject;
+                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
+            }
 
-        final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            // TODO: comment this exception back in after initial development is complete
-            //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
-            log.info("No viewer defined for domain object of type {}",domainObject.getClass().getName());
-            return;
+            final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
+            if (editorClass == null) {
+                // TODO: comment this exception back in after initial development is complete
+                //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
+                log.info("No viewer defined for domain object of type {}", domainObject.getClass().getName());
+                return;
+            }
+
+            // Do we already have the given node loaded?
+            if (!setCurrent(domainObject)) {
+                return;
+            }
+
+            if (editor == null || !editor.getClass().equals(editorClass)) {
+                setEditorClass(editorClass);
+            }
+            editor.loadDomainObject(domainObject, isUserDriven, null);
+            setName(editor.getName());
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
-        
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
-        }
-        
-        if (editor==null || !editor.getClass().equals(editorClass)) {
-            setEditorClass(editorClass);
-        }
-        editor.loadDomainObject(domainObject, isUserDriven, null);
-        setName(editor.getName());
     }
 
     private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {

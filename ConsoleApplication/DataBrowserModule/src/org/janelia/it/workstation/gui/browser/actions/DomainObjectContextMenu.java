@@ -760,7 +760,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
         NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
         Reference sampleRef = fragment.getSample();
-        final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
 
         mergeItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
