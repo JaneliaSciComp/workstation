@@ -39,7 +39,7 @@ public class ClipboardActionHelper {
         TileIndex index = tileFormat.tileIndexForXyz(vec, requiredZoomLevel, axis);
         File path = OctreeMetadataSniffer.getOctreeFilePath(index, tileFormat, true);
         String filePathStr = path.toString().replace(FILE_SEP, LINUX_FILE_SEP);
-        log.info("Returning {} for required zoom of {} {} and full zoom path is {}.", path.toString(), requiredZoomLevel, filePathStr);
+        log.info("Returning {} for required zoom of {}, and full zoom path is {}.", path.toString(), requiredZoomLevel, filePathStr);
         return filePathStr;
     }
     
