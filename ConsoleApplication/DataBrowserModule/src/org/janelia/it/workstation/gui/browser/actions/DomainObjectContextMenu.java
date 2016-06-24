@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,11 +12,13 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -58,10 +61,14 @@ import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFac
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
@@ -739,92 +746,139 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         return toggleHudMI;
     }
 
-    protected JMenuItem getMergeItem() {
-
-        // If multiple items are not selected then leave
-        if (!multiple) {
-            return null;
-        }
-
-        HashSet<Long> fragmentIds = new HashSet<>();
-        for (DomainObject domainObject : domainObjectList) {
-            if (!(domainObject instanceof NeuronFragment)) {
-                continue;
+    private long startMergeTask() throws Exception {
+        Long parentId = null;
+        List<NeuronFragment> fragments = new ArrayList<>();
+        for (DomainObject domainObj : domainObjectList) {
+            NeuronFragment fragment = (NeuronFragment)domainObj;
+            Long resultId = fragment.getSeparationId();
+            if (parentId == null) {
+                parentId = resultId;
+            } else if (resultId == null || !parentId.equals(resultId)) {
+                throw new IllegalStateException(
+                        "The selected neuron fragments are not part of the same neuron separation result: parentId="
+                                + parentId + " resultId=" + resultId);
             }
-            fragmentIds.add(domainObject.getId());
-        }
-        if (fragmentIds.size()<2) {
-            return null;
+            fragments.add(fragment);
         }
 
-        JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
-        NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
-        Reference sampleRef = fragment.getSample();
-        final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
-
-        mergeItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                SimpleWorker mergeTask = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        setProgress(1);
-                        Long parentId = null;
-                        List<NeuronFragment> fragments = new ArrayList<>();
-                        for (DomainObject domainObj : domainObjectList) {
-                            NeuronFragment fragment = (NeuronFragment)domainObj;
-                            Long resultId = fragment.getSeparationId();
-                            if (parentId == null) {
-                                parentId = resultId;
-                            } else if (resultId == null || !parentId.equals(resultId)) {
-                                throw new IllegalStateException(
-                                        "The selected neuron fragments are not part of the same neuron separation result: parentId="
-                                                + parentId + " resultId=" + resultId);
-                            }
-                            fragments.add(fragment);
-                        }
-
-                        Collections.sort(fragments, new Comparator<NeuronFragment>() {
-                            @Override
-                            public int compare(NeuronFragment o1, NeuronFragment o2) {
-                                Integer o1n = o1.getNumber();
-                                Integer o2n = o2.getNumber();
-                                return o1n.compareTo(o2n);
-                            }
-                        });
-
-                        HashSet<String> fragmentIds = new LinkedHashSet<>();
-                        for (NeuronFragment fragment : fragments) {
-                            fragmentIds.add(fragment.getId().toString());
-                        }
-
-                        // This should never happen
-                        if (null == parentId) {
-                            return;
-                        }
-
-                        HashSet<TaskParameter> taskParameters = new HashSet<>();
-                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
-                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
-                        ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-
-                };
-
-                mergeTask.execute();
+        Collections.sort(fragments, new Comparator<NeuronFragment>() {
+            @Override
+            public int compare(NeuronFragment o1, NeuronFragment o2) {
+                Integer o1n = o1.getNumber();
+                Integer o2n = o2.getNumber();
+                return o1n.compareTo(o2n);
             }
         });
 
-        mergeItem.setEnabled(multiple);
-        return mergeItem;
+        HashSet<String> fragmentIds = new LinkedHashSet<>();
+        for (NeuronFragment fragment : fragments) {
+            fragmentIds.add(fragment.getId().toString());
+        }
+
+        HashSet<TaskParameter> taskParameters = new HashSet<>();
+        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
+        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
+        Task mergeTask = ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
+        return mergeTask.getObjectId();
+    }
+
+    protected JMenuItem getMergeItem() {
+        try {
+            // If multiple items are not selected then leave
+            if (!multiple) {
+                return null;
+            }
+
+            HashSet<Long> fragmentIds = new HashSet<>();
+            for (DomainObject domainObject : domainObjectList) {
+                if (!(domainObject instanceof NeuronFragment)) {
+                    continue;
+                }
+                fragmentIds.add(domainObject.getId());
+            }
+            if (fragmentIds.size()<2) {
+                return null;
+            }
+
+            JMenuItem mergeItem = new JMenuItem("  Merge " + fragmentIds.size() + " Selected Neurons");
+            NeuronFragment fragment = (NeuronFragment) domainObjectList.get(0);
+            Reference sampleRef = fragment.getSample();
+            final Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+
+            mergeItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+
+                            @Override
+                            public String getName() {
+                                return "Merge Neuron Fragments ";
+                            }
+
+                            @Override
+                            protected void doStuff() throws Exception {
+
+                                setStatus("Submitting task");
+                                long taskId = startMergeTask();
+                                setTaskId(taskId);
+                                setStatus("Grid execution");
+
+                                // Wait until task is finished
+                                super.doStuff();
+
+                                if (isCancelled()) throw new CancellationException();
+                                setStatus("Done merging");
+                            }
+
+                            @Override
+                            public Callable<Void> getSuccessCallback() {
+                                return new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        SimpleWorker worker = new SimpleWorker() {
+
+                                            @Override
+                                            protected void doStuff() throws Exception {
+                                                try {
+                                                    final DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                                    model.invalidate(sample);
+                                                    SessionMgr.getBrowser().getEntityOutline().refresh();
+                                                }  catch (Exception e) {
+                                                    SessionMgr.getSessionMgr().handleException(e);
+                                                }
+                                            }
+
+                                            @Override
+                                            protected void hadSuccess() {
+                                            }
+
+                                            @Override
+                                            protected void hadError(Throwable error) {
+                                                SessionMgr.getSessionMgr().handleException(error);
+                                            }
+                                        };
+
+                                        worker.execute();
+                                        return null;
+                                    }
+                                };
+                            }
+                        };
+
+                        executeWorker.executeWithEvents();
+                    }
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
+            });
+            mergeItem.setEnabled(multiple);
+            return mergeItem;
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
 //    protected JMenuItem getImportItem() {

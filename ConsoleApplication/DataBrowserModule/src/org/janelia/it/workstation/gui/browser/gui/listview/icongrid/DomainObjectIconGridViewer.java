@@ -109,7 +109,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) {
+        public DomainObject getImageByUniqueId(Reference id) throws Exception {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         
@@ -402,32 +402,39 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void deleteKeyPressed() {
-        IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)parent; 
-            if (ClientDomainUtils.hasWriteAccess(treeNode)) {                
-                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
-                action.doAction();
+        try {
+            IsParent parent = selectionModel.getParentObject();
+            if (parent instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode)parent;
+                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                    List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
+                    action.doAction();
+                }
             }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     protected void configButtonPressed() {
+        try {
+            DomainObject firstObject;
+            List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+            if (selectedObjects.isEmpty()) {
+                firstObject = domainObjectList.getDomainObjects().get(0);
+            }
+            else {
+                firstObject = selectedObjects.get(0);
+            }
 
-        DomainObject firstObject;
-        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-        if (selectedObjects.isEmpty()) {
-            firstObject = domainObjectList.getDomainObjects().get(0);
-        }
-        else {
-            firstObject = selectedObjects.get(0);
-        }
-
-        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
-        if (configDialog.showDialog(this)==1) {
-            this.config = IconGridViewerConfiguration.loadConfig();
-            refresh();
+            IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
+            if (configDialog.showDialog(this)==1) {
+                this.config = IconGridViewerConfiguration.loadConfig();
+                refresh();
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -454,7 +461,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     private List<DomainObject> getSelectedObjects() {
-        return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        try {
+            return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     @Override

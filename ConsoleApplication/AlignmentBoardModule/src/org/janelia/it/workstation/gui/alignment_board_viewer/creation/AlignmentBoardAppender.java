@@ -136,37 +136,42 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
 
     @Override
     public boolean isCompatible(List<DomainObject> domainObjects) {
-        boolean rtnVal = false;
-        // Establish: is the Alignment Board Viewer already open?
-        AlignmentBoardContext abContext = getABContext();
-        setDomainObjects(domainObjects);
-        // Establish: is the domainObject incoming, an appropriate type, with alignment board open?
-        if (domainObjects != null  &&  abContext != null) {
-			AlignmentContext alignmentContext = abContext.getAlignmentContext();
-			AlignmentBoard receiver = abContext.getAlignmentBoard();
-			for (DomainObject domainObject: domainObjects) {
-				if (domainObject instanceof Sample) {
-					rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, (Sample) domainObject);
-				} else if (domainObject instanceof NeuronFragment) {
-					Sample sample = domainHelper.getSampleForNeuron((NeuronFragment) domainObject);
-					rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, sample);
-				} else if (domainObject instanceof CompartmentSet) {
-					rtnVal = true;
-					for (AlignmentBoardItem item : receiver.getChildren()) {
-						// Only one compartment set may be added.
-						if (domainHelper.isCompartmentSet(item)) {
-							rtnVal = false;
-							break;
-						}
-					}
-					if (rtnVal) {
-						rtnVal = compatibilityChecker.isCompartmentSetCompatible(alignmentContext, (CompartmentSet) domainObject);
-					}
-				}
-			}
-        }
+        try {
+            boolean rtnVal = false;
+            // Establish: is the Alignment Board Viewer already open?
+            AlignmentBoardContext abContext = getABContext();
+            setDomainObjects(domainObjects);
+            // Establish: is the domainObject incoming, an appropriate type, with alignment board open?
+            if (domainObjects != null && abContext != null) {
+                AlignmentContext alignmentContext = abContext.getAlignmentContext();
+                AlignmentBoard receiver = abContext.getAlignmentBoard();
+                for (DomainObject domainObject : domainObjects) {
+                    if (domainObject instanceof Sample) {
+                        rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, (Sample) domainObject);
+                    } else if (domainObject instanceof NeuronFragment) {
+                        Sample sample = domainHelper.getSampleForNeuron((NeuronFragment) domainObject);
+                        rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, sample);
+                    } else if (domainObject instanceof CompartmentSet) {
+                        rtnVal = true;
+                        for (AlignmentBoardItem item : receiver.getChildren()) {
+                            // Only one compartment set may be added.
+                            if (domainHelper.isCompartmentSet(item)) {
+                                rtnVal = false;
+                                break;
+                            }
+                        }
+                        if (rtnVal) {
+                            rtnVal = compatibilityChecker.isCompartmentSetCompatible(alignmentContext, (CompartmentSet) domainObject);
+                        }
+                    }
+                }
+            }
 
-        return rtnVal;
+            return rtnVal;
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return false;
+        }
     }
 
     @Override

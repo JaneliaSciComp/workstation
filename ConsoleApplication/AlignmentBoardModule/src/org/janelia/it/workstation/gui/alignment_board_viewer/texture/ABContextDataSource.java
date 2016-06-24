@@ -14,6 +14,7 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 //import org.janelia.it.workstation.model.domain.VolumeImage;
@@ -57,81 +58,82 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
-        logger.debug( "Getting renderable datas." );
-        Collection<MaskChanRenderableData> rtnVal = new ArrayList<>();
+        try {
+            logger.debug("Getting renderable datas.");
+            Collection<MaskChanRenderableData> rtnVal = new ArrayList<>();
 
-        int nextTranslatedNum = 1;
-        int liveFileCount = 0;
+            int nextTranslatedNum = 1;
+            int liveFileCount = 0;
 
-        for ( AlignmentBoardItem alignmentBoardItem : context.getAlignmentBoardItems() ) {
-            ABItem dobj = domainHelper.getObjectForItem(alignmentBoardItem);
-            if (dobj instanceof ABSample) {
-                currentSample = (ABSample)dobj;
-                sampleABItem = alignmentBoardItem;
-                currentCompartmentSet = null;
+            for (AlignmentBoardItem alignmentBoardItem : context.getAlignmentBoardItems()) {
+                ABItem dobj = domainHelper.getObjectForItem(alignmentBoardItem);
+                if (dobj instanceof ABSample) {
+                    currentSample = (ABSample) dobj;
+                    sampleABItem = alignmentBoardItem;
+                    currentCompartmentSet = null;
 
-                MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(dobj, alignmentBoardItem);
+                    MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(dobj, alignmentBoardItem);
 
-                rtnVal.add( containerRenderable );
+                    rtnVal.add(containerRenderable);
 
-                Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
-                if ( childItems != null ) {
-                    for ( AlignmentBoardItem childItem: childItems ) {
-                        ABItem childDobj = domainHelper.getObjectForItem(childItem);
-                        if ( childDobj instanceof ABNeuronFragment) {
-                            liveFileCount += getNeuronFragmentRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
-                        }
-                        else if ( childDobj instanceof ABReferenceChannel) {
-                            liveFileCount += getReferenceChannelRenderableData( rtnVal, nextTranslatedNum++, childItem );
-                        }
-                    }
-                }
-            }
-            else if ( dobj instanceof ABNeuronFragment) {
-                liveFileCount += getNeuronFragmentRenderableData(rtnVal, nextTranslatedNum, false, alignmentBoardItem);
-            }
-            else if ( dobj instanceof ABCompartmentSet) {
-                currentSample = null;
-                currentCompartmentSet = (ABCompartmentSet)dobj;
-                compartmentSetABItem = alignmentBoardItem;
-
-                MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(dobj, alignmentBoardItem);
-
-                rtnVal.add( containerRenderable );
-
-                AlignmentContext targetAlignmentContext = context.getAlignmentContext();
-                AlignmentContext compartmentAlignmentContext = new AlignmentContext(); 
-                compartmentAlignmentContext.setAlignmentSpace(currentCompartmentSet.getAlignmentSpace());
-                compartmentAlignmentContext.setImageSize(currentCompartmentSet.getImageSize());
-                compartmentAlignmentContext.setOpticalResolution(currentCompartmentSet.getOpticalResolution());
-
-                Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
-                if ( childItems != null ) {
-                    CompatibilityChecker checker = new CompatibilityChecker();
-                    for ( AlignmentBoardItem item: childItems ) {
-                        ABItem childDobj = domainHelper.getObjectForItem(item);
-                        if ( childDobj instanceof ABCompartment) {
-                            if ( checker.isEqual(targetAlignmentContext, compartmentAlignmentContext ) ) {
-                                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
+                    Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
+                    if (childItems != null) {
+                        for (AlignmentBoardItem childItem : childItems) {
+                            ABItem childDobj = domainHelper.getObjectForItem(childItem);
+                            if (childDobj instanceof ABNeuronFragment) {
+                                liveFileCount += getNeuronFragmentRenderableData(rtnVal, nextTranslatedNum++, false, childItem);
+                            } else if (childDobj instanceof ABReferenceChannel) {
+                                liveFileCount += getReferenceChannelRenderableData(rtnVal, nextTranslatedNum++, childItem);
                             }
                         }
                     }
+                } else if (dobj instanceof ABNeuronFragment) {
+                    liveFileCount += getNeuronFragmentRenderableData(rtnVal, nextTranslatedNum, false, alignmentBoardItem);
+                } else if (dobj instanceof ABCompartmentSet) {
+                    currentSample = null;
+                    currentCompartmentSet = (ABCompartmentSet) dobj;
+                    compartmentSetABItem = alignmentBoardItem;
+
+                    MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(dobj, alignmentBoardItem);
+
+                    rtnVal.add(containerRenderable);
+
+                    AlignmentContext targetAlignmentContext = context.getAlignmentContext();
+                    AlignmentContext compartmentAlignmentContext = new AlignmentContext();
+                    compartmentAlignmentContext.setAlignmentSpace(currentCompartmentSet.getAlignmentSpace());
+                    compartmentAlignmentContext.setImageSize(currentCompartmentSet.getImageSize());
+                    compartmentAlignmentContext.setOpticalResolution(currentCompartmentSet.getOpticalResolution());
+
+                    Collection<AlignmentBoardItem> childItems = alignmentBoardItem.getChildren();
+                    if (childItems != null) {
+                        CompatibilityChecker checker = new CompatibilityChecker();
+                        for (AlignmentBoardItem item : childItems) {
+                            ABItem childDobj = domainHelper.getObjectForItem(item);
+                            if (childDobj instanceof ABCompartment) {
+                                if (checker.isEqual(targetAlignmentContext, compartmentAlignmentContext)) {
+                                    liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
+                                }
+                            }
+                        }
+                    }
+
+                } else if (dobj instanceof ABCompartment) {
+                    liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignmentBoardItem);
                 }
-
             }
-            else if ( dobj instanceof ABCompartment) {
-                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignmentBoardItem);
+
+            //  Prevent user from seeing "forever working" indicator when there is nothing to see.
+            if (liveFileCount == 0 && context.getAlignmentBoardItems().size() > 0) {
+                String message = "No mask or channel file sets found.  Nothing to display.";
+                logger.error(message);
+                throw new RuntimeException(message);
             }
-        }
 
-        //  Prevent user from seeing "forever working" indicator when there is nothing to see.
-        if ( liveFileCount == 0  &&  context.getAlignmentBoardItems().size() > 0 ) {
-            String message = "No mask or channel file sets found.  Nothing to display.";
-            logger.error( message );
-            throw new RuntimeException( message );
+            return rtnVal;
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
         }
-
-        return rtnVal;
     }
 
     //------------------------------------------------------------HELPERS
@@ -227,7 +229,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Collection<MaskChanRenderableData> maskChanRenderableDatas,
         int nextTranslatedNum,
         AlignmentBoardItem item
-    ) {
+    ) throws Exception {
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setInvertedY(false);
         renderableBean.setLabelFileNum(nextTranslatedNum);
@@ -237,7 +239,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
-        data.setCompartment( true ); // For render characteristics        
+        data.setCompartment( true ); // For render characteristics
 
         Sample referencedSample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(item.getTarget().getObjectRef());
         String maskPath = domainHelper.getRefMaskPath(referencedSample, context.getAlignmentContext());

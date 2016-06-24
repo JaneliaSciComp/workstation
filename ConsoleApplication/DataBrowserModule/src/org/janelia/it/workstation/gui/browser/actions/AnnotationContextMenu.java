@@ -22,6 +22,7 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Context pop up menu for annotations.
@@ -51,16 +52,19 @@ public class AnnotationContextMenu extends PopupContextMenu {
             return;
         }
 
-        OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
-        
-        add(getTitleItem());
-        add(getCopyNameToClipboardItem());
-        add(getCopyIdToClipboardItem());
-        add(getCopyAnnotationItem());
-        add(getViewDetailsItem());
-        addSeparator();
-        add(getRemoveAnnotationItem());
-        add(getEditAnnotationItem(keyTerm));
+        try {
+            OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
+            add(getTitleItem());
+            add(getCopyNameToClipboardItem());
+            add(getCopyIdToClipboardItem());
+            add(getCopyAnnotationItem());
+            add(getViewDetailsItem());
+            addSeparator();
+            add(getRemoveAnnotationItem());
+            add(getEditAnnotationItem(keyTerm));
+        }  catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 
     protected JMenuItem getTitleItem() {

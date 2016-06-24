@@ -946,36 +946,40 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-            if (updatedSample!=null) {
-                loadDomainObject(updatedSample, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(sample.getId())) {
-                    log.info("objects set invalidated, reloading...");
-                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                    if (updatedSample!=null) {
-                        loadDomainObject(updatedSample, false, null);
-                    }
-                    break;
+        try {
+            if (event.isTotalInvalidation()) {
+                log.info("total invalidation, reloading...");
+                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                if (updatedSample!=null) {
+                    loadDomainObject(updatedSample, false, null);
                 }
-                else if (lsms!=null) {
-                    for(LSMImage lsm : lsms) {
-                        if (domainObject.getId().equals(lsm.getId())) {
-                            log.info("lsm invalidated, reloading...");
-                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                            if (updatedSample!=null) {
-                                loadDomainObject(updatedSample, false, null);
+            }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(sample.getId())) {
+                        log.info("objects set invalidated, reloading...");
+                        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                        if (updatedSample!=null) {
+                            loadDomainObject(updatedSample, false, null);
+                        }
+                        break;
+                    }
+                    else if (lsms!=null) {
+                        for(LSMImage lsm : lsms) {
+                            if (domainObject.getId().equals(lsm.getId())) {
+                                log.info("lsm invalidated, reloading...");
+                                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                                if (updatedSample!=null) {
+                                    loadDomainObject(updatedSample, false, null);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
             }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 

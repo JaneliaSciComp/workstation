@@ -156,7 +156,7 @@ public class DomainHelper {
 		savebackExecutor.submit(new SaverCallable(alignmentBoard));
 	}
 
-    public Sample getSampleForNeuron(NeuronFragment nf) {
+    public Sample getSampleForNeuron(NeuronFragment nf) throws Exception {
         Reference sampleRef = nf.getSample();
         return (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
     }
@@ -246,7 +246,7 @@ public class DomainHelper {
      * @param ids list of reference ids to check.
      * @return compatible/inflated set of values.
      */
-    public List<DomainObject> selectAndInflateCandidateObjects(List<Reference> ids) {
+    public List<DomainObject> selectAndInflateCandidateObjects(List<Reference> ids) throws Exception {
         List<DomainObject> domainObjects = new ArrayList<>();
         for (Reference id : ids) {
             if (id.getTargetClassName().equals(Sample.class.getSimpleName()) ||
@@ -261,59 +261,65 @@ public class DomainHelper {
     }
 
     public ABItem getObjectForItem(AlignmentBoardItem item) {
-        AlignmentBoardReference ref = item.getTarget();
-        if (ref == null) {
-            log.warn("Null reference in item {}", item.getName());
-            return createDummyItem(item);
-        }
-        if (ref.getObjectRef() == null) {
-            log.error("No object ref, or no target for item " + item.getName());
-            return null;
-        }
+        try {
+            AlignmentBoardReference ref = item.getTarget();
 
-        DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
-        DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+            if (ref == null) {
+                log.warn("Null reference in item {}", item.getName());
+                return createDummyItem(item);
+            }
+            if (ref.getObjectRef() == null) {
+                log.error("No object ref, or no target for item " + item.getName());
+                return null;
+            }
 
-        if (domainObject instanceof CompartmentSet) {
-            CompartmentSet cs = (CompartmentSet) domainObject;
-            AlignmentBoardReference abRef = item.getTarget();
-            if (abRef.getItemId() == null  ||  abRef.getItemId().equals(cs.getId())) {
-                // Got compartment set
-                return new ABCompartmentSet(cs);
-            }
-            else {
-                // Got compartment
-                Compartment comp = cs.getCompartment(abRef.getItemId());
-                return new ABCompartment(comp);
-            }
-        } else if (domainObject instanceof Sample) {
-            if (ref.getItemId() == null  ||  ref.getItemId().equals(domainObject.getId())) {
-                // Got sample
-                return new ABSample((Sample) domainObject);
-            }
-            else {
-                // Got reference channel
-                log.trace("Got a Ref Channel.");
-                Sample sample = (Sample)domainObject;
-                List<NeuronSeparation> separations = sample.getResultsById(NeuronSeparation.class, ref.getItemId());
-                if (separations.isEmpty()) {
-                    log.warn("No neuron separation found for ref {}.", ref.getItemId());
-                    return createDummyItem(item);
+            DomainModel domainModel = DomainMgr.getDomainMgr().getModel();
+            DomainObject domainObject = domainModel.getDomainObject(ref.getObjectRef());
+
+            if (domainObject instanceof CompartmentSet) {
+                CompartmentSet cs = (CompartmentSet) domainObject;
+                AlignmentBoardReference abRef = item.getTarget();
+                if (abRef.getItemId() == null  ||  abRef.getItemId().equals(cs.getId())) {
+                    // Got compartment set
+                    return new ABCompartmentSet(cs);
                 }
                 else {
-                    return new ABReferenceChannel(separations.get(0));
+                    // Got compartment
+                    Compartment comp = cs.getCompartment(abRef.getItemId());
+                    return new ABCompartment(comp);
                 }
+            } else if (domainObject instanceof Sample) {
+                if (ref.getItemId() == null  ||  ref.getItemId().equals(domainObject.getId())) {
+                    // Got sample
+                    return new ABSample((Sample) domainObject);
+                }
+                else {
+                    // Got reference channel
+                    log.trace("Got a Ref Channel.");
+                    Sample sample = (Sample)domainObject;
+                    List<NeuronSeparation> separations = sample.getResultsById(NeuronSeparation.class, ref.getItemId());
+                    if (separations.isEmpty()) {
+                        log.warn("No neuron separation found for ref {}.", ref.getItemId());
+                        return createDummyItem(item);
+                    }
+                    else {
+                        return new ABReferenceChannel(separations.get(0));
+                    }
+                }
+            } else if (domainObject instanceof NeuronFragment) {
+                return new ABNeuronFragment((NeuronFragment) domainObject);
             }
-        } else if (domainObject instanceof NeuronFragment) {
-            return new ABNeuronFragment((NeuronFragment) domainObject);
+            if (domainObject == null) {
+                log.warn("No domain object found for ref {}.", ref.getItemId());
+            }
+            else {
+                throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
+            }
+            return createDummyItem(item);
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
         }
-        if (domainObject == null) {
-            log.warn("No domain object found for ref {}.", ref.getItemId());
-        }
-        else {
-            throw new IllegalStateException("Unrecognized item type: " + domainObject.getType());
-        }
-        return createDummyItem(item);
     }
     
 	public boolean isSample(AlignmentBoardItem nextItem) {

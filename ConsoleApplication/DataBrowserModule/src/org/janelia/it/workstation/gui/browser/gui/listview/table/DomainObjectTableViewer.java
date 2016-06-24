@@ -94,7 +94,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) {
+        public DomainObject getImageByUniqueId(Reference id) throws Exception {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
 
@@ -148,7 +148,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
-        this.config = IconGridViewerConfiguration.loadConfig();
+        try {
+            this.config = IconGridViewerConfiguration.loadConfig();
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
 
         this.domainObjectList = domainObjectList;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
@@ -181,33 +185,39 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected DomainObjectContextMenu getContextualPopupMenu() {
 
         List<Reference> ids = selectionModel.getSelectedIds();
-        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        // TODO: should this use the same result as the icon grid viewer?
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
+        try {
+            List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
+            // TODO: should this use the same result as the icon grid viewer?
+            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
 
-        JTable table = getTable();
-        ListSelectionModel lsm = table.getSelectionModel();
-        if (lsm.getMinSelectionIndex()==lsm.getMaxSelectionIndex()) {
-            String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-            final String label = value==null?"null":value;
+            JTable table = getTable();
+            ListSelectionModel lsm = table.getSelectionModel();
+            if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
+                String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+                final String label = value == null ? "null" : value;
 
-            JMenuItem titleMenuItem = new JMenuItem(label);
-            titleMenuItem.setEnabled(false);
-            popupMenu.add(titleMenuItem);
+                JMenuItem titleMenuItem = new JMenuItem(label);
+                titleMenuItem.setEnabled(false);
+                popupMenu.add(titleMenuItem);
 
-            JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
-            copyMenuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Transferable t = new StringSelection(label);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-                }
-            });
-            popupMenu.add(copyMenuItem);
+                JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
+                copyMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Transferable t = new StringSelection(label);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+                    }
+                });
+                popupMenu.add(copyMenuItem);
+            }
+
+            popupMenu.addMenuItems();
+
+            return popupMenu;
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+            return null;
         }
-
-        popupMenu.addMenuItems();
-        return popupMenu;
     }
 
     protected JPopupMenu getColumnPopupMenu(final int col) {
@@ -236,7 +246,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void objectDoubleClicked(DomainObject object) {
-        getContextualPopupMenu().runDefaultAction();
+        try {
+            getContextualPopupMenu().runDefaultAction();
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 
     @Override
@@ -255,13 +269,17 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void deleteKeyPressed() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
-        IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)parent;
-            if (ClientDomainUtils.hasWriteAccess(treeNode)) {
-                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
-                action.doAction();
+        try {
+            IsParent parent = selectionModel.getParentObject();
+            if (parent instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode) parent;
+                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
+                    action.doAction();
+                }
             }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
@@ -379,23 +397,27 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected void updateHud(boolean toggle) {
 
         Hud hud = Hud.getSingletonInstance();
-        List<DomainObject> selected = getSelectedObjects();
-        
-        if (selected.size() != 1) {
-            hud.hideDialog();
-            return;
-        }
-        
-        DomainObject domainObject = selected.get(0);
-        if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, null, null);
-        }
-        else {
-            hud.setObject(domainObject, null, null, false);
+        try {
+            List<DomainObject> selected = getSelectedObjects();
+
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+
+            DomainObject domainObject = selected.get(0);
+            if (toggle) {
+                hud.setObjectAndToggleDialog(domainObject, null, null);
+            }
+            else {
+                hud.setObject(domainObject, null, null, false);
+            }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
     
-    private List<DomainObject> getSelectedObjects() {
+    private List<DomainObject> getSelectedObjects() throws Exception {
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
     }
     

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -34,38 +35,38 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
      * @throws Exception something went wrong
      */
     @Override
-    public SolrJsonResults performSearch(SolrParams query) {
+    public SolrJsonResults performSearch(SolrParams query) throws Exception {
         Response response = manager.getSearchEndpoint()
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making search request to the server: " + query)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         SolrJsonResults results = response.readEntity(SolrJsonResults.class);
         return results;
     }
 
     @Override
-    public Workspace getDefaultWorkspace() {
+    public Workspace getDefaultWorkspace() throws Exception {
         Response response = manager.getWorkspaceEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getDefaultWorkspace from server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Workspace workspace = response.readEntity(Workspace.class);
         return workspace;
     }
 
     @Override
-    public Collection<Workspace> getWorkspaces() {
+    public Collection<Workspace> getWorkspaces() throws Exception {
         Response response = manager.getWorkspacesEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getWorkspaces from server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
 
         Collection<Workspace> workspace = response.readEntity(new GenericType<List<Workspace>>() {});
@@ -82,7 +83,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createTreeNode to server: " + treeNode)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         TreeNode newTreeNode = response.readEntity(TreeNode.class);
         return newTreeNode;
@@ -97,7 +98,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createFilter to server: " + filter)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Filter newFilter = response.readEntity(Filter.class);
         return newFilter;
@@ -112,7 +113,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateFilter to server: " + filter)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Filter newFilter = response.readEntity(Filter.class);
         return newFilter;
@@ -130,7 +131,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .put(Entity.json(query));
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
         if (checkBadResponse(response.getStatus(), "problem making request addChildrenToTreeNode to server: " + treeNode + "," + references)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         return updatedTreeNode;
     }
@@ -147,7 +148,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request removeChildrenFromTreeNode to server: " + treeNode + "," + references)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         TreeNode updatedTreeNode = response.readEntity(TreeNode.class);
         return updatedTreeNode;
@@ -168,7 +169,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request reorderChildrenInTreeNode to server: " + treeNode + "," + order)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         TreeNode sortedTreeNode = response.readEntity(TreeNode.class);
         return sortedTreeNode;
@@ -184,7 +185,7 @@ public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFaca
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to get Ancestors from server for: " + object.getId())) {
-            return null;
+            throw new WebApplicationException(response);
         }
         List<Reference> references = response.readEntity(new GenericType<List<Reference>>() {});
         return references;

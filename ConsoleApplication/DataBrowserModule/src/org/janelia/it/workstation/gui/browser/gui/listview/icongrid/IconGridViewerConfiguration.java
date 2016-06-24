@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +28,17 @@ public class IconGridViewerConfiguration {
     }
 
     public static IconGridViewerConfiguration loadConfig() {
-        Map<String,String> domainClassTitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_TITLES);
-        log.debug("Loaded {} title preferences",domainClassTitles.size());
-        Map<String,String> domainClassSubtitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_SUBTITLES);
-        log.debug("Loaded {} subtitle preferences",domainClassSubtitles.size());
-        IconGridViewerConfiguration config = new IconGridViewerConfiguration(domainClassTitles, domainClassSubtitles);
-        return config;
+        try {
+            Map<String, String> domainClassTitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_TITLES);
+            log.debug("Loaded {} title preferences", domainClassTitles.size());
+            Map<String, String> domainClassSubtitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_SUBTITLES);
+            log.debug("Loaded {} subtitle preferences", domainClassSubtitles.size());
+            IconGridViewerConfiguration config = new IconGridViewerConfiguration(domainClassTitles, domainClassSubtitles);
+            return config;
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     public void save() throws Exception {

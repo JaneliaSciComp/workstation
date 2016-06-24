@@ -735,10 +735,15 @@ public class FilterEditorPanel extends JPanel
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
-                    Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-                    if (updatedFilter!=null) {
-                        filterNode.update(updatedFilter);
-                        loadDomainObjectNode(filterNode, false, null);
+                    try {
+                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
+
+                        if (updatedFilter != null) {
+                            filterNode.update(updatedFilter);
+                            loadDomainObjectNode(filterNode, false, null);
+                        }
+                    } catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
                     }
                     break;
                 }

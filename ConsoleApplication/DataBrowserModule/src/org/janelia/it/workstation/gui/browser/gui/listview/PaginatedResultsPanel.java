@@ -193,9 +193,13 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                     final List<DomainObject> selectedDomainObjects = new ArrayList<>();
                     DomainModel model = getDomainMgr().getModel();
                     for(Reference id : selectionModel.getSelectedIds()) {
-                        DomainObject domainObject = model.getDomainObject(id);
-                        if (domainObject!=null) {
-                            selectedDomainObjects.add(domainObject);
+                        try {
+                            DomainObject domainObject = model.getDomainObject(id);
+                            if (domainObject!=null) {
+                                selectedDomainObjects.add(domainObject);
+                            }
+                        }  catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
                         }
                     }
 
