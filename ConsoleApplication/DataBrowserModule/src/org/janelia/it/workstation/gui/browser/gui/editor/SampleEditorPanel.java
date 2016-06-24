@@ -946,6 +946,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (sample==null) return;
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
             Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
@@ -981,6 +982,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (sample==null) return;
         if (event.getDomainObject().getId().equals(sample.getId())) {
             this.sample = null;
             currRunMap.clear();

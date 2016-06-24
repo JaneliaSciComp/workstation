@@ -17,7 +17,8 @@ public class RESTClientManager {
     private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
 
     private static final String REMOTE_API_URL = ConsoleProperties.getInstance().getProperty("domain.facade.rest.url");
-    private static final String REMOTE_DATA_PREFIX = ConsoleProperties.getInstance().getProperty("domain.facade.rest.data.prefix");
+    private static final String REMOTE_DATA_PREFIX = "data";
+    private static final String REMOTE_PROCESS_PREFIX = "process";
     private static RESTClientManager instance;
 
     private Client client;
@@ -45,12 +46,12 @@ public class RESTClientManager {
         serviceEndpoints.put("annotation", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/annotation"));
         serviceEndpoints.put("filter", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/filter"));
         serviceEndpoints.put("treenode", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/treenode"));
-        serviceEndpoints.put("objectset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/objectset"));
         serviceEndpoints.put("user", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/user"));
         serviceEndpoints.put("dataset", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/dataset"));
         serviceEndpoints.put("login", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/login"));
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
+        serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
     }
 
     public static RESTClientManager getInstance() {
@@ -88,10 +89,6 @@ public class RESTClientManager {
         return serviceEndpoints.get("treenode");
     }
 
-    public WebTarget getObjectSetEndpoint() {
-        return serviceEndpoints.get("objectset");
-    }
-
     public WebTarget getUserEndpoint() {
         return serviceEndpoints.get("user");
     }
@@ -111,5 +108,9 @@ public class RESTClientManager {
     public WebTarget getSampleEndpoint() {
         return serviceEndpoints.get("sample");
     }
-    
+
+    public WebTarget getReleaseEndpoint() {
+        return serviceEndpoints.get("release");
+    }
+
 }

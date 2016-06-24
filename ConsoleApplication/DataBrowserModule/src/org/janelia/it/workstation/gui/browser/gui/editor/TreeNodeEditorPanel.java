@@ -196,6 +196,7 @@ public class TreeNodeEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (treeNode==null) return;
         if (event.getDomainObject().getId().equals(treeNode.getId())) {
             this.treeNode = null;
             domainObjects.clear();
