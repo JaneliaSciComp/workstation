@@ -53,9 +53,10 @@ public class OctreeFilePathToClipboardAction extends AbstractAction {
         if (SystemInfo.isWindows) {
             int colonPos = filePathStr.indexOf(":");
             if (colonPos != -1) {
-                filePathStr = remoteBasePath + filePathStr.substring(colonPos+1);
+                filePathStr = filePathStr.substring(colonPos+1);
             }
         }
+        filePathStr = remoteBasePath + filePathStr;
         ClipboardActionHelper.setClipboard(filePathStr);
         log.info("For location {}, camera={}. File path string {}.", content, vec, filePathStr);
     }
