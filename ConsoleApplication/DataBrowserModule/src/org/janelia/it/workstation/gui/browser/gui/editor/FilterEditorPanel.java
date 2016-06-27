@@ -727,6 +727,7 @@ public class FilterEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (filter==null) return;
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
             refreshSearchResults(false);

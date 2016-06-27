@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade
 public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     private RESTClientManager manager;
-    
+
     public SampleFacadeImpl() {
         this.manager = RESTClientManager.getInstance();
     }
@@ -92,24 +92,65 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         List<LSMImage> lsms = response.readEntity((new GenericType<List<LSMImage>>() {}));
         return lsms;
     }
-    
+
     @Override
     public List<LineRelease> getLineReleases() {
-        throw new UnsupportedOperationException();
+        Response response = manager.getReleaseEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .path("releases")
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to get line releases")) {
+            return null;
+        }
+        List<LineRelease> releases = response.readEntity((new GenericType<List<LineRelease>>() {}));
+        return releases;
     }
 
     @Override
     public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception {
-        throw new UnsupportedOperationException();
+        DomainQuery query = new DomainQuery();
+
+        LineRelease release = new LineRelease();
+        release.setName(name);
+        release.setReleaseDate(releaseDate);
+        release.setLagTimeMonths(lagTimeMonths);
+        release.setDataSets(dataSets);
+
+        query.setDomainObject(release);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        Response response = manager.getReleaseEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
+            return null;
+        }
+        LineRelease newLineRelease = response.readEntity(LineRelease.class);
+        return newLineRelease;
     }
 
     @Override
     public LineRelease update(LineRelease release) throws Exception {
-        throw new UnsupportedOperationException();
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(release);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        Response response = manager.getReleaseEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
+            return null;
+        }
+        LineRelease newLineRelease = response.readEntity(LineRelease.class);
+        return newLineRelease;
     }
 
     @Override
     public void remove(LineRelease release) throws Exception {
-        throw new UnsupportedOperationException();
+        Response response = manager.getReleaseEndpoint()
+                .queryParam("releaseId", release.getId())
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .delete();
+        checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release);
     }
 }

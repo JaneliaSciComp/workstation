@@ -179,12 +179,12 @@ public class DownloadDialog extends ModalDialog {
     private void addField(String label, JComponent component, String constraints) {
         JLabel attrLabel = new JLabel(label);
         attrLabel.setLabelFor(component);
-        attrPanel.add(attrLabel, "gap para, ay top");
+        attrPanel.add(attrLabel,"gap para, ay top");
         String compConstraints = "gap para, ay top";
         if (!StringUtils.isEmpty(constraints)) {
             compConstraints += ", "+constraints;
         }
-        attrPanel.add(component, compConstraints);
+        attrPanel.add(component,compConstraints);
     }
     
     public void showDialog(final List<? extends DomainObject> domainObjects, final ResultDescriptor defaultResultDescriptor) {
