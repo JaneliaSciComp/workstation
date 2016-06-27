@@ -49,8 +49,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         if (checkBadResponse(response.getStatus(), "problem making request createOntology from server")) {
             throw new WebApplicationException(response);
         }
-        Ontology newOntology = response.readEntity(Ontology.class);
-        return newOntology;
+        return response.readEntity(Ontology.class);
     }
 
     @Override
@@ -82,8 +81,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         if (checkBadResponse(response.getStatus(), "problem making request addOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + terms)) {
             throw new WebApplicationException(response);
         }
-        Ontology newOntology = response.readEntity(Ontology.class);
-        return newOntology;
+        return response.readEntity(Ontology.class);
     }
 
     @Override
@@ -123,8 +121,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         if (checkBadResponse(response.getStatus(), "problem making request reorderOntologyTerms to server: " + ontologyId + "," + parentTermId + "," + order)) {
             throw new WebApplicationException(response);
         }
-        Ontology newOntology = response.readEntity(Ontology.class);
-        return newOntology;
+        return response.readEntity(Ontology.class);
     }
     
     @Override
@@ -140,9 +137,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         if (checkBadResponse(response.getStatus(), "problem making request getAnnotations from server: " + references)) {
             throw new WebApplicationException(response);
         }
-        List<Annotation> annotations = response.readEntity(new GenericType<List<Annotation>>() {
-        });
-        return annotations;
+        return response.readEntity(new GenericType<List<Annotation>>() {});
     }
     
     @Override
@@ -177,8 +172,7 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         if (checkBadResponse(response.getStatus(), "problem making request updateAnnotation from server: " + annotation)) {
             throw new WebApplicationException(response);
         }
-        Annotation newAnnotation = response.readEntity(Annotation.class);
-        return newAnnotation;
+        return response.readEntity(Annotation.class);
     }
 
     @Override
@@ -193,5 +187,4 @@ public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade
         }
     }
 
-    
 }

@@ -31,9 +31,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
             throw new WebApplicationException(response);
         }
-        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>() {
-        });
-        return subjects;
+        return response.readEntity(new GenericType<List<Subject>>() {});
     }
 
     @Override
@@ -46,8 +44,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getSubjectByKey to server")) {
             throw new WebApplicationException(response);
         }
-        Subject subject = response.readEntity(Subject.class);
-        return subject;
+        return response.readEntity(Subject.class);
     }
     
     @Override
@@ -74,8 +71,7 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getPreferences to server")) {
             throw new WebApplicationException(response);
         }
-        List<Preference> preferences = response.readEntity(new GenericType<List<Preference>>(){});
-        return preferences;
+        return response.readEntity(new GenericType<List<Preference>>(){});
     }
 
     @Override
@@ -90,7 +86,6 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
         if (checkBadResponse(response.getStatus(), "problem making saving request savePreferences to server: " + preference)) {
             throw new WebApplicationException(response);
         }
-        Preference newPref = response.readEntity(Preference.class);
-        return newPref;
+        return response.readEntity(Preference.class);
     }
 }

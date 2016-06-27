@@ -47,8 +47,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request createDataSet from server")) {
             throw new WebApplicationException(response);
         }
-        DataSet newDataSet = response.readEntity(DataSet.class);
-        return newDataSet;
+        return response.readEntity(DataSet.class);
     }
 
     @Override
@@ -62,8 +61,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request updateDataSet to server: " + dataSet)) {
             throw new WebApplicationException(response);
         }
-        DataSet newDataSet = response.readEntity(DataSet.class);
-        return newDataSet;
+        return response.readEntity(DataSet.class);
     }
 
     @Override
@@ -89,8 +87,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request to get Lsm For Sample: " + sampleId)) {
             throw new WebApplicationException(response);
         }
-        List<LSMImage> lsms = response.readEntity((new GenericType<List<LSMImage>>() {}));
-        return lsms;
+        return response.readEntity((new GenericType<List<LSMImage>>() {}));
     }
 
     @Override
@@ -103,8 +100,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request to get line releases")) {
             return null;
         }
-        List<LineRelease> releases = response.readEntity((new GenericType<List<LineRelease>>() {}));
-        return releases;
+        return response.readEntity((new GenericType<List<LineRelease>>() {}));
     }
 
     @Override
@@ -125,8 +121,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
             return null;
         }
-        LineRelease newLineRelease = response.readEntity(LineRelease.class);
-        return newLineRelease;
+        return response.readEntity(LineRelease.class);
     }
 
     @Override
@@ -140,8 +135,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
             return null;
         }
-        LineRelease newLineRelease = response.readEntity(LineRelease.class);
-        return newLineRelease;
+        return response.readEntity(LineRelease.class);
     }
 
     @Override
