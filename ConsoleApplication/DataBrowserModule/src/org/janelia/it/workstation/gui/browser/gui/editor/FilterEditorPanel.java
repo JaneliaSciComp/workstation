@@ -309,7 +309,7 @@ public class FilterEditorPanel extends JPanel
 	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
             configPanel.setExpanded(filter.getId()==null);
-            
+
             search();
         }
         catch (Exception e) {
@@ -406,18 +406,20 @@ public class FilterEditorPanel extends JPanel
         log.trace("refresh");
         
         String inputFieldValue = searchBox.getSearchString();
-        if (filter.getSearchString()!=null && !filter.getSearchString().equals(inputFieldValue)) {
+        if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
             dirty = true;
         }
         
         filter.setSearchString(inputFieldValue);
-        
+
         saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
         performSearch(isUserDriven, success, failure);
     }
     
     private void updateView() {
+
+        searchBox.setSearchString(filter.getSearchString());
 
         final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
         typeCriteriaButton.setText("Result Type: " + currType);
@@ -625,7 +627,7 @@ public class FilterEditorPanel extends JPanel
                     // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
                     continue;
                 }
-                String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
+                String label = facetValue.getValue()+" ("+facetValue.getCount()+" items)";
                 final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
