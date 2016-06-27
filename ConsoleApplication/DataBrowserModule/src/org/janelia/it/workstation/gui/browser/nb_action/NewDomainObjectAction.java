@@ -5,6 +5,7 @@ import java.util.List;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.openide.nodes.Node;
 
@@ -41,7 +42,7 @@ public final class NewDomainObjectAction extends NodePresenterAction {
         newFilterItem.addActionListener(new NewFilterAction(node));
         newMenu.add(newFilterItem);
 
-        if (selected.size()!=1) {
+        if (selected.size()!=1 || !ClientDomainUtils.hasWriteAccess(node.getTreeNode())) {
             newMenu.setEnabled(false);
         }
         

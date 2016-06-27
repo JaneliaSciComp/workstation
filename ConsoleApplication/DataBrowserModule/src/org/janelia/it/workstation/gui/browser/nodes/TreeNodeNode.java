@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
@@ -112,8 +113,8 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     
     @Override
     public void update(TreeNode treeNode) {
+        log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
         super.update(treeNode);
-        log.trace("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
         log.debug("Refreshing children for {} (now has {} children)", treeNode.getName(), treeNode.getNumChildren());
         childFactory.update(treeNode);
         refreshChildren();
@@ -166,6 +167,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
+        actions.add(AddToFolderAction.get());
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());

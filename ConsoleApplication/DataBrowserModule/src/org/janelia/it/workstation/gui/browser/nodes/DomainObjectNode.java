@@ -32,6 +32,7 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -203,6 +204,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
+        actions.add(AddToFolderAction.get());
         actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
