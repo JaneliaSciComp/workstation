@@ -172,7 +172,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         subtitleInputBox.setCompletionProvider(provider);
 
         String title = config.getDomainClassTitle(resultClass.getSimpleName());
-        if (StringUtils.isEmpty(title)) {
+        if (title==null) {
             titleInputBox.setText(DEFAULT_TITLE_VALUE);
         }
         else {
@@ -180,7 +180,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
         }
 
         String subtitle = config.getDomainClassSubtitle(resultClass.getSimpleName());
-        if (StringUtils.isEmpty(subtitle)) {
+        if (subtitle==null) {
             subtitleInputBox.setText(DEFAULT_SUBTITLE_VALUE);
         }
         else {

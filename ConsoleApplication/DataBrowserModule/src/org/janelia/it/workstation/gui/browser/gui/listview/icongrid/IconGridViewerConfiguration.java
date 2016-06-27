@@ -35,7 +35,8 @@ public class IconGridViewerConfiguration {
             log.debug("Loaded {} subtitle preferences", domainClassSubtitles.size());
             IconGridViewerConfiguration config = new IconGridViewerConfiguration(domainClassTitles, domainClassSubtitles);
             return config;
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
             return null;
         }
@@ -59,10 +60,14 @@ public class IconGridViewerConfiguration {
     }
 
     public String getDomainClassTitle(String className) {
-        return domainClassTitles.get(className);
+        String title = domainClassTitles.get(className);
+        log.debug("Got title {} for {}",className,title);
+        return title;
     }
 
     public String getDomainClassSubtitle(String className) {
-        return domainClassSubtitles.get(className);
+        String subtitle = domainClassTitles.get(className);
+        log.debug("Got subtitle {} for {}",className,subtitle);
+        return subtitle;
     }
 }
