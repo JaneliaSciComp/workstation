@@ -834,7 +834,7 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public List<LineRelease> getLineReleases() {
+    public List<LineRelease> getLineReleases() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<LineRelease> releases = sampleFacade.getLineReleases();
         List<LineRelease> canonicalReleases = putOrUpdate(releases, false);

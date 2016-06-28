@@ -91,14 +91,13 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
     }
 
     @Override
-    public List<LineRelease> getLineReleases() {
+    public List<LineRelease> getLineReleases() throws Exception {
         Response response = manager.getReleaseEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
-                .path("releases")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request to get line releases")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         return response.readEntity((new GenericType<List<LineRelease>>() {}));
     }
@@ -119,7 +118,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         return response.readEntity(LineRelease.class);
     }
@@ -133,7 +132,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
                 .request("application/json")
                 .post(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
-            return null;
+            throw new WebApplicationException(response);
         }
         return response.readEntity(LineRelease.class);
     }
@@ -145,6 +144,8 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .delete();
-        checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release);
+        if (checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release)) {
+            throw new WebApplicationException(response);
+        }
     }
 }
