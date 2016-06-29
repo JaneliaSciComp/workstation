@@ -419,6 +419,8 @@ called from a  SimpleWorker thread.
 
         // keep a copy so we know what visuals to remove:
         TmNeuron deletedNeuron = getCurrentNeuron();
+        final boolean hadAnnotations = deletedNeuron.getGeoAnnotationMap().size() > 0;
+
         setCurrentNeuron(null);
 
         // delete
@@ -441,8 +443,10 @@ called from a  SimpleWorker thread.
                 filteredAnnotationList.setSkipUpdate(true);
 
                 fireNeuronSelected(null);
-                fireAnnotationsDeleted(tempAnnotationList);
-                fireAnchoredPathsRemoved(tempPathList);
+                if (hadAnnotations) {
+                    fireAnnotationsDeleted(tempAnnotationList);
+                    fireAnchoredPathsRemoved(tempPathList);
+                }
                 fireWorkspaceLoaded(workspace);
                 fireWsEntityChanged();
 
@@ -450,7 +454,9 @@ called from a  SimpleWorker thread.
                 skeletonController.skeletonChanged();
 
                 filteredAnnotationList.setSkipUpdate(false);
-                filteredAnnotationList.updateData();
+                if (hadAnnotations) {
+                    filteredAnnotationList.updateData();
+                }
 
             }
         });
@@ -912,6 +918,9 @@ called from a  SimpleWorker thread.
                 neuron.getStructuredTextAnnotationMap().remove(annotation.getId());
             }
             neuron.getGeoAnnotationMap().remove(annotation.getId());
+            if (annotation.isRoot()) {
+                neuron.removeRootAnnotation(annotation);
+            }
         }
         // for the root annotation, also delete any traced paths to the parent,
         // if it exists and eliminate the root annotation as a child of the
