@@ -718,9 +718,8 @@ called from a  SimpleWorker thread.
 
         // if source neuron is now empty, delete it
         if (sourceNeuron.getGeoAnnotationMap().size() == 0) {
-            // delete
+            deleteNeuron(sourceNeuron);
         }
-
 
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
@@ -741,7 +740,6 @@ called from a  SimpleWorker thread.
 
         // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
         stopwatch.stop();
-
     }
 
 
