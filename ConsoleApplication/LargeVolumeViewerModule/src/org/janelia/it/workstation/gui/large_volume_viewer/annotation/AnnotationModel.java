@@ -415,13 +415,15 @@ called from a  SimpleWorker thread.
     public synchronized void deleteCurrentNeuron() throws Exception {
         if (getCurrentNeuron() == null) {
             return;
+        } else {
+            deleteNeuron(getCurrentNeuron());
+            setCurrentNeuron(null);
         }
+    }
 
-        // keep a copy so we know what visuals to remove:
-        TmNeuron deletedNeuron = getCurrentNeuron();
+    public synchronized void deleteNeuron(TmNeuron deletedNeuron) throws Exception {
+
         final boolean hadAnnotations = deletedNeuron.getGeoAnnotationMap().size() > 0;
-
-        setCurrentNeuron(null);
 
         // delete
         neuronManager.deleteNeuron(currentWorkspace, deletedNeuron);
@@ -712,6 +714,13 @@ called from a  SimpleWorker thread.
             // log.info("Saving source neuron.");
             neuronManager.saveNeuronData(sourceNeuron);
         }
+
+
+        // if source neuron is now empty, delete it
+        if (sourceNeuron.getGeoAnnotationMap().size() == 0) {
+            // delete
+        }
+
 
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
