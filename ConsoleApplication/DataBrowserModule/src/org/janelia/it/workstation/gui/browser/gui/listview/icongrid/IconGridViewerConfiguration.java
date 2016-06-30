@@ -54,9 +54,9 @@ public class IconGridViewerConfiguration {
         domainClassTitles.put(className, title);
     }
 
-    public void setDomainClassSubtitle(String className, String title) {
-        log.debug("Setting subtitle for {} to {}",className,title);
-        domainClassSubtitles.put(className, title);
+    public void setDomainClassSubtitle(String className, String subtitle) {
+        log.debug("Setting subtitle for {} to {}",className,subtitle);
+        domainClassSubtitles.put(className, subtitle);
     }
 
     public String getDomainClassTitle(String className) {
@@ -66,7 +66,7 @@ public class IconGridViewerConfiguration {
     }
 
     public String getDomainClassSubtitle(String className) {
-        String subtitle = domainClassTitles.get(className);
+        String subtitle = domainClassSubtitles.get(className);
         log.debug("Got subtitle {} for {}",className,subtitle);
         return subtitle;
     }
