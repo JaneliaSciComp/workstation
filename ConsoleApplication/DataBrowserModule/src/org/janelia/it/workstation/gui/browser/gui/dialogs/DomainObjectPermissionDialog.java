@@ -45,7 +45,6 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     private final JComboBox subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
-//    private final JCheckBox recursiveCheckbox;
 
     private DomainObjectPermission dop;
     private DomainObject domainObject;
@@ -79,12 +78,6 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         writeCheckbox = new JCheckBox("Write");
         attrPanel.add(writeCheckbox, "gap para, span 2");
-
-//        recursiveCheckbox = new JCheckBox("Apply permission changes to all subfolders");
-//        recursiveCheckbox.setSelected(true);
-//
-//        addSeparator(attrPanel, "Options");
-//        attrPanel.add(recursiveCheckbox, "gap para, span 2");
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
@@ -155,9 +148,6 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         readCheckbox.setSelected(dop == null || dop.isRead());
         writeCheckbox.setSelected(dop != null && dop.isWrite());
-//        if (dop!=null) {
-//            recursiveCheckbox.setEnabled((dop.getDomainObject() instanceof TreeNode));
-//        }
         
         packAndShow();
     }
@@ -167,7 +157,6 @@ public class DomainObjectPermissionDialog extends ModalDialog {
         Utils.setWaitingCursor(parent);
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
-//        final boolean recursive = recursiveCheckbox.isSelected();
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
