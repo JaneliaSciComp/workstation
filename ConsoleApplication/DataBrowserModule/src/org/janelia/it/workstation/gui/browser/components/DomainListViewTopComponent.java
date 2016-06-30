@@ -45,19 +45,19 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = DomainListViewTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        //iconBase = "images/folder_open_page.png",
         persistenceType = TopComponent.PERSISTENCE_ONLY_OPENED
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 3)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainListViewAction",
         preferredID = DomainListViewTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_DomainListViewAction=Browser",
-    "CTL_DomainListViewTopComponent=Browser"
+    "CTL_DomainListViewAction=Data Browser",
+    "CTL_DomainListViewTopComponent=Data Browser"
 })
 public final class DomainListViewTopComponent extends TopComponent implements FindContextActivator {
 

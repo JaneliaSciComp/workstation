@@ -70,12 +70,12 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = DomainExplorerTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "images/folder.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.DomainExplorerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 1)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME

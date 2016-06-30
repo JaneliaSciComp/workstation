@@ -42,7 +42,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     
     public ImageTypeSelectionButton(boolean showTitle) {
     	this.showTitle = showTitle;
-        setIcon(Icons.getIcon("page.png"));
+        setIcon(Icons.getIcon("image.png"));
         setToolTipText("Select the result type to display");
     }
 

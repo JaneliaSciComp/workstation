@@ -47,7 +47,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
-import org.janelia.it.workstation.gui.browser.nb_action.NewOntologyAction;
+import org.janelia.it.workstation.gui.browser.nb_action.NewOntologyActionListener;
 import org.janelia.it.workstation.gui.browser.nodes.EmptyNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
@@ -81,11 +81,12 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Description(
         preferredID = OntologyExplorerTopComponent.TC_NAME,
+        iconBase = "images/page.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 4)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyExplorerAction",
         preferredID = OntologyExplorerTopComponent.TC_NAME
@@ -576,8 +577,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     ontologyListMenu.add(new JSeparator());
 
                     JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
-                    addMenuItem.setIcon(Icons.getIcon("folder_add.png"));
-                    addMenuItem.addActionListener(new NewOntologyAction());
+                    addMenuItem.setIcon(Icons.getIcon("page_add.png"));
+                    addMenuItem.addActionListener(new NewOntologyActionListener());
                     ontologyListMenu.add(addMenuItem);
 
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());

@@ -35,10 +35,10 @@ public class FilterNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (ClientDomainUtils.isOwner(getFilter())) {
-            return Icons.getIcon("search-yellow-icon.png").getImage();
+            return Icons.getIcon("script.png").getImage();
         }
         else {
-            return Icons.getIcon("search-blue-icon.png").getImage();
+            return Icons.getIcon("script.png").getImage();
         }
     }
     

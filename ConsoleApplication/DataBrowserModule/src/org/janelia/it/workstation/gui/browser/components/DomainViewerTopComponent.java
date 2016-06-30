@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor2", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+//@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainViewerAction",
         preferredID = DomainViewerTopComponent.TC_NAME

@@ -35,11 +35,11 @@ public final class NewDomainObjectAction extends NodePresenterAction {
         JMenu newMenu = new JMenu("New");
         
         JMenuItem newFolderItem = new JMenuItem("Folder");
-        newFolderItem.addActionListener(new NewFolderAction(node));
+        newFolderItem.addActionListener(new NewFolderActionListener(node));
         newMenu.add(newFolderItem);
         
         JMenuItem newFilterItem = new JMenuItem("Filter");
-        newFilterItem.addActionListener(new NewFilterAction(node));
+        newFilterItem.addActionListener(new NewFilterActionListener(node));
         newMenu.add(newFilterItem);
 
         if (selected.size()!=1 || !ClientDomainUtils.hasWriteAccess(node.getTreeNode())) {
