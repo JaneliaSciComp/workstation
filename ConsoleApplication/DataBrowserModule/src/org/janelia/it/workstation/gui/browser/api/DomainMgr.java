@@ -170,7 +170,7 @@ public class DomainMgr {
     public void saveMapAsPreferences(Map<String,String> map, String category) throws Exception {
         for(String key : map.keySet()) {
             String value = map.get(key);
-            if (!StringUtils.isEmpty(value)) {
+            if (value!=null) {
                 Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
                 if (preference==null) {
                     preference = new Preference(AccessManager.getSubjectKey(), category, key, value);

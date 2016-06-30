@@ -71,6 +71,14 @@ public class SmartSearchBox extends JComboBox {
     }
 
     /**
+     * Set the search string.
+     * @param searchString
+     */
+    public void setSearchString(String searchString) {
+        setSelectedItem(searchString);
+    }
+
+    /**
      * Override this method to provide custom search history persistence. The
      * global search history is used by default.
      * @return Current search history. May be null or empty if there is no history.

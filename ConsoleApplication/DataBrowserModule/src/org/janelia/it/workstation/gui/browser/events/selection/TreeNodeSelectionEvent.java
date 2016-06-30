@@ -11,12 +11,12 @@ import java.util.Arrays;
  */
 public class TreeNodeSelectionEvent extends DomainObjectSelectionEvent {
 
-    public TreeNodeSelectionEvent(Object source, boolean select, TreeNode treeNode, boolean isUserDriven) {
-        super(source, Arrays.asList(treeNode), select, true, isUserDriven);
+    public TreeNodeSelectionEvent(Object source, TreeNode treeNode, boolean select, boolean clearAll, boolean isUserDriven) {
+        super(source, Arrays.asList(treeNode), select, clearAll, isUserDriven);
     }
     
-    public TreeNodeSelectionEvent(Object source, boolean select, TreeNodeNode treeNodeNode, boolean isUserDriven) {
-        super(source, treeNodeNode, select, true, isUserDriven);
+    public TreeNodeSelectionEvent(Object source, TreeNodeNode treeNodeNode, boolean select, boolean clearAll, boolean isUserDriven) {
+        super(source, treeNodeNode, select, clearAll, isUserDriven);
     }
     
     public TreeNodeNode getTreeNodeNode() {

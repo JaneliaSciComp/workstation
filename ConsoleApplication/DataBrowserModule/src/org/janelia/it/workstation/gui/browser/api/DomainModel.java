@@ -8,6 +8,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -548,7 +549,12 @@ public class DomainModel {
     }
 
     public Workspace getDefaultWorkspace() throws Exception {
-        return getWorkspaces().iterator().next();
+        for (Workspace workspace : getWorkspaces()) {
+            if (workspace.getOwnerKey().equals(AccessManager.getSubjectKey()) && DomainConstants.NAME_DEFAULT_WORKSPACE.equals(workspace.getName())) {
+                return workspace;
+            }
+        }
+        throw new IllegalStateException("Cannot find default workspace");
     }
 
     public List<DataSet> getDataSets() throws Exception {
@@ -828,7 +834,7 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public List<LineRelease> getLineReleases() {
+    public List<LineRelease> getLineReleases() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         List<LineRelease> releases = sampleFacade.getLineReleases();
         List<LineRelease> canonicalReleases = putOrUpdate(releases, false);

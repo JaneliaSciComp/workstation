@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade
 public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
     private RESTClientManager manager;
-    
+
     public SampleFacadeImpl() {
         this.manager = RESTClientManager.getInstance();
     }
@@ -47,8 +47,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request createDataSet from server")) {
             throw new WebApplicationException(response);
         }
-        DataSet newDataSet = response.readEntity(DataSet.class);
-        return newDataSet;
+        return response.readEntity(DataSet.class);
     }
 
     @Override
@@ -62,8 +61,7 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request updateDataSet to server: " + dataSet)) {
             throw new WebApplicationException(response);
         }
-        DataSet newDataSet = response.readEntity(DataSet.class);
-        return newDataSet;
+        return response.readEntity(DataSet.class);
     }
 
     @Override
@@ -89,27 +87,65 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         if (checkBadResponse(response.getStatus(), "problem making request to get Lsm For Sample: " + sampleId)) {
             throw new WebApplicationException(response);
         }
-        List<LSMImage> lsms = response.readEntity((new GenericType<List<LSMImage>>() {}));
-        return lsms;
+        return response.readEntity((new GenericType<List<LSMImage>>() {}));
     }
-    
+
     @Override
-    public List<LineRelease> getLineReleases() {
-        throw new UnsupportedOperationException();
+    public List<LineRelease> getLineReleases() throws Exception {
+        Response response = manager.getReleaseEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request to get line releases")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity((new GenericType<List<LineRelease>>() {}));
     }
 
     @Override
     public LineRelease createLineRelease(String name, Date releaseDate, Integer lagTimeMonths, List<String> dataSets) throws Exception {
-        throw new UnsupportedOperationException();
+        DomainQuery query = new DomainQuery();
+
+        LineRelease release = new LineRelease();
+        release.setName(name);
+        release.setReleaseDate(releaseDate);
+        release.setLagTimeMonths(lagTimeMonths);
+        release.setDataSets(dataSets);
+
+        query.setDomainObject(release);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        Response response = manager.getReleaseEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request createLineRelease to server: " + release)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(LineRelease.class);
     }
 
     @Override
     public LineRelease update(LineRelease release) throws Exception {
-        throw new UnsupportedOperationException();
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(release);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        Response response = manager.getReleaseEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request updateLineRelease to server: " + release)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(LineRelease.class);
     }
 
     @Override
     public void remove(LineRelease release) throws Exception {
-        throw new UnsupportedOperationException();
+        Response response = manager.getReleaseEndpoint()
+                .queryParam("releaseId", release.getId())
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .delete();
+        if (checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release)) {
+            throw new WebApplicationException(response);
+        }
     }
 }

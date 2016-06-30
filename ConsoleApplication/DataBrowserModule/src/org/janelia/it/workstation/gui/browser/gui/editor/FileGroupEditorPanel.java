@@ -177,9 +177,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (result ==null) {
-            return; // Nothing to refresh
-        } 
+        if (result==null) return;
         if (event.isTotalInvalidation()) {
             log.info("Total invalidation, reloading...");
             refreshResult();

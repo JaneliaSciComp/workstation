@@ -54,7 +54,7 @@ public interface SampleFacade {
      * Returns all the line releases.
      * @return
      */
-    public List<LineRelease> getLineReleases();
+    public List<LineRelease> getLineReleases() throws Exception;
 
     /**
      * Creates a new line release.

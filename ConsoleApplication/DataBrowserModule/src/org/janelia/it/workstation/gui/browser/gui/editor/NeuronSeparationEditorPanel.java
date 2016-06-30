@@ -496,9 +496,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (separation==null) {
-                return; // Nothing to refresh
-            }
+            if (separation==null) return;
+
             if (event.isTotalInvalidation()) {
                 log.info("Total invalidation, reloading...");
                 search();

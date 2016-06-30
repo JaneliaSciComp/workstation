@@ -316,11 +316,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             refresh(false, true, null);
         }
         else {
+            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+            final List<Long[]> selected = beanTreeView.getSelectedPaths();
+
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<DomainObjectNode> nodes = DomainObjectNodeTracker.getInstance().getNodesById(domainObject.getId());
                 if (!nodes.isEmpty()) {
-                log.info("Updating invalidated object: {}",domainObject.getName());
+                    log.info("Updating invalidated object: {}",domainObject.getName());
                     for(DomainObjectNode node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
@@ -335,16 +338,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             }
                             else {
                                 log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
-                                final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-                                final List<Long[]> selected = beanTreeView.getSelectedPaths();
                                 node.update(refreshed);
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        beanTreeView.expand(expanded);
-                                        beanTreeView.selectPaths(selected);
-                                    }
-                                });
                             }
                         }  catch (Exception ex) {
                             SessionMgr.getSessionMgr().handleException(ex);
@@ -352,6 +346,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     }
                 }
             }
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    beanTreeView.expand(expanded);
+                    beanTreeView.selectPaths(selected);
+                }
+            });
         }
     }
     

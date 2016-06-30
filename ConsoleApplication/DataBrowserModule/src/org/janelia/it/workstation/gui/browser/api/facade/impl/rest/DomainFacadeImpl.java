@@ -49,8 +49,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using name: " + name)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
-        });
+        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {});
         return (List<T>)domainObjs;
     }
     
@@ -77,9 +76,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server: " + refList)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
-        });
-        return domainObjs;
+        return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
     
     @Override
@@ -96,9 +93,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using reverser reference: " + reference)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
-        });
-        return domainObjs;
+        return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
 
@@ -116,9 +111,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObjects from server: " + ids)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
-        });
-        return domainObjs;
+        return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
     @Override
@@ -137,9 +130,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getAllDomainObjectsByClass from server: " + className)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {
-        });
-        return domainObjs;
+        return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
     public DomainObject save(DomainObject domainObject) throws Exception {
@@ -177,8 +168,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request updateProperty from server: " + propName + "," + propValue)) {
             throw new WebApplicationException(response);
         }
-        DomainObject domainObj = response.readEntity(DomainObject.class);
-        return domainObj;
+        return response.readEntity(DomainObject.class);
     }
 
 
@@ -198,7 +188,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights + "," + grant)) {
             throw new WebApplicationException(response);
         }
-        return this.getDomainObject(Reference.createFor(domainObject));
+        return getDomainObject(Reference.createFor(domainObject));
     }
 
     @Override
