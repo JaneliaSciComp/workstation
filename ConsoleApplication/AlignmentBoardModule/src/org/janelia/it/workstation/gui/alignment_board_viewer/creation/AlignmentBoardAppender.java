@@ -75,7 +75,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
 							if (sample == null) {
 								throw new Exception("No sample ancestor found for neuron fragment " + domainObject.getId());
 							}
-							if (!compatibilityChecker.isSampleCompatible(getAlignmentContext(), sample)) {
+							if (!compatibilityChecker.isFragmentCompatible(getAlignmentContext(), sample, nf)) {
 								throw new Exception(INCOMPATIBLE_MSG);
 							}
 						}
@@ -149,8 +149,9 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
                     if (domainObject instanceof Sample) {
                         rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, (Sample) domainObject);
                     } else if (domainObject instanceof NeuronFragment) {
-                        Sample sample = domainHelper.getSampleForNeuron((NeuronFragment) domainObject);
-                        rtnVal = compatibilityChecker.isSampleCompatible(alignmentContext, sample);
+                        final NeuronFragment neuronFragment = (NeuronFragment) domainObject;
+                        Sample sample = domainHelper.getSampleForNeuron(neuronFragment);
+                        rtnVal = compatibilityChecker.isFragmentCompatible(alignmentContext, sample, neuronFragment);
                     } else if (domainObject instanceof CompartmentSet) {
                         rtnVal = true;
                         for (AlignmentBoardItem item : receiver.getChildren()) {
