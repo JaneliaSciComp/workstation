@@ -52,6 +52,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade.EJBLookupException;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.NoDataException;
@@ -1158,7 +1159,11 @@ public final class ModelMgr {
 
     // Methods associated with the 3D Tiled Microscope viewer
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
+        try {
+            return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
+        } catch (EJBLookupException ex) {
+            throw ex;
+        }
     }
     
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
