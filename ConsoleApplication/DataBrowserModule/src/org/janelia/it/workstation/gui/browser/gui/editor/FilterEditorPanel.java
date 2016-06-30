@@ -10,6 +10,7 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -21,6 +22,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -271,7 +273,11 @@ public class FilterEditorPanel extends JPanel
     
     public void loadNewFilter() {
         Filter newFilter = new Filter();
-        newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
+        newFilter.setSearchClass(Sample.class.getSimpleName());
+        FacetCriteria facet = new FacetCriteria();
+        facet.setAttributeName("sageSynced");
+        facet.setValues(Sets.newHashSet("true"));
+        newFilter.addCriteria(facet);
         loadDomainObject(newFilter, true, null);
     }
 
