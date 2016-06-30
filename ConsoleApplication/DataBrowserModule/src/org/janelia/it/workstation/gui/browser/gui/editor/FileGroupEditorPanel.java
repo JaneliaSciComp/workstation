@@ -198,15 +198,20 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         try {
             Sample sample = result.getParentRun().getParent().getParent();
             Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-            List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
-            if (results.isEmpty()) {
-                log.info("Sample no longer has result with id: "+ result.getId());
-                showNothing();
-                return;
+            if (updatedSample!=null) {
+                List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
+                if (results.isEmpty()) {
+                    log.info("Sample no longer has result with id: "+ result.getId());
+                    showNothing();
+                    return;
+                }
+                showResult(results.get(results.size()-1), false, null);
             }
-            PipelineResult result = results.get(results.size()-1);
-            showResult(result, false, null);
-        }  catch (Exception e) {
+            else {
+                showNothing();
+            }
+        }  
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
