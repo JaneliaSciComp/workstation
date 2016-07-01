@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,81 +122,77 @@ public class DownloadItem {
             itemDir = workstationImagesDir;
         }
 
-        targetFile = new File(itemDir, constructFilePath(filenamePattern));
-        
-        log.debug("Target path: {}",targetFile.getAbsolutePath());
-        log.debug("Target extension: {}",targetExtension);
+        try {
+            targetFile = new File(itemDir, constructFilePath(filenamePattern));
+            log.debug("Target path: {}", targetFile.getAbsolutePath());
+            log.debug("Target extension: {}", targetExtension);
+        } catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 
     // TODO: rewrite this to use StringUtils.replaceVariablePattern 
-    private String constructFilePath(String filePattern) {
-        
+    private String constructFilePath(String filePattern) throws Exception {
         Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
-        for(DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
-            log.debug("Adding attribute: "+attr.getLabel());
+        for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
+            log.debug("Adding attribute: " + attr.getLabel());
             attributeMap.put(attr.getLabel(), attr);
         }
 
         log.debug("File pattern: {}", filePattern);
-        
+
         Pattern pattern = Pattern.compile("\\{(.+?)\\}");
         Matcher matcher = pattern.matcher(filePattern);
         StringBuffer buffer = new StringBuffer();
         while (matcher.find()) {
             String template = matcher.group(1);
             String replacement = null;
-            log.debug("  Matched: {}",template);
+            log.debug("  Matched: {}", template);
             for (String templatePart : template.split("\\|")) {
                 String attrLabel = templatePart.trim();
                 if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
-                    replacement = resultName==null ? null : resultName;
-                }
-                else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
+                    replacement = resultName == null ? null : resultName;
+                } else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
                     replacement = sourceFile.getName();
-                } 
-                else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
+                } else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
                     if (domainObject instanceof Sample) {
                         replacement = domainObject.getName();
-                    }
-                    else if (domainObject instanceof LSMImage) {
-                        LSMImage lsm = (LSMImage)domainObject;
-                        Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
-                        if (sample!=null) {
+                    } else if (domainObject instanceof LSMImage) {
+                        LSMImage lsm = (LSMImage) domainObject;
+                        Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
+                        if (sample != null) {
                             replacement = sample.getName();
                         }
                     }
-                } 
-                else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
+                } else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
                     replacement = targetExtension;
-                } 
-                else if (attrLabel.matches("\"(.*?)\"")) {
-                	replacement = attrLabel.substring(1, attrLabel.length()-1);
-                }
-                else {
+                } else if (attrLabel.matches("\"(.*?)\"")) {
+                    replacement = attrLabel.substring(1, attrLabel.length() - 1);
+                } else {
                     DomainObjectAttribute attr = attributeMap.get(attrLabel);
-                    if (attr!=null) {
-                        replacement = getStringAttributeValue(attr);    
+                    if (attr != null) {
+                        replacement = getStringAttributeValue(attr);
                     }
                 }
 
                 if (replacement != null) {
                     matcher.appendReplacement(buffer, replacement);
-                    log.debug("    '{}'->'{}' = '{}'",template,replacement,buffer);
+                    log.debug("    '{}'->'{}' = '{}'", template, replacement, buffer);
                     break;
                 }
             }
 
-            if (replacement==null) {
-                log.warn("      Cannot find a replacement for: {}",template);
+            if (replacement == null) {
+                log.warn("      Cannot find a replacement for: {}", template);
             }
         }
         matcher.appendTail(buffer);
-        
-        log.debug("Final buffer: {}",buffer);
-        
+
+        log.debug("Final buffer: {}", buffer);
+
         // Strip extension, if any. We'll re-add it at the end.
         StringBuilder filepath = new StringBuilder(FileUtil.getBasename(buffer.toString()));
-        
+
         if (splitChannels) {
             filepath.append("_#");
         }
@@ -203,8 +200,10 @@ public class DownloadItem {
         if (!StringUtils.isEmpty(targetExtension)) {
             filepath.append(".").append(targetExtension);
         }
-        log.debug("Final file path: {}",filepath);
+        log.debug("Final file path: {}", filepath);
+
         return filepath.toString();
+
     }
 
     private String getStringAttributeValue(DomainObjectAttribute attr) {

@@ -31,9 +31,10 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class CompatibilityChecker {
-    private Logger log = LoggerFactory.getLogger(CompatibilityChecker.class);
+    private final Logger log = LoggerFactory.getLogger(CompatibilityChecker.class);
+    private final DomainHelper domainHelper = new DomainHelper();
+    
     public int getCompatibleFragmentCount(final AlignmentBoardContext abContext, List<DomainObject> itemList) throws UnsupportedFlavorException, IOException, Exception {
-        DomainHelper domainHelper = new DomainHelper();
         // Need check for alignment context compatibility.
         AlignmentContext standardContext = abContext.getAlignmentContext();
         boolean typeIsFragment;
@@ -52,24 +53,9 @@ public class CompatibilityChecker {
                     if (sample == null) {
                         fragmentCount = 0;
                         break;
-                    } else {
-                        boolean compatible = isSampleCompatibleThrowsEx(standardContext, sample);
-                        // Must establish that the fragment's separation is
-                        // also compatible.
-                        AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, fragment);
-                        if (neuronFC != null  &&
-                            neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
-                            neuronFC.getImageSize().equals(standardContext.getImageSize())  &&
-                            neuronFC.getOpticalResolution().equals(standardContext.getOpticalResolution())) {
-                            
-                            compatible = true;
-                        }
-                        else {
-                            compatible = false;
-                        }
-                        if (compatible) {
-                            fragmentCount++;
-                        }
+                    } else if (isSampleCompatibleThrowsEx(standardContext, sample)  &&
+                               isNeuronSeparationCompatible(standardContext, sample, fragment)) {
+                        fragmentCount++;
                     }
                 } else if (typeIsSample) {
                     sample = (Sample) domainObject;
@@ -86,7 +72,7 @@ public class CompatibilityChecker {
         }
         return fragmentCount;
     }
-    
+
     /** Equality convenience method, since changing equals() is impractical on domain objects. */
     public boolean isEqual(AlignmentContext contextA, AlignmentContext contextB) {
         return contextA.getImageSize().equals(contextB.getImageSize())  &&
@@ -110,6 +96,50 @@ public class CompatibilityChecker {
                 && contextA.getOpticalResolution().equals(opticalResolution);
     }
 
+    /**
+     * Given fragment and its containing neuron, figure out if it belongs to the
+     * established standard context.
+     * 
+     * @param standardContext must adhere to this.
+     * @param sample contains fragment.
+     * @param neuronFragment may/may not be compatible.
+     * @return T=same context; F=not
+     */
+    public boolean isFragmentCompatible(AlignmentContext standardContext, Sample sample, NeuronFragment neuronFragment) {
+        boolean rtnVal = false;
+        if (sample == null) {
+            log.warn("No sample ancestor found for neuron fragment " + neuronFragment.getId());
+        }
+        else if (isSampleCompatible(standardContext, sample)  &&  isNeuronSeparationCompatible(standardContext, sample, neuronFragment)) {
+            rtnVal = true;
+        }
+            
+        return rtnVal;
+    }
+    
+    /**
+     * Only aligned neuron fragments may be presented in the alignment board.
+     * 
+     * @param neuronFragment may/may not have alignment context.
+     * @return T: has the context.  F: not.
+     */
+    public boolean isAligned(NeuronFragment neuronFragment) {
+        boolean rtnVal = false;
+        try {
+            Sample sample = domainHelper.getSampleForNeuron(neuronFragment);
+            if (sample != null) {
+                AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, neuronFragment);
+                if (neuronFC != null) {
+                    rtnVal = true;
+                }
+            }
+            
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+    
     /**
      * Check if this sample has a context compatible with the 'one of momentum'.  Trap any exceptions.
      */
@@ -141,7 +171,6 @@ public class CompatibilityChecker {
     private boolean isSampleCompatibleThrowsEx(AlignmentContext standardContext, Sample sample) throws Exception {
         boolean rtnVal;
         boolean foundMatch = false;
-        DomainHelper domainHelper = new DomainHelper();
         List<AlignmentContext> contexts = domainHelper.getAvailableAlignmentContexts(sample);
         if (contexts.isEmpty()) {
             log.warn("No available contexts in sample {}.", sample.getName());
@@ -161,6 +190,24 @@ public class CompatibilityChecker {
 
         rtnVal = foundMatch;
         return rtnVal;
+    }
+    
+    private boolean isNeuronSeparationCompatible(AlignmentContext standardContext, Sample sample, NeuronFragment fragment) {
+        boolean compatible;
+        // Must establish that the fragment's separation is
+        // also compatible.
+        AlignmentContext neuronFC = domainHelper.getNeuronFragmentAlignmentContext(sample, fragment);
+        if (neuronFC != null  &&
+                neuronFC.getAlignmentSpace().equals(standardContext.getAlignmentSpace())  &&
+                neuronFC.getImageSize().equals(standardContext.getImageSize())  &&
+                neuronFC.getOpticalResolution().equals(standardContext.getOpticalResolution())) {
+            
+            compatible = true;
+        }
+        else {
+            compatible = false;
+        }
+        return compatible;
     }
     
 }

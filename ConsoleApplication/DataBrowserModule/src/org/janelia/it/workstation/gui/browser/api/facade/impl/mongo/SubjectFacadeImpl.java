@@ -5,7 +5,6 @@ import java.util.List;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainDAO;
-import org.janelia.it.jacs.shared.security.BasicAuthToken;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
 
@@ -29,10 +28,10 @@ public class SubjectFacadeImpl implements SubjectFacade {
 
     @Override
     public Subject loginSubject(String username, String password) {
-        BasicAuthToken userInfo = new BasicAuthToken();
+       /* BasicAuthToken userInfo = new BasicAuthToken();
         userInfo.setUsername(username);
-        userInfo.setPassword(password);
-        return dao.getSubjectByKey("user:" + userInfo.getUsername());
+        userInfo.setPassword(password);*/
+        return dao.getSubjectByKey("user:" + username);
      }
 
     @Override

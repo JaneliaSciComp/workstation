@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.passive_3d.top_component;
 
 import java.awt.BorderLayout;
@@ -27,13 +22,13 @@ import org.openide.util.NbBundle.Messages;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 33)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 102)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_Snapshot3dAction",
         preferredID = Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
 )
 @Messages({
-    "CTL_Snapshot3dAction=Snapshot3d",
+    "CTL_Snapshot3dAction=Snapshot 3d",
     "CTL_Snapshot3dTopComponent=" + Snapshot3dTopComponent.LABEL_TEXT,
     "HINT_Snapshot3dTopComponent=Large Volume Viewer's snapshot of data containing the crosshair."
 })

@@ -1,35 +1,30 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.io.File;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
 
-import org.janelia.it.jacs.shared.lvv.OctreeMetadataSniffer;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
  * Converts the text, as it is expected, in the status label, into a tile
  * location, and copies that into the clipboard, in a simple format.
  */
 public class TileLocToClipboardAction extends AbstractAction {
-    private final static String FILE_SEP = System.getProperty("file.separator");
-    private final static String LINUX_FILE_SEP = "/";
 
     private final JLabel statusLabel;
     private final TileFormat tileFormat;
     private final BasicObservableCamera3d camera;
     private final CoordinateAxis axis;
+    private final Logger log = LoggerFactory.getLogger(TileLocToClipboardAction.class);
 
     public TileLocToClipboardAction(
             JLabel statusLabel, 
@@ -47,13 +42,10 @@ public class TileLocToClipboardAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         String content = statusLabel.getText();
-        final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter(null);
-        double[] micronLocation = micronCoordsFormatter.messageToTuple(content);
-        Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
-        
-        TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
-        File path = OctreeMetadataSniffer.getOctreeFilePath(index, tileFormat, true);
-        String filePathStr = path.toString().replace(FILE_SEP, LINUX_FILE_SEP);
+        Vec3 vec = ClipboardActionHelper.getCoordVector(content);
+        //Vec3 vec = camera.getFocus(); // Testing, only.
+        String filePathStr = ClipboardActionHelper.getOctreePathAtCoords(tileFormat, camera, axis, vec);
+        log.debug("(1)For location {}, camera={}. File path string {}.", statusLabel.getText(), vec, filePathStr);
         // Not truly looking for the file path; just the legs of the path.
         if (SystemInfo.isWindows) {
             int colonPos = filePathStr.indexOf(":");
@@ -61,8 +53,7 @@ public class TileLocToClipboardAction extends AbstractAction {
                 filePathStr = filePathStr.substring(colonPos+1);
             }
         }
-        StringSelection selection = new StringSelection(filePathStr);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(selection, selection);
+        ClipboardActionHelper.setClipboard(filePathStr);
+        log.debug("(2)For location {}, camera={}. File path string {}.", statusLabel.getText(), vec, filePathStr);
     }
 }

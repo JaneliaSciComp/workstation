@@ -31,12 +31,12 @@ import com.google.common.eventbus.Subscribe;
 )
 @TopComponent.Description(
         preferredID = DomainInspectorTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "images/zoom.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.browser.components.DomainInspectorTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 2)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_DomainInspectorAction",
         preferredID = DomainInspectorTopComponent.TC_NAME

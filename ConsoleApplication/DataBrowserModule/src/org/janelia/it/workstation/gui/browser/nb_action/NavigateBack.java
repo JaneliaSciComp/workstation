@@ -14,12 +14,11 @@ import org.openide.util.actions.CallableSystemAction;
         id = "org.janelia.it.workstation.gui.browser.nb_action.NavigateBack"
 )
 @ActionRegistration(
-        iconBase = "images/arrow_back.gif",
         displayName = "#CTL_NavigateBack"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/View", position = -100, separatorBefore = -150),
-    @ActionReference(path = "Toolbars/Navigation", position = 3333),
+    @ActionReference(path = "Toolbars/Navigation", position = 100),
     @ActionReference(path = "Shortcuts", name = "M-LEFT")
 })
 @Messages("CTL_NavigateBack=Back")

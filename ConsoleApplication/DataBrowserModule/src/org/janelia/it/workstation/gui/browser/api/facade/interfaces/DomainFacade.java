@@ -20,7 +20,7 @@ public interface DomainFacade {
      * @param id GUID of domain object
      * @return the domain object
      */
-    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id);
+    public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception;
 
     /**
      * Returns the domain object with the given class and name.
@@ -28,28 +28,28 @@ public interface DomainFacade {
      * @param name name of the domain object
      * @return
      */
-    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name);
+    public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception;
     
     /**
      * Returns the domain object specified by the given reference.
      * @param reference to a domain object
      * @return the domain object
      */
-    public DomainObject getDomainObject(Reference reference);
+    public DomainObject getDomainObject(Reference reference) throws Exception;
 
     /**
      * Returns the domain objects specified by the given list of references. 
      * @param references list of references
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(List<Reference> references);
+    public List<DomainObject> getDomainObjects(List<Reference> references) throws Exception;
 
     /**
      * Returns the domain objects specified by the given reverse reference. 
      * @param reference reverse reference
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(ReverseReference reference);
+    public List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception;
 
     /**
      * Returns the domain objects of a particular type, given by the list of GUIDs. 
@@ -57,14 +57,14 @@ public interface DomainFacade {
      * @param ids collection of GUIDs
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids);
+    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) throws Exception;
 
     /**
      * Returns the domain objects of a particular type, for ANY ownership.
      * @param className class name
      * @return list of domain objects
      */
-    public List<DomainObject> getAllDomainObjectsByClass(String className);
+    public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception;
     
     /**
      * Update a property on the given domain object.

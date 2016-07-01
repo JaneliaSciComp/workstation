@@ -525,7 +525,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         compartmentLoader.setAcceptors(maskDataAcceptors);
         compartmentLoader.setFileStats(fileStats);
 
-        logger.debug("Timing multi-thread data load for multi-mask-assbembly.");
+        logger.debug("Timing multi-thread data load for multi-mask-assembly.");
         multiThreadedDataLoad(renderableDatas, false);
         logger.debug("End timing multi-mask-assembly");
         maskDataAcceptors.clear();

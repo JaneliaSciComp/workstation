@@ -19,6 +19,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.nb_action.DomainObjectCreator;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
@@ -175,8 +176,16 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
             return true;
         }
         else {
-            log.debug("Just UN-Nulled object in ABCreator");            
-            return domainObject instanceof Sample || domainObject instanceof NeuronFragment  ||  domainObject instanceof CompartmentSet;            
+            log.debug("Just UN-Nulled object in ABCreator");
+            if (domainObject instanceof Sample  ||  domainObject instanceof CompartmentSet) {
+                return true;
+            }
+            else if (domainObject instanceof NeuronFragment) {
+                return new CompatibilityChecker().isAligned((NeuronFragment)domainObject);
+            }
+            else {
+                return false;
+            }
         }
     }
 

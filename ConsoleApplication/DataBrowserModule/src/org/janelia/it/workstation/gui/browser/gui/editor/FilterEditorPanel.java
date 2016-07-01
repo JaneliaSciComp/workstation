@@ -10,6 +10,7 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -21,6 +22,7 @@ import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
+import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
@@ -271,7 +273,11 @@ public class FilterEditorPanel extends JPanel
     
     public void loadNewFilter() {
         Filter newFilter = new Filter();
-        newFilter.setSearchClass(DEFAULT_SEARCH_CLASS.getName());
+        newFilter.setSearchClass(Sample.class.getSimpleName());
+        FacetCriteria facet = new FacetCriteria();
+        facet.setAttributeName("sageSynced");
+        facet.setValues(Sets.newHashSet("true"));
+        newFilter.addCriteria(facet);
         loadDomainObject(newFilter, true, null);
     }
 
@@ -309,7 +315,7 @@ public class FilterEditorPanel extends JPanel
 	            configPanel.addTitleComponent(saveAsButton, false, true);
             }
             configPanel.setExpanded(filter.getId()==null);
-            
+
             search();
         }
         catch (Exception e) {
@@ -406,18 +412,20 @@ public class FilterEditorPanel extends JPanel
         log.trace("refresh");
         
         String inputFieldValue = searchBox.getSearchString();
-        if (filter.getSearchString()!=null && !filter.getSearchString().equals(inputFieldValue)) {
+        if (!StringUtils.areEqual(filter.getSearchString(), inputFieldValue)) {
             dirty = true;
         }
         
         filter.setSearchString(inputFieldValue);
-        
+
         saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
         performSearch(isUserDriven, success, failure);
     }
     
     private void updateView() {
+
+        searchBox.setSearchString(filter.getSearchString());
 
         final String currType = DomainUtils.getTypeName(searchConfig.getSearchClass());
         typeCriteriaButton.setText("Result Type: " + currType);
@@ -625,7 +633,7 @@ public class FilterEditorPanel extends JPanel
                     // Skip anything that is not selected, and which doesn't have results. Clicking it would be futile.
                     continue;
                 }
-                String label = facetValue.getValue()+" ("+facetValue.getCount()+")";
+                String label = facetValue.getValue()+" ("+facetValue.getCount()+" items)";
                 final JMenuItem menuItem = new JCheckBoxMenuItem(label, selected);
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -727,6 +735,7 @@ public class FilterEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
+        if (filter==null) return;
         if (event.isTotalInvalidation()) {
             log.info("total invalidation, reloading...");
             refreshSearchResults(false);
@@ -735,10 +744,15 @@ public class FilterEditorPanel extends JPanel
             for (DomainObject domainObject : event.getDomainObjects()) {
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
-                    Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-                    if (updatedFilter!=null) {
-                        filterNode.update(updatedFilter);
-                        loadDomainObjectNode(filterNode, false, null);
+                    try {
+                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
+
+                        if (updatedFilter != null) {
+                            filterNode.update(updatedFilter);
+                            loadDomainObjectNode(filterNode, false, null);
+                        }
+                    } catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
                     }
                     break;
                 }

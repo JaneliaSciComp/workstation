@@ -71,6 +71,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private DomainObjectSelectionModel editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     private SearchProvider searchProvider;
+
+    private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
 
@@ -107,7 +109,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) {
+        public DomainObject getImageByUniqueId(Reference id) throws Exception {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         
@@ -223,17 +225,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
-        editSelectionModel.reset();
-
         if (select) {
-            this.selectEditObjects(domainObjects);
+            editSelectionModel.select(domainObjects, true, true);
         }
     }
 
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})",domainObjects.size(),select,clearAll,isUserDriven);
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})", domainObjects.size(), select, clearAll, isUserDriven);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -317,8 +317,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
     }
+
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        }
+    }
+
 
     @Override
     public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
@@ -333,7 +343,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching {} for {}",domainObject.getName(),text);
+        log.debug("Searching {} for {}", domainObject.getName(), text);
 
         String tupper = text.toUpperCase();
 
@@ -392,32 +402,39 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void deleteKeyPressed() {
-        IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)parent; 
-            if (ClientDomainUtils.hasWriteAccess(treeNode)) {                
-                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
-                action.doAction();
+        try {
+            IsParent parent = selectionModel.getParentObject();
+            if (parent instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode)parent;
+                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                    List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
+                    action.doAction();
+                }
             }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     protected void configButtonPressed() {
+        try {
+            DomainObject firstObject;
+            List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+            if (selectedObjects.isEmpty()) {
+                firstObject = domainObjectList.getDomainObjects().get(0);
+            }
+            else {
+                firstObject = selectedObjects.get(0);
+            }
 
-        DomainObject firstObject;
-        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-        if (selectedObjects.isEmpty()) {
-            firstObject = domainObjectList.getDomainObjects().get(0);
-        }
-        else {
-            firstObject = selectedObjects.get(0);
-        }
-
-        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
-        if (configDialog.showDialog(this)==1) {
-            this.config = IconGridViewerConfiguration.loadConfig();
-            refresh();
+            IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
+            if (configDialog.showDialog(this)==1) {
+                this.config = IconGridViewerConfiguration.loadConfig();
+                refresh();
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -444,7 +461,12 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
     
     private List<DomainObject> getSelectedObjects() {
-        return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        try {
+            return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     @Override

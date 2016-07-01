@@ -107,13 +107,13 @@ public class DomainMgr {
      * groups then users, alphabetical by full name. 
      * @return sorted list of subjects
      */
-    public List<Subject> getSubjects() {
+    public List<Subject> getSubjects() throws Exception {
         List<Subject> subjects = subjectFacade.getSubjects();
         DomainUtils.sortSubjects(subjects);
         return subjects;
     }
 
-    private void loadPreferences() {
+    private void loadPreferences() throws Exception {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
             log.info(subjectFacade.getPreferences().toString());
@@ -129,13 +129,13 @@ public class DomainMgr {
      * @param key
      * @return
      */
-    public Preference getPreference(String category, String key) {
+    public Preference getPreference(String category, String key) throws Exception {
         loadPreferences();
         String mapKey = category+":"+key;
         return preferenceMap.get(mapKey);
     }
 
-    public List<Preference> getPreferences(String category) {
+    public List<Preference> getPreferences(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
         for(Preference preference : preferenceMap.values()) {
@@ -155,10 +155,10 @@ public class DomainMgr {
         Preference updated = subjectFacade.savePreference(preference);
         preferenceMap.put(getPreferenceMapKey(preference), updated);
         notifyPreferenceChanged(updated);
-        log.debug("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
+        log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
 
-    public Map<String,String> loadPreferencesAsMap(String category) {
+    public Map<String,String> loadPreferencesAsMap(String category) throws Exception {
         List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
         Map<String,String> map = new HashMap<>();
         for(Preference preference : titlePreferences) {
@@ -170,7 +170,7 @@ public class DomainMgr {
     public void saveMapAsPreferences(Map<String,String> map, String category) throws Exception {
         for(String key : map.keySet()) {
             String value = map.get(key);
-            if (!StringUtils.isEmpty(value)) {
+            if (value!=null) {
                 Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
                 if (preference==null) {
                     preference = new Preference(AccessManager.getSubjectKey(), category, key, value);

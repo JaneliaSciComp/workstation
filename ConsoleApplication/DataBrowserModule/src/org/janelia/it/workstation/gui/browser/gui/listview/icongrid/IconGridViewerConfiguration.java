@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +28,18 @@ public class IconGridViewerConfiguration {
     }
 
     public static IconGridViewerConfiguration loadConfig() {
-        Map<String,String> domainClassTitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_TITLES);
-        log.debug("Loaded {} title preferences",domainClassTitles.size());
-        Map<String,String> domainClassSubtitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_SUBTITLES);
-        log.debug("Loaded {} subtitle preferences",domainClassSubtitles.size());
-        IconGridViewerConfiguration config = new IconGridViewerConfiguration(domainClassTitles, domainClassSubtitles);
-        return config;
+        try {
+            Map<String, String> domainClassTitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_TITLES);
+            log.debug("Loaded {} title preferences", domainClassTitles.size());
+            Map<String, String> domainClassSubtitles = DomainMgr.getDomainMgr().loadPreferencesAsMap(DomainConstants.PREFERENCE_CATEGORY_DOMAIN_OBJECT_SUBTITLES);
+            log.debug("Loaded {} subtitle preferences", domainClassSubtitles.size());
+            IconGridViewerConfiguration config = new IconGridViewerConfiguration(domainClassTitles, domainClassSubtitles);
+            return config;
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     public void save() throws Exception {
@@ -47,16 +54,20 @@ public class IconGridViewerConfiguration {
         domainClassTitles.put(className, title);
     }
 
-    public void setDomainClassSubtitle(String className, String title) {
-        log.debug("Setting subtitle for {} to {}",className,title);
-        domainClassSubtitles.put(className, title);
+    public void setDomainClassSubtitle(String className, String subtitle) {
+        log.debug("Setting subtitle for {} to {}",className,subtitle);
+        domainClassSubtitles.put(className, subtitle);
     }
 
     public String getDomainClassTitle(String className) {
-        return domainClassTitles.get(className);
+        String title = domainClassTitles.get(className);
+        log.debug("Got title {} for {}",className,title);
+        return title;
     }
 
     public String getDomainClassSubtitle(String className) {
-        return domainClassSubtitles.get(className);
+        String subtitle = domainClassSubtitles.get(className);
+        log.debug("Got subtitle {} for {}",className,subtitle);
+        return subtitle;
     }
 }

@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
 @ActionID(category = "Window", id = "AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window", position = 200 )
+@ActionReference(path = "Menu/Window/Alignment Board", position = 50)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
         preferredID = AlignmentBoardTopComponent.PREFERRED_ID

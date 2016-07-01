@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.full_skeleton_view.top_component;
 
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -26,13 +21,13 @@ import org.openide.util.NbBundle.Messages;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Large Volume Viewer" , position = 101)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AnnotationSkeletalViewAction",
         preferredID = AnnotationSkeletalViewTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_AnnotationSkeletalViewAction=AnnotationSkeletalView",
+    "CTL_AnnotationSkeletalViewAction=Annotation Skeletal View",
     "CTL_AnnotationSkeletalViewTopComponent=" + AnnotationSkeletalViewTopComponent.LABEL_TEXT,
     "HINT_AnnotationSkeletalViewTopComponent=Skeletal View of LVV Annotations"
 })

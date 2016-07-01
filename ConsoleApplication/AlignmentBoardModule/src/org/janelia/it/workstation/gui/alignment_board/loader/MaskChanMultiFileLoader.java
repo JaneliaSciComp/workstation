@@ -90,29 +90,34 @@ public class MaskChanMultiFileLoader {
             Callable<Void> segmentTask = new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
-                    MaskSingleFileLoader singleFileLoader = new MaskSingleFileLoader(maskAcceptors, channelAcceptors, bean, fileStats);
-                    singleFileLoader.setApplicableSegment(finalSlabNo, NUM_SEGMENTS);
+                    try {
+                        MaskSingleFileLoader singleFileLoader = new MaskSingleFileLoader(maskAcceptors, channelAcceptors, bean, fileStats);
+                        singleFileLoader.setApplicableSegment(finalSlabNo, NUM_SEGMENTS);
 
-                    // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
-                    if (!enforcePadding) {
-                        singleFileLoader.setAxialLengthDivisibility(1);
-                    }
-                    if (dimWriteback) {
-                        singleFileLoader.setIntensityDivisor(5);
-                    } else {
-                        singleFileLoader.setIntensityDivisor(1);
-                    }
-                    try (InputStream maskInputStream = streamSource.getMaskInputStream()) {
-                        singleFileLoader.read(maskInputStream, finalChannelDataBean);
-                        
-                        // Accumulate information for final sanity check.
-                        if (isCheckForConsistency()) {
-                            checker.accumulate(
-                                    bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
-                            );
+                        // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
+                        if (!enforcePadding) {
+                            singleFileLoader.setAxialLengthDivisibility(1);
                         }
+                        if (dimWriteback) {
+                            singleFileLoader.setIntensityDivisor(5);
+                        } else {
+                            singleFileLoader.setIntensityDivisor(1);
+                        }
+                        try (InputStream maskInputStream = streamSource.getMaskInputStream()) {
+                            singleFileLoader.read(maskInputStream, finalChannelDataBean);
+
+                            // Accumulate information for final sanity check.
+                            if (isCheckForConsistency()) {
+                                checker.accumulate(
+                                        bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
+                                );
+                            }
+                        }
+                        return null;
+                    } catch (Exception ex2) {
+                        ex2.printStackTrace();
+                        return null;
                     }
-                    return null;
                 }
             };
             followUps.add(executorService.submit(segmentTask));
@@ -122,12 +127,15 @@ public class MaskChanMultiFileLoader {
         executorService.awaitTermination(30, TimeUnit.MINUTES);
 
         Exception lastException = null;
-        for (Future<Void> future : followUps) {
+        List<Future<Void>> safeFollowUps = new ArrayList<>(followUps);
+        for (Future<Void> future : safeFollowUps) {
             try {
                 future.get();
             }
             catch (InterruptedException | ExecutionException ex) {
                 ex.printStackTrace();
+                if (ex.getCause() != null)
+                    ex.getCause().printStackTrace();
                 lastException = ex;
             }
         }
