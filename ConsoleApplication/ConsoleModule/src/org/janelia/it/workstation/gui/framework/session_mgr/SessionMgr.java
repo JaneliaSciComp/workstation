@@ -30,7 +30,7 @@ import javax.swing.UIManager.LookAndFeelInfo;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
@@ -568,7 +568,7 @@ public final class SessionMgr implements ActivityLogging {
     /**
      * Log a tool event, always.  No criteria will be checked.
      * 
-     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long) 
+     * @see #logToolEvent(ToolString toolName, CategoryString category, ActionString actio)
      */
     @Override
     public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
@@ -899,9 +899,9 @@ public final class SessionMgr implements ActivityLogging {
         Subject subject = SessionMgr.getSessionMgr().getSubject();
         if (subject != null) {
             subjectKeys.add(subject.getKey());
-            if (subject instanceof User) {
-                for (SubjectRelationship relation : ((User) subject).getGroupRelationships()) {
-                    subjectKeys.add(relation.getGroup().getKey());
+            if (subject.isUser()) {
+                for (String tmpGroup : subject.getGroups()) {
+                    subjectKeys.add(tmpGroup);
                 }
             }
         }
@@ -926,20 +926,20 @@ public final class SessionMgr implements ActivityLogging {
 
     public static boolean authenticatedSubjectIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-        return subject instanceof User && isUserInGroup2((User) subject, groupName);
+        return subject.isUser() && isUserInGroup2(subject, groupName);
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getSubject();
-        return subject instanceof User && isUserInGroup2((User) subject, groupName);
+        return subject.isUser() && isUserInGroup2(subject, groupName);
     }
 
-    private static boolean isUserInGroup2(User targetUser, String targetGroup) {
+    private static boolean isUserInGroup2(Subject targetUser, String targetGroup) {
         if (null == targetUser) {
             return false;
         }
-        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
-            if (relation.getGroup().getKey().equals(targetGroup)) {
+        for (String tmpGroup : targetUser.getGroups()) {
+            if (tmpGroup.equals(targetGroup)) {
                 return true;
             }
         }

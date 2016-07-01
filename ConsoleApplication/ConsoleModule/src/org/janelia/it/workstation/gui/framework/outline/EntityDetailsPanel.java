@@ -20,7 +20,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -582,7 +582,8 @@ public class EntityDetailsPanel extends JPanel implements Refreshable {
                 filtered.add(subject);
             }
         }
-        EntityUtils.sortSubjects(filtered);
+        // TODO: 7/1/16 NGDEP This panel is old and should probably be disabled so people can't add Entity Permissions for unused Subjects
+//        EntityUtils.sortSubjects(filtered);
         return filtered;
     }
 

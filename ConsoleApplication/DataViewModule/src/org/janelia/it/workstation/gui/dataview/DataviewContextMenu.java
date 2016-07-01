@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.dataview;
 
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;

@@ -7,7 +7,7 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 
 /**
  * A combo-box renderer for Subject selection. 

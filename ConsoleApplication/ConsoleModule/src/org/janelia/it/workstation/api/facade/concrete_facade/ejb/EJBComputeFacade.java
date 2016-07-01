@@ -2,7 +2,7 @@ package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;

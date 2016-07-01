@@ -35,7 +35,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
@@ -156,7 +156,7 @@ public final class ModelMgr {
      * Manager instead, as that has more convenient 'finding' of various parts
      * of the event.
      *
-     * @param event to log.
+     * @param events to log.
      */
     public void addEventsToSession(UserToolEvent[] events) {
         try {
@@ -291,16 +291,17 @@ public final class ModelMgr {
         return finalList;
     }
 
+    // TODO: 7/1/16 NGDEP We no longer save sort criteria?
     public String getSortCriteria(Long entityId) {
         try {
-            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
-            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-            String entityIdStr = entityId.toString();
-            for (SubjectPreference pref : prefs.values()) {
-                if (pref.getName().equals(entityIdStr)) {
-                    return pref.getValue();
-                }
-            }
+//            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
+//            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+//            String entityIdStr = entityId.toString();
+//            for (SubjectPreference pref : prefs.values()) {
+//                if (pref.getName().equals(entityIdStr)) {
+//                    return pref.getValue();
+//                }
+//            }
         }
         catch (Exception e) {
             log.error("Error loading sort criteria for {}", entityId,e);
@@ -308,17 +309,18 @@ public final class ModelMgr {
         return null;
     }
 
+    // TODO: 7/1/16 NGDEP We no longer save sort criteria?
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
         Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
-        if (StringUtils.isEmpty(sortCriteria)) {
-            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
-            log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
-        }
-        else {
-            subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));
-            log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
-        }
-        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
+//        if (StringUtils.isEmpty(sortCriteria)) {
+//            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
+//            log.debug("Removed user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId);
+//        }
+//        else {
+//            subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));
+//            log.debug("Saved user preference: " + CATEGORY_SORT_CRITERIA + ":" + entityId + "=" + sortCriteria);
+//        }
+//        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
        // SessionMgr.getSessionMgr().setSubject(newSubject);
     }
 
