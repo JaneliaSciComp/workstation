@@ -363,7 +363,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         rect.translate(centerX, centerY);
         
         // Scroll the area into view.
-        log.trace("Scroll to visible: {}",rect);
+        log.debug("Scroll to visible: {}",rect);
         viewport.scrollRectToVisible(rect);
     }
 
@@ -391,6 +391,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void scrollSelectedObjectsToCenter() {
+        log.debug("Scrolling selected objects to center");
         List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;

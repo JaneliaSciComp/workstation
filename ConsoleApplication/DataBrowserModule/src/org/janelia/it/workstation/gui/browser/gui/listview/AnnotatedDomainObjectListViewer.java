@@ -49,7 +49,9 @@ public interface AnnotatedDomainObjectListViewer {
      * @param isUserDriven is this action driven directly by the user?
      */
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven);
-    
+
+    public void showLoadingIndicator();
+
     /**
      * Show the objects in the list in the viewer, along with their annotations. 
      * @param domainObjectList 

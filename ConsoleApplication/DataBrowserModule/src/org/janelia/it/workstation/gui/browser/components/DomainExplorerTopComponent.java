@@ -40,6 +40,7 @@ import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -57,6 +58,8 @@ import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.awt.SystemColor.text;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -497,13 +500,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
+        beanTreeView.navigateToNodeStartingWith(text, bias, skipStartingNode);
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
     
     @Override

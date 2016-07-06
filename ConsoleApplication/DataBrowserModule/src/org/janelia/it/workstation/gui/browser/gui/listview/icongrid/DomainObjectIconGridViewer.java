@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -255,6 +256,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     }
 
     @Override
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        updateUI();
+    }
+
+    @Override
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
@@ -343,7 +351,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching {} for {}", domainObject.getName(), text);
+        log.trace("Searching {} for {}", domainObject.getName(), text);
 
         String tupper = text.toUpperCase();
 
