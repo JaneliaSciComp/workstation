@@ -1,13 +1,22 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl.rest;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.jackson.JacksonFeature;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +42,18 @@ public class RESTClientManager {
         this.serverUrl = serverUrl;
         log.info("Using server URL: {}",serverUrl);
         client = ClientBuilder.newClient();
-        client.register(JacksonFeature.class);
+        JacksonJsonProvider provider = new JacksonJaxbJsonProvider();
+                //.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                //.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        ObjectMapper mapper = provider.locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
+        mapper.addHandler(new DeserializationProblemHandler() {
+            @Override
+            public boolean handleUnknownProperty(DeserializationContext ctxt, JsonParser jp, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException, JsonProcessingException {
+                log.error("Failed to deserialize property which does not exist in model: {}.{}",beanOrClass.getClass().getName(),propertyName);
+                return true;
+            }
+        });
+        client.register(provider);
         registerRestUris();
     }
 
