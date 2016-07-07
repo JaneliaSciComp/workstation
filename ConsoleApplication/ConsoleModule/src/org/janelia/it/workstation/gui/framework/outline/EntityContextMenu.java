@@ -51,6 +51,7 @@ import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
+import org.janelia.it.workstation.gui.framework.actions.ShowLVVWorkspaceInfoActionListener;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -161,6 +162,7 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
+        add(getShowLVVWorkspaceInfo());
         if (getWrapEntityItem() != null) {
             for (JMenuItem wrapItem: getWrapEntityItem()) {
                 add(wrapItem);
@@ -1286,6 +1288,19 @@ public class EntityContextMenu extends JPopupMenu {
         if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             JMenuItem menuItem = new JMenuItem("  Edit sample path");
             menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+            return menuItem;
+        } else {
+            return null;
+        }
+    }
+
+    protected JMenuItem getShowLVVWorkspaceInfo() {
+        if (multiple)
+            return null;
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+        if (entityType.equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            JMenuItem menuItem = new JMenuItem("  Show sample info");
+            menuItem.addActionListener(new ShowLVVWorkspaceInfoActionListener(rootedEntity));
             return menuItem;
         } else {
             return null;
