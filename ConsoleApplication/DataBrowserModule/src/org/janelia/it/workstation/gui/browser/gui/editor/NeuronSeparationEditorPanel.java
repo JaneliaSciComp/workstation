@@ -318,9 +318,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     public void loadSampleResult(final PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
 
         if (result==null) return;
-        
+
         if (!debouncer.queue(null)) {
-            log.debug("Skipping load, since there is one already in progress");
+            log.info("Skipping load, since there is one already in progress");
             return;
         }
         
@@ -346,12 +346,10 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             debouncer.success();
         }
         else {
-            String title = sample.getName();// + " - " + DomainModelViewUtils.getLabel(result);
-            configPanel.setTitle(title);
+            configPanel.setTitle(sample.getName());
             setResult(separation, isUserDriven, success);
         }
-        
-        updateUI();
+
     }
     
     private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final Callable<Void> success) {
@@ -380,6 +378,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             @Override
             protected void hadSuccess() {
                 showResults(isUserDriven);
+                debouncer.success();
             }
 
             @Override
