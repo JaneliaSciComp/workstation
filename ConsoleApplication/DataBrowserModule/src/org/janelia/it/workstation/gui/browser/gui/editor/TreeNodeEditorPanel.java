@@ -180,7 +180,7 @@ public class TreeNodeEditorPanel extends JPanel
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
         try {
-            if (treeNodeNode==null) return;
+            if (treeNodeNode==null || treeNode==null) return;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
                 TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());

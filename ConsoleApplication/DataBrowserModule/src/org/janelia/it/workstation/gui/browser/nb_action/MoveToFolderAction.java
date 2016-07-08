@@ -51,8 +51,10 @@ public class MoveToFolderAction extends AddToFolderAction {
     }
 
     @Override
-    protected void addSelectedObjectsToFolder(TreeNode folder, Long[] idPath) throws Exception {
-        super.addSelectedObjectsToFolder(folder, idPath);
+    protected void addItemsToFolder(TreeNode folder, Long[] idPath) throws Exception {
+        super.addItemsToFolder(folder, idPath);
+
+        // TODO: ensure that all items were successfully added before deletion
 
         // Build list of things to remove
         Multimap<TreeNode,DomainObject> removeMap = ArrayListMultimap.create();

@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +17,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -52,21 +50,15 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
-import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
-import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -658,7 +650,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getAddToFolderItem() {
-        AddItemsToFolderAction action = new AddItemsToFolderAction(domainObjectList);
+        AddToFolderAction action = AddToFolderAction.get();
+        action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
         item.setText("  " + item.getText());
         return item;
