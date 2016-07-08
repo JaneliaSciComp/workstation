@@ -26,11 +26,10 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapt
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Encoder;
@@ -207,6 +206,9 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                 if (tiledMicroscopeBeanRemote != null) {
                     tiledMicroscopeBeanRemote.saveProtobufNeuronBytesJDBC(preExistingEntityData.getId(), serializableBytes);
                 }
+                else {
+                    throw new Exception("Failed to obtain proxy object.");
+                }
 
                 long elapsedTime = new Date().getTime() - timeStart;
 
@@ -302,6 +304,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     
     /** Hang onto a 'recent-enough' cached proxy to EJB.  Caching removes much of the JNDI lookup burden. */
     private static class RemoteTmProxyCache {
+        public static final double EJB_CACHE_EXPIRE_MIN = 30.0;
         private TiledMicroscopeBeanRemote tiledMicroscopeBeanRemote = null;
         private Date cacheTime = null;
         
@@ -309,10 +312,11 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             Date cacheExpiryTime = new Date();
             // Blow-out cache periodically, in case the server is down,
             // and there happens to be some load-balancing thing in effect.
-            long cacheExpiryTimeMs = cacheExpiryTime.getTime() - (1000 * 60 * 30);
+            long cacheExpiryTimeMs = cacheExpiryTime.getTime() - (int)(1000 * 60 * EJB_CACHE_EXPIRE_MIN);
             cacheExpiryTime.setTime(cacheExpiryTimeMs);
             if (tiledMicroscopeBeanRemote == null  ||  cacheTime.before(cacheExpiryTime)) {
-                tiledMicroscopeBeanRemote = EJBFactory.getRemoteTiledMicroscopeBean();            
+                tiledMicroscopeBeanRemote = EJBEntityFacade.getRemoteTMBWithRetries();
+                log.info("Returning fresh remote EJB proxy.");
                 cacheTime = new Date();
             }
             return tiledMicroscopeBeanRemote;

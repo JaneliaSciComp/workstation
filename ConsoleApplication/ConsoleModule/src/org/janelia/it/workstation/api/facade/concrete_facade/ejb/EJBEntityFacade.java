@@ -324,7 +324,7 @@ public class EJBEntityFacade implements EntityFacade {
         return rtnVal;
     }
     
-    private TiledMicroscopeBeanRemote getRemoteTMBWithRetries() {
+    public static TiledMicroscopeBeanRemote getRemoteTMBWithRetries() {
         TiledMicroscopeBeanRemote bean = null;
         for (int i = 0; i < RETRY_MAX_ATTEMPTS_RTMB; i++) {
             bean = EJBFactory.getRemoteTiledMicroscopeBean();
