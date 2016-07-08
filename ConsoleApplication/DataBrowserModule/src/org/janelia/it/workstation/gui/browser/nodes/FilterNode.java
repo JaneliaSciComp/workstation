@@ -60,7 +60,7 @@ public class FilterNode extends DomainObjectNode {
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(AddToFolderAction.get());
-        actions.add(MoveToFolderAction.get());
+//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

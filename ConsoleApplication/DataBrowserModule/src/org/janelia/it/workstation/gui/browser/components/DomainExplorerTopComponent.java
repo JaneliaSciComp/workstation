@@ -320,7 +320,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         else {
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-            final List<Long[]> selected = beanTreeView.getSelectedPaths();
 
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
@@ -332,18 +331,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
                                 log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
-                                try {
-                                    node.destroy();
-                                }
-                                catch (IOException e) {
-                                    log.error("  Error destroying invalidated node",e);
-                                }
+                                node.destroy();
                             }
                             else {
                                 log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
                                 node.update(refreshed);
                             }
-                        }  catch (Exception ex) {
+                        }  
+                        catch (Exception ex) {
                             SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
@@ -354,7 +349,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 @Override
                 public void run() {
                     beanTreeView.expand(expanded);
-                    beanTreeView.selectPaths(selected);
                 }
             });
         }
