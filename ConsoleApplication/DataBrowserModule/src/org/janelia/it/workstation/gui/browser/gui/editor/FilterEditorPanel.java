@@ -10,7 +10,6 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -24,7 +23,9 @@ import javax.swing.*;
 
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
@@ -110,7 +111,7 @@ public class FilterEditorPanel extends JPanel
     // Results
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    
+
     public FilterEditorPanel() {
 
         this.saveButton = new JButton("Save");
@@ -130,7 +131,6 @@ public class FilterEditorPanel extends JPanel
                             filterToSave.setCriteriaList(filter.getCriteriaList());
                             filterToSave.setSearchClass(filter.getSearchClass());
                             filterToSave.setSearchString(filter.getSearchString());
-                            filterToSave.setSort(filter.getSort());
                             log.info("Saving filter '{}' with id {}",filterToSave.getName(),filterToSave.getId());
                         }
                         else {
@@ -143,6 +143,7 @@ public class FilterEditorPanel extends JPanel
                     @Override
                     protected void hadSuccess() {
                         setFilter(savedFilter);
+                        savePreferences();
                         saveButton.setVisible(false);
                     }
 
@@ -193,6 +194,7 @@ public class FilterEditorPanel extends JPanel
                         savedFilter = model.save(savedFilter);
                         model.addChild(model.getDefaultWorkspace(), savedFilter);
                         setFilter(savedFilter);
+                        savePreferences();
                     }
 
                     @Override
@@ -305,6 +307,7 @@ public class FilterEditorPanel extends JPanel
         selectionModel.setParentObject(filter);
         this.dirty = false;
         setFilter(filter);
+        loadPreferences();
 
         try {
             updateView();
@@ -773,13 +776,47 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
+    public String getSortField() {
+        return searchConfig.getSortCriteria();
+    }
+
+    @Override
     public void setSortField(String sortCriteria) {
-        this.filter.setSort(sortCriteria);
+        searchConfig.setSortCriteria(sortCriteria);
+        savePreferences();
     }
 
     @Override
     public void search() {
         refreshSearchResults(true);
+    }
+
+    private void loadPreferences() {
+        if (filter.getId()==null) return;
+        try {
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString());
+            if (sortCriteriaPref!=null) {
+                log.info("Loaded sort criteria preference: {}",sortCriteriaPref.getValue());
+                searchConfig.setSortCriteria((String) sortCriteriaPref.getValue());
+            }
+            else {
+                searchConfig.setSortCriteria(null);
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
+            log.info("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
     }
 
     @Override
@@ -832,6 +869,6 @@ public class FilterEditorPanel extends JPanel
     public void loadState(DomainObjectEditorState state) {
         // TODO: do a better job of restoring the state
         resultsPanel.setViewerType(state.getListViewerState().getType());
-        loadDomainObjectNode((FilterNode)state.getDomainObjectNode(), true, null);
+        loadDomainObjectNode(state.getDomainObjectNode(), true, null);
     }
 }

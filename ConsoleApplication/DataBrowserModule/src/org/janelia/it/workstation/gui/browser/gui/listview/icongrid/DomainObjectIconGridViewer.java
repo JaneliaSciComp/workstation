@@ -28,7 +28,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainObjectProviderHelper;
@@ -38,13 +37,13 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.IconGridViewerConfigDi
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -172,14 +171,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
-                    if (preference==null) {
-                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
-                    }
-                    else {
-                        preference.setValue(value);
-                    }
-                    DomainMgr.getDomainMgr().savePreference(preference);
+                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
                 }
             }
 

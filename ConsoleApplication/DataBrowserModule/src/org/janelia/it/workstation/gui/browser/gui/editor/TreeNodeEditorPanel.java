@@ -13,7 +13,9 @@ import javax.swing.JPanel;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -65,7 +67,8 @@ public class TreeNodeEditorPanel extends JPanel
     // Results
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    
+    private String sortCriteria;
+
     public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
@@ -134,6 +137,8 @@ public class TreeNodeEditorPanel extends JPanel
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 domainObjects = model.getDomainObjects(treeNode.getChildren());
                 annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                loadPreferences();
+                prepareResults();
                 log.info("Showing "+domainObjects.size()+" items");
             }
 
@@ -153,9 +158,13 @@ public class TreeNodeEditorPanel extends JPanel
 
         worker.execute();
     }
-    
-    public void showResults() {
+
+    private void prepareResults() throws Exception {
+        DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
+    }
+
+    private void showResults() {
         resultsPanel.showSearchResults(searchResults, true);
     }
 
@@ -211,42 +220,26 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void setSortField(final String sortCriteria) {
+    public String getSortField() {
+        return sortCriteria;
+    }
 
-        resultsPanel.showLoadingIndicator();
+    @Override
+    public void setSortField(final String sortCriteria) {
+        this.sortCriteria = sortCriteria;
+        savePreferences();
+    }
+
+    @Override
+    public void search() {
 
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-                final boolean ascending = !sortCriteria.startsWith("-");
-
-                final Map<DomainObject,Object> fieldValues = new HashMap<>();
-                for(DomainObject domainObject : domainObjects) {
-                    Object value = ClientDomainUtils.getFieldValue(domainObject, sortField);
-                    fieldValues.put(domainObject, value);
-                }
-
-                Collections.sort(domainObjects, new Comparator<DomainObject>() {
-                    @Override
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    public int compare(DomainObject o1, DomainObject o2) {
-                        try {
-                            Comparable v1 = (Comparable)fieldValues.get(o1);
-                            Comparable v2 = (Comparable)fieldValues.get(o2);
-                            Ordering ordering = Ordering.natural().nullsLast();
-                            if (!ascending) {
-                                ordering = ordering.reverse();
-                            }
-                            return ComparisonChain.start().compare(v1, v2, ordering).result();
-                        }
-                        catch (Exception e) {
-                            log.error("Problem encountered when sorting DomainObjects", e);
-                            return 0;
-                        }
-                    }
-                });
+                loadPreferences();
+                prepareResults();
+                log.info("Showing "+domainObjects.size()+" items");
             }
 
             @Override
@@ -265,11 +258,6 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void search() {
-        // Nothing needs to be done here, because results were updated by setSortField()
-    }
-
-    @Override
     public void export() {
         DomainObjectTableViewer viewer = null;
         if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
@@ -277,6 +265,32 @@ public class TreeNodeEditorPanel extends JPanel
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
+    }
+
+    private void loadPreferences() {
+        if (treeNode.getId()==null) return;
+        try {
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString());
+            if (sortCriteriaPref!=null) {
+                sortCriteria = (String)sortCriteriaPref.getValue();
+            }
+            else {
+                sortCriteria = null;
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (StringUtils.isEmpty(sortCriteria)) return;
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
     }
 
     @Override

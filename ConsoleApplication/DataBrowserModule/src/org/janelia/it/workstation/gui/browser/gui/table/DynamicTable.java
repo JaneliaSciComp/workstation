@@ -521,6 +521,10 @@ public abstract class DynamicTable extends JPanel {
         return null;
     }
 
+    public int getTableColumnIndex(DynamicColumn column) {
+        return displayedColumns.indexOf(column);
+    }
+
     public TableColumn getTableColumn(DynamicColumn column) {
         int index = columns.indexOf(column);
         if (index<0) {

@@ -294,30 +294,27 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     private void setPreference(final String name, final String value) {
 
+        Utils.setMainFrameCursorWaitStatus(true);
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
-                    if (preference==null) {
-                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
-                    }
-                    else {
-                        preference.setValue(value);
-                    }
-                    DomainMgr.getDomainMgr().savePreference(preference);
+                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
                 }
             }
 
             @Override
             protected void hadSuccess() {
+                Utils.setMainFrameCursorWaitStatus(false);
                 search();
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setMainFrameCursorWaitStatus(false);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };

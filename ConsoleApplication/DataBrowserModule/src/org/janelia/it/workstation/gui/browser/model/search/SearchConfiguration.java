@@ -47,6 +47,7 @@ public class SearchConfiguration {
     // Source state
     private final Filter filter;
     private final int pageSize;
+    private String sortCriteria;
     
     // Derived from source state
     private Class<? extends DomainObject> searchClass;
@@ -66,6 +67,14 @@ public class SearchConfiguration {
     
     public Filter getFilter() {
         return filter;
+    }
+
+    public String getSortCriteria() {
+        return sortCriteria;
+    }
+
+    public void setSortCriteria(String sortCriteria) {
+        this.sortCriteria = sortCriteria;
     }
 
     public final void setSearchClass(Class<? extends DomainObject> searchClass) {
@@ -260,7 +269,6 @@ public class SearchConfiguration {
         log.debug("Adding facet filters: {}",filters);
         builder.getFilters().putAll(filters);
 
-        String sortCriteria = filter.getSort();
         if (!StringUtils.isEmpty(sortCriteria)) {
             String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
             log.debug("Setting sort: {}",sortCriteria);

@@ -28,9 +28,6 @@ import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.support.SearchType;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.TemplateEditorTextbox;
@@ -189,7 +186,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
     }
 
     private CompletionProvider createCompletionProvider(Class<? extends DomainObject> resultClass) {
-        List<DomainObjectAttribute> attrs = ClientDomainUtils.getUniqueAttributes(resultClass);
+        List<DomainObjectAttribute> attrs = DomainUtils.getUniqueAttributes(resultClass);
         DefaultCompletionProvider provider = new DefaultCompletionProvider();
         for(DomainObjectAttribute attr : attrs) {
             provider.addCompletion(new ShorthandCompletion(provider, attr.getLabel(), "{"+attr.getLabel()+"}", ""));

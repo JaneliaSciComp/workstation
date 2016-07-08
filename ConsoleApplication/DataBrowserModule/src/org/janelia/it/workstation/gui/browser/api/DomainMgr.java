@@ -158,6 +158,24 @@ public class DomainMgr {
         log.info("Saved preference in category {} with {}={}",preference.getCategory(),preference.getKey(),preference.getValue());
     }
 
+    /**
+     * Set the given preference value, creating the preference if necessary.
+     * @param category
+     * @param key
+     * @param value
+     * @throws Exception
+     */
+    public void setPreference(String category, String key, String value) throws Exception {
+        Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
+        if (preference==null) {
+            preference = new Preference(AccessManager.getSubjectKey(), category, key, value);
+        }
+        else {
+            preference.setValue(value);
+        }
+        savePreference(preference);
+    }
+
     public Map<String,String> loadPreferencesAsMap(String category) throws Exception {
         List<Preference> titlePreferences = DomainMgr.getDomainMgr().getPreferences(category);
         Map<String,String> map = new HashMap<>();
