@@ -521,7 +521,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         for(Sample sample : samples) {
             if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                vllMenuItem.setEnabled(false);
+                submenu.setEnabled(false);
                 break;
             }
         }
