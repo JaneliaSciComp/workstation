@@ -63,6 +63,13 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import javax.swing.Icon;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -92,8 +99,15 @@ public class LayersPanel extends JPanel implements Refreshable {
     
     private AlignmentBoardContext alignmentBoardContext;
     private SimpleWorker worker;
+    private Map<String,String> classToIcon = new HashMap<>();
+        
     
     public LayersPanel() {
+        classToIcon.put(Sample.class.getSimpleName(), "beaker.png");
+        classToIcon.put(NeuronFragment.class.getSimpleName(), "brick.png");
+        classToIcon.put(ABReferenceChannel.REF_CHANNEL_TYPE_NAME, "images.png");
+        classToIcon.put(Compartment.class.getSimpleName(), "matrix.png");
+        classToIcon.put(CompartmentSet.class.getSimpleName(), "matrix.png");
         domainHelper = new DomainHelper();
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
@@ -633,6 +647,7 @@ public class LayersPanel extends JPanel implements Refreshable {
 				} else {
 					label.setText(alignmentBoardItem.getName());
 				}
+                label.setIcon(getIcon(alignmentBoardItem));
             }
             else if (value instanceof String) {
 
@@ -642,6 +657,20 @@ public class LayersPanel extends JPanel implements Refreshable {
             }
             
             return label;
+        }
+        
+        private Icon getIcon(AlignmentBoardItem alignmentBoardItem) {            
+            if (alignmentBoardItem == null  ||  alignmentBoardItem.getTarget() == null  ||  alignmentBoardItem.getTarget().getObjectRef() == null) {
+                return null;
+            }
+            else {
+                String targetClassName = alignmentBoardItem.getTarget().getObjectRef().getTargetClassName();
+                Icon icon = Icons.getIcon(classToIcon.get(targetClassName));
+                if (icon == null  &&  alignmentBoardItem.getName().equals(ABReferenceChannel.REF_CHANNEL_TYPE_NAME)) {
+                    icon = Icons.getIcon(classToIcon.get(alignmentBoardItem.getName()));
+                }
+                return icon;
+            }
         }
     }
 
