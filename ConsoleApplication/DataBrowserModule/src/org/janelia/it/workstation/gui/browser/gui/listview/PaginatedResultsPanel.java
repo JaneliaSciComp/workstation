@@ -395,7 +395,9 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     public void showLoadingIndicator() {
-        resultsView.showLoadingIndicator();
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        updateUI();
     }
     
     public void showResultsView() {
@@ -423,6 +425,12 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
+
+        if (searchResults==null) {
+            // First load into this panel, so we need a top-level loading indicator, since the resultsView isn't active yet
+            showLoadingIndicator();
+        }
+
         this.searchResults = searchResults;
         numPages = searchResults.getNumTotalPages();
         if (isUserDriven) {

@@ -537,7 +537,14 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
                 imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
                 imagesPanel.setScrollLoadingEnabled(true);
-                imagesPanel.loadUnloadImages();
+                updateUI(); // Make sure buttons are displayed before calling load/unload to load their contents
+
+                SwingUtilities.invokeLater(new Runnable() {
+                   @Override
+                   public void run() {
+                       imagesPanel.loadUnloadImages();
+                   }
+               });
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);
