@@ -88,7 +88,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         if (result==null) return;
         
         if (!debouncer.queue(null)) {
-            log.debug("Skipping load, since there is one already in progress");
+            log.info("Skipping load, since there is one already in progress");
             return;
         }
         

@@ -200,7 +200,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-        
+
         editor.loadSampleResult(result, isUserDriven, success);
 
         String sampleName = StringUtils.abbreviate(result.getParentRun().getParent().getParent().getName(), 18);
