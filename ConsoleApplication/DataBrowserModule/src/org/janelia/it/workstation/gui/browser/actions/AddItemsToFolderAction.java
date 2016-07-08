@@ -173,8 +173,6 @@ public class AddItemsToFolderAction implements NamedAction {
 
     private void addUniqueItemsToFolder(final TreeNode treeNode, final Long[] idPath) {
 
-        final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-
         int existing = 0;
         for(DomainObject domainObject : domainObjects) {
             if (treeNode.hasChild(domainObject)) {
@@ -202,13 +200,6 @@ public class AddItemsToFolderAction implements NamedAction {
             @Override
             protected void hadSuccess() {
                 log.info("Added to folder {}", treeNode.getId());
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        explorer.expand(idPath);
-                        explorer.selectNodeByPath(idPath);
-                    }
-                });
             }
 
             @Override
