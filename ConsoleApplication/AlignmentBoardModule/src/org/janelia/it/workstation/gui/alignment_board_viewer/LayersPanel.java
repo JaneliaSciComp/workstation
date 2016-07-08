@@ -666,7 +666,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             else {
                 String targetClassName = alignmentBoardItem.getTarget().getObjectRef().getTargetClassName();
                 Icon icon = Icons.getIcon(classToIcon.get(targetClassName));
-                if (icon == null  &&  alignmentBoardItem.getName().equals(ABReferenceChannel.REF_CHANNEL_TYPE_NAME)) {
+                if (ABReferenceChannel.REF_CHANNEL_TYPE_NAME.equals(alignmentBoardItem.getName())) {
                     icon = Icons.getIcon(classToIcon.get(alignmentBoardItem.getName()));
                 }
                 return icon;
