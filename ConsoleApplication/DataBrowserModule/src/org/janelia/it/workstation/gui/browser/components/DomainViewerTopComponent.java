@@ -200,7 +200,8 @@ public final class DomainViewerTopComponent extends TopComponent {
             if (domainObject instanceof NeuronFragment) {
                 NeuronFragment fragment = (NeuronFragment) domainObject;
                 domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-            } else if (domainObject instanceof LSMImage) {
+            }
+            else if (domainObject instanceof LSMImage) {
                 LSMImage lsmImage = (LSMImage) domainObject;
                 domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
             }
@@ -230,6 +231,12 @@ public final class DomainViewerTopComponent extends TopComponent {
 
     private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Sample) {
+            return SampleEditorPanel.class;
+        }
+        else if (domainObject instanceof NeuronFragment) {
+            return SampleEditorPanel.class;
+        }
+        else if (domainObject instanceof LSMImage) {
             return SampleEditorPanel.class;
         }
         return null;
