@@ -339,7 +339,7 @@ public class SkeletonActorModel {
         }
 
         if (mostRecentAnchorVersion==skeleton.getAnchorSetVersion()) {
-            // log.info("updateAnchors() skipping redundant update"); 
+            // log.info("updateAnchors() skipping redundant update");
             return;
         } else {
             mostRecentAnchorVersion=skeleton.getAnchorSetVersion();

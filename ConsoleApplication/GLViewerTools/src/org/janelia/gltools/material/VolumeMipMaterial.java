@@ -38,7 +38,10 @@ import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector4;
+import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.VolumeTextureMesh;
+import org.janelia.geometry3d.camera.BasicViewSlab;
+import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderProgram;
@@ -86,7 +89,10 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
-    private float relativeSlabThickness = 0.5f;
+    
+    // private float relativeSlabThickness = 0.5f;
+    private float relativeZNear = 0.92f;
+    private float relativeZFar = 1.08f;
     
     public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
     {
@@ -100,6 +106,22 @@ public class VolumeMipMaterial extends BasicMaterial
         shaderProgram = mipShader;
         
         setShadingStyle(Shading.FLAT);
+    }
+
+    public float getRelativeZNear() {
+        return relativeZNear;
+    }
+
+    public void setRelativeZNear(float relativeZNear) {
+        this.relativeZNear = relativeZNear;
+    }
+
+    public float getRelativeZFar() {
+        return relativeZFar;
+    }
+
+    public void setRelativeZFar(float relativeZFar) {
+        this.relativeZFar = relativeZFar;
     }
     
     public Texture3d getTexture() {return volumeTexture;}
@@ -123,13 +145,13 @@ public class VolumeMipMaterial extends BasicMaterial
         gl.glCullFace(GL3.GL_FRONT);
     }
     
-    public void setRelativeSlabThickness(float thickness) {
-        relativeSlabThickness = thickness;
-    }
+    // public void setRelativeSlabThickness(float thickness) {
+    //     relativeSlabThickness = thickness;
+    // }
     
-    public float getViewSlabThickness(AbstractCamera camera) {
-        return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
-    }
+    // public float getViewSlabThickness(AbstractCamera camera) {
+    //     return relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
+    // }
     
     /*
     public static float getViewSlabThickness(AbstractCamera camera) {
@@ -209,7 +231,7 @@ public class VolumeMipMaterial extends BasicMaterial
             gl.glUniform1i(levelOfDetailIndex, intLod);
             
             // Clip on slab, to limit depth of rendering
-            float slabThickness = getViewSlabThickness(camera);
+            // float slabThickness = getViewSlabThickness(camera);
             // float slabThickness = relativeSlabThickness * camera.getVantage().getSceneUnitsPerViewportHeight();
             float cameraFocusDistance = 0.0f;
             if (camera instanceof PerspectiveCamera) {
@@ -218,9 +240,9 @@ public class VolumeMipMaterial extends BasicMaterial
             }
             // Plane equation is easy to express in camera frame
             Vector4 nearSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance - 0.5f*slabThickness);
+                    cameraFocusDistance * relativeZNear);
             Vector4 farSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance + 0.5f*slabThickness);
+                    cameraFocusDistance * relativeZFar);
             // But we need plane equation in texture coordinate frame
             Matrix4 planeXform = camera_X_tc.inverse().transpose(); // look it up...
             Vector4 nearSlabPlane_tc = planeXform.multiply( nearSlabPlane_camera );
@@ -258,7 +280,33 @@ public class VolumeMipMaterial extends BasicMaterial
        
         super.displayMesh(gl, mesh, camera, modelViewMatrix);
     }
-    
+
+    @Override
+    protected void displayWithMatrices(
+                GL3 gl, 
+                MeshActor mesh, 
+                AbstractCamera camera,
+                Matrix4 modelViewMatrix) 
+    {
+        
+        Viewport vp = camera.getViewport();
+        ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative() / 10.0f, vp.getzFarRelative() + 100.0f);
+        try {
+            camera.pushInternalViewSlab(slab);
+            if (modelViewMatrix == null)
+                modelViewMatrix = new Matrix4(camera.getViewMatrix());
+            gl.glUniformMatrix4fv(modelViewIndex, 1, false, modelViewMatrix.asArray(), 0);
+        
+            Matrix4 projectionMatrix = camera.getProjectionMatrix();
+            gl.glUniformMatrix4fv(projectionIndex, 1, false, projectionMatrix.asArray(), 0);
+
+            displayNoMatrices(gl, mesh, camera, modelViewMatrix);
+        }
+        finally {
+            camera.popInternalViewSlab();
+        }
+    }
+
     @Override
     public void dispose(GL3 gl) {
         // Destroy extra shader programs
