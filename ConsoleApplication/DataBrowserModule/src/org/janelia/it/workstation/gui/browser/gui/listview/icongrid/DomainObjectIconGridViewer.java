@@ -412,13 +412,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     action.doAction();
                 }
             }
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     protected void configButtonPressed() {
         try {
+            if (domainObjectList.getDomainObjects().isEmpty()) return;
+
             DomainObject firstObject;
             List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
             if (selectedObjects.isEmpty()) {
@@ -433,7 +436,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 this.config = IconGridViewerConfiguration.loadConfig();
                 refresh();
             }
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
