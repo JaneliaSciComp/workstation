@@ -31,9 +31,11 @@ import org.slf4j.LoggerFactory;
 public class ImageTypeSelectionButton extends DropDownButton {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
-    
+
+    private FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
+
     private ResultDescriptor currResult;
-    private String currImageType;
+    private String currImageType = DEFAULT_TYPE.name();
     private boolean showTitle;
 
     public ImageTypeSelectionButton() {
@@ -49,9 +51,16 @@ public class ImageTypeSelectionButton extends DropDownButton {
     public void setResultDescriptor(ResultDescriptor currResult) {
         this.currResult = currResult;
     }
-    
+
+    public String getImageType() {
+        return currImageType;
+    }
+
     public void setImageType(String currImageType) {
         this.currImageType = currImageType;
+        if (currImageType == null) {
+            this.currImageType = DEFAULT_TYPE.name();
+        }
         if (showTitle) {
             setText(currImageType);
         }
@@ -66,7 +75,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
         }
-        
+
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
             
         for(Object source : sourceList) {
@@ -98,11 +107,8 @@ public class ImageTypeSelectionButton extends DropDownButton {
         log.debug("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
         for(FileType fileType : FileType.values()) {
             final String typeName = fileType.name();
-            log.trace("Type {} has count={}",typeName,countedTypeNames.count(typeName));
-            if (countedTypeNames.count(typeName)>0) {
-                if (currImageType == null || !countedTypeNames.contains(currImageType)) {
-                    this.currImageType = typeName;
-                }
+            log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+            if (countedTypeNames.count(typeName)>0 || fileType.equals(FileType.FirstAvailable2d)) {
                 JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(currImageType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
@@ -114,29 +120,8 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 group.add(menuItem);
             }
         }
-        
-        // Default type
-        if (currImageType == null) {
-            this.currImageType = FileType.SignalMip.name();
-            // If there are no signal MIPs, try something else
-            if (countedTypeNames.count(currImageType)==0) {
-                log.info("No signal MIPs, looking for another default");
-                for (FileType fileType : FileType.values()) {
-                    if (countedTypeNames.count(fileType)>0) {
-                        this.currImageType = fileType.name();
-                        log.info("Choosing default image type: {}",currImageType);
-                        break;
-                    }
-                }
-            }
-
-        }
     }
     
     protected void imageTypeChanged(String typeName) {}
-    
-    public String getImageType() {
-        return currImageType;
-    }
 
 }
