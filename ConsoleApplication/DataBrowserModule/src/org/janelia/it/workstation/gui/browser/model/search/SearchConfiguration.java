@@ -278,10 +278,16 @@ public class SearchConfiguration {
 
         if (!StringUtils.isEmpty(sortCriteria)) {
             String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            log.debug("Setting sort: {}",sortCriteria);
             DomainObjectAttribute sortAttr = searchAttrs.get(sortField);
-            builder.setSortField(sortAttr.getSearchKey());
-            builder.setAscending(!sortCriteria.startsWith("-"));
+            if (sortAttr!=null) {
+                log.debug("Setting sort: {}",sortCriteria);
+                builder.setSortField(sortAttr.getSearchKey());
+                builder.setAscending(!sortCriteria.startsWith("-"));
+            }
+            else {
+                log.debug("Unknown sort field: {}",sortCriteria);
+            }
+
         }
         
         return builder;
