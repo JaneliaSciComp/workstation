@@ -166,7 +166,14 @@ public class SearchConfiguration {
                 if (criteria instanceof FacetCriteria) {
                     FacetCriteria fc = (FacetCriteria) criteria;
                     DomainObjectAttribute attr = searchAttrs.get(fc.getAttributeName());
-                    filters.put(attr.getFacetKey(), fc.getValues());
+                    if (attr!=null) {
+                        if (attr.getFacetKey()==null) {
+                            log.warn("Search requests facet {} but it does not have a defined facet key on {}",fc.getAttributeName(),searchType);
+                        }
+                        else {
+                            filters.put(attr.getFacetKey(), fc.getValues());
+                        }
+                    }
                 }
                 else if (criteria instanceof AttributeCriteria) {
                     AttributeCriteria ac = (AttributeCriteria) criteria;

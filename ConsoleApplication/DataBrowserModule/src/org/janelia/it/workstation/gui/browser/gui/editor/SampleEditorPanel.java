@@ -859,13 +859,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             if (result!=null) {
                 this.resultDescriptor = new ResultDescriptor(result);
-                if (result instanceof SampleAlignmentResult) {
-                    SampleAlignmentResult sar = (SampleAlignmentResult)result;
-                    label.setText(resultDescriptor+" ("+sar.getAlignmentSpace()+")");
-                }
-                else {
-                    label.setText(resultDescriptor.toString());
-                }
+                label.setText(resultDescriptor.toString());
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
                 String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);

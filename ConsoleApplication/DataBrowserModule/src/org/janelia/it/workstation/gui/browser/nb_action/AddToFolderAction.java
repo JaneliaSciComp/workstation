@@ -63,7 +63,6 @@ public class AddToFolderAction extends NodePresenterAction {
     public void setDomainObjects(Collection<DomainObject> domainObjectList) {
         domainObjects.clear();
         domainObjects.addAll(domainObjectList);
-        log.info("setDomainObjects: {}",domainObjects.size());
     }
 
     /**
@@ -93,8 +92,6 @@ public class AddToFolderAction extends NodePresenterAction {
         
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
-
-        log.info("Seelcted objects: {}",domainObjects.size());
 
         String name = domainObjects.size() > 1 ? "Add " + domainObjects.size() + " Items To Folder" : "Add To Folder";
         JMenu newFolderMenu = new JMenu(name);
