@@ -240,6 +240,10 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
             // not accumulate redundant tasks.  If one is waiting to save
             // this neuron, no need to schedule another, which will just
             // save it again after--and possibly after other operations.
+
+
+            // this doesn't work right now; keeping it in because I hope to fix it
+            /*
             for (Runnable runnable: saveQueue.getQueue()) {
                 SaveNeuronRunnable snr = (SaveNeuronRunnable)runnable;
                 if (snr.sameNeuron(neuron)  &&  ! snr.isRunning()) {
@@ -247,6 +251,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                     return;
                 }
             }
+            */
             SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(workspaceEntity, neuron);
             saveQueue.submit(saveNeuronRunnable);
         }

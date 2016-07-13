@@ -59,7 +59,8 @@ public final class SessionMgr implements ActivityLogging {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
 
-    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 50;
+    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
+    public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     private static final int MAX_PORT_TRIES = 20;
@@ -428,8 +429,10 @@ public final class SessionMgr implements ActivityLogging {
      */
     public void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
 
-        if ((gigabyteCapacity == null)
-                || (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY)) {
+        if (gigabyteCapacity == null) {
+            gigabyteCapacity = DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
+        }
+        else if (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY) {
             gigabyteCapacity = MIN_FILE_CACHE_GIGABYTE_CAPACITY;
         }
         else if (gigabyteCapacity > MAX_FILE_CACHE_GIGABYTE_CAPACITY) {

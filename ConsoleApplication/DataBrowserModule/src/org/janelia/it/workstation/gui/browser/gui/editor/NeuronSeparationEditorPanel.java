@@ -286,7 +286,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void sortByFragmentWeight() {
-        setSortField("-voxelWeight");
+        this.sortCriteria = "-voxelWeight";
     }
     
     private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {
@@ -368,7 +368,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 else {
                     domainObjects = model.getDomainObjects(separation.getFragmentsReference());
                     // TODO: set up global preference for visibility, allow users to select other user's preferences
-                    annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
+                    annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                    fragmentSortButton.setVisible(false);
+                    for (DomainObject obj:domainObjects) {
+                        NeuronFragment fragment = (NeuronFragment)obj;
+                        if (fragment.getVoxelWeight()!=null) {
+                            fragmentSortButton.setVisible(true);
+                            break;
+                        }
+                    }
                 }
                 loadPreferences();
                 prepareResults();

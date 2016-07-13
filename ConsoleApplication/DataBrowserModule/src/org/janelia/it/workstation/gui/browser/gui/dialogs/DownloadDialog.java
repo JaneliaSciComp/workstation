@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -40,7 +39,6 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SolrSearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -123,7 +121,7 @@ public class DownloadDialog extends ModalDialog {
         @Override
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-                log.info("Item state changed: {}", e);
+                log.trace("Item state changed: {}", e);
                 populateDownloadItemList(null);
             }
         }
@@ -202,7 +200,7 @@ public class DownloadDialog extends ModalDialog {
             }
         });
         Component mainFrame = SessionMgr.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.3)));
+        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.6), (int) (mainFrame.getHeight() * 0.4)));
         packAndShow();
     }
 
@@ -316,9 +314,14 @@ public class DownloadDialog extends ModalDialog {
     
     private void populateUI() {
 
-        attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
+        attrPanel = new JPanel(new MigLayout(
+                "wrap 2, ins 10, fill",
+                "[growprio 0]0[growprio 1, grow]",
+                "[][][][growprio 200][][][][][][][][][][growprio 200]"
 
-        addSeparator(attrPanel, "Items to Export");
+        ));
+
+        addSeparator(attrPanel, "Items to Export"); // Row #1
         
         DefaultComboBoxModel<String> etmodel = new DefaultComboBoxModel<>();
         etmodel.setSelectedItem(currItemsToExport);
@@ -345,15 +348,15 @@ public class DownloadDialog extends ModalDialog {
             }
         });
         
-        addField("Select type:", exportTypeCombo, "width 100:150:200, grow");
+        addField("Select type:", exportTypeCombo, "width 100:150:200, grow"); // Row #2
         
         expandedObjectCountLabel = new JLabel();
-        addField("Item count:", expandedObjectCountLabel);
+        addField("Item count:", expandedObjectCountLabel);  // Row #3
         
         expandedObjectList = new JList<>(new DefaultListModel<String>());
         expandedObjectList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         expandedObjectList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:600:800, height 30:100:200, grow");
+        addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:600:2000, height 30:100:1000, grow");  // Row #4
         
         resultButton = new ResultSelectionButton(onlySampleInputs) {
             protected void resultChanged(ResultDescriptor resultDescriptor) {
@@ -363,24 +366,24 @@ public class DownloadDialog extends ModalDialog {
         resultButton.setResultDescriptor(defaultResultDescriptor);
         resultButton.populate(expandedObjects);
         resultButton.setVisible(true); // Show even if there is nothing to select. We'll just make it disabled.
-        addField("Select result:", resultButton);
+        addField("Select result:", resultButton); // Row #5
         
         updateResultCombo();
         
-        addSeparator(attrPanel, "File Processing");
+        addSeparator(attrPanel, "File Processing"); // Row #6
         
         formatCombo = new JComboBox<>();
         formatCombo.setEditable(false);
         formatCombo.setToolTipText("Choose an export format");
-        addField("Output file format:", formatCombo);
+        addField("Output file format:", formatCombo); // Row #7
         
         splitChannelCheckbox = new JCheckBox();
-        addField("Split channels?", splitChannelCheckbox);
+        addField("Split channels?", splitChannelCheckbox); // Row #8
         
-        addSeparator(attrPanel, "File Naming");
+        addSeparator(attrPanel, "File Naming"); // Row #9
         
         flattenStructureCheckbox = new JCheckBox();
-        addField("Flatten folder structure?", flattenStructureCheckbox);
+        addField("Flatten folder structure?", flattenStructureCheckbox); // Row #10
 
         filePatternCombo = new JComboBox<>();
         filePatternCombo.setEditable(true);
@@ -394,18 +397,17 @@ public class DownloadDialog extends ModalDialog {
             fpmodel.addElement(pattern);
         }
 
-        addField("Naming pattern:", filePatternCombo, "width 200:300:600, grow");
-        
-        attrPanel.add(new JLabel(""), "gap para, aligny top");
-        attrPanel.add(new JLabel(FILE_PATTERN_HELP), "gap para, width 200:800:1000, grow, ay top");
+        addField("Naming pattern:", filePatternCombo, "width 200:300:600, grow"); // Row #11
+
+        addField("", new JLabel(FILE_PATTERN_HELP), "width 200:800:1000, grow"); // Row #12
 
         downloadItemCountLabel = new JLabel();
-        addField("File count:", downloadItemCountLabel);
+        addField("File count:", downloadItemCountLabel); // Row #13
         
         downloadItemList = new JList<>(new DefaultListModel<DownloadItem>());
         downloadItemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         downloadItemList.setLayoutOrientation(JList.VERTICAL);
-        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:1300:1300, height 80:300:1000, grow");
+        addField("Preview files:", new JScrollPane(downloadItemList), "width 200:600:2000, height 50:200:1000, grow"); // Row #14
 
         // Add change listeners
         formatCombo.addItemListener(changeListener);
