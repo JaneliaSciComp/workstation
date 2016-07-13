@@ -166,7 +166,14 @@ public class SearchConfiguration {
                 if (criteria instanceof FacetCriteria) {
                     FacetCriteria fc = (FacetCriteria) criteria;
                     DomainObjectAttribute attr = searchAttrs.get(fc.getAttributeName());
-                    filters.put(attr.getFacetKey(), fc.getValues());
+                    if (attr!=null) {
+                        if (attr.getFacetKey()==null) {
+                            log.warn("Search requests facet {} but it does not have a defined facet key on {}",fc.getAttributeName(),searchType);
+                        }
+                        else {
+                            filters.put(attr.getFacetKey(), fc.getValues());
+                        }
+                    }
                 }
                 else if (criteria instanceof AttributeCriteria) {
                     AttributeCriteria ac = (AttributeCriteria) criteria;
@@ -271,10 +278,16 @@ public class SearchConfiguration {
 
         if (!StringUtils.isEmpty(sortCriteria)) {
             String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            log.debug("Setting sort: {}",sortCriteria);
             DomainObjectAttribute sortAttr = searchAttrs.get(sortField);
-            builder.setSortField(sortAttr.getSearchKey());
-            builder.setAscending(!sortCriteria.startsWith("-"));
+            if (sortAttr!=null) {
+                log.debug("Setting sort: {}",sortCriteria);
+                builder.setSortField(sortAttr.getSearchKey());
+                builder.setAscending(!sortCriteria.startsWith("-"));
+            }
+            else {
+                log.debug("Unknown sort field: {}",sortCriteria);
+            }
+
         }
         
         return builder;

@@ -86,6 +86,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 //  the intial entity, but we need the sample either way to be able to open it:
                 if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     sliceSample = initialEntity;
+                    HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                     // Which version of workspace?  Can it be handled, here?
                     boolean usableVersion = false;

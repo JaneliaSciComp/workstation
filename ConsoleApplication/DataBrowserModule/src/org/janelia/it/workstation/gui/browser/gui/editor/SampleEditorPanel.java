@@ -359,7 +359,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             @Override
             protected void hadSuccess() {
-                showResults();
+                showResults(true);
             }
 
             @Override
@@ -488,7 +488,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             @Override
             protected void hadSuccess() {
-                showResults();
+                showResults(isUserDriven);
                 
                 if (MODE_RESULTS.equals(currMode))  {
                     if (!resultPanels.isEmpty()) {
@@ -518,12 +518,12 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         updateUI();
     }
     
-    public void showResults() {
+    public void showResults(boolean isUserDriven) {
         if (MODE_LSMS.equals(currMode))  {
-            showLsmView();
+            showLsmView(isUserDriven);
         }
         else if (MODE_RESULTS.equals(currMode)) {
-            showResultView();
+            showResultView(isUserDriven);
         }
         updateUI();
     }
@@ -552,7 +552,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
     }
 
-    private void showLsmView() {
+    private void showLsmView(boolean isUserDriven) {
 
     	configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(objectiveButton);
@@ -577,14 +577,14 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
 
-        lsmPanel.showSearchResults(lsmSearchResults, true);
+        lsmPanel.showSearchResults(lsmSearchResults, isUserDriven);
         
         removeAll();
         add(configPanel, BorderLayout.NORTH);
         add(lsmPanel, BorderLayout.CENTER);
     }
 
-    private void showResultView() {
+    private void showResultView(boolean isUserDriven) {
 
         lips.clear();
         resultPanels.clear();
@@ -704,7 +704,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                 	currRunMap.put(objective, run);
-                	showResults();
+                	showResults(true);
                 }
             });
             group.add(menuItem);
@@ -859,13 +859,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             if (result!=null) {
                 this.resultDescriptor = new ResultDescriptor(result);
-                if (result instanceof SampleAlignmentResult) {
-                    SampleAlignmentResult sar = (SampleAlignmentResult)result;
-                    label.setText(resultDescriptor+" ("+sar.getAlignmentSpace()+")");
-                }
-                else {
-                    label.setText(resultDescriptor.toString());
-                }
+                label.setText(resultDescriptor.toString());
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
                 String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);
