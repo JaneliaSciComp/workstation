@@ -4,6 +4,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.awt.Color;
 
@@ -73,6 +74,7 @@ called from a  SimpleWorker thread.
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
+    private TmNeuronTagMap currentTagMap;
 
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
@@ -178,6 +180,8 @@ called from a  SimpleWorker thread.
                 log.error(ex.getMessage());
                 SessionMgr.getSessionMgr().handleException(ex);
             }
+            // likewise, we load the neuron tag map separately:
+            loadNeuronTagMap();
 
         } else {
             currentWorkspace = null;
@@ -1581,6 +1585,70 @@ called from a  SimpleWorker thread.
             });
         }
 
+    }
+
+    /**
+     * the neuron tag map is currently stored in the workspace preferences;
+     * we read and write it here, in the AnnModel, which means it's not
+     * really available if you load the workspace via the DAO; this is
+     * expected to change soon, when we go to Mongo world; at that point,
+     * we'll improve this hack
+     */
+    private void loadNeuronTagMap() {
+        if (currentTagMap == null) {
+            currentTagMap = new TmNeuronTagMap();
+        } else {
+            currentTagMap.clearAll();
+        }
+
+        if (getCurrentWorkspace() == null) {
+            return;
+        }
+
+        String tagMapString = getPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP);
+        if (tagMapString == null) {
+            return;
+        }
+
+        // decode the string and fill the tag map; brute force for now,
+        //  but I'd like to implement a bulk update in TmNeuronTagMap at some point
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = null;
+        try {
+            rootNode = (ObjectNode) mapper.readTree(tagMapString);
+        } catch (IOException e) {
+            // failed to read
+            return;
+        }
+
+        Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
+        while (nodeIterator.hasNext()) {
+            Map.Entry<String, JsonNode> entry = nodeIterator.next();
+            String tag = entry.getKey();
+            JsonNode neuronIDArray = entry.getValue();
+            if (neuronIDArray.isArray()) {
+                for (JsonNode node: neuronIDArray) {
+                    Long neuronID = node.asLong();
+                    currentTagMap.addTag(tag, neuronID);
+                }
+            } else {
+                System.out.println("expected json array and didn't get it!");
+            }
+        }
+    }
+
+    private void saveNeuronTagMap() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+
+        for (String tag: currentTagMap.getAllTags()) {
+            ArrayNode array = mapper.createArrayNode();
+            for (Long neuronID: currentTagMap.getNeuronIDs(tag)) {
+                array.add(neuronID);
+            }
+            rootNode.put(tag, array);
+        }
+        setPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP, rootNode.toString());
     }
 
     /**
