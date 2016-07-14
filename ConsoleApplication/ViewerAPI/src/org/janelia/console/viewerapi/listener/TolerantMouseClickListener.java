@@ -28,11 +28,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.console.viewerapi.listener;
 
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import javax.swing.event.MouseInputListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Allow mouse click with a tiny amount of motion to count as a mouseClicked() event
@@ -46,6 +48,7 @@ implements MouseInputListener
     private final MouseInputListener target;
     
     private MouseEvent pressedEvent = null;
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public TolerantMouseClickListener(MouseInputListener target, int maxClickDistance) {
         this.maxClickDistance = maxClickDistance;
@@ -102,6 +105,7 @@ implements MouseInputListener
                 pressedEvent.getClickCount(), 
                 pressedEvent.isPopupTrigger(), 
                 pressedEvent.getButton());
+        // logger.info("tolerant click!");
         target.mouseClicked(clickEvent);
         pressedEvent = null;
     }
