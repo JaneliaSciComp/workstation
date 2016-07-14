@@ -115,7 +115,7 @@ public class DownloadDialog extends ModalDialog {
     private String currItemsToExport = ITEM_TYPE_SELF;
     private ResultDescriptor defaultResultDescriptor;
     private List<? extends DomainObject> inputObjects;
-    boolean onlySampleInputs;
+    boolean hasSampleInputs;
     private List<DomainObject> expandedObjects;
     private List<DownloadItem> downloadItems;
     private final Debouncer debouncer = new Debouncer();
@@ -220,7 +220,6 @@ public class DownloadDialog extends ModalDialog {
         Utils.setWaitingCursor(DownloadDialog.this);
         
     	// Reset state that will be populated below
-    	onlySampleInputs = true;
     	downloadItems.clear();
     	expandedObjects.clear();
     	
@@ -255,6 +254,7 @@ public class DownloadDialog extends ModalDialog {
     }
     
     private void addObjectsToExport(List<String> path, DomainObject domainObject) {
+        hasSampleInputs = false;
         try {
             // TODO: this should update some kind of label so the user knows what's going on during a long load
             log.info("addObjectsToExport({},{})", path, domainObject.getName());
@@ -269,7 +269,8 @@ public class DownloadDialog extends ModalDialog {
                         addObjectsToExport(childPath, child);
                     }
                 }
-            } else if (domainObject instanceof TreeNode) {
+            }
+            else if (domainObject instanceof TreeNode) {
                 TreeNode treeNode = (TreeNode) domainObject;
                 List<DomainObject> children = DomainMgr.getDomainMgr().getModel().getDomainObjects(treeNode.getChildren());
                 List<String> childPath = new ArrayList<>(path);
@@ -277,7 +278,8 @@ public class DownloadDialog extends ModalDialog {
                 for (DomainObject child : children) {
                     addObjectsToExport(childPath, child);
                 }
-            } else if (domainObject instanceof Filter) {
+            }
+            else if (domainObject instanceof Filter) {
                 Filter filter = (Filter) domainObject;
                 try {
                     SearchConfiguration config = new SearchConfiguration(filter, 1000);
@@ -294,8 +296,10 @@ public class DownloadDialog extends ModalDialog {
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
-            } else {
+            }
+            else {
                 if (domainObject instanceof Sample) {
+                    hasSampleInputs = true;
                     if (currItemsToExport.equals(ITEM_TYPE_LSM)) {
                         for (LSMImage lsm : DomainMgr.getDomainMgr().getModel().getLsmsForSample((Sample) domainObject)) {
                             log.info("Adding expanded LSM: " + lsm.getName());
@@ -305,13 +309,14 @@ public class DownloadDialog extends ModalDialog {
                         log.info("Adding Sample: " + domainObject.getName());
                         downloadItems.add(new DownloadItem(path, domainObject));
                     }
-                } else {
-                    onlySampleInputs = false;
+                }
+                else {
                     log.info("Not just Samples. Adding " + domainObject.getName());
                     downloadItems.add(new DownloadItem(path, domainObject));
                 }
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -330,7 +335,7 @@ public class DownloadDialog extends ModalDialog {
         DefaultComboBoxModel<String> etmodel = new DefaultComboBoxModel<>();
         etmodel.setSelectedItem(currItemsToExport);
         etmodel.addElement(ITEM_TYPE_SELF);
-        if (onlySampleInputs) {
+        if (hasSampleInputs) {
             etmodel.addElement(ITEM_TYPE_LSM);
         }
         
@@ -362,7 +367,7 @@ public class DownloadDialog extends ModalDialog {
         expandedObjectList.setLayoutOrientation(JList.VERTICAL);
         addField("Preview items:", new JScrollPane(expandedObjectList), "width 200:600:2000, height 30:100:1000, grow");  // Row #4
         
-        resultButton = new ResultSelectionButton(onlySampleInputs) {
+        resultButton = new ResultSelectionButton(hasSampleInputs) {
             @Override
             protected void resultChanged(ResultDescriptor resultDescriptor) {
                 resultButton.setResultDescriptor(resultDescriptor);
@@ -379,7 +384,7 @@ public class DownloadDialog extends ModalDialog {
         resultButton.populate(expandedObjects);
         addField("Select result:", resultButton); // Row #5
 
-        typeButton = new ImageTypeSelectionButton(onlySampleInputs, false) {
+        typeButton = new ImageTypeSelectionButton(true, false) {
             @Override
             protected void imageTypeChanged(FileType fileType) {
                 if (fileType.is2dImage()) {
@@ -464,9 +469,7 @@ public class DownloadDialog extends ModalDialog {
     }
 
     private void updateResultCombo() {
-        boolean enabled = onlySampleInputs && currItemsToExport.equals(ITEM_TYPE_SELF);
-    	resultButton.setEnabled(enabled);
-        typeButton.setEnabled(enabled);
+    	resultButton.setEnabled(hasSampleInputs && currItemsToExport.equals(ITEM_TYPE_SELF));
     }
 
     private void populateExpandedObjectList(Callable<Void> success) {
@@ -475,7 +478,7 @@ public class DownloadDialog extends ModalDialog {
         eolm.removeAllElements();
         for(DomainObject domainObject : expandedObjects) {
             log.info("Adding expanded object to list: "+domainObject.getName());
-            eolm.addElement(domainObject.getName());
+            eolm.addElement(domainObject.getName()+" ("+domainObject.getType()+")");
         }
 
         expandedObjectCountLabel.setText(expandedObjects.size()+" items");
