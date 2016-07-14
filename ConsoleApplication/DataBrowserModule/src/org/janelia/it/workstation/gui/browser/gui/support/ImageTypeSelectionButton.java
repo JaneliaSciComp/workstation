@@ -65,10 +65,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
     }
 
     public void setImageType(FileType imageType) {
-        this.currImageType = imageType;
-        if (currImageType == null) {
-            this.currImageType = DEFAULT_TYPE;
-        }
+        this.currImageType = imageType == null ? DEFAULT_TYPE : imageType;
         if (showTitle) {
             setText(currImageType.getLabel());
         }
