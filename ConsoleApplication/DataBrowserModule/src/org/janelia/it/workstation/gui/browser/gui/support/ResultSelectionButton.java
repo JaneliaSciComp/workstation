@@ -49,6 +49,7 @@ public class ResultSelectionButton extends DropDownButton {
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
         setToolTipText("Select the result to display");
+        setResultDescriptor(ResultDescriptor.LATEST);
     }
 
     public void setResultDescriptor(ResultDescriptor currResult) {
@@ -63,11 +64,7 @@ public class ResultSelectionButton extends DropDownButton {
     }
     
     public void populate(Collection<DomainObject> domainObjects) {
-        
-        if (currResult == null) {
-            this.currResult = ResultDescriptor.LATEST;
-        }
-        
+
         Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {

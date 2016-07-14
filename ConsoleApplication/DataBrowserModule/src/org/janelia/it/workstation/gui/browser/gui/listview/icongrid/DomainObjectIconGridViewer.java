@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
@@ -91,7 +92,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             else if (domainObject instanceof HasFiles) {
                 result = (HasFiles)domainObject;
             }
-            return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageType());
+            return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageTypeName());
         }
 
         @Override
@@ -152,9 +153,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         };
         typeButton = new ImageTypeSelectionButton() {
             @Override
-            protected void imageTypeChanged(String typeName) {
-                log.info("Setting image type preference: "+typeName);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
+            protected void imageTypeChanged(FileType fileType) {
+                log.info("Setting image type preference: "+fileType);
+                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
         getToolbar().addCustomComponent(resultButton);
@@ -282,7 +283,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
-                        typeButton.setImageType((String)preference2.getValue());
+                        typeButton.setImageTypeName((String)preference2.getValue());
                     }
                 }
 
@@ -373,7 +374,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageType());
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -457,10 +458,10 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         DomainObject domainObject = selected.get(0);
         if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType());
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         }
         else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType(), false);
+            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
         }
     }
     

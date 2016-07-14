@@ -16,6 +16,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.FileGroup;
@@ -23,7 +24,6 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.FileGroupSelectionModel;
@@ -72,9 +72,9 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         typeButton = new ImageTypeSelectionButton() {
             @Override
-            protected void imageTypeChanged(String typeName) {
-                log.info("Setting image type preference: "+typeName);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
+            protected void imageTypeChanged(FileType fileType) {
+                log.info("Setting image type preference: "+fileType);
+                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
 
@@ -122,7 +122,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
             log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
-                typeButton.setImageType((String)preference2.getValue());
+                typeButton.setImageTypeName((String)preference2.getValue());
             }
             typeButton.populate(hasFileGroups.getGroups());
 
@@ -234,7 +234,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         public String getImageFilepath(FileGroup imageObject) {
-            return DomainUtils.getFilepath(imageObject, typeButton.getImageType());
+            return DomainUtils.getFilepath(imageObject, typeButton.getImageTypeName());
         }
 
         @Override

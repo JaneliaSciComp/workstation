@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Drop-down button for selecting the image type to display. 
  * 
@@ -35,34 +36,41 @@ public class ImageTypeSelectionButton extends DropDownButton {
     private FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
 
     private ResultDescriptor currResult;
-    private String currImageType = DEFAULT_TYPE.name();
+    private FileType currImageType;
+    private boolean only2d;
     private boolean showTitle;
 
     public ImageTypeSelectionButton() {
-        this(false);
+        this(false, true);
     }
     
-    public ImageTypeSelectionButton(boolean showTitle) {
+    public ImageTypeSelectionButton(boolean showTitle, boolean only2d) {
+        this.only2d = only2d;
     	this.showTitle = showTitle;
         setIcon(Icons.getIcon("image.png"));
         setToolTipText("Select the result type to display");
+        setImageType(DEFAULT_TYPE);
     }
 
     public void setResultDescriptor(ResultDescriptor currResult) {
         this.currResult = currResult;
     }
 
-    public String getImageType() {
-        return currImageType;
+    public String getImageTypeName() {
+        return currImageType.name();
     }
 
-    public void setImageType(String currImageType) {
-        this.currImageType = currImageType;
+    public void setImageTypeName(String imageType) {
+        setImageType(FileType.valueOf(imageType));
+    }
+
+    public void setImageType(FileType imageType) {
+        this.currImageType = imageType;
         if (currImageType == null) {
-            this.currImageType = DEFAULT_TYPE.name();
+            this.currImageType = DEFAULT_TYPE;
         }
         if (showTitle) {
-            setText(currImageType);
+            setText(currImageType.getLabel());
         }
     }
 
@@ -88,12 +96,12 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 }
             }
             if (source instanceof HasFileGroups) {
-                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFileGroups) source);
+                Multiset<String> typeNames = DomainUtils.getTypeNames((HasFileGroups)source, only2d);
                 log.debug("Source has file groups: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
             if (source instanceof HasFiles) {
-                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFiles) source);
+                Multiset<String> typeNames = DomainUtils.getTypeNames((HasFiles) source, only2d);
                 log.debug("Source has files: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
@@ -105,15 +113,15 @@ public class ImageTypeSelectionButton extends DropDownButton {
         ButtonGroup group = new ButtonGroup();
         
         log.debug("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
-        for(FileType fileType : FileType.values()) {
-            final String typeName = fileType.name();
+        for(final FileType fileType : FileType.values()) {
+            String typeName = fileType.name();
             log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
-            if (countedTypeNames.count(typeName)>0 || fileType.equals(FileType.FirstAvailable2d)) {
-                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(currImageType));
+            if (countedTypeNames.count(typeName)>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
+                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), fileType.equals(currImageType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        currImageType = typeName;
-                        imageTypeChanged(currImageType);
+                        setImageType(fileType);
+                        imageTypeChanged(fileType);
                     }
                 });
                 getPopupMenu().add(menuItem);
@@ -122,6 +130,6 @@ public class ImageTypeSelectionButton extends DropDownButton {
         }
     }
     
-    protected void imageTypeChanged(String typeName) {}
+    protected void imageTypeChanged(FileType fileType) {}
 
 }
