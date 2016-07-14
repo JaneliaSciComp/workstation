@@ -1,4 +1,4 @@
-package org.janelia.it.workstation;
+package org.janelia.it.workstation.gui.browser.api;
 
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -6,7 +6,6 @@ import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.openide.LifecycleManager;
 
 import javax.swing.*;

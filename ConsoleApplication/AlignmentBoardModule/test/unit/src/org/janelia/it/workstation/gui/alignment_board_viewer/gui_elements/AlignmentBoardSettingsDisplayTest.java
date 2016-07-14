@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
-import org.janelia.it.workstation.gui.WorkstationEnvironment;
+import org.janelia.it.workstation.gui.browser.api.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
