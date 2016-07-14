@@ -121,7 +121,7 @@ public class DownloadDialog extends ModalDialog {
         @Override
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED || e.getSource() instanceof JCheckBox) {
-                log.info("Item state changed: {}", e);
+                log.trace("Item state changed: {}", e);
                 populateDownloadItemList(null);
             }
         }

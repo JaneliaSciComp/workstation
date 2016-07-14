@@ -147,7 +147,8 @@ public class ApplyAnnotationAction extends NodeAction {
 
             worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
             worker.execute();
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
