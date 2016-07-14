@@ -87,6 +87,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
@@ -137,6 +139,7 @@ import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
+import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -536,74 +539,80 @@ public final class NeuronTracerTopComponent extends TopComponent
         // 2) Setup 3D viewer mouse interaction
         interactor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
-                sceneWindow.getInnerComponent()) {
+                sceneWindow.getInnerComponent());
+        
+        // 3) Add custom interactions
+        MouseInputListener hortaMouseListener = new MouseInputAdapter() 
+        {
+            // Show/hide crosshair on enter/exit
+            @Override
+            public void mouseEntered(MouseEvent event) {
+                super.mouseEntered(event);
+                crossHairActor.setVisible(true);
+                sceneWindow.redrawNow();
+            }
+            @Override
+            public void mouseExited(MouseEvent event) {
+                super.mouseExited(event);
+                crossHairActor.setVisible(false);
+                sceneWindow.redrawNow();
+            }
 
-                    // Show/hide crosshair on enter/exit
-                    @Override
-                    public void mouseEntered(MouseEvent event) {
-                        super.mouseEntered(event);
-                        crossHairActor.setVisible(true);
-                        sceneWindow.redrawNow();
-                    }
-                    @Override
-                    public void mouseExited(MouseEvent event) {
-                        super.mouseExited(event);
-                        crossHairActor.setVisible(false);
-                        sceneWindow.redrawNow();
-                    }
-                    
-                    // Click to center on position
-                    @Override
-                    public void mouseClicked(MouseEvent event) 
-                    {
-                        // Click to center on position
-                        if ((event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1)) {
-                            if (System.nanoTime() < (previousClickTime + minClickInterval)) {
-                                return;
-                            }
-
-                            // Use neuron cursor position, if available, rather than hardware mouse position.
-                            Vector3 xyz = null;
-                            // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                            // if (hoverAnchor == null) {
-                                xyz = worldXyzForScreenXy(event.getPoint());
-                            // } else {
-                            //     xyz = hoverAnchor.getLocationUm();
-                                // logger.info("Using neuron cursor XYZ "+xyz);
-                            // }
-
-                            // logger.info(xyz);
-                            previousClickTime = System.nanoTime();
-                            PerspectiveCamera pCam = (PerspectiveCamera) camera;
-                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
-                        }
+            // Click to center on position
+            @Override
+            public void mouseClicked(MouseEvent event) 
+            {
+                // Click to center on position
+                if ((event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1)) {
+                    if (System.nanoTime() < (previousClickTime + minClickInterval)) {
+                        return;
                     }
 
-                    // Hover to show location in status bar
-                    @Override
-                    public void mouseMoved(MouseEvent event) {
-                        super.mouseMoved(event);
+                    // Use neuron cursor position, if available, rather than hardware mouse position.
+                    Vector3 xyz = null;
+                    // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                    // if (hoverAnchor == null) {
+                        xyz = worldXyzForScreenXy(event.getPoint());
+                    // } else {
+                    //     xyz = hoverAnchor.getLocationUm();
+                        // logger.info("Using neuron cursor XYZ "+xyz);
+                    // }
 
-                        // Print out screen X, Y (pixels)
-                        StringBuilder msg = new StringBuilder();
-                        final boolean showWindowCoords = false;
-                        if (showWindowCoords) {
-                            msg.append("Window position (pixels):");
-                            msg.append(String.format("[% 4d", event.getX()));
-                            msg.append(String.format(", % 4d", event.getY()));
-                            msg.append("]");
-                        }
+                    // logger.info(xyz);
+                    previousClickTime = System.nanoTime();
+                    PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                    loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                }
+            }
 
-                        reportIntensity(msg, event);
+            // Hover to show location in status bar
+            @Override
+            public void mouseMoved(MouseEvent event) {
+                super.mouseMoved(event);
 
-                        // reportPickItem(msg, event);
+                // Print out screen X, Y (pixels)
+                StringBuilder msg = new StringBuilder();
+                final boolean showWindowCoords = false;
+                if (showWindowCoords) {
+                    msg.append("Window position (pixels):");
+                    msg.append(String.format("[% 4d", event.getX()));
+                    msg.append(String.format(", % 4d", event.getY()));
+                    msg.append("]");
+                }
 
-                        if (msg.length() > 0) {
-                            StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
-                        }
-                    }
+                reportIntensity(msg, event);
 
-                };
+                // reportPickItem(msg, event);
+
+                if (msg.length() > 0) {
+                    StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
+                }
+            }
+        };
+        // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+        TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
+        sceneWindow.getInnerComponent().addMouseListener(tolerantMouseClickListener);
+        sceneWindow.getInnerComponent().addMouseMotionListener(tolerantMouseClickListener);
 
     }
 
