@@ -28,6 +28,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
@@ -194,6 +195,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             if (alignmentBoard == null) {
                 throw new Exception("No alignment board in event for context " + event.getAlignmentBoardContext());
             }
+            new ActivityLogHelper().logOpen(alignmentBoard.getName());
             preExistingBoardSettings = UserSettingSerializer.settingsExist( alignmentBoard );
             
             // Carry out any steps to prepare GUI for presence of this panel.
