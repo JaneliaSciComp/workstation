@@ -203,9 +203,19 @@ public final class DomainViewerTopComponent extends TopComponent {
             }
             else if (domainObject instanceof LSMImage) {
                 LSMImage lsmImage = (LSMImage) domainObject;
-                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
+                Reference sampleRef = lsmImage.getSample();
+                if (sampleRef!=null) {
+                    domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+                }
+                else {
+                    domainObject = null;
+                }
             }
 
+            if (domainObject==null) {
+                return;
+            }
+            
             final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
             if (editorClass == null) {
                 // TODO: comment this exception back in after initial development is complete

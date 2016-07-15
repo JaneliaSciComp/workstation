@@ -82,8 +82,6 @@ public class AddToFolderAction extends NodePresenterAction {
             domainObjects.add(selectedNode.getDomainObject());
         }
 
-        log.info("enable: {}",domainObjects.size());
-
         return enabled;
     }
 
