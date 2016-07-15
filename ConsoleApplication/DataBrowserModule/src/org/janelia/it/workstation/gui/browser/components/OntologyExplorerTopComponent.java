@@ -460,8 +460,6 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = ontologyNode!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
 
-        log.info("Saving {} expanded nodes",expanded.size());
-
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -481,9 +479,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             // Reselect the current ontology
                             selectOntology(ontologyNode.getId(), false);
                             // Restore tree state
-                            log.info("Re-expanding {} nodes",expanded.size());
                             beanTreeView.expand(expanded);
-//                            beanTreeView.selectPaths(selected);
+                            beanTreeView.selectPaths(selected);
                             beanTreeView.updateUI();
                         }
                     }
