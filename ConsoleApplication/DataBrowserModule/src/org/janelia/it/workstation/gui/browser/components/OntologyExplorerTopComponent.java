@@ -333,13 +333,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     if (ontologyNode!=null && ontologyNode.getId().equals(updatedOntology.getId())) {
                         // Current ontology has been invalidated 
                         log.info("Refreshing because current ontology '{}' has been invalidated.",updatedOntology.getName());
-                        refresh(false, true, new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                selectOntology(ontologyNode.getId(), true);
-                                return null;
-                            }
-                        });
+                        refresh(false, true, null);
                         break;
                     }
                     else {
@@ -377,7 +371,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectCreated(DomainObjectCreateEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
-            refresh(false, false, new Callable<Void>() {
+            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
+            refresh(false, true, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     selectOntology(domainObject.getId(), true);
@@ -464,7 +459,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         
         final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = ontologyNode!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
-        
+
+        log.info("Saving {} expanded nodes",expanded.size());
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -484,8 +481,10 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             // Reselect the current ontology
                             selectOntology(ontologyNode.getId(), false);
                             // Restore tree state
+                            log.info("Re-expanding {} nodes",expanded.size());
                             beanTreeView.expand(expanded);
-                            beanTreeView.selectPaths(selected);
+//                            beanTreeView.selectPaths(selected);
+                            beanTreeView.updateUI();
                         }
                     }
                     beanTreeView.grabFocus();

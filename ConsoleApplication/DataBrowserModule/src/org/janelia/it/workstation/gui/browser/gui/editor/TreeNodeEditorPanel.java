@@ -1,17 +1,11 @@
 package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -21,7 +15,6 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
