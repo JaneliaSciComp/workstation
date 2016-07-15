@@ -213,6 +213,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         return selectionModel;
     }
 
+    @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
         log.info("selectEditObjects(domainObjects.size={},select={})", domainObjects.size(), select);
 
