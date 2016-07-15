@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,6 +18,10 @@ import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
  * Time: 10:49 AM
  */
 public class EJBEntityFacade implements EntityFacade {
+    public static final String COMM_FAILURE_MSG_TMB = "Communication failure.";
+    private static final int RETRY_MAX_ATTEMPTS_RTMB = 5;
+    private static final int RETRY_INTERIM_MULTIPLIER_RTMB = 500;
+
     @Override
     public List<EntityType> getEntityTypes() throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntityTypes();
@@ -246,33 +251,53 @@ public class EJBEntityFacade implements EntityFacade {
     // Addition of the interface for the Tiled Microscope Data
     @Override
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
+        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
+        if (tmBean == null) {
+            throw new EJBLookupException("Communication failure.");
+        }
+        return tmBean.createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
 
     @Override
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
+        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
+        if (tmBean == null) {
+            throw new EJBLookupException("Communication failure.");
+        }
+        return tmBean.createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
     }
 
     @Override
     public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().removeWorkspacePreference(workspaceId, key);
+        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
+        if (tmBean == null) {
+            throw new EJBLookupException("Communication failure.");
+        }
+        tmBean.removeWorkspacePreference(workspaceId, key);
     }
 
     @Override
     public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().createOrUpdateWorkspacePreference(workspaceId, key, value);
+        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
+        if (tmBean == null) {
+            throw new EJBLookupException(COMM_FAILURE_MSG_TMB);
+        }
+        tmBean.createOrUpdateWorkspacePreference(workspaceId, key, value);
     }
 
     @Override
     public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().loadWorkspace(workspaceId);
+        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
+        if (tmBean == null) {
+            throw new EJBLookupException("Communication failure.");
+        }
+        return tmBean.loadWorkspace(workspaceId);
     }
 
     @Override
     public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
         Map<Integer,byte[]> rtnVal = null;
-        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = getRemoteTMBWithRetries();
         if ( remoteTiledMicroscopeBean != null ) {
             rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, dimensions );
         }
@@ -282,7 +307,7 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
         RawFileInfo rtnVal = null;
-        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = getRemoteTMBWithRetries();
         if ( remoteTiledMicroscopeBean != null ) {
             rtnVal = remoteTiledMicroscopeBean.getNearestChannelFiles( basePath, viewerCoord );
         }
@@ -292,10 +317,49 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {
         CoordinateToRawTransform rtnVal = null;
-        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = getRemoteTMBWithRetries();
         if ( remoteTiledMicroscopeBean != null ) {
             rtnVal = remoteTiledMicroscopeBean.getTransform(basePath);
         }
         return rtnVal;
+    }
+    
+    public static TiledMicroscopeBeanRemote getRemoteTMBWithRetries() {
+        TiledMicroscopeBeanRemote bean = null;
+        for (int i = 0; i < RETRY_MAX_ATTEMPTS_RTMB; i++) {
+            bean = EJBFactory.getRemoteTiledMicroscopeBean();
+            if (bean != null) {
+                if (i > 0) {
+                    // At least one retry failed.
+                    try {
+                        UserToolEvent ute = new UserToolEvent();
+                        ute.setAction(COMM_FAILURE_MSG_TMB);
+                        ute.setCategory(TiledMicroscopeBeanRemote.class.getSimpleName());
+                        ute.setToolName("EJB");
+                        ute.setSessionId(0L);
+                        ute.setTimestamp(new java.util.Date());
+                        ute.setUserLogin("Unknown");
+                        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(null);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                break;
+            }
+            else {
+                try {
+                    Thread.sleep(RETRY_INTERIM_MULTIPLIER_RTMB * (i + 1));
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
+                }
+            }
+        };
+        return bean;
+    }
+    
+    public static class EJBLookupException extends Exception {
+        public EJBLookupException(String message) {
+            super(message);
+        }
     }
 }

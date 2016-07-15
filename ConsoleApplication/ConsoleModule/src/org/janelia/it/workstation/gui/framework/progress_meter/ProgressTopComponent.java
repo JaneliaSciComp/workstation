@@ -25,7 +25,7 @@ import org.openide.windows.TopComponent;
 )
 @TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=30)
 @ActionID(category = "Window", id = "ProgressTopComponent")
-@ActionReference(path = "Menu/Window", position = 100)
+@ActionReference(path = "Menu/Window/Core", position = 5)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ProgressTopComponentAction",
         preferredID = ProgressTopComponent.PREFERRED_ID

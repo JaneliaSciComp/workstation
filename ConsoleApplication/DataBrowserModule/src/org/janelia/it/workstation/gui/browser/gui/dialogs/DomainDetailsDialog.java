@@ -82,6 +82,7 @@ public class DomainDetailsDialog extends ModalDialog {
 
     @Subscribe
     public void annotationsChanged(DomainObjectAnnotationChangeEvent event) {
+        if (domainObject==null) return;
         if (event.getDomainObject().getId().equals(domainObject.getId())) {
             detailsPanel.loadAnnotations();
         }

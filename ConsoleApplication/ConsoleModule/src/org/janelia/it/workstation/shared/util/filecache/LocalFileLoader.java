@@ -23,14 +23,7 @@ public class LocalFileLoader {
     /**
      * Constructs a local file loader instance.
      *
-     * The removeInvalidFilesAndEmptyDirectories parameter is provided to allow
-     * callers to opt-in to the somewhat risky task of automatic deletion/clean-up
-     * of the the specified active directory.  Automatic deletion/clean-up is fine
-     * as long as you are sure the specified active directory only contains cache
-     * files.  However if the wrong directory (e.g. the user home directory)
-     * was acidentally provided, enabling this parameter would be a big problem.
-     *
-     * @param  activeDirectory                        the active directory for the local file cache.
+     * @param  activeDirectory  the active directory for the local file cache.
      */
     public LocalFileLoader(File activeDirectory) {
         this.activeDirectory = activeDirectory;

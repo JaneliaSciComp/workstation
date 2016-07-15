@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -13,6 +14,7 @@ import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
@@ -27,7 +29,6 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.actions.RemoveItemsFromFolderAction;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainObjectProviderHelper;
@@ -37,13 +38,13 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.IconGridViewerConfigDi
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -71,6 +72,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private DomainObjectSelectionModel editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
     private SearchProvider searchProvider;
+
+    private boolean editMode;
     
     private final ImageModel<DomainObject,Reference> imageModel = new ImageModel<DomainObject, Reference>() {
 
@@ -89,7 +92,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             else if (domainObject instanceof HasFiles) {
                 result = (HasFiles)domainObject;
             }
-            return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageType());
+            return result==null? null : DomainUtils.getFilepath(result, typeButton.getImageTypeName());
         }
 
         @Override
@@ -107,7 +110,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) {
+        public DomainObject getImageByUniqueId(Reference id) throws Exception {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
         
@@ -150,9 +153,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         };
         typeButton = new ImageTypeSelectionButton() {
             @Override
-            protected void imageTypeChanged(String typeName) {
-                log.info("Setting image type preference: "+typeName);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
+            protected void imageTypeChanged(FileType fileType) {
+                log.info("Setting image type preference: "+fileType);
+                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
         getToolbar().addCustomComponent(resultButton);
@@ -169,14 +172,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
-                    if (preference==null) {
-                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
-                    }
-                    else {
-                        preference.setValue(value);
-                    }
-                    DomainMgr.getDomainMgr().savePreference(preference);
+                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
                 }
             }
 
@@ -223,17 +219,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         if (domainObjects.isEmpty()) {
             return;
         }
-        editSelectionModel.reset();
-
         if (select) {
-            this.selectEditObjects(domainObjects);
+            editSelectionModel.select(domainObjects, true, true);
         }
     }
 
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})",domainObjects.size(),select,clearAll,isUserDriven);
+        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})", domainObjects.size(), select, clearAll, isUserDriven);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -252,6 +246,13 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 scrollSelectedObjectsToCenter();
             }
         });
+    }
+
+    @Override
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        updateUI();
     }
 
     @Override
@@ -282,7 +283,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                     Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
-                        typeButton.setImageType((String)preference2.getValue());
+                        typeButton.setImageTypeName((String)preference2.getValue());
                     }
                 }
 
@@ -317,8 +318,18 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void toggleEditMode(boolean editMode) {
+        this.editMode = editMode;
         imagesPanel.setEditMode(editMode);
     }
+
+    @Override
+    public void refreshEditMode() {
+        imagesPanel.setEditMode(editMode);
+        if (editSelectionModel!=null) {
+            imagesPanel.setEditSelection(editSelectionModel.getSelectedIds(), true);
+        }
+    }
+
 
     @Override
     public void setEditSelectionModel(DomainObjectSelectionModel editSelectionModel) {
@@ -333,7 +344,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
-        log.debug("Searching {} for {}",domainObject.getName(),text);
+        log.trace("Searching {} for {}", domainObject.getName(), text);
 
         String tupper = text.toUpperCase();
 
@@ -363,7 +374,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageType());
+        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), getSelectedObjects(), resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         popupMenu.addMenuItems();
         return popupMenu;
     }
@@ -392,32 +403,43 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     
     @Override
     protected void deleteKeyPressed() {
-        IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)parent; 
-            if (ClientDomainUtils.hasWriteAccess(treeNode)) {                
-                List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
-                action.doAction();
+        try {
+            IsParent parent = selectionModel.getParentObject();
+            if (parent instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode)parent;
+                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                    List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
+                    action.doAction();
+                }
             }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     protected void configButtonPressed() {
+        try {
+            if (domainObjectList.getDomainObjects().isEmpty()) return;
 
-        DomainObject firstObject;
-        List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
-        if (selectedObjects.isEmpty()) {
-            firstObject = domainObjectList.getDomainObjects().get(0);
-        }
-        else {
-            firstObject = selectedObjects.get(0);
-        }
+            DomainObject firstObject;
+            List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+            if (selectedObjects.isEmpty()) {
+                firstObject = domainObjectList.getDomainObjects().get(0);
+            }
+            else {
+                firstObject = selectedObjects.get(0);
+            }
 
-        IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
-        if (configDialog.showDialog(this)==1) {
-            this.config = IconGridViewerConfiguration.loadConfig();
-            refresh();
+            IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
+            if (configDialog.showDialog(this)==1) {
+                this.config = IconGridViewerConfiguration.loadConfig();
+                refresh();
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -436,15 +458,20 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         
         DomainObject domainObject = selected.get(0);
         if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType());
+            hud.setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName());
         }
         else {
-            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageType(), false);
+            hud.setObject(domainObject, resultButton.getResultDescriptor(), typeButton.getImageTypeName(), false);
         }
     }
     
     private List<DomainObject> getSelectedObjects() {
-        return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        try {
+            return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     @Override

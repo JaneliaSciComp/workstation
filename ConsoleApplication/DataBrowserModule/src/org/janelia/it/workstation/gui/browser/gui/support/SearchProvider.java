@@ -8,6 +8,11 @@ package org.janelia.it.workstation.gui.browser.gui.support;
 public interface SearchProvider {
 
 	/**
+	 * Get the sort field. The field name may be prefixed with a +/- to control the sort direction.
+	 */
+	public String getSortField();
+
+	/**
 	 * Set the sort field. The field name may be prefixed with a +/- to control the sort direction.
 	 * @param sortField
 	 */

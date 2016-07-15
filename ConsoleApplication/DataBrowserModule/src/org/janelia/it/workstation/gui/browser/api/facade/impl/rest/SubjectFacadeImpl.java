@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.api.facade.impl.rest;
 
 import java.util.List;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -22,59 +23,55 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
     }
 
     @Override
-    public List<Subject> getSubjects() {
+    public List<Subject> getSubjects() throws Exception {
         Response response = manager.getUserEndpoint()
                 .path("subjects")
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjects to server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
-        List<Subject> subjects = response.readEntity(new GenericType<List<Subject>>() {
-        });
-        return subjects;
+        return response.readEntity(new GenericType<List<Subject>>() {});
     }
 
     @Override
-    public Subject getSubjectByKey(String key) {
+    public Subject getSubjectByKey(String key) throws Exception {
         Response response = manager.getUserEndpoint()
                 .path("subject")
                 .queryParam("subjectKey", key)
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getSubjectByKey to server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
-        Subject subject = response.readEntity(Subject.class);
-        return subject;
+        return response.readEntity(Subject.class);
     }
     
     @Override
-    public Subject loginSubject(String username, String password) {
+    public Subject loginSubject(String username, String password) throws Exception {
         String credentials = "Basic " + Base64.encodeAsString(username + ":" + password);
         Response response = manager.getLoginEndpoint()
                 .request("application/json")
                 .header("Authorization", credentials)
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making authenticating user against the server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
         Subject authSubject = response.readEntity(Subject.class);
         return authSubject;
     }
 
     @Override
-    public List<Preference> getPreferences() {
+    public List<Preference> getPreferences() throws Exception {
         Response response = manager.getUserEndpoint()
                 .path("preferences")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
         if (checkBadResponse(response.getStatus(), "problem making request getPreferences to server")) {
-            return null;
+            throw new WebApplicationException(response);
         }
-        List<Preference> preferences = response.readEntity(new GenericType<List<Preference>>(){});
-        return preferences;
+        return response.readEntity(new GenericType<List<Preference>>(){});
     }
 
     @Override
@@ -87,9 +84,8 @@ public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
                 .request("application/json")
                 .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making saving request savePreferences to server: " + preference)) {
-            return null;
+            throw new WebApplicationException(response);
         }
-        Preference newPref = response.readEntity(Preference.class);
-        return newPref;
+        return response.readEntity(Preference.class);
     }
 }

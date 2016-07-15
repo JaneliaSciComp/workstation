@@ -23,6 +23,7 @@ import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
@@ -113,7 +114,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
     public boolean showAutoAnnotationConfiguration() {
         pressedOk = false;
             
-        template = SessionMgr.getBrowser().getAutoShareTemplate();
+        template = StateMgr.getStateMgr().getAutoShareTemplate();
         
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
@@ -169,8 +170,8 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
         final boolean write = writeCheckbox.isSelected();
         String permissions = (read ? "r" : "") + (write ? "w" : "");
         template.setPermissions(permissions);
-        
-        SessionMgr.getBrowser().setAutoShareTemplate(template);
+
+        StateMgr.getStateMgr().setAutoShareTemplate(template);
         
         setVisible(false);
     }

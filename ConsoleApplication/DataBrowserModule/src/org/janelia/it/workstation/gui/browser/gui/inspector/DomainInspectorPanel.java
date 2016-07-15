@@ -19,13 +19,16 @@ import javax.swing.*;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
+import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
@@ -33,6 +36,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -81,6 +85,7 @@ public class DomainInspectorPanel extends JPanel {
     private final JPanel attributesPanel;
     private final DynamicTable attributesTable;
 
+    private final JTextArea permissionsNoteLabel;
     private final JLabel permissionsLoadingLabel;
     private final JPanel permissionsPanel;
     private final DynamicTable permissionsTable;
@@ -149,6 +154,11 @@ public class DomainInspectorPanel extends JPanel {
         tabbedPane.addTab(TAB_NAME_ATTRIBUTES, Icons.getIcon("table.png"), attributesPanel, "The selected item's attributes");
 
         // Permissions tab
+        permissionsNoteLabel = new JTextArea();
+        permissionsNoteLabel.setEditable(false);
+        permissionsNoteLabel.setFocusable(false);
+        permissionsNoteLabel.setLineWrap(true);
+        permissionsNoteLabel.setWrapStyleWord(true);
         permissionsLoadingLabel = createLoadingLabel();
         permissionsTable = new DynamicTable(true, false) {
             @Override
@@ -280,9 +290,12 @@ public class DomainInspectorPanel extends JPanel {
         permissionsButtonPane.add(addPermissionButton);
         permissionsButtonPane.add(Box.createHorizontalGlue());
 
-        permissionsPanel = new JPanel(new BorderLayout());
-        permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
-        permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
+        permissionsPanel = new JPanel();
+        permissionsPanel.setLayout(new MigLayout(
+                "ins 0, flowy, fillx",
+                "[fill]",
+                "[grow 2, growprio 1, fill][grow 2, growprio 1][grow 1, growprio 0]"
+        ));
 
         tabbedPane.addTab("Permissions", Icons.getIcon("group.png"), permissionsPanel, "Who has access to the selected item");
 
@@ -451,6 +464,11 @@ public class DomainInspectorPanel extends JPanel {
 
     private void loadSubjects() {
 
+        if (this.subjects!=null) {
+            loadPermissions();
+            return;
+        }
+
         log.debug("Loading subjects for {}", domainObject.getId());
 
         SimpleWorker worker = new SimpleWorker() {
@@ -466,8 +484,6 @@ public class DomainInspectorPanel extends JPanel {
             protected void hadSuccess() {
                 setSubjects(subjects);
                 loadPermissions();
-                addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
-                log.debug("Setting permission button state to {}", addPermissionButton.isEnabled());
             }
 
             @Override
@@ -511,16 +527,36 @@ public class DomainInspectorPanel extends JPanel {
             }
         });
 
+        if (domainObject instanceof Filter) {
+            permissionsNoteLabel.setText("Note: sharing this Filter does not share its results.");
+        }
+        else if (domainObject instanceof TreeNode) {
+            permissionsNoteLabel.setText("Note: sharing this Folder also shares all of its current and future contents.");
+        }
+        else if (domainObject instanceof Sample) {
+            permissionsNoteLabel.setText("Note: sharing this Sample will also share its LSMs and Neuron Fragments.");
+        }
+        else if (domainObject instanceof DataSet) {
+            permissionsNoteLabel.setText("Note: sharing this Data Set will also share its current and future Samples, LSMS, and Neuron Fragments.");
+        }
+        else {
+            permissionsNoteLabel.setText("");
+        }
+
         permissionsTable.removeAllRows();
         for (DomainObjectPermission eap : eaps) {
             permissionsTable.addRow(eap);
         }
         permissionsTable.updateTableModel();
         permissionsPanel.removeAll();
-        permissionsPanel.add(permissionsButtonPane, BorderLayout.SOUTH);
-        permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
+        permissionsPanel.add(permissionsTable, "width 10:300:3000");
+        permissionsPanel.add(permissionsNoteLabel, "width 10:300:3000");
+        permissionsPanel.add(permissionsButtonPane, "width 10:300:3000");
         permissionsPanel.revalidate();
         permissionsPanel.repaint();
+
+        log.trace("Setting permission button state to {}", addPermissionButton.isEnabled());
+        addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
     }
 
     public void loadAnnotations() {
@@ -591,14 +627,17 @@ public class DomainInspectorPanel extends JPanel {
     }
 
     public void refresh() {
-        this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-        if (domainObject!=null) {
-            loadSubjects();
-            loadAttributes();
-            loadAnnotations();
-        }
-        else {
-            showNothing();
+        try {
+            this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
+            if (domainObject != null) {
+                loadSubjects();
+                loadAttributes();
+                loadAnnotations();
+            } else {
+                showNothing();
+            }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 }

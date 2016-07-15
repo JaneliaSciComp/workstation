@@ -26,7 +26,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
 
     private byte[][] slabs;
     private VolumeDataChunk[] chunks;
-
+        
     public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel ) {
         this( sizeX, sizeY, sizeZ, bytesPerVoxel, DEFAULT_NUM_SLABS, null );
     }
@@ -124,6 +124,10 @@ public class VeryLargeVolumeData implements VolumeDataI {
     @Override
     public byte getValueAt(long location) {
         int slabNo = getSlabNo( location );
+        if (slabNo > slabs.length) {
+            logger.warn("Slab no {} out of bounds, for location {}. Returning 0 for value.", slabNo, location);
+            return 0;
+        }
         byte[] slab = slabs[ slabNo ];
         int locInSlab = getLocInSlab(location);
         return slab[ locInSlab ];

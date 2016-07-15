@@ -1,10 +1,16 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Toolkit;
 
-import javax.swing.*;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JSplitPane;
 
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
@@ -16,7 +22,6 @@ public class DataViewer extends JPanel {
 
     private static final double realEstatePercent = 1.0;
 
-    private SearchConfiguration searchConfig;
     private SearchPane searchPane;
     private EntityPane entityPane;
     private EntityDataPane entityParentsPane;
@@ -46,8 +51,6 @@ public class DataViewer extends JPanel {
 
     private void initUI() {
 
-        searchConfig = new SearchConfiguration();
-
         entityParentsPane = new EntityDataPane("Entity Data: Parents", true, false) {
             @Override
             protected void doubleClick(EntityData entityData) {
@@ -66,7 +69,7 @@ public class DataViewer extends JPanel {
             }
         };
 
-        searchPane = new SearchPane(searchConfig) {
+        searchPane = new SearchPane() {
             @Override
             public void performHibernateSearch(String searchString) {
                 if (searchString.matches("\\d{19}")) {
@@ -76,19 +79,9 @@ public class DataViewer extends JPanel {
                     entityPane.performSearchByName(searchString);
                 }
             }
-
-            @Override
-            public void performSolrSearch(boolean clear) {
-                entityPane.performSearch(clear);
-            }
-
-            @Override
-            public void performGroovySearch(String code) {
-                entityPane.runGroovyCode(code);
-            }
         };
 
-        entityPane = new EntityPane(searchConfig, searchPane, entityParentsPane, entityChildrenPane);
+        entityPane = new EntityPane(searchPane, entityParentsPane, entityChildrenPane);
 
         double frameHeight = (double) DataViewer.this.getPreferredSize().height - 30;
         double frameWidth = (double) DataViewer.this.getPreferredSize().width - 30;
@@ -106,15 +99,10 @@ public class DataViewer extends JPanel {
     }
 
     private void initData() {
-        searchConfig.load();
     }
 
     public EntityPane getEntityPane() {
         return entityPane;
-    }
-
-    public SearchConfiguration getSearchConfig() {
-        return searchConfig;
     }
 
     public SearchPane getSearchPane() {

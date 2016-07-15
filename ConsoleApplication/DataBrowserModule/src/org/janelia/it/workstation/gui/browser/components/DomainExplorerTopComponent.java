@@ -14,9 +14,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -24,8 +25,6 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
@@ -33,8 +32,6 @@ import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeToolbar;
 import org.janelia.it.workstation.gui.browser.gui.tree.CustomTreeView;
-import org.janelia.it.workstation.gui.browser.nb_action.NavigateBack;
-import org.janelia.it.workstation.gui.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
@@ -43,6 +40,7 @@ import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -55,15 +53,13 @@ import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.actions.CallableSystemAction;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.Subscribe;
+import static java.awt.SystemColor.text;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -77,19 +73,19 @@ import com.google.common.eventbus.Subscribe;
 )
 @TopComponent.Description(
         preferredID = DomainExplorerTopComponent.TC_NAME,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase = "images/folder.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.DomainExplorerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Core", position = 1)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_DomainExplorerAction=Domain Explorer",
-    "CTL_DomainExplorerTopComponent=Domain Explorer"
+    "CTL_DomainExplorerAction=Data Explorer",
+    "CTL_DomainExplorerTopComponent=Data Explorer"
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener, FindContext {
 
@@ -323,38 +319,38 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             refresh(false, true, null);
         }
         else {
+            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<DomainObjectNode> nodes = DomainObjectNodeTracker.getInstance().getNodesById(domainObject.getId());
                 if (!nodes.isEmpty()) {
-                log.info("Updating invalidated object: {}",domainObject.getName());
+                    log.info("Updating invalidated object: {}",domainObject.getName());
                     for(DomainObjectNode node : nodes) {
-                        DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
-                        if (refreshed==null) {
-                            log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
-                            try {
+                        try {
+                            DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
+                            if (refreshed==null) {
+                                log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                                 node.destroy();
                             }
-                            catch (IOException e) {
-                                log.error("  Error destroying invalidated node",e);
+                            else {
+                                log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
+                                node.update(refreshed);
                             }
-                        }
-                        else {
-                            log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
-                            final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-                            final List<Long[]> selected = beanTreeView.getSelectedPaths();
-                            node.update(refreshed);
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    beanTreeView.expand(expanded);
-                                    beanTreeView.selectPaths(selected);
-                                }
-                            });
+                        }  
+                        catch (Exception ex) {
+                            SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
                 }
             }
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    beanTreeView.expand(expanded);
+                }
+            });
         }
     }
     
@@ -404,7 +400,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             break; // For now, we'll only expand first node
                         }
                     }
-                    beanTreeView.grabFocus();
                     debouncer.success();
                 }
                 catch (Exception e) {
@@ -499,13 +494,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
+        beanTreeView.navigateToNodeStartingWith(text, bias, skipStartingNode);
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
     
     @Override

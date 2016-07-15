@@ -55,7 +55,7 @@ public class FileDownloadWorker {
     
     public void startDownload() {
 
-        log.info("Starting download of {} to {}",downloadItem.getSourceExtension(),downloadItem.getTargetExtension());
+        log.debug("Starting download of {} to {}",downloadItem.getSourceExtension(),downloadItem.getTargetExtension());
         
         try {
             boolean convertOnServer = true;

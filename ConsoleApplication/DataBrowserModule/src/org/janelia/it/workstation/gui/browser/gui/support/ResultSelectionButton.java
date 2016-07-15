@@ -49,6 +49,7 @@ public class ResultSelectionButton extends DropDownButton {
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
         setToolTipText("Select the result to display");
+        setResultDescriptor(ResultDescriptor.LATEST);
     }
 
     public void setResultDescriptor(ResultDescriptor currResult) {
@@ -63,11 +64,7 @@ public class ResultSelectionButton extends DropDownButton {
     }
     
     public void populate(Collection<DomainObject> domainObjects) {
-        
-        if (currResult == null) {
-            this.currResult = ResultDescriptor.LATEST;
-        }
-        
+
         Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {
@@ -75,7 +72,10 @@ public class ResultSelectionButton extends DropDownButton {
                 Sample sample = (Sample)domainObject;
                 for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                     SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run==null || run.getResults()==null) continue;
+                    if (run==null || run.getResults()==null) {
+                        run = objectiveSample.getLatestRun();
+                        if (run==null || run.getResults()==null) continue;
+                    }
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
@@ -112,8 +112,10 @@ public class ResultSelectionButton extends DropDownButton {
         ButtonGroup group = new ButtonGroup();
         
         for(final ResultDescriptor resultDescriptor : sortedResults) {
+            int count = countedResultNames.count(resultDescriptor);
             String resultName = resultDescriptor.toString();
-            JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultName.equals(currResult.toString()));
+            if (count>0) resultName += " ("+count+" items)";
+            JMenuItem menuItem = new JRadioButtonMenuItem(resultName, resultDescriptor.equals(currResult));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setResultDescriptor(resultDescriptor);

@@ -594,7 +594,8 @@ public class AlignmentBoardControls {
     }
 
     private synchronized void fireRebuild() {
-        for ( ControlsListener listener: listeners ) {
+        List<ControlsListener> tempListeners = new ArrayList<>(listeners);
+        for ( ControlsListener listener: tempListeners ) {
             listener.forceRebuild();
         }
     }

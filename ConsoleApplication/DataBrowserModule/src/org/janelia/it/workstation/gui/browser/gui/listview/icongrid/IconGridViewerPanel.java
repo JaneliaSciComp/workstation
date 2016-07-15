@@ -24,10 +24,11 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -185,7 +186,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
             
             KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+            if (!KeyBindings.getKeyBindings().executeBinding(shortcut)) {
                 
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
@@ -529,9 +530,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         // Actually display everything
         showAll();
 
-        // Finally, we're done, we can call the success callback
-        ConcurrentUtils.invokeAndHandleExceptions(success);
-
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -539,6 +537,17 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
                 imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
                 imagesPanel.setScrollLoadingEnabled(true);
+                updateUI(); // Make sure buttons are displayed before calling load/unload to load their contents
+
+                SwingUtilities.invokeLater(new Runnable() {
+                   @Override
+                   public void run() {
+                       imagesPanel.loadUnloadImages();
+                   }
+               });
+
+                // Finally, we're done, we can call the success callback
+                ConcurrentUtils.invokeAndHandleExceptions(success);
             }
         });
     }

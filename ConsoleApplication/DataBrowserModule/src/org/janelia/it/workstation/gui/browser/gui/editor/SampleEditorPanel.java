@@ -22,7 +22,9 @@ import javax.swing.*;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -46,6 +48,7 @@ import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEve
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -57,8 +60,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
@@ -76,8 +78,9 @@ import org.slf4j.LoggerFactory;
 public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Sample>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
-    
+
     // Constants
+    private final static String PREFERENCE_KEY = "SampleEditor";
     private final static String MODE_LSMS = "LSMs";
     private final static String MODE_RESULTS = "Results";
     private final static String ALL_VALUE = "all";
@@ -107,6 +110,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     private Map<String,SamplePipelineRun> currRunMap = new HashMap<>();
     private List<LSMImage> lsms;
     private List<Annotation> lsmAnnotations;
+    private String sortCriteria;
     private String currMode = MODE_RESULTS;
     private String currObjective = ALL_VALUE;
     private String currArea = ALL_VALUE;
@@ -167,7 +171,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             repaint();
         }
     };
-    
+
     protected void enterKeyPressed() {}
     
     protected void deleteKeyPressed() {}
@@ -330,43 +334,32 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         return resultPanels.get(i + 1);
     }
-    
+
+    @Override
+    public String getSortField() {
+        return sortCriteria;
+    }
+
     @Override
     public void setSortField(final String sortCriteria) {
-
-        lsmPanel.showLoadingIndicator();
+        this.sortCriteria = sortCriteria;
+        savePreferences();
+    }
+    
+    @Override
+    public void search() {
 
         SimpleWorker worker = new SimpleWorker() {
-        
+
             @Override
             protected void doStuff() throws Exception {
-                final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-                final boolean ascending = !sortCriteria.startsWith("-");
-                Collections.sort(lsms, new Comparator<DomainObject>() {
-                    @Override
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    public int compare(DomainObject o1, DomainObject o2) {
-                        try {
-                            // TODO: speed could be improved by moving the reflection calls outside of the sort
-                            Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
-                            Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
-                            Ordering ordering = Ordering.natural().nullsLast();
-                            if (!ascending) {
-                                ordering = ordering.reverse();
-                            }
-                            return ComparisonChain.start().compare(v1, v2, ordering).result();
-                        }
-                        catch (Exception e) {
-                            log.error("Problem encountered when sorting DomainObjects", e);
-                            return 0;
-                        }
-                    }
-                });
+                loadPreferences();
+                prepareLsmResults();
             }
 
             @Override
             protected void hadSuccess() {
-                showResults();
+                showResults(true);
             }
 
             @Override
@@ -375,13 +368,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        
+
         worker.execute();
-    }
-    
-    @Override
-    public void search() {
-        // Nothing needs to be done here, because results were updated by setSortField()
     }
 
     @Override
@@ -392,6 +380,32 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
         action.doAction();
+    }
+
+    private void loadPreferences() {
+        if (sample.getId()==null) return;
+        try {
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY);
+            if (sortCriteriaPref!=null) {
+                sortCriteria = (String) sortCriteriaPref.getValue();
+            }
+            else {
+                sortCriteria = null;
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (StringUtils.isEmpty(sortCriteria)) return;
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
     }
     
     @Override
@@ -464,6 +478,8 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     DomainModel model = DomainMgr.getDomainMgr().getModel();
                     lsms = model.getLsmsForSample(sample);
                     lsmAnnotations = model.getAnnotations(DomainUtils.getReferences(lsms));
+                    loadPreferences();
+                    prepareLsmResults();
                 }
                 else if (MODE_RESULTS.equals(currMode))  {
                     // Everything is already in memory
@@ -472,7 +488,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             
             @Override
             protected void hadSuccess() {
-                showResults();
+                showResults(isUserDriven);
                 
                 if (MODE_RESULTS.equals(currMode))  {
                     if (!resultPanels.isEmpty()) {
@@ -502,17 +518,41 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         updateUI();
     }
     
-    public void showResults() {
+    public void showResults(boolean isUserDriven) {
         if (MODE_LSMS.equals(currMode))  {
-            showLsmView();
+            showLsmView(isUserDriven);
         }
         else if (MODE_RESULTS.equals(currMode)) {
-            showResultView();
+            showResultView(isUserDriven);
         }
         updateUI();
     }
-    
-    private void showLsmView() {
+
+    private void prepareLsmResults() {
+
+        List<LSMImage> filteredLsms = new ArrayList<>();
+        for(LSMImage lsm : lsms) {
+
+            boolean display = true;
+
+            if (!currObjective.equals(ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
+                display = false;
+            }
+
+            if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
+                display = false;
+            }
+
+            if (display) {
+                filteredLsms.add(lsm);
+            }
+        }
+
+        DomainUtils.sortDomainObjects(filteredLsms, sortCriteria);
+        lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
+    }
+
+    private void showLsmView(boolean isUserDriven) {
 
     	configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(objectiveButton);
@@ -536,34 +576,15 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         List<String> areas = new ArrayList<>(areaSet);
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
-        
-        List<LSMImage> filteredLsms = new ArrayList<>();
-        for(LSMImage lsm : lsms) {
 
-            boolean display = true;
-
-            if (!currObjective.equals(ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
-                display = false;
-            }
-            
-            if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
-                display = false;
-            }
-            
-            if (display) {
-                filteredLsms.add(lsm);
-            }
-        }
-        
-        lsmSearchResults = SearchResults.paginate(filteredLsms, lsmAnnotations);
-        lsmPanel.showSearchResults(lsmSearchResults, true);
+        lsmPanel.showSearchResults(lsmSearchResults, isUserDriven);
         
         removeAll();
         add(configPanel, BorderLayout.NORTH);
         add(lsmPanel, BorderLayout.CENTER);
     }
 
-    private void showResultView() {
+    private void showResultView(boolean isUserDriven) {
 
         lips.clear();
         resultPanels.clear();
@@ -683,7 +704,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                 	currRunMap.put(objective, run);
-                	showResults();
+                	showResults(true);
                 }
             });
             group.add(menuItem);
@@ -838,13 +859,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             if (result!=null) {
                 this.resultDescriptor = new ResultDescriptor(result);
-                if (result instanceof SampleAlignmentResult) {
-                    SampleAlignmentResult sar = (SampleAlignmentResult)result;
-                    label.setText(resultDescriptor+" ("+sar.getAlignmentSpace()+")");
-                }
-                else {
-                    label.setText(resultDescriptor.toString());
-                }
+                label.setText(resultDescriptor.toString());
                 subLabel.setText(DomainModelViewUtils.getDateString(result.getCreationDate()));
                 
                 String signalMip = DomainUtils.getFilepath(result, FileType.SignalMip);
@@ -946,41 +961,47 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-            if (updatedSample!=null) {
-                loadDomainObject(updatedSample, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(sample.getId())) {
-                    log.info("objects set invalidated, reloading...");
-                    Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                    if (updatedSample!=null) {
-                        loadDomainObject(updatedSample, false, null);
-                    }
-                    break;
+        try {
+		    if (sample==null) return;
+            if (event.isTotalInvalidation()) {
+                log.info("total invalidation, reloading...");
+                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                if (updatedSample!=null) {
+                    loadDomainObject(updatedSample, false, null);
                 }
-                else if (lsms!=null) {
-                    for(LSMImage lsm : lsms) {
-                        if (domainObject.getId().equals(lsm.getId())) {
-                            log.info("lsm invalidated, reloading...");
-                            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
-                            if (updatedSample!=null) {
-                                loadDomainObject(updatedSample, false, null);
+            }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(sample.getId())) {
+                        log.info("objects set invalidated, reloading...");
+                        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                        if (updatedSample!=null) {
+                            loadDomainObject(updatedSample, false, null);
+                        }
+                        break;
+                    }
+                    else if (lsms!=null) {
+                        for(LSMImage lsm : lsms) {
+                            if (domainObject.getId().equals(lsm.getId())) {
+                                log.info("lsm invalidated, reloading...");
+                                Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
+                                if (updatedSample!=null) {
+                                    loadDomainObject(updatedSample, false, null);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
             }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (sample==null) return;
         if (event.getDomainObject().getId().equals(sample.getId())) {
             this.sample = null;
             currRunMap.clear();

@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * UI configuration for a TableViewerPanel. 
@@ -53,25 +54,29 @@ public class TableViewerConfiguration {
     }
 
     public static TableViewerConfiguration loadConfig() {
+        try {
+            TableViewerConfiguration config;
+            Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(
+                    DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
+                    DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
 
-        TableViewerConfiguration config;
-        Preference columnsPreference = DomainMgr.getDomainMgr().getPreference(
-                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS,
-                DomainConstants.PREFERENCE_CATEGORY_TABLE_COLUMNS);
-
-        if (columnsPreference==null) {
-            config = new TableViewerConfiguration();
-        }
-        else {
-            try {
-                config = TableViewerConfiguration.deserialize((String)columnsPreference.getValue());
+            if (columnsPreference==null) {
+                config = new TableViewerConfiguration();
             }
-            catch (Exception e) {
-                throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());
+            else {
+                try {
+                    config = TableViewerConfiguration.deserialize((String)columnsPreference.getValue());
+                }
+                catch (Exception e) {
+                    throw new IllegalStateException("Cannot deserialize column preference: "+columnsPreference.getValue());
+                }
             }
-        }
 
-        return config;
+            return config;
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 
     public void save() throws Exception {

@@ -11,11 +11,14 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
-import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
+import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
 
 /**
  * The Console server interface for clients to call in order to request data. This implementation accepts and returns
  * SOAP-friendly types like arrays instead of collection interfaces like Lists, which are not supported by JAX-WS.
+ *
+ * NOTE: This class must stay in this legacy package until such time that the Neuron Annotator web service client
+ * bindings can be regenerated.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

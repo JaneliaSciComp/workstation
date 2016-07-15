@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TreeNodeNode extends DomainObjectNode {
+public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
@@ -111,11 +112,10 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
-    public void update(DomainObject domainObject) {
-        super.update(domainObject);
-        TreeNode treeNode = (TreeNode)domainObject;
-        log.trace("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
-        log.debug("Refreshing children for {} (now has {} children)",domainObject.getName(),treeNode.getNumChildren());
+    public void update(TreeNode treeNode) {
+        log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
+        super.update(treeNode);
+        log.debug("Refreshing children for {} (now has {} children)", treeNode.getName(), treeNode.getNumChildren());
         childFactory.update(treeNode);
         refreshChildren();
     }
@@ -126,7 +126,7 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     public TreeNode getTreeNode() {
-        return (TreeNode)getDomainObject();
+        return getDomainObject();
     }
     
     @Override
@@ -167,7 +167,8 @@ public class TreeNodeNode extends DomainObjectNode {
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
-        actions.add(MoveToFolderAction.get());
+        actions.add(AddToFolderAction.get());
+//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

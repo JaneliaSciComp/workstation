@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,24 +15,29 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultRowSorter;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -98,28 +104,32 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         resultsTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) return;
-                // Synchronize the table selection to the selection model
-                Set<S> selectedIds = new HashSet<>();
-                // Everything selected in the table should be selected in the model
-                for(Object object : resultsTable.getSelectedObjects()) {
-                    T obj = (T)object;
-                    S id = imageModel.getImageUniqueId(obj);
-                    selectedIds.add(id);
-                    if (!selectionModel.isSelected(id)) {
-                        selectionModel.select(obj, false, true);
-                    }
-                }
-                // Clear out everything that was not selected above
-                for(S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
-                    if (!selectedIds.contains(selectedId)) {
-                        T object = imageModel.getImageByUniqueId(selectedId);
-                        if (selectionModel.isSelected(selectedId)) {
-                            selectionModel.deselect(object, true);
+                try {
+                    if (e.getValueIsAdjusting()) return;
+                    // Synchronize the table selection to the selection model
+                    Set<S> selectedIds = new HashSet<>();
+                    // Everything selected in the table should be selected in the model
+                    for (Object object : resultsTable.getSelectedObjects()) {
+                        T obj = (T) object;
+                        S id = imageModel.getImageUniqueId(obj);
+                        selectedIds.add(id);
+                        if (!selectionModel.isSelected(id)) {
+                            selectionModel.select(obj, false, true);
                         }
                     }
+                    // Clear out everything that was not selected above
+                    for (S selectedId : new ArrayList<>(selectionModel.getSelectedIds())) {
+                        if (!selectedIds.contains(selectedId)) {
+                            T object = imageModel.getImageByUniqueId(selectedId);
+                            if (selectionModel.isSelected(selectedId)) {
+                                selectionModel.deselect(object, true);
+                            }
+                        }
+                    }
+                    updateHud(false);
+                } catch (Exception ex) {
+                    SessionMgr.getSessionMgr().handleException(ex);
                 }
-                updateHud(false);
             }
         });
         
@@ -177,7 +187,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
             }
 
             KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+            if (!KeyBindings.getKeyBindings().executeBinding(shortcut)) {
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
@@ -368,6 +378,25 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     public DynamicColumn getColumn(String columnName) {
         return resultsTable.getColumn(columnName);
+    }
+
+    public int getColumnIndex(String columnName) {
+        return resultsTable.getTableColumnIndex(getColumn(columnName));
+    }
+
+    public void setSortColumn(String columnName, boolean ascending) {
+        if (StringUtils.isEmpty(columnName)) {
+            getTable().getRowSorter().setSortKeys(new ArrayList());
+        }
+        else {
+            int index = getColumnIndex(columnName);
+            if (index >= 0) {
+                getTable().getRowSorter().setSortKeys(Arrays.asList(new RowSorter.SortKey(index, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING)));
+            } 
+            else {
+                log.error("Sort column does not exist: " + columnName);
+            }
+        }
     }
 
     protected DynamicTable getDynamicTable() {

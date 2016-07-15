@@ -2,7 +2,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.WorkstationEnvironment;
+import org.janelia.it.workstation.gui.browser.api.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;

@@ -15,6 +15,8 @@ import java.util.concurrent.Executor;
 
 import javax.swing.SwingUtilities;
 
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -34,16 +36,12 @@ import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronDescriptor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspaceDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -54,35 +52,23 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade.EJBLookupException;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.NoDataException;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
-import org.janelia.it.workstation.model.utils.OntologyKeyBind;
-import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
-
 public final class ModelMgr {
 
     private static final Logger log = LoggerFactory.getLogger(ModelMgr.class);
 
-    // TODO: externalize these properties
-    public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
-    public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
-    public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     public static final String CATEGORY_SORT_CRITERIA = "SortCriteria:";
 
     private static final ModelMgr modelManager = new ModelMgr();
@@ -337,46 +323,6 @@ public final class ModelMgr {
        // SessionMgr.getSessionMgr().setSubject(newSubject);
     }
 
-    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
-        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = null;
-        return null;
-        /*//ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
-        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
-
-        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
-        for (SubjectPreference pref : prefs.values()) {
-            ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
-        }
-
-        return ontologyKeyBindings;*/
-    }
-
-    public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
-
-        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-       /* Subject subject = ModelMgr.getModelMgr().getSubjectWithPreferences(SessionMgr.getSessionMgr().getSubject().getKey());
-
-        // First delete all keybinds for this ontology
-        for (String key : subject.getCategoryPreferences(category).keySet()) {
-            subject.getPreferenceMap().remove(category + ":" + key);
-        }
-
-        // Now re-add all the current key bindings
-        Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
-        for (OntologyKeyBind bind : keybinds) {
-            subject.setPreference(new SubjectPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
-        }
-
-        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-       // SessionMgr.getSessionMgr().setSubject(newSubject);
-        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());*/
-    }
-
-    public void removeOntologyKeyBindings(long ontologyId) throws Exception {
-        ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
-    }
-
     private void notifyOntologySelected(final Long ontologyId) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -521,16 +467,6 @@ public final class ModelMgr {
         }
     }
 
-    public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
-        if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-            return false;
-        }
-        for (ModelMgrObserver listener : getModelMgrObservers()) {
-            listener.entityViewRequested(entityId);
-        }
-        return true;
-    }
-
     public void notifyAnnotationsChanged(final Long entityId) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
@@ -664,28 +600,6 @@ public final class ModelMgr {
         }
         return entityModel.createCommonRootFolder(currWorkspaceId, name).getChildEntity();
     }
-    
-    public RootedEntity createTopLevelRootedEntity(String name) throws Exception {
-        if (currWorkspaceId == null) {
-            throw new IllegalStateException("Cannot create common root when workspace is not selected");
-        }
-        EntityData commonRootEd = entityModel.createCommonRootFolder(currWorkspaceId, name);
-        RootedEntity workspaceRE = new RootedEntity(getCurrentWorkspace());
-        return workspaceRE.getChildById(commonRootEd.getChildEntity().getId());
-    }
-    
-    public RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
-        return entityModel.createAlignmentBoard(currWorkspaceId, alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
-    }
-
-    public AlignedItem addAlignedItem(AlignedItem parent, EntityWrapper wrapper, boolean visible) throws Exception {
-        Entity parentEntity = parent.getInternalEntity();
-        RootedEntity rootedEntity = entityModel.addAlignedItem(parentEntity, wrapper.getInternalEntity(), wrapper.getName(), visible);
-        AlignedItem newItem = new AlignedItem(rootedEntity);
-        newItem.setParent(newItem);
-        parent.addChild(newItem);
-        return newItem;
-    }
 
     public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
         entityModel.demoteCommonRootToFolder(commonRoot);
@@ -805,10 +719,6 @@ public final class ModelMgr {
         this.currWorkspaceId = workspaceId;
     }
 
-    public Long getCurrentWorkspaceId() {
-        return currWorkspaceId;
-    }
-    
     public Entity getCurrentWorkspace() throws Exception {
         if (currWorkspaceId==null) {
             // No current workspace defined, so make it the default workspace
@@ -1249,7 +1159,11 @@ public final class ModelMgr {
 
     // Methods associated with the 3D Tiled Microscope viewer
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
+        try {
+            return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
+        } catch (EJBLookupException ex) {
+            throw ex;
+        }
     }
     
     public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {

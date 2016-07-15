@@ -32,6 +32,7 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -56,18 +57,18 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNode extends AbstractNode implements Has2dRepresentation, HasIdentifier {
+public abstract class DomainObjectNode<T extends DomainObject> extends AbstractNode implements Has2dRepresentation, HasIdentifier {
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
 
     private final ChildFactory parentChildFactory;
     private final InstanceContent lookupContents;
 
-    public DomainObjectNode(ChildFactory parentChildFactory, Children children, DomainObject domainObject) {
+    public DomainObjectNode(ChildFactory parentChildFactory, Children children, T domainObject) {
         this(new InstanceContent(), parentChildFactory, children, domainObject);
     }
 
-    public DomainObjectNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, DomainObject domainObject) {
+    public DomainObjectNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, T domainObject) {
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
@@ -75,7 +76,7 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         DomainObjectNodeTracker.getInstance().registerNode(this);
     }
     
-    public void update(DomainObject domainObject) {
+    public void update(T domainObject) {
         String oldName = getName();
         String oldDisplayName = getDisplayName();
         log.debug("Updating node with: {}",domainObject.getName());
@@ -91,8 +92,8 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         return lookupContents;
     }
 
-    public DomainObject getDomainObject() {
-        DomainObject obj = getLookup().lookup(DomainObject.class);
+    public T getDomainObject() {
+        T obj = (T)getLookup().lookup(DomainObject.class);
         return obj;
     }
     
@@ -203,7 +204,8 @@ public class DomainObjectNode extends AbstractNode implements Has2dRepresentatio
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
-        actions.add(MoveToFolderAction.get());
+        actions.add(AddToFolderAction.get());
+//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

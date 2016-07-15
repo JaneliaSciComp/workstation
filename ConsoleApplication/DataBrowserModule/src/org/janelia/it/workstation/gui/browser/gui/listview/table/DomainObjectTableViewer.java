@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -29,6 +30,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -48,8 +50,11 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +99,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         @Override
-        public DomainObject getImageByUniqueId(Reference id) {
+        public DomainObject getImageByUniqueId(Reference id) throws Exception {
             return DomainMgr.getDomainMgr().getModel().getDomainObject(id);
         }
 
@@ -146,16 +151,27 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        updateUI();
+    }
+
+    @Override
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
-        this.config = IconGridViewerConfiguration.loadConfig();
+        try {
+            this.config = IconGridViewerConfiguration.loadConfig();
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
 
         this.domainObjectList = domainObjectList;
         log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
 
         attributeMap.clear();
 
-        attrs = ClientDomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
+        attrs = DomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
         attrs.add(0, annotationAttr);
 
         TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
@@ -169,6 +185,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         showObjects(domainObjectList.getDomainObjects(), success);
+        setSortCriteria(searchProvider.getSortField());
     }
 
     @Override
@@ -181,33 +198,39 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected DomainObjectContextMenu getContextualPopupMenu() {
 
         List<Reference> ids = selectionModel.getSelectedIds();
-        List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
-        // TODO: should this use the same result as the icon grid viewer?
-        DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject)selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
+        try {
+            List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
+            // TODO: should this use the same result as the icon grid viewer?
+            DomainObjectContextMenu popupMenu = new DomainObjectContextMenu((DomainObject) selectionModel.getParentObject(), selected, ResultDescriptor.LATEST, null);
 
-        JTable table = getTable();
-        ListSelectionModel lsm = table.getSelectionModel();
-        if (lsm.getMinSelectionIndex()==lsm.getMaxSelectionIndex()) {
-            String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
-            final String label = value==null?"null":value;
+            JTable table = getTable();
+            ListSelectionModel lsm = table.getSelectionModel();
+            if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
+                String value = table.getValueAt(table.getSelectedRow(), table.getSelectedColumn()).toString();
+                final String label = value == null ? "null" : value;
 
-            JMenuItem titleMenuItem = new JMenuItem(label);
-            titleMenuItem.setEnabled(false);
-            popupMenu.add(titleMenuItem);
+                JMenuItem titleMenuItem = new JMenuItem(label);
+                titleMenuItem.setEnabled(false);
+                popupMenu.add(titleMenuItem);
 
-            JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
-            copyMenuItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    Transferable t = new StringSelection(label);
-                    Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-                }
-            });
-            popupMenu.add(copyMenuItem);
+                JMenuItem copyMenuItem = new JMenuItem("  Copy Value To Clipboard");
+                copyMenuItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Transferable t = new StringSelection(label);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+                    }
+                });
+                popupMenu.add(copyMenuItem);
+            }
+
+            popupMenu.addMenuItems();
+
+            return popupMenu;
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+            return null;
         }
-
-        popupMenu.addMenuItems();
-        return popupMenu;
     }
 
     protected JPopupMenu getColumnPopupMenu(final int col) {
@@ -236,7 +259,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     @Override
     protected void objectDoubleClicked(DomainObject object) {
-        getContextualPopupMenu().runDefaultAction();
+        try {
+            getContextualPopupMenu().runDefaultAction();
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 
     @Override
@@ -255,13 +282,17 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     @Override
     protected void deleteKeyPressed() {
         // TODO: this was copy and pasted from DomainObjectIconGridViewer and should be refactored someday
-        IsParent parent = selectionModel.getParentObject();
-        if (parent instanceof TreeNode) {
-            TreeNode treeNode = (TreeNode)parent;
-            if (ClientDomainUtils.hasWriteAccess(treeNode)) {
-                RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
-                action.doAction();
+        try {
+            IsParent parent = selectionModel.getParentObject();
+            if (parent instanceof TreeNode) {
+                TreeNode treeNode = (TreeNode) parent;
+                if (ClientDomainUtils.hasWriteAccess(treeNode)) {
+                    RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
+                    action.doAction();
+                }
             }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
@@ -283,6 +314,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     // TODO: implement this so things like neuron fragments can be edited in table mode
     @Override
     public void toggleEditMode(boolean editMode) {
+
+    }
+
+    @Override
+    public void refreshEditMode() {
 
     }
 
@@ -374,26 +410,42 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     protected void updateHud(boolean toggle) {
 
         Hud hud = Hud.getSingletonInstance();
-        List<DomainObject> selected = getSelectedObjects();
-        
-        if (selected.size() != 1) {
-            hud.hideDialog();
-            return;
-        }
-        
-        DomainObject domainObject = selected.get(0);
-        if (toggle) {
-            hud.setObjectAndToggleDialog(domainObject, null, null);
-        }
-        else {
-            hud.setObject(domainObject, null, null, false);
+        try {
+            List<DomainObject> selected = getSelectedObjects();
+
+            if (selected.size() != 1) {
+                hud.hideDialog();
+                return;
+            }
+
+            DomainObject domainObject = selected.get(0);
+            if (toggle) {
+                hud.setObjectAndToggleDialog(domainObject, null, null);
+            }
+            else {
+                hud.setObject(domainObject, null, null, false);
+            }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
     
-    private List<DomainObject> getSelectedObjects() {
+    private List<DomainObject> getSelectedObjects() throws Exception {
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
     }
-    
+
+    private void setSortCriteria(String sortCriteria) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(sortCriteria)) {
+            setSortColumn(null, true);
+        }
+        else {
+            this.sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+            this.ascending = !sortCriteria.startsWith("-");
+            log.info("Setting sort column: {}",sortCriteria);
+            setSortColumn(sortField, ascending);
+        }
+    }
+
     protected class DomainObjectRowSorter extends RowSorter<TableModel> {
 
         private List<SortKey> sortKeys = new ArrayList<>();
@@ -403,6 +455,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             for (int i = 0; i < columns.size(); i++) {
                 if (columns.get(i).getName().equals(sortField)) {
                     sortKeys.add(new SortKey(i, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING));
+                    break;
                 }
             }
         }
@@ -414,7 +467,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             if (!column.isVisible() || !column.isSortable()) {
                 return;
             }
-
             SortOrder newOrder = SortOrder.ASCENDING;
             if (!sortKeys.isEmpty()) {
                 SortKey currentSortKey = sortKeys.get(0);
@@ -437,7 +489,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public void setSortKeys(List<? extends SortKey> sortKeys) {
-            this.sortKeys = Collections.unmodifiableList(new ArrayList<>(sortKeys));
+            this.sortKeys = new ArrayList(sortKeys);
         }
 
         @Override

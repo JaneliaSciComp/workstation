@@ -30,13 +30,13 @@ public interface WorkspaceFacade {
      * Return the current user's default workspace.
      * @return workspace
      */
-    public Workspace getDefaultWorkspace();
+    public Workspace getDefaultWorkspace() throws Exception;
 
     /**
      * Return all of the workspaces that the current user can access. 
      * @return list of workspaces
      */
-    public Collection<Workspace> getWorkspaces();
+    public Collection<Workspace> getWorkspaces() throws Exception;
 
     /**
      * Create and return a new tree node. 

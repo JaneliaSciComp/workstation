@@ -53,7 +53,7 @@ public class SampleFacadeImpl implements SampleFacade {
     }
 
     @Override
-    public List<LineRelease> getLineReleases() {
+    public List<LineRelease> getLineReleases() throws Exception {
         return dao.getLineReleases(AccessManager.getSubjectKey());
     }
 

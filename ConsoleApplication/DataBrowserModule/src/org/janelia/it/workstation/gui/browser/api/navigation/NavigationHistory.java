@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
-import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditorState;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateBack;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateForward;
 import org.openide.util.actions.CallableSystemAction;

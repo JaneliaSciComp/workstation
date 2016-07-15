@@ -54,7 +54,7 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
     }
 
     public boolean userRequestedCancel() {
-        return progressMonitor.isCanceled();
+        return progressMonitor!=null && progressMonitor.isCanceled();
     }
 
     public synchronized boolean isDisregarded() {

@@ -33,10 +33,12 @@ public class SampleResultViewerManager implements ViewerManager<SampleResultView
     /* Manage the active instance of this top component */
     
     private SampleResultViewerTopComponent activeInstance;
-    void activate(SampleResultViewerTopComponent instance) {
+    @Override
+    public void activate(SampleResultViewerTopComponent instance) {
         activeInstance = instance;
     }
-    boolean isActive(SampleResultViewerTopComponent instance) {
+    @Override
+    public boolean isActive(SampleResultViewerTopComponent instance) {
         return activeInstance == instance;
     }
     @Override

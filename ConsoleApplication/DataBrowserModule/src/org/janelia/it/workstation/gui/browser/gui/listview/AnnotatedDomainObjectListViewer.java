@@ -10,7 +10,6 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.navigation.ListViewerState;
 
 /**
  * An interface for a viewer that can display an AnnotatedDomainObjectList.
@@ -50,7 +49,9 @@ public interface AnnotatedDomainObjectListViewer {
      * @param isUserDriven is this action driven directly by the user?
      */
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven);
-    
+
+    public void showLoadingIndicator();
+
     /**
      * Show the objects in the list in the viewer, along with their annotations. 
      * @param domainObjectList 
@@ -86,6 +87,12 @@ public interface AnnotatedDomainObjectListViewer {
      * Called on the specific viewer to toggle edit mode
      */
     public void toggleEditMode(boolean editMode);
+
+    /**
+     * Used when you have to perform two UI actions sequentially in the same thread
+     * TODO: provide a mechanism for consistently executing UI callback queues, ala Javascript
+     */
+    public void refreshEditMode();
 
     /**
      * Configure the edit selection model to use in the viewer.

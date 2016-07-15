@@ -23,6 +23,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Drop-down button for selecting the image type to display. 
  * 
@@ -31,29 +32,42 @@ import org.slf4j.LoggerFactory;
 public class ImageTypeSelectionButton extends DropDownButton {
 
     private static final Logger log = LoggerFactory.getLogger(ImageTypeSelectionButton.class);
-    
+
+    private FileType DEFAULT_TYPE = FileType.FirstAvailable2d;
+
     private ResultDescriptor currResult;
-    private String currImageType;
+    private FileType currImageType;
+    private boolean only2d;
     private boolean showTitle;
 
     public ImageTypeSelectionButton() {
-        this(false);
+        this(false, true);
     }
     
-    public ImageTypeSelectionButton(boolean showTitle) {
+    public ImageTypeSelectionButton(boolean showTitle, boolean only2d) {
+        this.only2d = only2d;
     	this.showTitle = showTitle;
-        setIcon(Icons.getIcon("page.png"));
+        setIcon(Icons.getIcon("image.png"));
         setToolTipText("Select the result type to display");
+        setImageType(DEFAULT_TYPE);
     }
 
     public void setResultDescriptor(ResultDescriptor currResult) {
         this.currResult = currResult;
     }
-    
-    public void setImageType(String currImageType) {
-        this.currImageType = currImageType;
+
+    public String getImageTypeName() {
+        return currImageType.name();
+    }
+
+    public void setImageTypeName(String imageType) {
+        setImageType(FileType.valueOf(imageType));
+    }
+
+    public void setImageType(FileType imageType) {
+        this.currImageType = imageType == null ? DEFAULT_TYPE : imageType;
         if (showTitle) {
-            setText(currImageType);
+            setText(currImageType.getLabel());
         }
     }
 
@@ -66,7 +80,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
         if (currResult == null) {
             this.currResult = ResultDescriptor.LATEST;
         }
-        
+
         Multiset<String> countedTypeNames = LinkedHashMultiset.create();
             
         for(Object source : sourceList) {
@@ -79,12 +93,12 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 }
             }
             if (source instanceof HasFileGroups) {
-                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFileGroups) source);
+                Multiset<String> typeNames = DomainUtils.getTypeNames((HasFileGroups)source, only2d);
                 log.debug("Source has file groups: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
             if (source instanceof HasFiles) {
-                Multiset<String> typeNames = DomainUtils.get2dTypeNames((HasFiles) source);
+                Multiset<String> typeNames = DomainUtils.getTypeNames((HasFiles) source, only2d);
                 log.debug("Source has files: {}",typeNames);
                 countedTypeNames.addAll(typeNames);
             }
@@ -96,47 +110,23 @@ public class ImageTypeSelectionButton extends DropDownButton {
         ButtonGroup group = new ButtonGroup();
         
         log.debug("{} domain objects have {} type names",sourceList.size(),countedTypeNames.elementSet().size());
-        for(FileType fileType : FileType.values()) {
-            final String typeName = fileType.name();
-            log.trace("Type {} has count={}",typeName,countedTypeNames.count(typeName));
-            if (countedTypeNames.count(typeName)>0) {
-                if (currImageType == null || !countedTypeNames.contains(currImageType)) {
-                    this.currImageType = typeName;
-                }
-                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), typeName.equals(currImageType));
+        for(final FileType fileType : FileType.values()) {
+            String typeName = fileType.name();
+            log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
+            if (countedTypeNames.count(typeName)>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
+                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), fileType.equals(currImageType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        currImageType = typeName;
-                        imageTypeChanged(currImageType);
+                        setImageType(fileType);
+                        imageTypeChanged(fileType);
                     }
                 });
                 getPopupMenu().add(menuItem);
                 group.add(menuItem);
             }
         }
-        
-        // Default type
-        if (currImageType == null) {
-            this.currImageType = FileType.SignalMip.name();
-            // If there are no signal MIPs, try something else
-            if (countedTypeNames.count(currImageType)==0) {
-                log.info("No signal MIPs, looking for another default");
-                for (FileType fileType : FileType.values()) {
-                    if (countedTypeNames.count(fileType)>0) {
-                        this.currImageType = fileType.name();
-                        log.info("Choosing default image type: {}",currImageType);
-                        break;
-                    }
-                }
-            }
-
-        }
     }
     
-    protected void imageTypeChanged(String typeName) {}
-    
-    public String getImageType() {
-        return currImageType;
-    }
+    protected void imageTypeChanged(FileType fileType) {}
 
 }

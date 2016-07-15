@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 
 public interface ImageModel<T,S> {
 
-    public T getImageByUniqueId(S id);
+    public T getImageByUniqueId(S id) throws Exception;
     
     public S getImageUniqueId(T imageObject);
     

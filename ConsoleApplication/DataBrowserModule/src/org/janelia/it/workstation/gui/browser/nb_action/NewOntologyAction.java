@@ -1,22 +1,14 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
-import javax.swing.JOptionPane;
-
-import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
+import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.actions.CallableSystemAction;
 
 /**
  * Create a new ontology owned by the current user.
@@ -32,7 +24,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReference(path = "Menu/File/New", position = 4)
 @Messages("CTL_NewOntologyAction=Ontology")
-public class NewOntologyAction implements ActionListener {
+public class NewOntologyAction extends CallableSystemAction {
 
     protected final Component mainFrame = SessionMgr.getMainFrame();
 
@@ -40,46 +32,28 @@ public class NewOntologyAction implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
+    public String getName() {
+        return "Ontology";
+    }
 
-        final DomainModel model = DomainMgr.getDomainMgr().getModel();
+    @Override
+    protected String iconResource() {
+        return "images/page_add.png";
+    }
 
-        final String name = (String) JOptionPane.showInputDialog(mainFrame, "Ontology Name:\n",
-                "Create new ontology", JOptionPane.PLAIN_MESSAGE, null, null, null);
-        if (StringUtils.isEmpty(name)) {
-            return;
-        }
+    @Override
+    public HelpCtx getHelpCtx() {
+        return null;
+    }
 
-        // Make sure the ontology explorer is visible first
-        OntologyExplorerTopComponent tc = OntologyExplorerTopComponent.getInstance();
-        if (!tc.isOpened()) {
-            tc.open();
-        }
-        tc.requestVisible();
+    @Override
+    protected boolean asynchronous() {
+        return false;
+    }
 
-        SimpleWorker worker = new SimpleWorker() {
-
-            private Ontology ontology;
-
-            @Override
-            protected void doStuff() throws Exception {
-                ontology = new Ontology();
-                ontology.setName(name);
-                model.create(ontology);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // GUI will update due to events
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-
-        };
-        
-        worker.execute();
+    @Override
+    public void performAction() {
+        NewOntologyActionListener actionListener = new NewOntologyActionListener();
+        actionListener.actionPerformed(null);
     }
 }

@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.36</specification-version>
+                        <specification-version>1.37</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.36</specification-version>
+                        <specification-version>1.30</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -42,6 +42,7 @@
             <public-packages>
                 <package>org.janelia.geometry.util</package>
                 <package>org.janelia.geometry3d</package>
+                <package>org.janelia.geometry3d.camera</package>
             </public-packages>
         </data>
     </configuration>

@@ -41,6 +41,7 @@ uniform COLOR_VEC opacityFunctionMax = COLOR_VEC(1);
 uniform vec3 camPosInTc; // camera position, in texture coordinate frame
 uniform sampler3D volumeTexture; // the confocal image stack
 uniform int levelOfDetail = 0; // volume texture LOD
+uniform float fadeThicknessInTexels = 1000.0;
 
 // Use actual voxelSize, as uniform, for more accurate occlusion
 uniform vec3 volumeMicrometers = vec3(256, 256, 200);
@@ -559,9 +560,11 @@ void integrate_intensity(
     //    the user drags the opacity parameters. 
     float rd = (rayParameter - viewSlab.minRayParam) 
             / (viewSlab.maxRayParam - viewSlab.minRayParam); // relative depth
-    const float fadeBuffer = 0.20; // how much of depth slab to include in fading
-    float fade = rampstep(0.0, fadeBuffer, rd);
-    fade = min(fade, rampstep(1.0, 1.0 - fadeBuffer, rd));
+    float fadeInterval = fadeThicknessInTexels / (viewSlab.maxRayParam - viewSlab.minRayParam);
+    // But don't fade much in extremely thin slabs
+    fadeInterval = min(0.40, fadeInterval); // how much of depth slab to include in fading
+    float fade = rampstep(0.0, fadeInterval, rd);
+    fade = min(fade, rampstep(1.0, 1.0 - fadeInterval, rd));
     localOpacity *= fade;
 
     // Integrate
@@ -690,7 +693,7 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
     CoreStatus coreStatus = CoreStatus(false, 0, 0); // For finding neurite centroid
     // 2) March along the ray, one voxel at a time
     int stepCount = 0;
-    const int maxStepCount = 400; // protect against infinite loops or oversize volumes
+    const int maxStepCount = 800; // protect against infinite loops or oversize volumes
     while(true) {
         if (ray_complete(voxelRayState, rayBounds, integratedIntensity, coreStatus))
             return integratedIntensity; // DONE, we made it to the far side of the volume

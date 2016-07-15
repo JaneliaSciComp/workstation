@@ -31,6 +31,7 @@ import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -203,16 +204,21 @@ public class DataSetDialog extends ModalDialog {
 
             identifierInput.setText(dataSet.getIdentifier());
             sampleNamePatternInput.setText(dataSet.getSampleNamePattern());
+            sageConfigPathInput.setText(dataSet.getSageConfigPath());
+            sageGrammarPathInput.setText(dataSet.getSageGrammarPath());
 
             SampleImageType sampleImageType = dataSet.getSampleImageType();
             if (sampleImageType != null) {
                 sampleImageInput.setSelectedItem(sampleImageType);
             }
+
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
-            if (dataSet.getPipelineProcesses()!=null) {
+            if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
                 applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
-        } else {
+
+        }
+        else {
             nameInput.setText("");
             applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
         }
@@ -222,7 +228,10 @@ public class DataSetDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        Utils.setWaitingCursor(DataSetDialog.this);
+        if (dataSet!=null && !ClientDomainUtils.hasWriteAccess(dataSet)) {
+            JOptionPane.showMessageDialog(this, "You do not have access to make changes to this data set", "Access denied", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         final String sampleNamePattern = sampleNamePatternInput.getText();
         if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
@@ -237,6 +246,8 @@ public class DataSetDialog extends ModalDialog {
         final String sageConfigPath = sageConfigPathInput.getText();
         final String sageGrammarPath = sageGrammarPathInput.getText();
         final String sampleImageType = ((SampleImageType) sampleImageInput.getSelectedItem()).name();
+
+        Utils.setWaitingCursor(DataSetDialog.this);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -257,6 +268,8 @@ public class DataSetDialog extends ModalDialog {
                 pipelineProcesses.add(getCheckboxValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);
                 dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
+                dataSet.setSageConfigPath(sageConfigPath);
+                dataSet.setSageGrammarPath(sageGrammarPath);
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 model.save(dataSet);
             }

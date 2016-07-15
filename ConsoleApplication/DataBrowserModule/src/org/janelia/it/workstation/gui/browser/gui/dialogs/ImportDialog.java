@@ -384,24 +384,28 @@ public class ImportDialog extends ModalDialog {
 
                                             @Override
                                             protected void hadSuccess() {
-                                                DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                                rootFolder = (TreeNode)model.getDomainObject(Reference.createFor(rootFolder));
-                                                List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
-                                                DomainObject importFolder = null;
-                                                for (DomainObject child: children) {
-                                                    if (child.getName().equals(importFolderName)) {
-                                                        importFolder = child;
-                                                        break;
+                                                try {
+                                                    DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                                    rootFolder = (TreeNode) model.getDomainObject(Reference.createFor(rootFolder));
+                                                    List<DomainObject> children = model.getDomainObjects(rootFolder.getChildren());
+                                                    DomainObject importFolder = null;
+                                                    for (DomainObject child : children) {
+                                                        if (child.getName().equals(importFolderName)) {
+                                                            importFolder = child;
+                                                            break;
+                                                        }
                                                     }
+                                                    final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
+                                                    SwingUtilities.invokeLater(new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            explorer.selectNodeByPath(idPath);
+                                                            setVisible(false);
+                                                        }
+                                                    });
+                                                }  catch (Exception e) {
+                                                    SessionMgr.getSessionMgr().handleException(e);
                                                 }
-                                                final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
-                                                SwingUtilities.invokeLater(new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        explorer.selectNodeByPath(idPath);
-                                                        setVisible(false);
-                                                    }
-                                                });
                                             }
 
                                             @Override

@@ -415,11 +415,15 @@ called from a  SimpleWorker thread.
     public synchronized void deleteCurrentNeuron() throws Exception {
         if (getCurrentNeuron() == null) {
             return;
+        } else {
+            deleteNeuron(getCurrentNeuron());
+            setCurrentNeuron(null);
         }
+    }
 
-        // keep a copy so we know what visuals to remove:
-        TmNeuron deletedNeuron = getCurrentNeuron();
-        setCurrentNeuron(null);
+    public synchronized void deleteNeuron(TmNeuron deletedNeuron) throws Exception {
+
+        final boolean hadAnnotations = deletedNeuron.getGeoAnnotationMap().size() > 0;
 
         // delete
         neuronManager.deleteNeuron(currentWorkspace, deletedNeuron);
@@ -441,8 +445,10 @@ called from a  SimpleWorker thread.
                 filteredAnnotationList.setSkipUpdate(true);
 
                 fireNeuronSelected(null);
-                fireAnnotationsDeleted(tempAnnotationList);
-                fireAnchoredPathsRemoved(tempPathList);
+                if (hadAnnotations) {
+                    fireAnnotationsDeleted(tempAnnotationList);
+                    fireAnchoredPathsRemoved(tempPathList);
+                }
                 fireWorkspaceLoaded(workspace);
                 fireWsEntityChanged();
 
@@ -450,7 +456,9 @@ called from a  SimpleWorker thread.
                 skeletonController.skeletonChanged();
 
                 filteredAnnotationList.setSkipUpdate(false);
-                filteredAnnotationList.updateData();
+                if (hadAnnotations) {
+                    filteredAnnotationList.updateData();
+                }
 
             }
         });
@@ -707,6 +715,12 @@ called from a  SimpleWorker thread.
             neuronManager.saveNeuronData(sourceNeuron);
         }
 
+
+        // if source neuron is now empty, delete it
+        if (sourceNeuron.getGeoAnnotationMap().size() == 0) {
+            deleteNeuron(sourceNeuron);
+        }
+
         final TmGeoAnnotation updateSourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -726,7 +740,6 @@ called from a  SimpleWorker thread.
 
         // log.info("ending mergeNeurite(); elapsed = " + stopwatch);
         stopwatch.stop();
-
     }
 
 
@@ -912,6 +925,9 @@ called from a  SimpleWorker thread.
                 neuron.getStructuredTextAnnotationMap().remove(annotation.getId());
             }
             neuron.getGeoAnnotationMap().remove(annotation.getId());
+            if (annotation.isRoot()) {
+                neuron.removeRootAnnotation(annotation);
+            }
         }
         // for the root annotation, also delete any traced paths to the parent,
         // if it exists and eliminate the root annotation as a child of the

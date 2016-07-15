@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 201)
 @ActionID(category = "Window", id = "AlignmentBoardControlsTopComponent")
-@ActionReference(path = "Menu/Window", position = 201)
+@ActionReference(path = "Menu/Window/Alignment Board", position = 51)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardControlsAction",
         preferredID = AlignmentBoardControlsTopComponent.PREFERRED_ID
@@ -54,7 +54,9 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setTopComponent( new JLabel( "" ));
         splitPane.setBottomComponent( new JLabel( "" ));
-        splitPane.setResizeWeight(0.5);
+		// Hog space for the upper tier, because lower tier has
+		// explicit vertical space demand.
+        splitPane.setResizeWeight(1.0);
         jPanel1.add( splitPane, BorderLayout.CENTER );
 
         setName(Bundle.CTL_AlignmentBoardControlsTopComponent());

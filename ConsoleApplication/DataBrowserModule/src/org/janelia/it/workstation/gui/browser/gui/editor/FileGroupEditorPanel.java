@@ -16,6 +16,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.FileGroup;
@@ -23,7 +24,6 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.FileGroupSelectionModel;
@@ -72,9 +72,9 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         typeButton = new ImageTypeSelectionButton() {
             @Override
-            protected void imageTypeChanged(String typeName) {
-                log.info("Setting image type preference: "+typeName);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
+            protected void imageTypeChanged(FileType fileType) {
+                log.info("Setting image type preference: "+fileType);
+                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
 
@@ -88,7 +88,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         if (result==null) return;
         
         if (!debouncer.queue(null)) {
-            log.debug("Skipping load, since there is one already in progress");
+            log.info("Skipping load, since there is one already in progress");
             return;
         }
         
@@ -111,31 +111,35 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     private void showResult(PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
+        try {
+            ObjectiveSample objectiveSample = result.getParentRun().getParent();
+            configPanel.setTitle(objectiveSample.getObjective()+" "+result.getName());
 
-        ObjectiveSample objectiveSample = result.getParentRun().getParent();
-        configPanel.setTitle(objectiveSample.getObjective()+" "+result.getName());
+            HasFileGroups hasFileGroups = (HasFileGroups)result;
 
-        HasFileGroups hasFileGroups = (HasFileGroups)result;
+            DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
 
-        DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
-        Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
-        log.info("Got image type preference: "+preference2);
-        if (preference2!=null) {
-            typeButton.setImageType((String)preference2.getValue());
-        }
-        typeButton.populate(hasFileGroups.getGroups());
-
-        List<FileGroup> sortedGroups = new ArrayList<>(hasFileGroups.getGroups());
-        Collections.sort(sortedGroups, new Comparator<FileGroup>() {
-            @Override
-            public int compare(FileGroup o1, FileGroup o2) {
-                return o1.getKey().compareTo(o2.getKey());
+            Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
+            log.info("Got image type preference: "+preference2);
+            if (preference2!=null) {
+                typeButton.setImageTypeName((String)preference2.getValue());
             }
-        });
+            typeButton.populate(hasFileGroups.getGroups());
 
-        log.info("Showing "+hasFileGroups.getGroupKeys().size()+" file groups");
-        resultsPanel.showObjects(sortedGroups, success);
-        showResults(isUserDriven);
+            List<FileGroup> sortedGroups = new ArrayList<>(hasFileGroups.getGroups());
+            Collections.sort(sortedGroups, new Comparator<FileGroup>() {
+                @Override
+                public int compare(FileGroup o1, FileGroup o2) {
+                    return o1.getKey().compareTo(o2.getKey());
+                }
+            });
+
+            log.info("Showing "+hasFileGroups.getGroupKeys().size()+" file groups");
+            resultsPanel.showObjects(sortedGroups, success);
+            showResults(isUserDriven);
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
     public void showResults(boolean isUserDriven) {
@@ -173,9 +177,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (result ==null) {
-            return; // Nothing to refresh
-        } 
+        if (result==null) return;
         if (event.isTotalInvalidation()) {
             log.info("Total invalidation, reloading...");
             refreshResult();
@@ -193,16 +195,25 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     private void refreshResult() {
-        Sample sample = result.getParentRun().getParent().getParent();
-        Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-        List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
-        if (results.isEmpty()) {
-            log.info("Sample no longer has result with id: "+ result.getId());
-            showNothing();
-            return;
+        try {
+            Sample sample = result.getParentRun().getParent().getParent();
+            Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+            if (updatedSample!=null) {
+                List<PipelineResult> results = updatedSample.getResultsById(PipelineResult.class, result.getId());
+                if (results.isEmpty()) {
+                    log.info("Sample no longer has result with id: "+ result.getId());
+                    showNothing();
+                    return;
+                }
+                showResult(results.get(results.size()-1), false, null);
+            }
+            else {
+                showNothing();
+            }
+        }  
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
-        PipelineResult result = results.get(results.size()-1);
-        showResult(result, false, null);
     }
 
     private FileGroup getFileGroup(String key) {
@@ -223,7 +234,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         public String getImageFilepath(FileGroup imageObject) {
-            return DomainUtils.getFilepath(imageObject, typeButton.getImageType());
+            return DomainUtils.getFilepath(imageObject, typeButton.getImageTypeName());
         }
 
         @Override
@@ -283,30 +294,27 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     private void setPreference(final String name, final String value) {
 
+        Utils.setMainFrameCursorWaitStatus(true);
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
-                    if (preference==null) {
-                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
-                    }
-                    else {
-                        preference.setValue(value);
-                    }
-                    DomainMgr.getDomainMgr().savePreference(preference);
+                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
                 }
             }
 
             @Override
             protected void hadSuccess() {
+                Utils.setMainFrameCursorWaitStatus(false);
                 search();
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setMainFrameCursorWaitStatus(false);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };

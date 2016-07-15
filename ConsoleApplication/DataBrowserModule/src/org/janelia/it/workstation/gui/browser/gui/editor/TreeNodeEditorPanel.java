@@ -13,7 +13,9 @@ import javax.swing.JPanel;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -22,7 +24,6 @@ import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -33,10 +34,9 @@ import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.navigation.DomainObjectEditorState;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TreeNodeEditorPanel extends JPanel
-        implements DomainObjectNodeSelectionEditor<TreeNodeNode>, SearchProvider {
+        implements DomainObjectNodeSelectionEditor<TreeNode>, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(TreeNodeEditorPanel.class);
     
@@ -67,7 +67,8 @@ public class TreeNodeEditorPanel extends JPanel
     // Results
     private SearchResults searchResults;
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
-    
+    private String sortCriteria;
+
     public TreeNodeEditorPanel() {
         
         setLayout(new BorderLayout());
@@ -108,20 +109,25 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void loadDomainObjectNode(final TreeNodeNode treeNodeNode, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<TreeNode> treeNodeNode, boolean isUserDriven, Callable<Void> success) {
+        this.treeNodeNode = (TreeNodeNode)treeNodeNode;
+        loadDomainObject(treeNodeNode.getDomainObject(), isUserDriven, success);
+    }
 
-        if (treeNodeNode==null) return;
+    @Override
+    public void loadDomainObject(final TreeNode treeNode, final boolean isUserDriven, final Callable<Void> success) {
+
+        if (treeNode==null) return;
         
         if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
 
-        log.info("loadDomainObject(TreeNode:{})",treeNodeNode.getName());
+        log.info("loadDomainObject(TreeNode:{})",treeNode.getName());
         resultsPanel.showLoadingIndicator();
 
-        this.treeNodeNode = treeNodeNode;
-        this.treeNode = treeNodeNode.getTreeNode();
+        this.treeNode = treeNode;
         selectionModel.setParentObject(treeNode);
         
         SimpleWorker worker = new SimpleWorker() {
@@ -131,6 +137,8 @@ public class TreeNodeEditorPanel extends JPanel
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 domainObjects = model.getDomainObjects(treeNode.getChildren());
                 annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                loadPreferences();
+                prepareResults();
                 log.info("Showing "+domainObjects.size()+" items");
             }
 
@@ -150,9 +158,13 @@ public class TreeNodeEditorPanel extends JPanel
 
         worker.execute();
     }
-    
-    public void showResults() {
+
+    private void prepareResults() throws Exception {
+        DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
+    }
+
+    private void showResults() {
         resultsPanel.showSearchResults(searchResults, true);
     }
 
@@ -167,31 +179,37 @@ public class TreeNodeEditorPanel extends JPanel
 
     @Subscribe
     public void domainObjectInvalidated(DomainObjectInvalidationEvent event) {
-        if (event.isTotalInvalidation()) {
-            log.info("total invalidation, reloading...");
-            TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-            if (updatedFolder!=null) {
-                treeNodeNode.update(updatedFolder);
-                loadDomainObjectNode(treeNodeNode, false, null);
-            }
-        }
-        else {
-            for (DomainObject domainObject : event.getDomainObjects()) {
-                if (domainObject.getId().equals(treeNode.getId())) {
-                    log.info("tree node invalidated, reloading...");
-                    TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-                    if (updatedFolder!=null) {
-                        treeNodeNode.update(updatedFolder);
-                        loadDomainObjectNode(treeNodeNode, false, null);
-                    }
-                    break;
+        try {
+            if (treeNodeNode==null || treeNode==null) return;
+            if (event.isTotalInvalidation()) {
+                log.info("total invalidation, reloading...");
+                TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+                if (updatedFolder!=null) {
+                    treeNodeNode.update(updatedFolder);
+                    loadDomainObjectNode(treeNodeNode, false, null);
                 }
             }
+            else {
+                for (DomainObject domainObject : event.getDomainObjects()) {
+                    if (domainObject.getId().equals(treeNode.getId())) {
+                        log.info("tree node invalidated, reloading...");
+                        TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+                        if (updatedFolder!=null) {
+                            treeNodeNode.update(updatedFolder);
+                            loadDomainObjectNode(treeNodeNode, false, null);
+                        }
+                        break;
+                    }
+                }
+            }
+        }  catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
+        if (treeNode==null) return;
         if (event.getDomainObject().getId().equals(treeNode.getId())) {
             this.treeNode = null;
             domainObjects.clear();
@@ -202,42 +220,26 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void setSortField(final String sortCriteria) {
+    public String getSortField() {
+        return sortCriteria;
+    }
 
-        resultsPanel.showLoadingIndicator();
+    @Override
+    public void setSortField(final String sortCriteria) {
+        this.sortCriteria = sortCriteria;
+        savePreferences();
+    }
+
+    @Override
+    public void search() {
 
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-                final boolean ascending = !sortCriteria.startsWith("-");
-
-                final Map<DomainObject,Object> fieldValues = new HashMap<>();
-                for(DomainObject domainObject : domainObjects) {
-                    Object value = ClientDomainUtils.getFieldValue(domainObject, sortField);
-                    fieldValues.put(domainObject, value);
-                }
-
-                Collections.sort(domainObjects, new Comparator<DomainObject>() {
-                    @Override
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    public int compare(DomainObject o1, DomainObject o2) {
-                        try {
-                            Comparable v1 = (Comparable)fieldValues.get(o1);
-                            Comparable v2 = (Comparable)fieldValues.get(o2);
-                            Ordering ordering = Ordering.natural().nullsLast();
-                            if (!ascending) {
-                                ordering = ordering.reverse();
-                            }
-                            return ComparisonChain.start().compare(v1, v2, ordering).result();
-                        }
-                        catch (Exception e) {
-                            log.error("Problem encountered when sorting DomainObjects", e);
-                            return 0;
-                        }
-                    }
-                });
+                loadPreferences();
+                prepareResults();
+                log.info("Showing "+domainObjects.size()+" items");
             }
 
             @Override
@@ -256,11 +258,6 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void search() {
-        // Nothing needs to be done here, because results were updated by setSortField()
-    }
-
-    @Override
     public void export() {
         DomainObjectTableViewer viewer = null;
         if (resultsPanel.getViewer() instanceof DomainObjectTableViewer) {
@@ -268,6 +265,32 @@ public class TreeNodeEditorPanel extends JPanel
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
+    }
+
+    private void loadPreferences() {
+        if (treeNode.getId()==null) return;
+        try {
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString());
+            if (sortCriteriaPref!=null) {
+                sortCriteria = (String)sortCriteriaPref.getValue();
+            }
+            else {
+                sortCriteria = null;
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (StringUtils.isEmpty(sortCriteria)) return;
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, treeNode.getId().toString(), sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
     }
 
     @Override

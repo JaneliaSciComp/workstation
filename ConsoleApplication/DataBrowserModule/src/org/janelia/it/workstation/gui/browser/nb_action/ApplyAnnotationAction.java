@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
@@ -91,61 +92,65 @@ public class ApplyAnnotationAction extends NodeAction {
     }
     
     public void performAction(final OntologyTerm ontologyTerm) {
-        
-        Ontology ontology = ontologyTerm.getOntology();
-        String keyTermValue = ontologyTerm.getName();
-        Long keyTermId = ontologyTerm.getId();
-        
-        if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
-            // Cannot annotate with a category or enum
-            return;
-        }
-        
-        log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
-        
-        List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
-        
-        if (selectedIds.isEmpty()) {
-            // Cannot annotate nothing
-            log.warn("ApplyAnnotationAction called without any objects being selected");
-            return;
-        }
-        
-        for(Reference id : selectedIds) {
-            log.debug("Selected: "+id);
-        }
-        
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
+        try {
+            Ontology ontology = ontologyTerm.getOntology();
+            String keyTermValue = ontologyTerm.getName();
+            Long keyTermId = ontologyTerm.getId();
 
-        AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
-        final String value = editor.showEditor();
+            if (ontologyTerm instanceof Category || ontologyTerm instanceof org.janelia.it.jacs.model.domain.ontology.Enum) {
+                // Cannot annotate with a category or enum
+                return;
+            }
 
-        SimpleWorker worker = new SimpleWorker() {
+            log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
 
-            @Override
-            protected void doStuff() throws Exception {
-                int i = 1;
-                for (DomainObject domainObject : selectedDomainObjects) {
-                    doAnnotation(domainObject, ontologyTerm, value);
-                    setProgress(i++, selectedDomainObjects.size());
+            List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
+
+            if (selectedIds.isEmpty()) {
+                // Cannot annotate nothing
+                log.warn("ApplyAnnotationAction called without any objects being selected");
+                return;
+            }
+
+            for(Reference id : selectedIds) {
+                log.debug("Selected: "+id);
+            }
+
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
+
+            AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
+            final String value = editor.showEditor();
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                @Override
+                protected void doStuff() throws Exception {
+                    int i = 1;
+                    for (DomainObject domainObject : selectedDomainObjects) {
+                        doAnnotation(domainObject, ontologyTerm, value);
+                        setProgress(i++, selectedDomainObjects.size());
+                    }
                 }
-            }
 
-            @Override
-            protected void hadSuccess() {
-                // UI will be updated by events
-            }
+                @Override
+                protected void hadSuccess() {
+                    // UI will be updated by events
+                }
 
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
 
-        };
+            };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
-        worker.execute();
+            worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.execute();
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
     public void doAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
@@ -192,9 +197,9 @@ public class ApplyAnnotationAction extends NodeAction {
         Annotation savedAnnotation = model.create(annotation);
         log.info("Saved annotation as " + savedAnnotation.getId());
         
-        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
+        PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
         if (template!=null) {
-            model.changePermissions(annotation, template.getSubjectKey(), template.getPermissions(), true);  
+            model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions(), true);
             log.info("Auto-shared annotation with " + template.getSubjectKey());
         }
     }

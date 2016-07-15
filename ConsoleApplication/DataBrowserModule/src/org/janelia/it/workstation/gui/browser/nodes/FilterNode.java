@@ -8,9 +8,8 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
-import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.nb_action.SearchHereAction;
@@ -36,10 +35,10 @@ public class FilterNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (ClientDomainUtils.isOwner(getFilter())) {
-            return Icons.getIcon("search-yellow-icon.png").getImage();
+            return Icons.getIcon("script.png").getImage();
         }
         else {
-            return Icons.getIcon("search-blue-icon.png").getImage();
+            return Icons.getIcon("script.png").getImage();
         }
     }
     
@@ -60,7 +59,8 @@ public class FilterNode extends DomainObjectNode {
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
-        actions.add(MoveToFolderAction.get());
+        actions.add(AddToFolderAction.get());
+//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "OntologyViewerTopComponent")
-@ActionReference(path = "Menu/Window", position = 453)
+@ActionReference(path = "Menu/Window/Legacy", position = 13)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyViewerAction",
         preferredID = OntologyViewerTopComponent.PREFERRED_ID

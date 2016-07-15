@@ -107,7 +107,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean renderingInProgress = false;
     private boolean outstandingRenderRequest = false;
 
-    private boolean preExistingBoard = true;
+    private boolean preExistingBoardSettings = true;
 
     private boolean boardOpen = false;
     private boolean connectEditEvents = true;
@@ -183,7 +183,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         logger.info("Board Opened");
-
+        if (boardOpen) {
+            serialize();
+        }
         boardOpen = false;
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
@@ -192,7 +194,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             if (alignmentBoard == null) {
                 throw new Exception("No alignment board in event for context " + event.getAlignmentBoardContext());
             }
-            preExistingBoard = UserSettingSerializer.settingsExist( alignmentBoard );
+            preExistingBoardSettings = UserSettingSerializer.settingsExist( alignmentBoard );
             
             // Carry out any steps to prepare GUI for presence of this panel.
         }
@@ -356,7 +358,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         // Pull settings back in from last time.
         deserializeSettings();
 
-        if ( !preExistingBoard) {
+        if ( !preExistingBoardSettings) {
             mip3d.setResetFirstRedraw( true );
         }
         else {
@@ -475,6 +477,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                                 alignmentBoard, mip3d.getVolumeModel(), settingsData
                         );
                         userSettingSerializer.serializeSettings();
+                        preExistingBoardSettings = true;                        
                     }
 
                     @Override
@@ -507,10 +510,11 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         if ( context != null ) {
             if ( mip3d != null && settingsPanel != null ) {
                 try {
-                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                                 alignmentBoard, mip3d.getVolumeModel(), settingsData
-                        );
-                        userSettingSerializer.serializeSettings();
+                    );
+                    userSettingSerializer.serializeSettings();
+                    preExistingBoardSettings = true;
                 } catch ( Throwable error ) {
                     SessionMgr.getSessionMgr().handleException( error );
                 }

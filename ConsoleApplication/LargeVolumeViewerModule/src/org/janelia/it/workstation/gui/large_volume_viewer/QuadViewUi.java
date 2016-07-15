@@ -402,6 +402,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
                     result.add(addCopyTileFileLocMenuItem());
+                    result.add(addCopyOctreePathMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -793,7 +794,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
         if(HttpDataSource.useHttp()) {
-            HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
+            HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
             useHttpCheckbox.setSelected(true);
         } else {
             useHttpCheckbox.setSelected(false);
@@ -805,7 +806,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     useHttpCheckbox.setSelected(false);
                     HttpDataSource.setUseHttp(false);
                 } else if (e.getStateChange()==ItemEvent.SELECTED) {
-                    HttpDataSource.setInteractiveServer(ConsoleProperties.getInstance().getProperty("interactive.server.url"));
+                    HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
                     useHttpCheckbox.setSelected(true);
                     HttpDataSource.setUseHttp(true);
                 }
@@ -1172,6 +1173,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         return mnCopyMicron;
     }
+
+    public JMenuItem addCopyOctreePathMenuItem() {
+        JMenuItem menuItem = new JMenuItem(
+                new OctreeFilePathToClipboardAction(
+                        statusLabel, tileServer.getSharedVolumeImage().getRemoteBasePath(), tileFormat, camera, CoordinateAxis.Z
+                )
+        );
+        return menuItem;
+    }
     
     public JMenuItem addCopyTileLocMenuItem() {
         JMenuItem mnCopyTileInx = new JMenuItem(
@@ -1479,7 +1489,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getWorkspaceId() {
-        return this.annotationModel.getCurrentWorkspace().getId();
+        if (this.annotationModel.getCurrentWorkspace() != null) {
+            return this.annotationModel.getCurrentWorkspace().getId();
+        } else {
+            return null;
+        }
     }
 
     private Long getSampleId() {

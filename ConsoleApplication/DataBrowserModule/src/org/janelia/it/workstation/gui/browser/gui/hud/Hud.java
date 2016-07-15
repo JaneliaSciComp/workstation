@@ -167,7 +167,7 @@ public class Hud extends ModalDialog {
         }
 
         ResultDescriptor currResult = (overrideSettings && resultDescriptor!=null) ? resultDescriptor : resultButton.getResultDescriptor();
-        String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageType();
+        String currImageType  = (overrideSettings && typeName!=null) ? typeName : typeButton.getImageTypeName();
 
         log.debug("setObjectAndToggleDialog - name:{}, toggle:{}, currResult:{}, currImageType:{}",domainObject.getName(),toggle,currResult,currImageType);
         
@@ -183,7 +183,7 @@ public class Hud extends ModalDialog {
         resultButton.populate(domainObject);
         
         typeButton.setResultDescriptor(currResult);
-        typeButton.setImageType(currImageType);
+        typeButton.setImageTypeName(currImageType);
         typeButton.populate(domainObject);
         
         set3dModeEnabled(getFast3dFile()!=null);
@@ -196,9 +196,9 @@ public class Hud extends ModalDialog {
             fileProvider = (HasFiles)domainObject;
         }
         
-        final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageType());
+        final String imagePath = DomainUtils.getFilepath(fileProvider, typeButton.getImageTypeName());
         if (imagePath == null) {
-            log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageType());
+            log.info("No image path for {} ({})", domainObject.getName(), typeButton.getImageTypeName());
             previewLabel.setIcon(new MissingIcon());
 
             if (render3DCheckbox != null) {
@@ -229,7 +229,7 @@ public class Hud extends ModalDialog {
 
                     // Ensure we have an image and that it is cached.
                     if (image == null) {
-                        log.info("Must load image.");
+                        log.debug("Must load image.");
                         final File imageFile = SessionMgr.getCachedFile(imagePath, false);
                         if (imageFile != null) {
                             image = Utils.readImage(imageFile.getAbsolutePath());
@@ -427,13 +427,13 @@ public class Hud extends ModalDialog {
             resultButton = new ResultSelectionButton() {
                 @Override
                 protected void resultChanged(ResultDescriptor resultDescriptor) {
-                    setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageType(), false, true);
+                    setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageTypeName(), false, true);
                 }
             };
             typeButton = new ImageTypeSelectionButton() {
                 @Override
-                protected void imageTypeChanged(String typeName) {
-                    setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), typeName, false, true);
+                protected void imageTypeChanged(FileType fileType) {
+                    setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), fileType.name(), false, true);
                 }
             };
 

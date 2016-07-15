@@ -14,12 +14,11 @@ import org.openide.util.actions.CallableSystemAction;
         id = "org.janelia.it.workstation.gui.browser.nb_action.NavigateForward"
 )
 @ActionRegistration(
-        iconBase = "images/arrow_forward.gif",
         displayName = "#CTL_NavigateForward"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/View", position = -100, separatorAfter = -50),
-    @ActionReference(path = "Toolbars/Navigation", position = 3333),
+    @ActionReference(path = "Toolbars/Navigation", position = 101),
     @ActionReference(path = "Shortcuts", name = "M-RIGHT")
 })
 @Messages("CTL_NavigateForward=Forward")

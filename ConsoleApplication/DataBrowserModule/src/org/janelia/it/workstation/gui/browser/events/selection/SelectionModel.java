@@ -50,7 +50,13 @@ public abstract class SelectionModel<T,S> {
      * @param clearAll
      */
     public final void select(List<T> objects, boolean clearAll, boolean isUserDriven) {
-        log.trace("select(objects.size={}, clearAll={}, isUserDriven={})",objects.size(),clearAll,isUserDriven);
+        if (objects.size()==1) {
+            log.trace("{} - select(objects={}, clearAll={}, isUserDriven={})",getClass().getSimpleName(),objects,clearAll,isUserDriven);
+        }
+        else {
+            log.trace("{} - select(objects.size={}, clearAll={}, isUserDriven={})",getClass().getSimpleName(),objects.size(),clearAll,isUserDriven);    
+        }
+        
         boolean clear = clearAll;
         for(T object : objects) {
             S id = getId(object);
@@ -62,6 +68,7 @@ public abstract class SelectionModel<T,S> {
             }
             clear = false;
         }
+        log.trace("{} - {} selected", getClass().getSimpleName(), selected.size());
         selectionChanged(objects, true, clearAll, isUserDriven);
     }
     
@@ -99,7 +106,13 @@ public abstract class SelectionModel<T,S> {
      * @param objects
      */
     public final void deselect(List<T> objects, boolean isUserDriven) {
-        log.trace("deselect(objects.size={}, isUserDriven={})",objects.size(),isUserDriven);
+        if (objects.size()==1) {
+            log.trace("{} - deselect(objects={}, isUserDriven={})",getClass().getSimpleName(),objects,isUserDriven);
+        }
+        else {
+            log.trace("{} - deselect(objects.size={}, isUserDriven={})",getClass().getSimpleName(),objects.size(),isUserDriven);
+        }
+        
         for(T object : objects) {
             S id = getId(object);
             if (!selected.contains(id)) {
@@ -107,6 +120,7 @@ public abstract class SelectionModel<T,S> {
             }
             selected.remove(id);
         }
+        log.trace("{} - {} selected", getClass().getSimpleName(), selected.size());
         selectionChanged(objects, false, false, isUserDriven);
     }
 

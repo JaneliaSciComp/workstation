@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.util.Arrays;
+
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 
@@ -26,6 +28,10 @@ public abstract class OntologyElementAction implements Action {
         return uniqueId;
     }
 
+    public Long getElementId() {
+        return path[path.length-1];
+    }
+
     @Override
     public String getName() {
         return uniqueId;
@@ -46,5 +52,10 @@ public abstract class OntologyElementAction implements Action {
     @Override
     public int hashCode() {
         return uniqueId.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "OntologyElementAction{" + uniqueId + '}';
     }
 }
