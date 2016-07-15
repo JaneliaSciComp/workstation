@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
-import java.io.IOException;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -59,7 +60,6 @@ import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.awt.SystemColor.text;
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -123,7 +123,24 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
-        
+
+        beanTreeView.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                    Node[] selectedNodes = beanTreeView.getSelectedNodes();
+                    if (selectedNodes.length>0) {
+                        final Node node = selectedNodes[selectedNodes.length-1];
+                        if (node instanceof DomainObjectNode) {
+                            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
+                            selectionModel.select((DomainObjectNode)node, true, true);
+                        }
+                    }
+                }
+            }
+        });
+
         this.toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
             protected void refresh() {
@@ -416,18 +433,17 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (allNodes.isEmpty()) {
             return;
         }
-        final Node node = allNodes.iterator().next();
-        if (node instanceof DomainObjectNode) {
-            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode)node, true, true);
-        }
+        final Node selectedNode = allNodes.iterator().next();
+        // This method currently doesn't do anything, because we had to add a custom MouseListener to listen
+        // for selection events, to disambiguate left-clicks from right-clicks. In the future we may want something
+        // that responds to either type of selection and this is where that code would go.
     }
 
     public WorkspaceNode getWorkspaceNode() {
