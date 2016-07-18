@@ -290,7 +290,17 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void actionPerformed(ActionEvent e)
             {
                 // System.out.println("hide models");
+                boolean bChanged = false;
                 if (neuronMPRenderer.setHideAll(true))
+                    bChanged = true;
+                // Use "v" key to show/hide primary "P" anchor
+                for (GL3Actor actor : tracingActors) {
+                    if (actor.isVisible()) {
+                        actor.setVisible(false);
+                        bChanged = true;
+                    }
+                }
+                if (bChanged)
                     redrawNow();
             }
         });
@@ -299,7 +309,17 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void actionPerformed(ActionEvent e)
             {
                 // System.out.println("unhide models");
+                boolean bChanged = false;
                 if (neuronMPRenderer.setHideAll(false))
+                    bChanged = true;
+                // Use "v" key to show/hide primary "P" anchor
+                for (GL3Actor actor : tracingActors) {
+                    if (! actor.isVisible()) {
+                        actor.setVisible(true);
+                        bChanged = true;
+                    }
+                }
+                if (bChanged)
                     redrawNow();
             }
         });
@@ -453,6 +473,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
     
+    
+    private List<GL3Actor> tracingActors = new ArrayList<>();
     private NeuronMPRenderer setUpActors() 
     {
         
@@ -463,7 +485,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         renderers.add(neuronMPRenderer0);
                 
         // 3) Neurite model
+        tracingActors.clear();
         for (GL3Actor tracingActor : tracingInteractor.createActors()) {
+            tracingActors.add(tracingActor);
             sceneWindow.getRenderer().addActor(tracingActor);
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
