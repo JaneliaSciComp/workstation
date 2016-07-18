@@ -71,7 +71,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
     
     private OntologyTermNode(OntologyChildFactory parentChildFactory, OntologyChildFactory childFactory, final Ontology ontology, OntologyTerm ontologyTerm) {
-        super(parentChildFactory, Children.create(childFactory, false), ontologyTerm);
+        super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, ontologyTerm);
         this.parentChildFactory = parentChildFactory;
         this.childFactory = childFactory;
         this.ontology = ontology;

@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
 @ActionID( 
         category = "Window", id = "org.janelia.horta.nodes.HortaSceneEditorTopComponent") 
 @ActionReference( 
-        path = "Menu/Window/Horta") 
+        path = "Menu/Window/Horta", position = 300) 
 @TopComponent.OpenActionRegistration( 
         displayName = "#CTL_HortaSceneEditorAction",
         preferredID = "HortaSceneEditorTopComponent"

@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -54,7 +55,7 @@ public class DownloadItem {
         this.domainObject = domainObject;
     }
     
-    public void init(ResultDescriptor resultDescriptor, String targetExtension, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
+    public void init(ResultDescriptor resultDescriptor, String imageType, String targetExtension, boolean splitChannels, boolean flattenStructure, String filenamePattern) {
 
         this.targetExtension = targetExtension;
         this.splitChannels = splitChannels;
@@ -89,10 +90,12 @@ public class DownloadItem {
         log.debug("Domain object type: {}",domainObject.getType());
         log.debug("Domain object id: {}",domainObject.getId());
         log.debug("File provider: {}",fileProvider);
-        
-        String sourceFilePath = DomainUtils.getDefault3dImageFilePath(fileProvider);
+
+        FileType fileType = FileType.valueOf(imageType);
+
+        String sourceFilePath = DomainUtils.getFilepath(fileProvider, imageType);
         if (sourceFilePath==null) {
-            errorMessage = "Cannot find result file for: "+domainObject.getName();
+            errorMessage = "Cannot find '"+fileType.getLabel()+"' file for '"+resultDescriptor+"' result in: "+domainObject.getName();
             return;
         }
             
@@ -126,7 +129,8 @@ public class DownloadItem {
             targetFile = new File(itemDir, constructFilePath(filenamePattern));
             log.debug("Target path: {}", targetFile.getAbsolutePath());
             log.debug("Target extension: {}", targetExtension);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -152,23 +156,29 @@ public class DownloadItem {
                 String attrLabel = templatePart.trim();
                 if (ATTR_LABEL_RESULT_NAME.equals(attrLabel)) {
                     replacement = resultName == null ? null : resultName;
-                } else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
+                }
+                else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
                     replacement = sourceFile.getName();
-                } else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
+                }
+                else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
                     if (domainObject instanceof Sample) {
                         replacement = domainObject.getName();
-                    } else if (domainObject instanceof LSMImage) {
+                    }
+                    else if (domainObject instanceof LSMImage) {
                         LSMImage lsm = (LSMImage) domainObject;
                         Sample sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(lsm.getSample());
                         if (sample != null) {
                             replacement = sample.getName();
                         }
                     }
-                } else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
+                }
+                else if (ATTR_LABEL_EXTENSION.equals(attrLabel)) {
                     replacement = targetExtension;
-                } else if (attrLabel.matches("\"(.*?)\"")) {
+                }
+                else if (attrLabel.matches("\"(.*?)\"")) {
                     replacement = attrLabel.substring(1, attrLabel.length() - 1);
-                } else {
+                }
+                else {
                     DomainObjectAttribute attr = attributeMap.get(attrLabel);
                     if (attr != null) {
                         replacement = getStringAttributeValue(attr);

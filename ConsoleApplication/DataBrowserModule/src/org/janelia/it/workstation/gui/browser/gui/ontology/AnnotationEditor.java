@@ -26,7 +26,9 @@ import org.slf4j.LoggerFactory;
 public class AnnotationEditor {
 
     private final static Logger log = LoggerFactory.getLogger(ApplyAnnotationAction.class);
-    
+
+    public static final String CANCEL_VALUE = "CANCEL";
+
     private final Ontology ontology;
     private Annotation annotation;
     private OntologyTerm keyTerm;
@@ -59,9 +61,9 @@ public class AnnotationEditor {
                 value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Value:\n", currValue);
 
                 Interval interval = (Interval) keyTerm;
-                if (StringUtils.isEmpty((String) value)) return null;
+                if (StringUtils.isEmpty(value)) return null;
                 try {
-                    Double dvalue = Double.parseDouble((String) value);
+                    Double dvalue = Double.parseDouble(value);
                     if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
                         throw new NumberFormatException();
                     }
@@ -69,9 +71,10 @@ public class AnnotationEditor {
                 catch (NumberFormatException e) {
                     JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                             "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
-                    return null;
+                    return CANCEL_VALUE;
                 }
-            } else if (keyTerm instanceof EnumText) {
+            }
+            else if (keyTerm instanceof EnumText) {
 
                 Long valueEnumId = ((EnumText) keyTerm).getValueEnumId();
                 OntologyTermReference enumRef = new OntologyTermReference(ontology.getId(), valueEnumId);
@@ -80,7 +83,7 @@ public class AnnotationEditor {
                 if (valueEnum == null) {
                     Exception error = new Exception(keyTerm.getName() + " has no supporting enumeration.");
                     SessionMgr.getSessionMgr().handleException(error);
-                    return null;
+                    return CANCEL_VALUE;
                 }
 
                 Object currValue = null;
@@ -97,7 +100,8 @@ public class AnnotationEditor {
                 if (enumTerm != null) {
                     value = enumTerm.getName();
                 }
-            } else if (keyTerm instanceof Text) {
+            }
+            else if (keyTerm instanceof Text) {
 
                 String currValue = null;
                 if (annotation != null) {
@@ -108,9 +112,9 @@ public class AnnotationEditor {
                 dialog.setAnnotationValue(currValue);
                 dialog.setVisible(true);
                 value = dialog.getAnnotationValue();
+                if (value==null) return CANCEL_VALUE;
             }
 
-            if (value == null || "".equals(value)) return null;
             return value;
         }
         catch (Exception e) {

@@ -19,6 +19,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 
 /**
@@ -130,6 +131,7 @@ public class AlignmentBoardControls {
     private VolumeModel volumeModel;
     private AlignmentBoardSettings settings;
 
+    private final ActivityLogHelper activityLogger = new ActivityLogHelper();
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControls.class );
 
     /**
@@ -844,6 +846,7 @@ public class AlignmentBoardControls {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentNormalizedCoordinates();
                 fireCropEvent();
+                activityLogger.logSubVolSelect(null, cropCoordSet.getAcceptedCoordinates());
             }
         });
 
@@ -951,6 +954,7 @@ public class AlignmentBoardControls {
         useSignalDataCheckbox.addChangeListener( new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
+                activityLogger.logToggleIntensity(null, useSignalDataCheckbox.isSelected());
                 fireSettingsEvent();
             }
         });

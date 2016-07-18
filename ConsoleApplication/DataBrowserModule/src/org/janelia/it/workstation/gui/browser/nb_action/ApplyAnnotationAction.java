@@ -14,6 +14,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
@@ -122,6 +123,8 @@ public class ApplyAnnotationAction extends NodeAction {
             AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
             final String value = editor.showEditor();
 
+            if (AnnotationEditor.CANCEL_VALUE.equals(value)) return;
+
             SimpleWorker worker = new SimpleWorker() {
 
                 @Override
@@ -147,7 +150,8 @@ public class ApplyAnnotationAction extends NodeAction {
 
             worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
             worker.execute();
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }

@@ -25,6 +25,7 @@
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/build/classes-generated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/test/unit/src" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes" />

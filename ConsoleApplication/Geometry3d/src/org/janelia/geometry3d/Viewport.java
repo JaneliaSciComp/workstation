@@ -30,13 +30,15 @@
 package org.janelia.geometry3d;
 
 import org.janelia.console.viewerapi.ComposableObservable;
+import org.janelia.geometry3d.camera.ConstViewport;
 
 /**
  * Rectangular viewing window region where scene rendering occurs
  * 
  * @author brunsc
  */
-public class Viewport {
+public class Viewport implements ViewSlab, ConstViewport
+{
     private int originXPixels = 0;
     private int originYPixels = 0;
     private int widthPixels = 0;
@@ -53,6 +55,7 @@ public class Viewport {
         return widthPixels/(float)heightPixels;
     }
 
+    @Override
     public ComposableObservable getChangeObservable() {
         return changeObservable;
     }
@@ -101,10 +104,12 @@ public class Viewport {
         changeObservable.setChanged();
     }
 
+    @Override
     public float getzNearRelative() {
         return zNearRelative;
     }
 
+    @Override
     public void setzNearRelative(float zNearRelative) {
         if (zNearRelative == this.zNearRelative)
             return;
@@ -112,10 +117,12 @@ public class Viewport {
         changeObservable.setChanged();
     }
 
+    @Override
     public float getzFarRelative() {
         return zFarRelative;
     }
 
+    @Override
     public void setzFarRelative(float zFarRelative) {
         if (zFarRelative == this.zFarRelative)
             return;

@@ -34,6 +34,8 @@ import org.janelia.console.viewerapi.ComposableObservable;
 import java.util.Collection;
 import java.util.Observer;
 import org.janelia.console.viewerapi.model.VantageInterface;
+import org.janelia.geometry3d.camera.ConstRotation;
+import org.janelia.geometry3d.camera.ConstVantage;
 
 /**
  * Viewport-independent, camera-type-independent camera representation,
@@ -42,7 +44,7 @@ import org.janelia.console.viewerapi.model.VantageInterface;
  * @author cmbruns
  */
 public class Vantage 
-implements CompositeObject3d, ObservableInterface, VantageInterface
+implements CompositeObject3d, ObservableInterface, VantageInterface, ConstVantage
 {
     private float sceneUnitsPerViewportHeight; // Zoom level
     private final Vector3 focusPosition = new Vector3(0,0,0); // Location of subject in GL units
@@ -126,7 +128,7 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
         return rotationInGround;
     }
 
-    public boolean setRotationInGround(Rotation rotationInGround) 
+    public boolean setRotationInGround(ConstRotation rotationInGround) 
     {
         if (this.rotationInGround.equals(rotationInGround))
             return false; // unchanged
@@ -148,10 +150,12 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
         return true;
     }
     
+    @Override
     public float getSceneUnitsPerViewportHeight() {
         return sceneUnitsPerViewportHeight;
     }
 
+    @Override
     public boolean setSceneUnitsPerViewportHeight(float sceneUnitsPerViewportHeight) {
         if(sceneUnitsPerViewportHeight == this.sceneUnitsPerViewportHeight)
             return false;
@@ -282,7 +286,8 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
         return true;
     }
 
-    public Vector3 getUpInWorld() {
+    @Override
+    public ConstVector3 getUpInWorld() {
         return upInWorld;
     }
 
@@ -342,6 +347,16 @@ implements CompositeObject3d, ObservableInterface, VantageInterface
     public boolean hasChanged()
     {
         return changeObservable.hasChanged();
+    }
+
+    @Override
+    public ConstVector3 getFocusAsVector3() {
+        return getFocusPosition();
+    }
+
+    @Override
+    public ConstRotation getRotation() {
+        return rotationInGround;
     }
     
 }

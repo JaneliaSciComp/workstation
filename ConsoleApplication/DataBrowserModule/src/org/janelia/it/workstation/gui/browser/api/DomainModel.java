@@ -358,6 +358,7 @@ public class DomainModel {
      */
     public DomainObject getDomainObject(Reference ref) throws Exception {
         log.debug("getDomainObject({})",ref);
+        if (ref==null) return null;
         DomainObject domainObject = objectCache.getIfPresent(ref);
         if (domainObject != null) {
             log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
