@@ -49,7 +49,7 @@ public class SampleFacadeImpl implements SampleFacade {
     
     @Override
     public Collection<LSMImage> getLsmsForSample(Long sampleId) {
-        return dao.getLsmsBySampleId(AccessManager.getSubjectKey(), sampleId);
+        return dao.getActiveLsmsBySampleId(AccessManager.getSubjectKey(), sampleId);
     }
 
     @Override
