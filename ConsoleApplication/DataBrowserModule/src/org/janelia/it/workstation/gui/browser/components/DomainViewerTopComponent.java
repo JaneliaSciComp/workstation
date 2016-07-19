@@ -234,7 +234,8 @@ public final class DomainViewerTopComponent extends TopComponent {
             }
             editor.loadDomainObject(domainObject, isUserDriven, null);
             setName(editor.getName());
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }

@@ -132,10 +132,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     Node[] selectedNodes = beanTreeView.getSelectedNodes();
                     if (selectedNodes.length>0) {
                         final Node node = selectedNodes[selectedNodes.length-1];
-                        if (node instanceof DomainObjectNode) {
-                            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-                            selectionModel.select((DomainObjectNode)node, true, true);
-                        }
+                        navigateNode(node);
                     }
                 }
             }
@@ -203,7 +200,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
 //    private void bindKeys() {
 //        
 //        CutAction cutAction = SystemAction.get(CutAction.class);
@@ -491,11 +488,35 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         return node;
     }
-    
-    public void selectNodeById(Long id) {
+
+    public Node selectAndNavigateNodeByPath(Long[] idPath) {
+        Node selectedNode = selectNodeByPath(idPath);
+        if (selectedNode!=null) {
+            navigateNode(selectedNode);
+        }
+        return selectedNode;
+    }
+
+    public Node selectNodeById(Long id) {
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);
-            break;
+            return node;
+        }
+        return null;
+    }
+
+    public Node selectAndNavigateNodeById(Long id) {
+        Node selectedNode = selectNodeById(id);
+        if (selectedNode!=null) {
+            navigateNode(selectedNode);
+        }
+        return selectedNode;
+    }
+
+    private void navigateNode(Node node) {
+        if (node instanceof DomainObjectNode) {
+            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
+            selectionModel.select((DomainObjectNode)node, true, true);
         }
     }
 

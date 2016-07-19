@@ -98,9 +98,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             }
         }
         else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+            // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
-            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
+            DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId());
         }
     }
 
@@ -246,18 +246,29 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
 
                 SimpleWorker worker = new SimpleWorker() {
+                    Sample sample;
                     NeuronSeparation separation;
 
                     @Override
                     protected void doStuff() throws Exception {
-                        Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
+                        sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
+                        if (sample!=null) {
+                            separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
+                        }
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        viewer.requestActive();
-                        viewer.loadSampleResult(separation, true, null);
+                        if (sample==null) {
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                        }
+                        else if (separation==null) {
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                        }
+                        else {
+                            viewer.requestActive();
+                            viewer.loadSampleResult(separation, true, null);
+                        }
                     }
 
                     @Override

@@ -399,7 +399,7 @@ public class ImportDialog extends ModalDialog {
                                                     SwingUtilities.invokeLater(new Runnable() {
                                                         @Override
                                                         public void run() {
-                                                            explorer.selectNodeByPath(idPath);
+                                                            explorer.selectAndNavigateNodeByPath(idPath);
                                                             setVisible(false);
                                                         }
                                                     });
