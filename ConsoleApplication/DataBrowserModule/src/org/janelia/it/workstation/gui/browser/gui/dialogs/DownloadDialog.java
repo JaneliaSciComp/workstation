@@ -28,6 +28,7 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -215,7 +216,7 @@ public class DownloadDialog extends ModalDialog {
             return;
         }
 
-        log.info("findObjectsToExport(inputObjects.size={})",inputObjects.size());
+        log.info("findObjectsToExport(inputObjects={})", DomainUtils.abbr(inputObjects));
 
         Utils.setWaitingCursor(DownloadDialog.this);
         

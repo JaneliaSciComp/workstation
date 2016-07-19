@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
@@ -194,27 +195,23 @@ public final class DomainViewerTopComponent extends TopComponent {
     public DomainObjectEditor<? extends DomainObject> getEditor() {
         return editor;
     }
-        
+
+    public boolean isCurrent(DomainObject domainObject) {
+        try {
+            domainObject = DomainViewerManager.getObjectToLoad(domainObject);
+            if (domainObject==null) return getCurrent()==null;
+            return DomainUtils.equals(getCurrent(), domainObject);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return false;
+        }
+    }
+
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         try {
-            if (domainObject instanceof NeuronFragment) {
-                NeuronFragment fragment = (NeuronFragment) domainObject;
-                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-            }
-            else if (domainObject instanceof LSMImage) {
-                LSMImage lsmImage = (LSMImage) domainObject;
-                Reference sampleRef = lsmImage.getSample();
-                if (sampleRef!=null) {
-                    domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
-                }
-                else {
-                    domainObject = null;
-                }
-            }
-
-            if (domainObject==null) {
-                return;
-            }
+            domainObject = DomainViewerManager.getObjectToLoad(domainObject);
+            if (domainObject==null) return;
             
             final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
             if (editorClass == null) {

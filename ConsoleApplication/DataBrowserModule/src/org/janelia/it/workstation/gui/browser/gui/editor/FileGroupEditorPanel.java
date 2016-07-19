@@ -26,7 +26,9 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.FileGroupSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -161,7 +163,12 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     public String getName() {
         return "File Group Editor";
     }
-    
+
+    @Override
+    public SelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+
     @Override
     public Object getEventBusListener() {
         return resultsPanel;
