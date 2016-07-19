@@ -93,8 +93,8 @@ public class ResultIterator implements Iterator<DomainObject> {
                 // and go backwards to the last page, which has less than a full page of results.
                 currIndex = objects.size()-1;
             }
-            
-            DomainObject object = objects.get(currIndex);
+                        
+            DomainObject object = objects.isEmpty() ? null : objects.get(currIndex);
 
             if (currPage==startPage && currIndex==startIndex && skipStartingIndex) {
                 // We have looped back to the starting index, which was initially skipped,

@@ -380,8 +380,20 @@ public class SearchConfiguration {
 
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
-        log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
+        log.info("Search found {} objects. Current page {} includes {} objects and {} annotations.", numFound, page, domainObjects.size(), annotations.size());
 
+        if (refs.size()>domainObjects.size()) {
+            log.warn("SOLR index is out of date! It refers to {} objects which no longer exist.", refs.size()-domainObjects.size());
+            
+            if (log.isTraceEnabled()) {
+                for(Reference ref : refs) {
+                    if (model.getDomainObject(ref)==null) {
+                        log.trace("Could not find "+ref);
+                    }
+                }
+            }
+        }
+        
         stopWatch.stop("performMongoSearch");
 
         return new ResultPage(domainObjects, annotations, numFound);
