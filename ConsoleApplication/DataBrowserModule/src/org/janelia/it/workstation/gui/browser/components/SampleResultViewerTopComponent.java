@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.editor.FileGroupEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
@@ -189,6 +190,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         // Can view display this object?
         final Class<? extends SampleResultEditor> editorClass = getEditorClass(result);
         if (editorClass==null) {
+            log.info("No editor defined for result of type {}",result.getClass().getSimpleName());
             return;
         }
 
@@ -210,6 +212,10 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         else {
             setName("Results for " + sampleName);
         }
+    }
+
+    public SelectionModel getSelectionModel() {
+        return editor==null?null:editor.getSelectionModel();
     }
 
     private static Class<? extends SampleResultEditor> getEditorClass(PipelineResult result) {

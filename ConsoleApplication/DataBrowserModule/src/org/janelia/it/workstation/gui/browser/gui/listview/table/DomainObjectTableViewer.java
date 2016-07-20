@@ -167,7 +167,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         this.domainObjectList = domainObjectList;
-        log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
+        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
 
         attributeMap.clear();
 

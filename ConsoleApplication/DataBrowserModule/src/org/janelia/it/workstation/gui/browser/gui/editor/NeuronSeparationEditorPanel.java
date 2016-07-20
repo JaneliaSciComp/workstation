@@ -88,7 +88,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
     private boolean hideFragments = false;
-    private boolean editModeEnabled = false;
     private NeuronSeparation separation;
     
     // Results
@@ -207,7 +206,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
             }
             showResults(true);
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
 
@@ -239,7 +239,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 resultsPanel.getViewer().selectEditObjects(visibleNeuronFrags, true);
             }
             showResults(true);
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -250,7 +251,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editModeButton.setVisible(true);
         editOkButton.setVisible(false);
         editCancelButton.setVisible(false);
-        editModeEnabled = false;
         resultsPanel.getViewer().toggleEditMode(false);
         enableVisibilityCheckBox.setVisible(true);
         performHideAction(hideFragments);
@@ -273,7 +273,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
             neuronSepVisibility.setValue(visibilities);
             DomainMgr.getDomainMgr().savePreference(neuronSepVisibility);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Problem encountered saving preferences", e);
         }
         cancelEditMode();
@@ -298,7 +299,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     JMenuItem viewItem = new JMenuItem(getLabel(separation));
                     viewItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
-                            setResult(separation, true, null);
+                            setResult(separation, true);
                         }
                     });
                     popupMenu.add(viewItem);
@@ -319,7 +320,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
         if (result==null) return;
 
-        if (!debouncer.queue(null)) {
+        if (!debouncer.queue(success)) {
             log.info("Skipping load, since there is one already in progress");
             return;
         }
@@ -347,12 +348,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         }
         else {
             configPanel.setTitle(sample.getName());
-            setResult(separation, isUserDriven, success);
+            setResult(separation, isUserDriven);
         }
 
     }
     
-    private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final Callable<Void> success) {
+    private void setResult(final NeuronSeparation separation, final boolean isUserDriven) {
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         
@@ -495,7 +496,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     public String getName() {
         return "Neuron Separation Editor";
     }
-    
+
+    @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
     }
