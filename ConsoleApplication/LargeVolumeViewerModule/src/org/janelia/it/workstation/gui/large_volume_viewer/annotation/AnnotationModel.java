@@ -420,6 +420,7 @@ called from a  SimpleWorker thread.
         if (getCurrentNeuron() == null) {
             return;
         } else {
+            currentTagMap.clearTags(getCurrentNeuron());
             deleteNeuron(getCurrentNeuron());
             setCurrentNeuron(null);
         }
@@ -1593,6 +1594,8 @@ called from a  SimpleWorker thread.
      * really available if you load the workspace via the DAO; this is
      * expected to change soon, when we go to Mongo world; at that point,
      * we'll improve this hack
+     *
+     * json format: {"tag": [list of neuron IDs], ...}
      */
     private void loadNeuronTagMap() {
         if (currentTagMap == null) {
@@ -1631,8 +1634,6 @@ called from a  SimpleWorker thread.
                     Long neuronID = node.asLong();
                     currentTagMap.addTag(tag, neuronID);
                 }
-            } else {
-                System.out.println("expected json array and didn't get it!");
             }
         }
     }
@@ -1646,7 +1647,7 @@ called from a  SimpleWorker thread.
             for (Long neuronID: currentTagMap.getNeuronIDs(tag)) {
                 array.add(neuronID);
             }
-            rootNode.put(tag, array);
+            rootNode.set(tag, array);
         }
         setPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP, rootNode.toString());
     }
