@@ -54,6 +54,8 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.janelia.it.jacs.model.domain.support.DomainUtils.abbr;
+
 /**
  * An IconGridViewer implementation for viewing domain objects. 
  *
@@ -215,7 +217,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void selectEditObjects(List<DomainObject> domainObjects, boolean select) {
-        log.info("selectEditObjects(domainObjects.size={},select={})", domainObjects.size(), select);
+        log.info("selectEditObjects(domainObjects={},select={})", DomainUtils.abbr(domainObjects), select);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -228,7 +230,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
     @Override
     public void selectDomainObjects(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
-        log.info("selectDomainObjects(domainObjects.size={},select={},clearAll={},isUserDriven={})", domainObjects.size(), select, clearAll, isUserDriven);
+        log.info("selectDomainObjects(domainObjects={},select={},clearAll={},isUserDriven={})", DomainUtils.abbr(domainObjects), select, clearAll, isUserDriven);
 
         if (domainObjects.isEmpty()) {
             return;
@@ -260,7 +262,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     public void showDomainObjects(AnnotatedDomainObjectList objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
-        log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
+        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
 
         SimpleWorker worker = new SimpleWorker() {
 

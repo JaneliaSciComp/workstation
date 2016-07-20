@@ -204,7 +204,7 @@ public class FilterEditorPanel extends JPanel
                             @Override
                             public void run() {
                                 // Select the filter and force it to reload
-                                DomainExplorerTopComponent.getInstance().selectNodeById(filter.getId());
+                                DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(filter.getId());
                             }
                         });
                     }

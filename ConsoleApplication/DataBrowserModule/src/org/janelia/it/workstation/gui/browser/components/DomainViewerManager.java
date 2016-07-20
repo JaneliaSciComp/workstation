@@ -4,6 +4,9 @@ import java.awt.Component;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -90,4 +93,23 @@ public class DomainViewerManager implements ViewerManager<DomainViewerTopCompone
             viewer.loadDomainObject(domainObject, false);
         }
     }
+
+    public static DomainObject getObjectToLoad(DomainObject domainObject) throws Exception {
+        if (domainObject instanceof NeuronFragment) {
+            NeuronFragment fragment = (NeuronFragment) domainObject;
+            return DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
+        }
+        else if (domainObject instanceof LSMImage) {
+            LSMImage lsmImage = (LSMImage) domainObject;
+            Reference sampleRef = lsmImage.getSample();
+            if (sampleRef!=null) {
+                return DomainMgr.getDomainMgr().getModel().getDomainObject(sampleRef);
+            }
+            else {
+                return null;
+            }
+        }
+        return domainObject;
+    }
+
 }

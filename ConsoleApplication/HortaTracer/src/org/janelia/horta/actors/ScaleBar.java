@@ -202,6 +202,8 @@ public class ScaleBar extends MeshActor {
                 bottomPixel + borderWidthPixels + labelHeight, 
                 w - 2*borderWidthPixels, h - 2*borderWidthPixels, 
                 vw, vh);
+
+        gl.glDisable(GL3.GL_DEPTH_TEST);
         
         ((ScaleBarMaterial)getMaterial()).barColor = borderColor;
         super.display(gl, camera, barBorderTransform);

@@ -64,7 +64,7 @@ public final class NewFolderActionListener implements ActionListener {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        explorer.selectNodeByPath(idPath);
+                        explorer.selectAndNavigateNodeByPath(idPath);
                     }
                 });
             }

@@ -10,18 +10,21 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
-@ActionID(
-        category = "Services",
-        id = "MigrateEntitiesAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_MigrateEntitiesAction"
-)
-@ActionReferences({
-    @ActionReference(path = "Menu/Services", position = 1500),
-    @ActionReference(path = "Shortcuts", name = "M-N")
-})
-@Messages("CTL_MigrateEntitiesAction=Migrate References and Annotations")
+// TODO: this action is disabled because it works on entities, not domain objects
+// At some point we may want to port it over to NG world.
+
+//@ActionID(
+//        category = "Services",
+//        id = "MigrateEntitiesAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_MigrateEntitiesAction"
+//)
+//@ActionReferences({
+//    @ActionReference(path = "Menu/Services", position = 1500),
+//    @ActionReference(path = "Shortcuts", name = "M-N")
+//})
+//@Messages("CTL_MigrateEntitiesAction=Migrate References and Annotations")
 public final class MigrateEntitiesAction implements ActionListener {
 
     @Override
