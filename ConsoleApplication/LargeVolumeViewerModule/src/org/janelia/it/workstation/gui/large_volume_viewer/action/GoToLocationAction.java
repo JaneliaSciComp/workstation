@@ -31,7 +31,7 @@ public class GoToLocationAction extends AbstractAction {
     public void actionPerformed(ActionEvent event) {
         String input = (String)JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
-                "Enter an x, y, z or x, y location (commas optional):",
+                "Enter an x, y, z or x, y location:\n(commas optional; brackets allowed)",
                 "Go to location",
                 JOptionPane.PLAIN_MESSAGE,
                 null,                           // icon
@@ -51,7 +51,10 @@ public class GoToLocationAction extends AbstractAction {
         //  get fancy and do auto-completing fuzzy matches on neuron names,
         //  we can break it out as its own class
 
-        String [] items = input.replace(',', ' ').trim().split("\\s+");
+        // remove optional commas because they are annoying to require
+        // remove square brackets so we can round-trip from "copy
+        //  location to clipboard" command
+        String [] items = input.replace(',', ' ').replaceAll("\\[", "").replaceAll("]", "").trim().split("\\s+");
         if (items.length < 2 || items.length > 3) {
             JOptionPane.showMessageDialog(null,
                     "Expected x, y or x ,y ,z location;\ngot: " + input,
