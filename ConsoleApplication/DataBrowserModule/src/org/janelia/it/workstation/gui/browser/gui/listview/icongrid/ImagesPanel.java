@@ -321,11 +321,28 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         scrollButtonToCenter(selectedButton);
     }
 
+    public void scrollObjectToCenterIfOutsideViewport(T imageObject) {
+        if (imageObject == null) {
+            return;
+        }
+        S uniqueId = imageModel.getImageUniqueId(imageObject);
+        AnnotatedImageButton<T,S> selectedButton = getButtonById(uniqueId);
+        if (isOutsideViewport(selectedButton)) {
+            scrollButtonToCenter(selectedButton);
+        }
+    }
+
     public void scrollButtonToVisible(AnnotatedImageButton<T,S> button) {
         if (button == null) {
             return;
         }
         getViewport().scrollRectToVisible(button.getBounds());
+    }
+
+    public boolean isOutsideViewport(AnnotatedImageButton<T,S> button) {
+        Rectangle rect = button.getBounds();
+        Rectangle viewRect = viewport.getViewRect();
+        return !viewRect.intersects(rect);
     }
 
     public void scrollButtonToCenter(AnnotatedImageButton<T,S> button) {
@@ -401,7 +418,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         scrollButtonToCenter(centerOfMass);
     }
 
-    public void scrollSelectedEntitiesToTop() {
+    public void scrollSelectedButtonsToTop() {
         List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;

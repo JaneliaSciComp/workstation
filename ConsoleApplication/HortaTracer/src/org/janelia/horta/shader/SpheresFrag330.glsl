@@ -37,7 +37,7 @@
 uniform vec4 color = vec4(0, 1, 0, 1); // one color for all spheres
 uniform mat4 projectionMatrix; // needed for proper sphere depth calculation
 uniform sampler2D lightProbe;
-
+uniform vec2 screenSize = vec2(1280, 800);
 
 in vec3 imposterPos; // imposter geometry location, in camera frame
 in float pc, c2; // pre-computed ray-casting quadratic formula linear coefficients
@@ -64,22 +64,42 @@ vec3 image_based_lighting(
 
 void main() {
     vec2 a2_d = sphere_nonlinear_coeffs(imposterPos, pc, c2);
-    // fast-fail rays that miss sphere, before expensively solving exact surface location
-    if (a2_d.y < 0) // quadratic formula discriminant, (b^2 - 4ac) < 0
-        discard; // ray through point does not intersect sphere
-    vec3 back_surface;
-    vec3 s = sphere_surface_from_coeffs(imposterPos, pc, a2_d, back_surface);
-    vec3 normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
-    gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
 
-    // Near clip to reveal solid core
-    if (gl_FragDepth < 0) { // Near surface is clipped by zNear
-        // Show nothing if rear surface is also closer than zNear
-        float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
-        // if (back_depth < 0) discard;
-        gl_FragDepth = 0;
-        s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
-        normal = vec3(0, 0, 1); // slice core parallel to screen
+    vec3 s, normal;
+    // fast-fail rays that miss sphere, before expensively solving exact surface location
+    if (a2_d.y < 0) { // quadratic formula discriminant, (b^2 - 4ac) < 0
+        // At low zoom, don't discard: It causes artifacts
+        // Compute pixel size, to determine current zoom level:
+        vec4 shifted1 = projectionMatrix * (vec4(center, 1) + vec4(0.1, 0, 0, 0));
+        vec4 shifted2 = projectionMatrix * (vec4(center, 1) - vec4(0.1, 0, 0, 0));
+        float screensPerMicrometer = 5 * abs(shifted1.x/shifted1.w - shifted2.x/shifted2.w);
+        float micrometersPerPixel = 1.0 / (screensPerMicrometer * screenSize.x);
+        if (micrometersPerPixel > 0.2 * fragRadius) {
+            // TODO: below assumes imposter is near the front surface of the quadric
+            s = imposterPos;
+            normal = vec3(0, 0, 1);
+            gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
+        }
+        else {
+            discard;
+        }
+    }
+    else {
+        vec3 back_surface;
+        s = sphere_surface_from_coeffs(imposterPos, pc, a2_d, back_surface);
+        normal = 1.0 / fragRadius * (s - center); // normalized without an additional sqrt! :)
+
+        gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
+
+        // Near clip to reveal solid core
+        if (gl_FragDepth < 0) { // Near surface is clipped by zNear
+            // Show nothing if rear surface is also closer than zNear
+            float back_depth = fragDepthFromEyeXyz(back_surface, projectionMatrix);
+            // if (back_depth < 0) discard;
+            gl_FragDepth = 0;
+            s.z = zNearFromProjection(projectionMatrix); // Update clipped Z coordinate
+            normal = vec3(0, 0, 1); // slice core parallel to screen
+        }
     }
 
     // Color and shading

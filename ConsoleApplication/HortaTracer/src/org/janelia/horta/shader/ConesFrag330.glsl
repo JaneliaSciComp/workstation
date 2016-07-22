@@ -37,7 +37,7 @@
 uniform vec4 color = vec4(0, 1, 0, 1); // one color for all cones
 uniform mat4 projectionMatrix; // needed for proper depth calculation
 uniform sampler2D lightProbe; // for image-based-lighting (IBL)
-
+uniform vec2 screenSize = vec2(1280, 800);
 
 in float fragRadius; // average radius of cone
 in vec3 center; // center of cone, in camera frame
@@ -74,37 +74,64 @@ vec3 image_based_lighting(
 
 
 void main() {
+    vec3 s, normal; // surface and normal
+
     // set up quadratic formula to solve cone ray-casting equation
     float qe_half_a, discriminant;
     cone_nonlinear_coeffs(tAP, qe_c, qe_half_b, qe_undot_half_a, qe_half_a, discriminant);
-    if (discriminant < 0)
-        discard; // ray does not intersect cone
 
-    // Compute projected surface of cone
-    // TODO - distinguish near-axis vs off-axis view cases
-    vec3 back_surface;
-    vec3 s = cone_surface_from_coeffs(imposterPos, qe_half_b, qe_half_a, discriminant,
-         back_surface);
-    vec3 cs = s - center;
-    
-    bool viewAlongCone = bViewAlongCone > 0.5;
-
-    if (viewAlongCone) {
-        // s = back_surface; // second surface is the seen one in this case
+    // float pixelSize = 2.0 / (screenSize.x * projectionMatrix[0][0]);
+    if (discriminant < 0) {
+        // At low zoom, don't discard: It causes artifacts
+        // Compute pixel size, to determine current zoom level:
+        vec4 shifted1 = projectionMatrix * (vec4(center, 1) + vec4(0.1, 0, 0, 0));
+        vec4 shifted2 = projectionMatrix * (vec4(center, 1) - vec4(0.1, 0, 0, 0));
+        float screensPerMicrometer = 5 * abs(shifted1.x/shifted1.w - shifted2.x/shifted2.w);
+        float micrometersPerPixel = 1.0 / (screensPerMicrometer * screenSize.x);
+        if (micrometersPerPixel > 0.2 * fragRadius) {
+            // TODO: below assumes imposter is near the front surface of the quadric
+            s = imposterPos;
+            vec3 in_screen = normalize(cross(aHat, vec3(0,0,-1)));
+            normal = normalize(cross(in_screen, aHat));
+            if (normal.z < 0)
+                normal = -normal;
+        }
+        else {
+            discard;
+        }
     }
+    else {
+        // Compute projected surface of cone
+        // TODO - distinguish near-axis vs off-axis view cases
+        vec3 back_surface;
+        s = cone_surface_from_coeffs(imposterPos, qe_half_b, qe_half_a, discriminant,
+             back_surface);
+        vec3 cs = s - center;
 
-    // Truncate cone geometry to prescribed ends
-    if ( abs(dot(cs, aHat)) > halfConeLength ) 
-        discard;
+        bool viewAlongCone = bViewAlongCone > 0.5;
 
-    // Compute surface normal vector, for shading
-    vec3 n1 = normalize( cs - dot(cs, aHat)*aHat );
-    vec3 normal = normalScale * (n1 + taper * aHat);
+        if (viewAlongCone) {
+            // s = back_surface; // second surface is the seen one in this case
+        }
 
-    // color for testing
-    // vec4 testColor = vec4(1, 0, 0, 1);
-    // if (viewAlongCone)
-    //     testColor = vec4(0, 1, 0, 1);
+        // Truncate cone geometry to prescribed ends
+        if ( abs(dot(cs, aHat)) > halfConeLength ) {
+            const bool doColorTipMissesMagenta = false;
+            if (doColorTipMissesMagenta) { // for debugging
+                fragColor = vec4(1, 0, 0.9, 1.0); // for debugging
+                gl_FragDepth = 0.999;
+                return;
+            } else {
+                gl_FragDepth = 1;
+                discard; // past end of cone
+            }
+            discard;
+        }
+
+        // Compute surface normal vector, for shading
+        vec3 n1 = normalize( cs - dot(cs, aHat)*aHat );
+        normal = normalScale * (n1 + taper * aHat);
+    }
 
     // Put computed cone surface Z depth into depth buffer
     gl_FragDepth = fragDepthFromEyeXyz(s, projectionMatrix);
@@ -128,5 +155,4 @@ void main() {
         image_based_lighting(s, normal, color.rgb, reflectColor, lightProbe),
         // light_rig(s, normal, color.rgb),
         color.a);
-
 }

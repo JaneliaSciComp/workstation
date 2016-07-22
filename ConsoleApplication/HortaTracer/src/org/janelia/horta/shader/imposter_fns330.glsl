@@ -138,25 +138,30 @@ float zNearFromProjection(mat4 projectionMatrix) {
 void cone_linear_coeffs(in vec3 center, in float radius, in vec3 axis, in float taper, in vec3 pos,
         out float tAP, out float qe_c, out float qe_half_b, out vec3 qe_undot_half_a) 
 {
+    // Scale computations for better numerical stability?
+    float scale1 = 20.0 / length(center); // center is constant over entire cone
+    float scale2 = scale1 * scale1;
+
     // x = Unit cylinder axis
     vec3 x = normalize(-axis); // minus is important...
     
     // "A" parameter of quadratic formula is nonlinear, but has two linear components
     // Q: Can we use scalar instead of vector? A: No
-    qe_undot_half_a = cross(pos, x); // (1)
+    qe_undot_half_a = cross(scale1 * pos, x); // (1)
     
     // "B" parameter
-    tAP = taper * dot(x, pos); // (2)
-    float tAC = taper * dot(x, center);
+    tAP = taper * dot(x, scale1 * pos); // (2)
+    float tAC = taper * dot(x, scale1 * center);
     vec3 qe_undot_b_part = vec3(
         dot(center, vec3(-x.y*x.y -x.z*x.z, x.x*x.y, x.x*x.z)),
         dot(center, vec3( x.x*x.y, -x.x*x.x - x.z*x.z, x.y*x.z)),
         dot(center, vec3( x.x*x.z,  x.y*x.z, -x.x*x.x - x.y*x.y)));
-    qe_half_b = dot(pos, qe_undot_b_part) - tAP * (radius - tAC);
+    float rad_s = scale1 * radius;
+    qe_half_b = dot(scale2 * pos, qe_undot_b_part) - tAP * (rad_s - tAC);
     
     // "C" parameter of quadratic formula is complicated, but is constant wrt position
-    vec3 cxa = cross(center, x);
-    qe_c = dot(cxa, cxa) - radius * radius + (2*radius - tAC)*tAC;
+    vec3 cxa = cross(scale1 * center, x);
+    qe_c = dot(cxa, cxa) - rad_s * rad_s + (2*rad_s - tAC)*tAC;
 }
 
 // Second phase of sphere imposter shading: Compute nonlinear coefficients

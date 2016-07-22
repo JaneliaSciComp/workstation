@@ -2,10 +2,10 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.WrapLayout;
 
 /**
@@ -62,6 +63,19 @@ public final class ConfigPanel extends JPanel {
         
         this.titleLabel = new JLabel("");
         titleLabel.setFont(TITLE_FONT);
+
+		titleLabel.addMouseListener(new MouseHandler() {
+			@Override
+			protected void popupTriggered(MouseEvent e) {
+				if (e.isConsumed()) {
+					return;
+				}
+				LabelContextMenu popupMenu = new LabelContextMenu("Name", titleLabel);
+				popupMenu.addMenuItems();
+				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				e.consume();
+			}
+		});
                 
         this.titlePanel = new JPanel(new WrapLayout(false, WrapLayout.LEFT, 2, 3));
         addDefaultTitleComponents();
