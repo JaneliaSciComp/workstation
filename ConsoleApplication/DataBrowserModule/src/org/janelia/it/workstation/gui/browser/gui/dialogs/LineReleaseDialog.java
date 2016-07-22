@@ -192,7 +192,7 @@ public class LineReleaseDialog extends ModalDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
-        annotatorsPanel = new MembershipListPanel<>("Additional Annotators", SubjectComboBoxRenderer.class);
+        annotatorsPanel = new MembershipListPanel<>("Annotators", SubjectComboBoxRenderer.class);
         bottomPanel.add(annotatorsPanel, c);
 
         c.gridx = 2;
@@ -226,10 +226,6 @@ public class LineReleaseDialog extends ModalDialog {
                 }
 
                 for (Subject subject : DomainMgr.getDomainMgr().getSubjects()) {
-                    if (SessionMgr.getSubjectKey().equals(subject.getKey())) {
-                        continue;
-                    }
-                    
                     subjects.add(subject);
                     subjectMap.put(subject.getKey(), subject);
                 }
