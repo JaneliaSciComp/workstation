@@ -420,7 +420,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         S id = getImageModel().getImageUniqueId(object);
         AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
         if (button != null) {
-            imagesPanel.scrollObjectToCenter(object);
+            imagesPanel.scrollObjectToCenterIfOutsideViewport(object);
             button.requestFocus();
             updateHud(false);
         }
