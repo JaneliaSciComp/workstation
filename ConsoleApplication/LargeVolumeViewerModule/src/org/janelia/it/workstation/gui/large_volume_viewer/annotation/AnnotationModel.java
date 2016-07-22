@@ -1638,7 +1638,7 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void saveNeuronTagMap() {
+    public synchronized void saveNeuronTagMap() {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 
@@ -1650,6 +1650,10 @@ called from a  SimpleWorker thread.
             rootNode.set(tag, array);
         }
         setPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP, rootNode.toString());
+    }
+
+    public TmNeuronTagMap getCurrentTagMap() {
+        return currentTagMap;
     }
 
     /**
