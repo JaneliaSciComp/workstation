@@ -61,7 +61,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTagsButton.addMouseListener(new MouseForwarder(toolbar, "ShowTagsButton->JToolBar"));
         toolbar.add(showTagsButton);
 
-        configButton = new JButton();
+        configButton = new JButton("Titles...");
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Configure the icon viewer.");

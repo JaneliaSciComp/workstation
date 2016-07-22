@@ -23,7 +23,7 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
     public TableViewerToolbar() {
         super();
 
-        chooseColumnsButton = new JButton();
+        chooseColumnsButton = new JButton("Columns...");
         chooseColumnsButton.setIcon(Icons.getIcon("cog.png"));
         chooseColumnsButton.setFocusable(false);
         chooseColumnsButton.setToolTipText("Select columns to display.");
