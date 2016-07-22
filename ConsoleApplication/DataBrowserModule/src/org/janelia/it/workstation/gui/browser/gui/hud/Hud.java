@@ -88,9 +88,24 @@ public class Hud extends ModalDialog {
         setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
         setVisible(false);
+
+        resultButton = new ResultSelectionButton() {
+            @Override
+            protected void resultChanged(ResultDescriptor resultDescriptor) {
+                setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageTypeName(), false, true);
+            }
+        };
+        typeButton = new ImageTypeSelectionButton() {
+            @Override
+            protected void imageTypeChanged(FileType fileType) {
+                setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), fileType.name(), false, true);
+            }
+        };
+
         previewLabel = new JLabel(new ImageIcon());
         previewLabel.setFocusable(false);
         previewLabel.setRequestFocusEnabled(false);
+
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(previewLabel);
 
@@ -120,7 +135,9 @@ public class Hud extends ModalDialog {
         
         this.add(scrollPane, BorderLayout.CENTER);
         add(scrollPane, BorderLayout.CENTER);
+
         init3dGui();
+
         if (mip3d != null) {
             mip3d.setDoubleBuffered(true);
         }
@@ -423,19 +440,6 @@ public class Hud extends ModalDialog {
             rgbMenu.add(greenButton);
             rgbMenu.setEnabled(false);
             menuBar.add(rgbMenu);
-
-            resultButton = new ResultSelectionButton() {
-                @Override
-                protected void resultChanged(ResultDescriptor resultDescriptor) {
-                    setObjectAndToggleDialog(domainObject, resultDescriptor, typeButton.getImageTypeName(), false, true);
-                }
-            };
-            typeButton = new ImageTypeSelectionButton() {
-                @Override
-                protected void imageTypeChanged(FileType fileType) {
-                    setObjectAndToggleDialog(domainObject, resultButton.getResultDescriptor(), fileType.name(), false, true);
-                }
-            };
 
             JPanel leftSidePanel = new JPanel();
             leftSidePanel.setLayout(new FlowLayout());
