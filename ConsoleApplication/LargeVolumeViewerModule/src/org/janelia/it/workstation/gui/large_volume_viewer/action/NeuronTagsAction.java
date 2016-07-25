@@ -147,19 +147,9 @@ public class NeuronTagsAction extends AbstractAction {
         cTopLeft.anchor = GridBagConstraints.PAGE_START;
         cTopLeft.fill = GridBagConstraints.HORIZONTAL;
         cTopLeft.weighty = 0.0;
-        JLabel appliedLabel = new JLabel("Applied");
+        JLabel appliedLabel = new JLabel("Applied (click to remove)");
         appliedLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(appliedLabel, cTopLeft);
-
-        GridBagConstraints cFlowLeft = new GridBagConstraints();
-        cFlowLeft.gridx = 0;
-        cFlowLeft.gridy = GridBagConstraints.RELATIVE;
-        cFlowLeft.anchor = GridBagConstraints.PAGE_START;
-        cFlowLeft.fill = GridBagConstraints.HORIZONTAL;
-        cFlowLeft.weighty = 0.0;
-        JLabel appliedLabel2 = new JLabel("(click to remove)");
-        appliedLabel2.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(appliedLabel2, cFlowLeft);
 
         // the dialog isn't currently resizeable, but I want
         //  to be ready in case I make it so
@@ -174,6 +164,12 @@ public class NeuronTagsAction extends AbstractAction {
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
         panel.add(appliedScroller, cGrowLeft);
 
+        GridBagConstraints cFlowLeft = new GridBagConstraints();
+        cFlowLeft.gridx = 0;
+        cFlowLeft.gridy = GridBagConstraints.RELATIVE;
+        cFlowLeft.anchor = GridBagConstraints.PAGE_START;
+        cFlowLeft.fill = GridBagConstraints.HORIZONTAL;
+        cFlowLeft.weighty = 0.0;
         JButton removeAllButton = new JButton("Remove all");
         removeAllButton.addActionListener(new ActionListener() {
             @Override
@@ -191,19 +187,9 @@ public class NeuronTagsAction extends AbstractAction {
         cTopRight.anchor = GridBagConstraints.PAGE_START;
         cTopRight.fill = GridBagConstraints.HORIZONTAL;
         cTopRight.weighty = 0.0;
-        JLabel availableLabel = new JLabel("Available");
+        JLabel availableLabel = new JLabel("Available (click to add)");
         availableLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(availableLabel, cTopRight);
-
-        GridBagConstraints cFlowRight = new GridBagConstraints();
-        cFlowRight.gridx = 1;
-        cFlowRight.gridy = GridBagConstraints.RELATIVE;
-        cFlowRight.anchor = GridBagConstraints.PAGE_START;
-        cFlowRight.fill = GridBagConstraints.HORIZONTAL;
-        cFlowRight.weighty = 0.0;
-        JLabel availableLabel2 = new JLabel("(click to add)");
-        availableLabel2.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(availableLabel2, cFlowRight);
 
         GridBagConstraints cGrowRight = new GridBagConstraints();
         cGrowRight.gridx = 1;
@@ -214,8 +200,13 @@ public class NeuronTagsAction extends AbstractAction {
         availableTagsList = new JList();
         availableTagsList.setVisibleRowCount(LIST_LENGTH);
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
-        panel.add(availableScroller, cFlowRight);
+        panel.add(availableScroller, cGrowRight);
 
+        GridBagConstraints cFlowRight = new GridBagConstraints();
+        cFlowRight.gridx = 1;
+        cFlowRight.gridy = GridBagConstraints.RELATIVE;
+        cFlowRight.anchor = GridBagConstraints.PAGE_START;
+        cFlowRight.fill = GridBagConstraints.HORIZONTAL;
         JPanel newTagPanel = new JPanel();
         newTagPanel.setLayout(new HorizontalLayout());
         newTagPanel.add(new JLabel("New tag:"));
