@@ -36,7 +36,7 @@ public class NeuronTagsAction extends AbstractAction {
     private JList availableTagsList;
     private JTextField newTagField;
 
-    private static final int LIST_LENGTH = 6;
+    private static final int TAG_LIST_LENGTH = 8;
 
     public NeuronTagsAction(AnnotationModel annotationModel) {
         this.annModel = annotationModel;
@@ -160,7 +160,7 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowLeft.fill = GridBagConstraints.HORIZONTAL;
         cGrowLeft.weighty = 1.0;
         appliedTagsList = new JList();
-        appliedTagsList.setVisibleRowCount(LIST_LENGTH);
+        appliedTagsList.setVisibleRowCount(TAG_LIST_LENGTH);
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
         panel.add(appliedScroller, cGrowLeft);
 
@@ -168,7 +168,8 @@ public class NeuronTagsAction extends AbstractAction {
         cFlowLeft.gridx = 0;
         cFlowLeft.gridy = GridBagConstraints.RELATIVE;
         cFlowLeft.anchor = GridBagConstraints.PAGE_START;
-        cFlowLeft.fill = GridBagConstraints.HORIZONTAL;
+        // cFlowLeft.fill = GridBagConstraints.HORIZONTAL;
+        cFlowLeft.fill = GridBagConstraints.NONE;
         cFlowLeft.weighty = 0.0;
         JButton removeAllButton = new JButton("Remove all");
         removeAllButton.addActionListener(new ActionListener() {
@@ -198,7 +199,7 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowRight.fill = GridBagConstraints.HORIZONTAL;
         cGrowRight.weighty = 1.0;
         availableTagsList = new JList();
-        availableTagsList.setVisibleRowCount(LIST_LENGTH);
+        availableTagsList.setVisibleRowCount(TAG_LIST_LENGTH);
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
         panel.add(availableScroller, cGrowRight);
 
