@@ -97,26 +97,20 @@ public class NeuronTagsAction extends AbstractAction {
      * clear all the tags from the currently selected neuron
      */
     private void onClearAllButton() {
-
-
-        System.out.println("Clear all button clicked");
-
-
-
+        annModel.getCurrentTagMap().clearTags(annModel.getCurrentNeuron());
+        annModel.saveNeuronTagMap();
+        fillTagLists();
     }
 
     /**
      * populate both of the tag lists in the UI
      */
     private void fillTagLists() {
-
-
-        System.out.println("in fillTagLists");
-
-
         // note: I've learned that people like things to be in order;
         //  so even though tags are inherently unordered, alphabetize
         //  them in the lists
+        // note: it's lexical sort, though, so it might need adjustment
+        //  if people complain
 
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
@@ -125,15 +119,12 @@ public class NeuronTagsAction extends AbstractAction {
         Arrays.sort(appliedTags);
         appliedTagsList.setListData(appliedTags);
 
-
         // available tag list; be careful, we're mutating:
         Set<String> availableTagSet = new HashSet<>(annModel.getCurrentTagMap().getAllTags());
         availableTagSet.removeAll(appliedTagSet);
         String [] availableTags = availableTagSet.toArray(new String[availableTagSet.size()]);
         Arrays.sort(availableTags);
         availableTagsList.setListData(availableTags);
-
-
     }
 
     private JPanel getInterface() {
@@ -235,6 +226,14 @@ public class NeuronTagsAction extends AbstractAction {
         });
         newTagPanel.add(newTagButton);
         panel.add(newTagPanel, cFlowRight);
+
+        // new tag field behavior
+        newTagField.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                onAddNewTag();
+            }
+        });
 
         // applied tags list behavior
         appliedTagsList.addMouseListener(new MouseAdapter() {
