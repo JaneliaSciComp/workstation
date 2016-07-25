@@ -36,6 +36,8 @@ public class NeuronTagsAction extends AbstractAction {
     private JList availableTagsList;
     private JTextField newTagField;
 
+    private static final int LIST_LENGTH = 6;
+
     public NeuronTagsAction(AnnotationModel annotationModel) {
         this.annModel = annotationModel;
 
@@ -94,9 +96,9 @@ public class NeuronTagsAction extends AbstractAction {
     }
 
     /**
-     * clear all the tags from the currently selected neuron
+     * remove all the tags from the currently selected neuron
      */
-    private void onClearAllButton() {
+    private void onRemoveAllButton() {
         annModel.getCurrentTagMap().clearTags(annModel.getCurrentNeuron());
         annModel.saveNeuronTagMap();
         fillTagLists();
@@ -168,17 +170,18 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowLeft.fill = GridBagConstraints.HORIZONTAL;
         cGrowLeft.weighty = 1.0;
         appliedTagsList = new JList();
+        appliedTagsList.setVisibleRowCount(LIST_LENGTH);
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
         panel.add(appliedScroller, cGrowLeft);
 
-        JButton clearAllButton = new JButton("Clear all");
-        clearAllButton.addActionListener(new ActionListener() {
+        JButton removeAllButton = new JButton("Remove all");
+        removeAllButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                onClearAllButton();
+                onRemoveAllButton();
             }
         });
-        panel.add(clearAllButton, cFlowLeft);
+        panel.add(removeAllButton, cFlowLeft);
 
 
         // right column = available tags
@@ -209,6 +212,7 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowRight.fill = GridBagConstraints.HORIZONTAL;
         cGrowRight.weighty = 1.0;
         availableTagsList = new JList();
+        availableTagsList.setVisibleRowCount(LIST_LENGTH);
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
         panel.add(availableScroller, cFlowRight);
 
