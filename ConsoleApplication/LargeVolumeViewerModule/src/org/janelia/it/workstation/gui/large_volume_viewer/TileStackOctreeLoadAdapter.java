@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Date;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -61,22 +62,29 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         tileStackCacheController.shutdown();
     }
 
+    private int totalMs = 0;
+    private int totalNum  = 0;
+    private static final int NUM_TILES_TO_AVG = 100;
+
     @Override
     public TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError, MissingTileException {
         //int count=ltrCount.addAndGet(1);
         //log.info("ltrCount="+count);
-
         //log.info("loadToRam() useVolumeCache="+VolumeCache.useVolumeCache());
         long startTime = System.nanoTime();
         if (VolumeCache.useVolumeCache()) {
+
             TextureData2dGL result=tileStackCacheController.loadToRam(tileIndex);
             if (result==null && (!VolumeCache.useVolumeCache())) {
                 throw new AbstractTextureLoadAdapter.TileLoadError("VolumeCache off");
             }
             return result;
+
         } else {
 
-            TextureData2d textureData2d=null;
+            TextureData2d textureData2d;
+
+            long startTime = System.currentTimeMillis();
 
             if (HttpDataSource.useHttp()) {
                 textureData2d = HttpDataSource.getSample2DTile(tileIndex);
@@ -92,7 +100,20 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 }
             }
 
-            //long loadTime=new Date().getTime()-startTime;
+            long loadTime = System.currentTimeMillis()-startTime;
+
+            if (log.isDebugEnabled()) {
+                synchronized (this) {
+                    totalMs += loadTime;
+                    totalNum += 1;
+                    if (totalNum >= NUM_TILES_TO_AVG) {
+                        long avgTime = Math.round((double) totalMs / (double) totalNum);
+                        log.debug("loadToRam({} samples) - avgTimeMs={}", NUM_TILES_TO_AVG, avgTime);
+                        totalMs = 0;
+                        totalNum = 0;
+                    }
+                }
+            }
 
             //log.info("loadToRam() timeMs="+loadTime);
 
