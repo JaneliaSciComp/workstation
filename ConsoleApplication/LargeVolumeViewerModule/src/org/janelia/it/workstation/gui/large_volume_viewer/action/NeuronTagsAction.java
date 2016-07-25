@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -11,6 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -21,7 +24,6 @@ import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.jdesktop.swingx.HorizontalLayout;
 
 /**
  * this action opens a dialog that allows the user to edit
@@ -35,8 +37,6 @@ public class NeuronTagsAction extends AbstractAction {
     private JList appliedTagsList;
     private JList availableTagsList;
     private JTextField newTagField;
-
-    private static final int TAG_LIST_LENGTH = 8;
 
     public NeuronTagsAction(AnnotationModel annotationModel) {
         this.annModel = annotationModel;
@@ -140,6 +140,8 @@ public class NeuronTagsAction extends AbstractAction {
         // I hate GridBagLayout's verbosity, but it's the only way
         //  in Java to get the control over the UI that I want
 
+        Insets insets = new Insets(5, 5, 5, 5);
+
         // left column = applied tags
         GridBagConstraints cTopLeft = new GridBagConstraints();
         cTopLeft.gridx = 0;
@@ -147,6 +149,7 @@ public class NeuronTagsAction extends AbstractAction {
         cTopLeft.anchor = GridBagConstraints.PAGE_START;
         cTopLeft.fill = GridBagConstraints.HORIZONTAL;
         cTopLeft.weighty = 0.0;
+        cTopLeft.insets = insets;
         JLabel appliedLabel = new JLabel("Applied (click to remove)");
         appliedLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(appliedLabel, cTopLeft);
@@ -159,18 +162,19 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowLeft.anchor = GridBagConstraints.PAGE_START;
         cGrowLeft.fill = GridBagConstraints.HORIZONTAL;
         cGrowLeft.weighty = 1.0;
+        cGrowLeft.insets = insets;
         appliedTagsList = new JList();
-        appliedTagsList.setVisibleRowCount(TAG_LIST_LENGTH);
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
+        appliedScroller.setPreferredSize(new Dimension(160, 160));
         panel.add(appliedScroller, cGrowLeft);
 
         GridBagConstraints cFlowLeft = new GridBagConstraints();
         cFlowLeft.gridx = 0;
         cFlowLeft.gridy = GridBagConstraints.RELATIVE;
         cFlowLeft.anchor = GridBagConstraints.PAGE_START;
-        // cFlowLeft.fill = GridBagConstraints.HORIZONTAL;
         cFlowLeft.fill = GridBagConstraints.NONE;
         cFlowLeft.weighty = 0.0;
+        cFlowLeft.insets = insets;
         JButton removeAllButton = new JButton("Remove all");
         removeAllButton.addActionListener(new ActionListener() {
             @Override
@@ -188,6 +192,7 @@ public class NeuronTagsAction extends AbstractAction {
         cTopRight.anchor = GridBagConstraints.PAGE_START;
         cTopRight.fill = GridBagConstraints.HORIZONTAL;
         cTopRight.weighty = 0.0;
+        cTopRight.insets = insets;
         JLabel availableLabel = new JLabel("Available (click to add)");
         availableLabel.setHorizontalAlignment(JLabel.CENTER);
         panel.add(availableLabel, cTopRight);
@@ -198,9 +203,10 @@ public class NeuronTagsAction extends AbstractAction {
         cGrowRight.anchor = GridBagConstraints.PAGE_START;
         cGrowRight.fill = GridBagConstraints.HORIZONTAL;
         cGrowRight.weighty = 1.0;
+        cGrowRight.insets = insets;
         availableTagsList = new JList();
-        availableTagsList.setVisibleRowCount(TAG_LIST_LENGTH);
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
+        availableScroller.setPreferredSize(new Dimension(160, 160));
         panel.add(availableScroller, cGrowRight);
 
         GridBagConstraints cFlowRight = new GridBagConstraints();
@@ -208,12 +214,13 @@ public class NeuronTagsAction extends AbstractAction {
         cFlowRight.gridy = GridBagConstraints.RELATIVE;
         cFlowRight.anchor = GridBagConstraints.PAGE_START;
         cFlowRight.fill = GridBagConstraints.HORIZONTAL;
+        cFlowRight.weighty = 0.0;
+        cFlowRight.insets = insets;
         JPanel newTagPanel = new JPanel();
-        newTagPanel.setLayout(new HorizontalLayout());
-        newTagPanel.add(new JLabel("New tag:"));
-        newTagField = new JTextField("", 10);
+        newTagPanel.setLayout(new BoxLayout(newTagPanel, BoxLayout.LINE_AXIS));
+        newTagField = new JTextField();
         newTagPanel.add(newTagField);
-        JButton newTagButton = new JButton("Add");
+        JButton newTagButton = new JButton("New tag");
         newTagButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
