@@ -219,6 +219,20 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         fireNeuronStyleChangeEvent(neuron, style);
     }
 
+    @Override
+    public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+        Map<TmNeuron, NeuronStyle> styleMap = new HashMap<>();
+        for (TmNeuron neuron: neuronList) {
+            styleMap.put(neuron, style);
+        }
+        fireNeuronStylesChangedEvent(styleMap);
+    }
+
+    @Override
+    public void neuronTagsChanged(List<TmNeuron> neuronList) {
+        // LVV translator currently does nothing with neuron tags
+    }
+
     public void annotationSelected(Long id) {
         fireNextParentEvent(id);
     }
