@@ -41,7 +41,7 @@ public class NeuronTagsAction extends AbstractAction {
     public NeuronTagsAction(AnnotationModel annotationModel) {
         this.annModel = annotationModel;
 
-        putValue(NAME, "Edit tags...");
+        putValue(NAME, "Edit neuron tags...");
         putValue(SHORT_DESCRIPTION, "Edit tags for neuron");
     }
 
