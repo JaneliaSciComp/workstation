@@ -11,6 +11,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +88,21 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }
+
+        @Override
+        public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+            wsNeuronList.neuronStyleChanged(neuron, style);
+        }
+
+        @Override
+        public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+            wsNeuronList.neuronStylesChanged(neuronList, style);
+        }
+
+        @Override
+        public void neuronTagsChanged(List<TmNeuron> neuronList) {}
+
+
     }
     
     private class PanelPanListener implements CameraPanToListener {

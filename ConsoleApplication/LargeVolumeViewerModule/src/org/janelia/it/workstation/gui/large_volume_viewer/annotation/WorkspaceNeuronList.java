@@ -21,6 +21,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
  * this widget displays a list of neurons in a workspace
@@ -314,6 +315,20 @@ public class WorkspaceNeuronList extends JPanel {
                 panListener.cameraPanTo(bounds.getCenter());
             }
         }
+    }
+
+    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+        updateModel(neuron);
+    }
+
+    public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+        for (TmNeuron neuron: neuronList) {
+            updateModel(neuron);
+        }
+    }
+
+    public void neuronTagsChanged(List<TmNeuron> neuronList) {
+        // coming soon
     }
 
 }
