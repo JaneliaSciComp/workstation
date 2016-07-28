@@ -84,8 +84,6 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
 
             TextureData2d textureData2d;
 
-            long startTime = System.currentTimeMillis();
-
             if (HttpDataSource.useHttp()) {
                 textureData2d = HttpDataSource.getSample2DTile(tileIndex);
                 final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
@@ -97,21 +95,6 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
                 final double elapsedMs = (double) (System.nanoTime() - startTime) / 1000000.0;
                 if (textureData2d != null) {
                     activityLog.logTileLoad(getRelativeSlice(tileIndex), tileIndex, elapsedMs, folderOpenTimestamp);
-                }
-            }
-
-            long loadTime = System.currentTimeMillis()-startTime;
-
-            if (log.isDebugEnabled()) {
-                synchronized (this) {
-                    totalMs += loadTime;
-                    totalNum += 1;
-                    if (totalNum >= NUM_TILES_TO_AVG) {
-                        long avgTime = Math.round((double) totalMs / (double) totalNum);
-                        log.debug("loadToRam({} samples) - avgTimeMs={}", NUM_TILES_TO_AVG, avgTime);
-                        totalMs = 0;
-                        totalNum = 0;
-                    }
                 }
             }
 
