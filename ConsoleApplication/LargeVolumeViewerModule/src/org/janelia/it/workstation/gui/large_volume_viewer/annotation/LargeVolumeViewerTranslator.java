@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * somewhat interchangeably, which can be confusing
  */
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-    GlobalAnnotationListener, NeuronStyleChangeListener {
+    GlobalAnnotationListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -217,11 +217,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     @Override
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         fireNeuronStyleChangeEvent(neuron, style);
-    }
-
-    @Override
-    public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
-        fireNeuronStylesChangedEvent(neuronStyleMap);
     }
 
     public void annotationSelected(Long id) {
