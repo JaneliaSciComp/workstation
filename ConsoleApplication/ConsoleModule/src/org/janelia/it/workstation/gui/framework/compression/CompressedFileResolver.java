@@ -6,6 +6,8 @@ import org.openide.util.lookup.ServiceProvider;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Finds the degetCompressedNameForFileBytesed version of an input file.
@@ -17,11 +19,27 @@ import java.util.List;
  */
 @ServiceProvider(service = CompressedFileResolverI.class, path = CompressedFileResolverI.LOOKUP_PATH)
 public class CompressedFileResolver implements CompressedFileResolverI {    
+    
+    private static final Logger log = LoggerFactory.getLogger(CompressedFileResolver.class);
+    
     private List<CompressionAlgorithm> chain;
     public CompressedFileResolver() {
         chain = new ArrayList<>();
-        chain.add(new Mj2ExecutableCompressionAlgorithm());
-        chain.add( new TrivialCompression() );
+
+        try {
+            chain.add(new Mj2ExecutableCompressionAlgorithm());
+        }
+        catch (Exception e) {
+            log.error("Error instantiating Mj2ExecutableCompressionAlgorithm: "+e.getMessage());
+        }
+
+        try {
+            chain.add( new TrivialCompression() );
+        }
+        catch (Exception e) {
+            log.error("Error instantiating TrivialCompression: "+e.getMessage());
+        }
+
         //chain.add( new LZ4Compression() );
     }
     
