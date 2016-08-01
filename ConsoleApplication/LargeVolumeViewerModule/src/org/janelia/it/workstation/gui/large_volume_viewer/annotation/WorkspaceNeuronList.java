@@ -9,6 +9,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
 import java.awt.*;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -34,6 +35,9 @@ public class WorkspaceNeuronList extends JPanel {
     private NeuronTableModel neuronTableModel;
     private DefaultRowSorter<TableModel, String> sorter;
     private JTextField filterField;
+    private JComboBox tagModeMenu;
+    private JComboBox tagMenu;
+
     private AnnotationManager annotationManager;
     private AnnotationModel annotationModel;
     private CameraPanToListener panListener;
@@ -164,7 +168,7 @@ public class WorkspaceNeuronList extends JPanel {
         // text field for filter
         JPanel filterPanel = new JPanel();
         filterPanel.setLayout(new BoxLayout(filterPanel, BoxLayout.LINE_AXIS));
-        JLabel filterLabel = new JLabel("Filter text:");
+        JLabel filterLabel = new JLabel("Text filter:");
         filterPanel.add(filterLabel);
         filterField = new JTextField();
         filterField.getDocument().addDocumentListener(
@@ -204,7 +208,62 @@ public class WorkspaceNeuronList extends JPanel {
         add(filterPanel, c3);
 
 
+        // tag filter
+        JPanel tagFilterPanel = new JPanel();
+        tagFilterPanel.setLayout(new BoxLayout(tagFilterPanel, BoxLayout.LINE_AXIS));
+        tagFilterPanel.add(new JLabel("Tag filter:"));
+
+        String [] modeStrings = {"(none)", "include", "exclude"};
+        tagModeMenu = new JComboBox(modeStrings);
+        tagModeMenu.setSelectedIndex(0);
+        tagModeMenu.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox box = (JComboBox) e.getSource();
+                String mode = (String) box.getSelectedItem();
+                tagModeChanged(mode);
+            }
+        });
+        tagFilterPanel.add(tagModeMenu);
+        tagMenu = new JComboBox();
+        // add items later (they aren't available now)
+        tagMenu.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox box = (JComboBox) e.getSource();
+                String tag = (String) box.getSelectedItem();
+                tagFilterChanged(tag);
+            }
+        });
+
+        tagFilterPanel.add(tagMenu);
+
+        // same packing behavior as text filter panel
+        add(tagFilterPanel, c3);
+
         loadWorkspace(null);
+    }
+
+    /**
+     * retrieve the current tags and update the drop-down menu
+     */
+    private void updateTagMenu() {
+        String currentSelection = (String) tagMenu.getSelectedItem();
+        tagMenu.removeAllItems();
+
+        Set<String> tagSet = annotationModel.getCurrentTagMap().getAllTags();
+        String[] tagList = tagSet.toArray(new String[tagSet.size()]);
+        Arrays.sort(tagList);
+
+        tagMenu.addItem("");
+        for (String tag: tagList) {
+            tagMenu.addItem(tag);
+        }
+
+        // be sure the current tag is still displayed, if it's present
+        if (tagSet.contains(currentSelection)) {
+            tagMenu.setSelectedItem(currentSelection);
+        }
     }
 
     /**
@@ -251,6 +310,17 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     /**
+     * called when tag mode drop-down is changed
+     */
+    public void tagModeChanged(String mode) {
+        System.out.println("tag filter mode changed to " + mode);
+    }
+
+    public void tagFilterChanged(String tag) {
+        System.out.println("tag filter changed to " + tag);
+    }
+
+    /**
      * called when the sort order is changed in the UI
      */
     public void sortOrderChanged(NeuronSortOrder neuronSortOrder) {
@@ -280,6 +350,9 @@ public class WorkspaceNeuronList extends JPanel {
     public void loadWorkspace(TmWorkspace workspace) {
         updateModel(workspace);
         setSortOrder(neuronSortOrder);
+        if (workspace != null) {
+            updateTagMenu();
+        }
     }
 
     /**
@@ -328,6 +401,7 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     public void neuronTagsChanged(List<TmNeuron> neuronList) {
+        updateTagMenu();
         for (TmNeuron neuron: neuronList) {
             neuronTableModel.updateNeuron(neuron);
         }
@@ -421,7 +495,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public boolean hasFilter() {
-        return tagMode != NeuronTagMode.NONE;
+        return (tagMode != NeuronTagMode.NONE && tagFilter != "");
     }
 
     private boolean matchesTagFilter(TmNeuron neuron) {
