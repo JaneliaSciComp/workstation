@@ -21,7 +21,16 @@ public class Mj2CompressionTest {
     private static final File MOCK_COMPRESSED = new File("C:\\Users\\FOSTERL\\Documents\\mj2_test_files\\01941-ngc.0.tif_comp-10.mj2");
     //private static final File MOCK_COMPRESSED = new File("/tier2/mousebrainmicro/mousebrainmicro/data/2015-06-19/Tiling/2015-06-29/01/01941/01941-ngc.0.tif_comp-10.mj2");
     
-    private Mj2ExecutableCompressionAlgorithm mj2 = new Mj2ExecutableCompressionAlgorithm();
+    private Mj2ExecutableCompressionAlgorithm mj2;
+    
+    public Mj2CompressionTest() {
+    	try {
+    		mj2 = new Mj2ExecutableCompressionAlgorithm();
+    	}
+    	catch (Exception e) {
+    		throw new AssertionError("Cannot instantiate Mj2 compression",e);
+    	}
+    }
     
     @Test
     public void canDecompress() {
