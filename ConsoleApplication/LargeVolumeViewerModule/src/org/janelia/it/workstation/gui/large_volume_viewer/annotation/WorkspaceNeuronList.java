@@ -328,19 +328,28 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     public void neuronTagsChanged(List<TmNeuron> neuronList) {
-        // coming soon
+        for (TmNeuron neuron: neuronList) {
+            neuronTableModel.updateNeuron(neuron);
+        }
     }
 
 }
 
 class NeuronTableModel extends AbstractTableModel {
 
-    // note: creation date column will be hidden!
+    public enum NeuronTagMode {NONE, INCLUDE, EXCLUDE};
+
+    // note: creation date column will be hidden
     private String[] columnNames = {"Name", "Style", "Creation Date"};
 
     private ArrayList<TmNeuron> neurons = new ArrayList<>();
+    private ArrayList<TmNeuron> matchedNeurons = new ArrayList<>();
+    private ArrayList<TmNeuron> unmatchedNeurons = new ArrayList<>();
 
-    // need this to retrieve colors!
+    private String tagFilter = "";
+    private NeuronTagMode tagMode = NeuronTagMode.NONE;
+
+    // need this to retrieve colors, tags
     private AnnotationModel annotationModel;
 
     public void setAnnotationModel(AnnotationModel annotationModel) {
@@ -348,24 +357,75 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public void clear() {
-        neurons = new ArrayList<>();
+        neurons.clear();
+        matchedNeurons.clear();
+        unmatchedNeurons.clear();
         fireTableDataChanged();
     }
 
     public void addNeuron(TmNeuron neuron) {
         neurons.add(neuron);
+        if (hasFilter()) {
+            if (annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter)) {
+                matchedNeurons.add(neuron);
+            }
+        }
         fireTableDataChanged();
     }
 
     public void addNeurons(List<TmNeuron> neuronList) {
         neurons.addAll(neuronList);
+        if (hasFilter()) {
+            for (TmNeuron neuron: neuronList) {
+                if (annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter)) {
+                    matchedNeurons.add(neuron);
+                } else {
+                    unmatchedNeurons.add(neuron);
+                }
+            }
+        }
         fireTableDataChanged();
     }
 
     public void updateNeuron(TmNeuron neuron) {
-        int neuronRow = getRowForNeuron(neuron);
-        neurons.set(neuronRow, neuron);
+        replaceNeuron(neuron, neurons);
+        if (hasFilter()) {
+            if (matchesTagFilter(neuron)) {
+                replaceNeuron(neuron, matchedNeurons);
+            } else {
+                replaceNeuron(neuron, unmatchedNeurons);
+            }
+        }
         fireTableDataChanged();
+    }
+
+    // filter stuff
+
+    public void setTagFilter(String tag, NeuronTagMode mode) {
+        // mode switch is cheap, but don't iterate over the
+        //  neurons again if the tag didn't change
+        tagMode = mode;
+        if (tag != tagFilter) {
+            tagFilter = tag;
+            matchedNeurons.clear();
+            unmatchedNeurons.clear();
+            for (TmNeuron neuron : neurons) {
+                if (matchesTagFilter(neuron)) {
+                    matchedNeurons.add(neuron);
+                } else {
+                    unmatchedNeurons.add(neuron);
+                }
+            }
+        }
+        fireTableDataChanged();
+    }
+
+    public boolean hasFilter() {
+        return tagMode != NeuronTagMode.NONE;
+    }
+
+    private boolean matchesTagFilter(TmNeuron neuron) {
+        return annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter);
     }
 
     // boilerplate stuff
@@ -378,15 +438,50 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public int getRowCount() {
-        return neurons.size();
+        if (hasFilter()) {
+            if (tagMode == NeuronTagMode.INCLUDE) {
+                return matchedNeurons.size();
+            } else {
+                return unmatchedNeurons.size();
+            }
+        } else {
+            return neurons.size();
+        }
     }
 
     public TmNeuron getNeuronAtRow(int row) {
-        return neurons.get(row);
+        if (hasFilter()) {
+            if (tagMode == NeuronTagMode.INCLUDE) {
+                return matchedNeurons.get(row);
+            } else {
+                return unmatchedNeurons.get(row);
+            }
+        } else {
+            return neurons.get(row);
+        }
+    }
+
+    private void replaceNeuron(TmNeuron neuron, List<TmNeuron> neuronList) {
+        TmNeuron foundNeuron = null;
+        for (TmNeuron n: neuronList) {
+            if (n.getId().equals(neuron.getId())) {
+                foundNeuron = n;
+                break;
+            }
+        }
+        if (foundNeuron != null) {
+            neuronList.set(neuronList.indexOf(foundNeuron), neuron);
+        } else {
+
+
+            // error, should never happen; what to do?
+
+
+
+        }
     }
 
     public int getRowForNeuron(TmNeuron neuron) {
-        // we're matching by ID, not object identity
         TmNeuron foundNeuron = null;
         for (TmNeuron n: neurons) {
             if (n.getId().equals(neuron.getId())) {
@@ -419,20 +514,30 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public Object getValueAt(int row, int column) {
+        TmNeuron targetNeuron;
+        if (hasFilter()) {
+            if (tagMode == NeuronTagMode.INCLUDE) {
+                targetNeuron = matchedNeurons.get(row);
+            } else {
+                targetNeuron = unmatchedNeurons.get(row);
+            }
+        } else {
+            targetNeuron = neurons.get(row);
+        }
+
         switch (column) {
             case 0:
                 // neuron itself, which will display as name
-                return neurons.get(row);
+                return targetNeuron;
             case 1:
                 // color, from style
-                return annotationModel.getNeuronStyle(neurons.get(row)).getColor();
+                return annotationModel.getNeuronStyle(targetNeuron).getColor();
             case 2:
                 // creation date, hidden, but there for sorting
-                return neurons.get(row).getCreationDate();
+                return targetNeuron.getCreationDate();
             default:
                 return null;
         }
-
     }
 
 }
