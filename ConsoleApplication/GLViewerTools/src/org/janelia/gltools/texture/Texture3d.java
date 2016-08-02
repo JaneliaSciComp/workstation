@@ -29,18 +29,12 @@
  */
 package org.janelia.gltools.texture;
 
-import com.sun.media.jai.codec.ByteArraySeekableStream;
-import com.sun.media.jai.codec.FileCacheSeekableStream;
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.MemoryCacheSeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,14 +48,25 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+
 import javax.media.opengl.GL3;
 
+import com.sun.media.jai.codec.ByteArraySeekableStream;
+import com.sun.media.jai.codec.FileCacheSeekableStream;
+import com.sun.media.jai.codec.FileSeekableStream;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageDecoder;
+import com.sun.media.jai.codec.MemoryCacheSeekableStream;
+import com.sun.media.jai.codec.SeekableStream;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
+import org.janelia.gltools.activity_logging.ActivityLogHelper;
 import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
 import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +79,9 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
     private static final Logger log = LoggerFactory.getLogger(Texture3d.class);
 
-    private static ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
+    private static final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
+    
+    private static final ScheduledThreadPoolExecutor scheduledThreadPoolExecutor=new ScheduledThreadPoolExecutor(6);
 
     protected int height = 0;
     protected int depth = 0;
@@ -169,12 +176,30 @@ public class Texture3d extends BasicTexture implements GL3Resource
     public Texture3d loadTiffStack(File tiffFile) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
         RenderedImage[] slices = renderedImagesFromTiffStack(tiffFile);
+
+        long logId = System.currentTimeMillis();
+
         float t1=timer.reportMsAndRestart();
         System.out.println("Tiff load to RenderedImages took "+t1+" ms");
-        Texture3d result = loadStack(slices);
-        float t2=timer.reportMsAndRestart();
-        System.out.println("Tiff RenderedImages to Buffer took "+t2+" ms");
-        System.out.println(">>> loadTiffStack() total time="+(t1+t2)+" ms");
+
+        Texture3d result;
+        if (slices.length < 1) {
+            result = this;
+        }
+        else {
+            Pair<Raster[], ColorModel> slicePair = loadStack(slices);
+
+            float t2=timer.reportMsAndRestart();
+            System.out.println("Tiff RenderedImages to raster took "+t2+" ms");
+            activityLog.logBrickLoadToRendered(logId, tiffFile.getAbsolutePath(), HttpDataSource.useHttp(), t1+t2);
+
+            result = loadStack(slicePair.getLeft(), slicePair.getRight());
+
+            float t3=timer.reportMsAndRestart();
+            System.out.println("Tiff load raster slices to texture buffer took "+t3+" ms");
+            System.out.println(">>> loadTiffStack() total time="+(t1+t2+t3)+" ms");
+        }
+
         return result;
     }
 
@@ -207,15 +232,27 @@ public class Texture3d extends BasicTexture implements GL3Resource
         // TODO - 32 bit integers...
     }
 
-    public Texture3d loadStack(RenderedImage[] stack) {
+    public Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
         PerformanceTimer timer = new PerformanceTimer();
-        if (stack.length < 1)
-            return this;
+
         depth = stack.length;
         RenderedImage slice = stack[0];
         width = slice.getWidth();
         height = slice.getHeight();
-        ColorModel colorModel = slice.getColorModel();
+
+        // NOTE: empirically, this step cannot be done with multiple-threads. It is mysteriously not thread-safe.
+        Raster[] raster = new Raster[stack.length];
+        for (int i = 0; i < stack.length; i++) {
+            raster[i] = stack[i].getData();
+        }
+
+        System.out.println("Getting Rasters from RenderedImages took "+timer.reportMsAndRestart()+" ms");
+        return Pair.of(raster, slice.getColorModel());
+    }
+
+    public Texture3d loadStack(Raster[] raster, ColorModel colorModel) {
+        PerformanceTimer timer = new PerformanceTimer();
+
         bytesPerIntensity = colorModel.getComponentSize(0)/8;
         bytesPerIntensity = Math.max(1, bytesPerIntensity);
         // NOTE - we might want to support more data types than byte and short eventually.
@@ -244,14 +281,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
         allocatePixels();
 
         System.out.println("Initializing texture buffer took "+timer.reportMsAndRestart()+" ms");
-
-        // NOTE: empirically, this step cannot be done with multiple-threads. It is mysteriously not thread-safe.
-        Raster[] raster=new Raster[stack.length];
-        for (int i=0;i<stack.length;i++) {
-            raster[i]=stack[i].getData();
-        }
-
-        System.out.println("Getting Rasters from RenderedImages took "+timer.reportMsAndRestart()+" ms");
 
         if (getMethod!=null) {
             getMethod.releaseConnection();
@@ -866,8 +895,23 @@ public class Texture3d extends BasicTexture implements GL3Resource
             try {
                 String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
                 log.info("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath="+httpPathFromFilePath);
-                getMethod=optionalFileStreamSource.getStreamForFile(httpPathFromFilePath);
-                SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
+                getMethod = optionalFileStreamSource.getStreamForFile(httpPathFromFilePath);
+
+                // We can now write the stream directly to a buffer, because we know the content length up front.
+                long contentLength = getMethod.getResponseContentLength();
+                byte[] bytes = new byte[(int)contentLength];
+                DataInputStream dataIs = new DataInputStream(getMethod.getResponseBodyAsStream());
+                dataIs.readFully(bytes);
+
+                // Back when we didn't know the content length, we had to do this more inefficient read into a growing buffer, and then a copy into a new byte array:
+                //byte[] bytes = IOUtils.toByteArray(getMethod.getResponseBodyAsStream());
+
+                SeekableStream s = new ByteArraySeekableStream(bytes);
+                System.out.println("Texture3D STREAM byte load time ms="+timer.reportMsAndRestart());
+
+                // Another way is to read the stream as necessary, but this seems slower.
+//                SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
+
                 decoder = ImageCodec.createImageDecoder("tiff", s, null);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -876,6 +920,8 @@ public class Texture3d extends BasicTexture implements GL3Resource
             }
         }
         else if (optionalFileByteSource!=null) {
+            // This reads the file into memory ON THE SERVER before streaming it to the client all at once,
+            // which is pointless and delays it getting here. Don't use this.
             byte[] bytes=null;
             try {
                 String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
