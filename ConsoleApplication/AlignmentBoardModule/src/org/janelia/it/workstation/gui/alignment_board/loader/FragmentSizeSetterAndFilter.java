@@ -12,10 +12,13 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -54,11 +57,27 @@ public class FragmentSizeSetterAndFilter {
     public Collection<MaskChanRenderableData> filter( Collection<MaskChanRenderableData> rawList ) {
         // For each data, read up its voxel count.
         FileResolver resolver = new CacheFileResolver();
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<>();
         for ( MaskChanRenderableData data: rawList ) {
             String maskPath = data.getMaskPath();
             if ( maskPath != null ) {
-                File infile = new File( resolver.getResolvedFilename( maskPath ) );
+                String resolvedFilename = null;
+                try {
+                    resolvedFilename = resolver.getResolvedFilename( maskPath );
+                } catch (Exception ex) {
+                    logger.warn("Failed to resolve {}.  Cannot be read.", maskPath);
+                    resolvedFilename = maskPath;
+                }
+                File infile = new File( resolvedFilename);
                 if ( ! infile.canRead() ) {
+                    // Need to send notice to us-as-support, that this is broken.
+                    MailHelper helper = new MailHelper();
+                    // Comma-separated list of email addresses
+                    String[] errorMessageDestinations = SystemConfigurationProperties.getString("System.ErrorMessageDestination").split(",");
+                    for (String errorMessageDestination : errorMessageDestinations) {
+                        helper.sendEmail("saffordt@janelia.hhmi.org", errorMessageDestination, "Ref Channel Not Created",
+                                "No reference channel was created during separation, for a sample belonging to user " + AccessManager.getSubjectKey() + ".  Expected path is " + maskPath + ".");
+                    }                    
                     logger.warn("Mask file {} cannot be read.", infile);
                 }
                 else {
@@ -71,6 +90,9 @@ public class FragmentSizeSetterAndFilter {
                             fis.close();
                             bean.setVoxelCount( voxelCount );
                         }
+                        
+                        // All tests passed: add this one to output list.
+                        sortedRenderableDatas.add(data);
 
                     } catch ( Exception ex ) {
                         logger.error("Caught an exception while attempting to retrieve voxel count for {}.", maskPath );
@@ -81,8 +103,7 @@ public class FragmentSizeSetterAndFilter {
             }
         }
 
-        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<>();
-        sortedRenderableDatas.addAll( rawList );
+        //sortedRenderableDatas.addAll( rawList );
         Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Now discard based on filtering criteria.
