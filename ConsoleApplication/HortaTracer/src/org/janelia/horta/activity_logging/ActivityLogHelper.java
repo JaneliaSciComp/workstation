@@ -1,5 +1,6 @@
 package org.janelia.horta.activity_logging;
 
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
@@ -25,6 +26,7 @@ public class ActivityLogHelper {
     // These category strings are used similarly.  Lining them up spatially
     // makes it easier to see that they are all different.
     private static final CategoryString HORTA_LAUNCH_CATEGORY_STRING              = new CategoryString("launchHorta");
+    private static final CategoryString HORTA_LOAD_BRICK_CATEGORY_STRING          = new CategoryString("loadBrick");
     private static final CategoryString HORTA_ADD_ANCHOR_CATEGORY_STRING          = new CategoryString("addAnchor:xyzsw");
     private static final CategoryString HORTA_MERGE_NEURITES_CATEGORY_STRING      = new CategoryString("mergeNeurites:xyzsw");
     private static final CategoryString HORTA_MOVE_NEURITE_CATEGORY_STRING        = new CategoryString("moveNeurite:xyzsw");
@@ -48,6 +50,15 @@ public class ActivityLogHelper {
     public void logHortaLaunch(SampleLocation sampleLocation) {
         this.sampleLocation = sampleLocation;
         FrameworkImplProvider.getSessionSupport().logToolEvent(HORTA_TOOL_STRING, HORTA_LAUNCH_CATEGORY_STRING, new ActionString(sampleLocation.getSampleUrl().toString()));        
+    }
+
+    public void logHortaLoad(String filename, final double elapsedMs) {
+        final ActionString actionString = new ActionString(filename + ":elapsed_ms=" + elapsedMs
+        );
+        activityLogging.logToolEvent(
+                HORTA_TOOL_STRING,
+                HORTA_LOAD_BRICK_CATEGORY_STRING,
+                actionString);
     }
 
     public void logAddAnchor(float[] location) {

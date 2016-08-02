@@ -7,10 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/branding" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleWrapper/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/SceneWindow/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DataViewModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DataBrowserModule/src" isTestSource="false" />
@@ -26,6 +23,11 @@
       <sourceFolder url="file://$MODULE_DIR$/ViewerAPI/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/test/unit/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SceneWindow/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/GLViewerTools/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/HortaTracer/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SceneWindow/build/classes-generated" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" />
       <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes" />
@@ -36,18 +38,15 @@
       <excludeFolder url="file://$MODULE_DIR$/DataBrowserModule/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/DataViewModule/build" />
       <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/build" />
-      <excludeFolder url="file://$MODULE_DIR$/GLViewerTools/src" />
       <excludeFolder url="file://$MODULE_DIR$/GeometricSearchModule/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/Geometry3d/build" />
-      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build" />
-      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/src" />
+      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/HortaTracer/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/Jogl213/build" />
-      <excludeFolder url="file://$MODULE_DIR$/Jogl213/src" />
       <excludeFolder url="file://$MODULE_DIR$/Jogl224Lib/build" />
-      <excludeFolder url="file://$MODULE_DIR$/Jogl224Lib/src" />
       <excludeFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/build" />
-      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/build" />
-      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/src" />
+      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/SceneWindow/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/classes" />
       <excludeFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/build/depcache" />
       <excludeFolder url="file://$MODULE_DIR$/SplitPickingModule/build" />
@@ -65,6 +64,7 @@
     <orderEntry type="module" module-name="Model" />
     <orderEntry type="module" module-name="Shared" />
     <orderEntry type="module" module-name="Jacs" />
+    <orderEntry type="module" module-name="Compute" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -78,6 +78,15 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
+          <root url="jar://$MODULE_DIR$/Jogl224Lib/release/modules/ext/gluegen-2.2.4.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
           <root url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" />
         </CLASSES>
         <JAVADOC />
@@ -88,6 +97,5 @@
         <jarDirectory url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" recursive="false" type="SOURCES" />
       </library>
     </orderEntry>
-    <orderEntry type="module" module-name="Compute" />
   </component>
 </module>
