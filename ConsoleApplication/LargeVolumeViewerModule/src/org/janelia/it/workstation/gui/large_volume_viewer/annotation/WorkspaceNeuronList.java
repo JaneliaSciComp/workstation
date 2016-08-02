@@ -313,11 +313,33 @@ public class WorkspaceNeuronList extends JPanel {
      * called when tag mode drop-down is changed
      */
     public void tagModeChanged(String mode) {
-        System.out.println("tag filter mode changed to " + mode);
+        // note: if you set the mode to NONE, we don't change
+        //  the tag; you might want to come back to it later
+
+        // probably ought to have a constant map for this...
+        NeuronTableModel.NeuronTagMode tagMode;
+        if (mode == "(none)") {
+            tagMode = NeuronTableModel.NeuronTagMode.NONE;
+        } else if (mode == "include") {
+            tagMode = NeuronTableModel.NeuronTagMode.INCLUDE;
+        } else if (mode == "exclude") {
+            tagMode = NeuronTableModel.NeuronTagMode.EXCLUDE;
+        } else {
+            // should never happen
+            tagMode = NeuronTableModel.NeuronTagMode.NONE;
+        }
+        neuronTableModel.setTagMode(tagMode);
     }
 
     public void tagFilterChanged(String tag) {
-        System.out.println("tag filter changed to " + tag);
+        // note: if you set the tag filter to empty string,
+        //  we explicitly change the mode to NONE as well
+        if (tag == "") {
+            tagModeMenu.setSelectedItem("(none)");
+            neuronTableModel.setTagFilter(tag, NeuronTableModel.NeuronTagMode.NONE);
+        } else {
+            neuronTableModel.setTagFilter(tag);
+        }
     }
 
     /**
@@ -401,8 +423,10 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     public void neuronTagsChanged(List<TmNeuron> neuronList) {
+        System.out.println("neuronTagsChanged: ");
         updateTagMenu();
         for (TmNeuron neuron: neuronList) {
+            System.out.println(neuron);
             neuronTableModel.updateNeuron(neuron);
         }
     }
@@ -475,6 +499,14 @@ class NeuronTableModel extends AbstractTableModel {
 
     // filter stuff
 
+    public void setTagMode(NeuronTagMode mode) {
+        setTagFilter(tagFilter, mode);
+    }
+
+    public void setTagFilter(String tag) {
+        setTagFilter(tag, tagMode);
+    }
+
     public void setTagFilter(String tag, NeuronTagMode mode) {
         // mode switch is cheap, but don't iterate over the
         //  neurons again if the tag didn't change
@@ -536,15 +568,9 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     private void replaceNeuron(TmNeuron neuron, List<TmNeuron> neuronList) {
-        TmNeuron foundNeuron = null;
-        for (TmNeuron n: neuronList) {
-            if (n.getId().equals(neuron.getId())) {
-                foundNeuron = n;
-                break;
-            }
-        }
-        if (foundNeuron != null) {
-            neuronList.set(neuronList.indexOf(foundNeuron), neuron);
+        int index = getIndexForNeuron(neuron, neuronList);
+        if (index >= 0) {
+            neuronList.set(index, neuron);
         } else {
 
 
@@ -555,19 +581,34 @@ class NeuronTableModel extends AbstractTableModel {
         }
     }
 
-    public int getRowForNeuron(TmNeuron neuron) {
+    public int getIndexForNeuron(TmNeuron neuron, List<TmNeuron> neuronList) {
         TmNeuron foundNeuron = null;
-        for (TmNeuron n: neurons) {
+        for (TmNeuron n: neuronList) {
             if (n.getId().equals(neuron.getId())) {
                 foundNeuron = n;
                 break;
             }
         }
         if (foundNeuron != null) {
-            return neurons.indexOf(foundNeuron);
+            return neuronList.indexOf(foundNeuron);
         } else {
             return -1;
         }
+    }
+
+    public int getRowForNeuron(TmNeuron neuron) {
+        List<TmNeuron> neuronList;
+        if (hasFilter()) {
+            if (tagMode == NeuronTagMode.INCLUDE) {
+                neuronList = matchedNeurons;
+            } else {
+                // EXCLUDE:
+                neuronList = unmatchedNeurons;
+            }
+        } else {
+            neuronList = neurons;
+        }
+        return getIndexForNeuron(neuron, neuronList);
     }
 
     // needed to get color to work right; make sure classes match what getValueAt() returns!
