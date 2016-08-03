@@ -66,12 +66,14 @@ public class LineReleaseDialog extends ModalDialog {
 
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
+    private JCheckBox autoReleaseCheckbox;
     private DateComboBox dateInput = new DateComboBox();
     private JTextField lagTimeInput = new JTextField(10);
     private JCheckBox sageSyncCheckbox;
     private MembershipListPanel<DataSet> dataSetPanel;
     private MembershipListPanel<Subject> annotatorsPanel;
     private MembershipListPanel<Subject> subscribersPanel;
+    private JButton syncButton;
     private JButton okButton;
 
     private LineRelease releaseEntity;
@@ -98,11 +100,20 @@ public class LineReleaseDialog extends ModalDialog {
             }
         });
 
-        this.okButton = new JButton("OK");
+        this.syncButton = new JButton("Synchronize Folder Hierarchy");
+        syncButton.setToolTipText("Synchronize the folder hierarchy of all the lines due to be released");
+        syncButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveSyncAndClose(true);
+            }
+        });
+
+        this.okButton = new JButton("Save");
         okButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                saveAndClose();
+                saveSyncAndClose(false);
             }
         });
 
@@ -111,6 +122,7 @@ public class LineReleaseDialog extends ModalDialog {
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(cancelButton);
+        buttonPane.add(syncButton);
         buttonPane.add(okButton);
 
         add(buttonPane, BorderLayout.SOUTH);
@@ -125,10 +137,13 @@ public class LineReleaseDialog extends ModalDialog {
         this.releaseEntity = releaseEntity;
 
         if (releaseEntity == null) {
+            syncButton.setVisible(false);
             okButton.setText("Create Folder Hierarchy");
             okButton.setToolTipText("Create the release and corresponding folder hierarchy of all the lines due to be released");
-        } else {
-            okButton.setText("OK");
+        } 
+        else {
+        	syncButton.setVisible(true);
+            okButton.setText("Save");
             okButton.setToolTipText("Close and save changes");
         }
 
@@ -148,14 +163,19 @@ public class LineReleaseDialog extends ModalDialog {
         attrPanel.add(nameLabel, "gap para");
 
         nameInput.setEnabled(editable);
-
+        
         if (editable) {
             nameLabel.setLabelFor(nameInput);
             attrPanel.add(nameInput);
-        } else if (releaseEntity != null) {
+        } 
+        else if (releaseEntity != null) {
             attrPanel.add(new JLabel(releaseEntity.getName()));
         }
 
+        autoReleaseCheckbox = new JCheckBox("Automated release");
+        autoReleaseCheckbox.setEnabled(editable);
+        attrPanel.add(autoReleaseCheckbox, "gap para, span 2");
+        
         final JLabel dateLabel = new JLabel("Target Release Date: ");
         dateLabel.setLabelFor(dateInput);
         attrPanel.add(dateLabel, "gap para");
@@ -249,6 +269,8 @@ public class LineReleaseDialog extends ModalDialog {
                 if (releaseEntity != null) {
                     nameInput.setText(releaseEntity.getName());
 
+                    autoReleaseCheckbox.setSelected(releaseEntity.isAutoRelease());
+                    
                     Integer lagTimeMonths = releaseEntity.getLagTimeMonths();
                     if (lagTimeMonths != null) {
                         lagTimeInput.setText(lagTimeMonths.toString());
@@ -293,6 +315,7 @@ public class LineReleaseDialog extends ModalDialog {
                     }
                 } 
                 else {
+                    autoReleaseCheckbox.setSelected(true);
                     nameInput.setText("");
                     dateInput.setDate(new Date());
                     lagTimeInput.setText("");
@@ -318,8 +341,8 @@ public class LineReleaseDialog extends ModalDialog {
         panel.add(label, "split 2, span" + (first ? "" : ", gaptop 10lp"));
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
-
-    private void saveAndClose() {
+    
+    private void saveSyncAndClose(final boolean forceSync) {
 
         Utils.setWaitingCursor(LineReleaseDialog.this);
 
@@ -379,10 +402,11 @@ public class LineReleaseDialog extends ModalDialog {
 
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 
-                boolean syncFolders = false;
+                boolean isNew = false;
                 if (releaseEntity == null) {
                     releaseEntity = model.createLineRelease(nameInput.getText(), dateInput.getDate(), lagTimeFinal, dataSets);
-                    syncFolders = true;
+                    releaseEntity.setAutoRelease(autoReleaseCheckbox.isSelected());
+                    isNew = true;
                 }
 
                 releaseEntity.setAnnotators(annotators);
@@ -390,7 +414,7 @@ public class LineReleaseDialog extends ModalDialog {
                 releaseEntity.setSageSync(sageSyncCheckbox.isSelected());
                 releaseEntity = model.update(releaseEntity);
                 
-                if (syncFolders) {
+                if (forceSync||isNew) {
                     launchSyncTask();
                 }
             }

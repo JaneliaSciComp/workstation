@@ -54,6 +54,8 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Keeps in memory a configurable number of nearby volume tiles.
@@ -68,6 +70,8 @@ import org.openide.util.RequestProcessor;
  */
 public class HortaVolumeCache
 {
+    private static final Logger log = LoggerFactory.getLogger(HortaVolumeCache.class);
+
     private int ramTileCount = 3; // Three is better than two for tile availability
     private int gpuTileCount = 1;
     private final PerspectiveCamera camera;
@@ -205,6 +209,9 @@ public class HortaVolumeCache
         BrickInfoSet allBricks = NeuronTraceLoader.getBricksForCameraResolution(source, camera);
         Collection<BrickInfo> closestBricks = allBricks.getClosestBricks(xyz, ramTileCount);
         Collection<BrickInfo> veryClosestBricks = allBricks.getClosestBricks(xyz, gpuTileCount);
+
+        log.info("New location: {} (allBricks={}, closestBricks={}, veryClosestBricks={})" , xyz, allBricks.size(), closestBricks.size(), veryClosestBricks.size());
+
         synchronized(desiredDisplayTiles) {
             desiredDisplayTiles.clear();
             desiredDisplayTiles.addAll(veryClosestBricks);
@@ -250,10 +257,12 @@ public class HortaVolumeCache
                 continue; // already displayed           
             if (nearVolumeInRam.containsKey(brick)) // Is the texture already loaded in RAM?
                 continue; // already loaded
+            log.info("Queueing brick with norm priority: "+brick.getBoundingBox());
             queueLoad((BrainTileInfo)brick, Thread.NORM_PRIORITY);
         }
         for (final BrickInfo brick : newBricks) 
         {
+            log.info("Queueing brick with min priority: "+brick.getBoundingBox());
             queueLoad((BrainTileInfo)brick, Thread.MIN_PRIORITY); // Don't worry; duplicates will be skipped
         }
 

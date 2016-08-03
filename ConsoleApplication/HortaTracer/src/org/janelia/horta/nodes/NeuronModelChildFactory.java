@@ -36,6 +36,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
@@ -61,6 +63,12 @@ public class NeuronModelChildFactory extends ChildFactory< VertexSubset >
     
     public NeuronModelChildFactory(NeuronModel neuron) {
         this.neuron = neuron;
+        neuron.getVisibilityChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                refresh(false);
+            }
+        });
     }
 
     private void insertDirectionalPair(NeuronVertex vertex1, NeuronVertex vertex2) {
