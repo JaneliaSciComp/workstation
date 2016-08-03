@@ -354,11 +354,18 @@ implements NeuronSet// , LookupListener
                 return; // Don't instantiate the neuron now, if it is not previously instantiated.
 
             // Update Horta color when LVV color changes
-            Color newColor = style.getColor();
             NeuronModel neuronModel = nl.neuronModelForTmNeuron(neuron);
+
+            Color newColor = style.getColor();
             if (! newColor.equals(neuronModel.getColor())) {
                 neuronModel.setColor(newColor);
                 neuronModel.getColorChangeObservable().notifyObservers();
+            }
+            
+            boolean vis = style.isVisible();
+            if (vis != neuronModel.isVisible()) {
+                neuronModel.setVisible(vis);
+                neuronModel.getVisibilityChangeObservable().notifyObservers();
             }
         }
         

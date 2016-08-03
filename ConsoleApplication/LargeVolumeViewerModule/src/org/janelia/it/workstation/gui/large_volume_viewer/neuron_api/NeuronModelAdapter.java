@@ -364,6 +364,18 @@ public class NeuronModelAdapter implements NeuronModel
         if (bIsVisible == visible)
             return; // no change
         bIsVisible = visible;
+        
+        // Synchronize with TmNeuron Style
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        Color color = cachedColor;
+        if (style != null)
+            color = style.getColor();
+        try {
+            annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+        } catch (IOException ex) {
+            // Exceptions.printStackTrace(ex);
+        }
+        
         getVisibilityChangeObservable().setChanged();
     }
 
