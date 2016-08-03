@@ -97,7 +97,7 @@ public class NeuronModelAdapter implements NeuronModel
         this.workspace = workspace;
     }
 
-    public boolean hasCachedVertex(Long vertexId) {
+    protected boolean hasCachedVertex(Long vertexId) {
         return vertexes.hasCachedVertex(vertexId);
     }
         
@@ -291,6 +291,7 @@ public class NeuronModelAdapter implements NeuronModel
             return;
         // TODO: set color in actual wrapped Style
         cachedColor = color;
+        getColorChangeObservable().setChanged();
     }
 
     @Override
