@@ -1756,6 +1756,12 @@ called from a  SimpleWorker thread.
         }
     }
 
+    private void fireNeuronTagsChanged(List<TmNeuron> neuronList) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronTagsChanged(neuronList);
+        }
+    }
+
     private void fireNotesUpdated(TmWorkspace workspace) {
         if (notesUpdateListener != null) {
             notesUpdateListener.notesUpdated(workspace);
@@ -1766,7 +1772,7 @@ called from a  SimpleWorker thread.
         try {
             modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(currentWorkspace.getId())));
         } catch (Exception ex) {
-            log.warn("Failed to post workspace chang.");
+            log.warn("Failed to post workspace change.");
         }
     }
 

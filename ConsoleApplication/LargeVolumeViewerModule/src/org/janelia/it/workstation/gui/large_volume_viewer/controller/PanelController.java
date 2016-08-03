@@ -100,8 +100,9 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
 
         @Override
-        public void neuronTagsChanged(List<TmNeuron> neuronList) {}
-
+        public void neuronTagsChanged(List<TmNeuron> neuronList) {
+            wsNeuronList.neuronTagsChanged(neuronList);
+        }
 
     }
     
