@@ -30,6 +30,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -343,7 +344,30 @@ implements NeuronSet// , LookupListener
 
         @Override
         public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style)
-        {}
+        {
+            if (neuron == null)
+                return;
+            if (style == null)
+                return;
+            NeuronList nl = (NeuronList) neurons;
+            if (! nl.hasCachedNeuronId(neuron.getId()))
+                return; // Don't instantiate the neuron now, if it is not previously instantiated.
+
+            // Update Horta color when LVV color changes
+            NeuronModel neuronModel = nl.neuronModelForTmNeuron(neuron);
+
+            Color newColor = style.getColor();
+            if (! newColor.equals(neuronModel.getColor())) {
+                neuronModel.setColor(newColor);
+                neuronModel.getColorChangeObservable().notifyObservers();
+            }
+            
+            boolean vis = style.isVisible();
+            if (vis != neuronModel.isVisible()) {
+                neuronModel.setVisible(vis);
+                neuronModel.getVisibilityChangeObservable().notifyObservers();
+            }
+        }
         
     }
     
@@ -353,7 +377,19 @@ implements NeuronSet// , LookupListener
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
         
-        public boolean hasCachedNeuronId(Long neuronId) {
+        private NeuronModel neuronModelForTmNeuron(TmNeuron tmNeuron) 
+        {
+            if (tmNeuron == null)
+                return null;
+            Long guid = tmNeuron.getId();
+            if (! cachedNeurons.containsKey(guid)) {
+                // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
+                cachedNeurons.put(guid, new NeuronModelAdapter(tmNeuron, annotationModel, workspace));
+            }
+            return cachedNeurons.get(guid);
+        }
+        
+        private boolean hasCachedNeuronId(Long neuronId) {
             return cachedNeurons.containsKey(neuronId);
         }
         
@@ -411,12 +447,7 @@ implements NeuronSet// , LookupListener
                 public NeuronModel next()
                 {
                     TmNeuron neuron = it.next();
-                    Long guid = neuron.getId();
-                    if (! cachedNeurons.containsKey(guid)) {
-                        // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, annotationModel, workspace));
-                    }
-                    return cachedNeurons.get(guid);
+                    return neuronModelForTmNeuron(neuron);
                 }
 
                 @Override
