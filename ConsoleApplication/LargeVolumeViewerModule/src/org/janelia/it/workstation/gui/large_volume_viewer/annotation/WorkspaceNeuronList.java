@@ -254,7 +254,7 @@ public class WorkspaceNeuronList extends JPanel {
         String currentMode = (String) tagModeMenu.getSelectedItem();
         tagMenu.removeAllItems();
 
-        Set<String> tagSet = annotationModel.getAllTags();
+        Set<String> tagSet = annotationModel.getAllNeuronTags();
         String[] tagList = tagSet.toArray(new String[tagSet.size()]);
         Arrays.sort(tagList);
 
@@ -466,7 +466,7 @@ class NeuronTableModel extends AbstractTableModel {
     public void addNeuron(TmNeuron neuron) {
         neurons.add(neuron);
         if (hasFilter()) {
-            if (annotationModel.hasTag(neuron, tagFilter)) {
+            if (annotationModel.hasNeuronTag(neuron, tagFilter)) {
                 matchedNeurons.add(neuron);
             }
         }
@@ -477,7 +477,7 @@ class NeuronTableModel extends AbstractTableModel {
         neurons.addAll(neuronList);
         if (hasFilter()) {
             for (TmNeuron neuron: neuronList) {
-                if (annotationModel.hasTag(neuron, tagFilter)) {
+                if (annotationModel.hasNeuronTag(neuron, tagFilter)) {
                     matchedNeurons.add(neuron);
                 } else {
                     unmatchedNeurons.add(neuron);
@@ -533,7 +533,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     private boolean matchesTagFilter(TmNeuron neuron) {
-        return annotationModel.hasTag(neuron, tagFilter);
+        return annotationModel.hasNeuronTag(neuron, tagFilter);
     }
 
     // boilerplate stuff

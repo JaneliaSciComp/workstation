@@ -420,7 +420,7 @@ called from a  SimpleWorker thread.
         if (getCurrentNeuron() == null) {
             return;
         } else {
-            clearTags(getCurrentNeuron());
+            clearNeuronTags(getCurrentNeuron());
             deleteNeuron(getCurrentNeuron());
             setCurrentNeuron(null);
         }
@@ -1655,35 +1655,31 @@ called from a  SimpleWorker thread.
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
     //  wrapper where for mutating calls, we save the map and fire appropriate updates
 
-    public Set<String> getTags(TmNeuron neuron) {
-        return getTags(neuron.getId());
+    public Set<String> getNeuronTags(TmNeuron neuron) {
+        return getNeuronTags(neuron.getId());
     }
 
-    public Set<String> getTags(Long neuronID) {
+    public Set<String> getNeuronTags(Long neuronID) {
         return currentTagMap.getTags(neuronID);
     }
 
-    public Set<String> getAllTags() {
+    public Set<String> getAllNeuronTags() {
         return currentTagMap.getAllTags();
     }
 
-    public Set<Long> getNeuronIDs(String tag) {
-        return currentTagMap.getNeuronIDs(tag);
+    public boolean hasNeuronTag(TmNeuron neuron, String tag) {
+        return hasNeuronTag(neuron.getId(), tag);
     }
 
-    public boolean hasTag(TmNeuron neuron, String tag) {
-        return hasTag(neuron.getId(), tag);
-    }
-
-    public boolean hasTag(Long neuronID, String tag) {
+    public boolean hasNeuronTag(Long neuronID, String tag) {
         return currentTagMap.hasTag(neuronID, tag);
     }
 
-    public void addTag(String tag, TmNeuron neuron) {
-        addTag(tag, neuron.getId());
+    public void addNeuronTag(String tag, TmNeuron neuron) {
+        addNeuronTag(tag, neuron.getId());
     }
 
-    public void addTag(String tag, Long neuronID) {
+    public void addNeuronTag(String tag, Long neuronID) {
         currentTagMap.addTag(tag, neuronID);
         saveNeuronTagMap();
         List<TmNeuron> changed = new ArrayList<>();
@@ -1691,11 +1687,11 @@ called from a  SimpleWorker thread.
         fireNeuronTagsChanged(changed);
     }
 
-    public void removeTag(String tag, TmNeuron neuron) {
-        removeTag(tag, neuron.getId());
+    public void removeNeuronTag(String tag, TmNeuron neuron) {
+        removeNeuronTag(tag, neuron.getId());
     }
 
-    public void removeTag(String tag, Long neuronID) {
+    public void removeNeuronTag(String tag, Long neuronID) {
         currentTagMap.removeTag(tag, neuronID);
         saveNeuronTagMap();
         List<TmNeuron> changed = new ArrayList<>();
@@ -1703,11 +1699,11 @@ called from a  SimpleWorker thread.
         fireNeuronTagsChanged(changed);
     }
 
-    public void clearTags(TmNeuron neuron) {
-        clearTags(neuron.getId());
+    public void clearNeuronTags(TmNeuron neuron) {
+        clearNeuronTags(neuron.getId());
     }
 
-    public void clearTags(Long neuronID) {
+    public void clearNeuronTags(Long neuronID) {
         currentTagMap.clearTags(neuronID);
         saveNeuronTagMap();
         List<TmNeuron> changed = new ArrayList<>();
