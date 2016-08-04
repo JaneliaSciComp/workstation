@@ -420,7 +420,7 @@ called from a  SimpleWorker thread.
         if (getCurrentNeuron() == null) {
             return;
         } else {
-            currentTagMap.clearTags(getCurrentNeuron());
+            clearTags(getCurrentNeuron());
             deleteNeuron(getCurrentNeuron());
             setCurrentNeuron(null);
         }
@@ -1652,8 +1652,77 @@ called from a  SimpleWorker thread.
         setPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP, rootNode.toString());
     }
 
-    public TmNeuronTagMap getCurrentTagMap() {
-        return currentTagMap;
+    // and now we have all the NeuronTagMap methods...in each case, it's a simple
+    //  wrapper where for mutating calls, we save the map and fire appropriate updates
+
+    public Set<String> getTags(TmNeuron neuron) {
+        return getTags(neuron.getId());
+    }
+
+    public Set<String> getTags(Long neuronID) {
+        return currentTagMap.getTags(neuronID);
+    }
+
+    public Set<String> getAllTags() {
+        return currentTagMap.getAllTags();
+    }
+
+    public Set<Long> getNeuronIDs(String tag) {
+        return currentTagMap.getNeuronIDs(tag);
+    }
+
+    public boolean hasTag(TmNeuron neuron, String tag) {
+        return hasTag(neuron.getId(), tag);
+    }
+
+    public boolean hasTag(Long neuronID, String tag) {
+        return currentTagMap.hasTag(neuronID, tag);
+    }
+
+    public void addTag(String tag, TmNeuron neuron) {
+        addTag(tag, neuron.getId());
+    }
+
+    public void addTag(String tag, Long neuronID) {
+        currentTagMap.addTag(tag, neuronID);
+        saveNeuronTagMap();
+        List<TmNeuron> changed = new ArrayList<>();
+        changed.add(getNeuronFromNeuronID(neuronID));
+        fireNeuronTagsChanged(changed);
+    }
+
+    public void removeTag(String tag, TmNeuron neuron) {
+        removeTag(tag, neuron.getId());
+    }
+
+    public void removeTag(String tag, Long neuronID) {
+        currentTagMap.removeTag(tag, neuronID);
+        saveNeuronTagMap();
+        List<TmNeuron> changed = new ArrayList<>();
+        changed.add(getNeuronFromNeuronID(neuronID));
+        fireNeuronTagsChanged(changed);
+    }
+
+    public void clearTags(TmNeuron neuron) {
+        clearTags(neuron.getId());
+    }
+
+    public void clearTags(Long neuronID) {
+        currentTagMap.clearTags(neuronID);
+        saveNeuronTagMap();
+        List<TmNeuron> changed = new ArrayList<>();
+        changed.add(getNeuronFromNeuronID(neuronID));
+        fireNeuronTagsChanged(changed);
+    }
+
+    public void clearAll() {
+        List<TmNeuron> changed = new ArrayList<>();
+        for (Long neuronID: currentTagMap.getAllNeuronIDs()) {
+            changed.add(getNeuronFromNeuronID(neuronID));
+        }
+        currentTagMap.clearAll();
+        saveNeuronTagMap();
+        fireNeuronTagsChanged(changed);
     }
 
     /**
