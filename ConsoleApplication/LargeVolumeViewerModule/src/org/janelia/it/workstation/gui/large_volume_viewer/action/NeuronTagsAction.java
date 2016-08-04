@@ -74,7 +74,7 @@ public class NeuronTagsAction extends AbstractAction {
         // not entirely happy about how it's structured like that...but I
         //  decided I didn't want to delegate all its methods to AnnModel
         //  and handle the saves there, so for now, stuck with it
-        annModel.getCurrentTagMap().addTag(tag, annModel.getCurrentNeuron());
+        annModel.addTag(tag, annModel.getCurrentNeuron());
         annModel.saveNeuronTagMap();
         fillTagLists();
     }
@@ -83,7 +83,7 @@ public class NeuronTagsAction extends AbstractAction {
      * remove given tag from current neuron
      */
     private void removeTag(String tag) {
-        annModel.getCurrentTagMap().removeTag(tag, annModel.getCurrentNeuron());
+        annModel.removeTag(tag, annModel.getCurrentNeuron());
         annModel.saveNeuronTagMap();
         fillTagLists();
     }
@@ -99,7 +99,7 @@ public class NeuronTagsAction extends AbstractAction {
      * remove all the tags from the currently selected neuron
      */
     private void onRemoveAllButton() {
-        annModel.getCurrentTagMap().clearTags(annModel.getCurrentNeuron());
+        annModel.clearTags(annModel.getCurrentNeuron());
         annModel.saveNeuronTagMap();
         fillTagLists();
     }
@@ -116,13 +116,13 @@ public class NeuronTagsAction extends AbstractAction {
 
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
-        Set<String> appliedTagSet = annModel.getCurrentTagMap().getTags(currentNeuron);
+        Set<String> appliedTagSet = annModel.getTags(currentNeuron);
         String[] appliedTags = appliedTagSet.toArray(new String[appliedTagSet.size()]);
         Arrays.sort(appliedTags);
         appliedTagsList.setListData(appliedTags);
 
         // available tag list; be careful, we're mutating:
-        Set<String> availableTagSet = new HashSet<>(annModel.getCurrentTagMap().getAllTags());
+        Set<String> availableTagSet = new HashSet<>(annModel.getAllTags());
         availableTagSet.removeAll(appliedTagSet);
         String [] availableTags = availableTagSet.toArray(new String[availableTagSet.size()]);
         Arrays.sort(availableTags);

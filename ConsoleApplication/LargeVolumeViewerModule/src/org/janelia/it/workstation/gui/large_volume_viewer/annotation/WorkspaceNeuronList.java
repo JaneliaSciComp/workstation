@@ -248,10 +248,13 @@ public class WorkspaceNeuronList extends JPanel {
      * retrieve the current tags and update the drop-down menu
      */
     private void updateTagMenu() {
+        // maintain the current menu state; the mode gets reset
+        //  when you insert the "" item in the tag menu
         String currentSelection = (String) tagMenu.getSelectedItem();
+        String currentMode = (String) tagModeMenu.getSelectedItem();
         tagMenu.removeAllItems();
 
-        Set<String> tagSet = annotationModel.getCurrentTagMap().getAllTags();
+        Set<String> tagSet = annotationModel.getAllTags();
         String[] tagList = tagSet.toArray(new String[tagSet.size()]);
         Arrays.sort(tagList);
 
@@ -260,10 +263,11 @@ public class WorkspaceNeuronList extends JPanel {
             tagMenu.addItem(tag);
         }
 
-        // be sure the current tag is still displayed, if it's present
+        // reset menus
         if (tagSet.contains(currentSelection)) {
             tagMenu.setSelectedItem(currentSelection);
         }
+        tagModeMenu.setSelectedItem(currentMode);
     }
 
     /**
@@ -423,10 +427,8 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     public void neuronTagsChanged(List<TmNeuron> neuronList) {
-        System.out.println("neuronTagsChanged: ");
         updateTagMenu();
         for (TmNeuron neuron: neuronList) {
-            System.out.println(neuron);
             neuronTableModel.updateNeuron(neuron);
         }
     }
@@ -464,7 +466,7 @@ class NeuronTableModel extends AbstractTableModel {
     public void addNeuron(TmNeuron neuron) {
         neurons.add(neuron);
         if (hasFilter()) {
-            if (annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter)) {
+            if (annotationModel.hasTag(neuron, tagFilter)) {
                 matchedNeurons.add(neuron);
             }
         }
@@ -475,7 +477,7 @@ class NeuronTableModel extends AbstractTableModel {
         neurons.addAll(neuronList);
         if (hasFilter()) {
             for (TmNeuron neuron: neuronList) {
-                if (annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter)) {
+                if (annotationModel.hasTag(neuron, tagFilter)) {
                     matchedNeurons.add(neuron);
                 } else {
                     unmatchedNeurons.add(neuron);
@@ -531,7 +533,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     private boolean matchesTagFilter(TmNeuron neuron) {
-        return annotationModel.getCurrentTagMap().hasTag(neuron, tagFilter);
+        return annotationModel.hasTag(neuron, tagFilter);
     }
 
     // boilerplate stuff
