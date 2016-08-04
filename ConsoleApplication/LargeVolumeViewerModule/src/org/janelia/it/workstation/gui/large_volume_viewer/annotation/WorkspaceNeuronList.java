@@ -572,14 +572,9 @@ class NeuronTableModel extends AbstractTableModel {
     private void replaceNeuron(TmNeuron neuron, List<TmNeuron> neuronList) {
         int index = getIndexForNeuron(neuron, neuronList);
         if (index >= 0) {
+            // should always be present, but if it isn't,
+            //  nothing we can do
             neuronList.set(index, neuron);
-        } else {
-
-
-            // error, should never happen; what to do?
-
-
-
         }
     }
 
