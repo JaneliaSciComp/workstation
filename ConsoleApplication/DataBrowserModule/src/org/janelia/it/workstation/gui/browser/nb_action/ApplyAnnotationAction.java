@@ -14,7 +14,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
@@ -87,6 +87,7 @@ public class ApplyAnnotationAction extends NodeAction {
     @Override
     protected void performAction(Node[] activatedNodes) {
         if (!enable(activatedNodes)) return;
+        ActivityLogHelper.logUserAction("ApplyAnnotationAction.performAction");
         for(OntologyTermNode node : selected) {
             performAction(node.getOntologyTerm());
         }

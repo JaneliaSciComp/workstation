@@ -1,8 +1,5 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
@@ -16,12 +13,13 @@ import org.janelia.it.jacs.model.domain.ontology.EnumText;
 import org.janelia.it.jacs.model.domain.ontology.Interval;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Text;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
@@ -76,30 +74,12 @@ public class AnnotationContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyNameToClipboardItem() {
         if (multiple) return null;
-        
-        JMenuItem copyMenuItem = new JMenuItem("  Copy Name To Clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(annotation.getName());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-            }
-        });
-        return copyMenuItem;
+        return getNamedActionItem(new CopyToClipboardAction("Name",annotation.getName()));
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
         if (multiple) return null;
-        
-        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID To Clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                Transferable t = new StringSelection(annotation.getId().toString());
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-            }
-        });
-        return copyMenuItem;
+        return getNamedActionItem(new CopyToClipboardAction("GUID",annotation.getId().toString()));
     }
 
     protected JMenuItem getCopyAnnotationItem() {
@@ -109,6 +89,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
         JMenuItem deleteByTermItem = new JMenuItem("  Copy Annotation");
         deleteByTermItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                ActivityLogHelper.logUserAction("AnnotationContextMenu.copyAnnotation", annotation);
                 StateMgr.getStateMgr().setCurrentSelectedOntologyAnnotation(annotation);
             }
         });
@@ -135,6 +116,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
         JMenuItem detailsItem = new JMenuItem("  View Details");
         detailsItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+                ActivityLogHelper.logUserAction("AnnotationContextMenu.viewDetails", annotation);
                 new DomainDetailsDialog().showForDomainObject(annotation);
             }
         });

@@ -11,6 +11,7 @@ import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -41,6 +42,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTitlesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTitlesButtonPressed");
                 showTitlesButtonPressed();
             }
         });
@@ -55,6 +57,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         showTagsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("IconGridViewerToolbar.showTagsButtonPressed");
                 showTagsButtonPressed();
             }
         });
@@ -68,6 +71,7 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
         configButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("IconGridViewerToolbar.configButtonPressed");
                 configButtonPressed();
             }
         });

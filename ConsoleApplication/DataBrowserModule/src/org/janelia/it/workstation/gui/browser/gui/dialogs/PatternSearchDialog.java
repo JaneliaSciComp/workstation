@@ -43,6 +43,7 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 import org.janelia.it.jacs.shared.annotation.RelativePatternAnnotationDataManager;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -416,6 +417,7 @@ public class PatternSearchDialog extends ModalDialog {
             this.saveFolder = null;
             this.returnInsteadOfSaving = false;
             quantifierLoaderWorker.execute();
+            ActivityLogHelper.logUserAction("PatternSearchDialog.showDialog");
             packAndShow();
         } catch (Exception e) {
             log.error("Problem getting workspace for adding Pattern Search Save Folder", e);
@@ -428,14 +430,15 @@ public class PatternSearchDialog extends ModalDialog {
 		this.saveFolder = null;
 		this.returnInsteadOfSaving = true;
         quantifierLoaderWorker.execute();
+        ActivityLogHelper.logUserAction("PatternSearchDialog.showDialog");
 		packAndShow();
 		try {
-			List<Long> results = new ArrayList<Long>();
+			List<Long> results = new ArrayList<>();
 			if (saveClicked) {
     			if (filterResult!=null) {
     				List<Long> allResults = filterResult.getSampleList();
     				if (allResults!=null) {
-    					results.addAll(new LinkedHashSet<Long>(allResults));
+    					results.addAll(new LinkedHashSet<>(allResults));
     				}
     			}
 			}
@@ -443,7 +446,7 @@ public class PatternSearchDialog extends ModalDialog {
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);
-			return new ArrayList<Long>();
+			return new ArrayList<>();
 		}
 	}
 

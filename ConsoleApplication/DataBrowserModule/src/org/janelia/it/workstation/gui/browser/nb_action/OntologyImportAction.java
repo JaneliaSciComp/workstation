@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.domain.ontology.Interval;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyElementType;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -67,7 +68,10 @@ public class OntologyImportAction extends NodePresenterAction   {
 
     }
 
-    private void importOntology (OntologyTermNode termNode) {
+    private void importOntology(OntologyTermNode termNode) {
+
+        ActivityLogHelper.logUserAction("OntologyImportAction.importOntology");
+
         final OntologyTerm ontologyTerm = termNode.getOntologyTerm();
         final Ontology ontology = termNode.getOntology();
         final JFileChooser fc = new JFileChooser();

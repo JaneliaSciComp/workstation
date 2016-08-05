@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,6 +18,7 @@ import javax.swing.text.Position;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -141,6 +141,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             @Override
             public void actionPerformed(ActionEvent e) {
                 loadAndSelectAll();
+                ActivityLogHelper.logUserAction("PaginatedResultsPanel.loadAndSelectAll");
             }
         });
 
@@ -190,6 +191,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    ActivityLogHelper.logUserAction("PaginatedResultsPanel.setViewerType", type.getName());
                     setViewerType(type);
 
                     final List<DomainObject> selectedDomainObjects = new ArrayList<>();

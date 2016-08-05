@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -7,18 +9,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JMenuItem;
+
 import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
 import javax.swing.filechooser.FileFilter;
 
-import org.openide.nodes.Node;
-
-import org.janelia.it.jacs.model.domain.ontology.*;
+import org.janelia.it.jacs.model.domain.ontology.EnumText;
+import org.janelia.it.jacs.model.domain.ontology.Interval;
+import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.YamlFileFilter;
+import org.openide.nodes.Node;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -61,6 +64,9 @@ public class OntologyExportAction extends NodePresenterAction   {
     }
 
     private void exportOntology(OntologyTerm ontologyTerm) {
+
+        ActivityLogHelper.logUserAction("OntologyExportAction.exportOntology");
+
         String defaultSaveFilename = ontologyTerm.getName().replaceAll("\\s+", "_") + "." + SAVE_FILE_EXTENSION;
 
         final JFileChooser fc = new JFileChooser();
