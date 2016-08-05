@@ -29,7 +29,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  *
  * djo, 12/13
  */
-public class WorkspaceNeuronList extends JPanel {
+public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
@@ -433,6 +433,17 @@ public class WorkspaceNeuronList extends JPanel {
         }
     }
 
+    /**
+     * return the list of currently visible neurons in the UI
+     */
+    public List<TmNeuron> getNeuronList() {
+        List<TmNeuron> neuronList = new ArrayList<>();
+        for (int i=0; i<neuronTable.getRowCount(); i++) {
+            int index = neuronTable.convertRowIndexToModel(i);
+            neuronList.add((TmNeuron) neuronTableModel.getValueAt(index, 0));
+        }
+        return neuronList;
+    }
 }
 
 class NeuronTableModel extends AbstractTableModel {
