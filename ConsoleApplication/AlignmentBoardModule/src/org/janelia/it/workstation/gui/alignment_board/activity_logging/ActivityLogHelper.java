@@ -108,7 +108,7 @@ public class ActivityLogHelper {
             bldr.append(LOG_PART_SEP);
             bldr.append(savebackEvent.getMethod());
             bldr.append(LOG_PART_SEP);
-            bldr.append(savebackEvent.getGammaFactor());
+            bldr.append(String.format("4.3f", savebackEvent.getGammaFactor()));
             bldr.append(LOG_PART_SEP);
             // Coords are optional.  Their absense will be marked by the dangling part-separator above.
             for (float[] coord: savebackEvent.getAbsoluteCoords()) {
