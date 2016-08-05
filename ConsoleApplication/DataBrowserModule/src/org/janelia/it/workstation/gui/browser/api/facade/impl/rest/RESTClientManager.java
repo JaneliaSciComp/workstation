@@ -17,9 +17,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class RESTClientManager {
 
@@ -53,7 +55,9 @@ public class RESTClientManager {
                 return true;
             }
         });
+
         client.register(provider);
+        client.register(MultiPartFeature.class);
         registerRestUris();
     }
 
@@ -72,6 +76,9 @@ public class RESTClientManager {
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
+        serviceEndpoints.put("tmSample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/sample"));
+        serviceEndpoints.put("tmWorkspace", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/workspace"));
+        serviceEndpoints.put("tmNeuron", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/workspace/neuron"));
     }
 
     public static RESTClientManager getInstance() {
@@ -133,4 +140,15 @@ public class RESTClientManager {
         return serviceEndpoints.get("release");
     }
 
+    public WebTarget getTmSampleEndpoint() {
+        return serviceEndpoints.get("tmSample");
+    }
+
+    public WebTarget getTmWorkspaceEndpoint() {
+        return serviceEndpoints.get("tmWorkspace");
+    }
+
+    public WebTarget getTmNeuronEndpoint() {
+        return serviceEndpoints.get("tmNeuron");
+    }
 }
