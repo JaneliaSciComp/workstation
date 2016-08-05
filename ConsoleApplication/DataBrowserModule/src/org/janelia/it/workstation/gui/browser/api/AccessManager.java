@@ -34,9 +34,10 @@ public final class AccessManager {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
 
-    private static final AccessManager accessManager = new AccessManager();
+    private static AccessManager accessManager;
+    private static String bypassSubjectKey;
+
     private ActivityLogHelper activityLogHelper = new ActivityLogHelper();
-    
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
@@ -52,6 +53,9 @@ public final class AccessManager {
     }
 
     static public AccessManager getAccessManager() {
+        if (accessManager == null) {
+            accessManager = new AccessManager();
+        }
         return accessManager;
     }
 
@@ -226,7 +230,19 @@ public final class AccessManager {
         return subjectKeys;
     }
 
+    /**
+     * Bypass for testing without logging in an actual user.
+     * @param subjectKey
+     * @return
+     */
+    public static void setSubjectKey(String subjectKey) {
+        bypassSubjectKey = subjectKey;
+    }
+
     public static String getSubjectKey() {
+        if (bypassSubjectKey!=null) {
+            return bypassSubjectKey;
+        }
         Subject subject = getAccessManager().getSubject();
         if (subject == null) {
             throw new SystemError("Not logged in");
