@@ -168,7 +168,7 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void loadWorkspace(TmWorkspace workspace) {
+    public synchronized void loadWorkspace(final TmWorkspace workspace) {
         if (workspace != null) {
             currentWorkspace = workspace;
             // Neurons need to be loaded en masse from raw data from server.
@@ -190,6 +190,7 @@ called from a  SimpleWorker thread.
             public void run() {
                 fireWorkspaceLoaded(updateWorkspace);
                 fireNeuronSelected(null);
+                activityLog.logLoadWorkspace(workspace.getId());
             }
         });
 
@@ -208,6 +209,7 @@ called from a  SimpleWorker thread.
                         key, value);
                 // Push to memory as well.
                 currentWorkspace.getPreferences().setProperty(key, value);
+                activityLog.logSetPreference(currentWorkspace.getId(), key);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -250,6 +252,7 @@ called from a  SimpleWorker thread.
         }
         setCurrentNeuron(neuron); // synchronized on this AnnotationModel here
         fireNeuronSelected(neuron);
+        activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
     }
 
     // convenience methods
@@ -381,6 +384,7 @@ called from a  SimpleWorker thread.
                 fireWorkspaceLoaded(workspace);
                 fireNeuronSelected(neuron);
                 fireWsEntityChanged();
+                activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
             }
         });
 
@@ -408,6 +412,7 @@ called from a  SimpleWorker thread.
             public void run() {
                 fireWorkspaceLoaded(workspace);
                 fireNeuronSelected(neuron);
+                activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
             }
         });
     }
@@ -421,7 +426,7 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void deleteNeuron(TmNeuron deletedNeuron) throws Exception {
+    public synchronized void deleteNeuron(final TmNeuron deletedNeuron) throws Exception {
 
         final boolean hadAnnotations = deletedNeuron.getGeoAnnotationMap().size() > 0;
 
@@ -459,7 +464,7 @@ called from a  SimpleWorker thread.
                 if (hadAnnotations) {
                     filteredAnnotationList.updateData();
                 }
-
+                activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
             }
         });
     }
@@ -473,6 +478,7 @@ called from a  SimpleWorker thread.
     public synchronized void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
         TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
                 brainSampleID, name, sessionMgr.getSubject().getKey());
+        activityLog.logCreateWorkspace(workspace.getId());
         loadWorkspace(workspace);
     }
 
@@ -1099,7 +1105,7 @@ called from a  SimpleWorker thread.
         });
     }
 
-    public synchronized void addAnchoredPath(TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
+    public synchronized void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
 
         // check we can find both endpoints in same neuron
         //  don't need to check that they are neighboring; UI gesture already enforces it
@@ -1144,6 +1150,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireAnchoredPathAdded(path);
+                activityLog.logAddAnchoredPath(getCurrentWorkspace().getId(), path.getId());
             }
         });
 
@@ -1164,7 +1171,7 @@ called from a  SimpleWorker thread.
      * should only be called within AnnotationModel, and it does not
      * persist neuron or do any other cleanup
      */
-    private void removeAnchoredPath(TmNeuron neuron, TmAnchoredPath path) throws  Exception {
+    private void removeAnchoredPath(TmNeuron neuron, final TmAnchoredPath path) throws  Exception {
         // Remove the anchor path from its containing neuron
         neuron.getAnchoredPathMap().remove(path.getEndpoints());
 
@@ -1175,6 +1182,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireAnchoredPathsRemoved(pathList);
+                activityLog.logRemoveAnchoredPath(getCurrentWorkspace().getId(), path.getId());
             }
         });
     }
@@ -1214,7 +1222,7 @@ called from a  SimpleWorker thread.
     /**
      * add or update a note on a geometric annotation
      */
-    public synchronized void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
+    public synchronized void setNote(final TmGeoAnnotation geoAnnotation, final String noteString) throws Exception {
         TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
         if (neuron == null) {
             throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
@@ -1271,12 +1279,13 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
+                activityLog.logSetNote(workspace.getId(), geoAnnotation.getId(), noteString);
             }
         });
 
     }
 
-    public synchronized void removeNote(TmStructuredTextAnnotation textAnnotation) throws Exception {
+    public synchronized void removeNote(final TmStructuredTextAnnotation textAnnotation) throws Exception {
 
         final TmWorkspace workspace = getCurrentWorkspace();
         TmNeuron neuron = getNeuronFromAnnotationID(textAnnotation.getParentId());
@@ -1292,6 +1301,7 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireNotesUpdated(workspace);
+                activityLog.logRemoveNote(workspace.getId(), textAnnotation.getParentId());
             }
         });
     }
@@ -1307,6 +1317,7 @@ called from a  SimpleWorker thread.
 
         // fire change to listeners
         fireNeuronStyleChanged(neuron, style);
+        activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
     /**
@@ -1484,11 +1495,12 @@ called from a  SimpleWorker thread.
             SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);
+                activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
             }
         }
     }
 
-    public synchronized void importBulkSWCData(File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
+    public synchronized void importBulkSWCData(final File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1577,6 +1589,7 @@ called from a  SimpleWorker thread.
                     fireWorkspaceLoaded(workspace);
                     fireWsEntityChanged();
                     fireNeuronSelected(updateNeuron);
+                    activityLog.logImportSWCFile(workspace.getId(), swcFile.getName());
                 }
             });
         }

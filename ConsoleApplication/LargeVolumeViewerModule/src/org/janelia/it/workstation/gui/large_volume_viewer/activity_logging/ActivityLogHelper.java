@@ -23,7 +23,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 public class ActivityLogHelper {
     // sample:workspace:micronX,micronY,micronZ:voxX,voxY,voxZ:time
     public static final String BOTH_COORDS_FMT = "%d:%d:%5.3f,%5.3f,%5.3f:%5.3f,%5.3f,%5.3f";
-    // sample:workspace:X,Y,Z:time
+    // workspace:X,Y,Z:time
     public static final String SIMPLE_COORDS_FMT = "%d:%5.3f,%5.3f,%5.3f";
 
     private static final ActivityLogHelper instance = new ActivityLogHelper();
@@ -51,6 +51,21 @@ public class ActivityLogHelper {
     private static final CategoryString END_OP_VOXEL_CATEGORY_STRING            = new CategoryString("endAOvx:xyzw");
     // Time-of-writing: nothing is producing micron coords alone.
     private static final CategoryString END_OP_MICRON_CATEGORY_STRING           = new CategoryString("endAOmu:xyzw");
+    private static final CategoryString LVV_LOAD_WORKSPACE_CATEGORY_STRING      = new CategoryString("loadWorkspace");
+    private static final CategoryString LVV_SET_PREFERENCE_CATEGORY_STRING      = new CategoryString("setPreference");
+    private static final CategoryString LVV_SELECT_NEURON_CATEGORY_STRING       = new CategoryString("selectNeuron");
+    private static final CategoryString LVV_CREATE_NEURON_CATEGORY_STRING       = new CategoryString("createNeuron");
+    private static final CategoryString LVV_RENAME_NEURON_CATEGORY_STRING       = new CategoryString("renameNeuron");
+    private static final CategoryString LVV_DELETE_NEURON_CATEGORY_STRING       = new CategoryString("deleteNeuron");
+    private static final CategoryString LVV_CREATE_WORKSPACE_CATEGORY_STRING    = new CategoryString("createWorkspace");
+    private static final CategoryString LVV_ADD_ANCHORED_PATH_CATEGORY_STRING   = new CategoryString("addAnchoredPath");
+    private static final CategoryString LVV_REMOVE_ANCHORED_PATH_CATEGORY_STRING = new CategoryString("removeAnchoredPath");
+    private static final CategoryString LVV_SET_NOTE_CATEGORY_STRING            = new CategoryString("setNote");
+    private static final CategoryString LVV_REMOVE_NOTE_CATEGORY_STRING         = new CategoryString("removeNote");
+    private static final CategoryString LVV_SET_STYLE_CATEGORY_STRING           = new CategoryString("setStyle");
+    private static final CategoryString LVV_SHOW_WORKSPACE_INFO_CATEGORY_STRING = new CategoryString("showWorkspaceInfo");
+    private static final CategoryString LVV_EXPORT_SWC_CATEGORY_STRING          = new CategoryString("exportSWCFile");
+    private static final CategoryString LVV_IMPORT_SWC_CATEGORY_STRING          = new CategoryString("importSWCFile");
 
     private static final int LONG_TIME_LOAD_LOG_THRESHOLD = 5 * 1000;
 
@@ -271,6 +286,126 @@ public class ActivityLogHelper {
                 LVV_LOGSTAMP_ID,
                 LVV_NAVIGATE_LANDMARK_CATEGORY_STRING,
                 new ActionString(action)
+        );
+    }
+
+    public void logLoadWorkspace(Long workspaceID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_LOAD_WORKSPACE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString())
+        );
+    }
+
+    public void logSetPreference(Long workspaceID, String key) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_SET_PREFERENCE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + key)
+        );
+    }
+
+    public void logSelectNeuron(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_SELECT_NEURON_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logCreateNeuron(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_CREATE_NEURON_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logRenameNeuron(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_RENAME_NEURON_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logDeleteNeuron(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_DELETE_NEURON_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logCreateWorkspace(Long workspaceID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_CREATE_WORKSPACE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString())
+        );
+    }
+
+    public void logAddAnchoredPath(Long workspaceID, Long pathID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_ADD_ANCHORED_PATH_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + pathID.toString())
+        );
+    }
+
+    public void logRemoveAnchoredPath(Long workspaceID, Long pathID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_REMOVE_ANCHORED_PATH_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + pathID.toString())
+        );
+    }
+
+    public void logSetNote(Long workspaceID, Long annotationID, String note) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_SET_NOTE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + annotationID.toString() + ":" + note)
+        );
+    }
+
+    public void logRemoveNote(Long workspaceID, Long annotationID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_REMOVE_NOTE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + annotationID.toString())
+        );
+    }
+
+    public void logSetStyle(Long workspaceID, Long neuronID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_SET_STYLE_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + neuronID.toString())
+        );
+    }
+
+    public void logShowWorkspaceInfo(Long workspaceID) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_SHOW_WORKSPACE_INFO_CATEGORY_STRING,
+                new ActionString(workspaceID.toString())
+        );
+    }
+
+    public void logExportSWCFile(Long workspaceID, String filename) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_EXPORT_SWC_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + filename)
+        );
+    }
+
+    public void logImportSWCFile(Long workspaceID, String filename) {
+        SessionMgr.getSessionMgr().logToolEvent(
+                LVV_LOGSTAMP_ID,
+                LVV_IMPORT_SWC_CATEGORY_STRING,
+                new ActionString(workspaceID.toString() + ":" + filename)
         );
     }
 
