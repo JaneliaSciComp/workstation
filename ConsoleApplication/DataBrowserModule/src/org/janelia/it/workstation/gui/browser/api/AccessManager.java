@@ -35,8 +35,7 @@ public final class AccessManager {
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
 
     private static final AccessManager accessManager = new AccessManager();
-    private ActivityLogHelper activityLogHelper = new ActivityLogHelper();
-    
+
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
@@ -114,12 +113,13 @@ public final class AccessManager {
         if (null!=loginEvent && null!=loginEvent.getSessionId()) {
             SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
         }
-        activityLogHelper.logUserInfo(authenticatedSubject);
+        ActivityLogHelper.logSessionBegin();
+        ActivityLogHelper.logUserInfo(authenticatedSubject);
     }
 
     private void endSession() {
         // TO DO: add to eventBus server logging
-        activityLogHelper.logSessionEnd();
+        ActivityLogHelper.logSessionEnd();
     }
 
     public boolean setRunAsUser(String runAsUser) {

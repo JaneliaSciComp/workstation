@@ -39,6 +39,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.solr.FacetValue;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -64,6 +65,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,6 +305,7 @@ public class FilterEditorPanel extends JPanel
         }
         
         log.debug("loadDomainObject(Filter:{})",filter.getName());
+        final StopWatch w = new StopWatch();
 
         selectionModel.setParentObject(filter);
         this.dirty = false;
@@ -324,6 +327,8 @@ public class FilterEditorPanel extends JPanel
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
+
+        ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
     }
 
     public JPanel getResultsPanel() {
@@ -362,6 +367,7 @@ public class FilterEditorPanel extends JPanel
 
         log.debug("Performing search with isUserDriven={}",isUserDriven);
         if (searchConfig.getSearchClass()==null) return;
+        final StopWatch w = new StopWatch();
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -376,6 +382,7 @@ public class FilterEditorPanel extends JPanel
                     resultsPanel.showSearchResults(searchResults, isUserDriven);
                     updateView();
                     ConcurrentUtils.invokeAndHandleExceptions(success);
+                    ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
                 }
                 catch (Exception e) {
                     hadError(e);

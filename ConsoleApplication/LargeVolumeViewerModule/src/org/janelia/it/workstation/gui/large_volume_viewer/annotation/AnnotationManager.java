@@ -1512,6 +1512,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                             "# annotations (largest neuron) = " + maxannotations + "\n",
                     "Info",
                     JOptionPane.PLAIN_MESSAGE);
+            activityLog.logShowWorkspaceInfo(annotationModel.getCurrentWorkspace().getId());
         }
     }
 

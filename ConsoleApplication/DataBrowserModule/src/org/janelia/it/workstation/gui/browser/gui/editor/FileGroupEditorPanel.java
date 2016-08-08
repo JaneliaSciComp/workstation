@@ -24,9 +24,9 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.FileGroupSelectionModel;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerPanel;
@@ -38,6 +38,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,6 +96,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         }
         
         log.info("loadSampleResult(PipelineResult:{})",result.getName());
+        final StopWatch w = new StopWatch();
 
         this.result = result;
         Sample sample = result.getParentRun().getParent().getParent();
@@ -110,6 +112,8 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         debouncer.success();
         updateUI();
+
+        ActivityLogHelper.logElapsed("FileGroupEditorPanel.loadSampleResult", result, w);
     }
 
     private void showResult(PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {

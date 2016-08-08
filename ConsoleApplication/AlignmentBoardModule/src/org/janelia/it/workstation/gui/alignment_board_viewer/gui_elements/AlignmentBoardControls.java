@@ -638,6 +638,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
+                activityLogger.logToggleSaveBrightness(showingAxes.isSelected());
             }
         });
         
@@ -649,6 +650,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setShowAxes(showingAxes.isSelected());
+                activityLogger.logToggleAxes(showingAxes.isSelected());
                 fireRenderRefresh();
             }
         });

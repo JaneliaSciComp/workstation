@@ -15,6 +15,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -99,6 +100,8 @@ public class AddToFolderAction extends NodePresenterAction {
         createNewItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("AddToFolderAction.createNewFolder");
+
                 // Add button clicked
                 final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
                         "Create new folder in workspace", JOptionPane.PLAIN_MESSAGE, null, null, null);
@@ -152,6 +155,8 @@ public class AddToFolderAction extends NodePresenterAction {
         chooseItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
+
                 NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to");
                 nodeChooser.setRootVisible(false);
                 
@@ -194,6 +199,7 @@ public class AddToFolderAction extends NodePresenterAction {
                 JMenuItem commonRootItem = new JMenuItem(folder.getName());
                 commonRootItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
+                        ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
                         addUniqueItemsToFolder(finalFolder, idPath);
                     }
                 });

@@ -1,35 +1,8 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
-import org.jdesktop.swingx.VerticalLayout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -41,6 +14,35 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+
+import javax.swing.*;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
+import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.jdesktop.swingx.VerticalLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -207,6 +209,7 @@ public class ImportDialog extends ModalDialog {
         folderObjectId = null;
         folderField.setText(folderName);
 
+        ActivityLogHelper.logUserAction("ImportDialog.showDialog");
         packAndShow();
     }
 

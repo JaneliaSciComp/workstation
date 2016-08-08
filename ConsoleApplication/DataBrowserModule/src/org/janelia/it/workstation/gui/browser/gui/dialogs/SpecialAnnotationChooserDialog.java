@@ -28,6 +28,7 @@ import org.janelia.it.jacs.model.domain.ontology.EnumText;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
@@ -234,6 +235,8 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
         annotationPanel.setOpaque(true); //content panes must be opaque
         this.setContentPane(annotationPanel);
+
+        ActivityLogHelper.logUserAction("SpecialAnnotationChooserDialog.createAndShowGUI");
 
         //Display the window.
         this.pack();
