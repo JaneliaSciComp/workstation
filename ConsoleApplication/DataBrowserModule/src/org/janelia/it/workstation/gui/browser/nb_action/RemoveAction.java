@@ -4,20 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -102,6 +99,8 @@ public final class RemoveAction extends NodeAction {
     
     @Override
     protected void performAction (Node[] activatedNodes) {
+
+        ActivityLogHelper.logUserAction("RemoveAction.performAction");
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         final Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.create();

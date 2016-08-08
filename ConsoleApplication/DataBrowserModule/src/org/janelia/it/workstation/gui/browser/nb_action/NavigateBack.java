@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -46,6 +47,7 @@ public final class NavigateBack extends CallableSystemAction {
 
     @Override
     public void performAction() {
+        ActivityLogHelper.logUserAction("NavigateBack.performAction");
         StateMgr.getStateMgr().getNavigationHistory().goBack();
     }
 }

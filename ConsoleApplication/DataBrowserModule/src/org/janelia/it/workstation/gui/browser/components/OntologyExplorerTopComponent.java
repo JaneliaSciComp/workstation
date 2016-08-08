@@ -23,6 +23,7 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -67,6 +68,7 @@ import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.Node;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -454,7 +456,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             log.debug("Skipping refresh, since there is one already in progress");
             return;
         }
-        
+
+        final StopWatch w = new StopWatch();
         log.info("refresh(restoreState={})",restoreState);
         
         final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
@@ -485,6 +488,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         }
                     }
                     beanTreeView.grabFocus();
+                    ActivityLogHelper.logElapsed("OntologyExplorerTopComponent.refresh", w);
                     debouncer.success();
                 }
                 catch (Exception e) {
@@ -565,6 +569,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         roleMenuItem.setIcon(Icons.getIcon(iconName));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
+                                ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
                                 StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
                             }
                         });
@@ -596,11 +601,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     recordingKeyBinds = true;
                     // Transfer focus to a node in the tree in preparation for key presses
                     beanTreeView.grabFocus();
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.enterKeyBindingMode");
                 }
                 else {
                     keyBindButton.setToolTipText("Enter key binding mode");
                     recordingKeyBinds = false;
                     KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.exitKeyBindingMode");
                 }
             }
         });

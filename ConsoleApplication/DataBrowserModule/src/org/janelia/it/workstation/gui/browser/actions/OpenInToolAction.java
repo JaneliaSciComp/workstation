@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.actions;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -45,6 +46,7 @@ public class OpenInToolAction implements NamedAction {
 
     @Override
     public void doAction() {
+        ActivityLogHelper.logUserAction("OpenInToolAction.doAction", tool);
         try {
             ToolMgr.openFile(tool, path, mode);
         } 

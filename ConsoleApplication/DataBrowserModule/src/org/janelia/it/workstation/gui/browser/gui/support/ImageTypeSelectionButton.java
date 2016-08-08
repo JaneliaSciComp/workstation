@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,6 +120,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
                     public void actionPerformed(ActionEvent e) {
                         setImageType(fileType);
                         imageTypeChanged(fileType);
+                        ActivityLogHelper.logUserAction("ImageTypeSelectionButton.imageTypeChanged", fileType.getLabel());
                     }
                 });
                 getPopupMenu().add(menuItem);

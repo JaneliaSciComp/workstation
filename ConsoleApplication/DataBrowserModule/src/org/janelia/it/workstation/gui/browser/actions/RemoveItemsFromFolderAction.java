@@ -7,6 +7,7 @@ import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -35,7 +36,9 @@ public class RemoveItemsFromFolderAction implements NamedAction {
 
     @Override
     public void doAction() {
-    
+
+        ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", treeNode);
+
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         if (!ClientDomainUtils.hasWriteAccess(treeNode)) {

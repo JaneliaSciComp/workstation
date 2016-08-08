@@ -28,6 +28,7 @@ import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.TemplateEditorTextbox;
@@ -200,6 +201,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
     }
 
     public int showDialog(Component parent) throws HeadlessException {
+        ActivityLogHelper.logUserAction("IconGridViewerConfigDialog.showDialog");
         packAndShow();
         return returnValue;
     }

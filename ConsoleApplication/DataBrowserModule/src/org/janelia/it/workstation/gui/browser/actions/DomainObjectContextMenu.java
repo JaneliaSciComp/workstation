@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
-import javax.mail.Session;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -26,7 +25,6 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -39,6 +37,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -92,6 +91,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         this.multiple = domainObjectList.size() > 1;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;
+        ActivityLogHelper.logUserAction("DomainObjectContentMenu.create", domainObject);
     }
 
     public void runDefaultAction() {
@@ -195,6 +195,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             openItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.openInNewEditorItem", domainObject);
                     DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                     viewer.requestActive();
                     viewer.loadDomainObject(objectToLoad, true);
@@ -216,6 +217,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.openSeparationInNewEditorItem", domainObject);
                 final SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
                 final NeuronFragment neuronFragment = (NeuronFragment)domainObject;
 
@@ -264,12 +266,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getDetailsItem() {
         if (multiple) return null;
-
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.viewDetails", domainObject);
                 new DomainDetailsDialog().showForDomainObject(domainObject);
             }
         });
@@ -283,6 +285,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changePermissions", domainObject);
                 new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
             }
         });
@@ -299,6 +302,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.showInLightbox", domainObject);
                 Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName);
             }
         });
@@ -327,6 +331,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             errorMenu.add(new JMenuItem(term.getName())).addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+
+                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
@@ -385,6 +391,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
         vllMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToVisuallyLossless", domainObject);
 
                 final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
                 String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
@@ -468,6 +476,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         llMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToLossless", domainObject);
+
                 final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
                 String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
@@ -528,6 +538,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
 
                 int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
                         "Are you sure you want to purge " + samples.size() + " sample(s) " +
@@ -602,6 +614,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", domainObject);
+
                 int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
@@ -650,7 +664,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveFromFolderItem() {
 
-        NamedAction action = null;
+        NamedAction action;
         if (contextObject instanceof TreeNode) {
             action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
         }
@@ -730,6 +744,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContextMenu.download", domainObject);
                 DownloadDialog dialog = new DownloadDialog();
                 dialog.showDialog(domainObjectList, resultDescriptor);
             }
@@ -800,6 +815,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
             mergeItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    ActivityLogHelper.logUserAction("DomainObjectContextMenu.mergeSelectedNeurons");
                     try {
                         BackgroundWorker executeWorker = new TaskMonitoringWorker() {
 
@@ -893,7 +909,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //        return null;
 //    }
-//
+
     private JMenuItem getSpecialAnnotationSession() {
         if (this.multiple) return null;
         if (!SessionMgr.getSubjectKey().equals("user:simpsonj") && !SessionMgr.getSubjectKey().equals("group:simpsonlab")) {
@@ -903,6 +919,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContextMenu.specialAnnotation");
                 if (null == StateMgr.getStateMgr().getCurrentOntologyId()) {
                     JOptionPane.showMessageDialog(mainFrame,
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",

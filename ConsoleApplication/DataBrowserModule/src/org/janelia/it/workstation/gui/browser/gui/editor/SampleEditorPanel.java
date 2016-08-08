@@ -14,13 +14,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -33,13 +38,12 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineError;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -49,6 +53,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.browser.gui.listview.PaginatedResultsPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -60,12 +65,12 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -459,6 +464,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         }
         
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
+        final StopWatch w = new StopWatch();
 
         // Save the scroll horizontal position on the table, so that users can compare attribuets more easily
         final ListViewerState viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
@@ -501,6 +507,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
+                ActivityLogHelper.logElapsed("SampleEditorPanel.loadDomainObject", sample, w);
             }
             
             @Override
@@ -736,6 +743,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     }
 
     private void setViewMode(String currMode) {
+        ActivityLogHelper.logUserAction("SampleEditorPanel.setViewMode", currMode);
         this.currMode = currMode;
         loadDomainObject(sample, true, null);
     }

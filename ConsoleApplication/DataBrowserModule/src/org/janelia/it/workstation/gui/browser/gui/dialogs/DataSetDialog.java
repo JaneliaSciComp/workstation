@@ -30,6 +30,7 @@ import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -217,10 +218,13 @@ public class DataSetDialog extends ModalDialog {
                 applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
 
+            ActivityLogHelper.logUserAction("DataSetDialog.showDialog", dataSet);
         }
         else {
             nameInput.setText("");
             applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
+
+            ActivityLogHelper.logUserAction("DataSetDialog.showDialog");
         }
 
         packAndShow();

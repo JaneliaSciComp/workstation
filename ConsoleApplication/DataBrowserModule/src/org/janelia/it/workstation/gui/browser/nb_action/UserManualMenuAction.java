@@ -8,6 +8,7 @@ import java.net.URI;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -38,6 +39,8 @@ public final class UserManualMenuAction extends AbstractAction implements Presen
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        ActivityLogHelper.logUserAction("UserManualMenuAction.actionPerformed");
+
         Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
             try {
