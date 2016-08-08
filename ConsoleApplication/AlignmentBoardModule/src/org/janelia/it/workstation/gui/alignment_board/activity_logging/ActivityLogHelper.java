@@ -16,6 +16,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
@@ -209,30 +210,39 @@ public class ActivityLogHelper {
                 bldr.append(event.getChangeType());
                 bldr.append(LOG_PART_SEP);
                 final AlignmentBoardItem item = event.getItem();
-                if (item != null) {
-                    bldr.append(event.getItem().getName());                    
+
+                if (event.getChangeType().equals(ChangeType.FilterLevelChange)) {
+                    bldr.append(settings.getMaximumNeuronCount())
+                        .append(LOG_PART_SEP)
+                        .append(settings.getMinimumVoxelCount());
                 }
-                bldr.append(LOG_PART_SEP);
-                if (item != null) {
-                    bldr.append(event.getItem().getColor());
-                }
-                bldr.append(LOG_PART_SEP);
-                if (item != null) {
-                    bldr.append(event.getItem().getInclusionStatus());
-                }
-                bldr.append(LOG_PART_SEP);
-                if (item != null) {
-                    bldr.append(event.getItem().getRenderMethod());
-                }
-                bldr.append(LOG_PART_SEP);
-                // In event of no item/target (perhaps for ref channel, dangling separator tells the tale.
-                if (item != null) {
-                    final AlignmentBoardReference target = item.getTarget();
-                    if (target != null) {
-                        bldr.append(target.getItemId());
+                else {
+                    if (item != null) {
+                        bldr.append(event.getItem().getName());
+                    }
+                    bldr.append(LOG_PART_SEP);
+
+                    // In event of no item/target (perhaps for ref channel, dangling separator tells the tale.
+                    if (item != null) {
+                        final AlignmentBoardReference target = item.getTarget();
+                        if (target != null) {
+                            bldr.append(target.getItemId());
+                        }
+                    }
+                    bldr.append(LOG_PART_SEP);
+
+                    if (item != null) {
+                        bldr.append(event.getItem().getColor());
+                    }
+                    bldr.append(LOG_PART_SEP);
+                    if (item != null) {
+                        bldr.append(event.getItem().getInclusionStatus());
+                    }
+                    bldr.append(LOG_PART_SEP);
+                    if (item != null) {
+                        bldr.append(event.getItem().getRenderMethod());
                     }
                 }
-                bldr.append(LOG_PART_SEP);
                 ACTIVITY_LOGGING.logToolEvent(TOOL_STRING, ABOARD_CHANGE_CATEGORY, new ActionString(bldr.toString()));
             } catch (Throwable th) {
                 // Eat all exceptions.  Avoid harming caller.
