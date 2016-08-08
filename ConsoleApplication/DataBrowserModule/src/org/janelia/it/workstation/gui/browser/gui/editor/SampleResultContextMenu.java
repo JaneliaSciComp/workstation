@@ -20,6 +20,7 @@ import org.janelia.it.workstation.gui.browser.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInToolAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerManager;
 import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
@@ -55,8 +56,8 @@ public class SampleResultContextMenu extends PopupContextMenu {
         add(getCopyIdToClipboardItem());
         
         setNextAddRequiresSeparator(true);
-        add(getResultsInNewViewer());
-        add(getOpenSeparationInNewViewer());
+        add(getOpenResultsInNewViewerItem());
+        add(getOpenSeparationInNewViewerItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
@@ -101,12 +102,13 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return getNamedActionItem(new CopyToClipboardAction("GUID",result.getId().toString()));
     }
 
-    protected JMenuItem getResultsInNewViewer() {
+    protected JMenuItem getOpenResultsInNewViewerItem() {
         if (!(result instanceof HasFileGroups)) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open Results In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("SampleResultContextMenu.openResultsInNewViewer");
                 SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
                 viewer.requestActive();
                 viewer.loadSampleResult(result, true, null);
@@ -115,12 +117,13 @@ public class SampleResultContextMenu extends PopupContextMenu {
         return copyMenuItem;
     }
 
-    protected JMenuItem getOpenSeparationInNewViewer() {
+    protected JMenuItem getOpenSeparationInNewViewerItem() {
         if (result.getLatestSeparationResult()==null) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open Neuron Separation In New Viewer");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("SampleResultContextMenu.openSeparationInNewViewerItem");
                 SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
                 viewer.requestActive(); 
                 viewer.loadSampleResult(result, true, null);
@@ -211,7 +214,8 @@ public class SampleResultContextMenu extends PopupContextMenu {
         JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) { 
+            public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("SampleResultContextMenu.showInLightbox", result);
                 ObjectiveSample objectiveSample = result.getParentRun().getParent();
                 Sample sample = objectiveSample.getParent();
                 ResultDescriptor descriptor = new ResultDescriptor(result);

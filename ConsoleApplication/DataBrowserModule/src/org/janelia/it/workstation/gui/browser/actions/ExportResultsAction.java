@@ -10,6 +10,7 @@ import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTableViewer;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
@@ -49,7 +50,9 @@ public class ExportResultsAction<T> implements NamedAction {
 
     @Override
     public void doAction() {
-    
+
+        ActivityLogHelper.logUserAction("ExportResultsAction.doAction");
+
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
         chooser.setFileSelectionMode(FileChooser.FILES_ONLY);

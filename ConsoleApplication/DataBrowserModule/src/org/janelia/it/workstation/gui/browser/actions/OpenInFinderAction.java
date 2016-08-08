@@ -4,6 +4,7 @@ import java.io.File;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DesktopApi;
 import org.janelia.it.workstation.shared.util.FileCallable;
@@ -47,6 +48,7 @@ public class OpenInFinderAction implements NamedAction {
     @Override
     public void doAction() {
         try {
+            ActivityLogHelper.logUserAction("OpenInFinderAction.doAction", filepath);
             Utils.processStandardFilepath(filepath, new FileCallable() {
                 @Override
                 public void call(File file) throws Exception {
