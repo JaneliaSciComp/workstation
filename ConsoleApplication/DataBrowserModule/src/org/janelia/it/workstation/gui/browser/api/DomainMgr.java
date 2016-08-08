@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -14,6 +15,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
@@ -23,8 +25,6 @@ import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * Singleton for managing the Domain Model and related data access. 
@@ -55,6 +55,7 @@ public class DomainMgr {
     private SampleFacade sampleFacade;
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
+    private TiledMicroscopeFacade tmFacade;
     
     private DomainModel model;
     private Map<String,Preference> preferenceMap;
@@ -67,6 +68,7 @@ public class DomainMgr {
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
+            tmFacade = getNewInstance(reflections, TiledMicroscopeFacade.class);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -97,7 +99,7 @@ public class DomainMgr {
      */
     public DomainModel getModel() {
         if (model == null) {
-            model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
+            model = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade, tmFacade);
         }
         return model;
     }

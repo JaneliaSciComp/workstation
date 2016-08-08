@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.TiledMicroscopeFacadeImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class TmWebClientTest {
 
     private static final Logger log = LoggerFactory.getLogger(TmWebClientTest.class);
 
-    private static TiledMicroscopeFacadeImpl facade;
+    private static TiledMicroscopeFacade facade;
     private static TmProtobufExchanger exchanger;
 
     private static final String TEST_SAMPLE_CRUD_SAMPLE = "testSampleCRUD";

@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.browser.api.facade.impl.rest;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,19 +15,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
+public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade {
 
     private static Logger log = LoggerFactory.getLogger(TiledMicroscopeFacadeImpl.class);
 
@@ -40,6 +36,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         this.exchanger = new TmProtobufExchanger();
     }
 
+    @Override
     public Collection<TmSample> getTmSamples() throws Exception {
         Response response = manager.getTmSampleEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -51,6 +48,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(new GenericType<List<TmSample>>() {});
     }
 
+    @Override
     public TmSample create(TmSample tmSample) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -64,6 +62,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmSample.class);
     }
 
+    @Override
     public TmSample update(TmSample tmSample) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSample);
@@ -77,6 +76,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmSample.class);
     }
 
+    @Override
     public void remove(TmSample tmSample) throws Exception {
         Response response = manager.getTmSampleEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -88,6 +88,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         }
     }
 
+    @Override
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
         Response response = manager.getTmWorkspaceEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -99,6 +100,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(new GenericType<List<TmWorkspace>>() {});
     }
 
+    @Override
     public TmWorkspace create(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -112,6 +114,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmWorkspace.class);
     }
 
+    @Override
     public TmWorkspace update(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);
@@ -125,6 +128,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmWorkspace.class);
     }
 
+    @Override
     public void remove(TmWorkspace tmWorkspace) throws Exception {
         Response response = manager.getTmWorkspaceEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -136,7 +140,8 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         }
     }
 
-    private Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
+    @Override
+    public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
         Response response = manager.getTmNeuronEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("workspaceId", workspaceId)
@@ -165,7 +170,8 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return neurons;
     }
 
-    private TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
+    @Override
+    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
                 .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
@@ -179,7 +185,8 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    private TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
+    @Override
+    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
                 .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
@@ -193,7 +200,8 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    private void remove(TmNeuronMetadata neuronMetadata) throws Exception {
+    @Override
+    public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         Response response = manager.getTmNeuronEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("neuronId", neuronMetadata.getId())
@@ -202,56 +210,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl {
         if (checkBadResponse(response.getStatus(), "problem making request removeTmNeuron from server: " + neuronMetadata)) {
             throw new WebApplicationException(response);
         }
-    }
-
-    public List<TmNeuron> getWorkspaceNeurons(Long workspaceId) throws Exception {
-        List<TmNeuron> neurons = new ArrayList<>();
-        for(Pair<TmNeuronMetadata,InputStream> pair : getWorkspaceNeuronPairs(workspaceId)) {
-            TmNeuronMetadata neuronMetadata = pair.getLeft();
-            TmNeuron tmNeuron = exchanger.deserializeNeuron(pair.getRight());
-            // TODO: Should these metadata be serialized with protobuf at all? Probably not!
-            // But since they are, let's verify that they're consistent.
-            if (!tmNeuron.getId().equals(neuronMetadata.getId())) {
-                log.error("Neuron's metadata (id) does not match serialized data: "+tmNeuron.getId());
-            }
-            if (!tmNeuron.getOwnerKey().equals(neuronMetadata.getOwnerKey())) {
-                log.error("Neuron's metadata (ownerKey) does not match serialized data: "+tmNeuron.getId());
-            }
-            if (!tmNeuron.getWorkspaceId().equals(neuronMetadata.getWorkspaceRef().getTargetId())) {
-                log.error("Neuron's metadata (ownerKey) does not match serialized data: "+tmNeuron.getId());
-            }
-            neurons.add(tmNeuron);
-        }
-        return neurons;
-    }
-
-    public TmNeuronMetadata create(TmNeuron tmNeuron) throws Exception {
-        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
-        Long newId = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-        tmNeuron.setId(newId);
-        tmNeuron.setOwnerKey(AccessManager.getSubjectKey());
-        neuronMetadata.setId(tmNeuron.getId());
-        neuronMetadata.setOwnerKey(tmNeuron.getOwnerKey());
-        neuronMetadata.setWorkspaceRef(Reference.createFor(TmWorkspace.class, tmNeuron.getWorkspaceId()));
-        byte[] protobufBytes = exchanger.serializeNeuron(tmNeuron);
-        create(neuronMetadata, new ByteArrayInputStream(protobufBytes));
-        return neuronMetadata;
-    }
-
-    public TmNeuronMetadata update(TmNeuron tmNeuron) throws Exception {
-        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
-        neuronMetadata.setId(tmNeuron.getId());
-        neuronMetadata.setOwnerKey(tmNeuron.getOwnerKey());
-        neuronMetadata.setWorkspaceRef(Reference.createFor(TmWorkspace.class, tmNeuron.getWorkspaceId()));
-        byte[] protobufBytes = exchanger.serializeNeuron(tmNeuron);
-        update(neuronMetadata, new ByteArrayInputStream(protobufBytes));
-        return neuronMetadata;
-    }
-
-    public void remove(TmNeuron tmNeuron) throws Exception {
-        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
-        neuronMetadata.setId(tmNeuron.getId());
-        remove(neuronMetadata);
     }
 
 }

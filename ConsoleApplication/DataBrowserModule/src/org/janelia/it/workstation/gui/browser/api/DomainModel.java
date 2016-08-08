@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.io.InputStream;
 import java.util.*;
 
 import javax.swing.SwingUtilities;
@@ -8,6 +9,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalNotification;
+import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -25,6 +27,9 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
@@ -33,6 +38,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -79,19 +85,21 @@ public class DomainModel {
     private final SampleFacade sampleFacade;
     private final SubjectFacade subjectFacade;
     private final WorkspaceFacade workspaceFacade;
-    
+    private final TiledMicroscopeFacade tmFacade;
+
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
     private final Map<Reference, Ontology> ontologyCache;
 
     public DomainModel(DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
-            SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade) {
+            SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade, TiledMicroscopeFacade tmFacade) {
         
         this.domainFacade = domainFacade;
         this.ontologyFacade = ontologyFacade;
         this.sampleFacade = sampleFacade;
         this.subjectFacade = subjectFacade;
         this.workspaceFacade = workspaceFacade;
+        this.tmFacade = tmFacade;
 
         this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Reference, DomainObject>() {
             @Override
@@ -966,5 +974,84 @@ public class DomainModel {
         }
 
         objects.add(domainObject);
+    }
+
+    public Collection<TmSample> getTmSamples() throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        Collection<TmSample> samples = tmFacade.getTmSamples();
+        List<TmSample> canonicalObjects = putOrUpdate(samples, false);
+        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        if (TIMER) w.stop("getTmSamples");
+        return canonicalObjects;
+    }
+
+    public TmSample save(TmSample object) throws Exception {
+        TmSample canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
+        }
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
+    }
+
+    public void remove(TmSample object) throws Exception {
+        tmFacade.remove(object);
+        notifyDomainObjectRemoved(object);
+    }
+
+    public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspaces();
+        List<TmWorkspace> canonicalObjects = putOrUpdate(workspaces, false);
+        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        if (TIMER) w.stop("getTmWorkspaces");
+        return canonicalObjects;
+    }
+
+    public TmWorkspace save(TmWorkspace object) throws Exception {
+        TmWorkspace canonicalObject;
+        synchronized (this) {
+            canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
+        }
+        notifyDomainObjectCreated(canonicalObject);
+        return canonicalObject;
+    }
+
+    public void remove(TmWorkspace object) throws Exception {
+        tmFacade.remove(object);
+        notifyDomainObjectRemoved(object);
+    }
+
+    public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
+        return tmFacade.getWorkspaceNeuronPairs(workspaceId);
+    }
+
+    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
+        TmNeuronMetadata updatedMetadata = tmFacade.create(neuronMetadata, protobufStream);
+        TmWorkspace workspace = (TmWorkspace)getDomainObject(updatedMetadata.getWorkspaceRef());
+        if (workspace==null) {
+            log.warn("Neuron's workspace is not a valid domain object: "+updatedMetadata);
+        }
+        // Event?
+        return updatedMetadata;
+    }
+
+    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
+        TmNeuronMetadata updatedMetadata = tmFacade.update(neuronMetadata, protobufStream);
+        TmWorkspace workspace = (TmWorkspace)getDomainObject(updatedMetadata.getWorkspaceRef());
+        if (workspace==null) {
+            log.warn("Neuron's workspace is not a valid domain object: "+updatedMetadata);
+        }
+        // Event?
+        return updatedMetadata;
+    }
+
+    public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
+        tmFacade.remove(neuronMetadata);
+        TmWorkspace workspace = (TmWorkspace)getDomainObject(neuronMetadata.getWorkspaceRef());
+        if (workspace==null) {
+            log.warn("Neuron's workspace is not a valid domain object: "+neuronMetadata);
+        }
+        // Event?
     }
 }
