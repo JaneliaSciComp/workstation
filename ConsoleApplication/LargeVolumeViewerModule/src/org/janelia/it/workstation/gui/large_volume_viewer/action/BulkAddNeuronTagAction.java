@@ -23,7 +23,7 @@ public class BulkAddNeuronTagAction extends AbstractAction {
     private NeuronListProvider listProvider;
 
     private JPanel mainPanel;
-    private JList existingList;
+    private JComboBox existingTagMenu;
     private JTextField newTagField;
 
 
@@ -43,7 +43,7 @@ public class BulkAddNeuronTagAction extends AbstractAction {
             return;
         }
 
-        Object[] options = {"Add", "Cancel"};
+        Object[] options = {"Done"};
         JOptionPane.showOptionDialog(null,
                 getInterface(),
                 "Add tags to " + neurons.size() + " neurons",
@@ -51,14 +51,14 @@ public class BulkAddNeuronTagAction extends AbstractAction {
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 options,
-                options[1]
+                options[0]
         );
     }
 
     private void requestAddTag(String tag) {
         // dialog: are you sure
         int ans = JOptionPane.showConfirmDialog(
-                ComponentUtil.getLVVMainWindow(),
+                null,
                 String.format("You are about to add the tag '%s' to %d neurons. This action cannot be undone! Continue?",
                         tag, listProvider.getNeuronList().size()),
                 "Add tags?",
@@ -92,19 +92,17 @@ public class BulkAddNeuronTagAction extends AbstractAction {
         existingButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                requestAddTag((String) existingList.getSelectedValue());
+                requestAddTag((String) existingTagMenu.getSelectedItem());
             }
         });
         existingPanel.add(existingButton);
 
-        existingPanel.add(new JLabel("existing tag"));
+        existingPanel.add(new JLabel("existing tag "));
 
-        existingList = new JList();
-        List<TmNeuron> neurons = listProvider.getNeuronList();
-        String[] existingTags = neurons.toArray(new String[neurons.size()]);
+        String[] existingTags = annModel.getAllNeuronTags().toArray(new String[annModel.getAllNeuronTags().size()]);
         Arrays.sort(existingTags);
-        existingList.setListData(existingTags);
-        existingPanel.add(existingList);
+        existingTagMenu = new JComboBox(existingTags);
+        existingPanel.add(existingTagMenu);
 
         existingPanel.add(Box.createHorizontalGlue());
         mainPanel.add(existingPanel);
@@ -117,11 +115,13 @@ public class BulkAddNeuronTagAction extends AbstractAction {
         newTagButton.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                requestAddTag(newTagField.getText());
+                if (newTagField.getText().length() > 0) {
+                    requestAddTag(newTagField.getText());
+                }
             }
         });
         newTagPanel.add(newTagButton);
-        newTagPanel.add(new JLabel("new tag"));
+        newTagPanel.add(new JLabel("new tag "));
         newTagField = new JTextField();
         newTagPanel.add(newTagField);
 
