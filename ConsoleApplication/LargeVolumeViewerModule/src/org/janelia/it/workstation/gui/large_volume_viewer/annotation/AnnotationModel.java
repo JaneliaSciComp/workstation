@@ -1638,7 +1638,7 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void saveNeuronTagMap() {
+    private synchronized void saveNeuronTagMap() {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 

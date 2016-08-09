@@ -75,7 +75,6 @@ public class NeuronTagsAction extends AbstractAction {
         //  decided I didn't want to delegate all its methods to AnnModel
         //  and handle the saves there, so for now, stuck with it
         annModel.addNeuronTag(tag, annModel.getCurrentNeuron());
-        annModel.saveNeuronTagMap();
         fillTagLists();
     }
 
@@ -84,7 +83,6 @@ public class NeuronTagsAction extends AbstractAction {
      */
     private void removeTag(String tag) {
         annModel.removeNeuronTag(tag, annModel.getCurrentNeuron());
-        annModel.saveNeuronTagMap();
         fillTagLists();
     }
 
@@ -100,7 +98,6 @@ public class NeuronTagsAction extends AbstractAction {
      */
     private void onRemoveAllButton() {
         annModel.clearNeuronTags(annModel.getCurrentNeuron());
-        annModel.saveNeuronTagMap();
         fillTagLists();
     }
 
