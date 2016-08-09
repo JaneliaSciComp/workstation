@@ -1327,6 +1327,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * from different input sources
      */
     public void chooseNeuronStyle() {
+        // called from annotation panel neuron gear menu "choose neuron style"
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1338,10 +1339,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void chooseNeuronStyle(Anchor anchor) {
+        // called from right-click on neuron in 2d view, "set neuron style"
         chooseNeuronStyle(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
     }
 
     public void chooseNeuronStyle(final TmNeuron neuron) {
+        // called from neuron list, clicking on color swatch
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1350,12 +1353,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
+        NeuronStyle chosenStyle = askForNeuronStyle(getNeuronStyle(neuron));
+        if (chosenStyle != null) {
+            setNeuronStyle(neuron, chosenStyle);
+        }
+    }
+
+    private NeuronStyle askForNeuronStyle(NeuronStyle inputStyle) {
         NeuronStyleDialog dialog = new NeuronStyleDialog(
                 (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                getNeuronStyle(neuron));
+                inputStyle);
         dialog.setVisible(true);
         if (dialog.styleChosen()) {
-            setNeuronStyle(neuron, dialog.getChosenStyle());
+            return dialog.getChosenStyle();
+        } else {
+            return null;
         }
     }
 
