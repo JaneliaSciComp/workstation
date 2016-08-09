@@ -24,6 +24,7 @@ import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * this action opens a dialog that allows the user to edit
@@ -34,6 +35,7 @@ public class NeuronTagsAction extends AbstractAction {
     private AnnotationModel annModel;
     private TmNeuron currentNeuron;
 
+    private JPanel mainPanel;
     private JList appliedTagsList;
     private JList availableTagsList;
     private JTextField newTagField;
@@ -69,21 +71,47 @@ public class NeuronTagsAction extends AbstractAction {
     /**
      * add given tag to current neuron
      */
-    private void addTag(String tag) {
-        // if you change the tag map, you have to save the tag map
-        // not entirely happy about how it's structured like that...but I
-        //  decided I didn't want to delegate all its methods to AnnModel
-        //  and handle the saves there, so for now, stuck with it
-        annModel.addNeuronTag(tag, annModel.getCurrentNeuron());
-        fillTagLists();
+    private void addTag(final String tag) {
+        SimpleWorker adder = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annModel.addNeuronTag(tag, annModel.getCurrentNeuron());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                fillTagLists();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showError("There was an error adding the " + tag + " tag!", "Error");
+            }
+        };
+        adder.execute();
     }
 
     /**
      * remove given tag from current neuron
      */
-    private void removeTag(String tag) {
-        annModel.removeNeuronTag(tag, annModel.getCurrentNeuron());
-        fillTagLists();
+    private void removeTag(final String tag) {
+        SimpleWorker remover = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annModel.removeNeuronTag(tag, annModel.getCurrentNeuron());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                fillTagLists();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showError("There was an error removing the " + tag + " tag!", "Error");
+            }
+        };
+        remover.execute();
     }
 
     /**
@@ -97,8 +125,23 @@ public class NeuronTagsAction extends AbstractAction {
      * remove all the tags from the currently selected neuron
      */
     private void onRemoveAllButton() {
-        annModel.clearNeuronTags(annModel.getCurrentNeuron());
-        fillTagLists();
+        SimpleWorker remover = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annModel.clearNeuronTags(annModel.getCurrentNeuron());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                fillTagLists();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showError("There was an error removing the tags!", "Error");
+            }
+        };
+        remover.execute();
     }
 
     /**
@@ -126,10 +169,18 @@ public class NeuronTagsAction extends AbstractAction {
         availableTagsList.setListData(availableTags);
     }
 
+    private void showError(String message, String title) {
+        JOptionPane.showMessageDialog(
+                mainPanel,
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE);
+    }
+
     private JPanel getInterface() {
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new GridBagLayout());
 
         // two columns; applied tags on the left, other available
         //  tags on the right
@@ -149,7 +200,7 @@ public class NeuronTagsAction extends AbstractAction {
         cTopLeft.insets = insets;
         JLabel appliedLabel = new JLabel("Applied (click to remove)");
         appliedLabel.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(appliedLabel, cTopLeft);
+        mainPanel.add(appliedLabel, cTopLeft);
 
         // the dialog isn't currently resizeable, but I want
         //  to be ready in case I make it so
@@ -163,7 +214,7 @@ public class NeuronTagsAction extends AbstractAction {
         appliedTagsList = new JList();
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
         appliedScroller.setPreferredSize(new Dimension(160, 160));
-        panel.add(appliedScroller, cGrowLeft);
+        mainPanel.add(appliedScroller, cGrowLeft);
 
         GridBagConstraints cFlowLeft = new GridBagConstraints();
         cFlowLeft.gridx = 0;
@@ -179,7 +230,7 @@ public class NeuronTagsAction extends AbstractAction {
                 onRemoveAllButton();
             }
         });
-        panel.add(removeAllButton, cFlowLeft);
+        mainPanel.add(removeAllButton, cFlowLeft);
 
 
         // right column = available tags
@@ -192,7 +243,7 @@ public class NeuronTagsAction extends AbstractAction {
         cTopRight.insets = insets;
         JLabel availableLabel = new JLabel("Available (click to add)");
         availableLabel.setHorizontalAlignment(JLabel.CENTER);
-        panel.add(availableLabel, cTopRight);
+        mainPanel.add(availableLabel, cTopRight);
 
         GridBagConstraints cGrowRight = new GridBagConstraints();
         cGrowRight.gridx = 1;
@@ -204,7 +255,7 @@ public class NeuronTagsAction extends AbstractAction {
         availableTagsList = new JList();
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
         availableScroller.setPreferredSize(new Dimension(160, 160));
-        panel.add(availableScroller, cGrowRight);
+        mainPanel.add(availableScroller, cGrowRight);
 
         GridBagConstraints cFlowRight = new GridBagConstraints();
         cFlowRight.gridx = 1;
@@ -225,7 +276,7 @@ public class NeuronTagsAction extends AbstractAction {
             }
         });
         newTagPanel.add(newTagButton);
-        panel.add(newTagPanel, cFlowRight);
+        mainPanel.add(newTagPanel, cFlowRight);
 
         // new tag field behavior
         newTagField.addActionListener(new AbstractAction() {
@@ -259,7 +310,7 @@ public class NeuronTagsAction extends AbstractAction {
 
         fillTagLists();
 
-        return panel;
+        return mainPanel;
     }
 
 }

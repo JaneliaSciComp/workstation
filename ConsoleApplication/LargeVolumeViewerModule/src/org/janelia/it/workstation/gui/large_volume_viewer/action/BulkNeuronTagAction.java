@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import javax.swing.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * this action opens a dialog that allows the user to add or remove
@@ -70,10 +72,27 @@ public class BulkNeuronTagAction extends AbstractAction {
         }
     }
 
-    private void addTag(String tag) {
-        for (TmNeuron neuron: listProvider.getNeuronList()) {
-            annModel.addNeuronTag(tag, neuron);
-        }
+    private void addTag(final String tag) {
+        final List<TmNeuron> neuronList = listProvider.getNeuronList();
+        SimpleWorker adder = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                for (TmNeuron neuron: neuronList) {
+                    annModel.addNeuronTag(tag, neuron);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing to do here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showError("There was an error adding the tag!", "Error");
+            }
+        };
+        adder.execute();
     }
 
     private void requestClearTag(String tag) {
@@ -89,7 +108,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         }
     }
 
-    private void clearTag(String tag) {
+    private void clearTag(final String tag) {
         // rather than worry about how to removing items from two Guava BiMaps
         //  while iterating over one of them, I'm just going to copy the set:
         Set<Long> remove = new HashSet<>(annModel.getNeuronIDsForTag(tag));
@@ -99,6 +118,41 @@ public class BulkNeuronTagAction extends AbstractAction {
                 annModel.removeNeuronTag(tag, neuron);
             }
         }
+
+        final List<TmNeuron> neuronList = new ArrayList<>();
+        Set<Long> taggedNeurons = annModel.getNeuronIDsForTag(tag);
+        for (TmNeuron neuron: listProvider.getNeuronList()) {
+            if (taggedNeurons.contains(neuron.getId())) {
+                neuronList.add(neuron);
+            }
+        }
+        SimpleWorker remover = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                for (TmNeuron neuron: neuronList) {
+                    annModel.removeNeuronTag(tag, neuron);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showError("There was an error removing the tags!", "Error");
+            }
+        };
+        remover.execute();
+    }
+
+    private void showError(String message, String title) {
+        JOptionPane.showMessageDialog(
+                mainPanel,
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE);
     }
 
     private JPanel getInterface() {
