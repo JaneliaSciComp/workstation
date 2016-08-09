@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
@@ -63,8 +64,8 @@ public class WorkspaceNode extends TreeNodeNode {
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
         actions.add(null);
         actions.add(NewDomainObjectAction.get());
         actions.add(new RenameAction());

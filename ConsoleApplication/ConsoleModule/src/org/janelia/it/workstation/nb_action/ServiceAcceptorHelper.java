@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.nb_action;
 
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
+
 import org.openide.util.lookup.Lookups;
 
 /**
@@ -9,6 +10,7 @@ import org.openide.util.lookup.Lookups;
  * for various tasks.  Convenience class that cuts down on redundant code.
  * 
  * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ServiceAcceptorHelper {
     /**
@@ -22,10 +24,8 @@ public class ServiceAcceptorHelper {
      * @param path tells the path identifier for searching compatible items.
      * @return a compatible handler for the criterion object.
      */
-    public<T extends Compatible,S> Collection<T> findHandler(S criterion, Class clazz, String path) {
-        Collection<T> candidates
-                = Lookups.forPath(path).lookupAll(clazz);
-
+    public static <T extends Compatible,S> Collection<T> findHandler(S criterion, Class clazz, String path) {
+        Collection<T> candidates = Lookups.forPath(path).lookupAll(clazz);
         Collection<T> rtnVal = new ArrayList<>();
         for (T nextAcceptor : candidates) {
             if (nextAcceptor.isCompatible(criterion)) {

@@ -22,6 +22,9 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
+import org.janelia.it.workstation.gui.browser.actions.NamedAction;
+import org.janelia.it.workstation.gui.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -39,6 +42,7 @@ import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -197,19 +201,20 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(AddToFolderAction.get());
-//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
-        actions.add(DownloadAction.get());
+        for (NamedAction namedAction : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
+            actions.add(new NamedActionWrapper(namedAction));
+        }
         return actions.toArray(new Action[actions.size()]);
     }
 
@@ -226,7 +231,6 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         DomainObject obj = getDomainObject();
 
         try {
-
             for (PropertyDescriptor propertyDescriptor : Introspector.getBeanInfo(obj.getClass()).getPropertyDescriptors()) {
                 Method getter = propertyDescriptor.getReadMethod();
                 if (getter==null) continue;
@@ -235,7 +239,6 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
                 prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
                 set.put(prop);
             }
-
         }
         catch (IntrospectionException ex) {
             SessionMgr.getSessionMgr().handleException(ex);
@@ -245,35 +248,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         return sheet;
     }
 
-    protected final class CopyNameAction extends AbstractAction {
 
-        public CopyNameAction() {
-            putValue(NAME, "Copy Name To Clipboard");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            Transferable t = new StringSelection(getName());
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-        }
-    }
-
-    protected final class CopyGUIDAction extends AbstractAction {
-
-        public CopyGUIDAction() {
-            putValue(NAME, "Copy GUID To Clipboard");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            HasIdentifier hasId = getLookup().lookup(HasIdentifier.class);
-            if (hasId==null) {
-                return;
-            }
-            Transferable t = new StringSelection(hasId.getId()+"");
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-        }
-    }
     
     protected final class RenameAction extends AbstractAction {
 

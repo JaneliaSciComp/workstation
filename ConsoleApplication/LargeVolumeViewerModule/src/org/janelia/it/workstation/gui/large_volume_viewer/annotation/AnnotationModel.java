@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-// workstation imports
-
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;

@@ -156,9 +156,11 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        for ( JComponent item: getOpenForContextItems() ) {
+
+        for (JComponent item: getOpenForContextItems() ) {
             add(item);
         }
+
         for (JMenuItem item: this.getWrapObjectItems()) {
 			add(item);
 		}

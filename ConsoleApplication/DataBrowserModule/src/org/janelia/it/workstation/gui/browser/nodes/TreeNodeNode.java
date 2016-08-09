@@ -12,6 +12,7 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -158,8 +159,8 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
@@ -167,7 +168,6 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(AddToFolderAction.get());
-//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

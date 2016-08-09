@@ -7,9 +7,9 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
-import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.nb_action.SearchHereAction;
@@ -52,15 +52,14 @@ public class FilterNode extends DomainObjectNode {
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new CopyNameAction());
-        actions.add(new CopyGUIDAction());
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
+        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new ViewDetailsAction());
         actions.add(new ChangePermissionsAction());
         actions.add(AddToFolderAction.get());
-//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
