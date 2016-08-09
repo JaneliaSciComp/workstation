@@ -12,7 +12,7 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -31,7 +31,7 @@ public class LVVDevPanel extends JPanel {
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // 2016: new neuron persistance
-    private ModelManagerTmModelAdapter modelAdapter;
+    private DomainMgrTmModelAdapter modelAdapter;
     private TmModelManipulator neuronManager;
 
     public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
@@ -40,7 +40,7 @@ public class LVVDevPanel extends JPanel {
         this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 
-        modelAdapter = new ModelManagerTmModelAdapter();
+        modelAdapter = new DomainMgrTmModelAdapter();
         neuronManager = new TmModelManipulator(modelAdapter);
 
         setupUI();

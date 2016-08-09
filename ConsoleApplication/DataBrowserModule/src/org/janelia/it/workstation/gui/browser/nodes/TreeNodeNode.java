@@ -19,7 +19,6 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
-import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;

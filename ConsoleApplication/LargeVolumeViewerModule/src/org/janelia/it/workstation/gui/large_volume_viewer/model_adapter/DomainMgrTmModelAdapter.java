@@ -1,7 +1,3 @@
-/**
- * Implementation of the model adapter, which pulls/pushes data through
- * the Model Manager.
- */
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
 import java.util.List;
@@ -20,16 +16,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Implementation of the model adapter, which pulls/pushes data through
+ * the TiledMicroscopeDomainMgr.
+ *
  * When invoked to fetch exchange neurons, this implementation will do so
  * by way of the model manager.  It adapts the model manipulator for 
  * client-side use.  Not intended to be used from multiple threads, which are
  * feeding different workspaces.
  *
  * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ModelManagerTmModelAdapter implements TmModelAdapter {
+public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
-    private static Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
+    private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
 
     // Very large initial work unit estimate; just need to work out the
     // conversion factor between this and the true number, once that is
@@ -43,6 +43,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
     @Override
     public List<TmNeuron> loadNeurons(TmWorkspace workspace) throws Exception {
+        log.info("Checking neurons for workspace: "+workspace);
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         List<TmNeuron> neurons;
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
@@ -67,7 +68,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
             // check neuron consistency and repair (some) problems
             for (TmNeuron neuron: neurons) {
-                log.info("Checking neuron "+neuron);
+                log.info("Checking neuron: "+neuron);
                 List<String> results = neuron.checkRepairNeuron();
                 // List<String> results = neuron.checkNeuron();
                 if (results.size() > 0) {

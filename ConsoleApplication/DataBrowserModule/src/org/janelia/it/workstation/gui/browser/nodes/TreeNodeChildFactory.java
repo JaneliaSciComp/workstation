@@ -93,10 +93,10 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                         else if (Filter.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                        else if (TmSampleNode.class.isAssignableFrom(obj.getClass())) {
+                        else if (TmSample.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                        else if (TmWorkspaceNode.class.isAssignableFrom(obj.getClass())) {
+                        else if (TmWorkspace.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
                     }

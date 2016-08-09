@@ -113,7 +113,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 filename = "workspace_large.png";
             }
             else if (imageObject instanceof TmSample) {
-                filename = "monitor_large.png";
+                filename = "folder_files_large.png";
             }
             ImageIcon icon = Icons.getIcon(filename);
             if (icon==null) return null;

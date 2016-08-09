@@ -264,7 +264,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             };
             closer.execute();
 
-        } else if (initialObject instanceof TmSample) {
+        }
+        else if (initialObject instanceof TmSample) {
             // if it's a bare sample, we don't have anything to do
             activityLog.setTileFormat(getTileFormat(), initialObject.getId());
         }
@@ -305,6 +306,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * parent, pass in null
      */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
+
         if (annotationModel.getCurrentWorkspace() == null) {
             presentError(
                     "You must load a workspace before beginning annotation!",
@@ -1407,6 +1409,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void saveQuadViewColorModel() {
+        log.info("saveQuadViewColorModel()");
         try {
             if (annotationModel.getCurrentWorkspace() == null) {
                 presentError("You must create a workspace to be able to save the color model!", "No workspace");
@@ -1414,6 +1417,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             else {
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
+                log.info("Setting color model: {}",workspace.getColorModel());
                 tmDomainMgr.save(workspace);
             }
         }
@@ -1423,6 +1427,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void saveColorModel3d(ImageColorModel colorModel) {
+        log.info("saveColorModel3d()");
         try {
             if (annotationModel.getCurrentWorkspace() == null) {
                 presentError("You must create a workspace to be able to save the color model!", "No workspace");
@@ -1430,6 +1435,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             else {
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
+                log.info("Setting 3d color model: {}",workspace.getColorModel3d());
                 tmDomainMgr.save(workspace);
             }
         }

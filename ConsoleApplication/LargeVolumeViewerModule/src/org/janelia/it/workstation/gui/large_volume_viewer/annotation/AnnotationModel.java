@@ -22,7 +22,6 @@ import com.google.common.base.Stopwatch;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronStyle;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
@@ -46,7 +45,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonCon
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -85,7 +84,7 @@ called from a  SimpleWorker thread.
     private TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
-    private final ModelManagerTmModelAdapter modelAdapter;
+    private final DomainMgrTmModelAdapter modelAdapter;
 
     private TmSample currentSample;
     private Matrix micronToVoxMatrix;
@@ -118,7 +117,7 @@ called from a  SimpleWorker thread.
     public AnnotationModel() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
-        modelAdapter = new ModelManagerTmModelAdapter();
+        modelAdapter = new DomainMgrTmModelAdapter();
         neuronManager = new TmModelManipulator(modelAdapter);
 
         // Report performance statistics when program closes
@@ -244,12 +243,14 @@ called from a  SimpleWorker thread.
 
     // current neuron methods
     public TmNeuron getCurrentNeuron() {
+        log.trace("getCurrentNeuron = {}",currentNeuron);
         return currentNeuron;
     }
 
     // this method sets the current neuron but does not
     //  fire an event to update the UI
     private synchronized void setCurrentNeuron(TmNeuron neuron) {
+        log.trace("setCurrentNeuron({})",neuron);
         // be sure we're using the neuron object from the current workspace
         if (neuron != null) {
             currentNeuron = getNeuronFromNeuronID(neuron.getId());
@@ -261,6 +262,7 @@ called from a  SimpleWorker thread.
     // this method sets the current neuron *and*
     //  updates the UI; null neuron means deselect
     public void selectNeuron(TmNeuron neuron) {
+        log.info("selectNeuron({})",neuron);
         if (neuron != null && getCurrentNeuron() != null && neuron.getId().equals(getCurrentNeuron().getId())) {
             return;
         }
@@ -300,6 +302,7 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
+        log.info("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }
 
@@ -311,6 +314,7 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
+        log.info("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
     }
 

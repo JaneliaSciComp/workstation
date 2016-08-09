@@ -33,10 +33,10 @@ public class TmSampleNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         if (ClientDomainUtils.isOwner(getSample())) {
-            return Icons.getIcon("monitor.png").getImage();
+            return Icons.getIcon("beaker.png").getImage();
         }
         else {
-            return Icons.getIcon("monitor.png").getImage();
+            return Icons.getIcon("beaker.png").getImage();
         }
     }
     
