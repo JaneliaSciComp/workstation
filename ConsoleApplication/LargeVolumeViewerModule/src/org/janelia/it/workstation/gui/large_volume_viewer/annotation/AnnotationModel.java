@@ -1667,6 +1667,10 @@ called from a  SimpleWorker thread.
         return currentTagMap.getAllTags();
     }
 
+    public Set<Long> getNeuronIDsForTag(String tag) {
+        return currentTagMap.getNeuronIDs(tag);
+    }
+
     public boolean hasNeuronTag(TmNeuron neuron, String tag) {
         return hasNeuronTag(neuron.getId(), tag);
     }

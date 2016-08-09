@@ -1,38 +1,39 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 
 /**
- * this action opens a dialog that allows the user to add
+ * this action opens a dialog that allows the user to add or remove
  * a neuron tag to all the neurons that are visible in
  * the neuron list
  */
-public class BulkAddNeuronTagAction extends AbstractAction {
+public class BulkNeuronTagAction extends AbstractAction {
 
     private AnnotationModel annModel;
     private NeuronListProvider listProvider;
 
     private JPanel mainPanel;
     private JComboBox existingTagMenu;
+    private JComboBox removeTagMenu;
     private JTextField newTagField;
 
 
-    public BulkAddNeuronTagAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
+    public BulkNeuronTagAction(AnnotationModel annotationModel, NeuronListProvider listProvider) {
         this.annModel = annotationModel;
         this.listProvider = listProvider;
 
-        putValue(NAME, "Bulk add neuron tags...");
-        putValue(SHORT_DESCRIPTION, "Add neuron tag to all visible neurons");
+        putValue(NAME, "Bulk edit neuron tags...");
+        putValue(SHORT_DESCRIPTION, "Edit neuron tag for all visible neurons");
     }
 
 
@@ -46,7 +47,7 @@ public class BulkAddNeuronTagAction extends AbstractAction {
         Object[] options = {"Done"};
         JOptionPane.showOptionDialog(null,
                 getInterface(),
-                "Add tags to " + neurons.size() + " neurons",
+                "Edit tags for " + neurons.size() + " neurons",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE,
                 null,
@@ -70,14 +71,33 @@ public class BulkAddNeuronTagAction extends AbstractAction {
     }
 
     private void addTag(String tag) {
-
-
-        System.out.println("actually adding tag " + tag);
-
-
-        // should I add a bulk add function annModel.addNeuronTags(String tag, List<TmNeuron> neuronList)?
         for (TmNeuron neuron: listProvider.getNeuronList()) {
             annModel.addNeuronTag(tag, neuron);
+        }
+    }
+
+    private void requestClearTag(String tag) {
+        // dialog: are you sure
+        int ans = JOptionPane.showConfirmDialog(
+                null,
+                String.format("You are about to remove the tag '%s' from the visible neurons that have it. This action cannot be undone! Continue?", tag),
+                "Clear tags?",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+        if (ans == JOptionPane.OK_OPTION) {
+            clearTag(tag);
+        }
+    }
+
+    private void clearTag(String tag) {
+        // rather than worry about how to removing items from two Guava BiMaps
+        //  while iterating over one of them, I'm just going to copy the set:
+        Set<Long> remove = new HashSet<>(annModel.getNeuronIDsForTag(tag));
+        // only remove if visible, remember:
+        for (TmNeuron neuron: listProvider.getNeuronList()) {
+            if (remove.contains(neuron.getId())) {
+                annModel.removeNeuronTag(tag, neuron);
+            }
         }
     }
 
@@ -85,6 +105,7 @@ public class BulkAddNeuronTagAction extends AbstractAction {
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 
+        // add existing tag
         JPanel existingPanel = new JPanel();
         existingPanel.setLayout(new BoxLayout(existingPanel, BoxLayout.LINE_AXIS));
 
@@ -96,18 +117,36 @@ public class BulkAddNeuronTagAction extends AbstractAction {
             }
         });
         existingPanel.add(existingButton);
-
         existingPanel.add(new JLabel("existing tag "));
 
         String[] existingTags = annModel.getAllNeuronTags().toArray(new String[annModel.getAllNeuronTags().size()]);
         Arrays.sort(existingTags);
         existingTagMenu = new JComboBox(existingTags);
         existingPanel.add(existingTagMenu);
-
         existingPanel.add(Box.createHorizontalGlue());
         mainPanel.add(existingPanel);
 
 
+        // remove existing tag
+        JPanel removePanel = new JPanel();
+        removePanel.setLayout(new BoxLayout(removePanel, BoxLayout.LINE_AXIS));
+
+        JButton removeButton = new JButton("Remove");
+        removeButton.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                requestClearTag((String) removeTagMenu.getSelectedItem());
+            }
+        });
+        removePanel.add(removeButton);
+        removePanel.add(new JLabel("existing tag "));
+        removeTagMenu = new JComboBox(existingTags);
+        removePanel.add(removeTagMenu);
+        removePanel.add(Box.createHorizontalGlue());
+        mainPanel.add(removePanel);
+
+
+        // add new tag
         JPanel newTagPanel = new JPanel();
         newTagPanel.setLayout(new BoxLayout(newTagPanel, BoxLayout.LINE_AXIS));
 

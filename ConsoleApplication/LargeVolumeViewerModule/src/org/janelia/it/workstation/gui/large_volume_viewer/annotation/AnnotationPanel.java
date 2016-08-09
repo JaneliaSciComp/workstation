@@ -12,7 +12,7 @@ import java.awt.HeadlessException;
 import java.awt.Insets;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkAddNeuronTagAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.util.Icons;
 
@@ -268,7 +268,7 @@ public class AnnotationPanel extends JPanel
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
         neuronToolMenu.add(new NeuronTagsAction(annotationModel));
-        neuronToolMenu.add(new BulkAddNeuronTagAction(annotationModel, workspaceNeuronList));
+        neuronToolMenu.add(new BulkNeuronTagAction(annotationModel, workspaceNeuronList));
         neuronToolMenu.add(new AbstractAction("Choose neuron style...") {
             @Override
             public void actionPerformed(ActionEvent e) {
