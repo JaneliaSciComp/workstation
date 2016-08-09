@@ -9,15 +9,19 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +36,9 @@ public class TiledMicroscopeDomainMgr {
 
     private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
 
+    // name of entity that holds our workspaces
+    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
+
     // Singleton
     private static TiledMicroscopeDomainMgr instance;
 
@@ -43,65 +50,90 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private DomainModel model;
+    private final DomainModel model = DomainMgr.getDomainMgr().getModel();
+    
+    public TmSample getSample(Long sampleId) throws Exception {
+        log.debug("getSample(sampleId={})",sampleId);
+        return model.getDomainObject(TmSample.class, sampleId);
+    }
 
-
-    /**
-     * Returns a lazy domain model instance. 
-     * @return domain model
-     */
-    public DomainModel getModel() {
-        if (model == null) {
-            model = DomainMgr.getDomainMgr().getModel();
-        }
-        return model;
+    public TmSample getSample(TmWorkspace workspace) throws Exception {
+        log.debug("getSample({})",workspace);
+        return getSample(workspace.getSampleRef().getTargetId());
     }
 
     public Collection<TmSample> getTmSamples() throws Exception {
-        List<TmSample> samples = new ArrayList<>();
-        for(org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample domainSample : model.getTmSamples()) {
-            TmSample sample = new TmSample(domainSample.getId(), domainSample.getName(), domainSample.getCreationDate(), domainSample.getFilepath());
-            samples.add(sample);
-        }
-        return samples;
+        log.debug("getTmSamples()");
+        return model.getTmSamples();
     }
 
-    public TmSample save(TmSample tmSample) throws Exception {
-
-        org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample domainObject = null;
-        if (tmSample.getId()!=null) {
-            domainObject = model.getDomainObject(org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample.class, tmSample.getId());
-        }
-
-        return null;
+    public TmSample save(TmSample sample) throws Exception {
+        log.debug("save({})",sample);
+        return model.save(sample);
     }
 
-    public void remove(TmSample tmSample) throws Exception {
-        throw new UnsupportedOperationException();
+    public void remove(TmSample sample) throws Exception {
+        log.debug("remove({})",sample);
+        model.remove(sample);
+    }
+
+    public TreeNode getOrCreateWorkspacesFolder() throws Exception {
+        log.debug("getOrCreateWorkspacesFolder()");
+        Workspace defaultWorkspace = model.getDefaultWorkspace();
+        TreeNode folder = DomainUtils.findObjectByTypeAndName(model.getDomainObjects(defaultWorkspace.getChildren()), TreeNode.class, WORKSPACES_FOLDER_NAME);
+        if (folder==null) {
+            TreeNode workspacesNode = new TreeNode();
+            workspacesNode.setName(WORKSPACES_FOLDER_NAME);
+            workspacesNode = model.create(workspacesNode);
+            model.addChild(defaultWorkspace, workspacesNode);
+        }
+        return folder;
+    }
+
+    public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
+        log.debug("getWorkspace(workspaceId={})",workspaceId);
+        return model.getDomainObject(TmWorkspace.class, workspaceId);
     }
 
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
-        throw new UnsupportedOperationException();
+        log.debug("getTmWorkspaces()");
+        return model.getTmWorkspaces();
     }
 
-    public TmWorkspace create(TmWorkspace tmWorkspace) throws Exception {
-        throw new UnsupportedOperationException();
+    public TmWorkspace save(TmWorkspace workspace) throws Exception {
+        log.debug("save({})", workspace);
+        return model.save(workspace);
     }
 
-    public TmWorkspace update(TmWorkspace tmWorkspace) throws Exception {
-        throw new UnsupportedOperationException();
+    public void remove(TmWorkspace workspace) throws Exception {
+        log.debug("remove({})", workspace);
+        model.remove(workspace);
     }
 
-    public void remove(TmWorkspace tmWorkspace) throws Exception {
-        throw new UnsupportedOperationException();
+    public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {
+        log.debug("createTiledMicroscopeWorkspace(sampleId={}, name={})", sampleId, name);
+        TreeNode workspaceRoot = getOrCreateWorkspacesFolder();
+        TmSample sample = getSample(sampleId);
+        if (sample==null) {
+            throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
+        }
+        TmWorkspace workspace = new TmWorkspace();
+        workspace.setOwnerKey(SessionMgr.getSubjectKey());
+        workspace.setName(name);
+        workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
+        workspace = save(workspace);
+        model.addChild(workspaceRoot, workspace);
+        return workspace;
     }
 
     public List<TmNeuron> getWorkspaceNeurons(Long workspaceId) throws Exception {
+        log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         List<TmNeuron> neurons = new ArrayList<>();
         for(Pair<TmNeuronMetadata,InputStream> pair : model.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
             TmNeuron tmNeuron = exchanger.deserializeNeuron(pair.getRight());
+            log.info("Got neuron {} with payload '{}'", neuronMetadata.getId(), tmNeuron);
             // TODO: Should these metadata be serialized with protobuf at all? Probably not!
             // But since they are, let's verify that they're consistent.
             if (!tmNeuron.getId().equals(neuronMetadata.getId())) {
@@ -113,42 +145,46 @@ public class TiledMicroscopeDomainMgr {
             if (!tmNeuron.getWorkspaceId().equals(neuronMetadata.getWorkspaceRef().getTargetId())) {
                 log.error("Neuron's metadata (ownerKey) does not match serialized data: "+tmNeuron.getId());
             }
+
             neurons.add(tmNeuron);
         }
+
+        log.info("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
         return neurons;
     }
 
-    public TmNeuronMetadata create(TmNeuron tmNeuron) throws Exception {
+    public TmNeuronMetadata save(TmNeuron tmNeuron) throws Exception {
+        log.debug("save({})", tmNeuron);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
-        Long newId = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-        tmNeuron.setId(newId);
-        tmNeuron.setOwnerKey(AccessManager.getSubjectKey());
-        neuronMetadata.setId(tmNeuron.getId());
-        neuronMetadata.setOwnerKey(tmNeuron.getOwnerKey());
-        neuronMetadata.setWorkspaceRef(Reference.createFor(TmWorkspace.class, tmNeuron.getWorkspaceId()));
-        byte[] protobufBytes = exchanger.serializeNeuron(tmNeuron);
-        model.create(neuronMetadata, new ByteArrayInputStream(protobufBytes));
-        return neuronMetadata;
-    }
 
-    public TmNeuronMetadata update(TmNeuron tmNeuron) throws Exception {
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
+        boolean newNeuron = false;
+        if (tmNeuron.getId()==null) {
+            Long newId = TimebasedIdentifierGenerator.generateIdList(1).get(0);
+            tmNeuron.setId(newId);
+            tmNeuron.setOwnerKey(AccessManager.getSubjectKey());
+            newNeuron = true;
+        }
+
         neuronMetadata.setId(tmNeuron.getId());
         neuronMetadata.setOwnerKey(tmNeuron.getOwnerKey());
-        neuronMetadata.setWorkspaceRef(Reference.createFor(TmWorkspace.class, tmNeuron.getWorkspaceId()));
+        neuronMetadata.setWorkspaceRef(Reference.createFor(org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace.class, tmNeuron.getWorkspaceId()));
+
         byte[] protobufBytes = exchanger.serializeNeuron(tmNeuron);
-        model.update(neuronMetadata, new ByteArrayInputStream(protobufBytes));
+        if (newNeuron) {
+            model.create(neuronMetadata, new ByteArrayInputStream(protobufBytes));
+        }
+        else {
+            model.update(neuronMetadata, new ByteArrayInputStream(protobufBytes));
+        }
+
         return neuronMetadata;
     }
 
     public void remove(TmNeuron tmNeuron) throws Exception {
+        log.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
         model.remove(neuronMetadata);
     }
-
-
-
 }

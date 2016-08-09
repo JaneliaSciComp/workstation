@@ -10,7 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 
@@ -112,21 +113,8 @@ public class AnnotationPanel extends JPanel
     
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
-            boolean state;
-            String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-            if (automaticRefinementPref != null) {
-                state = Boolean.parseBoolean(automaticRefinementPref);
-            } else {
-                state = false;
-            }
-            automaticRefinementMenuItem.setSelected(state);
-            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-            if (automaticTracingPref != null) {
-                state = Boolean.parseBoolean(automaticTracingPref);
-            } else {
-                state = false;
-            }
-            automaticTracingMenuItem.setSelected(state);
+            automaticRefinementMenuItem.setSelected(workspace.isAutoPointRefinement());
+            automaticTracingMenuItem.setSelected(workspace.isAutoTracing());
         }
     }
     
@@ -228,7 +216,7 @@ public class AnnotationPanel extends JPanel
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                annotationMgr.saveColorModel();
+                annotationMgr.saveQuadViewColorModel();
             }
         }));
 

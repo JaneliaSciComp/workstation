@@ -135,17 +135,44 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
+                <package>org.janelia.it.FlyWorkstation.ws</package>
+                <package>org.janelia.it.workstation.gui.browser</package>
+                <package>org.janelia.it.workstation.gui.browser.actions</package>
+                <package>org.janelia.it.workstation.gui.browser.activity_logging</package>
                 <package>org.janelia.it.workstation.gui.browser.api</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.baseball_card</package>
+                <package>org.janelia.it.workstation.gui.browser.api.facade.impl.mongo</package>
+                <package>org.janelia.it.workstation.gui.browser.api.facade.impl.rest</package>
+                <package>org.janelia.it.workstation.gui.browser.api.facade.interfaces</package>
+                <package>org.janelia.it.workstation.gui.browser.api.lifecycle</package>
+                <package>org.janelia.it.workstation.gui.browser.api.navigation</package>
+                <package>org.janelia.it.workstation.gui.browser.components</package>
                 <package>org.janelia.it.workstation.gui.browser.events</package>
+                <package>org.janelia.it.workstation.gui.browser.events.lifecycle</package>
+                <package>org.janelia.it.workstation.gui.browser.events.model</package>
                 <package>org.janelia.it.workstation.gui.browser.events.selection</package>
                 <package>org.janelia.it.workstation.gui.browser.exchange</package>
                 <package>org.janelia.it.workstation.gui.browser.flavors</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.editor</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.find</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.hud</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.inspector</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.keybind</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.listview</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.listview.icongrid</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.listview.table</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.ontology</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.support</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.table</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.tree</package>
+                <package>org.janelia.it.workstation.gui.browser.model</package>
+                <package>org.janelia.it.workstation.gui.browser.model.keybind</package>
+                <package>org.janelia.it.workstation.gui.browser.model.search</package>
                 <package>org.janelia.it.workstation.gui.browser.nb_action</package>
                 <package>org.janelia.it.workstation.gui.browser.nodes</package>
+                <package>org.janelia.it.workstation.gui.browser.web</package>
+                <package>org.janelia.it.workstation.gui.browser.ws</package>
             </public-packages>
         </data>
     </configuration>

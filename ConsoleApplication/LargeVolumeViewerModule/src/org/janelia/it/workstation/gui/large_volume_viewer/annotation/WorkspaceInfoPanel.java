@@ -4,18 +4,19 @@ import javax.swing.*;
 
 import java.awt.*;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+
 
 /**
  * this panel shows info on the selected workspace
  *
  * djo, 6/13
  */
-public class WorkspaceInfoPanel extends JPanel 
-{
+public class WorkspaceInfoPanel extends JPanel {
+
     private JLabel workspaceNameLabel;
     private JLabel sampleNameLabel;
 
@@ -38,8 +39,6 @@ public class WorkspaceInfoPanel extends JPanel
 
         loadWorkspace(null);
     }
-
-
 
     /**
      * populate the UI with info from the input workspace
@@ -64,7 +63,7 @@ public class WorkspaceInfoPanel extends JPanel
 
                 @Override
                 protected void doStuff() throws Exception {
-                    sampleName = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID()).getName();
+                    sampleName = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace).getName();
                 }
 
                 @Override

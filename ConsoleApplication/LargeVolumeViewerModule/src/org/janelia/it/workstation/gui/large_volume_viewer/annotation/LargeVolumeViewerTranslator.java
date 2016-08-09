@@ -1,24 +1,36 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import Jama.Matrix;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronStyleChangeListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NextParentListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
-import java.util.*;
-
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +55,8 @@ import org.slf4j.LoggerFactory;
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
     GlobalAnnotationListener, NeuronStyleChangeListener {
 
+    private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
+
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
     private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<>();
@@ -50,9 +64,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private Collection<NextParentListener> nextParentListeners = new ArrayList<>();
     private Collection<NeuronStyleChangeListener> neuronStyleChangeListeners = new ArrayList<>();
     private ViewStateListener viewStateListener;
-    
-    private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
-    
+
     public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
         avpListeners.add(l);
     }
@@ -242,14 +254,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             // require knowledge of the sample ID, rather than file path.
             TileFormat tileFormat = getTileFormat();
             if (tileFormat != null) {
-                Matrix micronToVoxMatrix = workspace.getMicronToVoxMatrix();
-                Matrix voxToMicronMatrix = workspace.getVoxToMicronMatrix();
+                Matrix micronToVoxMatrix = annModel.getMicronToVoxMatrix();
+                Matrix voxToMicronMatrix = annModel.getVoxToMicronMatrix();
                 if (micronToVoxMatrix != null  &&  voxToMicronMatrix != null) {                    
                     tileFormat.setMicronToVoxMatrix(micronToVoxMatrix);
                     tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
                 }
                 else {
-                    addMatrices(workspace, tileFormat);
+                    addMatrices(tileFormat);
                 }
             }
             
@@ -260,8 +272,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
             NeuronStyle style;
             Map<TmNeuron, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-            for (TmNeuron neuron: workspace.getNeuronList()) {
-                if (neuronStyleMap.containsKey(neuron.getId())) {
+            for (TmNeuron neuron: annModel.getNeuronList()) {
+                logger.info("Got neuron: "+neuron);
+                if (neuronStyleMap!=null && neuronStyleMap.containsKey(neuron.getId())) {
                     style = neuronStyleMap.get(neuron.getId());
                 } else {
                     style = NeuronStyle.getStyleForNeuron(neuron.getId());
@@ -276,9 +289,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
 
             // check for saved image color model
-            String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
-            if (colorModelString != null  &&  viewStateListener != null) {
-                viewStateListener.loadColorModel(colorModelString);
+            if (workspace.getColorModel() != null  &&  viewStateListener != null) {
+                viewStateListener.loadColorModel(workspace.getColorModel());
             }
 
             // note that we must add annotations in parent-child sequence
@@ -287,7 +299,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             //  present rather than piecemeal (which will cause problems in
             //  some cases on workspace reloads)
             List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            for (TmNeuron neuron: workspace.getNeuronList()) {
+            for (TmNeuron neuron: annModel.getNeuronList()) {
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                     addedAnchorList.addAll(neuron.getSubTreeList(root));
                 }
@@ -296,7 +308,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             // draw anchored paths, too, after all the anchors are drawn
             List<TmAnchoredPath> annList = new ArrayList<>();
-            for (TmNeuron neuron: workspace.getNeuronList()) {
+            for (TmNeuron neuron: annModel.getNeuronList()) {
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
                     annList.add(path);
                 }
@@ -394,22 +406,16 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      * This is a lazy-add of matrices. These matrices support translation
      * between coordinate systems.
      */
-    private void addMatrices(TmWorkspace workspace, TileFormat tileFormat) {
-        Matrix micronToVoxMatrix;
-        Matrix voxToMicronMatrix;
+    private void addMatrices(TileFormat tileFormat) {
         // If null, the tile format can be used to construct its
         // own versions of these matrices, and saved.
         try {
-            final Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
-            micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
-            voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
-            final String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
-            final String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+            final Matrix micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
+            final Matrix voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
             SimpleWorker sw = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
-                    ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
+                    annModel.setSampleMatrices(micronToVoxMatrix, voxToMicronMatrix);
                 }
 
                 @Override

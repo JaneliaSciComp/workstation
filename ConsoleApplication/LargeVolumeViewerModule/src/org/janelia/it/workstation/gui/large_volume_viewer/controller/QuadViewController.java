@@ -13,6 +13,7 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
@@ -63,8 +64,8 @@ public class QuadViewController implements ViewStateListener {
     }
     
     @Override
-    public void loadColorModel(String colorModelString) {
-        ui.imageColorModelFromString(colorModelString);
+    public void loadColorModel(TmColorModel colorModel) {
+        ui.setImageColorModel(colorModel);
     }
     
     @Override
@@ -267,7 +268,7 @@ public class QuadViewController implements ViewStateListener {
 
         @Override
         public void closeWorkspace() {
-            annoMgr.setInitialEntity(null);
+            annoMgr.setInitialObject(null);
         }
         
     }

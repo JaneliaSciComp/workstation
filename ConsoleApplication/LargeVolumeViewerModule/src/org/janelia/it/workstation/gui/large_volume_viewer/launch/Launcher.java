@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import javax.swing.JOptionPane;
-import org.janelia.it.workstation.nb_action.EntityAcceptor;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
@@ -16,15 +18,15 @@ import org.openide.windows.WindowManager;
 /**
  * Launches the Data Viewer from a context-menu.
  */
-@ServiceProvider(service = EntityAcceptor.class, path=EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH)
-public class Launcher implements EntityAcceptor  {
+@ServiceProvider(service = DomainObjectAcceptor.class, path= DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
+public class Launcher implements DomainObjectAcceptor  {
     
     private static final int MENU_ORDER = 300;
     
     public Launcher() {
     }
 
-    public void launch( final long entityId ) {
+    public void launch(final DomainObject domainObject) {
         TopComponentGroup group = 
                 WindowManager.getDefault().findTopComponentGroup(
                         "large_volume_viewer_plugin"
@@ -51,7 +53,7 @@ public class Launcher implements EntityAcceptor  {
                     win.requestActive();
                 }
                 try {
-                    win.openLargeVolumeViewer(entityId);
+                    win.openLargeVolumeViewer(domainObject);
                 } catch ( Exception ex ) {
                     SessionMgr.getSessionMgr().handleException( ex );
                 }
@@ -65,8 +67,8 @@ public class Launcher implements EntityAcceptor  {
     }
 
     @Override
-    public void acceptEntity(Entity e) {
-        launch(e.getId());
+    public void acceptDomainObject(DomainObject domainObject) {
+        launch(domainObject);
     }
 
     @Override
@@ -75,10 +77,8 @@ public class Launcher implements EntityAcceptor  {
     }
 
     @Override
-    public boolean isCompatible(Entity e) {
-        return e != null &&
-              (EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE.equals( e.getEntityTypeName() ) ||
-               EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE.equals( e.getEntityTypeName() ) );
+    public boolean isCompatible(DomainObject e) {
+        return e != null &&  ((e instanceof TmWorkspace) || (e instanceof TmSample));
     }
 
     @Override

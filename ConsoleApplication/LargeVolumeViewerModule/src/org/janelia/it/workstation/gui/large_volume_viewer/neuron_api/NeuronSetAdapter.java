@@ -46,9 +46,10 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
@@ -70,13 +71,15 @@ extends BasicNeuronSet
 implements NeuronSet// , LookupListener
 {
     private TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
+    private TmSample sample;
     private AnnotationModel annotationModel;
     private final GlobalAnnotationListener globalAnnotationListener;
     private final TmGeoAnnotationModListener annotationModListener;
     private HortaMetaWorkspace cachedHortaWorkspace = null;
     private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    
+
+
     public NeuronSetAdapter()
     {
         super("LVV Neurons", new NeuronList());
@@ -94,7 +97,7 @@ implements NeuronSet// , LookupListener
             // Exceptions.printStackTrace(ex);
             return null;
         }
-        return new NeuronModelAdapter(neuron, annotationModel, workspace);
+        return new NeuronModelAdapter(neuron, annotationModel, workspace, sample);
     }
     
     private boolean removeNeuron(NeuronModel neuron) {
@@ -188,6 +191,7 @@ implements NeuronSet// , LookupListener
         if (! workspace.getName().equals(getName()))
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
+        this.sample = annotationModel.getCurrentSample();
         NeuronList nl = (NeuronList) neurons;
         if (nl.wrap(workspace, annotationModel))
             getMembershipChangeObservable().setChanged();
@@ -350,6 +354,7 @@ implements NeuronSet// , LookupListener
     private static class NeuronList implements Collection<NeuronModel>
     {
         private TmWorkspace workspace;
+        private TmSample sample;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
         
@@ -366,7 +371,7 @@ implements NeuronSet// , LookupListener
         {
             if (workspace == null) 
                 return 0;
-            return workspace.getNeuronList().size();
+            return annotationModel.getNeuronList().size();
         }
 
         @Override
@@ -374,7 +379,7 @@ implements NeuronSet// , LookupListener
         {
             if (workspace == null) 
                 return true;
-            return workspace.getNeuronList().isEmpty();
+            return annotationModel.getNeuronList().isEmpty();
         }
 
         @Override
@@ -382,13 +387,13 @@ implements NeuronSet// , LookupListener
         {
             if (workspace == null)
                 return false;
-            if (workspace.getNeuronList().contains(o))
+            if (annotationModel.getNeuronList().contains(o))
                 return true;
             if (! ( o instanceof NeuronModelAdapter ))
                 return false;
             NeuronModelAdapter neuron = (NeuronModelAdapter) o;
             TmNeuron tmNeuron = neuron.getTmNeuron();
-            return workspace.getNeuronList().contains(tmNeuron);
+            return annotationModel.getNeuronList().contains(tmNeuron);
         }
 
         @Override
@@ -398,7 +403,7 @@ implements NeuronSet// , LookupListener
                 // return empty iterator
                 return new ArrayList<NeuronModel>().iterator();
             }
-            final Iterator<TmNeuron> it = workspace.getNeuronList().iterator();
+            final Iterator<TmNeuron> it = annotationModel.getNeuronList().iterator();
             return new Iterator<NeuronModel>() {
 
                 @Override
@@ -414,7 +419,7 @@ implements NeuronSet// , LookupListener
                     Long guid = neuron.getId();
                     if (! cachedNeurons.containsKey(guid)) {
                         // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
-                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, annotationModel, workspace));
+                        cachedNeurons.put(guid, new NeuronModelAdapter(neuron, annotationModel, workspace, sample));
                     }
                     return cachedNeurons.get(guid);
                 }
@@ -494,6 +499,7 @@ implements NeuronSet// , LookupListener
             
             this.annotationModel = annotationModel;
             this.workspace = workspace;
+            this.sample = annotationModel.getCurrentSample();
             
             // If we get this far, either the annotationModel or the workspace changed,
             // so we should refresh our persistent cached NeuronModelAdapter objects
@@ -502,7 +508,7 @@ implements NeuronSet// , LookupListener
             Set<Long> newNeurons = new HashSet<>();
             boolean neuronMembershipChanged = false;
             boolean neuronsWereRefreshed = false;
-            for (TmNeuron tmNeuron : workspace.getNeuronList()) 
+            for (TmNeuron tmNeuron : annotationModel.getNeuronList())
             {
                 Long newId = tmNeuron.getId();
                 newNeurons.add(newId);

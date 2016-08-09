@@ -265,7 +265,7 @@ public class ActivityLogHelper {
         if (annotationModel != null
                 && annotationModel.getCurrentWorkspace() != null
                 && annotationModel.getCurrentWorkspace().getId() != null) {
-            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleID() + ":" + annotationId;
+            action = "Sample/Annotation:" + annotationModel.getCurrentWorkspace().getSampleRef().getTargetId() + ":" + annotationId;
         }
         SessionMgr.getSessionMgr().logToolEvent(
                 LVV_LOGSTAMP_ID,

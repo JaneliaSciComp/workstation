@@ -14,6 +14,14 @@
       <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/test/unit/src" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/HortaTracer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DataBrowserModule/test/unit/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DataBrowserModule/build/classes-generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes-generated" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/ConsoleModule/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/DataBrowserModule/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/LargeVolumeViewerModule/build/classes" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/build_eclipse" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

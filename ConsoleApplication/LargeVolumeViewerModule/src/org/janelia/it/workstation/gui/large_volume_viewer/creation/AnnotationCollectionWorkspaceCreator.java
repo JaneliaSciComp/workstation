@@ -2,25 +2,21 @@ package org.janelia.it.workstation.gui.large_volume_viewer.creation;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import org.janelia.it.jacs.model.IdSource;
+
 import org.janelia.it.jacs.model.entity.Entity;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -116,7 +112,8 @@ public class AnnotationCollectionWorkspaceCreator implements EntityWrapperCreato
                                 
                                 // Let's create the new workspace.
                                 AnnotationModel annoModel = new AnnotationModel();
-                                Entity workspacesFolder = annoModel.getOrCreateWorkspacesFolder();
+                                if (true) throw new UnsupportedOperationException("This code needs to be ported to use domain objects");
+                                Entity workspacesFolder = null;//annoModel.getOrCreateWorkspacesFolder();
                                 if (workspacesFolder == null) {
                                     throw new Exception("Failed to obtain workspaces folder.");
                                 }

@@ -8,6 +8,8 @@ import java.util.Map;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -19,7 +21,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A child factory for tree nodes (i.e. folders). Supports adding and removing 
- * children dynamically. 
+ * children dynamically.
+ *
+ * TODO: this class needs an overhaul so that there is one place where we define which nodes appear as children of folders,
+ * and everything else that happens in here is a consequence of that.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -46,6 +51,12 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             else if (reference.getTargetClassName().equals("Filter")) {
                 return true;
             }
+            else if (reference.getTargetClassName().equals("TmSample")) {
+                return true;
+            }
+            else if (reference.getTargetClassName().equals("TmWorkspace")) {
+                return true;
+            }
         }
         return false;
     }
@@ -55,42 +66,49 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         try {
             if (treeNode==null) return false;
 
-        log.debug("Creating children keys for {}",treeNode.getName());
+            log.debug("Creating children keys for {}",treeNode.getName());
 
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
-        if (children.size()!=treeNode.getNumChildren()) {
-            log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
-        }
-        log.debug("Got {} children",children.size());
+            DomainModel model = DomainMgr.getDomainMgr().getModel();
+            List<DomainObject> children = model.getDomainObjects(treeNode.getChildren());
+            if (children.size()!=treeNode.getNumChildren()) {
+                log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());
+            }
+            log.debug("Got children: {}",children);
 
-        Map<Long,DomainObject> map = new HashMap<>();
-        for (DomainObject obj : children) {
-            map.put(obj.getId(), obj);
-        }
+            Map<Long,DomainObject> map = new HashMap<>();
+            for (DomainObject obj : children) {
+                map.put(obj.getId(), obj);
+            }
 
-        List<DomainObject> temp = new ArrayList<>();
-        if (treeNode.hasChildren()) {
-            for(Reference reference : treeNode.getChildren()) {
-                if (reference==null) continue;
-                DomainObject obj = map.get(reference.getTargetId());
-                log.trace(reference.getTargetClassName()+"#"+reference.getTargetId()+" -> "+obj);
-                if (obj!=null) {
-                    if (TreeNode.class.isAssignableFrom(obj.getClass())) {
-                        temp.add(obj);
+            List<DomainObject> temp = new ArrayList<>();
+            if (treeNode.hasChildren()) {
+                for(Reference reference : treeNode.getChildren()) {
+                    if (reference==null) continue;
+                    DomainObject obj = map.get(reference.getTargetId());
+                    log.trace(reference.getTargetClassName()+"#"+reference.getTargetId()+" -> "+obj);
+                    if (obj!=null) {
+                        if (TreeNode.class.isAssignableFrom(obj.getClass())) {
+                            temp.add(obj);
+                        }
+                        else if (Filter.class.isAssignableFrom(obj.getClass())) {
+                            temp.add(obj);
+                        }
+                        else if (TmSampleNode.class.isAssignableFrom(obj.getClass())) {
+                            temp.add(obj);
+                        }
+                        else if (TmWorkspaceNode.class.isAssignableFrom(obj.getClass())) {
+                            temp.add(obj);
+                        }
                     }
-                    else if (Filter.class.isAssignableFrom(obj.getClass())) {
-                        temp.add(obj);
+                    else {
+                        log.warn("Dead reference detected: "+reference);
                     }
-                }
-                else {
-                    log.warn("Dead reference detected: "+reference);
                 }
             }
-        }
 
-        list.addAll(temp);
-        } catch (Exception ex) {
+            list.addAll(temp);
+        }
+        catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
             return false;
         }
@@ -106,6 +124,13 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
             else if (Filter.class.isAssignableFrom(key.getClass())) {
                 return new FilterNode(this, (Filter)key);
+            }
+            // TODO: these classes should be registered and handled dynamically, not hard-coded here, so that they can be moved to another module (such as LVV)
+            else if (TmSample.class.isAssignableFrom(key.getClass())) {
+                return new TmSampleNode(this, (TmSample)key);
+            }
+            else if (TmWorkspace.class.isAssignableFrom(key.getClass())) {
+                return new TmWorkspaceNode(this, (TmWorkspace)key);
             }
             else {
                 return null;

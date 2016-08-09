@@ -30,11 +30,12 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
-import Jama.Matrix;
 import java.util.Objects;
+
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.util.MatrixUtilities;
 
 /**
  *
@@ -47,11 +48,11 @@ public class NeuronVertexAdapter implements NeuronVertex
     private final Jama.Matrix voxToMicronMatrix;
     private final Jama.Matrix micronToVoxMatrix;
 
-    public NeuronVertexAdapter(TmGeoAnnotation vertex, TmWorkspace workspace) {
+    public NeuronVertexAdapter(TmGeoAnnotation vertex, TmSample sample) {
         this.vertex = vertex;
         this.vertexId = vertex.getId();
-        this.voxToMicronMatrix = workspace.getVoxToMicronMatrix();
-        this.micronToVoxMatrix = workspace.getMicronToVoxMatrix();
+        this.voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");
+        this.micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
     }
     
     @Override

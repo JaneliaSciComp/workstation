@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -189,7 +189,7 @@ public class FilteredAnnotationList extends JPanel {
         model.clear();
         AnnotationFilter filter = getCurrentFilter();
         String note;
-        for (TmNeuron neuron: currentWorkspace.getNeuronList()) {
+        for (TmNeuron neuron: annotationModel.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     note = annotationMgr.getNote(ann.getId(), neuron);

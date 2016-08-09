@@ -16,9 +16,11 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 
@@ -287,7 +289,7 @@ public class WorkspaceNeuronList extends JPanel {
     private void updateModel(TmWorkspace workspace) {
         neuronTableModel.clear();
         if (workspace != null) {
-            neuronTableModel.addNeurons(workspace.getNeuronList());
+            neuronTableModel.addNeurons(annotationModel.getNeuronList());
         }
     }
 

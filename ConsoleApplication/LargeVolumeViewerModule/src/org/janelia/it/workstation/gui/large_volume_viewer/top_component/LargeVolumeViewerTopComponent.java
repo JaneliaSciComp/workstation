@@ -7,6 +7,8 @@ import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -69,10 +71,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         establishLookups();
     }
 
-    public void openLargeVolumeViewer( Long entityId ) throws Exception {
-        state.load( entityId );
+    public void openLargeVolumeViewer(DomainObject domainObject) {
+        state.load(domainObject);
     }
-    
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -103,12 +105,14 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         jPanel1.add( state.getLvvv(), BorderLayout.CENTER );
+        Events.getInstance().registerOnEventBus(state.getLvvv());
     }
 
     @Override
     public void componentClosed() {
         jPanel1.remove( state.getLvvv() );
         state.close();
+        Events.getInstance().unregisterOnEventBus(state.getLvvv());
     }
     
     public LargeVolumeViewViewer getLvvv() {

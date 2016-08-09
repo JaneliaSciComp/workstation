@@ -1,36 +1,26 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.console.viewerapi.ToolButton;
-import org.janelia.console.viewerapi.color_slider.SliderPanel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
-import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Vector;
 
 import javax.media.opengl.GLProfile;
 import javax.swing.*;
@@ -39,37 +29,59 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Vector;
-import java.util.List;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
+import org.janelia.console.viewerapi.ToolButton;
+import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelInitListener;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
+import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.dialogs.MemoryCheckDialog;
 import org.janelia.it.workstation.gui.full_skeleton_view.viewer.AnnotationSkeletonViewLauncher;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.SpinnerCalculationValue;
+import org.janelia.it.workstation.gui.large_volume_viewer.components.TileStackCacheStatusPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceRequestListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.WorkspaceClosureListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerLocationProvider;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.jacs.shared.swc.SWCDataConverter;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
 
 /** 
  * Main window for QuadView application.
@@ -278,7 +290,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	/**
 	 * Create the frame.
 	 */
-	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
+	public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar)
 	{
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
 
@@ -355,7 +367,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         largeVolumeViewerTranslator.connectSkeletonSignals(skeleton, skeletonController);
 
 		// must come after setupUi() (etc), since it triggers UI changes:
-		annotationMgr.setInitialEntity(initialEntity);
+		annotationMgr.setInitialObject(initialObject);
 
         //
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
@@ -1389,12 +1401,12 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         statusLabel.setText(text);
     }
 
-    public String imageColorModelAsString() {
-        return imageColorModel.asString();
+    public ImageColorModel getImageColorModel() {
+        return imageColorModel;
     }
 
-    public void imageColorModelFromString(String modelString) {
-        imageColorModel.fromString(modelString);
+    public void setImageColorModel(TmColorModel tmColorModel) {
+        ModelTranslation.updateColorModel(tmColorModel, imageColorModel);
     }
 
     /**
@@ -1500,7 +1512,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         if (annotationModel == null  ||  annotationModel.getCurrentWorkspace() == null) {
             return null;
         }
-        return this.annotationModel.getCurrentWorkspace().getSampleID();
+        return this.annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
     }
 
     /**

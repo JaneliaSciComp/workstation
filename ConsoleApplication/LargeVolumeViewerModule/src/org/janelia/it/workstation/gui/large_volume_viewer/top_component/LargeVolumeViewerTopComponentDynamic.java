@@ -1,17 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import javax.swing.SwingUtilities;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -42,13 +36,10 @@ public class LargeVolumeViewerTopComponentDynamic {
     protected LargeVolumeViewViewer getLvvv() {
         return lvvv;
     }
-    
-    protected void load(Long entityId) throws Exception {
+
+    public void load(DomainObject domainObject) {
         Snapshot3DLauncher.removeStaleViewer();
-        RootedEntity rootedEntity = new RootedEntity(
-                ModelMgr.getModelMgr().getEntityById(entityId)
-        );
-        getLvvv().loadEntity(rootedEntity);
+        getLvvv().loadDomainObject(domainObject);
     }
     
     protected void close() {
@@ -69,10 +60,8 @@ public class LargeVolumeViewerTopComponentDynamic {
             try {
                 SwingUtilities.invokeAndWait( runnable );
             } catch ( Exception ex ) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
+                logger.error("Problem closing LVV component group",ex);
             }
         }
     }
-
 }

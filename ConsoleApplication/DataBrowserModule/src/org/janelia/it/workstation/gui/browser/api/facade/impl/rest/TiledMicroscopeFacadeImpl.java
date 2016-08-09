@@ -18,7 +18,6 @@ import org.glassfish.jersey.media.multipart.MultiPart;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.slf4j.Logger;
@@ -26,14 +25,10 @@ import org.slf4j.LoggerFactory;
 
 public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade {
 
-    private static Logger log = LoggerFactory.getLogger(TiledMicroscopeFacadeImpl.class);
-
     private RESTClientManager manager;
-    private TmProtobufExchanger exchanger;
 
     public TiledMicroscopeFacadeImpl() {
         this.manager = RESTClientManager.getInstance();
-        this.exchanger = new TmProtobufExchanger();
     }
 
     @Override
@@ -147,7 +142,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.jan
                 .queryParam("workspaceId", workspaceId)
                 .request("multipart/mixed")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getWorkspaceNeurons from server")) {
+        if (checkBadResponse(response.getStatus(), "problem making request getWorkspaceNeurons from server: "+response.getLocation())) {
             throw new WebApplicationException(response);
         }
         MultiPart multipart = response.readEntity(MultiPart.class);

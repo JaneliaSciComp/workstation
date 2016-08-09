@@ -1,46 +1,64 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import com.google.common.base.Stopwatch;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+import java.awt.Frame;
+import java.awt.HeadlessException;
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.mail.Session;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import com.google.common.base.Stopwatch;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleDialog;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
-
-import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.tracing.VoxelPosition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.net.URL;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -56,8 +74,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * by events generated at AnnotationModel.
  */
 {
-
-    ModelMgr modelMgr;
+    private TiledMicroscopeDomainMgr tmDomainMgr;
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
@@ -69,7 +86,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     // quad view ui object
     private QuadViewUi quadViewUi;
 
-    private Entity initialEntity;
+    private DomainObject initialObject;
 
     private TileServer tileServer;
 
@@ -84,23 +101,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //  until the distance threshold seemed right
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
-    public static TmWorkspace.Version getWorkspaceVersion(Entity workspaceEntity) {
-        String versionNameValue = workspaceEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PROPERTY);
-        TmWorkspace.Version version = null;
-        if (versionNameValue != null) {
-            String[] nameValue = versionNameValue.split("=");
-            if (nameValue.length >= 2 && TmWorkspace.WS_VERSION_PROP.equals(nameValue[0])) {
-                version = TmWorkspace.Version.valueOf(nameValue[1]);
-            }
-        }
-        return version;
-    }
-
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
-        modelMgr = ModelMgr.getModelMgr();
+        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {
@@ -221,16 +226,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return tileServer.getLoadAdapter().getTileFormat();
     }
 
-    public Entity getInitialEntity() {
-        return initialEntity;
+    public DomainObject getInitialObject() {
+        return initialObject;
     }
 
     /**
-     * @param initialEntity = entity the user right-clicked on to start the
+     * @param initialObject = entity the user right-clicked on to start the
      * large volume viewer
      */
-    public void setInitialEntity(final Entity initialEntity) {
-        this.initialEntity = initialEntity;
+    public void setInitialObject(final DomainObject initialObject) {
+        this.initialObject = initialObject;
     }
 
     /**
@@ -239,7 +244,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void onVolumeLoaded() {
 
-        if (initialEntity == null) {
+        if (initialObject == null) {
             // this is a request to clear the workspace
             SimpleWorker closer = new SimpleWorker() {
                 @Override
@@ -259,35 +264,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             };
             closer.execute();
 
-        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+        } else if (initialObject instanceof TmSample) {
             // if it's a bare sample, we don't have anything to do
-            activityLog.setTileFormat(getTileFormat(), initialEntity.getId());
-        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            activityLog.setTileFormat(getTileFormat(), initialObject.getId());
+        }
+        else if (initialObject instanceof TmWorkspace) {
             final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // Must make known to user that things are happening,
-                    // even if slowly.
-                    progress.start();
-                    progress.setDisplayName("Loading workspace container");
-                    progress.switchToIndeterminate();
-                    TmWorkspace.Version version = getWorkspaceVersion(initialEntity);
-                    if (version != TmWorkspace.Version.PB_1) {
-                        // Force, and await, a full conversion.
-                    }
-
-                    // By the time this is triggered, any required conversion
-                    // will already have been accomplished.
-                    TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
-                    if (workspace.getNeuronList() != null  &&  workspace.getNeuronList().size() > 0) {
-                        // Retro-adaptation: this workspace was just, or is being, converted to protobuf.
-                        // Must ensure that any future reference to the workspace receives the latest.
-                        ModelMgr.getModelMgr().invalidateCache(initialEntity, true);
-                    }
-                    progress.finish();
-                    // at this point, we know the entity is a workspace, so:
-                    annotationModel.loadWorkspace(workspace);
+                    annotationModel.loadWorkspace((TmWorkspace)initialObject);
                     activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
                 }
 
@@ -366,7 +352,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 Stopwatch stopwatch = new Stopwatch();
                 stopwatch.start();
                 final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
-                activityLog.logAddAnchor(currentWorkspace.getSampleID(), currentWorkspace.getId(), finalLocation);
+                activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(), finalLocation);
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -608,7 +594,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
         TmNeuron sourceNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
 
-        ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getCurrentWorkspace().getNeuronList());
+        ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getNeuronList());
         neuronList.remove(sourceNeuron);
         // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
         //  date), but I don't want to figure out how to grab that sort order and use it here;
@@ -657,14 +643,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     //  so we can figure out what the new one is, since create neuron
                     //  can't tell us
                     Set<Long> oldNeuronIDs = new HashSet<>();
-                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                    for (TmNeuron neuron: annotationModel.getNeuronList()) {
                         oldNeuronIDs.add(neuron.getId());
                     }
 
                     annotationModel.createNeuron(neuronName);
 
                     TmNeuron newNeuron = null;
-                    for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+                    for (TmNeuron neuron: annotationModel.getNeuronList()) {
                         if (!oldNeuronIDs.contains(neuron.getId())) {
                             newNeuron = neuron;
                             break;
@@ -959,7 +945,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
 
         // prompt the user for a name, but suggest a standard name
-        final String neuronName = promptForNeuronName(getNeuronName(annotationModel.getCurrentWorkspace()));
+        final String neuronName = promptForNeuronName(getNextNeuronName());
 
         if (neuronName != null) {
             // create it:
@@ -1095,12 +1081,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * like "New neuron 12", where the integer is based on whatever similarly
      * named neurons exist already)
      */
-    private String getNeuronName(TmWorkspace workspace) {
+    private String getNextNeuronName() {
         // go through existing neuron names; try to parse against
         //  standard template; create list of integers found
         ArrayList<Long> intList = new ArrayList<Long>();
         Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
-        for (TmNeuron neuron : workspace.getNeuronList()) {
+        for (TmNeuron neuron : annotationModel.getNeuronList()) {
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
                 intList.add(Long.parseLong(matcher.group(1)));
@@ -1137,7 +1123,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void createWorkspace() {
         // if no sample loaded, error
-        if (initialEntity == null) {
+        if (initialObject == null) {
             presentError(
                     "You must load a brain sample entity before creating a workspace!",
                     "No brain sample!");
@@ -1146,9 +1132,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         // check that the entity *is* a workspace or brain sample, and get the sample ID:
         Long sampleID;
-        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            sampleID = initialEntity.getId();
-        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+
+        if (initialObject instanceof TmSample) {
+            sampleID = initialObject.getId();
+        }
+        else if (initialObject instanceof TmWorkspace) {
             sampleID = getSampleID();
             if (sampleID == null) {
                 presentError("Sample ID is null; did the previous sample or workspace finish loading?\n\nCould not create workspace!",
@@ -1204,20 +1192,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker creator = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                // for now, we'll put the new workspace into a default, top-level folder
-                //  named "Workspaces", which we will create if it does not exit; later,
-                //  we'll create a dialog to let the user choose the location of the
-                //  new workspace, and perhaps the brain sample, too
-                Entity workspaceRootEntity = annotationModel.getOrCreateWorkspacesFolder();
-
-                // now we can create the workspace (finally)
-                annotationModel.createWorkspace(workspaceRootEntity, ID, name);
+                // now we can create the workspace
+                annotationModel.createWorkspace(ID, name);
 
                 // and if there was a previously existing workspace, we'll save the
                 //  existing color model (which isn't cleared by creating a new
                 //  workspace) into the new workspace
                 if (existingWorkspace) {
-                    saveColorModel();
+                    saveQuadViewColorModel();
                 }
             }
 
@@ -1364,7 +1346,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  have to worry about missing entries, etc.; so go simple at the
         //  expense of a few more db calls
         NeuronStyle style;
-        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron: annotationModel.getNeuronList()) {
             style = getNeuronStyle(neuron);
             if (style.isVisible() != visibility) {
                 style.setVisible(visibility);
@@ -1385,7 +1367,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } else {
             setNeuronVisibility(annotationModel.getCurrentNeuron(), visibility);
         }
-
     }
 
     public void setNeuronVisibility(Anchor anchor, boolean visibility) {
@@ -1425,44 +1406,58 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
-    public void saveColorModel() {
-        if (annotationModel.getCurrentWorkspace() == null) {
-            presentError("You must create a workspace to be able to save the color model!", "No workspace");
-        } else {
-            savePreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+    public void saveQuadViewColorModel() {
+        try {
+            if (annotationModel.getCurrentWorkspace() == null) {
+                presentError("You must create a workspace to be able to save the color model!", "No workspace");
+            }
+            else {
+                TmWorkspace workspace = getCurrentWorkspace();
+                workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
+                tmDomainMgr.save(workspace);
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+    }
+
+    public void saveColorModel3d(ImageColorModel colorModel) {
+        try {
+            if (annotationModel.getCurrentWorkspace() == null) {
+                presentError("You must create a workspace to be able to save the color model!", "No workspace");
+            }
+            else {
+                TmWorkspace workspace = getCurrentWorkspace();
+                workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
+                tmDomainMgr.save(workspace);
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     public void setAutomaticRefinement(final boolean state) {
-        savePreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT, String.valueOf(state));
+        try {
+            TmWorkspace workspace = getCurrentWorkspace();
+            workspace.setAutoPointRefinement(state);
+            tmDomainMgr.save(workspace);
+        }
+        catch(Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 
     public void setAutomaticTracing(final boolean state) {
-        savePreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING, String.valueOf(state));
-    }
-
-    public void savePreference(final String name, final String value) {
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setPreference(name, value);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        saver.execute();
-    }
-
-    public String retrievePreference(final String name) {
-        return annotationModel.getPreference(name);
+        try {
+            TmWorkspace workspace = getCurrentWorkspace();
+            workspace.setAutoTracing(state);
+            tmDomainMgr.save(workspace);
+        }
+        catch(Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 
     public void tracePathToParent(PathTraceToParentRequest request) {
@@ -1499,10 +1494,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  eg,  move sample name, path to here
 
         if (annotationModel.getCurrentWorkspace() != null) {
-            int nneurons = annotationModel.getCurrentWorkspace().getNeuronList().size();
+            int nneurons = annotationModel.getNeuronList().size();
             int nannotations = 0;
             int maxannotations = 0;
-            for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
+            for (TmNeuron neuron : annotationModel.getNeuronList()) {
                 nannotations += neuron.getGeoAnnotationMap().size();
                 maxannotations = Math.max(maxannotations, neuron.getGeoAnnotationMap().size());
             }
@@ -1518,7 +1513,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
         int nannotations = 0;
-        for (TmNeuron neuron : annotationModel.getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron : annotationModel.getNeuronList()) {
             nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
         }
@@ -1686,7 +1681,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     private Long getSampleID() {
         if (annotationModel.getCurrentWorkspace() != null) {
-            return annotationModel.getCurrentWorkspace().getSampleID();
+            return annotationModel.getCurrentWorkspace().getSampleRef().getTargetId();
         } else {
             return null;
         }
@@ -1696,4 +1691,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getCurrentWorkspace().getId();
     }
 
+    public TmWorkspace getCurrentWorkspace() {
+        return annotationModel.getCurrentWorkspace();
+    }
 }

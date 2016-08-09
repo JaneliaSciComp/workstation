@@ -2,39 +2,55 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 // workstation imports
 
+import java.awt.Color;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.SwingUtilities;
+
+import Jama.Matrix;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.awt.Color;
-
 import com.google.common.base.Stopwatch;
-import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronStyle;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
+import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
+import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.ParametrizedLine;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
-import org.janelia.it.jacs.shared.swc.SWCData;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
-import javax.swing.*;
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.List;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.NotesUpdateListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class AnnotationModel
 /*
@@ -66,11 +82,14 @@ called from a  SimpleWorker thread.
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
-    private ModelMgr modelMgr;
-    private SessionMgr sessionMgr;
+    private TiledMicroscopeDomainMgr tmDomainMgr;
+
     private SWCDataConverter swcDataConverter;
     private final ModelManagerTmModelAdapter modelAdapter;
 
+    private TmSample currentSample;
+    private Matrix micronToVoxMatrix;
+    private Matrix voxToMicronMatrix;
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
 
@@ -83,8 +102,6 @@ called from a  SimpleWorker thread.
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
     private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
-    private String cachedNeuronStyleMapString;
-    private Map<Long, NeuronStyle> cachedNeuronStyleMap;
     private TmModelManipulator neuronManager;
 
     private LoadTimer addTimer = new LoadTimer();
@@ -94,16 +111,12 @@ called from a  SimpleWorker thread.
 
 
     // ----- constants
-    // name of entity that holds our workspaces
-    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
-
     // how far away to try to put split anchors (pixels)
     private static final Double SPLIT_ANCHOR_DISTANCE = 60.0;
 
 
     public AnnotationModel() {
-        modelMgr = ModelMgr.getModelMgr();
-        sessionMgr = SessionMgr.getSessionMgr();
+        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         filteredAnnotationModel = new FilteredAnnotationModel();
         modelAdapter = new ModelManagerTmModelAdapter();
         neuronManager = new TmModelManipulator(modelAdapter);
@@ -115,7 +128,10 @@ called from a  SimpleWorker thread.
                 addTimer.report();
             }
         });
+    }
 
+    public List<TmNeuron> getNeuronList() {
+        return neuronManager.getNeurons();
     }
 
     public FilteredAnnotationModel getFilteredAnnotationModel() {
@@ -159,6 +175,27 @@ called from a  SimpleWorker thread.
         return currentWorkspace;
     }
 
+    // current workspace methods
+    public TmSample getCurrentSample() {
+        return currentSample;
+    }
+
+    public Matrix getMicronToVoxMatrix() {
+        return micronToVoxMatrix;
+    }
+
+    public Matrix getVoxToMicronMatrix() {
+        return voxToMicronMatrix;
+    }
+
+    public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
+        this.micronToVoxMatrix = micronToVoxMatrix;
+        this.voxToMicronMatrix = voxToMicronMatrix;
+        currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
+        currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
+        tmDomainMgr.save(currentSample);
+    }
+
     private Long getWsId() {
         if (currentWorkspace != null) {
             return currentWorkspace.getId();
@@ -170,16 +207,22 @@ called from a  SimpleWorker thread.
 
     public synchronized void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
-            currentWorkspace = workspace;
-            // Neurons need to be loaded en masse from raw data from server.
             try {
+                currentWorkspace = workspace;
+                currentSample = tmDomainMgr.getSample(workspace);
+
+                micronToVoxMatrix = MatrixUtilities.deserializeMatrix(currentSample.getMicronToVoxMatrix(), "micronToVoxMatrix");
+                voxToMicronMatrix = MatrixUtilities.deserializeMatrix(currentSample.getVoxToMicronMatrix(), "voxToMicronMatrix");
+
+                // Neurons need to be loaded en masse from raw data from server.
                 neuronManager.loadWorkspaceNeurons(workspace);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 log.error(ex.getMessage());
                 SessionMgr.getSessionMgr().handleException(ex);
             }
-
-        } else {
+        }
+        else {
             currentWorkspace = null;
         }
         setCurrentNeuron(null);
@@ -197,33 +240,6 @@ called from a  SimpleWorker thread.
 
     public void setSWCDataConverter( SWCDataConverter converter ) {
         this.swcDataConverter = converter;
-    }
-
-    // preferences stuff
-    public synchronized void setPreference(String key, String value) {
-        if (currentWorkspace != null) {
-            try {
-                // Push to database.
-                modelMgr.createOrUpdateWorkspacePreference(currentWorkspace.getId(),
-                        key, value);
-                // Push to memory as well.
-                currentWorkspace.getPreferences().setProperty(key, value);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public String getPreference(String key) {
-        String rtnVal = null;
-        if (currentWorkspace != null) {
-            try {
-                rtnVal = currentWorkspace.getPreferences().getProperty(key);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return rtnVal;
     }
 
     // current neuron methods
@@ -278,7 +294,7 @@ called from a  SimpleWorker thread.
         }
 
         TmNeuron foundNeuron = null;
-        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron: getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
                 break;
@@ -289,7 +305,7 @@ called from a  SimpleWorker thread.
 
     public TmNeuron getNeuronFromNeuronID(Long neuronID) {
         TmNeuron foundNeuron = null;
-        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron: getNeuronList()) {
             if (neuron.getId().equals(neuronID)) {
                 foundNeuron = neuron;
                 break;
@@ -341,7 +357,7 @@ called from a  SimpleWorker thread.
         } else {
             excludedAnnotationID = excludedAnnotation.getId();
         }
-        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+        for (TmNeuron neuron: getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     if (excludedAnnotationID.equals(ann.getId())) {
@@ -372,7 +388,7 @@ called from a  SimpleWorker thread.
 
         // update local workspace
         final TmWorkspace workspace = getCurrentWorkspace();
-        workspace.getNeuronList().add(neuron);
+        getNeuronList().add(neuron);
         setCurrentNeuron(neuron);
 
         SwingUtilities.invokeLater(new Runnable() {
@@ -380,7 +396,7 @@ called from a  SimpleWorker thread.
             public void run() {
                 fireWorkspaceLoaded(workspace);
                 fireNeuronSelected(neuron);
-                fireWsEntityChanged();
+                fireWorkspaceChanged();
             }
         });
 
@@ -430,7 +446,7 @@ called from a  SimpleWorker thread.
 
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
-        workspace.getNeuronList().remove(deletedNeuron);
+        getNeuronList().remove(deletedNeuron);
 
         final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
@@ -450,7 +466,7 @@ called from a  SimpleWorker thread.
                     fireAnchoredPathsRemoved(tempPathList);
                 }
                 fireWorkspaceLoaded(workspace);
-                fireWsEntityChanged();
+                fireWorkspaceChanged();
 
                 skeletonController.setSkipSkeletonChange(false);
                 skeletonController.skeletonChanged();
@@ -465,29 +481,14 @@ called from a  SimpleWorker thread.
     }
 
     /**
-     * @param parentEntity = parent folder in hierarchy
-     * @param brainSampleID = tiled microscope sample ID
+     * Create a new workspace for the given sample, owned by the current user.
+     * @param sampleId = tiled microscope sample ID
      * @param name = name of new workspace
      * @throws Exception
      */
-    public synchronized void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
-        TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
-                brainSampleID, name, sessionMgr.getSubject().getKey());
+    public synchronized void createWorkspace(Long sampleId, String name) throws Exception {
+        TmWorkspace workspace = tmDomainMgr.createTiledMicroscopeWorkspace(sampleId, name);
         loadWorkspace(workspace);
-    }
-
-    /**
-     * we save our workspaces in a pre-defined area; this method returns it, creating if needed
-     *
-     * @return workspace folder entity
-     * @throws Exception
-     */
-    public synchronized Entity getOrCreateWorkspacesFolder() throws Exception {
-        Entity workspaceRootEntity = ModelMgr.getModelMgr().getOwnedCommonRootByName(WORKSPACES_FOLDER_NAME);
-        if (workspaceRootEntity == null) {
-            workspaceRootEntity = modelMgr.createCommonRoot(WORKSPACES_FOLDER_NAME);
-        }
-        return workspaceRootEntity;
     }
 
     /**
@@ -706,9 +707,9 @@ called from a  SimpleWorker thread.
 
         // Save the target neuron.
         // log.info("Saving target neuron.");
-        workspace.getNeuronList().remove(targetNeuron);
+        getNeuronList().remove(targetNeuron);
         neuronManager.saveNeuronData(updateTargetNeuron);
-        workspace.getNeuronList().add(updateTargetNeuron);
+        getNeuronList().add(updateTargetNeuron);
         // Save the source neuron, empty or not.
         if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
             // log.info("Saving source neuron.");
@@ -1300,11 +1301,15 @@ called from a  SimpleWorker thread.
      * change the style for a neuron; synchronized because it could be
      * called from multiple threads, and the update is not atomic
      */
-    public synchronized void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws IOException {
-        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
-        neuronStyleMap.put(neuron.getId(), style);
-        setNeuronStyleMap(neuronStyleMap);
+    public synchronized void setNeuronStyle(TmNeuron neuron, NeuronStyle style) throws Exception {
 
+        TmNeuronStyle tmNeuronStyle = currentWorkspace.getNeuronStyles().get(neuron.getId());
+        if (tmNeuronStyle==null) {
+            tmNeuronStyle = new TmNeuronStyle();
+            currentWorkspace.getNeuronStyles().put(neuron.getId(), tmNeuronStyle);
+        }
+        ModelTranslation.updateNeuronStyle(style, tmNeuronStyle);
+        tmDomainMgr.save(currentWorkspace);
         // fire change to listeners
         fireNeuronStyleChanged(neuron, style);
     }
@@ -1313,96 +1318,28 @@ called from a  SimpleWorker thread.
      * retrieve the neuron ID: NeuronStyle map from preferences
      */
     public Map<Long, NeuronStyle> getNeuronStyleMap() {
-        Map<Long, NeuronStyle> neuronStyleMap = new HashMap<>();
-
-        TmPreferences preferences = getCurrentWorkspace().getPreferences();
-        String stylePref = null;
-        if (preferences != null) {
-            stylePref = preferences.getProperty(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES);
-            if (stylePref == null) {
-                // no such preference
-                return neuronStyleMap;
-            }
-        }
-        else {
-            return neuronStyleMap;
-        }
-
-        // json parsing is kind of expensive, and we pull this map often; since it
-        //  changes rarely, cache the parsed version; use the string to check for
-        //  change since the pref doesn't store its modification time
-        if (cachedNeuronStyleMapString != null && cachedNeuronStyleMapString.equals(stylePref)) {
-            return cachedNeuronStyleMap;
-        } else {
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode rootNode = null;
-            try {
-                rootNode = (ObjectNode) mapper.readTree(stylePref);
-            } catch (IOException e) {
-                // can't parse, return the empty map
-                // debated what to do here, but this should never happen,
-                //  so I'll be lazy about it
-                cachedNeuronStyleMapString = null;
-                return neuronStyleMap;
-            }
-
-            // I can't believe you can't use a regular for loop for this...
-            Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
-            while (nodeIterator.hasNext()) {
-                Map.Entry<String, JsonNode> entry = nodeIterator.next();
-                neuronStyleMap.put(Long.parseLong(entry.getKey()), NeuronStyle.fromJSON((ObjectNode) entry.getValue()));
-            }
-            cachedNeuronStyleMapString = stylePref;
-            cachedNeuronStyleMap = neuronStyleMap;
-            return neuronStyleMap;
-        }
+        return null;
     }
 
     /**
      * retrieve a neuron style for a neuron, whether stored or default
      */
     public NeuronStyle getNeuronStyle(TmNeuron neuron) {
-        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
-        if (neuronStyleMap.containsKey(neuron.getId())) {
-            return neuronStyleMap.get(neuron.getId());
-        } else {
+        TmNeuronStyle neuronStyle = currentWorkspace.getNeuronStyles().get(neuron.getId());
+        if (neuronStyle==null) {
             return NeuronStyle.getStyleForNeuron(neuron.getId());
         }
-    }
-
-    /**
-     * store the neuron ID to NeuronStyle map in the preferences, overwriting
-     * previous entry; private because we want it only being access via the
-     * synchronized method setNeuronStyle in this class
-     */
-    private synchronized void setNeuronStyleMap(Map<Long, NeuronStyle> neuronStyleMap) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
-
-        for (Long neuronID: neuronStyleMap.keySet()) {
-            rootNode.put(neuronID.toString(), neuronStyleMap.get(neuronID).asJSON());
+        else {
+            return ModelTranslation.translateNeuronStyle(neuronStyle);
         }
-        setPreference(AnnotationsConstants.PREF_ANNOTATION_NEURON_STYLES, rootNode.toString());
-
-        // no updates here!
     }
 
     public boolean automatedRefinementEnabled() {
-        String automaticRefinementPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-        if (automaticRefinementPref != null) {
-            return Boolean.parseBoolean(automaticRefinementPref);
-        } else {
-            return false;
-        }
+        return getCurrentWorkspace().isAutoPointRefinement();
     }
 
     public boolean automatedTracingEnabled() {
-        String automaticTracingPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-        if (automaticTracingPref != null) {
-            return Boolean.parseBoolean(automaticTracingPref);
-        } else {
-            return false;
-        }
+        return getCurrentWorkspace().isAutoTracing();
     }
 
     /**
@@ -1440,7 +1377,7 @@ called from a  SimpleWorker thread.
         for (Long ID: neuronIDList) {
             if (ID != null) {
                 TmNeuron foundNeuron = null;
-                for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+                for (TmNeuron neuron: getNeuronList()) {
                     if (neuron.getId().equals(ID)) {
                         foundNeuron = neuron;
                         List<String> headers = neuronHeaders.get(ID);
@@ -1512,7 +1449,6 @@ called from a  SimpleWorker thread.
         }
         TmNeuron neuron = neuronManager.createTiledMicroscopeNeuron(getCurrentWorkspace(), neuronName);
 
-
         // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
         //  granularly (if we have a worker); start with 5% increments (1/20)
@@ -1561,7 +1497,7 @@ called from a  SimpleWorker thread.
 
         // need fresh copy, and add it to the workspace
         // neuron = neuronManager.refreshFromData(neuron);
-        getCurrentWorkspace().getNeuronList().add(neuron);
+        getNeuronList().add(neuron);
 
         updateNeuronColor(swcData, neuron);
 
@@ -1575,7 +1511,7 @@ called from a  SimpleWorker thread.
                 @Override
                 public void run() {
                     fireWorkspaceLoaded(workspace);
-                    fireWsEntityChanged();
+                    fireWorkspaceChanged();
                     fireNeuronSelected(updateNeuron);
                 }
             });
@@ -1610,12 +1546,12 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
                 fireWorkspaceLoaded(workspace);
-                fireWsEntityChanged();
+                fireWorkspaceChanged();
             }
         });
     }
 
-    private void updateNeuronColor(SWCData swcData, final TmNeuron neuron) throws IOException {
+    private void updateNeuronColor(SWCData swcData, final TmNeuron neuron) throws Exception {
         float[] colorArr = swcData.parseColorFloats();
         if (colorArr != null) {
             NeuronStyle style = new NeuronStyle(
@@ -1689,12 +1625,14 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void fireWsEntityChanged() {
-        try {
-            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(currentWorkspace.getId())));
-        } catch (Exception ex) {
-            log.warn("Failed to post workspace chang.");
-        }
-    }
+    private void fireWorkspaceChanged() {
+        // TODO: Not sure if this needs to be ported to NG.
+        // It doesn't look like anything in the LVV was listening to EntityChangeEvent. Maybe this was a way of updating the Explorer?
+//        try {
+//            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(currentWorkspace.getId())));
+//        } catch (Exception ex) {
+//            log.warn("Failed to post workspace chang.");
+//        }
 
+    }
 }
