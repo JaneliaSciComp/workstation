@@ -1700,6 +1700,14 @@ called from a  SimpleWorker thread.
         fireNeuronTagsChanged(changed);
     }
 
+    public void addNeuronTag(String tag, List<TmNeuron> neuronList) {
+        for (TmNeuron neuron: neuronList) {
+            currentTagMap.addTag(tag, neuron.getId());
+        }
+        saveNeuronTagMap();
+        fireNeuronTagsChanged(neuronList);
+    }
+
     public void removeNeuronTag(String tag, TmNeuron neuron) {
         removeNeuronTag(tag, neuron.getId());
     }

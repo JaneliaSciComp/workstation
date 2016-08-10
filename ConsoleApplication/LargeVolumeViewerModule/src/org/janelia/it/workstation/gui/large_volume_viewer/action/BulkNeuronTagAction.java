@@ -77,9 +77,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                for (TmNeuron neuron: neuronList) {
-                    annModel.addNeuronTag(tag, neuron);
-                }
+                annModel.addNeuronTag(tag, neuronList);
             }
 
             @Override
