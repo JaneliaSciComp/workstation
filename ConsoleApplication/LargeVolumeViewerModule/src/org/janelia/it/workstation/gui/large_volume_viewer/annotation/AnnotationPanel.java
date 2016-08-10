@@ -26,7 +26,6 @@ import javax.swing.border.TitledBorder;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 
-
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
  * the various other panels and whatnot.

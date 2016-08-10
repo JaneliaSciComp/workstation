@@ -273,7 +273,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             NeuronStyle style;
             Map<TmNeuron, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
             for (TmNeuron neuron: annModel.getNeuronList()) {
-                logger.info("Got neuron: "+neuron);
                 if (neuronStyleMap!=null && neuronStyleMap.containsKey(neuron.getId())) {
                     style = neuronStyleMap.get(neuron.getId());
                 } else {
