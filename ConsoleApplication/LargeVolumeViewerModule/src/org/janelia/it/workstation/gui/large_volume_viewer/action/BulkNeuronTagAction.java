@@ -3,12 +3,12 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.*;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
@@ -77,7 +77,11 @@ public class BulkNeuronTagAction extends AbstractAction {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                // Stopwatch stopwatch = new Stopwatch();
+                // stopwatch.start();
                 annModel.addNeuronTag(tag, neuronList);
+                // System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
+                // stopwatch.stop();
             }
 
             @Override
@@ -107,16 +111,6 @@ public class BulkNeuronTagAction extends AbstractAction {
     }
 
     private void clearTag(final String tag) {
-        // rather than worry about how to removing items from two Guava BiMaps
-        //  while iterating over one of them, I'm just going to copy the set:
-        Set<Long> remove = new HashSet<>(annModel.getNeuronIDsForTag(tag));
-        // only remove if visible, remember:
-        for (TmNeuron neuron: listProvider.getNeuronList()) {
-            if (remove.contains(neuron.getId())) {
-                annModel.removeNeuronTag(tag, neuron);
-            }
-        }
-
         final List<TmNeuron> neuronList = new ArrayList<>();
         Set<Long> taggedNeurons = annModel.getNeuronIDsForTag(tag);
         for (TmNeuron neuron: listProvider.getNeuronList()) {
@@ -124,12 +118,15 @@ public class BulkNeuronTagAction extends AbstractAction {
                 neuronList.add(neuron);
             }
         }
+
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                for (TmNeuron neuron: neuronList) {
-                    annModel.removeNeuronTag(tag, neuron);
-                }
+                // Stopwatch stopwatch = new Stopwatch();
+                // stopwatch.start();
+                annModel.removeNeuronTag(tag, neuronList);
+                // System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
+                // stopwatch.stop();
             }
 
             @Override
