@@ -1359,7 +1359,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    private NeuronStyle askForNeuronStyle(NeuronStyle inputStyle) {
+    public static NeuronStyle askForNeuronStyle(NeuronStyle inputStyle) {
         NeuronStyleDialog dialog = new NeuronStyleDialog(
                 (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
                 inputStyle);

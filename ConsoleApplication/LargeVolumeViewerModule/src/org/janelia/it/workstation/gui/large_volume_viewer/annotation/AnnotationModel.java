@@ -1314,6 +1314,15 @@ called from a  SimpleWorker thread.
         fireNeuronStyleChanged(neuron, style);
     }
 
+    public synchronized void setNeuronStyles(List<TmNeuron> neuronList, NeuronStyle style) throws IOException {
+        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
+        for (TmNeuron neuron: neuronList) {
+            neuronStyleMap.put(neuron.getId(), style);
+        }
+        setNeuronStyleMap(neuronStyleMap);
+        fireNeuronStylesChanged(neuronList, style);
+    }
+
     /**
      * retrieve the neuron ID: NeuronStyle map from preferences
      */
@@ -1822,6 +1831,12 @@ called from a  SimpleWorker thread.
     private void fireNeuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronStyleChanged(neuron, style);
+        }
+    }
+
+    private void fireNeuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronStylesChanged(neuronList, style);
         }
     }
 

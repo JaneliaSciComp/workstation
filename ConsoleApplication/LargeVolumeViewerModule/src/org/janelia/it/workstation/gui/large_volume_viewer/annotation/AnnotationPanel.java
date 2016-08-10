@@ -12,6 +12,7 @@ import java.awt.HeadlessException;
 import java.awt.Insets;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -275,6 +276,7 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.chooseNeuronStyle();
             }
         });
+        neuronToolMenu.add(new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList));
         neuronToolMenu.add(new AbstractAction("Show neuron") {
             @Override
             public void actionPerformed(ActionEvent e) {
