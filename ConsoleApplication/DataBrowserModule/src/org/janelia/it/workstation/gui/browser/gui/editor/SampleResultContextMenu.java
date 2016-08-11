@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JMenuItem;
 
@@ -26,6 +27,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopCo
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
+import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 
@@ -73,6 +75,14 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
+
+        for (JMenuItem item: getWrapObjectItems()) {
+            add(item);
+        }
+        
+        for (JMenuItem item: getAppendObjectItems()) {
+            add(item);
+        }
         
     }
     
@@ -144,6 +154,17 @@ public class SampleResultContextMenu extends PopupContextMenu {
         String path = DomainUtils.getDefault3dImageFilePath(result);
         if (path==null) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected List<JMenuItem> getWrapObjectItems() {
+        //if (multiple) {
+        //    return Collections.EMPTY_LIST;
+        //}
+        return new WrapperCreatorItemFactory().makeWrapperCreatorItems(result);
+    }
+    
+    protected List<JMenuItem> getAppendObjectItems() {
+        return new WrapperCreatorItemFactory().makePipelineResultAppenderItems(result);
     }
 
     protected JMenuItem getNeuronAnnotatorItem() {
