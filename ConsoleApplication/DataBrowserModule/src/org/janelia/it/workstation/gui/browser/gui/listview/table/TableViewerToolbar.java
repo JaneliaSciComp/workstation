@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -30,6 +31,7 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
         chooseColumnsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("TableViewerToolbar.chooseColumnsButtonPressed");
                 chooseColumnsButtonPressed();
             }
         });
@@ -43,6 +45,7 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
         exportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("TableViewerToolbar.exportButtonPressed");
                 exportButtonPressed();
             }
         });

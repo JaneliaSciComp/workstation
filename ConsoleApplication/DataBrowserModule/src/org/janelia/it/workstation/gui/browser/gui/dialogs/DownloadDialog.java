@@ -32,6 +32,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.DownloadItem;
@@ -206,6 +207,8 @@ public class DownloadDialog extends ModalDialog {
         });
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.8), (int) (mainFrame.getHeight() * 0.4)));
+
+        ActivityLogHelper.logUserAction("DownloadDialog.showDialog");
         packAndShow();
     }
 
@@ -466,6 +469,7 @@ public class DownloadDialog extends ModalDialog {
 
         // Repack to fit everything
         setPreferredSize(null);
+
         packAndShow();
     }
 

@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,8 +17,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -32,11 +28,11 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -53,8 +49,8 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,7 +295,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     JMenuItem viewItem = new JMenuItem(getLabel(separation));
                     viewItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
-                            setResult(separation, true);
+                            setResult(separation, true, null);
                         }
                     });
                     popupMenu.add(viewItem);
@@ -326,6 +322,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         }
         
         log.info("loadSampleResult(PipelineResult:{})",result.getName());
+        final StopWatch w = new StopWatch();
                 
         PipelineResult parentResult;
         if (result instanceof NeuronSeparation) {
@@ -345,15 +342,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         if (separation==null) {
             showNothing();
             debouncer.success();
+            ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", w);
         }
         else {
             configPanel.setTitle(sample.getName());
-            setResult(separation, isUserDriven);
+            setResult(separation, isUserDriven, w);
         }
-
     }
     
-    private void setResult(final NeuronSeparation separation, final boolean isUserDriven) {
+    private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final StopWatch w) {
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         
@@ -388,6 +385,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             protected void hadSuccess() {
                 showResults(isUserDriven);
                 debouncer.success();
+                if (w!=null) ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", separation, w);
             }
 
             @Override

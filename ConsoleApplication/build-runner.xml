@@ -90,6 +90,35 @@ of adapter.
         <echo message="Done : ${exec.error}"  />
     </target>
 
+    <target name="deploy-installers-production">
+        <property name="ssh.common.params" value="$jacs@workstation.int.janelia.org"/>
+        <property name="scp.common.params" value=""/>
+        <echo message="Testing connection" />
+        <echo message="SSH Common Params ${ssh.common.params} for ${ssh}"/>
+        <exec executable="${ssh}" description="Testing connection"
+              outputproperty="exec.output" failonerror="true">
+            <arg line="${ssh.common.params} ls -ld /tmp"/>
+        </exec>
+
+        <!--clean out old modules -->
+        <echo message="Removing remote Installer modules" />
+        <exec executable="${ssh}" description="Removing Installer modules">
+            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-macosx-4.7_0.tgz"/>
+            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-linux-4.7_0.tgz"/>
+            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-windows-4.7_0.exe"/>
+            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files"/>
+        </exec>
+
+        <!--copy new modules -->
+        <echo message="Copying new modules to ${tmpEnv}" />
+        <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
+        <exec executable="bash" description="Copying new modules to ${tmpEnv}">
+            <arg line="-c '${scp} -r ${basedir}/build/updates/* ${ssh.common.params}:/var/www/html/${tmpEnv}/.'"/>
+        </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
+    </target>
+
     <target name="create-platform" description="Target to build platform locally">
         <!--<echoproperties/>-->
         <ant antfile="build.xml" target="create-platform">

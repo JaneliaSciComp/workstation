@@ -27,6 +27,7 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -251,6 +252,8 @@ public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+
+        ActivityLogHelper.logUserAction("LineReleaseListDialog.showDialog");
 
         // Show dialog and wait
         packAndShow();

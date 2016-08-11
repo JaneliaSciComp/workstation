@@ -84,7 +84,7 @@ public class DomainMgr {
         }
         throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
     }
-    
+
     @Subscribe
     public void runAsUserChanged(RunAsEvent event) {
         log.info("User changed, resetting model");

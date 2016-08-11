@@ -24,6 +24,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +121,7 @@ public class ResultSelectionButton extends DropDownButton {
                 public void actionPerformed(ActionEvent e) {
                     setResultDescriptor(resultDescriptor);
                     resultChanged(currResult);
+                    ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", resultDescriptor.toString());
                 }
             });
             getPopupMenu().add(menuItem);

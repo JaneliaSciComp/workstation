@@ -13,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
@@ -73,6 +74,9 @@ public class DomainDetailsDialog extends ModalDialog {
         setTitle("Details: "+domainObject.getName());
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
+
+        ActivityLogHelper.logUserAction("DomainDetailsDialog.showForDomainObject", domainObject);
+
         // Show dialog and wait
         packAndShow();
         

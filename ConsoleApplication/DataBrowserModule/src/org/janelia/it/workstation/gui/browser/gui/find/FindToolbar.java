@@ -13,8 +13,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Position;
 
 import net.miginfocom.swing.MigLayout;
-
-import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 
 /**
@@ -157,6 +156,7 @@ public class FindToolbar extends JPanel {
         setVisible(true);
         nextMatch(false);
         takeFocus();
+        ActivityLogHelper.logUserAction("FindToolbar.open", findContext.getClass().getSimpleName());
     }
     
     public void close() {
