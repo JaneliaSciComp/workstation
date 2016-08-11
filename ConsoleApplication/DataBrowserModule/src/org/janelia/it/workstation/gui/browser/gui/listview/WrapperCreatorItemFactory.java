@@ -9,10 +9,16 @@ package org.janelia.it.workstation.gui.browser.gui.listview;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.JMenuItem;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.nb_action.DomainObjectAppender;
@@ -51,6 +57,22 @@ public class WrapperCreatorItemFactory {
         return rtnVal;
     }
 	
+    /**
+     * Resolves a pipeline result to its sample container/ancestor, and
+     * hands off to other method.
+     * 
+     * @param pipelineResult which should belong to a sample.
+     * @return any suitable menu items.
+     */
+    public List<JMenuItem> makeWrapperCreatorItems(final PipelineResult pipelineResult) {
+        // Need to resolve pipeline results into their samples.
+        DomainObject sample = getSampleContainer(pipelineResult);
+        if (sample != null)
+            return makeWrapperCreatorItems(sample);
+        else
+            return Collections.EMPTY_LIST;
+    }
+	
 	/**
 	 * Allows an abstraction layer between the action and thing being carried
 	 * out.  Here, we are letting things be appended to some other object, or
@@ -71,6 +93,36 @@ public class WrapperCreatorItemFactory {
 		}
 		return rtnVal;
 	}
+    
+    /**
+     * Resolves a pipeline result to its sample container/ancestor, and
+     * hands off to other method.
+     * 
+     * @param pipelineResult which should belong to a sample.
+     * @return any suitable menu items.
+     */
+    public List<JMenuItem> makePipelineResultAppenderItems(PipelineResult pipelineResult) {
+        List<DomainObject> objList = new ArrayList<>();
+        // Need to resolve pipeline's containing sample.
+        DomainObject sample = getSampleContainer(pipelineResult);
+        if (sample != null) {
+            objList.add(sample);
+        }
+        return makeObjectAppenderItems(objList);
+    }
+    
+    /** Convenience method to resolve sample for pr. */
+    private Sample getSampleContainer(PipelineResult pipelineResult) {
+        Sample rtnVal = null;
+        SamplePipelineRun spr = pipelineResult.getParentRun();
+        if (spr != null) {
+            ObjectiveSample os = spr.getParent();
+            if (os != null) {
+                rtnVal = os.getParent();                        
+            }
+        }
+        return rtnVal;
+    }
     
     class WrapObjectActionListener implements ActionListener {
         private DomainObjectCreator wrapperCreator;
