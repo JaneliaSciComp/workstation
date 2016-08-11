@@ -324,6 +324,14 @@ public class SkeletonActorModel {
         }
     }
 
+    public void updateNeuronStyles(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+        for (TmNeuron neuron: neuronStyleMap.keySet()) {
+            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
+        }
+        mostRecentAnchorVersion--;
+        updateAnchors();
+    }
+
     /**
      * update the arrays we'll send to OpenGL; this includes the anchors/points
      * (thus the name of the method), the lines between them, and the
