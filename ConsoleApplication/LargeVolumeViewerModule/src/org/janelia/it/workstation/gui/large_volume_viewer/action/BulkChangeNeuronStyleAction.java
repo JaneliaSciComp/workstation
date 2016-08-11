@@ -13,12 +13,16 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationM
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this action pops a dialog to let the user choose a style for all
  * neurons currently visible in the neuron list
  */
 public class BulkChangeNeuronStyleAction extends AbstractAction {
+
+    private static final Logger logger = LoggerFactory.getLogger(BulkChangeNeuronStyleAction.class);
 
     private AnnotationModel annModel;
     private NeuronListProvider listProvider;
@@ -57,6 +61,7 @@ public class BulkChangeNeuronStyleAction extends AbstractAction {
 
                     @Override
                     protected void hadError(Throwable error) {
+                        logger.error("error changing style for multiple neurons");
                         JOptionPane.showMessageDialog(
                                 ComponentUtil.getLVVMainWindow(),
                                 "Error changing neuron styles!",

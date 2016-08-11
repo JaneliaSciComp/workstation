@@ -13,6 +13,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this action opens a dialog that allows the user to add or remove
@@ -20,6 +22,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * the neuron list
  */
 public class BulkNeuronTagAction extends AbstractAction {
+
+    private static final Logger logger = LoggerFactory.getLogger(BulkNeuronTagAction.class);
 
     private AnnotationModel annModel;
     private NeuronListProvider listProvider;
@@ -91,6 +95,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
+                logger.error("error adding tag " + tag + " to multiple neurons");
                 showError("There was an error adding the tag!", "Error");
             }
         };
@@ -136,6 +141,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
+                logger.error("error removing tag " + tag + " from multiple neurons");
                 showError("There was an error removing the tags!", "Error");
             }
         };
