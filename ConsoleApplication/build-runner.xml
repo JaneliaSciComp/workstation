@@ -91,7 +91,7 @@ of adapter.
     </target>
 
     <target name="deploy-installers-production">
-        <property name="ssh.common.params" value="$jacs@workstation.int.janelia.org"/>
+        <property name="ssh.common.params" value="jacs@workstation.int.janelia.org"/>
         <property name="scp.common.params" value=""/>
         <echo message="Testing connection" />
         <echo message="SSH Common Params ${ssh.common.params} for ${ssh}"/>
@@ -100,20 +100,20 @@ of adapter.
             <arg line="${ssh.common.params} ls -ld /tmp"/>
         </exec>
 
-        <!--clean out old modules -->
-        <echo message="Removing remote Installer modules" />
-        <exec executable="${ssh}" description="Removing Installer modules">
-            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-macosx-4.7_0.tgz"/>
-            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-linux-4.7_0.tgz"/>
-            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files/http://workstation.int.janelia.org/sites/default/files/JaneliaWorkstation-windows-4.7_0.exe"/>
-            <arg line="${ssh.common.params} rm /var/www/html/sites/default/files"/>
+        <!--clean out old Installers -->
+        <echo message="Removing remote Installer files" />
+        <exec executable="${ssh}" description="Removing Installer files">
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-macosx.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-linux.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.exe"/>
         </exec>
 
-        <!--copy new modules -->
-        <echo message="Copying new modules to ${tmpEnv}" />
+        <!--copy new Installers in -->
+        <echo message="Copying new installers to jacs@workstation.int.janelia.org" />
         <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
-        <exec executable="bash" description="Copying new modules to ${tmpEnv}">
-            <arg line="-c '${scp} -r ${basedir}/build/updates/* ${ssh.common.params}:/var/www/html/${tmpEnv}/.'"/>
+        <exec executable="bash" description="Copying new Installers to $jacs@workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/* ${ssh.common.params}:/var/www/html/sites/default/files/.'"/>
         </exec>
         <echo message="Done : ${exec.output}"  />
         <echo message="Done : ${exec.error}"  />
@@ -247,13 +247,21 @@ of adapter.
             <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
         </condition>
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
+
+        <!-- Compress the Linux script to tgz -->
+        <tar tarfile="${basedir}/dist/JaneliaWorkstation-linux.tgz" compression="gzip">
+            <tarfileset dir="${basedir}/dist/" mode="644">
+                <include name="JaneliaWorkstation-linux.sh"/>
+            </tarfileset>
+        </tar>
+
     </target>
 
     <target name="build-mac" description="Builds a full mac app with canonical directory structure: first define antexec">
         <!-- This fails, because of files not found. -->
         <!--<ant antfile="build.xml" target="build-mac">-->
-            <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
-            <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
+        <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
+        <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
         <!--</ant>-->
         <echo message="This target still requires presetting antexec."/>
         <exec-target target="build-mac"/>
