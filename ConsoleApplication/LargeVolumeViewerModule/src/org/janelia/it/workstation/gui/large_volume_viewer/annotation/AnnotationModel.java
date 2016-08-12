@@ -1475,7 +1475,8 @@ called from a  SimpleWorker thread.
             }
         }
 
-        // get swcdata via converter, then write
+        // get swcdata via converter, then write; conversion from TmNeurons is done
+        //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
         List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
         if (swcDatas != null  &&  !swcDatas.isEmpty()) {
