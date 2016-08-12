@@ -31,6 +31,7 @@ public class AnnotationBuilderDialog extends JDialog {
     private JTextField annotationTextField;
     private String originalAnnotationText;
     private StringBuilder annotationValue = new StringBuilder();
+    private boolean cancelled = false;
 
     public AnnotationBuilderDialog() {
         super(SessionMgr.getMainFrame(), "Edit Value", true);
@@ -95,7 +96,7 @@ public class AnnotationBuilderDialog extends JDialog {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                setAnnotationValue(originalAnnotationText);
+                cancelled = true;
                 AnnotationBuilderDialog.this.setVisible(false);
             }
         });
@@ -137,7 +138,7 @@ public class AnnotationBuilderDialog extends JDialog {
     }
 
     public String getAnnotationValue() {
-        return annotationValue.toString();
+        return cancelled?null:annotationValue.toString();
     }
 
     public void setAnnotationValue(String newAnnotationValue) {

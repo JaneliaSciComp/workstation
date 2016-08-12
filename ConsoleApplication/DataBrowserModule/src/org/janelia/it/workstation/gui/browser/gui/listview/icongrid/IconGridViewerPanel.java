@@ -420,7 +420,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         S id = getImageModel().getImageUniqueId(object);
         AnnotatedImageButton<T,S> button = imagesPanel.getButtonById(id);
         if (button != null) {
-            imagesPanel.scrollObjectToCenter(object);
+            imagesPanel.scrollObjectToCenterIfOutsideViewport(object);
             button.requestFocus();
             updateHud(false);
         }
@@ -530,9 +530,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         // Actually display everything
         showAll();
 
-        // Finally, we're done, we can call the success callback
-        ConcurrentUtils.invokeAndHandleExceptions(success);
-
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -540,6 +537,17 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
                 imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
                 imagesPanel.setScrollLoadingEnabled(true);
+                updateUI(); // Make sure buttons are displayed before calling load/unload to load their contents
+
+                SwingUtilities.invokeLater(new Runnable() {
+                   @Override
+                   public void run() {
+                       imagesPanel.loadUnloadImages();
+                   }
+               });
+
+                // Finally, we're done, we can call the success callback
+                ConcurrentUtils.invokeAndHandleExceptions(success);
             }
         });
     }

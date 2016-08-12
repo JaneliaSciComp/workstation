@@ -23,6 +23,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
@@ -39,9 +40,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * A port of data sets management dialog to use domain objects
  *
  * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-
-
 public class DataSetListDialog extends ModalDialog {
 
     private final JLabel loadingLabel;
@@ -243,6 +243,8 @@ public class DataSetListDialog extends ModalDialog {
 
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+
+        ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");
 
         // Show dialog and wait
         packAndShow();

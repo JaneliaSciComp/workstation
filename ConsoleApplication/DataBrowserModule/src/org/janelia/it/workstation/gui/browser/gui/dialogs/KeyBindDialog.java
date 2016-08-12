@@ -17,6 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.keybind.ShortcutTextField;
@@ -120,6 +121,7 @@ public class KeyBindDialog extends ModalDialog {
 
     public void showForAction(Action action) {
         setActionToBind(action);
+        ActivityLogHelper.logUserAction("KeyBindDialog.showForAction", action.getName());
         packAndShow();
     }
 

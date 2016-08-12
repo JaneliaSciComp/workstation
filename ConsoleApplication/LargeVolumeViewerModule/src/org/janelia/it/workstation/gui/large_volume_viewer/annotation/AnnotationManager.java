@@ -261,7 +261,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             // if it's a bare sample, we don't have anything to do
-            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), initialEntity.getId());
+            activityLog.setTileFormat(getTileFormat(), initialEntity.getId());
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
             SimpleWorker loader = new SimpleWorker() {
@@ -1512,6 +1512,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                             "# annotations (largest neuron) = " + maxannotations + "\n",
                     "Info",
                     JOptionPane.PLAIN_MESSAGE);
+            activityLog.logShowWorkspaceInfo(annotationModel.getCurrentWorkspace().getId());
         }
     }
 

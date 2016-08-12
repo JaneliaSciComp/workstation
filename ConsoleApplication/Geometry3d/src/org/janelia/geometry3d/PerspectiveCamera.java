@@ -29,7 +29,8 @@
  */
 package org.janelia.geometry3d;
 
-import java.util.Observer;
+import org.janelia.geometry3d.camera.ConstViewSlab;
+import org.janelia.geometry3d.camera.ConstViewport;
 
 /**
  * PerspectiveCamera manages a projection matrix.
@@ -52,11 +53,12 @@ public class PerspectiveCamera extends AbstractCamera
     @Override
     protected void updateProjectionMatrix() {
         float focusDistance = getCameraFocusDistance();
+        ConstViewSlab slab = getEffectiveViewSlab();
         projectionMatrix.makePerspective(
                 fovYRadians, 
                 viewport.getAspect(), 
-                viewport.getzNearRelative() * focusDistance,
-                viewport.getzFarRelative() * focusDistance );
+                slab.getzNearRelative() * focusDistance,
+                slab.getzFarRelative() * focusDistance );
         projectionMatrixNeedsUpdate = false;
         // System.out.println("Projection matrix updated");
     }

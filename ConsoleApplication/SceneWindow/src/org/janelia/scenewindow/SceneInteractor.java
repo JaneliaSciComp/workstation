@@ -34,6 +34,7 @@ import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
@@ -113,7 +114,7 @@ public abstract class SceneInteractor
         float windowSize = 0.5f * (vp.getHeightPixels() + vp.getWidthPixels());
         float dAzimuth = -dx * radiansPerScreen / windowSize;
         float dElevation = dy * radiansPerScreen / windowSize;
-        Vector3 upInWorld = camera.getVantage().getUpInWorld();
+        ConstVector3 upInWorld = camera.getVantage().getUpInWorld();
         Rotation rotAz = new Rotation().setFromAxisAngle(upInWorld, dAzimuth);
         Rotation rotEl = new Rotation().setFromAxisAngle(xAxis, dElevation);
         Rotation newR = new Rotation(camera.getVantage().getRotationInGround());

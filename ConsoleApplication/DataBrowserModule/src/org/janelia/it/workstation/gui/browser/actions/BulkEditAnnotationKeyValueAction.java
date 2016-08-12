@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
@@ -38,6 +39,8 @@ public class BulkEditAnnotationKeyValueAction implements NamedAction {
 
     @Override
     public void doAction() {
+
+        ActivityLogHelper.logUserAction("BulkEditAnnotationKeyValueAction.doAction", annotation);
 
         final String originalAnnotationName = annotation.getName();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();

@@ -30,7 +30,7 @@ import org.openide.util.Utilities;
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.scenewindow.FPSWindowTopComponent")
-@ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Horta" , position = 250)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_FPSWindowAction",
         preferredID = "FPSWindowTopComponent"

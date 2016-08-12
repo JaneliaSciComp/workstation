@@ -7,6 +7,7 @@ import javax.swing.ProgressMonitor;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
@@ -33,7 +34,9 @@ public class PasteAnnotationTermAction implements NamedAction {
 
     @Override
     public void doAction() {
-    
+
+        ActivityLogHelper.logUserAction("PasteAnnotationTermAction.doAction");
+
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         SimpleWorker worker = new SimpleWorker() {

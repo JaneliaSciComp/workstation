@@ -16,6 +16,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.FileGroup;
@@ -23,10 +24,11 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.FileGroupSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
@@ -36,6 +38,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,9 +75,9 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         typeButton = new ImageTypeSelectionButton() {
             @Override
-            protected void imageTypeChanged(String typeName) {
-                log.info("Setting image type preference: "+typeName);
-                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, typeName);
+            protected void imageTypeChanged(FileType fileType) {
+                log.info("Setting image type preference: "+fileType);
+                setPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, fileType.name());
             }
         };
 
@@ -88,11 +91,12 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
         if (result==null) return;
         
         if (!debouncer.queue(null)) {
-            log.debug("Skipping load, since there is one already in progress");
+            log.info("Skipping load, since there is one already in progress");
             return;
         }
         
         log.info("loadSampleResult(PipelineResult:{})",result.getName());
+        final StopWatch w = new StopWatch();
 
         this.result = result;
         Sample sample = result.getParentRun().getParent().getParent();
@@ -108,6 +112,8 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         debouncer.success();
         updateUI();
+
+        ActivityLogHelper.logElapsed("FileGroupEditorPanel.loadSampleResult", result, w);
     }
 
     private void showResult(PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
@@ -122,7 +128,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
             log.info("Got image type preference: "+preference2);
             if (preference2!=null) {
-                typeButton.setImageType((String)preference2.getValue());
+                typeButton.setImageTypeName((String)preference2.getValue());
             }
             typeButton.populate(hasFileGroups.getGroups());
 
@@ -161,7 +167,12 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     public String getName() {
         return "File Group Editor";
     }
-    
+
+    @Override
+    public SelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+
     @Override
     public Object getEventBusListener() {
         return resultsPanel;
@@ -234,7 +245,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
         @Override
         public String getImageFilepath(FileGroup imageObject) {
-            return DomainUtils.getFilepath(imageObject, typeButton.getImageType());
+            return DomainUtils.getFilepath(imageObject, typeButton.getImageTypeName());
         }
 
         @Override
@@ -294,30 +305,27 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
 
     private void setPreference(final String name, final String value) {
 
+        Utils.setMainFrameCursorWaitStatus(true);
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject.getId()!=null) {
-                    Preference preference = DomainMgr.getDomainMgr().getPreference(name, parentObject.getId().toString());
-                    if (preference==null) {
-                        preference = new Preference(AccessManager.getSubjectKey(), name, parentObject.getId().toString(), value);
-                    }
-                    else {
-                        preference.setValue(value);
-                    }
-                    DomainMgr.getDomainMgr().savePreference(preference);
+                    DomainMgr.getDomainMgr().setPreference(name, parentObject.getId().toString(), value);
                 }
             }
 
             @Override
             protected void hadSuccess() {
+                Utils.setMainFrameCursorWaitStatus(false);
                 search();
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setMainFrameCursorWaitStatus(false);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };

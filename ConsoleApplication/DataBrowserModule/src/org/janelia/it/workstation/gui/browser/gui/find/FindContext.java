@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.browser.gui.find;
 
+import java.util.concurrent.Callable;
+
+import javax.swing.text.Position;
+
 /**
  * Any component that supports a contextual find (Meta-F) should implement this interface so that it can be registered
  * as the context whenever it is focused.
@@ -12,9 +16,7 @@ public interface FindContext {
     
     public void hideFindUI();
 
-    public void findPrevMatch(String text, boolean skipStartingNode);
-
-    public void findNextMatch(String text, boolean skipStartingNode);
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success);
     
     public void openMatch();
 }

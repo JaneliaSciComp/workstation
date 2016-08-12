@@ -24,6 +24,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class ResultSelectionButton extends DropDownButton {
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
         setToolTipText("Select the result to display");
+        setResultDescriptor(ResultDescriptor.LATEST);
     }
 
     public void setResultDescriptor(ResultDescriptor currResult) {
@@ -63,11 +65,7 @@ public class ResultSelectionButton extends DropDownButton {
     }
     
     public void populate(Collection<DomainObject> domainObjects) {
-        
-        if (currResult == null) {
-            this.currResult = ResultDescriptor.LATEST;
-        }
-        
+
         Multiset<ResultDescriptor> countedResultNames = LinkedHashMultiset.create();
             
         for(DomainObject domainObject : domainObjects) {
@@ -75,7 +73,10 @@ public class ResultSelectionButton extends DropDownButton {
                 Sample sample = (Sample)domainObject;
                 for(ObjectiveSample objectiveSample : sample.getObjectiveSamples()) {
                     SamplePipelineRun run = objectiveSample.getLatestSuccessfulRun();
-                    if (run==null || run.getResults()==null) continue;
+                    if (run==null || run.getResults()==null) {
+                        run = objectiveSample.getLatestRun();
+                        if (run==null || run.getResults()==null) continue;
+                    }
                     for(PipelineResult result : run.getResults()) {
                         if (result instanceof HasFileGroups && !(result instanceof LSMSummaryResult)) {
                             HasFileGroups hasGroups = (HasFileGroups)result;
@@ -120,6 +121,7 @@ public class ResultSelectionButton extends DropDownButton {
                 public void actionPerformed(ActionEvent e) {
                     setResultDescriptor(resultDescriptor);
                     resultChanged(currResult);
+                    ActivityLogHelper.logUserAction("ResultSelectionButton.resultChanged", resultDescriptor.toString());
                 }
             });
             getPopupMenu().add(menuItem);

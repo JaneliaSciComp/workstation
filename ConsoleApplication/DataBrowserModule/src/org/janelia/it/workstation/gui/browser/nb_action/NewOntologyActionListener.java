@@ -7,6 +7,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
@@ -20,6 +21,8 @@ public final class NewOntologyActionListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        ActivityLogHelper.logUserAction("NewOntologyActionListener.actionPerformed");
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 

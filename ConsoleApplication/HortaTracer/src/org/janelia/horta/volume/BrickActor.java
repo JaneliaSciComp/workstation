@@ -85,11 +85,16 @@ public class BrickActor extends MeshActor
         return brainTile;
     }
 
-    public void setRelativeSlabThickness(float thickness)
+    public void setRelativeZNear(float zNear)
     {
-        brickMaterial.setRelativeSlabThickness(thickness);
+        brickMaterial.setRelativeZNear(zNear);
     }
-    
+
+    public void setRelativeZFar(float zFar)
+    {
+        brickMaterial.setRelativeZFar(zFar);
+    }
+
     private static class BrickMaterial extends VolumeMipMaterial {
 
         private BrickMaterial(

@@ -65,7 +65,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
@@ -85,6 +87,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.KeyStroke;
+import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
@@ -115,6 +119,7 @@ import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
@@ -125,13 +130,16 @@ import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
 import org.janelia.horta.loader.HortaSwcLoader;
 import org.janelia.horta.loader.HortaVolumeCache;
+import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
+import org.janelia.horta.movie.HortaMovieSource;
 import org.janelia.horta.nodes.BasicHortaWorkspace;
 import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
+import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.actions.RedoAction;
@@ -166,7 +174,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.horta.NeuronTracerTopComponent")
-@ActionReference(path = "Menu/Window/Horta" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Horta" , position = 0 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_NeuronTracerAction",
         preferredID = NeuronTracerTopComponent.PREFERRED_ID
@@ -225,6 +233,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private int defaultColorChannel = 0;
     
     private final HortaVolumeCache volumeCache;
+    private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -281,7 +290,17 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void actionPerformed(ActionEvent e)
             {
                 // System.out.println("hide models");
+                boolean bChanged = false;
                 if (neuronMPRenderer.setHideAll(true))
+                    bChanged = true;
+                // Use "v" key to show/hide primary "P" anchor
+                for (GL3Actor actor : tracingActors) {
+                    if (actor.isVisible()) {
+                        actor.setVisible(false);
+                        bChanged = true;
+                    }
+                }
+                if (bChanged)
                     redrawNow();
             }
         });
@@ -290,7 +309,17 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void actionPerformed(ActionEvent e)
             {
                 // System.out.println("unhide models");
+                boolean bChanged = false;
                 if (neuronMPRenderer.setHideAll(false))
+                    bChanged = true;
+                // Use "v" key to show/hide primary "P" anchor
+                for (GL3Actor actor : tracingActors) {
+                    if (! actor.isVisible()) {
+                        actor.setVisible(true);
+                        bChanged = true;
+                    }
+                }
+                if (bChanged)
                     redrawNow();
             }
         });
@@ -370,7 +399,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // TODO: for now assuming that the largest NeuronSet is the LVV one
                 
                 Collection<NeuronSet> sets = metaWorkspace.getNeuronSets();
-                if (sets.size() == 0) {} // Do nothing
+                if (sets.isEmpty()) {} // Do nothing
                 else if (sets.size() == 1) {
                     tracingInteractor.setDefaultWorkspace(sets.iterator().next());                    
                 }
@@ -444,6 +473,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
     
+    
+    private List<GL3Actor> tracingActors = new ArrayList<>();
     private NeuronMPRenderer setUpActors() 
     {
         
@@ -454,7 +485,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         renderers.add(neuronMPRenderer0);
                 
         // 3) Neurite model
+        tracingActors.clear();
         for (GL3Actor tracingActor : tracingInteractor.createActors()) {
+            tracingActors.add(tracingActor);
             sceneWindow.getRenderer().addActor(tracingActor);
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
@@ -530,74 +563,80 @@ public final class NeuronTracerTopComponent extends TopComponent
         // 2) Setup 3D viewer mouse interaction
         interactor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
-                sceneWindow.getInnerComponent()) {
+                sceneWindow.getInnerComponent());
+        
+        // 3) Add custom interactions
+        MouseInputListener hortaMouseListener = new MouseInputAdapter() 
+        {
+            // Show/hide crosshair on enter/exit
+            @Override
+            public void mouseEntered(MouseEvent event) {
+                super.mouseEntered(event);
+                crossHairActor.setVisible(true);
+                sceneWindow.redrawNow();
+            }
+            @Override
+            public void mouseExited(MouseEvent event) {
+                super.mouseExited(event);
+                crossHairActor.setVisible(false);
+                sceneWindow.redrawNow();
+            }
 
-                    // Show/hide crosshair on enter/exit
-                    @Override
-                    public void mouseEntered(MouseEvent event) {
-                        super.mouseEntered(event);
-                        crossHairActor.setVisible(true);
-                        sceneWindow.redrawNow();
-                    }
-                    @Override
-                    public void mouseExited(MouseEvent event) {
-                        super.mouseExited(event);
-                        crossHairActor.setVisible(false);
-                        sceneWindow.redrawNow();
-                    }
-                    
-                    // Click to center on position
-                    @Override
-                    public void mouseClicked(MouseEvent event) 
-                    {
-                        // Click to center on position
-                        if ((event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1)) {
-                            if (System.nanoTime() < (previousClickTime + minClickInterval)) {
-                                return;
-                            }
-
-                            // Use neuron cursor position, if available, rather than hardware mouse position.
-                            Vector3 xyz = null;
-                            // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
-                            // if (hoverAnchor == null) {
-                                xyz = worldXyzForScreenXy(event.getPoint());
-                            // } else {
-                            //     xyz = hoverAnchor.getLocationUm();
-                                // logger.info("Using neuron cursor XYZ "+xyz);
-                            // }
-
-                            // logger.info(xyz);
-                            previousClickTime = System.nanoTime();
-                            PerspectiveCamera pCam = (PerspectiveCamera) camera;
-                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
-                        }
+            // Click to center on position
+            @Override
+            public void mouseClicked(MouseEvent event) 
+            {
+                // Click to center on position
+                if ((event.getClickCount() == 1) && (event.getButton() == MouseEvent.BUTTON1)) {
+                    if (System.nanoTime() < (previousClickTime + minClickInterval)) {
+                        return;
                     }
 
-                    // Hover to show location in status bar
-                    @Override
-                    public void mouseMoved(MouseEvent event) {
-                        super.mouseMoved(event);
+                    // Use neuron cursor position, if available, rather than hardware mouse position.
+                    Vector3 xyz = null;
+                    // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
+                    // if (hoverAnchor == null) {
+                        xyz = worldXyzForScreenXy(event.getPoint());
+                    // } else {
+                    //     xyz = hoverAnchor.getLocationUm();
+                        // logger.info("Using neuron cursor XYZ "+xyz);
+                    // }
 
-                        // Print out screen X, Y (pixels)
-                        StringBuilder msg = new StringBuilder();
-                        final boolean showWindowCoords = false;
-                        if (showWindowCoords) {
-                            msg.append("Window position (pixels):");
-                            msg.append(String.format("[% 4d", event.getX()));
-                            msg.append(String.format(", % 4d", event.getY()));
-                            msg.append("]");
-                        }
+                    // logger.info(xyz);
+                    previousClickTime = System.nanoTime();
+                    PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                    loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                }
+            }
 
-                        reportIntensity(msg, event);
+            // Hover to show location in status bar
+            @Override
+            public void mouseMoved(MouseEvent event) {
+                super.mouseMoved(event);
 
-                        // reportPickItem(msg, event);
+                // Print out screen X, Y (pixels)
+                StringBuilder msg = new StringBuilder();
+                final boolean showWindowCoords = false;
+                if (showWindowCoords) {
+                    msg.append("Window position (pixels):");
+                    msg.append(String.format("[% 4d", event.getX()));
+                    msg.append(String.format(", % 4d", event.getY()));
+                    msg.append("]");
+                }
 
-                        if (msg.length() > 0) {
-                            StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
-                        }
-                    }
+                reportIntensity(msg, event);
 
-                };
+                // reportPickItem(msg, event);
+
+                if (msg.length() > 0) {
+                    StatusDisplayer.getDefault().setStatusText(msg.toString(), 1);
+                }
+            }
+        };
+        // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+        TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
+        sceneWindow.getInnerComponent().addMouseListener(tolerantMouseClickListener);
+        sceneWindow.getInnerComponent().addMouseMotionListener(tolerantMouseClickListener);
 
     }
 
@@ -758,16 +797,29 @@ public final class NeuronTracerTopComponent extends TopComponent
         // associateLookup(Lookups.fixed(vantage, brightnessModel)); // TWO items in lookup
         FrameTracker frameTracker = sceneWindow.getRenderer().getFrameTracker();
         metaWorkspace = new BasicHortaWorkspace(sceneWindow.getVantage());        
+        
+        // reduce near clipping of volume block surfaces
+        Viewport vp = sceneWindow.getCamera().getViewport();
+        vp.setzNearRelative(0.93f);
+        vp.setzFarRelative(1.07f);
+        vp.getChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                Viewport vp = sceneWindow.getCamera().getViewport();
+                // logger.info("zNearRelative = " + vp.getzNearRelative());
+                // TODO: should that be updateRelativeSlabThickness?
+                neuronMPRenderer.setRelativeSlabThickness(vp.getzNearRelative(), vp.getzFarRelative());
+                redrawNow();
+            }
+        });
+
         associateLookup(Lookups.fixed(
                 vantage, 
                 brightnessModel, 
                 metaWorkspace, 
-                frameTracker));
-        
-        // reduce near clipping of volume block surfaces
-        Viewport vp = sceneWindow.getCamera().getViewport();
-        vp.setzNearRelative(0.50f);
-        vp.setzFarRelative(50.0f); // We use rear faces for volume rendering now...
+                frameTracker,
+                movieSource,
+                vp));
 
         sceneWindow.setBackgroundColor(Color.DARK_GRAY);
         this.add(sceneWindow.getOuterComponent(), BorderLayout.CENTER);
@@ -789,6 +841,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TarFileLoader());
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
+        droppedFileHandler.addLoader(new ObjMeshLoader(this));
         // Put dropped neuron models into "Temporary neurons"
         WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();
@@ -1093,6 +1146,44 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
                     
                     stereoMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Left Eye View") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                sceneWindow.getRenderer().getStereo3dMode() 
+                                        == SceneRenderer.Stereo3dMode.LEFT);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            sceneWindow.getRenderer().setStereo3dMode(
+                                    SceneRenderer.Stereo3dMode.LEFT);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
+                            sceneWindow.redrawNow();
+                        }
+                    }));
+                    
+                    stereoMenu.add(new JRadioButtonMenuItem(
+                            new AbstractAction("Right Eye View") 
+                    {
+                        {  
+                            putValue(Action.SELECTED_KEY, 
+                                sceneWindow.getRenderer().getStereo3dMode() 
+                                        == SceneRenderer.Stereo3dMode.RIGHT);
+                        }
+                        
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            sceneWindow.getRenderer().setStereo3dMode(
+                                    SceneRenderer.Stereo3dMode.RIGHT);
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            neuronMPRenderer.setOpaqueBufferDirty();
+                            sceneWindow.redrawNow();
+                        }
+                    }));
+                    
+                    stereoMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Red/Cyan Anaglyph") 
                     {
                         {  
@@ -1151,17 +1242,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 menu.add(new AbstractAction("Save Screen Shot...") {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
-                        glad.getContext().makeCurrent();
-
-                        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
-                        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
-                        // In Jogl 2.2.4, this newer screenshot method seems to work OK
-                        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
-                        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
-
-                        glad.getContext().release();
+                    public void actionPerformed(ActionEvent e) 
+                    {
+                        BufferedImage image = getScreenShot();
                         if (image == null) {
                             return;
                         }
@@ -1170,7 +1253,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 FileDialog.SAVE);
                         chooser.setFile("*.png");
                         chooser.setVisible(true);
-                        logger.info("Screen shot file name = " + chooser.getFile());
+                        // logger.info("Screen shot file name = " + chooser.getFile());
                         if (chooser.getFile() == null) {
                             return;
                         }
@@ -1419,11 +1502,11 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vantage v = sceneWindow.getVantage();
         if (doCubifyVoxels) {
             v.setWorldScaleHack(1, 1, 0.4f);
-            logger.info("distort");
+            // logger.info("distort");
         }
         else {
             v.setWorldScaleHack(1, 1, 1);
-            logger.info("undistort");
+            // logger.info("undistort");
         }
         v.notifyObservers();
         sceneWindow.redrawNow();
@@ -1486,7 +1569,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // TODO: Use this for redraw needs
-    private void redrawNow() {
+    public void redrawNow() {
         if (! isShowing())
             return;
         sceneWindow.getInnerComponent().repaint();
@@ -1532,5 +1615,65 @@ public final class NeuronTracerTopComponent extends TopComponent
         volumeCache.registerLoneDisplayedTile(boxMesh);
     }
 
+    // API for use by external HortaMovieSource class
     
+    public boolean setVisibleActors(Collection<String> visibleActorNames)
+    {
+        // TODO: This is just neurons for now...
+        for (NeuronSet neuronSet : metaWorkspace.getNeuronSets()) {
+            for (NeuronModel neuron : neuronSet) {
+                String n = neuron.getName();
+                boolean bWas = neuron.isVisible();
+                boolean bIs = visibleActorNames.contains(n);
+                if (bWas == bIs)
+                    continue;
+                neuron.setVisible(bIs);
+                neuron.getVisibilityChangeObservable().notifyObservers();
+            }
+        }
+        
+        return false;
+    }
+    
+    public Collection<String> getVisibleActorNames() {
+        Collection<String> result = new HashSet<>();
+
+        // TODO: This is just neurons for now...
+        for (NeuronSet neuronSet : metaWorkspace.getNeuronSets()) {
+            for (NeuronModel neuron : neuronSet) {
+                if (neuron.isVisible())
+                    result.add(neuron.getName());
+            }
+        }
+        
+        return result;
+    }
+    
+    public Vantage getVantage() {
+        return sceneWindow.getVantage();
+    }
+    
+    public void redrawImmediately() {
+        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+        glad.display();
+        glad.swapBuffers();
+    }
+        
+    public BufferedImage getScreenShot() 
+    {
+        GLAutoDrawable glad = sceneWindow.getGLAutoDrawable();
+        glad.getContext().makeCurrent();
+        // In Jogl 2.1.3, Screenshot is deprecated, but the non-deprecated method does not work. Idiots.
+        // BufferedImage image = Screenshot.readToBufferedImage(glad.getSurfaceWidth(), glad.getSurfaceHeight());
+        // In Jogl 2.2.4, this newer screenshot method seems to work OK
+        AWTGLReadBufferUtil rbu = new AWTGLReadBufferUtil(glad.getGLProfile(), false);
+        BufferedImage image = rbu.readPixelsToBufferedImage(glad.getGL(), true);
+        glad.getContext().release();
+        return image;
+    }
+
+    public void addMeshActor(GL3Actor meshActor) {
+        neuronMPRenderer.addMeshActor(meshActor);
+    }
+
 }

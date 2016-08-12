@@ -794,7 +794,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
         if(HttpDataSource.useHttp()) {
-            HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
+            HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
             useHttpCheckbox.setSelected(true);
         } else {
             useHttpCheckbox.setSelected(false);
@@ -806,7 +806,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     useHttpCheckbox.setSelected(false);
                     HttpDataSource.setUseHttp(false);
                 } else if (e.getStateChange()==ItemEvent.SELECTED) {
-                    HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("domain.facade.rest.url"));
+                    HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
                     useHttpCheckbox.setSelected(true);
                     HttpDataSource.setUseHttp(true);
                 }
@@ -1489,7 +1489,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getWorkspaceId() {
-        return this.annotationModel.getCurrentWorkspace().getId();
+        if (this.annotationModel.getCurrentWorkspace() != null) {
+            return this.annotationModel.getCurrentWorkspace().getId();
+        } else {
+            return null;
+        }
     }
 
     private Long getSampleId() {

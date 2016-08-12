@@ -44,7 +44,6 @@ public class StateMgr {
     // TODO: externalize these properties
     private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
     public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
-    public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
 
     private final NavigationHistory navigationHistory = new NavigationHistory();
     private final UserColorMapping userColorMapping = new UserColorMapping();
@@ -119,7 +118,7 @@ public class StateMgr {
     }
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
-        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
+        String category = DomainConstants.PREFERENCE_CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
         List<Preference> prefs = DomainMgr.getDomainMgr().getPreferences(category);
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(AccessManager.getSubjectKey(), ontologyId);
         for (Preference pref : prefs) {
@@ -131,7 +130,7 @@ public class StateMgr {
     }
 
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
-        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
+        String category = DomainConstants.PREFERENCE_CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
         boolean changed = false;
         Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         log.debug("Saving {} key bindings for ontology {}", keybinds.size(), ontologyKeyBindings.getOntologyId());

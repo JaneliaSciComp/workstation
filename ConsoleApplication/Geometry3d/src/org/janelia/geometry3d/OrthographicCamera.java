@@ -29,6 +29,8 @@
  */
 package org.janelia.geometry3d;
 
+import org.janelia.geometry3d.camera.ConstViewSlab;
+
 /**
  *
  * @author cmbruns
@@ -47,11 +49,12 @@ public class OrthographicCamera extends AbstractCamera
         float right = halfSize * viewport.getAspect();
         float depth = top * 2;
         // System.out.println("top = "+top);
+        ConstViewSlab slab = getEffectiveViewSlab();
         projectionMatrix.makeOrthographic(
                 -right, right,
                 -top, top,
-                (1.0f/viewport.getzNearRelative()) * depth, // near, positive
-                (1.0f - viewport.getzFarRelative()) * depth); // far, negative
+                (1.0f/slab.getzNearRelative()) * depth, // near, positive
+                (1.0f - slab.getzFarRelative()) * depth); // far, negative
         projectionMatrixNeedsUpdate = false;
     }
     

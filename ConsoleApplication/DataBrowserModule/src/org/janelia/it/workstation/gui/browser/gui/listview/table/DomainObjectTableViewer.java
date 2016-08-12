@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -29,6 +30,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -50,6 +52,9 @@ import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +151,13 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     }
 
     @Override
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        updateUI();
+    }
+
+    @Override
     public void showDomainObjects(final AnnotatedDomainObjectList domainObjectList, final Callable<Void> success) {
 
         try {
@@ -155,11 +167,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         this.domainObjectList = domainObjectList;
-        log.debug("showDomainObjects(domainObjectList.size={})",domainObjectList.getDomainObjects().size());
+        log.debug("showDomainObjects(domainObjectList={})",DomainUtils.abbr(domainObjectList.getDomainObjects()));
 
         attributeMap.clear();
 
-        attrs = ClientDomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
+        attrs = DomainUtils.getUniqueAttributes(domainObjectList.getDomainObjects());
         attrs.add(0, annotationAttr);
 
         TableViewerConfiguration config = TableViewerConfiguration.loadConfig();
@@ -173,6 +185,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         }
 
         showObjects(domainObjectList.getDomainObjects(), success);
+        setSortCriteria(searchProvider.getSortField());
     }
 
     @Override
@@ -420,7 +433,19 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private List<DomainObject> getSelectedObjects() throws Exception {
         return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
     }
-    
+
+    private void setSortCriteria(String sortCriteria) {
+        if (org.apache.commons.lang3.StringUtils.isEmpty(sortCriteria)) {
+            setSortColumn(null, true);
+        }
+        else {
+            this.sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+            this.ascending = !sortCriteria.startsWith("-");
+            log.info("Setting sort column: {}",sortCriteria);
+            setSortColumn(sortField, ascending);
+        }
+    }
+
     protected class DomainObjectRowSorter extends RowSorter<TableModel> {
 
         private List<SortKey> sortKeys = new ArrayList<>();
@@ -430,6 +455,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             for (int i = 0; i < columns.size(); i++) {
                 if (columns.get(i).getName().equals(sortField)) {
                     sortKeys.add(new SortKey(i, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING));
+                    break;
                 }
             }
         }
@@ -441,7 +467,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             if (!column.isVisible() || !column.isSortable()) {
                 return;
             }
-
             SortOrder newOrder = SortOrder.ASCENDING;
             if (!sortKeys.isEmpty()) {
                 SortKey currentSortKey = sortKeys.get(0);
@@ -464,7 +489,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public void setSortKeys(List<? extends SortKey> sortKeys) {
-            this.sortKeys = Collections.unmodifiableList(new ArrayList<>(sortKeys));
+            this.sortKeys = new ArrayList(sortKeys);
         }
 
         @Override

@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
@@ -194,17 +195,24 @@ public final class DomainViewerTopComponent extends TopComponent {
     public DomainObjectEditor<? extends DomainObject> getEditor() {
         return editor;
     }
-        
+
+    public boolean isCurrent(DomainObject domainObject) {
+        try {
+            domainObject = DomainViewerManager.getObjectToLoad(domainObject);
+            if (domainObject==null) return getCurrent()==null;
+            return DomainUtils.equals(getCurrent(), domainObject);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return false;
+        }
+    }
+
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
         try {
-            if (domainObject instanceof NeuronFragment) {
-                NeuronFragment fragment = (NeuronFragment) domainObject;
-                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
-            } else if (domainObject instanceof LSMImage) {
-                LSMImage lsmImage = (LSMImage) domainObject;
-                domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lsmImage.getSample());
-            }
-
+            domainObject = DomainViewerManager.getObjectToLoad(domainObject);
+            if (domainObject==null) return;
+            
             final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
             if (editorClass == null) {
                 // TODO: comment this exception back in after initial development is complete
@@ -223,13 +231,20 @@ public final class DomainViewerTopComponent extends TopComponent {
             }
             editor.loadDomainObject(domainObject, isUserDriven, null);
             setName(editor.getName());
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Sample) {
+            return SampleEditorPanel.class;
+        }
+        else if (domainObject instanceof NeuronFragment) {
+            return SampleEditorPanel.class;
+        }
+        else if (domainObject instanceof LSMImage) {
             return SampleEditorPanel.class;
         }
         return null;

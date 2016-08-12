@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -28,7 +29,11 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
         this.ontology = ontology;
         this.ontologyTerm = ontologyTerm;
     }
-    
+
+    public boolean hasNodeChildren() {
+        return ontologyTerm.hasChildren();
+    }
+
     @Override
     protected boolean createKeys(List<OntologyTerm> list) {
         if (ontologyTerm==null) return false;

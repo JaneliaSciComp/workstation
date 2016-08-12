@@ -144,8 +144,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request to save domainObject on server: " + domainObject.getId())) {
             throw new WebApplicationException(response);
         }
-        DomainObject domainObj = response.readEntity(DomainObject.class);
-        return domainObj;
+        return response.readEntity(DomainObject.class);
     }
 
     @Override

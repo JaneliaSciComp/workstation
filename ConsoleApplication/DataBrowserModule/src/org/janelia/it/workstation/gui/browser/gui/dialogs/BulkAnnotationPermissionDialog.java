@@ -23,6 +23,7 @@ import javax.swing.SwingConstants;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -161,6 +162,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                 model.addElement(subject);
             }
 
+            ActivityLogHelper.logUserAction("BulkAnnotationPermissionDialog.showForSelectedDomainObjects");
             packAndShow();
         }
         catch (Exception e) {

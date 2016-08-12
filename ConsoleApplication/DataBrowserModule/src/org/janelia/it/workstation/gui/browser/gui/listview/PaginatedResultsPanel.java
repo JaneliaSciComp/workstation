@@ -7,7 +7,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -16,6 +18,7 @@ import javax.swing.text.Position;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -24,6 +27,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextRegistration;
 import org.janelia.it.workstation.gui.browser.gui.find.FindToolbar;
+import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
@@ -37,8 +41,6 @@ import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,6 +141,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             @Override
             public void actionPerformed(ActionEvent e) {
                 loadAndSelectAll();
+                ActivityLogHelper.logUserAction("PaginatedResultsPanel.loadAndSelectAll");
             }
         });
 
@@ -188,6 +191,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             JMenuItem viewItem = new JMenuItem(type.getName());
             viewItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    ActivityLogHelper.logUserAction("PaginatedResultsPanel.setViewerType", type.getName());
                     setViewerType(type);
 
                     final List<DomainObject> selectedDomainObjects = new ArrayList<>();
@@ -423,6 +427,12 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
+
+        if (searchResults==null) {
+            // First load into this panel, so we need a top-level loading indicator, since the resultsView isn't active yet
+            showLoadingIndicator();
+        }
+
         this.searchResults = searchResults;
         numPages = searchResults.getNumTotalPages();
         if (isUserDriven) {
@@ -440,7 +450,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
         log.debug("showCurrPage(isUserDriven={})",isUserDriven);
 
-        showLoadingIndicator();
+        resultsView.showLoadingIndicator();
         updatePagingStatus();
                 
         if (searchResults==null) {
@@ -529,40 +539,49 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         findToolbar.close();
     }
 
-    @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        findMatch(text, Position.Bias.Backward, skipStartingNode);
-    }
+    private final Debouncer matchDebouncer = new Debouncer();
 
     @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        findMatch(text, Position.Bias.Forward, skipStartingNode);
-    }
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
 
-    private void findMatch(final String text, final Position.Bias bias, final boolean skipStartingNode) {
+        Map<String,Object> params = new HashMap();
+        params.put("text", text);
+        params.put("bias", bias);
+        params.put("skipStartingNode", skipStartingNode);
 
         Utils.setWaitingCursor(SessionMgr.getMainFrame());
+        if (!matchDebouncer.queueWithParameters(success, params)) {
+            return;
+        }
 
-        SimpleWorker worker = new SimpleWorker() {
+        SimpleWorker worker = createFindWorker(text, bias, skipStartingNode);
+        worker.execute();
+    }
 
+    private SimpleWorker createFindWorker(final String text, final Position.Bias bias, final boolean skipStartingNode) {
+
+        return new SimpleWorker() {
+
+            private long start;
             private ResultIteratorFind searcher;
             private DomainObject match;
             private Integer matchPage;
 
             @Override
             protected void doStuff() throws Exception {
+                start = System.currentTimeMillis();
                 DomainObject startObject;
                 Reference lastSelectedId = selectionModel.getLastSelectedId();
                 if (lastSelectedId!=null) {
-                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedId);    
+                    startObject = DomainMgr.getDomainMgr().getModel().getDomainObject(lastSelectedId);
                 }
                 else {
-                    // This is generally unexpected, because the viewer should 
-                    // select the first item automatically, and there is no way to deselect everything. 
+                    // This is generally unexpected, because the viewer should
+                    // select the first item automatically, and there is no way to deselect everything.
                     log.warn("No 'last selected object' in selection model! Defaulting to first object...");
                     startObject = resultPage.getDomainObjects().get(0);
                 }
-                
+
                 int index = resultPage.getDomainObjects().indexOf(startObject);
                 if (index<0) {
                     throw new IllegalStateException("Last selected object no longer exists");
@@ -574,9 +593,6 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 searcher = new ResultIteratorFind(resultIterator) {
                     @Override
                     protected boolean matches(ResultPage resultPage, DomainObject currObject) {
-                        if (userRequestedCancel()) {
-                            return true;
-                        }
                         return resultsView.matches(resultPage, currObject, text);
                     }
                 };
@@ -602,18 +618,24 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                 else {
                     log.info("No match found for '{}'",text);
                 }
+                Map<String,Object> params = matchDebouncer.drainToLastParameters();
+                if (params!=null) {
+                    log.info("Re-doing find because there were other find requests in the meantime");
+                    // This is where a functional approach would be nice... instead we get this mess
+                    createFindWorker((String)params.get("text"), (Position.Bias)params.get("bias"), (Boolean)params.get("skipStartingNode")).execute();
+                }
+                else {
+                    matchDebouncer.success();
+                }
             }
 
             @Override
             protected void hadError(Throwable error) {
                 Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                matchDebouncer.failure();
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving filter results...", ""));
-        worker.execute();
-
     }
 
     @Override

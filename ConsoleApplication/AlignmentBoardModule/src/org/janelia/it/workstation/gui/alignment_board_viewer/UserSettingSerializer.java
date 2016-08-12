@@ -282,6 +282,7 @@ public class UserSettingSerializer implements Serializable {
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() == 3 ) {
+                logger.info("Setting the camera rotation.  {}", str);
                 serializationAdapter.setRotation( coordinateSets );
             }
             else {

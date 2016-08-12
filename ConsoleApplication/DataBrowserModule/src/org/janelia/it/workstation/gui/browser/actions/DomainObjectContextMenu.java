@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,7 +17,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -27,7 +25,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
@@ -39,6 +37,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -52,25 +51,21 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
-import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
-import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
-import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for entities.
@@ -78,6 +73,8 @@ import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DomainObjectContextMenu extends PopupContextMenu {
+
+    private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
 
     // Current selection
     protected DomainObject contextObject;
@@ -94,21 +91,22 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         this.multiple = domainObjectList.size() > 1;
         this.resultDescriptor = resultDescriptor;
         this.typeName = typeName;
+        ActivityLogHelper.logUserAction("DomainObjectContentMenu.create", domainObject);
     }
 
     public void runDefaultAction() {
         if (DomainViewerTopComponent.isSupported(domainObject)) {
             DomainViewerTopComponent viewer = ViewerUtils.getViewer(DomainViewerManager.getInstance(), "editor2");
-            if (viewer == null || !DomainUtils.equals(viewer.getCurrent(), domainObject)) {
+            if (viewer == null || !viewer.isCurrent(domainObject)) {
                 viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
                 viewer.requestActive();
                 viewer.loadDomainObject(domainObject, true);
             }
         }
         else if (DomainExplorerTopComponent.isSupported(domainObject)) {
-            // TODO: should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
+            // TODO: here we should select by path to ensure we get the right one, but for that to happen the domain object needs to know its path
             DomainExplorerTopComponent.getInstance().expandNodeById(contextObject.getId());
-            DomainExplorerTopComponent.getInstance().selectNodeById(domainObject.getId());
+            DomainExplorerTopComponent.getInstance().selectAndNavigateNodeById(domainObject.getId());
         }
     }
 
@@ -127,7 +125,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         setNextAddRequiresSeparator(true);
         add(getOpenInNewEditorItem());
-        add(getOpenSampleInNewEditorItem());
         add(getOpenSeparationInNewEditorItem());
 
         setNextAddRequiresSeparator(true);
@@ -141,6 +138,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
+        add(getNeuronAnnotatorItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
@@ -151,8 +149,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getMarkForReprocessingItem());
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
-//
-//        setNextAddRequiresSeparator(true);
         add(getMergeItem());
 //        add(getImportItem());
 //
@@ -193,52 +189,24 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (multiple) return null;
         if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
 
-        JMenuItem openItem = new JMenuItem("  Open "+domainObject.getType()+" In New Viewer");
-        openItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-                viewer.requestActive();
-                viewer.loadDomainObject(domainObject, true);
-            }
-        });
-        return openItem;
-    }
-
-    protected JMenuItem getOpenSampleInNewEditorItem() {
-        if (multiple) return null;
-        if (!(domainObject instanceof NeuronFragment)) return null;
-
-        JMenuItem copyMenuItem = new JMenuItem("  Open Sample In New Viewer");
-        copyMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                final DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
-                final NeuronFragment neuronFragment = (NeuronFragment)domainObject;
-
-                SimpleWorker worker = new SimpleWorker() {
-                    Sample sample;
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        viewer.requestActive();
-                        viewer.loadDomainObject(sample, true);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                worker.execute();
-            }
-        });
-        return copyMenuItem;
+        try {
+            final DomainObject objectToLoad = DomainViewerManager.getInstance().getObjectToLoad(domainObject);
+            JMenuItem openItem = new JMenuItem("  Open " + objectToLoad.getType() + " In New Viewer");
+            openItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.openInNewEditorItem", domainObject);
+                    DomainViewerTopComponent viewer = ViewerUtils.createNewViewer(DomainViewerManager.getInstance(), "editor2");
+                    viewer.requestActive();
+                    viewer.loadDomainObject(objectToLoad, true);
+                }
+            });
+            return openItem;
+        }
+        catch (Exception e) {
+            log.error("Error creating 'Open In New Viewer' menu item",e);
+            return null;
+        }
     }
 
     protected JMenuItem getOpenSeparationInNewEditorItem() {
@@ -249,23 +217,40 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.openSeparationInNewEditorItem", domainObject);
                 final SampleResultViewerTopComponent viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
                 final NeuronFragment neuronFragment = (NeuronFragment)domainObject;
 
-
                 SimpleWorker worker = new SimpleWorker() {
-                    NeuronSeparation separation;
+                    Sample sample;
+                    PipelineResult result;
 
                     @Override
                     protected void doStuff() throws Exception {
-                        Sample sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
-                        separation = SampleUtils.getNeuronSeparation(sample, neuronFragment);
+                        sample = (Sample)DomainMgr.getDomainMgr().getModel().getDomainObject(neuronFragment.getSample());
+                        if (sample!=null) {
+                            result = SampleUtils.getResultContainingNeuronSeparation(sample, neuronFragment);
+                        }
                     }
 
                     @Override
                     protected void hadSuccess() {
-                        viewer.requestActive();
-                        viewer.loadSampleResult(separation, true, null);
+                        if (sample==null) {
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                        }
+                        else if (result==null) {
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                        }
+                        else {
+                            viewer.requestActive();
+                            viewer.loadSampleResult(result, true, new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    // TODO: It would be nice to select the NeuronFragment that the user clicked on to get here, but the required APIs are not curently easily accessible from the outside
+                                    return null;
+                                }
+                            });
+                        }
                     }
 
                     @Override
@@ -281,12 +266,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getDetailsItem() {
         if (multiple) return null;
-
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.viewDetails", domainObject);
                 new DomainDetailsDialog().showForDomainObject(domainObject);
             }
         });
@@ -300,6 +285,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changePermissions", domainObject);
                 new DomainDetailsDialog().showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_PERMISSIONS);
             }
         });
@@ -316,6 +302,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.showInLightbox", domainObject);
                 Hud.getSingletonInstance().setObjectAndToggleDialog(domainObject, resultDescriptor, typeName);
             }
         });
@@ -344,6 +331,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             errorMenu.add(new JMenuItem(term.getName())).addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+
+                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
@@ -402,6 +391,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
         vllMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToVisuallyLossless", domainObject);
 
                 final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
                 String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
@@ -485,6 +476,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         llMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.changeSampleCompressionStrategyToLossless", domainObject);
+
                 final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
                 String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
                 int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
@@ -521,7 +514,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         for(Sample sample : samples) {
             if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                vllMenuItem.setEnabled(false);
+                submenu.setEnabled(false);
                 break;
             }
         }
@@ -545,6 +538,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
+
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
 
                 int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
                         "Are you sure you want to purge " + samples.size() + " sample(s) " +
@@ -619,6 +614,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
+                ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", domainObject);
+
                 int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
@@ -658,7 +655,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getAddToFolderItem() {
-        AddItemsToFolderAction action = new AddItemsToFolderAction(domainObjectList);
+        AddToFolderAction action = AddToFolderAction.get();
+        action.setDomainObjects(domainObjectList);
         JMenuItem item = action.getPopupPresenter();
         item.setText("  " + item.getText());
         return item;
@@ -666,7 +664,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveFromFolderItem() {
 
-        NamedAction action = null;
+        NamedAction action;
         if (contextObject instanceof TreeNode) {
             action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
         }
@@ -701,6 +699,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (path==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
         return getNamedActionItem(new OpenWithDefaultAppAction(path));
+    }
+
+    protected JMenuItem getNeuronAnnotatorItem() {
+        if (multiple) return null;
+        if (domainObject instanceof NeuronFragment) {
+            return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+        }
+        return null;
     }
 
     protected JMenuItem getVaa3dTriViewItem() {
@@ -738,6 +744,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         toggleHudMI.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContextMenu.download", domainObject);
                 DownloadDialog dialog = new DownloadDialog();
                 dialog.showDialog(domainObjectList, resultDescriptor);
             }
@@ -808,6 +815,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
             mergeItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    ActivityLogHelper.logUserAction("DomainObjectContextMenu.mergeSelectedNeurons");
                     try {
                         BackgroundWorker executeWorker = new TaskMonitoringWorker() {
 
@@ -901,7 +909,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 //        }
 //        return null;
 //    }
-//
+
     private JMenuItem getSpecialAnnotationSession() {
         if (this.multiple) return null;
         if (!SessionMgr.getSubjectKey().equals("user:simpsonj") && !SessionMgr.getSubjectKey().equals("group:simpsonlab")) {
@@ -911,6 +919,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                ActivityLogHelper.logUserAction("DomainObjectContextMenu.specialAnnotation");
                 if (null == StateMgr.getStateMgr().getCurrentOntologyId()) {
                     JOptionPane.showMessageDialog(mainFrame,
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",

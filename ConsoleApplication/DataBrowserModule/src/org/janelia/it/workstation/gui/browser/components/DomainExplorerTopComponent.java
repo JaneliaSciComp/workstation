@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
-import java.io.IOException;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -40,6 +42,7 @@ import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -55,8 +58,10 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Top component for the Data Explorer, which shows an outline tree view of the
@@ -120,7 +125,21 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         this.beanTreeView = new CustomTreeView(this);
         beanTreeView.setDefaultActionAllowed(false);
         beanTreeView.setRootVisible(false);
-        
+
+        beanTreeView.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                super.mouseReleased(e);
+                if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                    Node[] selectedNodes = beanTreeView.getSelectedNodes();
+                    if (selectedNodes.length>0) {
+                        final Node node = selectedNodes[selectedNodes.length-1];
+                        navigateNode(node);
+                    }
+                }
+            }
+        });
+
         this.toolbar = new CustomTreeToolbar(beanTreeView) {
             @Override
             protected void refresh() {
@@ -183,7 +202,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
 //    private void bindKeys() {
 //        
 //        CutAction cutAction = SystemAction.get(CutAction.class);
@@ -317,7 +336,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         else {
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-            final List<Long[]> selected = beanTreeView.getSelectedPaths();
 
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
@@ -329,18 +347,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {
                                 log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
-                                try {
-                                    node.destroy();
-                                }
-                                catch (IOException e) {
-                                    log.error("  Error destroying invalidated node",e);
-                                }
+                                node.destroy();
                             }
                             else {
                                 log.info("  Updating node@{} with refreshed object",System.identityHashCode(node));
                                 node.update(refreshed);
                             }
-                        }  catch (Exception ex) {
+                        }  
+                        catch (Exception ex) {
                             SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
@@ -351,7 +365,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 @Override
                 public void run() {
                     beanTreeView.expand(expanded);
-                    beanTreeView.selectPaths(selected);
                 }
             });
         }
@@ -371,8 +384,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             log.debug("Skipping refresh, since there is one already in progress");
             return;
         }
-        
+
         log.info("refresh(restoreState={})",restoreState);
+        final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = root!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
@@ -403,6 +417,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             break; // For now, we'll only expand first node
                         }
                     }
+
+                    ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
                     debouncer.success();
                 }
                 catch (Exception e) {
@@ -419,18 +435,15 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-    
+
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (allNodes.isEmpty()) {
             return;
         }
-        final Node node = allNodes.iterator().next();
-        if (node instanceof DomainObjectNode) {
-            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode)node, true, true);
-        }
+        final Node selectedNode = allNodes.iterator().next();
+        ActivityLogHelper.logUserAction("DomainExplorerTopComponent.resultChanged", selectedNode.getDisplayName());
     }
 
     public WorkspaceNode getWorkspaceNode() {
@@ -478,11 +491,35 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         return node;
     }
-    
-    public void selectNodeById(Long id) {
+
+    public Node selectAndNavigateNodeByPath(Long[] idPath) {
+        Node selectedNode = selectNodeByPath(idPath);
+        if (selectedNode!=null) {
+            navigateNode(selectedNode);
+        }
+        return selectedNode;
+    }
+
+    public Node selectNodeById(Long id) {
         for(Node node : DomainObjectNodeTracker.getInstance().getNodesById(id)) {
             selectNode(node);
-            break;
+            return node;
+        }
+        return null;
+    }
+
+    public Node selectAndNavigateNodeById(Long id) {
+        Node selectedNode = selectNodeById(id);
+        if (selectedNode!=null) {
+            navigateNode(selectedNode);
+        }
+        return selectedNode;
+    }
+
+    private void navigateNode(Node node) {
+        if (node instanceof DomainObjectNode) {
+            log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
+            selectionModel.select((DomainObjectNode)node, true, true);
         }
     }
 
@@ -497,13 +534,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
+        beanTreeView.navigateToNodeStartingWith(text, bias, skipStartingNode);
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
     
     @Override

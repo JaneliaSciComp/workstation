@@ -35,8 +35,12 @@ import java.nio.ByteBuffer;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.camera.BasicViewSlab;
+import org.janelia.geometry3d.camera.ConstViewSlab;
+import org.janelia.geometry3d.camera.SlabbableCamera;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
@@ -65,9 +69,12 @@ public class OpaqueRenderPass extends RenderPass
     private float cachedZNear = 1e-2f;
     private float cachedZFar = 1e4f;
     
-    private PerspectiveCamera localCamera; // local version of camera with custom slab
-    private Viewport localViewport = new Viewport(); // local version of camera with custom slab
-    private float slabThickness = 0.50f; // Half of view height
+    // private PerspectiveCamera localCamera; // local version of camera with custom slab
+    // private final Viewport localViewport = new Viewport(); // local version of camera with custom slab
+    
+    // private float slabThickness = 0.50f; // Half of view height
+    private float relativeZNear = 0.92f;
+    private float relativeZFar = 1.08f;
 
     public OpaqueRenderPass(GLAutoDrawable drawable)
     {
@@ -120,16 +127,37 @@ public class OpaqueRenderPass extends RenderPass
         super.init(gl);
     }
     
-    public void setRelativeSlabThickness(float relativeThickness) {
-        this.slabThickness = relativeThickness;
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        if ((zNear == relativeZNear) && (zFar == relativeZFar))
+            return; // nothing changed
+        relativeZNear = zNear;
+        relativeZFar = zFar;
+        setBuffersDirty();
+        /*
+        if (localCamera != null) {
+            localViewport.setzNearRelative(zNear); // TODO
+            localViewport.setzFarRelative(zFar);
+            float focusDistance = localCamera.getCameraFocusDistance();
+            cachedZNear = zNear * focusDistance;
+            cachedZFar = zFar * focusDistance;
+            localViewport.getChangeObservable().notifyObservers();
+        }
+        */
     }
     
     @Override
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
+        /*
         // Create local copy of camera, so we can fuss with the slab thickness
         if ( (localCamera == null) || (localCamera.getVantage() != camera.getVantage()) ) {
-            localCamera = new PerspectiveCamera(camera.getVantage(), localViewport);
+            if (camera instanceof LateralOffsetCamera) { // might be stereo 3d, and we should preserve that
+                float offset = ((LateralOffsetCamera)camera).getOffsetPixels();
+                localCamera = new LateralOffsetCamera((PerspectiveCamera)camera, offset);
+            }
+            else {
+                localCamera = new PerspectiveCamera(camera.getVantage(), localViewport);
+            }
         }
         Viewport vp = camera.getViewport();
         localViewport.setWidthPixels(vp.getWidthPixels());
@@ -141,20 +169,24 @@ public class OpaqueRenderPass extends RenderPass
         // TODO - set slab thickness and update projection
         
         float focusDistance = localCamera.getCameraFocusDistance();
-        float heightInUnits = localCamera.getVantage().getSceneUnitsPerViewportHeight();
-        float slabInUnits = slabThickness * heightInUnits;
-        float zNear = focusDistance - 0.5f * slabInUnits;
-        float zFar  = focusDistance + 0.5f * slabInUnits;
-        if (zNear < 1e-3f) zNear = 1e-3f;
-        if (zFar <= zNear) zFar = zNear + 1e-3f;
-        float relNear = zNear/focusDistance;
-        float relFar = zFar/focusDistance;
+        // float heightInUnits = localCamera.getVantage().getSceneUnitsPerViewportHeight();
+        // float slabInUnits = slabThickness * heightInUnits;
+        // float zNear = focusDistance - 0.5f * slabInUnits;
+        // float zFar  = focusDistance + 0.5f * slabInUnits;
+        // if (zNear < 1e-3f) zNear = 1e-3f;
+        // if (zFar <= zNear) zFar = zNear + 1e-3f;
+        float relNear = relativeZNear;
+        float relFar = relativeZFar;
         localViewport.setzNearRelative(relNear);
         localViewport.setzFarRelative(relFar);
+        */
+
+        Viewport vp = camera.getViewport();
+        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
         
         // Store camera parameters for use by volume rendering pass
-        cachedZNear = zNear;
-        cachedZFar = zFar;
+        cachedZNear = relativeZNear * focusDistance;
+        cachedZFar = relativeZFar * focusDistance;
         
         if (useMsaa) {
             gl.glEnable(GL3.GL_MULTISAMPLE);
@@ -172,7 +204,39 @@ public class OpaqueRenderPass extends RenderPass
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO
         gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
-        super.renderScene(gl, localCamera);
+        try {
+            if (camera instanceof SlabbableCamera) {
+                ConstViewSlab slab = new BasicViewSlab(relativeZNear, relativeZFar);
+                ((SlabbableCamera)camera).pushInternalViewSlab(slab);
+            }
+
+            // Hack to draw neurons last, because transparent compartments aren't blending well
+            // and I'm in a hurry [CMB]
+            GL3Actor swcActor = null;
+            for (GL3Actor actor : getActors()) {
+                if (actor instanceof NeuronMPRenderer.AllSwcActor) {
+                    swcActor = actor;
+                    break;
+                }
+            }
+            boolean swcWasVisible = false;
+            if (swcActor != null) {
+                swcWasVisible = swcActor.isVisible();
+                swcActor.setVisible(false);
+            }
+
+            super.renderScene(gl, camera);
+
+            if ((swcActor != null) && swcWasVisible) {
+                swcActor.setVisible(true);
+                swcActor.display(gl, camera, null);
+            }
+        }
+        finally {
+            if (camera instanceof SlabbableCamera) {
+                ((SlabbableCamera)camera).popInternalViewSlab();
+            }
+        }
 
         for (RenderTarget rt : new RenderTarget[] {normalMaterialTarget /* , pickTarget */ }) 
         {
@@ -231,6 +295,18 @@ public class OpaqueRenderPass extends RenderPass
     
     public float getZFar() {
         return cachedZFar;
+    }
+    
+    public float getZFocus() 
+    {
+        /*
+        if (localCamera != null) {
+            return localCamera.getCameraFocusDistance();
+        }
+        */
+        // float ratio = 0.5f; // zero means focus at zNear, 1.0 means focus at zFar
+        float ratio = (1.0f - relativeZNear) / (relativeZFar - relativeZNear);
+        return (1.0f - ratio) * getZNear() + ratio * getZFar();
     }
     
     /**

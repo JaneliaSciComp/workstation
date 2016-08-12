@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.Checkbox;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
@@ -29,6 +28,7 @@ import javax.swing.JScrollPane;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
@@ -171,6 +171,7 @@ public class TableViewerConfigDialog extends ModalDialog {
     }
 
     public int showDialog(Component parent) throws HeadlessException {
+        ActivityLogHelper.logUserAction("TableViewerConfigDialog.showDialog");
         packAndShow();
         return returnValue;
     }

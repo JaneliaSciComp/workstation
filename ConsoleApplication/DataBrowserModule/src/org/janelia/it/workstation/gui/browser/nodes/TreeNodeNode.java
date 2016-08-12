@@ -168,7 +168,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
         actions.add(AddToFolderAction.get());
-        actions.add(MoveToFolderAction.get());
+//        actions.add(MoveToFolderAction.get());
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);

@@ -5,9 +5,7 @@ import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
@@ -65,6 +63,8 @@ public final class SearchHereAction extends NodeAction {
 
     @Override
     protected void performAction(Node[] activatedNodes) {
+
+        ActivityLogHelper.logUserAction("SearchHereAction.performAction");
 
         if (selected==null) return;
 

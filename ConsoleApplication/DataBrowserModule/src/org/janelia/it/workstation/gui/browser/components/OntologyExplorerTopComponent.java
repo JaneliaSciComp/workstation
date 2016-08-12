@@ -23,6 +23,7 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -57,6 +58,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -66,6 +68,7 @@ import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.Node;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -332,13 +335,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     if (ontologyNode!=null && ontologyNode.getId().equals(updatedOntology.getId())) {
                         // Current ontology has been invalidated 
                         log.info("Refreshing because current ontology '{}' has been invalidated.",updatedOntology.getName());
-                        refresh(false, true, new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                selectOntology(ontologyNode.getId(), true);
-                                return null;
-                            }
-                        });
+                        refresh(false, true, null);
                         break;
                     }
                     else {
@@ -376,7 +373,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     public void objectCreated(DomainObjectCreateEvent event) {
         final DomainObject domainObject = event.getDomainObject();
         if (domainObject instanceof Ontology) {
-            refresh(false, false, new Callable<Void>() {
+            log.info("Refreshing because current ontology '{}' has changed.", domainObject.getName());
+            refresh(false, true, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     selectOntology(domainObject.getId(), true);
@@ -458,12 +456,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             log.debug("Skipping refresh, since there is one already in progress");
             return;
         }
-        
+
+        final StopWatch w = new StopWatch();
         log.info("refresh(restoreState={})",restoreState);
         
         final List<Long[]> expanded = ontologyNode!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = ontologyNode!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -485,9 +484,11 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                             // Restore tree state
                             beanTreeView.expand(expanded);
                             beanTreeView.selectPaths(selected);
+                            beanTreeView.updateUI();
                         }
                     }
                     beanTreeView.grabFocus();
+                    ActivityLogHelper.logElapsed("OntologyExplorerTopComponent.refresh", w);
                     debouncer.success();
                 }
                 catch (Exception e) {
@@ -568,6 +569,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         roleMenuItem.setIcon(Icons.getIcon(iconName));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
+                                ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.openOntology", ontology);
                                 StateMgr.getStateMgr().setCurrentOntologyId(ontology.getId());
                             }
                         });
@@ -599,11 +601,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     recordingKeyBinds = true;
                     // Transfer focus to a node in the tree in preparation for key presses
                     beanTreeView.grabFocus();
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.enterKeyBindingMode");
                 }
                 else {
                     keyBindButton.setToolTipText("Enter key binding mode");
                     recordingKeyBinds = false;
                     KeyBindings.getKeyBindings().saveOntologyKeybinds(ontologyNode.getId());
+                    ActivityLogHelper.logUserAction("OntologyExplorerTopComponent.exitKeyBindingMode");
                 }
             }
         });
@@ -668,13 +672,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     }
 
     @Override
-    public void findPrevMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Backward, skipStartingNode);
-    }
-
-    @Override
-    public void findNextMatch(String text, boolean skipStartingNode) {
-        beanTreeView.navigateToNodeStartingWith(text, Position.Bias.Forward, skipStartingNode);
+    public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
+        beanTreeView.navigateToNodeStartingWith(text, bias, skipStartingNode);
+        ConcurrentUtils.invokeAndHandleExceptions(success);
     }
     
     @Override

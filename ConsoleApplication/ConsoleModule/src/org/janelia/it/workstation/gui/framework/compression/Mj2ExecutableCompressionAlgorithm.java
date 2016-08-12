@@ -45,19 +45,13 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
 
     private static boolean tmpInitialized=false;
     
-    public Mj2ExecutableCompressionAlgorithm() {
+    public Mj2ExecutableCompressionAlgorithm() throws Exception {
         File rDrive = new File("R:\\");
         if (! rDrive.exists()) {
-            try {
-                SystemCall sysCall = new SystemCall();
-                int cmdRtn = sysCall.emulateCommandLine(BUILD_RAMDISK_COMMAND, false);
-                if (cmdRtn != 0) {
-                    log.error(BUILD_RAMDISK_COMMAND + " failed with error " + cmdRtn);
-                }
-            } catch (Exception ex) {
-                log.error("Exception on create RAM Disk, using the command: " + BUILD_RAMDISK_COMMAND);
-                ex.printStackTrace();
-                throw new RuntimeException(ex);
+            SystemCall sysCall = new SystemCall();
+            int cmdRtn = sysCall.emulateCommandLine(BUILD_RAMDISK_COMMAND, false);
+            if (cmdRtn != 0) {
+                log.error(BUILD_RAMDISK_COMMAND + " failed with error " + cmdRtn);
             }
         }
 

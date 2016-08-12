@@ -321,11 +321,28 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         scrollButtonToCenter(selectedButton);
     }
 
+    public void scrollObjectToCenterIfOutsideViewport(T imageObject) {
+        if (imageObject == null) {
+            return;
+        }
+        S uniqueId = imageModel.getImageUniqueId(imageObject);
+        AnnotatedImageButton<T,S> selectedButton = getButtonById(uniqueId);
+        if (isOutsideViewport(selectedButton)) {
+            scrollButtonToCenter(selectedButton);
+        }
+    }
+
     public void scrollButtonToVisible(AnnotatedImageButton<T,S> button) {
         if (button == null) {
             return;
         }
         getViewport().scrollRectToVisible(button.getBounds());
+    }
+
+    public boolean isOutsideViewport(AnnotatedImageButton<T,S> button) {
+        Rectangle rect = button.getBounds();
+        Rectangle viewRect = viewport.getViewRect();
+        return !viewRect.intersects(rect);
     }
 
     public void scrollButtonToCenter(AnnotatedImageButton<T,S> button) {
@@ -363,7 +380,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         rect.translate(centerX, centerY);
         
         // Scroll the area into view.
-        log.trace("Scroll to visible: {}",rect);
+        log.debug("Scroll to visible: {}",rect);
         viewport.scrollRectToVisible(rect);
     }
 
@@ -391,6 +408,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
     }
 
     public void scrollSelectedObjectsToCenter() {
+        log.debug("Scrolling selected objects to center");
         List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
@@ -400,7 +418,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         scrollButtonToCenter(centerOfMass);
     }
 
-    public void scrollSelectedEntitiesToTop() {
+    public void scrollSelectedButtonsToTop() {
         List<AnnotatedImageButton<T,S>> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;

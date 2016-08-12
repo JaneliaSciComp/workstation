@@ -4,6 +4,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
@@ -29,6 +30,7 @@ public class CopyToClipboardAction implements NamedAction {
     @Override
     public void doAction() {
         try {
+            ActivityLogHelper.logUserAction("CopyToClipboardAction.doAction", value);
             Transferable t = new StringSelection(value);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }

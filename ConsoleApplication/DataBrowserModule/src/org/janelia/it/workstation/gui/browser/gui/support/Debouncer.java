@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -25,6 +26,7 @@ public class Debouncer {
     
     private final AtomicBoolean operationInProgress = new AtomicBoolean(false);
     private final Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<>();
+    private final Queue<Map<String,Object>> parameterQueue = new ConcurrentLinkedQueue<>();
 
     public boolean queue() {
         return queue(null);
@@ -39,7 +41,31 @@ public class Debouncer {
         }
         return true;
     }
-    
+
+    public synchronized boolean queueWithParameters(Callable<Void> success, Map<String,Object> parameters) {
+        if (success != null) {
+            callbacks.add(success);
+        }
+        if (operationInProgress.getAndSet(true)) {
+            if (parameters != null) {
+                log.trace("Queueing with parameters: {}",parameters);
+                parameterQueue.add(parameters);
+            }
+            return false;
+        }
+        return true;
+    }
+
+    public Map<String,Object> drainToLastParameters() {
+        Map<String,Object> parameters = null;
+        for (Iterator<Map<String,Object>> iterator = parameterQueue.iterator(); iterator.hasNext();) {
+            parameters = iterator.next();
+            iterator.remove();
+        }
+        log.trace("Returning last parameters: {}",parameters);
+        return parameters;
+    }
+
     public void success() {
         operationInProgress.set(false);
         executeCallBacks();

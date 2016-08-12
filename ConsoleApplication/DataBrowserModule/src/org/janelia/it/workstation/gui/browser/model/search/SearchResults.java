@@ -1,11 +1,12 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
-import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 
 import java.util.*;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,28 +29,20 @@ public class SearchResults {
      */
     public static SearchResults paginate(Collection<? extends DomainObject> domainObjects, Collection<Annotation> annotations) {
         
-        SearchResults searchResults = null;
+        SearchResults searchResults = new SearchResults();
         List<DomainObject> pageObjects = new ArrayList<>();
         
-        ArrayListMultimap<Long, Annotation> annotationsByTarget = ArrayListMultimap.create();
-        for(Annotation annotation : annotations) {
-            annotationsByTarget.put(annotation.getTarget().getTargetId(), annotation);
-        }
+        ListMultimap<Long, Annotation> annotationsByTarget = DomainUtils.getAnnotationsByDomainObjectId(annotations);
+        Set<DomainObject> uniqueObjects = new LinkedHashSet<>(domainObjects);
+        Set<Annotation> pageAnnotations = new LinkedHashSet<>();
         
-        List<Annotation> pageAnnotations = new ArrayList<>();
-        
-        for(DomainObject domainObject : domainObjects)  {
+        for(DomainObject domainObject : uniqueObjects)  {
             if (domainObject==null) continue;
             pageObjects.add(domainObject);
-            pageAnnotations.addAll(annotationsByTarget.get(domainObject.getId()));
+            List<Annotation> annots = annotationsByTarget.get(domainObject.getId());
+            pageAnnotations.addAll(annots);
             if (pageObjects.size()>=PAGE_SIZE) {
-                ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
-                if (searchResults==null) {
-                    searchResults = new SearchResults(page);
-                }
-                else {
-                    searchResults.addPage(page);
-                }
+                searchResults.addPage(new ResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
                 pageObjects.clear();
                 pageAnnotations.clear();
             }
@@ -57,23 +50,12 @@ public class SearchResults {
         
         if (!pageObjects.isEmpty()) {
             // Create one more page with the remaining items
-            pageAnnotations = new ArrayList<>();
-            for(DomainObject domainObject : pageObjects)  {
-                pageAnnotations.addAll(annotationsByTarget.get(domainObject.getId()));
-            }
-            ResultPage page = new ResultPage(pageObjects, pageAnnotations, domainObjects.size());
-            if (searchResults==null) {
-                searchResults = new SearchResults(page);
-            }
-            else {
-                searchResults.addPage(page);
-            }
+            searchResults.addPage(new ResultPage(pageObjects, new ArrayList<>(pageAnnotations), domainObjects.size()));
         }
         
-        if (searchResults==null) {
+        if (searchResults.getPages().isEmpty()) {
             // Construct an empty search results so as not to return null from this factory method
-            ResultPage page = new ResultPage(new ArrayList<DomainObject>(), new ArrayList<Annotation>(), 0);
-            searchResults = new SearchResults(page);
+            searchResults.addPage(new ResultPage(new ArrayList<DomainObject>(), new ArrayList<Annotation>(), 0));
         }
         
         return searchResults;
@@ -84,6 +66,9 @@ public class SearchResults {
     protected long numTotalResults = 0;
     protected long numLoadedResults = 0;
 
+    private SearchResults() {
+    }
+    
     public SearchResults(ResultPage firstPage) {
         addPage(firstPage);
     }

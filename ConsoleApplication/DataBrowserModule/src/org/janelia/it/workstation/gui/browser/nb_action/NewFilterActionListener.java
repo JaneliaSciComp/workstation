@@ -9,6 +9,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -34,6 +35,8 @@ public final class NewFilterActionListener implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+
+        ActivityLogHelper.logUserAction("NewFilterActionListener.actionPerformed");
 
         final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -76,7 +79,7 @@ public final class NewFilterActionListener implements ActionListener {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        explorer.selectNodeByPath(idPath);
+                        explorer.selectAndNavigateNodeByPath(idPath);
                     }
                 });
             }

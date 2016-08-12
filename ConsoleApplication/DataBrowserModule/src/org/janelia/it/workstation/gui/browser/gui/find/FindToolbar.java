@@ -5,13 +5,15 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.Position;
 
 import net.miginfocom.swing.MigLayout;
-
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 
 /**
@@ -130,20 +132,31 @@ public class FindToolbar extends JPanel {
 
     private void prevMatch(boolean skipStartingNode) {
         if (textField.getText().isEmpty()) return;
-        findContext.findPrevMatch(textField.getText(), skipStartingNode);
-        takeFocus();
+        findContext.findMatch(textField.getText(), Position.Bias.Backward, skipStartingNode, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                takeFocus();
+                return null;
+            }
+        });
     }
 
     private void nextMatch(boolean skipStartingNode) {
         if (textField.getText().isEmpty()) return;
-        findContext.findNextMatch(textField.getText(), skipStartingNode);
-        takeFocus();
+        findContext.findMatch(textField.getText(), Position.Bias.Forward, skipStartingNode, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                takeFocus();
+                return null;
+            }
+        });
     }
-    
+
     public void open() {
         setVisible(true);
         nextMatch(false);
         takeFocus();
+        ActivityLogHelper.logUserAction("FindToolbar.open", findContext.getClass().getSimpleName());
     }
     
     public void close() {

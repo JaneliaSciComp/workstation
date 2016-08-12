@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 
 import de.javasoft.swing.DateComboBox;
@@ -121,7 +122,8 @@ public class EditCriteriaDialog extends ModalDialog {
             AttributeValueCriteria avc = (AttributeValueCriteria)criteria;
             textField.setText(avc.getValue());
         }
-        
+
+        ActivityLogHelper.logUserAction("EditCriteriaDialog.showForCriteria");
         packAndShow();
         return save?criteria:null;
     }

@@ -120,6 +120,25 @@ public class CompatibilityChecker {
     /**
      * Only aligned neuron fragments may be presented in the alignment board.
      * 
+     * @param sample may/may not have alignment context.
+     * @return T: has the context.  F: not.
+     */
+    public boolean isAligned(Sample sample) {
+        boolean rtnVal = false;
+        try {
+            List<AlignmentContext> contexts = domainHelper.getAvailableAlignmentContexts(sample);
+            if (contexts != null && !contexts.isEmpty()) {
+                rtnVal = true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+    
+    /**
+     * Only aligned neuron fragments may be presented in the alignment board.
+     * 
      * @param neuronFragment may/may not have alignment context.
      * @return T: has the context.  F: not.
      */

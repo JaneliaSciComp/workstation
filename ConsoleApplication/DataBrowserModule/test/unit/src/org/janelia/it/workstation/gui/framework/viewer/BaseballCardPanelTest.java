@@ -18,7 +18,7 @@ import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.workstation.WorkstationEnvironment;
+import org.janelia.it.workstation.gui.browser.api.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.model.entity.RootedEntity;

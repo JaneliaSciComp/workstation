@@ -464,6 +464,11 @@ public class DomainInspectorPanel extends JPanel {
 
     private void loadSubjects() {
 
+        if (this.subjects!=null) {
+            loadPermissions();
+            return;
+        }
+
         log.debug("Loading subjects for {}", domainObject.getId());
 
         SimpleWorker worker = new SimpleWorker() {
@@ -479,8 +484,6 @@ public class DomainInspectorPanel extends JPanel {
             protected void hadSuccess() {
                 setSubjects(subjects);
                 loadPermissions();
-                addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
-                log.debug("Setting permission button state to {}", addPermissionButton.isEnabled());
             }
 
             @Override
@@ -551,6 +554,9 @@ public class DomainInspectorPanel extends JPanel {
         permissionsPanel.add(permissionsButtonPane, "width 10:300:3000");
         permissionsPanel.revalidate();
         permissionsPanel.repaint();
+
+        log.trace("Setting permission button state to {}", addPermissionButton.isEnabled());
+        addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
     }
 
     public void loadAnnotations() {

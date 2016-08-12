@@ -31,17 +31,14 @@ package org.janelia.scenewindow;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.CompositeObject3d;
@@ -49,8 +46,8 @@ import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
-import org.janelia.scenewindow.stereo.HardwareRenderer;
-import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -66,6 +63,7 @@ public class SceneWindow implements GLJComponent, Scene {
     private final BasicScene scene;
     // private CameraType cameraType = null;
     // private Scene scene;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public SceneWindow(Vantage vantage, CameraType cameraType) {
         scene = new BasicScene(vantage);
@@ -119,8 +117,15 @@ public class SceneWindow implements GLJComponent, Scene {
         GLContext context = glad.getContext();
         if (context == null) return false;
         context.makeCurrent();
-        glad.display();
-        context.release();
+        try {
+            glad.display();
+        }
+        catch (Exception exc) {
+            logger.error(exc.getMessage());
+        }
+        finally {
+            context.release();
+        }
         return true;
     }
     

@@ -47,6 +47,7 @@ public class SearchConfiguration {
     // Source state
     private final Filter filter;
     private final int pageSize;
+    private String sortCriteria;
     
     // Derived from source state
     private Class<? extends DomainObject> searchClass;
@@ -66,6 +67,14 @@ public class SearchConfiguration {
     
     public Filter getFilter() {
         return filter;
+    }
+
+    public String getSortCriteria() {
+        return sortCriteria;
+    }
+
+    public void setSortCriteria(String sortCriteria) {
+        this.sortCriteria = sortCriteria;
     }
 
     public final void setSearchClass(Class<? extends DomainObject> searchClass) {
@@ -157,7 +166,14 @@ public class SearchConfiguration {
                 if (criteria instanceof FacetCriteria) {
                     FacetCriteria fc = (FacetCriteria) criteria;
                     DomainObjectAttribute attr = searchAttrs.get(fc.getAttributeName());
-                    filters.put(attr.getFacetKey(), fc.getValues());
+                    if (attr!=null) {
+                        if (attr.getFacetKey()==null) {
+                            log.warn("Search requests facet {} but it does not have a defined facet key on {}",fc.getAttributeName(),searchType);
+                        }
+                        else {
+                            filters.put(attr.getFacetKey(), fc.getValues());
+                        }
+                    }
                 }
                 else if (criteria instanceof AttributeCriteria) {
                     AttributeCriteria ac = (AttributeCriteria) criteria;
@@ -260,13 +276,18 @@ public class SearchConfiguration {
         log.debug("Adding facet filters: {}",filters);
         builder.getFilters().putAll(filters);
 
-        String sortCriteria = filter.getSort();
         if (!StringUtils.isEmpty(sortCriteria)) {
             String sortField = (sortCriteria.startsWith("-")||sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            log.debug("Setting sort: {}",sortCriteria);
             DomainObjectAttribute sortAttr = searchAttrs.get(sortField);
-            builder.setSortField(sortAttr.getSearchKey());
-            builder.setAscending(!sortCriteria.startsWith("-"));
+            if (sortAttr!=null) {
+                log.debug("Setting sort: {}",sortCriteria);
+                builder.setSortField(sortAttr.getSearchKey());
+                builder.setAscending(!sortCriteria.startsWith("-"));
+            }
+            else {
+                log.debug("Unknown sort field: {}",sortCriteria);
+            }
+
         }
         
         return builder;
@@ -359,8 +380,20 @@ public class SearchConfiguration {
 
         List<DomainObject> domainObjects = model.getDomainObjects(refs);
         List<Annotation> annotations = model.getAnnotations(refs);
-        log.info("Search found {} objects. Current page includes {} objects and {} annotations.", numFound, domainObjects.size(), annotations.size());
+        log.info("Search found {} objects. Current page {} includes {} objects and {} annotations.", numFound, page, domainObjects.size(), annotations.size());
 
+        if (refs.size()>domainObjects.size()) {
+            log.warn("SOLR index is out of date! It refers to {} objects which no longer exist.", refs.size()-domainObjects.size());
+            
+            if (log.isTraceEnabled()) {
+                for(Reference ref : refs) {
+                    if (model.getDomainObject(ref)==null) {
+                        log.trace("Could not find "+ref);
+                    }
+                }
+            }
+        }
+        
         stopWatch.stop("performMongoSearch");
 
         return new ResultPage(domainObjects, annotations, numFound);

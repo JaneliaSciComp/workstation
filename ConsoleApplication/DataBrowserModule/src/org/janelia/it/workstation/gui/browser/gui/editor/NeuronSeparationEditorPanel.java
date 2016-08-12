@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,8 +17,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -32,10 +28,11 @@ import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.shared.utils.ReflectionUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
 import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -52,8 +49,8 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +63,9 @@ import org.slf4j.LoggerFactory;
 public class NeuronSeparationEditorPanel extends JPanel implements SampleResultEditor, SearchProvider {
 
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
-    
+
+    private final static String PREFERENCE_KEY = "NeuronSeparationEditor";
+
     // Utilities
     private final Debouncer debouncer = new Debouncer();
     
@@ -85,14 +84,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
     private final DomainObjectSelectionModel editSelectionModel = new DomainObjectSelectionModel();
     private boolean hideFragments = false;
-    private boolean editModeEnabled = false;
     private NeuronSeparation separation;
     
     // Results
     private List<DomainObject> domainObjects;
     private List<Annotation> annotations;
     private SearchResults searchResults;
-   
+    private String sortCriteria = "number";
+
     public NeuronSeparationEditorPanel() {
         
     	setBorder(BorderFactory.createEmptyBorder());
@@ -203,7 +202,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
             }
             showResults(true);
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
 
@@ -235,7 +235,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 resultsPanel.getViewer().selectEditObjects(visibleNeuronFrags, true);
             }
             showResults(true);
-        }  catch (Exception e) {
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -246,7 +247,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editModeButton.setVisible(true);
         editOkButton.setVisible(false);
         editCancelButton.setVisible(false);
-        editModeEnabled = false;
         resultsPanel.getViewer().toggleEditMode(false);
         enableVisibilityCheckBox.setVisible(true);
         performHideAction(hideFragments);
@@ -269,7 +269,8 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             }
             neuronSepVisibility.setValue(visibilities);
             DomainMgr.getDomainMgr().savePreference(neuronSepVisibility);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Problem encountered saving preferences", e);
         }
         cancelEditMode();
@@ -282,7 +283,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     }
 
     private void sortByFragmentWeight() {
-        setSortField("-voxelWeight");
+        this.sortCriteria = "-voxelWeight";
     }
     
     private JPopupMenu populateResultPopupMenu(JPopupMenu popupMenu, PipelineResult pipelineResult) {
@@ -314,13 +315,14 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
     public void loadSampleResult(final PipelineResult result, final boolean isUserDriven, final Callable<Void> success) {
 
         if (result==null) return;
-        
-        if (!debouncer.queue(null)) {
-            log.debug("Skipping load, since there is one already in progress");
+
+        if (!debouncer.queue(success)) {
+            log.info("Skipping load, since there is one already in progress");
             return;
         }
         
         log.info("loadSampleResult(PipelineResult:{})",result.getName());
+        final StopWatch w = new StopWatch();
                 
         PipelineResult parentResult;
         if (result instanceof NeuronSeparation) {
@@ -340,17 +342,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         if (separation==null) {
             showNothing();
             debouncer.success();
+            ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", w);
         }
         else {
-            String title = sample.getName();// + " - " + DomainModelViewUtils.getLabel(result);
-            configPanel.setTitle(title);
-            setResult(separation, isUserDriven, success);
+            configPanel.setTitle(sample.getName());
+            setResult(separation, isUserDriven, w);
         }
-        
-        updateUI();
     }
     
-    private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final Callable<Void> success) {
+    private void setResult(final NeuronSeparation separation, final boolean isUserDriven, final StopWatch w) {
         this.resultButton.setText(getLabel(separation));
         resultsPanel.showLoadingIndicator();
         
@@ -366,23 +366,26 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 else {
                     domainObjects = model.getDomainObjects(separation.getFragmentsReference());
                     // TODO: set up global preference for visibility, allow users to select other user's preferences
-
-                    annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));                    
+                    annotations = model.getAnnotations(DomainUtils.getReferences(domainObjects));
+                    fragmentSortButton.setVisible(false);
+                    for (DomainObject obj:domainObjects) {
+                        NeuronFragment fragment = (NeuronFragment)obj;
+                        if (fragment.getVoxelWeight()!=null) {
+                            fragmentSortButton.setVisible(true);
+                            break;
+                        }
+                    }
                 }
+                loadPreferences();
+                prepareResults();
                 log.info("Showing "+domainObjects.size()+" neurons");
             }
 
             @Override
             protected void hadSuccess() {
-                sort("number", new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        showResults(isUserDriven);
-                        ConcurrentUtils.invokeAndHandleExceptions(success);
-                        debouncer.success();
-                        return null;
-                    }
-                });
+                showResults(isUserDriven);
+                debouncer.success();
+                if (w!=null) ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", separation, w);
             }
 
             @Override
@@ -396,67 +399,59 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         worker.execute();
     }
 
-    private void sort(final String sortCriteria, final Callable<Void> success) {
-
-        try {
-            final String sortField = (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
-            final boolean ascending = !sortCriteria.startsWith("-");
-            Collections.sort(domainObjects, new Comparator<DomainObject>() {
-                @Override
-                @SuppressWarnings({"rawtypes", "unchecked"})
-                public int compare(DomainObject o1, DomainObject o2) {
-                    try {
-                        // TODO: speed could be improved by moving the reflection calls outside of the sort
-                        Comparable v1 = (Comparable) ReflectionUtils.get(o1, sortField);
-                        Comparable v2 = (Comparable) ReflectionUtils.get(o2, sortField);
-                        Ordering ordering = Ordering.natural().nullsLast();
-                        if (!ascending) {
-                            ordering = ordering.reverse();
-                        }
-                        return ComparisonChain.start().compare(v1, v2, ordering).result();
-                    }
-                    catch (Exception e) {
-                        log.error("Problem encountered when sorting DomainObjects", e);
-                        return 0;
-                    }
-                }
-            });
-            
-            ConcurrentUtils.invokeAndHandleExceptions(success);
-        }
-        catch (Exception e) {
-            resultsPanel.showNothing();
-            SessionMgr.getSessionMgr().handleException(e);
-        }
-    }
-    
-    @Override
-    public void setSortField(final String sortCriteria) {
-        sort(sortCriteria, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                showResults(true);
-                return null;
-            }
-        });
-    }
-    
     public void showNothing() {
         removeAll();
         updateUI();
     }
-    
+
+    private void prepareResults() throws Exception {
+        DomainUtils.sortDomainObjects(domainObjects, sortCriteria);
+        this.searchResults = SearchResults.paginate(domainObjects, annotations);
+    }
+
     public void showResults(boolean isUserDriven) {
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
-        this.searchResults = SearchResults.paginate(domainObjects, annotations);
         resultsPanel.showSearchResults(searchResults, isUserDriven);
     }
 
     @Override
+    public String getSortField() {
+        return sortCriteria;
+    }
+
+    @Override
+    public void setSortField(final String sortCriteria) {
+        this.sortCriteria = sortCriteria;
+        savePreferences();
+    }
+
+    @Override
     public void search() {
-        // Nothing needs to be done here, because results were updated by setSortField()
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                loadPreferences();
+                prepareResults();
+                log.info("Showing "+domainObjects.size()+" items");
+            }
+
+            @Override
+            protected void hadSuccess() {
+                showResults(true);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                showNothing();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 
     @Override
@@ -468,12 +463,39 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
         action.doAction();
     }
+
+    private void loadPreferences() {
+        if (separation.getId()==null) return;
+        try {
+            Preference sortCriteriaPref = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY);
+            if (sortCriteriaPref!=null) {
+                sortCriteria = (String) sortCriteriaPref.getValue();
+            }
+            else {
+                sortCriteria = "number";
+            }
+        }
+        catch (Exception e) {
+            log.error("Could not load sort criteria",e);
+        }
+    }
+
+    private void savePreferences() {
+        if (StringUtils.isEmpty(sortCriteria)) return;
+        try {
+            DomainMgr.getDomainMgr().setPreference(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+        }
+        catch (Exception e) {
+            log.error("Could not save sort criteria",e);
+        }
+    }
     
     @Override
     public String getName() {
         return "Neuron Separation Editor";
     }
-    
+
+    @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
     }
