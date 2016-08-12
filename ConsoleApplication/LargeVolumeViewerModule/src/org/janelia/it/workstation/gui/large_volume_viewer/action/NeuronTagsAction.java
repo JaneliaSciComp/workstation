@@ -167,7 +167,7 @@ public class NeuronTagsAction extends AbstractAction {
         appliedTagsList.setListData(appliedTags);
 
         // available tag list; be careful, we're mutating:
-        Set<String> availableTagSet = new HashSet<>(annModel.getAllNeuronTags());
+        Set<String> availableTagSet = new HashSet<>(annModel.getAvailableNeuronTags());
         availableTagSet.removeAll(appliedTagSet);
         String [] availableTags = availableTagSet.toArray(new String[availableTagSet.size()]);
         Arrays.sort(availableTags);

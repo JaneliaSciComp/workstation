@@ -1664,6 +1664,16 @@ called from a  SimpleWorker thread.
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
     //  wrapper where for mutating calls, we save the map and fire appropriate updates
 
+    public Set<String> getPredefinedNeuronTags() {
+        return currentTagMap.getPredefinedTags();
+    }
+
+    public Set<String> getAvailableNeuronTags() {
+        Set<String> availableTags = new HashSet<>(getAllNeuronTags());
+        availableTags.addAll(getPredefinedNeuronTags());
+        return availableTags;
+    }
+
     public Set<String> getNeuronTags(TmNeuron neuron) {
         return getNeuronTags(neuron.getId());
     }

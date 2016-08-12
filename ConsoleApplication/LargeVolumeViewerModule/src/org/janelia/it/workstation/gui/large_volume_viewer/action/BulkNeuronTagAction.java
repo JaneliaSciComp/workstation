@@ -174,7 +174,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         existingPanel.add(existingButton);
         existingPanel.add(new JLabel("existing tag "));
 
-        String[] existingTags = annModel.getAllNeuronTags().toArray(new String[annModel.getAllNeuronTags().size()]);
+        String[] existingTags = annModel.getAvailableNeuronTags().toArray(new String[annModel.getAvailableNeuronTags().size()]);
         Arrays.sort(existingTags);
         existingTagMenu = new JComboBox(existingTags);
         existingPanel.add(existingTagMenu);

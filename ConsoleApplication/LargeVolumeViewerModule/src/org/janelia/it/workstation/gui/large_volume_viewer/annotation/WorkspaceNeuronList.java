@@ -254,7 +254,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         String currentMode = (String) tagModeMenu.getSelectedItem();
         tagMenu.removeAllItems();
 
-        Set<String> tagSet = annotationModel.getAllNeuronTags();
+        Set<String> tagSet = annotationModel.getAvailableNeuronTags();
         String[] tagList = tagSet.toArray(new String[tagSet.size()]);
         Arrays.sort(tagList);
 
