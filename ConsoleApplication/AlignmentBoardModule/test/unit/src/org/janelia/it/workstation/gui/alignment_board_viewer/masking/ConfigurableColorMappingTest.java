@@ -2,8 +2,9 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.masking;
 
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 
 import static org.junit.Assert.*;
 
@@ -51,47 +51,51 @@ public class ConfigurableColorMappingTest {
 
         Collection<RenderableBean> renderablBeanCollection = new ArrayList<RenderableBean>();
         RenderableBean neuron1 = new RenderableBean();
-        neuron1.setType(EntityConstants.TYPE_NEURON_FRAGMENT );
+        neuron1.setType( NeuronFragment.class.getSimpleName() );
         neuron1.setRgb( RGB_FOR_NF1 );
         neuron1.setVoxelCount(3000L);
         neuron1.setInvertedY(false);
         neuron1.setLabelFileNum(10);
         neuron1.setTranslatedNum( TRANSLATED_NUM_NF1 );
-        neuron1.setRenderableEntity(makeEntity( 10L, EntityConstants.TYPE_NEURON_FRAGMENT ));
+        neuron1.setName("Testing10");
+        neuron1.setId(10L);
 
         RenderableBean neuron2 = new RenderableBean();
-        neuron2.setType(EntityConstants.TYPE_NEURON_FRAGMENT );
+        neuron2.setType( NeuronFragment.class.getSimpleName() );
         // Leaving as null.  Allow calc to happen.
         // neuron2.setRgb(new byte[]{25, 35, 12, RenderMappingI.FRAGMENT_RENDERING});
         neuron2.setVoxelCount(2000L);
         neuron2.setInvertedY(false);
         neuron2.setLabelFileNum(11);
         neuron2.setTranslatedNum(TRANSLATED_NUM_FOR_COLOR_WHEEL_A);
-        neuron2.setRenderableEntity( makeEntity(11L, EntityConstants.TYPE_NEURON_FRAGMENT) );
+        neuron2.setName("Testing11");
+        neuron2.setId(11L);
 
         RenderableBean neuron3 = new RenderableBean();
-        neuron3.setType(EntityConstants.TYPE_NEURON_FRAGMENT );
+        neuron3.setType( NeuronFragment.class.getSimpleName() );
         // Leaving as null.  Allow calc to happen.
         // neuron2.setRgb(new byte[]{25, 35, 12, RenderMappingI.FRAGMENT_RENDERING});
         neuron3.setVoxelCount(2500L);
         neuron3.setInvertedY(false);
         neuron3.setLabelFileNum(21);
         neuron3.setTranslatedNum( TRANSLATED_NUM_FOR_COLOR_AVG );
-        neuron3.setRenderableEntity( makeEntity(ID_NUM_FOR_COLOR_AVG, EntityConstants.TYPE_NEURON_FRAGMENT) );
+        neuron3.setName("Neuron"+ID_NUM_FOR_COLOR_AVG);
+        neuron3.setId(ID_NUM_FOR_COLOR_AVG);
         // We will establish "average colors" for this one.
         fileStats.recordChannelAverages( ID_NUM_FOR_COLOR_AVG, CHANNEL_AVERAGES );
 
         RenderableBean compartment1 = new RenderableBean();
-        compartment1.setType(EntityConstants.TYPE_COMPARTMENT);
+        compartment1.setType( Compartment.class.getSimpleName() );
         compartment1.setRgb( RGB_FOR_COMP1 );
         compartment1.setVoxelCount(18000L);
         compartment1.setInvertedY(false);
         compartment1.setLabelFileNum(12);
         compartment1.setTranslatedNum( TRANSLATED_NUM_COMP1 );
-        compartment1.setRenderableEntity(makeEntity(12L, EntityConstants.TYPE_COMPARTMENT));
+        compartment1.setName("Compartment" + 12L);
+        compartment1.setId(12L);
 
         RenderableBean compartment2 = new RenderableBean();
-        compartment2.setType(EntityConstants.TYPE_COMPARTMENT);
+        compartment2.setType( Compartment.class.getSimpleName() );
         // NULL rgb.
         //compartment2.setRgb(new byte[]{11, 92, 51, RenderMappingI.COMPARTMENT_RENDERING});
         compartment2.setVoxelCount(17000L);
@@ -152,10 +156,4 @@ public class ConfigurableColorMappingTest {
         }
     }
 
-    private Entity makeEntity(Long id, String type) {
-        Entity rtnVal = new Entity(id);
-        rtnVal.setEntityTypeName( type );
-        rtnVal.setName( "Entity " + id );
-        return rtnVal;
-    }
 }

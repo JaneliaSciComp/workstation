@@ -27,16 +27,16 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = true, position = 0)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "OntologyViewerTopComponent")
-@ActionReference(path = "Menu/Window", position = 40)
+@ActionReference(path = "Menu/Window/Legacy", position = 13)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_OntologyViewerAction",
         preferredID = OntologyViewerTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_OntologyViewerAction=Ontology Editor",
-    "CTL_OntologyViewerTopComponent=Ontology Editor",
+    "CTL_OntologyViewerAction=Legacy Ontology Editor",
+    "CTL_OntologyViewerTopComponent=Legacy Ontology Editor",
     "HINT_OntologyViewerTopComponent=Browse, edit and create ontologies"
 })
 public final class OntologyViewerTopComponent extends TopComponent {
@@ -49,8 +49,6 @@ public final class OntologyViewerTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_OntologyViewerTopComponent());
         setToolTipText(Bundle.HINT_OntologyViewerTopComponent());
-//        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
 
     }
 

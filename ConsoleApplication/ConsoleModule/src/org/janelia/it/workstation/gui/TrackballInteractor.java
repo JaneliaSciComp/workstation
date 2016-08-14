@@ -9,9 +9,9 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.UnitVec3;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.UnitVec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 
 /**

@@ -13,27 +13,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 
-import org.apache.solr.client.solrj.SolrQuery;
+import com.google.common.collect.ComparisonChain;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.EntityActorPermissionDialog;
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -44,18 +36,8 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.solr.EntityDocument;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityActorPermission;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.user_data.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ComparisonChain;
 
 
 /**
@@ -368,28 +350,15 @@ public class EntityDetailsPanel extends JPanel implements Refreshable {
         log.debug("Loading attributes for {}", entity.getId());
         showAttributesLoadingIndicator();
 
-        final SearchConfiguration searchConfig = SessionMgr.getBrowser().getGeneralSearchConfig();
-
         SimpleWorker worker = new SimpleWorker() {
 
             private Entity loadedEntity;
             private EntityDocument doc;
-            private boolean solrError = false;
 
             @Override
             protected void doStuff() throws Exception {
                 this.loadedEntity = ModelMgr.getModelMgr().getEntityById(entityId);
                 log.debug("Loading entity {}", entity.getId());
-                try {
-                    SolrQuery query = new SolrQuery("id:" + entityId);
-                    SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
-                    this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
-                    log.debug("Loading entity document {}", entity.getId());
-                }
-                catch (Exception e) {
-                    log.error("Error loading Solr attributes", e);
-                    solrError = true;
-                }
             }
 
             @Override
@@ -438,30 +407,6 @@ public class EntityDetailsPanel extends JPanel implements Refreshable {
                         attrNames.add(attrName);
                         attributesTable.addRow(attrValue);
                     }
-                }
-
-                if (doc != null) {
-                    List<SearchAttribute> attrs = searchConfig.getAttributeGroups().get(AttrGroup.SAGE);
-                    if (attrs!=null) {
-                        for (SearchAttribute attr : attrs) {
-                            String value = searchConfig.getValue(doc, attr.getName());
-                            if (value != null) {
-                                String attrName = attr.getLabel();
-                                if (!attrNames.contains(attrName)) {
-                                    attrNames.add(attrName);
-                                    AttributeValue attrValue = new AttributeValue(attrName, value);
-                                    attributesTable.addRow(attrValue);
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        log.warn("No SAGE attributes found in search configuration!");
-                    }
-                }
-
-                if (solrError) {
-                    attributesTable.addRow(new AttributeValue("ERROR", "Could not query Solr server for additional attributes"));
                 }
 
                 attributesTable.updateTableModel();

@@ -52,7 +52,7 @@ public class CreateOntologyTermAction implements Action {
 
         final DefaultMutableTreeNode treeNode = ontologyOutline.getDynamicTree().getCurrentNode();
         final OntologyElement element = ontologyOutline.getOntologyElement(treeNode);
-        final OntologyElementType childType = OntologyElementType.createTypeByName(className);
+        final OntologyElementType childType = null;
 
         // Add button clicked
         final String termName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Ontology Term:\n", "Adding to " + 

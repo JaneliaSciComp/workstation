@@ -1,9 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.octree.ZoomLevel;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.jacs.shared.lvv.*;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.octree.ZoomLevel;
+import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.raster.VoxelIndex;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -29,7 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.janelia.it.jacs.model.util.ThreadUtils;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -449,10 +450,10 @@ public class Subvolume {
             // ... if that fails, load the data right now.
             if (tileData == null) {
                 if (loadAdapter instanceof BlockTiffOctreeLoadAdapter) {
-                    tileData = ((BlockTiffOctreeLoadAdapter)loadAdapter).loadToRam(tileIx, false);
+                    tileData = new TextureData2dGL(((BlockTiffOctreeLoadAdapter)loadAdapter).loadToRam(tileIx, false));
                 }
                 else {
-                    tileData = loadAdapter.loadToRam(tileIx);
+                    tileData = new TextureData2dGL(loadAdapter.loadToRam(tileIx));
                 }
             }
             if (tileData == null) {
@@ -633,10 +634,6 @@ OVERFLOW_LABEL:
 
 	/**
 	 * TileIndex xyz containing ZoomedVoxel. BORROWED from TilFormat.
-	 * @param z
-	 * @param zoomLevel
-	 * @param sliceAxis
-	 * @return
 	 */
 	private TileFormat.TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis, TileFormat tileFormat) {
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
@@ -720,7 +717,7 @@ OVERFLOW_LABEL:
         for (int d = minDepth; d < maxDepth; d++) {
             for (int w = minWidth; w <= maxWidth; ++w) {
                 for (int h = minHeight; h <= maxHeight; ++h) {
-                    int whd[] = {w, h, d};
+                    int whd[] = {w, h, d};                    
                     TileIndex key = new TileIndex(
                             whd[xyzFromWhd[0]],
                             whd[xyzFromWhd[1]],

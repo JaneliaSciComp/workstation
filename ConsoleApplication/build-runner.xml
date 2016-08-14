@@ -30,6 +30,17 @@ of adapter.
         </ant>
     </target>
 
+    <target name="deploy-ng-nbms">
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation_ng"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav1"/>
+        </antcall>
+        <antcall target="deploy-nbms-env" >
+            <param name="tmp.env" value="workstation_ng"/>
+            <param name="tmp.destination" value="jacs@jacs-webdav2"/>
+        </antcall>
+    </target>
+
     <target name="deploy-nbms-staging">
         <antcall target="deploy-nbms-env" >
             <param name="tmp.env" value="staging"/>
@@ -74,6 +85,35 @@ of adapter.
         <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
         <exec executable="bash" description="Copying new modules to ${tmpEnv}">
             <arg line="-c '${scp} -r ${basedir}/build/updates/* ${ssh.common.params}:/var/www/html/${tmpEnv}/.'"/>
+        </exec>
+        <echo message="Done : ${exec.output}"  />
+        <echo message="Done : ${exec.error}"  />
+    </target>
+
+    <target name="deploy-installers-production">
+        <property name="ssh.common.params" value="jacs@workstation.int.janelia.org"/>
+        <property name="scp.common.params" value=""/>
+        <echo message="Testing connection" />
+        <echo message="SSH Common Params ${ssh.common.params} for ${ssh}"/>
+        <exec executable="${ssh}" description="Testing connection"
+              outputproperty="exec.output" failonerror="true">
+            <arg line="${ssh.common.params} ls -ld /tmp"/>
+        </exec>
+
+        <!--clean out old Installers -->
+        <echo message="Removing remote Installer files" />
+        <exec executable="${ssh}" description="Removing Installer files">
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-macosx.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-linux.tgz"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.exe"/>
+        </exec>
+
+        <!--copy new Installers in -->
+        <echo message="Copying new installers to jacs@workstation.int.janelia.org" />
+        <echo message="SCP Common Params ${scp.common.params} for ${scp}"/>
+        <exec executable="bash" description="Copying new Installers to $jacs@workstation.int.janelia.org">
+            <arg line="-c '${scp} ${basedir}/dist/* ${ssh.common.params}:/var/www/html/sites/default/files/.'"/>
         </exec>
         <echo message="Done : ${exec.output}"  />
         <echo message="Done : ${exec.error}"  />
@@ -188,7 +228,7 @@ of adapter.
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
             <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
             <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
-            <arg value="-Dsuite.nbi.product.uid=janeliaworkstation"/>
+            <arg value="-Dsuite.nbi.product.uid=janeliawsng"/>
             <arg value="-Dsuite.location=${basedir}"/>
             <arg value="-Dpack200.enabled=false"/>
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
@@ -207,13 +247,21 @@ of adapter.
             <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
         </condition>
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
+
+        <!-- Compress the Linux script to tgz -->
+        <tar tarfile="${basedir}/dist/JaneliaWorkstation-linux.tgz" compression="gzip">
+            <tarfileset dir="${basedir}/dist/" mode="644">
+                <include name="JaneliaWorkstation-linux.sh"/>
+            </tarfileset>
+        </tar>
+
     </target>
 
     <target name="build-mac" description="Builds a full mac app with canonical directory structure: first define antexec">
         <!-- This fails, because of files not found. -->
         <!--<ant antfile="build.xml" target="build-mac">-->
-            <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
-            <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
+        <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
+        <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
         <!--</ant>-->
         <echo message="This target still requires presetting antexec."/>
         <exec-target target="build-mac"/>

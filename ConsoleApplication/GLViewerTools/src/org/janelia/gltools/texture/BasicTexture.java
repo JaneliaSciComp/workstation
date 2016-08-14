@@ -42,6 +42,8 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GL3;
 import org.apache.commons.lang.ArrayUtils;
 import org.janelia.gltools.GL3Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -49,6 +51,9 @@ import org.janelia.gltools.GL3Resource;
  */
 public abstract class BasicTexture implements GL3Resource 
 {
+
+    static Logger log= LoggerFactory.getLogger(BasicTexture.class.getName());
+
     protected int handle;
     
     protected final int border = 0;
@@ -269,6 +274,7 @@ public abstract class BasicTexture implements GL3Resource
             int[] h = {handle};
             gl.glDeleteTextures(1, h, 0);
             handle = 0;
+            log.info("deleted texture");
         }
     }
 

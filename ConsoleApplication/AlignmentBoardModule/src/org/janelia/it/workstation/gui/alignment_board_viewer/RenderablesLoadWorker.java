@@ -23,7 +23,6 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.Rend
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +30,8 @@ import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.*;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 
 /**
@@ -438,24 +439,24 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             MaskChanRenderableData targetData = idToData.get(data.getBean());
             RenderableBean bean = data.getBean();
             if ( bean != null  &&
-                    bean.getRenderableEntity() != null  &&
-                    bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
+                    bean.getItem() != null  &&
+                    bean.getType().equals( NeuronFragment.class.getSimpleName() )
                     ) {
 
-                AlignedItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
+                AlignmentBoardItem item = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext().getAlignmentBoardItemWithId(bean.getId());
                 if ( item != null ) {
                     try {
                         if ( targetData != null ) {
                             // It's in the filtered list.  Mark it as such.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.In);
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.In.toString());
                         }
                         else {
                             // Not in the filtered list.  Exlude it.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize.toString());
                         }
                     } catch ( Exception ex ) {
                         ex.printStackTrace();
-                        logger.error("Failing to set inclusion status for entity id=" + bean.getRenderableEntity().getId() );
+                        logger.error("Failing to set inclusion status for entity id=" + bean.getId() );
                     }
                 }
             }
@@ -524,7 +525,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         compartmentLoader.setAcceptors(maskDataAcceptors);
         compartmentLoader.setFileStats(fileStats);
 
-        logger.debug("Timing multi-thread data load for multi-mask-assbembly.");
+        logger.debug("Timing multi-thread data load for multi-mask-assembly.");
         multiThreadedDataLoad(renderableDatas, false);
         logger.debug("End timing multi-mask-assembly");
         maskDataAcceptors.clear();

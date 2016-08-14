@@ -82,7 +82,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 //            return null;
 //        }
         else {
-            throw new IllegalStateException("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+            log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+            return null;
         }
     }
 
@@ -308,9 +309,19 @@ public abstract class EntityTransferHandler extends TransferHandler {
                         // Find drop acceptors, and figure out which are compatible.
                         ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();
                         Collection<DropAcceptor> targets = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+                        /*
+                           fosterl@janelia.hhmi.org
+                        
+                           The drop acceptor for Alignment Board no longer
+                           users RootedEntity objects.  It now accepts only
+                           the Domain Objects.
+                        
+                           This must be re-implemented, or removed.
+                        
                         for ( DropAcceptor acceptor: targets ) {
                             acceptor.drop(rootedEntities);
                         }
+                        */
                     }
                 }
 

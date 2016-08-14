@@ -5,11 +5,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,31 +25,25 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.ModelUtils;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-import java.util.ArrayList;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers.
@@ -523,41 +516,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     }
 
     private synchronized void selectNode(final DefaultMutableTreeNode node) {
-
-        // TODO: this should be encapsulated away from here somehow
-        ScreenEvaluationDialog screenEvaluationDialog = SessionMgr.getBrowser().getScreenEvaluationDialog();
-        if (screenEvaluationDialog.isCurrFolderDirty()) {
-            screenEvaluationDialog.setCurrFolderDirty(false);
-            if (screenEvaluationDialog.isAutoMoveAfterNavigation()) {
-                screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
-                    @Override
-                    public Void call() throws Exception {
-                        selectNode(node);
-                        return null;
-                    }
-                });
-                return;
-            }
-            else if (screenEvaluationDialog.isAskAfterNavigation()) {
-                Object[] options = {"Yes", "No", "Organize now"};
-                int c = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
-                        "Are you sure you want to navigate away from this folder without organizing it?", "Navigate",
-                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2]);
-                if (c == 1) {
-                    return;
-                }
-                else if (c == 2) {
-                    screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            selectNode(node);
-                            return null;
-                        }
-                    });
-                    return;
-                }
-            }
-        }
 
         if (node == null) {
             currUniqueId = null;

@@ -13,11 +13,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.Callable;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -37,22 +35,14 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.DataReporter;
-import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
-import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrEntityLoader;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
-import org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog;
-import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
@@ -61,6 +51,7 @@ import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
+import org.janelia.it.workstation.gui.framework.actions.ShowLVVWorkspaceInfoActionListener;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -76,8 +67,6 @@ import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SampleDownloadWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,29 +143,18 @@ public class EntityContextMenu extends JPopupMenu {
         add(getErrorFlag());
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
-        add(getMarkForReprocessingItem());
-        add(getSampleCompressionTypeItem());
-        add(getProcessingBlockItem());
-        add(getVerificationMovieItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFirstViewerItem());
         add(getOpenInSecondViewerItem());
         add(getOpenInFinderItem());
         add(getOpenWithAppItem());
-        add(getNeuronAnnotatorItem());
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
 
         setNextAddRequiresSeparator(true);
-        add(getSearchHereItem());
-
-        setNextAddRequiresSeparator(true);
-        add(getSortBySimilarityItem());
-        add(getMergeItem());
         add(getDownloadMenu());
-        add(getImportItem());
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -184,15 +162,11 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getEditLVVSamplePath());
+        add(getShowLVVWorkspaceInfo());
         if (getWrapEntityItem() != null) {
             for (JMenuItem wrapItem: getWrapEntityItem()) {
                 add(wrapItem);
             }
-        }
-
-        if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
-                .equals("group:simpsonlab")) && !this.multiple) {
-            add(getSpecialAnnotationSession());
         }
     }
 
@@ -735,399 +709,6 @@ public class EntityContextMenu extends JPopupMenu {
         return errorMenu;
     }
 
-    protected JMenuItem getProcessingBlockItem() {
-
-        final List<Entity> samples = new ArrayList<>();
-        for (RootedEntity re : rootedEntityList) {
-            Entity sample = re.getEntity();
-            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                if (!sample.getName().contains("~")) {
-                    samples.add(sample);
-                }
-            }
-        }
-        
-        if (samples.isEmpty()) return null;
-        
-        final String samplesText = multiple?samples.size()+" Samples":"Sample";
-        
-        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
-        blockItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge " + samples.size() + " sample(s) " +
-                                "by deleting all large files associated with them, and block all future processing?",
-                        "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result != 0) return;
-
-                Task task;
-                try {
-                    StringBuilder sampleIdBuf = new StringBuilder();
-                    for (Entity sample : samples) {
-                        if (sampleIdBuf.length() > 0) sampleIdBuf.append(",");
-                        sampleIdBuf.append(sample.getId());
-                    }
-
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
-                }
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                    return;
-                }
-
-                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-                    @Override
-                    public String getName() {
-                        return "Purging and blocking " + samples.size() + " samples";
-                    }
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        setStatus("Executing");
-                        super.doStuff();
-                        for (Entity sample : samples) {
-                            ModelMgr.getModelMgr().invalidateCache(sample, true);
-                        }
-                    }
-
-                    @Override
-                    public Callable<Void> getSuccessCallback() {
-                        return new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                SessionMgr.getBrowser().getEntityOutline().refresh();
-                                return null;
-                            }
-                        };
-                    }
-                };
-
-                taskWorker.executeWithEvents();
-            }
-        });
-
-        for(RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
-            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-                blockItem.setEnabled(false);
-                break;
-            }
-        }
-        
-        return blockItem;
-    }
-    
-    private List<Entity> getSelectedSamples() {
-        final List<Entity> samples = new ArrayList<>();
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
-            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) && !sample.getName().contains("~")) {
-                samples.add(sample);
-            }
-        }
-        return samples;
-    }
-
-    protected JMenuItem getSampleCompressionTypeItem() {
-    
-        final List<Entity> samples = getSelectedSamples();
-        if (samples.isEmpty()) return null;
-        
-        JMenu submenu = new JMenu("  Change Sample Compression Strategy");
-        
-        final int count = samples.size();
-        final String samplesText = multiple?count+" Samples":"Sample";
-        
-        JMenuItem vllMenuItem = new JMenuItem("Visually Lossless (h5j)");
-        vllMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                
-                final String targetCompression = EntityConstants.VALUE_COMPRESSION_VISUALLY_LOSSLESS;
-                String message = "Are you sure you want to convert "+samplesText+" to Visually Lossless (h5j) format?\n"
-                        + "This will immediately delete all Lossless v3dpbd files for this Sample and result in a large decrease in disk space usage.\n"
-                        + "Lossless files can be regenerated by reprocessing the Sample later.";
-                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-                
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    StringBuilder sampleIdBuf = new StringBuilder();
-                        
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for(final Entity sample : samples) {
-                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
-                            // Target is Visually Lossless, just run the compression service
-                            if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
-                            sampleIdBuf.append(sample.getId());
-                        }
-                    }
-                    
-                    @Override
-                    protected void hadSuccess() {  
-                        if (sampleIdBuf.length()==0) return;
-                        
-                        Task task;
-                        try {
-                            HashSet<TaskParameter> taskParameters = new HashSet<>();
-                            taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                            task = ModelMgr.getModelMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
-                        }
-                        catch (Exception e) {
-                            SessionMgr.getSessionMgr().handleException(e);
-                            return;
-                        }
-                        
-                        TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-                            @Override
-                            public String getName() {
-                                return "Compressing "+samples.size()+" samples";
-                            }
-
-                            @Override
-                            protected void doStuff() throws Exception {
-                                setStatus("Executing");
-                                super.doStuff();
-                                for(Entity sample : samples) {
-                                    ModelMgr.getModelMgr().invalidateCache(sample, true);
-                                }
-                            }
-                            
-                            @Override
-                            public Callable<Void> getSuccessCallback() {
-                                return new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                        SessionMgr.getBrowser().getEntityOutline().refresh();
-                                        return null;
-                                    }
-                                };
-                            }
-                        };
-
-                        taskWorker.executeWithEvents();
-                    }
-                    
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                
-                worker.execute();
-            }
-        });
-        
-        submenu.add(vllMenuItem);
-
-        JMenuItem llMenuItem = new JMenuItem("Lossless (v3dpbd)");
-        llMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                
-                final String targetCompression = EntityConstants.VALUE_COMPRESSION_LOSSLESS_AND_H5J;
-                String message = "Are you sure you want to mark "+samplesText+" for reprocessing into Lossless (v3dpbd) format?";
-                int result = JOptionPane.showConfirmDialog(mainFrame, message,  "Change Sample Compression", JOptionPane.OK_CANCEL_OPTION);
-                
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker() {
-                                            
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for(final Entity sample : samples) {
-                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_COMRESSION_TYPE, targetCompression);
-                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
-                        }
-                    }
-                    
-                    @Override
-                    protected void hadSuccess() {  
-                         JOptionPane.showMessageDialog(mainFrame, samplesText+" are marked for reprocessing to Lossless (v3dpbd) format, and will be available once the pipeline is run.", 
-                                 "Marked Samples", JOptionPane.INFORMATION_MESSAGE);
-                    }
-                    
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                
-                worker.execute();
-            }
-        });
-        
-        submenu.add(llMenuItem);
-        
-        for(Entity sample : samples) {
-            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-                vllMenuItem.setEnabled(false);
-                break;
-            }
-        }
-
-        return submenu;
-    }
-    
-    protected JMenuItem getMarkForReprocessingItem() {
-
-        final List<Entity> samples = new ArrayList<>();
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
-            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                if (!sample.getName().contains("~")) {
-                    samples.add(sample);
-                }
-            }
-        }
-        
-        if (samples.isEmpty()) return null;
-
-        final String samplesText = multiple?samples.size()+" Samples":"Sample";
-        
-        JMenuItem markItem = new JMenuItem("  Mark "+samplesText+" for Reprocessing");
-        markItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these " + samples.size() + " sample(s) to be reprocessed "
-                        + "during the next scheduled refresh?", "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for (final Entity sample : samples) {
-                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
-
-        for(RootedEntity rootedEntity : rootedEntityList) {
-            Entity sample = rootedEntity.getEntity();
-            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-                markItem.setEnabled(false);
-                break;
-            }
-        }
-
-        return markItem;
-    }
-    
-    private JMenuItem getVerificationMovieItem() {
-        if (multiple) return null;
-
-        if (!OpenWithDefaultAppAction.isSupported())
-            return null;
-        
-        final Entity sample = rootedEntity.getEntity();
-
-        if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-            return null;
-        }
-        
-        JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
-        movieItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    private Entity movie;
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        ModelMgr.getModelMgr().loadLazyEntity(sample, false);
-                        Entity alignedSample = null;
-                        for (Entity child : ModelMgrUtils.getAccessibleChildren(sample)) {
-                            if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)
-                                    && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE) != null) {
-                                alignedSample = child;
-                            }
-                        }
-
-                        if (alignedSample == null) {
-                            alignedSample = sample;
-                        }
-
-                        final ModelMgrEntityLoader loader = new ModelMgrEntityLoader();
-                        EntityVistationBuilder.create(loader).startAt(alignedSample)
-                                .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
-                                .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
-                                .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
-                                .run(new EntityVisitor() {
-                                    public void visit(Entity supportingData) throws Exception {
-                                        loader.populateChildren(supportingData);
-                                        for (Entity child : ModelMgrUtils.getAccessibleChildren(supportingData)) {
-                                            if (child.getName().equals("VerifyMovie.mp4")
-                                                    || child.getName().equals("AlignVerify.mp4")) {
-                                                movie = child;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                });
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-
-                        if (movie == null) {
-                            JOptionPane.showMessageDialog(mainFrame, "Could not locate verification movie",
-                                    "Not Found", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        String filepath = EntityUtils.getFilePath(movie);
-                        if (StringUtils.isEmpty(filepath)) {
-                            JOptionPane.showMessageDialog(mainFrame, "Verification movie has no path",
-                                    "Not Found", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        }
-
-                        OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(movie);
-                        action.doAction();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
-
-        if (EntityConstants.VALUE_BLOCKED.equals(sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_STATUS))) {
-            movieItem.setEnabled(false);
-        }
-        
-        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-            movieItem.setEnabled(false);
-        }
-
-        return movieItem;
-    }
-    
     private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
     
     private void updateAddToRootFolderHistory(Entity commonRoot) {
@@ -1349,149 +930,6 @@ public class EntityContextMenu extends JPopupMenu {
         }
         
         return deleteItem;
-    }
-    
-    
-    protected JMenuItem getMergeItem() {
-
-        // If multiple items are not selected then leave
-        if (!multiple) {
-            return null;
-        }
-
-        HashSet<Long> parentIds = new HashSet<>();
-        for (RootedEntity rootedEntity : rootedEntityList) {
-            // Add all parent ids to a collection
-            if (null != rootedEntity.getEntityData().getParentEntity()
-                    && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityTypeName())) {
-                parentIds.add(rootedEntity.getEntityData().getParentEntity().getId());
-            }
-            // if one of the selected entities has no parent or isn't owner by
-            // the user then leave; cannot merge
-            else {
-                return null;
-            }
-        }
-        // Anything but one parent id for selected entities should not allow
-        // merge
-        if (parentIds.size() != 1) {
-            return null;
-        }
-
-        JMenuItem mergeItem = new JMenuItem("  Merge " + rootedEntityList.size() + " Selected Neurons");
-
-        mergeItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                SimpleWorker mergeTask = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        setProgress(1);
-                        Long parentId = null;
-                        List<Entity> fragments = new ArrayList<>();
-                        for (RootedEntity entity : rootedEntityList) {
-                            Long resultId = ModelMgr
-                                    .getModelMgr()
-                                    .getAncestorWithType(entity.getEntity(),
-                                            EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
-                            if (parentId == null) {
-                                parentId = resultId;
-                            } else if (resultId == null || !parentId.equals(resultId)) {
-                                throw new IllegalStateException(
-                                        "The selected neuron fragments are not part of the same neuron separation result: parentId="
-                                                + parentId + " resultId=" + resultId);
-                            }
-                            fragments.add(entity.getEntityData().getChildEntity());
-                        }
-
-                        Collections.sort(fragments, new Comparator<Entity>() {
-                            @Override
-                            public int compare(Entity o1, Entity o2) {
-                                Integer o1n = Integer.parseInt(o1
-                                        .getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
-                                Integer o2n = Integer.parseInt(o2
-                                        .getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
-                                return o1n.compareTo(o2n);
-                            }
-                        });
-
-                        HashSet<String> fragmentIds = new LinkedHashSet<>();
-                        for (Entity fragment : fragments) {
-                            fragmentIds.add(fragment.getId().toString());
-                        }
-
-                        // This should never happen
-                        if (null == parentId) {
-                            return;
-                        }
-                        
-                        HashSet<TaskParameter> taskParameters = new HashSet<>();
-                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
-                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
-                        ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-
-                };
-
-                mergeTask.execute();
-            }
-        });
-
-        mergeItem.setEnabled(multiple);
-        return mergeItem;
-    }
-
-    protected JMenuItem getSortBySimilarityItem() {
-
-        // If multiple items are selected then leave
-        if (multiple) {
-            return null;
-        }
-
-        final Entity targetEntity = rootedEntity.getEntity();
-
-        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK)
-                && !targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_IMAGE_3D)) {
-            return null;
-        }
-
-        String parentId = Utils.getParentIdFromUniqueId(rootedEntity.getUniqueId());
-        final Entity folder = browser.getEntityOutline().getEntityByUniqueId(parentId);
-
-        if (!folder.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
-            return null;
-        }
-
-        JMenuItem sortItem = new JMenuItem("  Sort Folder By Similarity To This Image");
-
-        sortItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    HashSet<TaskParameter> taskParameters = new HashSet<>();
-                    taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
-                    taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
-                    Task task = ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
-
-                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
-                    dialog.showForTask(task);
-                    browser.getViewerManager().getActiveViewer().refresh();
-                } 
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
-            }
-        });
-
-        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
-        return sortItem;
     }
 
     protected JMenuItem getSetSortCriteriaItem() {
@@ -1754,88 +1192,6 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
-    protected JMenuItem getNeuronAnnotatorItem() {
-        if (multiple)
-            return null;
-        final String entityType = rootedEntity.getEntity().getEntityTypeName();
-        if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
-                || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Neuron Annotator");
-            vaa3dMenuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        Entity result = rootedEntity.getEntity();
-                        if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-                            result = ModelMgr.getModelMgr().getAncestorWithType(result,
-                                    EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-                        }
-
-                        if (result != null) {
-                            // Check that there is a valid NA instance running
-                            List<ExternalClient> clients = SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                            // If no NA client then try to start one
-                            if (clients.isEmpty()) {
-                                startNA();
-                            }
-                            // If NA clients "exist", make sure they are up
-                            else {
-                                ArrayList<ExternalClient> finalList = new ArrayList<>();
-                                for (ExternalClient client : clients) {
-                                    boolean connected = client.isConnected();
-                                    if (!connected) {
-                                        log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-                                        SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
-                                    }
-                                    else {
-                                        finalList.add(client);
-                                    }
-                                }
-                                // If none are up then start one
-                                if (finalList.size()==0) {
-                                    startNA();
-                                }
-                            }
-
-                            if (SessionMgr.getSessionMgr()
-                                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                                JOptionPane.showMessageDialog(mainFrame,
-                                        "Could not get Neuron Annotator to launch and connect. "
-                                                + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                                return;
-                            }
-
-                            log.debug("Requesting entity view in Neuron Annotator: " + result.getId());
-                            ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
-                        }
-                    } catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                }
-            });
-            return vaa3dMenuItem;
-        }
-        return null;
-    }
-
-    private void startNA() throws Exception {
-        log.debug("Client {} is not running. Starting a new instance.",
-                ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-        ToolMgr.runTool(ToolMgr.TOOL_NA);
-        boolean notRunning = true;
-        int killCount = 0;
-        while (notRunning && killCount < 2) {
-            if (SessionMgr.getSessionMgr()
-                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                Thread.sleep(3000);
-                killCount++;
-            }
-            else {
-                notRunning = false;
-            }
-        }
-    }
-
     protected JMenuItem getVaa3dTriViewItem() {
         if (multiple)
             return null;
@@ -1880,27 +1236,6 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
-    protected JMenuItem getImportItem() {
-        if (multiple) return null;
-        
-        String entityTypeName = rootedEntity.getEntity().getEntityTypeName();
-        if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
-            newAttachmentItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        browser.getImportDialog().showDialog(rootedEntity);
-                    } catch (Exception ex) {
-                        SessionMgr.getSessionMgr().handleException(ex);
-                    }
-                }
-            });
-
-            return newAttachmentItem;
-        }
-        return null;
-    }
-
     protected JMenuItem getNewFolderItem() {
         if (multiple) return null;
         
@@ -1935,24 +1270,6 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
-    protected JMenuItem getSearchHereItem() {
-        if (multiple) return null;
-        if (virtual) return null;
-        
-        JMenuItem searchHereMenuItem = new JMenuItem("  Search Here");
-        searchHereMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    SessionMgr.getBrowser().getGeneralSearchDialog()
-                            .showDialog(rootedEntity.getEntity());
-                } catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
-            }
-        });
-        return searchHereMenuItem;
-    }
-
     protected JMenuItem getActionItem(final Action action) {
         JMenuItem actionMenuItem = new JMenuItem(action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
@@ -1964,28 +1281,6 @@ public class EntityContextMenu extends JPopupMenu {
         return actionMenuItem;
     }
 
-    private JMenuItem getSpecialAnnotationSession() {
-        JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");
-        specialAnnotationSession.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (null == ModelMgr.getModelMgr().getCurrentOntology()) {
-                    JOptionPane.showMessageDialog(mainFrame,
-                            "Please select an ontology in the ontology window.", "Null Ontology Warning",
-                            JOptionPane.WARNING_MESSAGE);
-                } else {
-                    if (!SpecialAnnotationChooserDialog.getDialog().isVisible()) {
-                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
-                    } else {
-                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
-                    }
-                }
-            }
-        });
-
-        return specialAnnotationSession;
-    }
-
     protected JMenuItem getEditLVVSamplePath() {
         if (multiple)
             return null;
@@ -1993,6 +1288,19 @@ public class EntityContextMenu extends JPopupMenu {
         if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             JMenuItem menuItem = new JMenuItem("  Edit sample path");
             menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+            return menuItem;
+        } else {
+            return null;
+        }
+    }
+
+    protected JMenuItem getShowLVVWorkspaceInfo() {
+        if (multiple)
+            return null;
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+        if (entityType.equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            JMenuItem menuItem = new JMenuItem("  Show sample info");
+            menuItem.addActionListener(new ShowLVVWorkspaceInfoActionListener(rootedEntity));
             return menuItem;
         } else {
             return null;

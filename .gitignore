@@ -9,6 +9,7 @@ jacs/src/org/janelia/it/jacs/server/ie/jaxb
 shared/src/org/janelia/it/jacs/shared/blast/blastxmlparser/jaxb
 ConsoleApplication/SharedModelComputeWrapper/release
 ConsoleApplication/SharedModelComputeWrapper/src/jacs.properties
+generated
 buildprocess/intellij-make/
 ConsoleApplication/SharedModelComputeWrapper/release
 .metadata
@@ -18,7 +19,9 @@ ConsoleApplication/HortaTracer/*.log
 *.iws
 *.ipr
 *~
+.recommenders
 ConsoleApplication/LargeVolumeViewerModule/doc/Datasources/
 ConsoleApplication/LargeVolumeViewerModule/doc/Logs/
 ConsoleApplication/LargeVolumeViewerModule/doc/Shapes/
 .DS_Store
+hs_err_pid*.log

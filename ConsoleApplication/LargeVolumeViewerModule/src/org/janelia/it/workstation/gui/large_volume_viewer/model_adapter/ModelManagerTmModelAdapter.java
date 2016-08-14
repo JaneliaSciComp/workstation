@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -26,11 +26,10 @@ import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapt
 import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.jacs.model.util.ThreadUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.BASE64Encoder;
@@ -55,8 +54,9 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
 
     private static Logger log = LoggerFactory.getLogger(ModelManagerTmModelAdapter.class);
 
-    private static ScheduledThreadPoolExecutor saveQueue=new ScheduledThreadPoolExecutor(1);
+    private static ScheduledThreadPoolExecutor saveQueue=new ScheduledThreadPoolExecutor(1, new CustomNamedThreadFactory("Tm-Save-Queue"));
     private static boolean saveQueueErrorFlag=false;
+    private static RemoteTmProxyCache tmProxyCache = new RemoteTmProxyCache();
     
     @Override
     public void loadNeurons(TmWorkspace workspace) throws Exception {
@@ -134,15 +134,28 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
     private static class SaveNeuronRunnable implements Runnable {
         TmNeuron neuron;
         Entity workspaceEntity;
+        private AtomicBoolean running = new AtomicBoolean(false);
 
         public SaveNeuronRunnable(Entity workspaceEntity, TmNeuron neuron) {
             this.workspaceEntity=workspaceEntity;
             this.neuron=neuron;
         }
+        
+        public TmNeuron getNeuron() {
+            return neuron;
+        }
+        
+        public boolean isRunning() {
+            return running.get();
+        }
+        
+        public boolean sameNeuron(TmNeuron neuron) {
+            return neuron.getId() != null  &&  this.neuron.getId() != null  &&  neuron.getId().equals( this.neuron.getId() );
+        }
 
         @Override
         public void run() {
-
+            running.set(true);
             try {
                 // May need to exchange this entity-data for existing one on workspace
                 EntityData preExistingEntityData = null;
@@ -189,8 +202,13 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                 BASE64Encoder encoder = new BASE64Encoder();
                 preExistingEntityData.setValue(encoder.encode(serializableBytes));
 
-                TiledMicroscopeBeanRemote tiledMicroscopeBeanRemote = EJBFactory.getRemoteTiledMicroscopeBean();
-                tiledMicroscopeBeanRemote.saveProtobufNeuronBytesJDBC(preExistingEntityData.getId(), serializableBytes);
+                TiledMicroscopeBeanRemote tiledMicroscopeBeanRemote = tmProxyCache.getRemote();
+                if (tiledMicroscopeBeanRemote != null) {
+                    tiledMicroscopeBeanRemote.saveProtobufNeuronBytesJDBC(preExistingEntityData.getId(), serializableBytes);
+                }
+                else {
+                    throw new Exception("Failed to obtain proxy object.");
+                }
 
                 long elapsedTime = new Date().getTime() - timeStart;
 
@@ -209,6 +227,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                 }
                 saveQueueErrorFlag=true;
             }
+            running.set(false); // For completeness.
         }
     }
 
@@ -217,7 +236,23 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         if (saveQueueErrorFlag) {
             throw new Exception("Neuron save queue in error state - workstation should be restarted");
         } else {
-            SaveNeuronRunnable saveNeuronRunnable=new SaveNeuronRunnable(workspaceEntity, neuron);
+            // Save-queue tasks are identical to one another.  So let us
+            // not accumulate redundant tasks.  If one is waiting to save
+            // this neuron, no need to schedule another, which will just
+            // save it again after--and possibly after other operations.
+
+
+            // this doesn't work right now; keeping it in because I hope to fix it
+            /*
+            for (Runnable runnable: saveQueue.getQueue()) {
+                SaveNeuronRunnable snr = (SaveNeuronRunnable)runnable;
+                if (snr.sameNeuron(neuron)  &&  ! snr.isRunning()) {
+                    // There is a yet-to-run task focused on saving this neuron.
+                    return;
+                }
+            }
+            */
+            SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(workspaceEntity, neuron);
             saveQueue.submit(saveNeuronRunnable);
         }
     }
@@ -238,23 +273,6 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         } else {
             saveNeuronToQueue(workspaceEntity, neuron);
         }
-    }
-
-    @Override
-    public TmNeuron refreshFromEntityData(TmNeuron neuron) throws Exception {
-        Long workspaceId = neuron.getWorkspaceId();
-        Long neuronId = neuron.getId();
-        ensureWorkspaceEntity(workspaceId);
-        byte[] rawBuffer = 
-            ModelMgr
-                .getModelMgr()
-                .getB64DecodedEntityDataValue(
-                        workspaceId, 
-                        neuronId, 
-                        EntityConstants.ATTRIBUTE_PROTOBUF_NEURON
-                );
-        final TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        return exchanger.deserializeNeuron(rawBuffer, neuron);
     }
 
     @Override
@@ -287,6 +305,28 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
         }
         
         return workspaceEntity;
+    }
+    
+    /** Hang onto a 'recent-enough' cached proxy to EJB.  Caching removes much of the JNDI lookup burden. */
+    private static class RemoteTmProxyCache {
+        public static final double EJB_CACHE_EXPIRE_MIN = 30.0;
+        private TiledMicroscopeBeanRemote tiledMicroscopeBeanRemote = null;
+        private Date cacheTime = null;
+        
+        public TiledMicroscopeBeanRemote getRemote() {
+            Date cacheExpiryTime = new Date();
+            // Blow-out cache periodically, in case the server is down,
+            // and there happens to be some load-balancing thing in effect.
+            long cacheExpiryTimeMs = cacheExpiryTime.getTime() - (int)(1000 * 60 * EJB_CACHE_EXPIRE_MIN);
+            cacheExpiryTime.setTime(cacheExpiryTimeMs);
+            if (tiledMicroscopeBeanRemote == null  ||  cacheTime.before(cacheExpiryTime)) {
+                tiledMicroscopeBeanRemote = EJBEntityFacade.getRemoteTMBWithRetries();
+                log.info("Returning fresh remote EJB proxy.");
+                cacheTime = new Date();
+            }
+            return tiledMicroscopeBeanRemote;
+        }
+
     }
     
     /*

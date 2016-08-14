@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.junit.Test;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.junit.experimental.categories.Category;
@@ -24,13 +24,13 @@ public class RDComparatorTest {
         // Need to make the list.
         List<RenderableBean> enclosedBeanList = new RenderableBeanCollection().createCollection();
 
-        List<MaskChanRenderableData> dataList = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> dataList = new ArrayList<>();
         for ( RenderableBean bean: enclosedBeanList ) {
             MaskChanRenderableData data = new MaskChanRenderableData();
             data.setBean(bean);
             data.setChannelPath(CHANNEL_PATH);
             data.setMaskPath(MASK_PATH);
-            data.setCompartment( bean.getType().equals(EntityConstants.TYPE_COMPARTMENT ) );
+            data.setCompartment( bean.getType().equals( CompartmentSet.class.getSimpleName() ) );
 
             dataList.add( data );
         }
@@ -39,7 +39,7 @@ public class RDComparatorTest {
 
         // The tough part: see if it is sorted.  We preserve the order found, but make a new "un-enclosed" collection.
         // The sort order is meant to follow that of the enclosed value.
-        List<RenderableBean> unwrappedBeanList = new ArrayList<RenderableBean>();
+        List<RenderableBean> unwrappedBeanList = new ArrayList<>();
         for ( MaskChanRenderableData data: dataList ) {
             unwrappedBeanList.add( data.getBean() );
         }

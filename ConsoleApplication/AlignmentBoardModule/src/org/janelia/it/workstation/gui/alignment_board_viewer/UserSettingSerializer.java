@@ -1,14 +1,14 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.geom.Rotation3d;
-import org.janelia.it.workstation.geom.UnitVec3;
-import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.shared.geom.Rotation3d;
+import org.janelia.it.jacs.shared.geom.UnitVec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,8 @@ public class UserSettingSerializer implements Serializable {
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
 
     private final SerializationAdapter serializationAdapter;
-    private Entity alignmentBoard;
+    private AlignmentBoard alignmentBoard;
+    private DomainHelper domainHelper = new DomainHelper();
 
     private final Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
 
@@ -46,7 +47,7 @@ public class UserSettingSerializer implements Serializable {
      * @param alignmentBoard what to look at.
      * @return T: found string; F: no settings stored before this call.
      */
-    public static boolean settingsExist( Entity alignmentBoard ) {
+    public static boolean settingsExist( AlignmentBoard alignmentBoard ) {
         return getSettingsString( alignmentBoard ) != null;
     }
 
@@ -58,7 +59,7 @@ public class UserSettingSerializer implements Serializable {
      * @param alignmentBoardSettings for user-click settings.
      */
     public UserSettingSerializer(
-            Entity alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
+            AlignmentBoard alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
         serializationAdapter = new DirectStateSerializationAdapter( volumeModel, alignmentBoardSettings );
         this.alignmentBoard = alignmentBoard;
         logger.debug("Serializer: with VolumeModel {}, with cam3D {}.", volumeModel, volumeModel.getCamera3d() );
@@ -82,15 +83,13 @@ public class UserSettingSerializer implements Serializable {
             // This excessive length
             if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
                 logger.warn( "Abandoning the serialized string {}.", settingsString );
-                // Write back.
-                ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
                 settingsString = "";
             }
             logger.info( "Save-back Setting string: {}.", settingsString );
 
             // Write back.
-            ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
-
+            alignmentBoard.setEncodedUserSettings(settingsString);
+            domainHelper.saveAlignmentBoardAsync(alignmentBoard);
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
@@ -103,7 +102,7 @@ public class UserSettingSerializer implements Serializable {
      */
     public synchronized void deserializeSettings() {
         try {
-            String settingString = getSettingsString( this.alignmentBoard );
+            String settingString = getSettingsString( alignmentBoard );
             logger.info( "Read-Up Setting string: {} deserialized, from {}", settingString, alignmentBoard.getId() );
 
             if ( settingString != null ) {
@@ -283,6 +282,7 @@ public class UserSettingSerializer implements Serializable {
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() == 3 ) {
+                logger.info("Setting the camera rotation.  {}", str);
                 serializationAdapter.setRotation( coordinateSets );
             }
             else {
@@ -350,13 +350,8 @@ public class UserSettingSerializer implements Serializable {
 
     }
 
-    private static String getSettingsString( Entity alignmentBoard ) {
-        // Read up.
-        String settingString =
-                alignmentBoard.getValueByAttributeName(
-                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
-                );
-        return settingString;
+    private static String getSettingsString( AlignmentBoard alignmentBoard ) {
+        return alignmentBoard.getEncodedUserSettings();
     }
 
     /** Sets a neuron-cutoff constraint.  Here for purpose of non-redundancy. */

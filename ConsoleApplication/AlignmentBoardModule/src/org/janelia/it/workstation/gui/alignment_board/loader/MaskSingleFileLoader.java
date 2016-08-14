@@ -216,7 +216,7 @@ public class MaskSingleFileLoader {
 
         if ( DEBUG ) {
             frequencyAnalyzer = new ByteFrequencyDumper(
-                    renderableBean.getRenderableEntity().getName() + " " + renderableBean.getLabelFileNum(),
+                    renderableBean.getName() + " " + renderableBean.getLabelFileNum(),
                     channelMetaData.byteCount,
                     channelMetaData.channelCount
             );
@@ -243,10 +243,10 @@ public class MaskSingleFileLoader {
         }
 
         // Channel only available if presence of acceptors signalled its read.
-        if ( channelAcceptors.size() > 0  &&  renderableBean.getRenderableEntity() != null  &&  fileStats != null ) {
+        if ( channelAcceptors.size() > 0  &&  renderableBean.getItem() != null  &&  fileStats != null ) {
             if ( logger.isDebugEnabled() ) {
                 StringBuilder averages = new StringBuilder( "Average values for " )
-                        .append( renderableBean.getRenderableEntity().getName() ).append( " at total voxels of " )
+                        .append( renderableBean.getName() ).append( " at total voxels of " )
                         .append( renderableBean.getVoxelCount() ).append( " are:\n" );
                 for ( int i = 0; i < channelAverages.length; i++ ) {
                     averages.append( "Channel ").append( i ).append(' ').append( channelAverages[ i ] ).append( "\n" );
@@ -254,12 +254,12 @@ public class MaskSingleFileLoader {
                 logger.debug( averages.toString() );
             }
 
-            fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
+            fileStats.recordChannelAverages( renderableBean.getId(), channelAverages );
         }
         else if ( channelAcceptors.size() > 0 ) {
             logger.warn(
                     "No color averages recorded.  Renderable bean: entity={}.  Filestats={}.",
-                    renderableBean.getRenderableEntity(), fileStats + " " + channelAcceptors.size()
+                    renderableBean.getId(), fileStats + " " + channelAcceptors.size()
             );
         }
 
@@ -415,7 +415,7 @@ public class MaskSingleFileLoader {
                 }
                 if (logger.isTraceEnabled()) {
                     if ( renderableBean != null ) {
-                        logger.trace( "Single file loader looking at positions {} to {} for bean {}, t-num {}.", new Object[] {applicable1DStart, applicable1DEnd, renderableBean.getRenderableEntity().getName(), renderableBean.getTranslatedNum() } );
+                        logger.trace( "Single file loader looking at positions {} to {} for bean {}, t-num {}.", new Object[] {applicable1DStart, applicable1DEnd, renderableBean.getName(), renderableBean.getTranslatedNum() } );
                     }
                 }
             }
@@ -469,7 +469,7 @@ public class MaskSingleFileLoader {
             slowestSrcVaryingCoord = 0;
         }
         else {
-            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
+            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected. " + renderableBean.getName() );
         }
 
     }

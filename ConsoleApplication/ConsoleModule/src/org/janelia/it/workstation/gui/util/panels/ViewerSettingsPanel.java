@@ -155,10 +155,10 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         showAnnotationTables.setAlignmentX(Component.LEFT_ALIGNMENT);
         tableHeightPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        annotationPanel.add(Box.createVerticalStrut(5));
-        annotationPanel.add(onlySessionAnnotations);
-        annotationPanel.add(Box.createVerticalStrut(5));
-        annotationPanel.add(hideAnnotatedImages);
+//        annotationPanel.add(Box.createVerticalStrut(5));
+//        annotationPanel.add(onlySessionAnnotations);
+//        annotationPanel.add(Box.createVerticalStrut(5));
+//        annotationPanel.add(hideAnnotatedImages);
         annotationPanel.add(Box.createVerticalStrut(5));
         annotationPanel.add(showAnnotationTables);
         annotationPanel.add(tableHeightPanel);

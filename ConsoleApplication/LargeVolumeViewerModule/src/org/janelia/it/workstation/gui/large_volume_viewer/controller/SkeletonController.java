@@ -13,7 +13,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
@@ -48,14 +48,19 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     private NVTTableModelListener nvtTableModelListener;
     private TableModel nvtTableModel;
     private Timer meshDrawUpdateTimer;
-    
+    private boolean skipSkeletonChange=false;
+
     private static SkeletonController instance = new SkeletonController();
     
     private Long nextParentId = -1L;
     
     private SkeletonController() {
     }
-    
+
+    public void setSkipSkeletonChange(boolean skipSkeletonChange) {
+        this.skipSkeletonChange=skipSkeletonChange;
+    }
+
     public static SkeletonController getInstance() {
         return instance;
     }
@@ -236,12 +241,14 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
     
     public void skeletonChanged() {
-        for (SkeletonActor actor: actors) {
-            actor.getModel().updateAnchors();
+        if (!skipSkeletonChange) {
+            for (SkeletonActor actor : actors) {
+                actor.getModel().updateAnchors();
+            }
+            refreshMeshDrawUpdateTimer();
+            fireComponentUpdate();
+            log.info("anchor time=" + TraceMode.getTimerMs());
         }
-        refreshMeshDrawUpdateTimer();
-        fireComponentUpdate();
-        log.info("anchor time="+ TraceMode.getTimerMs());
     }
 
     public void deleteSubtreeRequested(Anchor anchor) {

@@ -366,7 +366,7 @@ public class AnnotationPanel extends JPanel
 
         // ----- interesting annotations
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        filteredList = new FilteredAnnotationList(annotationMgr, annotationModel, width);
+        filteredList = FilteredAnnotationList.createInstance(annotationMgr, annotationModel, width);
         add(filteredList, cVert);
 
 
@@ -453,7 +453,7 @@ public class AnnotationPanel extends JPanel
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 rtnVal = new ExportParameters();
                 rtnVal.setDownsampleModulo(downsampleModulo);
-                rtnVal.setSelectedFile(chooser.getSelectedFile());
+                rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
             }
         } catch (NumberFormatException nfe) {
             annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");

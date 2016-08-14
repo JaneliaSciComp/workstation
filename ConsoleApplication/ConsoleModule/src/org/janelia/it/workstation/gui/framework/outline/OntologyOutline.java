@@ -3,40 +3,17 @@ package org.janelia.it.workstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.DropMode;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JSeparator;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.JTree;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -47,6 +24,7 @@ import org.janelia.it.jacs.model.ontology.types.Category;
 import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.jacs.model.ontology.types.EnumText;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
@@ -57,15 +35,11 @@ import org.janelia.it.workstation.api.entity_model.management.EntitySelectionMod
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
-import org.janelia.it.workstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.workstation.gui.framework.actions.CreateOntologyAction;
-import org.janelia.it.workstation.gui.framework.actions.ImportOWLOntologyAction;
 import org.janelia.it.workstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.workstation.gui.framework.actions.OntologyElementAction;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.ontology.OntologyContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
@@ -77,13 +51,6 @@ import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.util.PermissionTemplate;
-import org.janelia.it.workstation.gui.dialogs.AutoAnnotationPermissionDialog;
-import org.janelia.it.workstation.gui.dialogs.BulkAnnotationPermissionDialog;
-import static org.janelia.it.workstation.gui.framework.outline.EntityContextMenu.mainFrame;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -98,74 +65,9 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     protected Entity root;
     private String currUniqueId;
 
-    private final KeyListener keyListener;
-    private final KeyBindDialog keyBindDialog;
-    private boolean recordingKeyBinds = false;
-
-    private final BulkAnnotationPermissionDialog bulkAnnotationDialog;
-    private final AutoAnnotationPermissionDialog autoAnnotationDialog;
-    
     private final Map<String, Action> ontologyActionMap = new HashMap<>();
 
     public OntologyOutline() {
-        
-        bulkAnnotationDialog = new BulkAnnotationPermissionDialog();
-        autoAnnotationDialog = new AutoAnnotationPermissionDialog();
-
-        // Create input listeners which will be added to the DynamicTree later
-        keyListener = new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getID() == KeyEvent.KEY_PRESSED) {
-                    if (KeymapUtil.isModifier(e)) {
-                        return;
-                    }
-                    KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-
-                    if (recordingKeyBinds) {
-                        Action action = getActionForNode(selectedTree.getCurrentNode());
-
-                        if (action == null) {
-                            throw new IllegalStateException("No action for current node");
-                        }
-
-                        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                            // Clear the key binding
-                            SessionMgr.getKeyBindings().setBinding(null, action);
-                        }
-                        else {
-                            // Set the key binding
-                            SessionMgr.getKeyBindings().setBinding(shortcut, action);
-                        }
-
-                        // Refresh the entire tree (another key bind may have been overridden)
-                        // TODO: this is very slow on large trees...
-                        JTree tree = selectedTree.getTree();
-                        DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
-                        selectedTree.refreshDescendants((DefaultMutableTreeNode) treeModel.getRoot());
-
-                        // Move to the next row
-                        selectedTree.navigateToNextRow();
-                    }
-                    else {
-                        SessionMgr.getKeyBindings().executeBinding(shortcut);
-                    }
-                }
-            }
-        };
-
-        // Prepare the key binding dialog box
-        this.keyBindDialog = new KeyBindDialog(this);
-        keyBindDialog.pack();
-
-        keyBindDialog.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentHidden(ComponentEvent e) {
-                // refresh the tree in case the key bindings were updated
-                DefaultTreeModel treeModel = (DefaultTreeModel) selectedTree.getTree().getModel();
-                treeModel.nodeChanged(selectedTree.getCurrentNode());
-            }
-        });
 
         // Listen for changes to the model
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
@@ -248,8 +150,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     /**
      * Load a single ontology into the outline.
-     *
-     * @param rootEntity
      */
     public void loadOntology(final Long rootId, final Callable<Void> success) {
 
@@ -312,8 +212,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     /**
      * Load a single ontology into the outline.
-     *
-     * @param rootEntity
      */
     public void showOntologyTree(final Entity ontologyTree) {
 
@@ -340,7 +238,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         // Replace the default key listener on the tree
         KeyListener defaultKeyListener = tree.getKeyListeners()[0];
         tree.removeKeyListener(defaultKeyListener);
-        tree.addKeyListener(keyListener);
 
         tree.setRootVisible(true);
         tree.setDragEnabled(true);
@@ -351,9 +248,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 return OntologyOutline.this;
             }
         });
-
-        // Load key bind preferences and bind keys to actions
-        SessionMgr.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -413,16 +307,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     });
                     ontologyListMenu.add(addMenuItem);
 
-                    JMenuItem loadOwlItem = new JMenuItem("Load OWL File...");
-                    loadOwlItem.setIcon(Icons.getIcon("folder_add.png"));
-                    loadOwlItem.addActionListener(new ActionListener() {
-                        public void actionPerformed(ActionEvent e) {
-                            Action action = new ImportOWLOntologyAction();
-                            action.doAction();
-                        }
-                    });
-                    ontologyListMenu.add(loadOwlItem);
-
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
             });
@@ -430,74 +314,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             toolBar.add(ontologyButton);
         }
 
-        final JToggleButton keyBindButton = new JToggleButton();
-        keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
-        keyBindButton.setToolTipText("Enter key binding mode");
-        keyBindButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                if (keyBindButton.isSelected()) {
-                    keyBindButton.setToolTipText("Exit key binding mode");
-                    recordingKeyBinds = true;
-                    // Transfer focus to a node in the tree in preparation for key presses
-                    selectedTree.getTree().grabFocus();
-                    if (selectedTree.getCurrentNode() == null) {
-                        selectedTree.setCurrentNode(selectedTree.getRootNode());
-                    }
-                }
-                else {
-                    keyBindButton.setToolTipText("Enter key binding mode");
-                    recordingKeyBinds = false;
-                    SessionMgr.getKeyBindings().saveOntologyKeybinds(getCurrentOntology());
-                }
-            }
-        });
-        toolBar.add(keyBindButton);
-        
-        final JToggleButton autoShareButton = new JToggleButton();
-        autoShareButton.setIcon(Icons.getIcon("group_gear.png"));
-        autoShareButton.setToolTipText("Configure annotation auto-sharing");
-        autoShareButton.setFocusable(false);
-        autoShareButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (autoShareButton.isSelected()) {
-                    boolean pressedOk = autoAnnotationDialog.showAutoAnnotationConfiguration();
-                    if (pressedOk) {
-                        PermissionTemplate template = SessionMgr.getBrowser().getAutoShareTemplate();
-                        if (template!=null) {
-                            JOptionPane.showMessageDialog(mainFrame,
-                                "Auto-sharing annotation with "+
-                                EntityUtils.getNameFromSubjectKey(template.getSubjectKey()), 
-                                "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
-                        }
-                    }
-                }
-                else {
-                    SessionMgr.getBrowser().setAutoShareTemplate(null);
-                    JOptionPane.showMessageDialog(mainFrame,
-                        "No longer auto-sharing annotations", "Auto-sharing ended", JOptionPane.INFORMATION_MESSAGE);
-                }
-                
-                autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
-            }
-            
-        });
-        autoShareButton.setSelected(SessionMgr.getBrowser().getAutoShareTemplate()!=null);
-        toolBar.add(autoShareButton);
-                    
-        final JButton bulkPermissionsButton = new JButton();
-        bulkPermissionsButton.setIcon(Icons.getIcon("group_edit.png"));
-        bulkPermissionsButton.setToolTipText("Bulk-edit permissions for annotations on selected entities");
-        bulkPermissionsButton.setFocusable(false);
-        bulkPermissionsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                bulkAnnotationDialog.showForSelectedEntities();
-            }
-            
-        });
-        toolBar.add(bulkPermissionsButton);
-        
         return toolBar;
     }
     
@@ -609,8 +425,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     /**
      * Register a corresponding Action for the given element, based on its term type. Recurses through the
      * element's children if there are any.
-     *
-     * @param element
      */
     private void populateActionMap(RootedEntity rootedEntity) {
 
@@ -857,17 +671,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     public Entity getCurrentOntology() {
         return root;
-    }
-
-    public void assignShortcutForCurrentNode() {
-        DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
-        if (treeNode != null) {
-            OntologyElement element = getOntologyElement(treeNode);
-            if (element != null) {
-                Action action = getActionForNode(treeNode);
-                keyBindDialog.showForAction(action);
-            }
-        }
     }
 
     @Override

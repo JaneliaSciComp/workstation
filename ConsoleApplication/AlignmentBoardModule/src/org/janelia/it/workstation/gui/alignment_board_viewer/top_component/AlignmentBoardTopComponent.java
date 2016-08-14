@@ -6,11 +6,12 @@ import java.util.Properties;
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -36,7 +37,7 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
 @ActionID(category = "Window", id = "AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window", position = 200 )
+@ActionReference(path = "Menu/Window/Alignment Board", position = 50)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
         preferredID = AlignmentBoardTopComponent.PREFERRED_ID
@@ -60,7 +61,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         setName(Bundle.CTL_AlignmentBoardTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
-        establishEntityAcceptor();
+        establishDomainObjectAcceptor();
     }
 
     @SuppressWarnings("unused")
@@ -76,7 +77,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     }
 
     //------------------------------------------HELPERS
-    private void establishEntityAcceptor() {
+    private void establishDomainObjectAcceptor() {
         Launcher launcher = new Launcher();
         this.associateLookup( Lookups.singleton( launcher ) );
         logger.info("Established acceptor");
@@ -127,13 +128,13 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+        Events.getInstance().registerOnEventBus(this);
         initMyComponents();
     }
 
     @Override
     public void componentClosed() {
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);        
+        Events.getInstance().unregisterOnEventBus(this);        
         alignmentBoardPanel.close();
         Runnable runnable = new Runnable() {
             public void run() {

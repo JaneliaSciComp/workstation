@@ -41,6 +41,7 @@ import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.OrthographicCamera;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -49,6 +50,7 @@ import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.scenewindow.stereo.AnaglyphRenderer;
+import org.janelia.scenewindow.stereo.LeftEyeRenderer;
 import org.janelia.scenewindow.stereo.MonoscopicRenderer;
 import org.janelia.scenewindow.stereo.StereoRenderer;
 import org.slf4j.Logger;
@@ -69,6 +71,8 @@ implements GLEventListener
     
     public enum Stereo3dMode {
         MONO,
+        LEFT,
+        RIGHT,
         RED_CYAN,
         GREEN_MAGENTA,
     }
@@ -100,7 +104,8 @@ implements GLEventListener
                 break;
             case PERSPECTIVE:
             default:
-                this.camera = new PerspectiveCamera(vantage, viewport);
+                this.camera = new LateralOffsetCamera(vantage, viewport);
+                // this.camera = new PerspectiveCamera(vantage, viewport);
                 break;
         }
     }
@@ -196,6 +201,12 @@ implements GLEventListener
         if (stereo3dMode == this.stereo3dMode) return;
         this.stereo3dMode = stereo3dMode;
         switch (stereo3dMode) { 
+            case LEFT:
+                stereoRenderer = new LeftEyeRenderer(120f);
+                break;
+            case RIGHT:
+                stereoRenderer = new LeftEyeRenderer(-120f);
+                break;
             case GREEN_MAGENTA:
                 stereoRenderer = new AnaglyphRenderer(false, true, false);
                 break;

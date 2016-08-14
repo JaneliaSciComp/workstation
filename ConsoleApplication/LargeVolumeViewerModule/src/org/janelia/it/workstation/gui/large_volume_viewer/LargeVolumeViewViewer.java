@@ -1,5 +1,6 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -85,6 +86,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 //  the intial entity, but we need the sample either way to be able to open it:
                 if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
                     sliceSample = initialEntity;
+                    HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                 } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                     // Which version of workspace?  Can it be handled, here?
                     boolean usableVersion = false;
@@ -110,6 +112,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
                     try {
                         sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -296,5 +299,7 @@ public class LargeVolumeViewViewer extends JPanel {
             }
         }
     }
+
+    public Entity getSliceSample() { return sliceSample; }
     
 }

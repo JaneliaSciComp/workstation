@@ -3,9 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
@@ -15,7 +15,6 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -340,7 +339,7 @@ public class SkeletonActorModel {
         }
 
         if (mostRecentAnchorVersion==skeleton.getAnchorSetVersion()) {
-            // log.info("updateAnchors() skipping redundant update"); 
+            // log.info("updateAnchors() skipping redundant update");
             return;
         } else {
             mostRecentAnchorVersion=skeleton.getAnchorSetVersion();

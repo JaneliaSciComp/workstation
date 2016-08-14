@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.viewer3d.learning;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

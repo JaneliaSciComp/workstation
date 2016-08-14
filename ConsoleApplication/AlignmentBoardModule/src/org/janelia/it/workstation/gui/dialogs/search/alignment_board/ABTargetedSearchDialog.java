@@ -1,25 +1,30 @@
 package org.janelia.it.workstation.gui.dialogs.search.alignment_board;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.dialogs.search.SearchParametersPanel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.BaseballCardPanel;
-import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import static org.janelia.it.workstation.gui.dialogs.search.alignment_board.SearchWorker.SEARCH_HISTORY_MDL_PROP;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCard;
+import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCardPanel;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.domain.Sample;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,8 +39,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private static final int DEFAULT_ROWS_PER_PAGE = 10;
 
     private AlignmentBoardContext context;
-    private Entity searchRoot;
-    private SearchParametersPanel searchParamsPanel;
+    private DomainObject searchRoot;
+//    private SearchParametersPanel searchParamsPanel;
     private BaseballCardPanel baseballCardPanel;
     private Logger logger = LoggerFactory.getLogger( ABTargetedSearchDialog.class );
 
@@ -61,7 +66,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     /** Launch with/without search-here starting point. */
-    public void showDialog( Entity searchRoot ) {
+    public void showDialog( DomainObject searchRoot ) {
         this.searchRoot = searchRoot;
         packAndShow();
     }
@@ -101,27 +106,31 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 context,
                 searchRoot == null ? null : searchRoot.getId()
         );
-        searchParamsPanel = new SearchParametersPanel() {
-            @Override
-            public void performSearch(boolean clear) {
-                searchAction.actionPerformed(null);
-            }
-            @Override
-            protected List<String> getSearchHistory() {
-                return (List<String>) SessionMgr.getSessionMgr().getModelProperty(SearchWorker.SEARCH_HISTORY_MDL_PROP);
-            }
-            @Override
-            protected void setSearchHistory(List<String> searchHistory) {
-                SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY_MDL_PROP, searchHistory);
-            }
-        };
-        SearchConfiguration searchConfig = new SearchConfiguration();
-        searchConfig.load();
-        searchConfig.addConfigurationChangeListener(searchParamsPanel);
-        searchParamsPanel.init(searchConfig);
-        return searchParamsPanel;
+        throw new IllegalStateException("Search is not currently supported");
+//        searchParamsPanel = new SearchParametersPanel() {
+//            @Override
+//            public void performSearch(boolean clear) {
+//                searchAction.actionPerformed(null);
+//            }
+//            @Override
+//            protected List<String> getSearchHistory() {
+//                return (List<String>) SessionMgr.getSessionMgr().getModelProperty(SearchWorker.SEARCH_HISTORY_MDL_PROP);
+//            }
+//            @Override
+//            protected void setSearchHistory(List<String> searchHistory) {
+//                SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY_MDL_PROP, searchHistory);
+//            }
+//        };
+//        SearchConfiguration searchConfig = new SearchConfiguration();
+//        searchConfig.load();
+//        searchConfig.addConfigurationChangeListener(searchParamsPanel);
+//        searchParamsPanel.init(searchConfig);
+//        return searchParamsPanel;
     }
 
+	/**
+	 * @todo fix references to entities.
+	 */
     private JPanel initDisposeGui() {
         JButton addToBoardBtn = new JButton("Add to Alignment Board");
         addToBoardBtn.addActionListener( new ActionListener() {
@@ -138,12 +147,23 @@ public class ABTargetedSearchDialog extends ModalDialog {
                         for ( BaseballCard bbc: selected ) {
                             logger.info("Adding entity {}.", bbc.toString());
                             try {
-                                context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
+                                DomainModel model = DomainMgr.getDomainMgr().getModel();
+                                final String type = bbc.getDomainObject().getType();
+                                String domainObjectClass = null;
+                                if (type.equals("Neuron Fragment")) {
+                                    domainObjectClass = NeuronFragment.class.getSimpleName();
+                                }
+                                else if (type.equals("Sample")) {
+                                    domainObjectClass = Sample.class.getSimpleName();
+                                }
+                                DomainObject dobj = model.getDomainObject(domainObjectClass, bbc.getDomainObject().getId());
+                                context.addDomainObject(dobj);
+                                //context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
                             } catch ( Exception ex ) {
                                 logger.error(
                                         "Failed to add entity {} to alignment board context {}.",
-                                        bbc.getEntity(),
-                                        context.getName()
+                                        bbc.getDomainObject(),
+                                        context.getAlignmentBoard().getName()
                                 );
                             }
                         }
@@ -225,8 +245,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
             param.setSearchRootId(searchRootId);
             param.setErrorHandler(errorHandler);
             param.setStartingRow( 0 );
-            SimpleWorker worker = new SearchWorker( param, searchParamsPanel.getQueryBuilder(), context );
-            worker.execute();
+            throw new IllegalStateException("Search is not currently supported");
+//            SimpleWorker worker = new SearchWorker( param, searchParamsPanel.getQueryBuilder(), context );
+//            worker.execute();
 
         }
         private void showLoadingIndicator() {

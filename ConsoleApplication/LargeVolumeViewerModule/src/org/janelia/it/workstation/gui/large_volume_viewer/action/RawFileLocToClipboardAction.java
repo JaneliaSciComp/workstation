@@ -11,12 +11,11 @@ import javax.swing.JLabel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         this.camera = camera;
         this.axis = axis;
         this.volumeImage = volumeImage;
-        putValue(Action.NAME, "Copy Tile File Location to Clipboard");
+        putValue(Action.NAME, "Copy Raw Tile File Location to Clipboard");
     }
 
     @Override
@@ -58,16 +57,27 @@ public class RawFileLocToClipboardAction extends AbstractAction {
         String content = statusLabel.getText();
         final MicronCoordsFormatter micronCoordsFormatter = new MicronCoordsFormatter(null);
         double[] micronLocation = micronCoordsFormatter.messageToTuple(content);
-        Vec3 vec = new Vec3( micronLocation[0], micronLocation[1], micronLocation[2] );
         
-        TileIndex index = tileFormat.tileIndexForXyz(vec, tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit()), axis);
         int[] micronIntCoords = new int[ micronLocation.length ];
         for (int i = 0; i < micronLocation.length; i++ ) {
             micronIntCoords[i] = (int)micronLocation[i];
         }
+        log.info("Translated [" + content + "] to [" + micronIntCoords[0] + "," + micronIntCoords[1] + "," + micronIntCoords[2] + "]");
+        TileFormat.VoxelXyz voxelCoords
+                = tileFormat.voxelXyzForMicrometerXyz(
+                        new TileFormat.MicrometerXyz(
+                                micronIntCoords[0],
+                                micronIntCoords[1],
+                                micronIntCoords[2]
+                        )
+                );
+        int[] voxelCoordArr = new int[] {
+            voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ()
+        };
+
         StringSelection selection;
         try {
-            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), micronIntCoords);
+            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), voxelCoordArr);
             File c0File = rfi.getChannel0();
             String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
             // Not truly looking for the file path; just the legs of the path.

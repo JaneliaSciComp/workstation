@@ -43,34 +43,22 @@ public class OntologyContextMenu extends EntityContextMenu {
         add(getImportOntologyItem());
         add(getExportOntologyItem());
         setNextAddRequiresSeparator(true);
-        add(getAssignShortcutItem());
         add(getAddItemMenu());
         add(getDeleteItem());
         setNextAddRequiresSeparator(true);
         add(getRemoveAnnotationItem());
     }
 
-    protected JMenuItem getAssignShortcutItem() {
-        
-        JMenuItem menuItem = new JMenuItem("  Assign Shortcut...");
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SessionMgr.getBrowser().getOntologyOutline().assignShortcutForCurrentNode();
-            }
-        });
-        return menuItem;
-
-    }
-
     protected JMenuItem getImportOntologyItem() {
-        return getActionItem(new OntologyImportAction(ontologyElement));
+       return null;
+        //return getActionItem(new OntologyImportAction(ontologyElement));
     }
-    
+
     protected JMenuItem getExportOntologyItem() {
-        return getActionItem(new OntologyExportAction(ontologyElement));
+        return null;
+        //return getActionItem(new OntologyExportAction(ontologyElement));
     }
-    
+
     protected JMenu getAddItemMenu() {
 
         OntologyElementType type = ontologyElement.getType();

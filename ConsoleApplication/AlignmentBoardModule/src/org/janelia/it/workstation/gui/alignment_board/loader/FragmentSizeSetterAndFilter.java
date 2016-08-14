@@ -1,19 +1,24 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
+import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.shared.utils.MailHelper;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,9 +30,10 @@ import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
  * some threshold. All beans which have passed through the filter will have their voxel counts set to the found value.
  */
 public class FragmentSizeSetterAndFilter {
-    private Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
-    private long thresholdVoxelCount;
-    private long thresholdNeuronCount;
+    private final Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
+    private final long thresholdVoxelCount;
+    private final long thresholdNeuronCount;
+    private final DomainHelper domainHelper = new DomainHelper();
 
     private Map<Long,Long> renDataBeanItemParentIdToChildCount;
 
@@ -49,14 +55,29 @@ public class FragmentSizeSetterAndFilter {
      * @return limited list, with only acceptable values.
      */
     public Collection<MaskChanRenderableData> filter( Collection<MaskChanRenderableData> rawList ) {
-
         // For each data, read up its voxel count.
         FileResolver resolver = new CacheFileResolver();
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<>();
         for ( MaskChanRenderableData data: rawList ) {
             String maskPath = data.getMaskPath();
             if ( maskPath != null ) {
-                File infile = new File( resolver.getResolvedFilename( maskPath ) );
+                String resolvedFilename = null;
+                try {
+                    resolvedFilename = resolver.getResolvedFilename( maskPath );
+                } catch (Exception ex) {
+                    logger.warn("Failed to resolve {}.  Cannot be read.", maskPath);
+                    resolvedFilename = maskPath;
+                }
+                File infile = new File( resolvedFilename);
                 if ( ! infile.canRead() ) {
+                    // Need to send notice to us-as-support, that this is broken.
+                    MailHelper helper = new MailHelper();
+                    // Comma-separated list of email addresses
+                    String[] errorMessageDestinations = SystemConfigurationProperties.getString("System.ErrorMessageDestination").split(",");
+                    for (String errorMessageDestination : errorMessageDestinations) {
+                        helper.sendEmail("saffordt@janelia.hhmi.org", errorMessageDestination, "Ref Channel Not Created",
+                                "No reference channel was created during separation, for a sample belonging to user " + AccessManager.getSubjectKey() + ".  Expected path is " + maskPath + ".");
+                    }                    
                     logger.warn("Mask file {} cannot be read.", infile);
                 }
                 else {
@@ -69,6 +90,9 @@ public class FragmentSizeSetterAndFilter {
                             fis.close();
                             bean.setVoxelCount( voxelCount );
                         }
+                        
+                        // All tests passed: add this one to output list.
+                        sortedRenderableDatas.add(data);
 
                     } catch ( Exception ex ) {
                         logger.error("Caught an exception while attempting to retrieve voxel count for {}.", maskPath );
@@ -79,12 +103,11 @@ public class FragmentSizeSetterAndFilter {
             }
         }
 
-        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
-        sortedRenderableDatas.addAll( rawList );
+        //sortedRenderableDatas.addAll( rawList );
         Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Now discard based on filtering criteria.
-        List<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> rtnVal = new ArrayList<>();
         int discardCount = 0;
         for ( MaskChanRenderableData data: sortedRenderableDatas ) {
             if ( filter(data) ) {
@@ -93,9 +116,9 @@ public class FragmentSizeSetterAndFilter {
             else {
                 discardCount ++;
                 logger.debug(
-                        "Not keeping {}, entity {}, because it has too few voxels.",
+                        "Not keeping {}, id {}, because it has too few voxels.",
                         data.getBean().getLabelFileNum(),
-                        data.getBean().getRenderableEntity()
+                        data.getBean().getId()
                 );
             }
 
@@ -121,15 +144,17 @@ public class FragmentSizeSetterAndFilter {
                 // Filter for first-N neurons cutoff.
                 if ( renDataBeanItemParentIdToChildCount != null ) {
                     rtnVal = false;
-                    if ( bean.getRenderableEntity() != null ) {
-                        AlignedItem alignedItem = AlignmentBoardMgr.getInstance().getLayersPanel()
-                                .getAlignmentBoardContext().getAlignedItemWithEntityId(
-                                        bean.getAlignedItemId()
-                                );
-                        if ( alignedItem != null ) {
-                            EntityWrapper parent = alignedItem.getParent();
+                    if ( bean.getId() != null ) {
+                        final AlignmentBoardContext alignmentBoardContext = 
+                                AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+                        AlignmentBoardItem alignmentBoardItem = alignmentBoardContext.getAlignmentBoardItemWithId(bean.getId());                        
+                        if ( alignmentBoardItem != null ) {
+                            ABItem item = (ABItem)bean.getItem();
+                            AlignmentBoardItem parent = alignmentBoardContext.getAlignmentBoardItemParent(item);
                             if ( parent != null ) {
-                                long parentId = parent.getId();
+
+                                ABItem abItem = domainHelper.getObjectForItem(parent);
+                                long parentId = abItem.getId();
 
                                 Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
                                 if ( countForParent == null ) {
@@ -148,7 +173,7 @@ public class FragmentSizeSetterAndFilter {
                 if ( rtnVal ) {
                     logger.debug(
                             "Keeping {}, with {} voxels.",
-                            data.getBean().getRenderableEntity(), voxelCount
+                            data.getBean().getId(), voxelCount
                     );
                 }
             }

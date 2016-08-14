@@ -1,20 +1,32 @@
 package org.janelia.it.workstation.gui.util.panels;
 
-import org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr;
-import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
-import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.shared.util.RendererType2D;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ButtonModel;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
+
+import org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr;
+import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
+import org.janelia.it.workstation.shared.util.RendererType2D;
 
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
@@ -240,15 +252,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         return "Application Settings";
     }
 
-    class MySessionModelListener implements SessionModelListener {
-        public void browserAdded(BrowserModel browserModel) {
-        }
-
-        public void browserRemoved(BrowserModel browserModel) {
-        }
-
-        public void sessionWillExit() {
-        }
+    class MySessionModelListener extends SessionModelAdapter {
 
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
             if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY))

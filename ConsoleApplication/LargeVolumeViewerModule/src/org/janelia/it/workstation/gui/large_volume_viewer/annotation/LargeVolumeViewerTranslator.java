@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import Jama.Matrix;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -16,8 +16,8 @@ import java.util.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
@@ -131,8 +131,14 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      */
     public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
         // remove all the individual annotations from 2D view
+        int size=annotationList.size();
+        int i=0;
         for (TmGeoAnnotation ann: annotationList) {
+            if (i%100==0) {
+                logger.info("deleteAnnotations() fireAnchorDeleted " + i + " of " + size);
+            }
             fireAnchorDeleted(ann);
+            i++;
         }
 
         // if first annotation in delete list has a parent, select it

@@ -108,6 +108,7 @@ public class EJBFactory {
             if (!lookupName.endsWith("/remote")) {
                 lookupName += "/remote";
             }
+
             return ic.lookup(lookupName);
         }
         catch (NamingException e) {

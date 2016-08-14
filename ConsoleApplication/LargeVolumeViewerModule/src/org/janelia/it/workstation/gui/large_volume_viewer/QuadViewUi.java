@@ -5,9 +5,10 @@ import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.cache.TileStackCacheController;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
@@ -24,7 +25,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.jacs.shared.swc.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.QuadViewController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -400,6 +402,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
                     result.add(addCopyTileFileLocMenuItem());
+                    result.add(addCopyOctreePathMenuItem());
                     result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
@@ -789,6 +792,28 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         gotoLocationButton.setAction(goToLocationAction);
         buttonsPanel.add(gotoLocationButton);
 
+        final JCheckBox useHttpCheckbox = new JCheckBox("Use Http");
+        if(HttpDataSource.useHttp()) {
+            HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
+            useHttpCheckbox.setSelected(true);
+        } else {
+            useHttpCheckbox.setSelected(false);
+        }
+        useHttpCheckbox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange()==ItemEvent.DESELECTED) {
+                    useHttpCheckbox.setSelected(false);
+                    HttpDataSource.setUseHttp(false);
+                } else if (e.getStateChange()==ItemEvent.SELECTED) {
+                    HttpDataSource.setRestServer(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"));
+                    useHttpCheckbox.setSelected(true);
+                    HttpDataSource.setUseHttp(true);
+                }
+            }
+        });
+        buttonsPanel.add(useHttpCheckbox);
+
         buttonsPanel.add(new TileStackCacheStatusPanel());
 
 		Component verticalGlue = Box.createVerticalGlue();
@@ -1148,6 +1173,15 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         return mnCopyMicron;
     }
+
+    public JMenuItem addCopyOctreePathMenuItem() {
+        JMenuItem menuItem = new JMenuItem(
+                new OctreeFilePathToClipboardAction(
+                        statusLabel, tileServer.getSharedVolumeImage().getRemoteBasePath(), tileFormat, camera, CoordinateAxis.Z
+                )
+        );
+        return menuItem;
+    }
     
     public JMenuItem addCopyTileLocMenuItem() {
         JMenuItem mnCopyTileInx = new JMenuItem(
@@ -1455,10 +1489,17 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     private Long getWorkspaceId() {
-        return this.annotationModel.getCurrentWorkspace().getId();
+        if (this.annotationModel.getCurrentWorkspace() != null) {
+            return this.annotationModel.getCurrentWorkspace().getId();
+        } else {
+            return null;
+        }
     }
 
     private Long getSampleId() {
+        if (annotationModel == null  ||  annotationModel.getCurrentWorkspace() == null) {
+            return null;
+        }
         return this.annotationModel.getCurrentWorkspace().getSampleID();
     }
 

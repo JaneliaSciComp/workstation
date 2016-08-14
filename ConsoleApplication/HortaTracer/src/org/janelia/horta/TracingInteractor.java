@@ -29,14 +29,13 @@
  */
 package org.janelia.horta;
 
+import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +64,6 @@ import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -852,7 +850,6 @@ public class TracingInteractor extends MouseAdapter
                     return false;
                 }
                 else {
-                    ActivityLogHelper.getInstance().logMergedNeurite(hoveredVertex);
                     return true;
                 }
             }

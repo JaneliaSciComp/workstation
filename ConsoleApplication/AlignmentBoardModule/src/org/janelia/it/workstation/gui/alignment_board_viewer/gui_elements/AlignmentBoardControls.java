@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
-import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
 import org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
@@ -20,6 +19,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 
 /**
@@ -99,7 +99,7 @@ public class AlignmentBoardControls {
     private JButton searchSave;
     private JButton colorSave;
     private JButton screenShot;
-    private JButton search;
+    //private JButton search;
     private AbstractButton connectEvents;
 
     private JButton commitButton;
@@ -131,6 +131,7 @@ public class AlignmentBoardControls {
     private VolumeModel volumeModel;
     private AlignmentBoardSettings settings;
 
+    private final ActivityLogHelper activityLogger = new ActivityLogHelper();
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControls.class );
 
     /**
@@ -387,9 +388,9 @@ public class AlignmentBoardControls {
         return screenShot;
     }
 
-    public AbstractButton getSearch() {
-        return search;
-    }
+    //public AbstractButton getSearch() {
+    //    return search;
+    //}
 
     public AbstractButton getConnectEvents() {
         return connectEvents;
@@ -595,7 +596,8 @@ public class AlignmentBoardControls {
     }
 
     private synchronized void fireRebuild() {
-        for ( ControlsListener listener: listeners ) {
+        List<ControlsListener> tempListeners = new ArrayList<>(listeners);
+        for ( ControlsListener listener: tempListeners ) {
             listener.forceRebuild();
         }
     }
@@ -636,6 +638,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
+                activityLogger.logToggleSaveBrightness(showingAxes.isSelected());
             }
         });
         
@@ -647,6 +650,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setShowAxes(showingAxes.isSelected());
+                activityLogger.logToggleAxes(showingAxes.isSelected());
                 fireRenderRefresh();
             }
         });
@@ -754,22 +758,22 @@ public class AlignmentBoardControls {
             }
         });
 
-        search = new JButton( Icons.getIcon( "find.png" ) );
-        search.setText("Add to Board");
-        search.setToolTipText("Add data to current Alignment Board");
-        search.setText("Add Data to Board");
-        // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
-        search.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed( ActionEvent ae ) {
-                if ( searchDialog == null ) {
-                    searchDialog = new ABTargetedSearchDialog(
-                            AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
-                    );
-                }
-                searchDialog.showDialog();
-            }
-        });
+        //search = new JButton( Icons.getIcon( "find.png" ) );
+        //search.setText("Add to Board");
+        //search.setToolTipText("Add data to current Alignment Board");
+        //search.setText("Add Data to Board");
+        //    NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
+        //search.addActionListener(new ActionListener() {
+        //    @Override
+        //    public void actionPerformed( ActionEvent ae ) {
+        //        if ( searchDialog == null ) {
+        //            searchDialog = new ABTargetedSearchDialog(
+        //                    AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
+        //            );
+        //        }
+        //        searchDialog.showDialog();
+        //    }
+        //});
 
         clearButton = new JButton( CLEAR_BUTTON_LABEL );
         clearButton.setToolTipText( CLEAR_BUTTON_TOOLTIP_TEXT );
@@ -844,6 +848,7 @@ public class AlignmentBoardControls {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentNormalizedCoordinates();
                 fireCropEvent();
+                activityLogger.logSubVolSelect(null, cropCoordSet.getAcceptedCoordinates());
             }
         });
 
@@ -951,6 +956,7 @@ public class AlignmentBoardControls {
         useSignalDataCheckbox.addChangeListener( new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
+                activityLogger.logToggleIntensity(null, useSignalDataCheckbox.isSelected());
                 fireSettingsEvent();
             }
         });

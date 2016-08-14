@@ -29,6 +29,7 @@
  */
 package org.janelia.geometry3d;
 
+import java.awt.Color;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 
@@ -56,6 +57,7 @@ implements Collection<Vertex>, ObservableInterface
     
     private final Box3 boundingBox = new Box3();
     private boolean boundingBoxIsDirty = false;
+    private Color defaultColor = null;
     
     private final ComposableObservable observable = new ComposableObservable();
 
@@ -162,6 +164,14 @@ implements Collection<Vertex>, ObservableInterface
             f.setNormal(normal);
             // System.out.println("triangle normal: "+normal);
         }
+    }
+
+    public Color getDefaultColor() {
+        return defaultColor;
+    }
+
+    public void setDefaultColor(Color defaultColor) {
+        this.defaultColor = defaultColor;
     }
     
     public Set<Edge> getEdges() {

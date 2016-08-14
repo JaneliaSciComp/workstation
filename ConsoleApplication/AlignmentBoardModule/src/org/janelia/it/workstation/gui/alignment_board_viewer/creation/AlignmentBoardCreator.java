@@ -1,29 +1,26 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.awt.Component;
-import java.util.Collections;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.model.domain.AlignmentContext;
-import org.janelia.it.workstation.model.domain.AlignmentContextFactory;
-import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
-import org.janelia.it.workstation.model.domain.Sample;
-import org.janelia.it.workstation.model.domain.EntityWrapper;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
-import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
+
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
+import org.janelia.it.workstation.nb_action.DomainObjectCreator;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,82 +30,46 @@ import org.slf4j.LoggerFactory;
  * 
  * @author fosterl
  */
-@ServiceProvider(service=EntityWrapperCreator.class,path=EntityWrapperCreator.LOOKUP_PATH)
-public class AlignmentBoardCreator implements EntityWrapperCreator {
+@ServiceProvider(service=DomainObjectCreator.class,path=DomainObjectCreator.LOOKUP_PATH)
+public class AlignmentBoardCreator implements DomainObjectCreator {
     
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
     
-    private RootedEntity rootedEntity;
+    private DomainObject domainObject;
+    private CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
     
     public void execute() {
 
         final Component mainFrame = SessionMgr.getMainFrame();
-        final Browser browser = SessionMgr.getBrowser();
 
         SimpleWorker worker = new SimpleWorker() {
             
             private Sample sample;
-            private EntityWrapper sampleMember;
+			// The member-of-sample is some domain object that is part of
+			// a sample.  It may be a Neuron Fragment or a Volume Image.
+			// If it is not given, it means the whole sample is to be added.
+            private DomainObject memberOfSample = null;
             private List<AlignmentContext> contexts;
             
             @Override
             protected void doStuff() throws Exception {
-                if (rootedEntity!=null) {
-                    if (rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE) ) {
-                        this.sample = (Sample) EntityWrapperFactory.wrap(getRootedEntity());
-                        this.contexts = sample.getAvailableAlignmentContexts();
+                if (domainObject!=null) {
+                    if (domainObject instanceof Sample) {
+						this.sample = (Sample)domainObject;
+                        this.contexts = new DomainHelper().getAvailableAlignmentContexts(sample);
                     }
-                    else {                        
-                        // Verify we have the sample ancestor.
-                        Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
-                        if (sampleEntity == null) {
-                            throw new Exception("No sample ancestor found for neuron fragment " + rootedEntity.getId());
+                    else if (domainObject instanceof NeuronFragment) {
+                        NeuronFragment nf = (NeuronFragment)domainObject;
+						this.memberOfSample = domainObject;
+                        sample = new DomainHelper().getSampleForNeuron(nf);
+                        if (sample == null) {
+                            throw new Exception("No sample ancestor found for neuron fragment " + domainObject.getId());
                         }
-                        this.sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
-                        this.sampleMember = EntityWrapperFactory.wrap(getRootedEntity());
-                        this.sampleMember.setParent(sample);
-
-                        // The grandparent entity here will be an aligned neuron separation.
-                        // The parent of the sample member will be a neuron fragment collection.
-                        String alignmentSpaceName = null;
-                        String opticalRes = null;
-                        String pixelRes = null;
-                        Entity neuronSeparation = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-                        if ( neuronSeparation != null ) {
-                            RootedEntity rootedNS = new RootedEntity( neuronSeparation );
-                            alignmentSpaceName = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE );
-                            opticalRes = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION );
-                            pixelRes = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION );
-                            if ( alignmentSpaceName == null ) {
-                                // Need to resolve by comparing with all sample contexts.
-                                List<AlignmentContext> sampleContexts = sample.getAvailableAlignmentContexts();
-                                for ( AlignmentContext context: sampleContexts ) {
-                                    if ( context.getOpticalResolution().equals(opticalRes)  &&  
-                                         context.getPixelResolution().equals(pixelRes) ) {
-                                        if ( contexts != null ) {
-                                            // Avoid chosing when multiple contexts match.
-                                            contexts = null;
-                                            break;
-                                        }
-                                        this.contexts = Collections.singletonList( context );
-                                    }
-                                }
-                                if ( contexts == null ) {
-                                    this.contexts = sampleContexts;
-                                    log.warn("Failed to find neuron or ref's alignment space.  Showing user whole list from sample.");
-                                }
-                            }
-                            else {
-                                this.contexts = Collections.singletonList(
-                                    new AlignmentContext( alignmentSpaceName, opticalRes, pixelRes )
-                                );
-                            }
-                        }
-                        
+                        this.contexts = new DomainHelper().getAvailableAlignmentContexts(sample);                        
                     }
                 }
                 else {
-                    this.contexts = new AlignmentContextFactory().getAllAlignmentContexts();
+                    this.contexts = new DomainHelper().getAllAlignmentContexts();
                 }
             }
             
@@ -122,12 +83,15 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                 }
                 
                 // Pick an alignment context for the new board
-                AlignmentContext values[] = new AlignmentContext[contexts.size()];
-                contexts.toArray(values);
-                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
+                DisplayWrapper values[] = formatContexts(contexts);
+                if (values.length == 0) {
+                    throw new RuntimeException("No alignment contexts available.  Please contact Janelia Workstation support.");
+                }
+                final DisplayWrapper displayWrapper = (DisplayWrapper)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
-                        values, values[0]);
-                if (alignmentContext==null) return;
+                        values, values[0]);                
+                if (displayWrapper==null) return;
+                final AlignmentContext alignmentContext = displayWrapper.getContext();
                 
                 // Pick a name for the new board
                 final String boardName = (String) JOptionPane.showInputDialog(mainFrame, "Board Name:\n",
@@ -136,33 +100,35 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                 
                 SimpleWorker worker = new SimpleWorker() {
                     
-                    private RootedEntity newBoard;
+                    private DomainObject newBoard;
                     
                     @Override
-                    protected void doStuff() throws Exception {
-                        newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, 
-                                alignmentContext.getAlignmentSpaceName(), alignmentContext.getOpticalResolution(), alignmentContext.getPixelResolution());
-                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(newBoard);
+                    protected void doStuff() throws Exception { 
+						constructAlignmentBoardObject();
+                        
+                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext((AlignmentBoard)newBoard, alignmentContext);
                         // Presence of a sample member implies that single child of
                         // the sample must be added without its siblings.
-                        if (sampleMember!=null) {
-                            alignmentBoardContext.addNewAlignedEntity(sampleMember);
+                        if (memberOfSample!=null) {
+                            alignmentBoardContext.addDomainObject(memberOfSample);
                         }
                         else if (sample!=null) {
-                            alignmentBoardContext.addNewAlignedEntity(sample);
+							log.info("Adding sample {} to alignment board {}, with id={}", sample.getName(), newBoard.getName(), newBoard.getId());
+                            alignmentBoardContext.addDomainObject(sample);
                         }
                     }
-                    
+
                     @Override
                     protected void hadSuccess() {
                         // Update Tree UI
-                        final EntityOutline entityOutline = browser.getEntityOutline();
+                        //final EntityOutline entityOutline = browser.getEntityOutline();
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                entityOutline.selectEntityByUniqueId(newBoard.getUniqueId());
+                                // Need to reflect the selection in the browse panel.
                                 Launcher launcher = new Launcher();
-                                launcher.launch(newBoard.getEntityId());
+								log.info("Launching with alignment board {}, with id={}", newBoard.getName(), newBoard.getId());
+                                launcher.launch(newBoard.getId());
                             }
                         });
                     }
@@ -171,6 +137,18 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                     protected void hadError(Throwable error) {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
+
+					private void constructAlignmentBoardObject() throws Exception {
+						AlignmentBoard board = new AlignmentBoard();
+						board.setAlignmentSpace(alignmentContext.getAlignmentSpace());
+						board.setImageSize(alignmentContext.getImageSize());
+						board.setOpticalResolution(alignmentContext.getOpticalResolution());
+						board.setName(boardName);
+						newBoard = new DomainHelper().createAlignmentBoard(board);
+						board = null;
+						log.info("Created new alignment board {}, with id={}", newBoard.getName(), newBoard.getId());
+					}
+
                 };
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing alignment board...", ""));
                 worker.execute();
@@ -186,30 +164,38 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
     }
 
     @Override
-    public void wrapEntity(RootedEntity e) {
-        this.rootedEntity = (RootedEntity)e;
+    public void useDomainObject(DomainObject e) {
+        this.domainObject = e;
         execute();
     }
 
     @Override
-    public boolean isCompatible(RootedEntity e) {
-        setRootedEntity(e);
-        if ( e == null ) {
-            log.debug("Just nulled-out the rooted entity to ABCreator");
+    public boolean isCompatible(DomainObject domainObject) {
+        setDomainObject(domainObject);
+        if ( domainObject == null ) {
+            log.debug("Just nulled-out the domain object to ABCreator");
             return true;
         }
         else {
-            log.debug("Just UN-Nulled rooted entity in ABCreator");            
-            // Caching the test sampleEntity, for use in action label.
-            final String entityTypeName = e.getEntity().getEntityTypeName();
-            return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||
-                   entityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT );
+            log.debug("Just UN-Nulled object in ABCreator");
+            if (domainObject instanceof Sample) {
+                return compatibilityChecker.isAligned((Sample)domainObject);
+            }
+            else if (domainObject instanceof CompartmentSet) {
+                return true;
+            }
+            else if (domainObject instanceof NeuronFragment) {
+                return compatibilityChecker.isAligned((NeuronFragment)domainObject);
+            }
+            else {
+                return false;
+            }
         }
     }
 
     @Override
     public String getActionLabel() {
-        if ( rootedEntity == null ) {
+        if ( domainObject == null ) {
             return "  Create New Alignment Board";
         }
         else {
@@ -218,17 +204,46 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
     }
 
     /**
-     * @param rootedEntity the rootedEntity to set
+     * @param domainObject the domain object to set.
      */
-    private void setRootedEntity(RootedEntity rootedEntity) {
-        this.rootedEntity = rootedEntity;
+    private void setDomainObject(DomainObject domainObject) {
+        this.domainObject = domainObject;
     }
 
     /**
-     * @return the rootedEntity
+     * @return the object of interest
      */
-    private RootedEntity getRootedEntity() {
-        return rootedEntity;
+    private DomainObject getDomainObject() {
+        return domainObject;
+    }
+    
+    private DisplayWrapper[] formatContexts(List<AlignmentContext> contexts) {
+        DisplayWrapper[] values = new DisplayWrapper[contexts.size()];
+        int i = 0;
+        for (AlignmentContext context: contexts) {
+            values[ i++ ] = new DisplayWrapper(context, String.format("%s: %s %s", context.getAlignmentSpace(), context.getImageSize(), context.getOpticalResolution()));
+        }
+        
+        return values;
     }
 
+    private static class DisplayWrapper {
+        private AlignmentContext context;
+        private String description;
+
+        public DisplayWrapper(AlignmentContext context, String description) {
+            this.context = context;
+            this.description = description;
+        }
+        
+        @Override
+        public String toString() {
+            return description;
+        }
+        
+        public AlignmentContext getContext() {
+            return context;
+        }
+    }
+    
 }

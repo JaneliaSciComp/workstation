@@ -26,16 +26,16 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true, position = 0)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 0)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.IconPanelTopComponent")
-@ActionReference(path = "Menu/Window", position = 0)
+@ActionReference(path = "Menu/Window/Legacy", position = 12)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_IconPanelAction",
         preferredID = IconPanelTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_IconPanelAction=Browser",
-    "CTL_IconPanelTopComponent=Browser",
+    "CTL_IconPanelAction=Legacy Browser",
+    "CTL_IconPanelTopComponent=Legacy Browser",
     "HINT_IconPanelTopComponent=Data shown as an array of graphical icons"
 })
 public final class IconPanelTopComponent extends TopComponent {
@@ -48,9 +48,6 @@ public final class IconPanelTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_IconPanelTopComponent());
         setToolTipText(Bundle.HINT_IconPanelTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
     }
 
     /**

@@ -4,25 +4,23 @@ import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationEvent;
-import org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationListener;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +29,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityListPane extends JPanel implements SearchConfigurationListener, Refreshable {
+public abstract class EntityListPane extends JPanel implements Refreshable {
 
     private static final Logger log = LoggerFactory.getLogger(EntityListPane.class);
 
@@ -68,6 +66,13 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
                 }
             }
         };
+
+        resultsTable.addColumn("id", "GUID", true, false, true, false);
+        resultsTable.addColumn("name", "Name", true, false, true, false);
+        resultsTable.addColumn("entity_type", "Type", true, false, true, false);
+        resultsTable.addColumn("username", "Owner", true, false, true, false);
+        resultsTable.addColumn("creation_date", "Date Created", true, false, true, false);
+        resultsTable.addColumn("updated_date", "Date Updated", true, false, true, false);
 
         titleLabel = new JLabel("Entity");
 
@@ -257,27 +262,13 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
     }
 
     protected void updateTableModel() {
+        log.info("clearing table");
         resultsTable.removeAllRows();
         for (Entity entity : entities) {
+            log.info("adding entity to table: "+entity.getId());
             resultsTable.addRow(entity);
         }
         resultsTable.updateTableModel();
-    }
-
-    @Override
-    public void configurationChange(SearchConfigurationEvent evt) {
-        SearchConfiguration searchConfig = evt.getSearchConfig();
-        Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
-
-        for (SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
-            resultsTable.addColumn(attr.getName(), attr.getLabel(), true, false, true, attr.isSortable());
-        }
-
-        for (SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
-            resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, true);
-        }
-
-        revalidate();
     }
 
     /**

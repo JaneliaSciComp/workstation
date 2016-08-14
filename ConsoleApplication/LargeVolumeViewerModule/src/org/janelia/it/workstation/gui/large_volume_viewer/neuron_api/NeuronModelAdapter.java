@@ -32,6 +32,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import Jama.Matrix;
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,7 +52,7 @@ import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -97,7 +98,7 @@ public class NeuronModelAdapter implements NeuronModel
         this.workspace = workspace;
     }
 
-    public boolean hasCachedVertex(Long vertexId) {
+    protected boolean hasCachedVertex(Long vertexId) {
         return vertexes.hasCachedVertex(vertexId);
     }
         
@@ -207,9 +208,20 @@ public class NeuronModelAdapter implements NeuronModel
     NeuronVertex addVertex(TmGeoAnnotation annotation)
     {
         Long vertexId = annotation.getId();
-        assert(vertexes.containsKey(vertexId));
+        
+        // Les reported this assert triggering recently
+        // assert(vertexes.containsKey(vertexId));
+        if (! vertexes.containsKey(vertexId)) {
+            logger.error("Could not find anchor with guid "+vertexId+" in NeuronModelAdapter");
+            return null;
+        }
+        
         Long parentId = annotation.getParentId();
-        NeuronVertex newVertex = vertexes.getVertexByGuid(vertexId);
+        NeuronVertex newVertex = vertexes.getVertexByTmGeoAnnotation(annotation);
+        if (newVertex == null) {
+            logger.error("Could not find anchor with guid "+vertexId);
+            return null;
+        }
         // Add edge
         if (vertexId.equals(parentId)) 
             return newVertex; // Self parent, so no edge. TODO: maybe this never happens
@@ -278,8 +290,23 @@ public class NeuronModelAdapter implements NeuronModel
             return;
         if (color.equals(cachedColor))
             return;
-        // TODO: set color in actual wrapped Style
         cachedColor = color;
+
+        // Set color in actual wrapped Style
+        boolean vis = true;
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        if (style != null)
+            vis = style.isVisible();
+        else
+            vis = isVisible();
+        
+        try {
+            annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+        } catch (IOException ex) {
+            // Exceptions.printStackTrace(ex); // ignore any unexpectec color sync problem for now...
+        }
+
+        getColorChangeObservable().setChanged();
     }
 
     @Override
@@ -328,7 +355,7 @@ public class NeuronModelAdapter implements NeuronModel
     public boolean isVisible()
     {
         return bIsVisible;
-        // return neuronStyle.isVisible();
+        // return neuronStyle.isColumnVisible();
     }
 
     @Override
@@ -337,6 +364,18 @@ public class NeuronModelAdapter implements NeuronModel
         if (bIsVisible == visible)
             return; // no change
         bIsVisible = visible;
+        
+        // Synchronize with TmNeuron Style
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        Color color = cachedColor;
+        if (style != null)
+            color = style.getColor();
+        try {
+            annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+        } catch (IOException ex) {
+            // Exceptions.printStackTrace(ex);
+        }
+        
         getVisibilityChangeObservable().setChanged();
     }
 
@@ -504,6 +543,7 @@ public class NeuronModelAdapter implements NeuronModel
         private Map<Long, TmGeoAnnotation> vertices;
         private final Map<Long, NeuronVertex> cachedVertices = new HashMap<>();
         private TmWorkspace workspace;
+        private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
         private VertexList(Map<Long, TmGeoAnnotation> vertices, TmWorkspace workspace)
         {
@@ -646,8 +686,30 @@ public class NeuronModelAdapter implements NeuronModel
         {
             if (! cachedVertices.containsKey(vertexId)) {
                 TmGeoAnnotation a = getAnnotationByGuid(vertexId);
-                if (a == null)
+                if (a == null) {
+                    logger.error("anchor not found in geoAnnotationMap");
                     return null;
+                }
+                cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
+            }
+            return cachedVertices.get(vertexId);
+        }
+        
+        private NeuronVertex getVertexByTmGeoAnnotation(TmGeoAnnotation a)
+        {
+            if (a == null) {
+                logger.error("attempt to retrieve vertex for null TmGeoAnnotation");
+                return null;
+            }
+            Long vertexId = a.getId();
+            
+            // sanity check
+            TmGeoAnnotation fromGAMap = getAnnotationByGuid(vertexId);
+            if (fromGAMap == null) {
+                logger.error("anchor not found in neuron geoAnnotationMap");
+            }
+            
+            if (! cachedVertices.containsKey(vertexId)) {
                 cachedVertices.put(vertexId, new NeuronVertexAdapter(a, workspace));
             }
             return cachedVertices.get(vertexId);

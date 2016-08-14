@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.opengl;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
  * Matrix implementation to help recapitulate the fixed functionality

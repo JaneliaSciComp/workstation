@@ -10,8 +10,8 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +104,6 @@ implements GL3Actor
      *   vertex arrays
      *   vertex buffer objects
      * 
-     * @param gl OpenGL rendering context
      */
     private void displayUsingImmediateMode(GL2 gl2) {
         checkGlError(gl2, "display mesh using immediate mode 0");
@@ -273,7 +272,6 @@ implements GL3Actor
 
     /**
      * Display lists are the old fashioned way to improve opengl performance
-     * @param gl
      */
     private void displayUsingDisplayList(GL2 gl2) {
         // The very first time, paint in immediate mode, and store a display list

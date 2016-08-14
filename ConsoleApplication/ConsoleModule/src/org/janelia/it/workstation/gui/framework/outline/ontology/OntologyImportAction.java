@@ -27,20 +27,20 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * Import an ontology from YAML format. 
- * 
+ * Import an ontology from YAML format.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyImportAction implements Action  {
 
     private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
-    
+
     private final OntologyElement ontology;
     private final OntologyElement ontologyElement;
-    
+
     public OntologyImportAction(OntologyElement ontologyElement) {
         this.ontologyElement = ontologyElement;
-        
+
         OntologyElement root = null;
         OntologyElement curr = ontologyElement;
         while (curr!=null) {
@@ -109,7 +109,8 @@ public class OntologyImportAction implements Action  {
         
         log.info("Importing "+termName+" of type "+typeName);
 
-        OntologyElementType childType = OntologyElementType.createTypeByName(typeName);
+        OntologyElementType childType = null;
+        //OntologyElementType.createTypeByName(typeName);
 
         if (childType instanceof Interval) {
             Object lowerBound = newNode.get("lowerBound");

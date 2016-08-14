@@ -7,25 +7,52 @@ package org.janelia.it.workstation.gui.framework.navigation_tools;
  * @version $Id: SearchManager.java,v 1.2 2011/03/08 16:16:49 saffordt Exp $
  */
 
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.stub.data.ControlledVocabulary;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.shared.util.text_component.StandardTextField;
-import org.janelia.it.jacs.model.entity.Entity;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Keymap;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
+
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.stub.data.ControlledVocabulary;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.shared.util.text_component.StandardTextField;
 
 public class SearchManager {
   private String STATUS = "Status: ";
@@ -471,10 +498,7 @@ public class SearchManager {
    * change so that we can update the UI.  One example is the SubView focus
    * ability upon navigation.
    */
-   private class MySessionModelListener implements SessionModelListener {
-    public void browserAdded(BrowserModel browserModel){}
-    public void browserRemoved(BrowserModel browserModel){}
-    public void sessionWillExit(){}
+   private class MySessionModelListener extends SessionModelAdapter {
     public void modelPropertyChanged(Object key, Object oldValue, Object newValue){
       if (key.equals(FOCUS_SUBVIEWS_UPON_NAVIGATION)) {
         subviewFocusCheckBox.setSelected(((Boolean)newValue).booleanValue());

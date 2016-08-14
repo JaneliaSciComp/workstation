@@ -1,17 +1,24 @@
 package org.janelia.it.workstation.gui.framework.bookmark;
 
-import org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr;
-import org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.shared.preferences.InfoObject;
-import org.janelia.it.workstation.shared.preferences.PreferenceManager;
-
-import javax.swing.*;
 import java.io.File;
 import java.io.FileWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import javax.swing.JOptionPane;
+
+import org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr;
+import org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
+import org.janelia.it.workstation.shared.preferences.InfoObject;
+import org.janelia.it.workstation.shared.preferences.PreferenceManager;
 
 public class BookmarkMgr extends PreferenceManager {
 
@@ -247,9 +254,7 @@ public class BookmarkMgr extends PreferenceManager {
   }
 
 
-  private class MySessionModelListener implements SessionModelListener {
-    public void browserAdded(BrowserModel browserModel) {}
-    public void browserRemoved(BrowserModel browserModel){}
+  private class MySessionModelListener extends SessionModelAdapter {
     /**
      * This method first commits any changes to be safe, and then sets all dirty
      * infos to the selected writeback file.  Then for each selection in the

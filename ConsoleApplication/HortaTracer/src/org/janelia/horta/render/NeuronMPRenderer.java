@@ -68,6 +68,7 @@ import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.horta.volume.BrickActor;
 import org.openide.util.Exceptions;
@@ -154,7 +155,12 @@ extends MultipassRenderer
             }
         });
         
-        setRelativeSlabThickness(0.5f);
+        setRelativeSlabThickness(0.92f, 1.08f);
+    }
+    
+    public void addMeshActor(GL3Actor meshActor) {
+        opaqueRenderPass.addActor(meshActor);
+        setOpaqueBufferDirty();
     }
     
     public void addVolumeActor(GL3Actor boxMesh) {
@@ -163,6 +169,9 @@ extends MultipassRenderer
     }
     
     public void clearVolumeActors() {
+        for (GL3Actor actor: volumeRenderPass.getActors()) {
+            obsoleteGLResources.add(actor);
+        }
         volumeRenderPass.clearActors();
         setIntensityBufferDirty();
     }
@@ -213,6 +222,7 @@ extends MultipassRenderer
         return result;
     }
     
+    // Ranges from zNear(returns -1.0) to zFar(returns 1.0)
     private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
         double intensity = intensityForScreenXy(xy);
@@ -262,6 +272,7 @@ extends MultipassRenderer
         return (opacity > 0);
     }
     
+    // Returns signed difference between focusDistance depth, and depth of item at screen point xy
     public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
     {
         if (isVisibleOpaqueAtScreenXy(xy, camera)) {
@@ -270,31 +281,43 @@ extends MultipassRenderer
             // TODO - transform to scene units (micrometers)
             double zNear = opaqueRenderPass.getZNear();
             double zFar = opaqueRenderPass.getZFar();
-            double zFocus = 0.5 * (zNear + zFar);
+            double zFocus = opaqueRenderPass.getZFocus();
             double zBuf = od;
             // code lifted from VolumeMipFrag.glsl, which wants the same depth information
             double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));
             return zEye - zFocus;
         }
         else if (isVisibleTransparentAtScreenXy(xy, camera)) {
-            double z = relativeTransparentDepthOffsetForScreenXy(xy, camera);
-            z *= 0.5 * getViewSlabThickness(camera);
-            return z;
+            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [-1,1]
+            zRel = 0.5*(zRel + 1.0); // rescale to range [0,1]
+            double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
+            double zNear = getRelativeZNear() * focusDistance;
+            double zFar = getRelativeZFar() * focusDistance;
+            double zSubject = zNear + zRel * (zFar - zNear);
+            return zSubject - focusDistance;
         }
         else { // we have neither opaque nor transparent geometry to calibrate depth
             return 0;
         }
     }
 
-    public final void setRelativeSlabThickness(float thickness) {
-        opaqueRenderPass.setRelativeSlabThickness(thickness);
-        volumeRenderPass.setRelativeSlabThickness(thickness);
+    public final void setRelativeSlabThickness(float zNear, float zFar) {
+        opaqueRenderPass.setRelativeSlabThickness(zNear, zFar);
+        volumeRenderPass.setRelativeSlabThickness(zNear, zFar);
+        volumeRenderPass.setOpaqueDepthTexture(
+            opaqueRenderPass.getFlatDepthTarget(),
+            opaqueRenderPass.getZNear(),
+            opaqueRenderPass.getZFar());
     }
     
-    public float getViewSlabThickness(AbstractCamera camera) {
-        return volumeRenderPass.getViewSlabThickness(camera);
+    public float getRelativeZNear() {
+        return volumeRenderPass.getRelativeZNear();
     }
-    
+
+    public float getRelativeZFar() {
+        return volumeRenderPass.getRelativeZFar();
+    }
+
     private void addNeuronReconstruction(NeuronModel neuron) {
         allSwcActor.addNeuronReconstruction(neuron);
         
@@ -448,7 +471,7 @@ extends MultipassRenderer
     }
     
     // One primitive-type at a time renderer for performance efficiency
-    private static class AllSwcActor extends BasicGL3Actor 
+    public static class AllSwcActor extends BasicGL3Actor 
     {
         // For performance efficiency, render similar primitives all at once
         // private final Map<NeuronModel, GL3Actor> currentNeuronActors = new HashMap<>();

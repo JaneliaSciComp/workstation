@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.tracing;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
 import org.janelia.it.workstation.gui.large_volume_viewer.TextureCache;
 

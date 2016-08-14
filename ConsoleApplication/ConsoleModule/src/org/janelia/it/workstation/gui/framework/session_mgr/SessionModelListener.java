@@ -15,8 +15,7 @@ public interface SessionModelListener extends GenericModelListener {
     public void browserAdded(BrowserModel browserModel);
 
     /**
-  cd cd pwd
-  * The browserModel sent will be the Model associated with the
+     * The browserModel sent will be the Model associated with the
      * disposed Browser
      */
     public void browserRemoved(BrowserModel browserModel);

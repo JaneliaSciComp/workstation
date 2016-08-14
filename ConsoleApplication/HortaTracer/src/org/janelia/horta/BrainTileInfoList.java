@@ -40,6 +40,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -66,7 +68,16 @@ implements Map<String, BrainTileInfo>, Iterable<BrainTileInfo>
         Map<String, Object> tilebase = (Map<String, Object>)yaml.load(is);
         // System.out.println(tilebase.getClass().getName());
         tilebasePath = (String) tilebase.get("path");
-        tilebasePath = OsFilePathRemapper.remapLinuxPath(tilebasePath); // Convert to OS-specific file path
+
+        System.out.println("BrainTileInfoList - starting tilebasePath="+tilebasePath);
+
+        if (!HttpDataSource.useHttp()) {
+            tilebasePath = OsFilePathRemapper.remapLinuxPath(tilebasePath); // Convert to OS-specific file path
+            System.out.println("BrainTileInfoList - changed tilebasePath="+tilebasePath);
+        } else {
+            System.out.println("BrainTileInfoList - using http, keeping original tilebasePath="+tilebasePath);
+        }
+
         List<Map<String, Object>> tiles = (List<Map<String, Object>>) tilebase.get("tiles");
         // Index tiles for easy retrieval
         for (Map<String, Object> tile : tiles) {

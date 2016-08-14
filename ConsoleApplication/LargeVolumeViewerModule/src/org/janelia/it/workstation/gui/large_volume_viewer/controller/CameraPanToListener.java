@@ -6,7 +6,7 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
  * Implement this to be told when the camera-pan should be done.

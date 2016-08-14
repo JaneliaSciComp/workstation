@@ -1,25 +1,25 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
+
 import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
+
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
-import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
 import org.openide.util.lookup.Lookups;
+import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.ACTION;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.HINT;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.WINDOW_NAMER;
 
 /**
  * Top component which displays something.
@@ -35,7 +35,7 @@ import org.openide.windows.WindowManager;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window/Large Volume Viewer", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
         preferredID = LVV_PREFERRED_ID

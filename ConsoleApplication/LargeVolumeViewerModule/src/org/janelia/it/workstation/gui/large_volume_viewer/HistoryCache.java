@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import java.util.*;
 
+import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

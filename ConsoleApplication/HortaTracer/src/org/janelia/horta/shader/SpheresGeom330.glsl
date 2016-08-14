@@ -106,7 +106,9 @@ const vec3 p8 = rotCorner * vec3(-1, -1, -1); // rear back corner
 
 
 void emit_one_vertex(vec3 offset) {
-    imposterPos = center + geomRadius[0] * offset;
+    // Because we always view the cube on-corner, we can afford to trim the bounding geometry a bit
+    const float trim = 0.72; // 0.70 = aggressive trim, determined empirically
+    imposterPos = center + trim * geomRadius[0] * offset;
     gl_Position = projectionMatrix * vec4(imposterPos, 1);
     pc = dot(imposterPos, center);
     EmitVertex();

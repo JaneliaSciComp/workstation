@@ -21,20 +21,11 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -53,15 +44,13 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.AnnotationFilter;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
-import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
@@ -76,10 +65,6 @@ import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -148,10 +133,7 @@ public class IconDemoPanel extends IconPanel {
     protected KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-            
-            if (KeymapUtil.isModifier(e)) {
-                return;
-            }
+
             if (e.getID() != KeyEvent.KEY_PRESSED) {
                 return;
             }
@@ -159,81 +141,77 @@ public class IconDemoPanel extends IconPanel {
                 return;
             }
 
-            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+            // No keybinds matched, use the default behavior
+            // Ctrl-A or Meta-A to select all
+            if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+                for (RootedEntity rootedEntity : pageRootedEntities) {
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+                }
+                if (pageRootedEntities.size() < allRootedEntities.size()) {
+                    selectionButtonContainer.setVisible(true);
+                }
+                return;
+            }
 
-                // No keybinds matched, use the default behavior
-                // Ctrl-A or Meta-A to select all
-                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    for (RootedEntity rootedEntity : pageRootedEntities) {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
-                    }
-                    if (pageRootedEntities.size() < allRootedEntities.size()) {
-                        selectionButtonContainer.setVisible(true);
-                    }
+            // Space on a single entity triggers a preview
+            if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                updateHud(true);
+                e.consume();
+                return;
+            }
+
+            // Enter with a single entity selected triggers an outline
+            // navigation
+            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+                if (selectedIds.size() != 1) {
                     return;
                 }
+                String selectedId = selectedIds.get(0);
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
+                return;
+            }
 
-                // Space on a single entity triggers a preview 
-                if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    updateHud(true);
-                    e.consume();
+            // Delete triggers deletion
+            if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+                List<RootedEntity> selected = getSelectedEntities();
+                if (selected.isEmpty()) {
                     return;
                 }
+                final Action action = new RemoveEntityAction(selected, true, false);
+                action.doAction();
+                e.consume();
+                return;
+            }
 
-                // Enter with a single entity selected triggers an outline
-                // navigation
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-                    if (selectedIds.size() != 1) {
-                        return;
-                    }
-                    String selectedId = selectedIds.get(0);
-                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
-                    return;
-                }
-
-                // Delete triggers deletion
-                if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    List<RootedEntity> selected = getSelectedEntities();
-                    if (selected.isEmpty()) {
-                        return;
-                    }
-                    final Action action = new RemoveEntityAction(selected, true, false);
-                    action.doAction();
-                    e.consume();
-                    return;
-                }
-
-                // Tab and arrow navigation to page through the images
-                boolean clearAll = false;
-                RootedEntity rootedEntity = null;
-                if (e.getKeyCode() == KeyEvent.VK_TAB) {
-                    clearAll = true;
-                    if (e.isShiftDown()) {
-                        rootedEntity = getPreviousEntity();
-                    }
-                    else {
-                        rootedEntity = getNextEntity();
-                    }
+            // Tab and arrow navigation to page through the images
+            boolean clearAll = false;
+            RootedEntity rootedEntity = null;
+            if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                clearAll = true;
+                if (e.isShiftDown()) {
+                    rootedEntity = getPreviousEntity();
                 }
                 else {
-                    clearAll = true;
-                    if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                        rootedEntity = getPreviousEntity();
-                    }
-                    else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                        rootedEntity = getNextEntity();
-                    }
+                    rootedEntity = getNextEntity();
                 }
+            }
+            else {
+                clearAll = true;
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                    rootedEntity = getPreviousEntity();
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                    rootedEntity = getNextEntity();
+                }
+            }
 
-                if (rootedEntity != null) {
-                    AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
-                    if (button != null) {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
-                        imagesPanel.scrollEntityToCenter(rootedEntity);
-                        updateHud(false);
-                    }
+            if (rootedEntity != null) {
+                AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
+                if (button != null) {
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
+                    imagesPanel.scrollEntityToCenter(rootedEntity);
+                    updateHud(false);
                 }
             }
 
@@ -384,19 +362,7 @@ public class IconDemoPanel extends IconPanel {
         setLayout(new BorderLayout());
         setFocusable(true);
 
-        sessionModelListener = new SessionModelListener() {
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
+        sessionModelListener = new SessionModelAdapter() {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if (key == "console.serverLogin") {
@@ -598,7 +564,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelAdapter() {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
@@ -624,18 +590,6 @@ public class IconDemoPanel extends IconPanel {
                     imagesPanel.scrollSelectedEntitiesToCenter();
                     imagesPanel.loadUnloadImages();
                 }
-            }
-
-            @Override
-            public void sessionWillExit() {
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-            }
-
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
             }
         });        
     }

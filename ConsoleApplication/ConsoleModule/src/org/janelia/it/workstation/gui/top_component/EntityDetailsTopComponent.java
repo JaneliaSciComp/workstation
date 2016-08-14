@@ -26,16 +26,16 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 20)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = false, position = 20)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityDetailsTopComponent")
-@ActionReference(path = "Menu/Window", position = 20)
+@ActionReference(path = "Menu/Window/Legacy", position = 11)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityDetailsAction",
         preferredID = EntityDetailsTopComponent.PREFERRED_ID
 )
 @Messages({
-    "CTL_EntityDetailsAction=Data Inspector",
-    "CTL_EntityDetailsTopComponent=Data Inspector",
+    "CTL_EntityDetailsAction=Legacy Data Inspector",
+    "CTL_EntityDetailsTopComponent=Legacy Data Inspector",
     "HINT_EntityDetailsTopComponent=See data details"
 })
 public final class EntityDetailsTopComponent extends TopComponent {
