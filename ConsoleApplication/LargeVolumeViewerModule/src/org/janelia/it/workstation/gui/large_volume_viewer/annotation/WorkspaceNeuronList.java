@@ -31,6 +31,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  */
 public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
+    private JLabel neuronLabel;
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
     private DefaultRowSorter<TableModel, String> sorter;
@@ -95,7 +96,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c.anchor = GridBagConstraints.PAGE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(10, 0, 0, 0);
-        add(new JLabel("Neurons", JLabel.LEADING), c);
+        neuronLabel =new JLabel("Neurons", JLabel.LEADING);
+        add(neuronLabel, c);
 
 
         // neuron table
@@ -285,6 +287,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             return;
         }
         sorter.setRowFilter(rowFilter);
+        updateNeuronLabel();
+    }
+
+    private void updateNeuronLabel() {
+        neuronLabel.setText(String.format("Neurons (showing %s/%s)",
+            neuronTable.getRowCount(), neuronTableModel.getTotalNeuronCount()));
     }
 
     /**
@@ -333,6 +341,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             tagMode = NeuronTableModel.NeuronTagMode.NONE;
         }
         neuronTableModel.setTagMode(tagMode);
+        updateNeuronLabel();
     }
 
     public void tagFilterChanged(String tag) {
@@ -344,6 +353,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         } else {
             neuronTableModel.setTagFilter(tag);
         }
+        updateNeuronLabel();
     }
 
     /**
@@ -389,6 +399,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         if (workspace != null) {
             neuronTableModel.addNeurons(workspace.getNeuronList());
         }
+        updateNeuronLabel();
     }
 
     /**
@@ -397,6 +408,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
      */
     private void updateModel(TmNeuron neuron) {
         neuronTableModel.updateNeuron(neuron);
+        updateNeuronLabel();
     }
 
 
@@ -566,6 +578,10 @@ class NeuronTableModel extends AbstractTableModel {
         } else {
             return neurons.size();
         }
+    }
+
+    public int getTotalNeuronCount() {
+        return neurons.size();
     }
 
     public TmNeuron getNeuronAtRow(int row) {
