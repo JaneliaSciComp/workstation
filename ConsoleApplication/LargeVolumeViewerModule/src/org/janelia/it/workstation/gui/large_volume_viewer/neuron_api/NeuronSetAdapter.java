@@ -346,7 +346,7 @@ implements NeuronSet// , LookupListener
         {}
 
         @Override
-        public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style)
+        public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStylemap)
         {}
 
         @Override

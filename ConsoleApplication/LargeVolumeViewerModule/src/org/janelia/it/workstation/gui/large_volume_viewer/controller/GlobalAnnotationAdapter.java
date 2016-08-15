@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
@@ -30,7 +31,7 @@ public abstract class GlobalAnnotationAdapter implements GlobalAnnotationListene
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {}
 
     @Override
-    public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {}
+    public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {}
 
     @Override
     public void neuronTagsChanged(List<TmNeuron> neuronList) {}

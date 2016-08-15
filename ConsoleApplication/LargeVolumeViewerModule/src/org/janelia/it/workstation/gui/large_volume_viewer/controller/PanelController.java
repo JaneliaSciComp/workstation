@@ -15,6 +15,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This will have access to setters, etc. on the panels, to provide
@@ -95,8 +96,8 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
 
         @Override
-        public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
-            wsNeuronList.neuronStylesChanged(neuronList, style);
+        public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {
+            wsNeuronList.neuronStylesChanged(neuronStyleMap);
         }
 
         @Override

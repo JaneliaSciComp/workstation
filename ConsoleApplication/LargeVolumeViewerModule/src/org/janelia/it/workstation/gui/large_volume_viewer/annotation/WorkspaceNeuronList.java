@@ -432,9 +432,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         updateModel(neuron);
     }
 
-    public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
-        for (TmNeuron neuron: neuronList) {
-            updateModel(neuron);
+    public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {
+        for (Long neuronID: neuronStyleMap.keySet()) {
+            updateModel(annotationModel.getNeuronFromNeuronID(neuronID));
         }
     }
 

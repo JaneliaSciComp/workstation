@@ -220,10 +220,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
-    public void neuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+    public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {
+        // for whatever historical reason, the next routines want the map
+        //  keyed on the neuron, not the neuron ID
         Map<TmNeuron, NeuronStyle> styleMap = new HashMap<>();
-        for (TmNeuron neuron: neuronList) {
-            styleMap.put(neuron, style);
+        for (Long neuronID: neuronStyleMap.keySet()) {
+            styleMap.put(annModel.getNeuronFromNeuronID(neuronID), neuronStyleMap.get(neuronID));
         }
         fireNeuronStylesChangedEvent(styleMap);
     }

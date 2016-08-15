@@ -1316,11 +1316,21 @@ called from a  SimpleWorker thread.
 
     public synchronized void setNeuronStyles(List<TmNeuron> neuronList, NeuronStyle style) throws IOException {
         Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
+        Map<Long, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuron neuron: neuronList) {
             neuronStyleMap.put(neuron.getId(), style);
+            updateMap.put(neuron.getId(), style);
         }
         setNeuronStyleMap(neuronStyleMap);
-        fireNeuronStylesChanged(neuronList, style);
+        fireNeuronStylesChanged(updateMap);
+    }
+
+    public synchronized void updateNeuronStyles(Map<Long, NeuronStyle> neuronStyleMap) throws IOException {
+        Map<Long, NeuronStyle> currentNeuronStyleMap = getNeuronStyleMap();
+        currentNeuronStyleMap.putAll(neuronStyleMap);
+        setNeuronStyleMap(currentNeuronStyleMap);
+        // only need to notify on the ones that changed
+        fireNeuronStylesChanged(neuronStyleMap);
     }
 
     /**
@@ -1860,9 +1870,9 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void fireNeuronStylesChanged(List<TmNeuron> neuronList, NeuronStyle style) {
+    private void fireNeuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
-            l.neuronStylesChanged(neuronList, style);
+            l.neuronStylesChanged(neuronStyleMap);
         }
     }
 
