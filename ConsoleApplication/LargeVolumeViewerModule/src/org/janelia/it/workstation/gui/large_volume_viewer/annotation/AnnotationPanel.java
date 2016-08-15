@@ -289,6 +289,14 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.setNeuronVisibility(false);
             }
         });
+        neuronToolMenu.add(new AbstractAction("Hide others") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // hide others = hide all then show current; this is purely a convenience function
+                annotationMgr.setAllNeuronVisibility(false);
+                annotationMgr.setNeuronVisibility(true);
+            }
+        });
         neuronToolMenu.add(new AbstractAction("Show all neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
