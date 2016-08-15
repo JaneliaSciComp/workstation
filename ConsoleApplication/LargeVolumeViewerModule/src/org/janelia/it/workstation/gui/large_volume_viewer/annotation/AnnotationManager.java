@@ -1376,13 +1376,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  have to worry about missing entries, etc.; so go simple at the
         //  expense of a few more db calls
         NeuronStyle style;
+        Map<Long, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
             style = getNeuronStyle(neuron);
             if (style.isVisible() != visibility) {
                 style.setVisible(visibility);
-                setNeuronStyle(neuron, style);
+                updateMap.put(neuron.getId(), style);
             }
         }
+        updateNeuronStyles(updateMap);
     }
 
     /**
@@ -1435,6 +1437,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         setter.execute();
+    }
+
+    public void updateNeuronStyles(final Map<Long, NeuronStyle> neuronStyleMap) {
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.updateNeuronStyles(neuronStyleMap);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
     }
 
     public void saveColorModel() {
