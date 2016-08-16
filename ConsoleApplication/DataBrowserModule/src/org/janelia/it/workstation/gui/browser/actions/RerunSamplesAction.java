@@ -102,7 +102,21 @@ public class RerunSamplesAction implements NamedAction {
                 "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
         if (result != 0) return;
+
+        // Force fresh pull, next attempt.
+        DomainMgr.getDomainMgr().getModel().invalidate(samples);
+
         for (Sample sample: samples) {
+            // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
+            try {
+                sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+                if (sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
+                    logger.info("Bypassing sample " + sample.getName() + " because it is already marked for repro.");
+                    continue;
+                }
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
             ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);
             Set<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
