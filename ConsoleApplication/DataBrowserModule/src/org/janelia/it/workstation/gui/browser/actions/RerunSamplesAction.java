@@ -88,18 +88,13 @@ public class RerunSamplesAction implements NamedAction {
     public void doAction() {
         StringBuilder sampleText = new StringBuilder();
         if (samples.size() == 1) {
-            sampleText.append("sample ");
-            sampleText.append(samples.get(0).getName());
+            sampleText.append("sample");
         }
         else {
-            sampleText.append("samples ");
-            for (Sample sample: samples) {
-                sampleText.append("<br>");
-                sampleText.append(sample.getName());
-            }
-            sampleText.append("<br>");
+            sampleText.append(samples.size());
+            sampleText.append(" samples");
         }
-        int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "<html>Are you sure you want the "+sampleText+" to be reprocessed?</html>",
+        int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want the "+sampleText+" to be reprocessed?",
                 "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
         if (result != 0) return;
@@ -114,8 +109,9 @@ public class RerunSamplesAction implements NamedAction {
                 for (Sample sample : samples) {
                     // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
                     sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                    if (sample.getStatus() != null  &&  sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
-                        logger.info("Bypassing sample " + sample.getName() + " because it is already marked for repro.");
+                    if (sample.getStatus() != null  &&
+                        (sample.getStatus().equals(DomainConstants.VALUE_MARKED)  ||  sample.getStatus().equals(DomainConstants.VALUE_PROCESSING))) {
+                        logger.info("Bypassing sample " + sample.getName() + " because it is already marked {}.", sample.getStatus());
                         continue;
                     }
 
