@@ -114,7 +114,7 @@ public class RerunSamplesAction implements NamedAction {
                 for (Sample sample : samples) {
                     // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
                     sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                    if (sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
+                    if (sample.getStatus() != null  &&  sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
                         logger.info("Bypassing sample " + sample.getName() + " because it is already marked for repro.");
                         continue;
                     }
