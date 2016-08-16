@@ -21,6 +21,7 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,36 +104,50 @@ public class RerunSamplesAction implements NamedAction {
 
         if (result != 0) return;
 
-        // Force fresh pull, next attempt.
-        DomainMgr.getDomainMgr().getModel().invalidate(samples);
+        SimpleWorker sw = new SimpleWorker() {
 
-        for (Sample sample: samples) {
-            // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
-            try {
-                sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
-                if (sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
-                    logger.info("Bypassing sample " + sample.getName() + " because it is already marked for repro.");
-                    continue;
+            @Override
+            protected void doStuff() throws Exception {
+                // Force fresh pull, next attempt.
+                DomainMgr.getDomainMgr().getModel().invalidate(samples);
+
+                for (Sample sample : samples) {
+                    // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
+                    sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
+                    if (sample.getStatus().equals(DomainConstants.VALUE_MARKED)) {
+                        logger.info("Bypassing sample " + sample.getName() + " because it is already marked for repro.");
+                        continue;
+                    }
+
+                    ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);
+                    Set<TaskParameter> taskParameters = new HashSet<>();
+                    taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                    taskParameters.add(new TaskParameter("reuse summary", "false", null));
+                    taskParameters.add(new TaskParameter("reuse processing", "false", null));
+                    taskParameters.add(new TaskParameter("reuse post", "false", null));
+                    taskParameters.add(new TaskParameter("reuse alignment", "false", null));
+                    Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
+                            taskParameters, TASK_LABEL, TASK_LABEL);
+                    try {
+                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                        DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
+                        ModelMgr.getModelMgr().dispatchJob(TASK_LABEL, task);
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
             }
-            ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", sample);
-            Set<TaskParameter> taskParameters = new HashSet<>();
-            taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
-            taskParameters.add(new TaskParameter("reuse summary", "false", null));
-            taskParameters.add(new TaskParameter("reuse processing", "false", null));
-            taskParameters.add(new TaskParameter("reuse post", "false", null));
-            taskParameters.add(new TaskParameter("reuse alignment", "false", null));
-            Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
-                    taskParameters, TASK_LABEL, TASK_LABEL);
-            try {
-                task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
-                ModelMgr.getModelMgr().dispatchJob(TASK_LABEL, task);
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
+
+            @Override
+            protected void hadSuccess() {
+                logger.debug("Successfully marked samples.");
             }
-        }
+
+            @Override
+            protected void hadError(Throwable error) {
+                throw new RuntimeException(error);
+            }
+            
+        };
     }
 }
