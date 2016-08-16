@@ -146,7 +146,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         setNextAddRequiresSeparator(true);
         add(getReportProblemItem());
-        add(getMarkForReprocessingItem());
+//        add(getMarkForReprocessingItem());
+        addRerunSamplesAction();
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getMergeItem());
@@ -595,6 +596,18 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
 
         return blockItem;
+    }
+
+    /** Allows users to rerun their own samples. */
+    protected JMenuItem addRerunSamplesAction() {
+
+        JMenuItem rtnVal = null;
+        NamedAction rerunAction = RerunSamplesAction.createAction(domainObjectList);
+        if (rerunAction != null) {
+            rtnVal = getNamedActionItem(rerunAction);
+            add(rtnVal);
+        }
+        return rtnVal;
     }
 
     protected JMenuItem getMarkForReprocessingItem() {

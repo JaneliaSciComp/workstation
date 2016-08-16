@@ -962,6 +962,20 @@ public final class ModelMgr {
         return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
     }
 
+    /**
+     * Like the submitJob method, but this one pushes the task to a dispatcher, for scheduled (balanced?)
+     * retrieval by waiting servers.
+     *
+     * @param processDefName name for labeling.
+     * @param task with all params
+     * @return the requiest created.
+     * @throws Exception
+     */
+    public TaskRequest dispatchJob(String processDefName, Task task) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().dispatchJob(processDefName, task.getObjectId());
+        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+    }
+
     public List<Task> getUserParentTasks() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserParentTasks();
     }
