@@ -20,5 +20,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JAX-RS"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jersey"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/RSyntaxTextArea"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LZ4"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

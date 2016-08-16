@@ -116,7 +116,7 @@ public class LZ4Compression implements CompressionAlgorithm {
         byte[] dest = new byte[fileLen * 3];
         
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
-        LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
+        LZ4UnknownSizeDecompressor decompressor = factory.unknownSizeDecompressor();
         int decompressedSize = decompressor.decompress(inbytes, 0, fileLen, dest, 0, dest.length);
         Date endDecompress = new Date();
         log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - startTime.getTime()) / 1000);
@@ -158,7 +158,7 @@ public class LZ4Compression implements CompressionAlgorithm {
     public byte[] decompressIntoByteBuf(byte[] inbytes, byte[] outbytes) throws CompressionException {
         Date startTime = new Date();
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
-        LZ4UnknownSizeDecompressor decompressor = factory.unknwonSizeDecompressor();
+        LZ4UnknownSizeDecompressor decompressor = factory.unknownSizeDecompressor();
         final int fileLen = (int) inbytes.length;
 
         decompressor.decompress(inbytes, 0, fileLen, outbytes, 0, outbytes.length);
