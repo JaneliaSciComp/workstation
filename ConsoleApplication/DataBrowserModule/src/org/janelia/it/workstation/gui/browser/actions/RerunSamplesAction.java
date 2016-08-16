@@ -149,5 +149,6 @@ public class RerunSamplesAction implements NamedAction {
             }
             
         };
+        sw.execute();
     }
 }
