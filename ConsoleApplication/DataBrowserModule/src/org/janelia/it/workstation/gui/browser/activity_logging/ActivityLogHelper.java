@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.activity_logging;
 
+import java.util.List;
+
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.jacs.model.domain.DomainObject;
