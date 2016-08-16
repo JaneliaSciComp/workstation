@@ -304,7 +304,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             return;
         }
 
-        updateModel(neuron);
+        neuronTableModel.updateNeuron(neuron);
+        updateNeuronLabel();
         int neuronModelRow = neuronTableModel.getRowForNeuron(neuron);
         if (neuronModelRow >= 0) {
             int neuronTableRow = neuronTable.convertRowIndexToView(neuronModelRow);
@@ -402,15 +403,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         updateNeuronLabel();
     }
 
-    /**
-     * update the table neuron with a new version of an
-     * existing neuron (replaces in place)
-     */
-    private void updateModel(TmNeuron neuron) {
-        neuronTableModel.updateNeuron(neuron);
-        updateNeuronLabel();
-    }
-
 
     private void onNeuronDoubleClicked(TmNeuron neuron) {
         // should pan to center of neuron; let's call that the center
@@ -429,20 +421,22 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
-        updateModel(neuron);
+        neuronTableModel.updateNeuron(neuron);
+        updateNeuronLabel();
     }
 
     public void neuronStylesChanged(Map<Long, NeuronStyle> neuronStyleMap) {
+        List<TmNeuron> neuronList = new ArrayList<>();
         for (Long neuronID: neuronStyleMap.keySet()) {
-            updateModel(annotationModel.getNeuronFromNeuronID(neuronID));
+            neuronList.add(annotationModel.getNeuronFromNeuronID(neuronID));
         }
+        neuronTableModel.updateNeurons(neuronList);
+        updateNeuronLabel();
     }
 
     public void neuronTagsChanged(List<TmNeuron> neuronList) {
         updateTagMenu();
-        for (TmNeuron neuron: neuronList) {
-            neuronTableModel.updateNeuron(neuron);
-        }
+        neuronTableModel.updateNeurons(neuronList);
     }
 
     /**
@@ -517,6 +511,20 @@ class NeuronTableModel extends AbstractTableModel {
                 replaceNeuron(neuron, matchedNeurons);
             } else {
                 replaceNeuron(neuron, unmatchedNeurons);
+            }
+        }
+        fireTableDataChanged();
+    }
+
+    public void updateNeurons(List<TmNeuron> neuronList) {
+        if (hasFilter()) {
+            for (TmNeuron neuron: neuronList) {
+                replaceNeuron(neuron, neurons);
+                if (matchesTagFilter(neuron)) {
+                    replaceNeuron(neuron, matchedNeurons);
+                } else {
+                    replaceNeuron(neuron, unmatchedNeurons);
+                }
             }
         }
         fireTableDataChanged();

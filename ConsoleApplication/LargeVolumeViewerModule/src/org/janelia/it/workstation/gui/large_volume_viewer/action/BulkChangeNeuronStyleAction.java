@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -51,7 +52,11 @@ public class BulkChangeNeuronStyleAction extends AbstractAction {
                 SimpleWorker changer = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
+                        // Stopwatch stopwatch = new Stopwatch();
+                        // stopwatch.start();
                         annModel.setNeuronStyles(neurons, style);
+                        // System.out.println("changed style of " + neurons.size() + " neurons in " + stopwatch);
+                        // stopwatch.stop();
                     }
 
                     @Override
