@@ -248,6 +248,10 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
+    public void editNeuronTagRequest(Anchor anchor) {
+        controller.editNeuronTagRequested(anchor);
+    }
+
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }

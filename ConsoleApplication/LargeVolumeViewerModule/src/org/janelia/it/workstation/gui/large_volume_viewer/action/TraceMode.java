@@ -458,6 +458,17 @@ implements MouseMode, KeyListener
                                 }
                             }
                         }));
+                        result.add(new JMenuItem(new AbstractAction("Edit neuron tags...") {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                if (getHoverAnchor() != null) {
+                                    skeleton.editNeuronTagRequest(getHoverAnchor());
+                                }
+                                else {
+                                    logger.warn("Null hover anchor when attempting edit tags.");
+                                }
+                            }
+                        }));
                         result.add(null); // separator
 						result.add(new JMenuItem(new AbstractAction("Change neuron style...") {
 							@Override

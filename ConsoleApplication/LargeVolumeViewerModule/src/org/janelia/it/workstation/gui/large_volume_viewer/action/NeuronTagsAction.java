@@ -30,14 +30,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * this action opens a dialog that allows the user to edit
- * the tags on a neuron
+ * the tags on a neuron, either the currently selected
+ * neuron (by default) or a target neuron set later
  */
 public class NeuronTagsAction extends AbstractAction {
 
     private static final Logger logger = LoggerFactory.getLogger(NeuronTagsAction.class);
 
     private AnnotationModel annModel;
-    private TmNeuron currentNeuron;
+    private TmNeuron targetNeuron;
 
     private JPanel mainPanel;
     private JList appliedTagsList;
@@ -54,16 +55,20 @@ public class NeuronTagsAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent action) {
 
-        // check for selected neuron
-        currentNeuron = annModel.getCurrentNeuron();
-        if (currentNeuron == null) {
+        // if target neuron hasn't been set, check for selected
+        //  neuron; that's our default target neuron; but if
+        //  there still isn't a valid target neuron, we're done
+        if (targetNeuron == null) {
+            targetNeuron = annModel.getCurrentNeuron();
+        }
+        if (targetNeuron == null) {
             return;
         }
 
         Object[] options = {"Close"};
         JOptionPane.showOptionDialog(null,
             getInterface(),
-            "Edit tags for " + currentNeuron.getName(),
+            "Edit tags for " + targetNeuron.getName(),
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.PLAIN_MESSAGE,
             null,
@@ -72,14 +77,18 @@ public class NeuronTagsAction extends AbstractAction {
             );
     }
 
+    public void setTargetNeuron(TmNeuron neuron) {
+        this.targetNeuron = neuron;
+    }
+
     /**
-     * add given tag to current neuron
+     * add given tag to target neuron
      */
     private void addTag(final String tag) {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.addNeuronTag(tag, annModel.getCurrentNeuron());
+                annModel.addNeuronTag(tag, targetNeuron);
             }
 
             @Override
@@ -89,7 +98,7 @@ public class NeuronTagsAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                logger.error("error adding tag " + tag + " to neuron " + annModel.getCurrentNeuron().getName());
+                logger.error("error adding tag " + tag + " to neuron " + targetNeuron.getName());
                 showError("There was an error adding the " + tag + " tag!", "Error");
             }
         };
@@ -97,13 +106,13 @@ public class NeuronTagsAction extends AbstractAction {
     }
 
     /**
-     * remove given tag from current neuron
+     * remove given tag from target neuron
      */
     private void removeTag(final String tag) {
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.removeNeuronTag(tag, annModel.getCurrentNeuron());
+                annModel.removeNeuronTag(tag, targetNeuron);
             }
 
             @Override
@@ -120,20 +129,20 @@ public class NeuronTagsAction extends AbstractAction {
     }
 
     /**
-     * create a new tag and apply it to the current neuron
+     * create a new tag and apply it to the target neuron
      */
     private void onAddNewTag() {
         addTag(newTagField.getText());
     }
 
     /**
-     * remove all the tags from the currently selected neuron
+     * remove all the tags from the target neuron
      */
     private void onRemoveAllButton() {
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.clearNeuronTags(annModel.getCurrentNeuron());
+                annModel.clearNeuronTags(targetNeuron);
             }
 
             @Override
@@ -161,7 +170,7 @@ public class NeuronTagsAction extends AbstractAction {
 
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
-        Set<String> appliedTagSet = annModel.getNeuronTags(currentNeuron);
+        Set<String> appliedTagSet = annModel.getNeuronTags(targetNeuron);
         String[] appliedTags = appliedTagSet.toArray(new String[appliedTagSet.size()]);
         Arrays.sort(appliedTags);
         appliedTagsList.setListData(appliedTags);

@@ -5,6 +5,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.*;
@@ -130,6 +132,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addEditNoteRequested(Anchor anchor) {
         if (anchor != null) {
             addEditNote(anchor.getGuid());
+        }
+    }
+
+    public void editNeuronTagsRequested(Anchor anchor) {
+        if (anchor != null) {
+            editNeuronTags(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
         }
     }
 
@@ -947,6 +955,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         };
         setter.execute();
+    }
+
+    public void editNeuronTags(TmNeuron neuron) {
+        // reuse the action; note that the action doesn't actually
+        //  use the event, so we can throw in an empty one
+        NeuronTagsAction action = new NeuronTagsAction(annotationModel);
+        action.setTargetNeuron(neuron);
+        action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
     }
 
     /**
