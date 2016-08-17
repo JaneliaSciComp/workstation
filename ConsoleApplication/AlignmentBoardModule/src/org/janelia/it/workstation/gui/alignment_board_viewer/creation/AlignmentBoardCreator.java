@@ -36,6 +36,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
     
     private DomainObject domainObject;
+    private CompatibilityChecker compatibilityChecker = new CompatibilityChecker();
     
     public void execute() {
 
@@ -177,11 +178,14 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
         }
         else {
             log.debug("Just UN-Nulled object in ABCreator");
-            if (domainObject instanceof Sample  ||  domainObject instanceof CompartmentSet) {
+            if (domainObject instanceof Sample) {
+                return compatibilityChecker.isAligned((Sample)domainObject);
+            }
+            else if (domainObject instanceof CompartmentSet) {
                 return true;
             }
             else if (domainObject instanceof NeuronFragment) {
-                return new CompatibilityChecker().isAligned((NeuronFragment)domainObject);
+                return compatibilityChecker.isAligned((NeuronFragment)domainObject);
             }
             else {
                 return false;

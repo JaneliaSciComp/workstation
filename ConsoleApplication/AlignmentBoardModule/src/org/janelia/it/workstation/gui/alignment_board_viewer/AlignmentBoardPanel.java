@@ -166,6 +166,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         deleteAll();
         AlignmentBoardMgr.getInstance().getLayersPanel().closeAlignmentBoard();
+        setLoading(false);
     }
 
     /** Call this for refresh time. */
