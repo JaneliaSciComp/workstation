@@ -74,7 +74,8 @@ public class ActivityLogHelper {
     }
 
     public static void logElapsed(String action, Object parameter, StopWatch watch) {
-        String subjectName = AccessManager.getAccessManager().getSubject().getName();
+        Subject subject = AccessManager.getAccessManager().getSubject();
+        String subjectName = subject==null?"none":subject.getName();
         ActionString actionString;
         if (watch==null) {
             actionString = buildAction(subjectName, action, parameter);
