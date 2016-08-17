@@ -33,7 +33,9 @@ package org.janelia.horta.loader;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.horta.loader.ktx.KtxHeader;
+import org.janelia.horta.ktx.KtxData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -41,6 +43,7 @@ import org.janelia.horta.loader.ktx.KtxHeader;
  */
 public class KtxLoader implements FileTypeLoader
 {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     @Override
     public boolean supports(DataSource source)
@@ -55,8 +58,13 @@ public class KtxLoader implements FileTypeLoader
     public boolean load(final DataSource source, FileHandler handler) throws IOException
     {
         InputStream stream = source.getInputStream();
-        KtxHeader header = new KtxHeader().loadStream(stream);
-        return false; // TODO
+        long start = System.nanoTime();
+        KtxData data = new KtxData().loadStream(stream);
+        long end = System.nanoTime();
+        double elapsed = (end - start)/1.0e9;
+        logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
+        // TODO: use the data
+        return true;
     }
 
 }

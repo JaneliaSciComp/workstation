@@ -28,24 +28,56 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.loader.ktx;
+package org.janelia.horta.ktx;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author brunsc
  */
-public class KtxHeader {
-
-    public KtxHeader loadStream(InputStream stream) throws IOException
-    {
-        byte[] identifier = new byte[12];
-        int readCount = stream.read(identifier, 0, 12);
-        if (readCount != 12)
-            throw new IOException("Could not read KTX header identifier");
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+public class KtxData 
+{
+    private KtxHeader header = new KtxHeader();
+    private List<ByteBuffer> mipmaps = new ArrayList<>();
     
+    public KtxData loadStream(InputStream stream) throws IOException {
+        header.loadStream(stream);
+        mipmaps.clear();
+        byte[] unused = new byte[4]; // for bulk reading of unused padding bytes
+        ByteBuffer sizeBuf = ByteBuffer.allocate(4); // to hold binary representation of image size
+        sizeBuf.order(header.byteOrder);
+        for (int m = 0; m < header.numberOfMipmapLevels; ++m) {
+            stream.read(sizeBuf.array());
+            sizeBuf.rewind();
+            int imageSize = (int)((long)sizeBuf.getInt() & 0xffffffffL);
+            // Use a DIRECT buffer for later efficient slurping into OpenGL
+            ByteBuffer mipmap = ByteBuffer.allocateDirect(imageSize);
+            // TODO: figure out how to stream straight into the direct buffer
+            // For now, copy into the direct buffer
+            byte[] b = new byte[imageSize];
+            int bytesRead = 0;
+            bytesRead = stream.read(b, bytesRead, imageSize - bytesRead);
+            while (bytesRead < imageSize) {
+                int moreBytes = stream.read(b, bytesRead, imageSize - bytesRead);
+                if (moreBytes < 1) {
+                    throw new IOException("Error reading mipmap number "+m);
+                }
+                bytesRead += moreBytes;
+            }
+            if (bytesRead != imageSize) {
+                throw new IOException("Error reading mipmap number "+m);
+            }
+            mipmap.put(b);
+            mipmaps.add(mipmap);
+            int padding = 3 - ((imageSize + 3) % 4);
+            stream.read(unused, 0, padding);
+        }
+        return this;
+    }
+
 }

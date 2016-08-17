@@ -32,7 +32,6 @@ package org.janelia.horta.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
-import net.jpountz.lz4.LZ4BlockInputStream;
 import net.jpountz.lz4.LZ4FrameInputStream;
 import org.apache.commons.io.FilenameUtils;
 
