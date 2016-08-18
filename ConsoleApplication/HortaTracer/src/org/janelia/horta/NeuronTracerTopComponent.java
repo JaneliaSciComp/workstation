@@ -140,7 +140,7 @@ import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
-import org.janelia.horta.loader.KtxLoader;
+import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -247,9 +247,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
-
-        // Drag a YML tilebase file to put some data in the viewer
-        setupDragAndDropYml();
 
         neuronManager = new NeuronManager(metaWorkspace);
         neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
@@ -390,6 +387,9 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         neuronMPRenderer = setUpActors();
         
+        // Drag a YML tilebase file to put some data in the viewer
+        setupDragAndDropYml();
+
         setBackgroundColor( metaWorkspace.getBackgroundColor() ); // call this AFTER setUpActors
         // neuronMPRenderer.setWorkspace(workspace); // set up signals in renderer
         metaWorkspace.addObserver(new Observer() {
@@ -845,7 +845,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TgzFileLoader());
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         droppedFileHandler.addLoader(new ObjMeshLoader(this));
-        droppedFileHandler.addLoader(new KtxLoader());
+        droppedFileHandler.addLoader( new HortaKtxLoader(this.neuronMPRenderer));
         // Put dropped neuron models into "Temporary neurons"
         WorkspaceUtil ws = new WorkspaceUtil(metaWorkspace);
         NeuronSet ns = ws.getOrCreateTemporaryNeuronSet();

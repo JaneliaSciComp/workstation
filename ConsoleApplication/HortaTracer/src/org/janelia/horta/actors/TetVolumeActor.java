@@ -28,43 +28,54 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.loader;
+package org.janelia.horta.actors;
 
-import java.io.IOException;
-import java.io.InputStream;
-import org.apache.commons.io.FilenameUtils;
-import org.janelia.horta.ktx.KtxData;
+import java.util.ArrayList;
+import java.util.List;
+import javax.media.opengl.GL3;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.MeshGeometry;
+import org.janelia.gltools.BasicGL3Actor;
+import org.janelia.gltools.MeshActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * TODO: Special initialization of triangle adjacency indices
  *
  * @author Christopher Bruns
  */
-public class KtxLoader implements FileTypeLoader
+public class TetVolumeActor extends BasicGL3Actor 
 {
+    private final MeshGeometry meshGeometry;
+    private final MeshActor meshActor;
+    protected final TetVolumeMaterial material;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    @Override
-    public boolean supports(DataSource source)
+    // For scaling efficiency, alternate constructor takes shared resources as argument
+    public TetVolumeActor(MeshGeometry meshGeometry) 
     {
-        String ext = FilenameUtils.getExtension(source.getFileName()).toUpperCase();
-        if (ext.equals("KTX"))
-            return true;
-        return false;
+        super(null);
+        material = new TetVolumeMaterial();
+        this.meshGeometry = meshGeometry;
+        meshActor = new TetVolumeMeshActor(meshGeometry, material, this);
+        this.addChild(meshActor);
     }
-
+    
+    public void addTetrahedron(int a, int b, int c, int apex) {
+        List<List<Integer>> tets = ((TetVolumeMeshActor)meshActor).getTetrahedra();
+        List<Integer> tet = new ArrayList<>();
+        tet.add(a);
+        tet.add(b);
+        tet.add(c);
+        tet.add(apex);
+        tets.add(tet);
+    }
+    
     @Override
-    public boolean load(final DataSource source, FileHandler handler) throws IOException
-    {
-        InputStream stream = source.getInputStream();
-        long start = System.nanoTime();
-        KtxData data = new KtxData().loadStream(stream);
-        long end = System.nanoTime();
-        double elapsed = (end - start)/1.0e9;
-        logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
-        // TODO: use the data
-        return true;
+    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+        super.display(gl, camera, parentModelViewMatrix);
     }
 
 }
