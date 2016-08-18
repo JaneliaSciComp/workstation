@@ -9,6 +9,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -62,7 +63,8 @@ public class RerunSamplesAction implements NamedAction {
                 }
             }
         }
-        if (samples.size() > 0  &&  samples.size() <= MAX_SAMPLE_RERUN_COUNT) {
+        if (samples.size() > 0  &&
+            (samples.size() <= MAX_SAMPLE_RERUN_COUNT  ||  AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin))) {
             action = new RerunSamplesAction(samples);
         }
         return action;
