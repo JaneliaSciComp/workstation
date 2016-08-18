@@ -137,7 +137,7 @@ public class DomainHelper {
                     }
                 }
             }
-            else {
+            if (alignmentBoardsFolder == null) {
                 // Must create the folder.
                 alignmentBoardsFolder = new TreeNode();
                 alignmentBoardsFolder.setName(ALIGNMENT_BOARDS_FOLDER);
