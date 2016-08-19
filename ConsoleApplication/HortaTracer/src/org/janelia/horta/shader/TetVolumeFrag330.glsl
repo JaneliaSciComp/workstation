@@ -34,16 +34,18 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-in vec4 barycentricCoords;
+in vec4 barycentricCoord;
+in vec3 fragTexCoord;
 
 out vec4 fragColor;
 
 void main() {
-    vec4 b = barycentricCoords;
+    vec4 b = barycentricCoord;
     float f = min(b.x, min(b.y, min(b.z, b.w)));
 
     if (f < 0) discard; // outside of tetrahedron; should not happen
 
+#ifdef DISPLAY_EDGES_ONLY
     // Display only the edges of the triangle
     float e1 = 0; // b.x + b.y; // first leg of base triangle
     float e2 = 0; // b.x + b.z; // third leg of base triangle
@@ -53,6 +55,7 @@ void main() {
     float e6 = b.z + b.w;
     float edge_score = max(e1, max(e2, max(e3, max(e4, max(e5, e6)))));
     if (edge_score < 0.95) discard; // hollow out non-edge region
+#endif
 
     fragColor = vec4(1, 0, 0, 0.5);
 }
