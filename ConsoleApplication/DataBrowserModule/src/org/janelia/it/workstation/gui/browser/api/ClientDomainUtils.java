@@ -25,11 +25,25 @@ public class ClientDomainUtils {
     
     /**
      * Returns true if the current user has read access to the given domain object.
-     * @param domainObject
-     * @return
+     * @param domainObject can they read this?
+     * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
-        return DomainUtils.hasReadAccess(domainObject, AccessManager.getSubjectKey());
+        // First check for literal, individual match.
+        final String currentUserSubjectKey = AccessManager.getSubjectKey();
+        if (domainObject.getReaders().contains(currentUserSubjectKey)) {
+            return true;
+        }
+        // Next check for group match.
+        Subject subject = AccessManager.getAccessManager().getSubject();
+        Set<String> currentUserGroups = subject.getGroups();        
+        for (String reader : domainObject.getReaders()) {            
+            if (currentUserGroups.contains(reader)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
