@@ -50,6 +50,10 @@ public class ImageTypeSelectionButton extends DropDownButton {
     	this.showTitle = showTitle;
         setIcon(Icons.getIcon("image.png"));
         setToolTipText("Select the result type to display");
+        reset();
+    }
+
+    public void reset() {
         setImageType(DEFAULT_TYPE);
     }
 

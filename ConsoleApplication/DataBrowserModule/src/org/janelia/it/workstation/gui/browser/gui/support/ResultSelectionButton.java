@@ -50,6 +50,10 @@ public class ResultSelectionButton extends DropDownButton {
         this.showTitle = showTitle;
         setIcon(Icons.getIcon("folder_open_page.png"));
         setToolTipText("Select the result to display");
+        reset();
+    }
+
+    public void reset() {
         setResultDescriptor(ResultDescriptor.LATEST);
     }
 
