@@ -10,20 +10,20 @@ import java.util.Arrays;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.*;
 import javax.swing.*;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture
@@ -185,7 +185,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                     reportError(gl, "init mux brick - buffers");
                 }
             } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
+                FrameworkImplProvider.handleException( ex );
             }
         }
 		// tidy up

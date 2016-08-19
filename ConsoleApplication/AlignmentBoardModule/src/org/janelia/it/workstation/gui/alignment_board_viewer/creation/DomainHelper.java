@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -42,7 +43,6 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABUnspecified;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -317,7 +317,7 @@ public class DomainHelper {
             }
             return createDummyItem(item);
         } catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }
@@ -362,7 +362,7 @@ public class DomainHelper {
     
     private void handleException(String message) {
         Exception ex = new Exception(message);
-        SessionMgr.getSessionMgr().handleException(ex);
+        FrameworkImplProvider.handleException(ex);
     }
       
 	private static class SaverCallable implements Callable<Void> {
@@ -378,7 +378,7 @@ public class DomainHelper {
 			try {
 				saveAlignmentBoard(alignmentBoard);
 			} catch (Exception ex) {
-				SessionMgr.getSessionMgr().handleException(ex);
+				FrameworkImplProvider.handleException(ex);
 			}
 			return null;
 		}

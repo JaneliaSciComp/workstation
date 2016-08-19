@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +115,7 @@ public class DownSampler {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException( error );
+                    FrameworkImplProvider.handleException( error );
                 }
             };
             downSamplingThreadPool.execute( simpleWorker );
@@ -150,7 +150,7 @@ public class DownSampler {
             logger.debug("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
-            SessionMgr.getSessionMgr().handleException( ie );
+            FrameworkImplProvider.handleException( ie );
         }
     }
 

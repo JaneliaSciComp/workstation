@@ -4,12 +4,12 @@ import java.awt.Component;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -40,7 +40,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
     
     public void execute() {
 
-        final Component mainFrame = SessionMgr.getMainFrame();
+        final Component mainFrame = FrameworkImplProvider.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -135,7 +135,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
 
 					private void constructAlignmentBoardObject() throws Exception {
@@ -156,7 +156,7 @@ public class AlignmentBoardCreator implements DomainObjectCreator {
             
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Finding alignments...", ""));
