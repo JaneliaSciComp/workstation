@@ -35,7 +35,7 @@ import java.io.InputStream;
 import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.material.Material;
 import org.janelia.gltools.texture.Texture2d;

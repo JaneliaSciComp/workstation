@@ -9,6 +9,8 @@
 // Project here in the geometry shader
 uniform mat4 projectionMatrix = mat4(1);
 
+uniform int renderPass = 1; // 1: front tetrahedra, 2: central tetrahedra, 3: rear tetrahedra
+
 /* Receive one tetrahedral mesh as a base triangle, plus three redundant side vertices
    The base of the tetrahedron is triangle 0-4-2, below.
    Vertices 1, 3, and 5 are all the same fourth apex vertex of the tetrahedron.
@@ -32,7 +34,7 @@ layout(triangles_adjacency) in;
 // for a total of twelve vertices.
 layout(triangle_strip, max_vertices=12) out; 
 
-in vec3 texCoord[]; // 3D intensity texture coordinate for volume rendering
+in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
 
 // Matrix to convert camera coordinates to (first three) barycentric coordinates
 // out mat4 baryFromCamera;
@@ -59,6 +61,13 @@ void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1, in int p
     EndPrimitive();
 }
 
+// Detect front faces
+// http://prideout.net/blog/?p=54
+bool isFront(vec4 A, vec4 B, vec4 C)
+{
+    return 0 < (A.x * B.y - B.x * A.y) + (B.x * C.y - C.x * B.y) + (C.x * A.y - A.x * C.y);
+}
+
 void main() {
     // We only need to project the 4 unique points, not all six.
     vec4 projected[4] = vec4[4] (
@@ -66,11 +75,20 @@ void main() {
         projectionMatrix * gl_in[2].gl_Position, // base2
         projectionMatrix * gl_in[4].gl_Position, // base3
         projectionMatrix * gl_in[1].gl_Position); // apex
+
+    // A front-facing tetrahedron has a NON-front-facing base triangle...
+    // TODO: this is not working perfectly yet...
+    bool front = ! isFront(projected[0], projected[1], projected[2]);
+    if ((renderPass == 1) && (! front))
+        return; // don't draw this tetrahedron on this pass
+    else if ((renderPass == 3) && front)
+        return; // don't draw this tetrahedron on this pass
+
     vec3 tc[4] = vec3[4] (
-        texCoord[0],
-        texCoord[2],
-        texCoord[4],
-        texCoord[1]);
+        geomTexCoord[0],
+        geomTexCoord[2],
+        geomTexCoord[4],
+        geomTexCoord[1]);
     const vec4 bary[4] = vec4[4] (
         vec4(1, 0, 0, 0), // base1
         vec4(0, 1, 0, 0), // base2

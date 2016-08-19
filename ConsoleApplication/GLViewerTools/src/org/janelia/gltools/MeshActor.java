@@ -60,9 +60,9 @@ import org.janelia.gltools.MeshFloatVbo.VertexAttribute;
 public class MeshActor extends BasicGL3Actor
 {
     protected final MeshGeometry geometry;
-    private final Material material;
+    protected final Material material;
     
-    private MeshFloatVbo vertexBufferObject = null;
+    protected MeshFloatVbo vertexBufferObject = null;
     
     // Vbo bookkeeping
     private int triangleIndexCount = 0;

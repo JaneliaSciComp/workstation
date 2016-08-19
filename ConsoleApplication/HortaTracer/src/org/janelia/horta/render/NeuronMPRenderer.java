@@ -44,7 +44,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
@@ -87,7 +87,7 @@ extends MultipassRenderer
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
-    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaMetaWorkspace workspace) 
+    public NeuronMPRenderer(GLAutoDrawable drawable, final ChannelBrightnessModel brightnessModel, HortaMetaWorkspace workspace) 
     {
         this.drawable = drawable;
         

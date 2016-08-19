@@ -7,7 +7,7 @@
  */
 
 // For efficiency, limit number of possible color channels
-#define COLOR_VEC vec2
+#define COLOR_VEC vec3
 
 uniform sampler2D upstreamImage;
 uniform COLOR_VEC opacityFunctionMin = COLOR_VEC(0.0);
@@ -56,18 +56,25 @@ vec3 hslToRgb(vec3 hsl)
     return rgb;
 }
 
-vec4[4] COLOR_RAMP_RED = vec4[4]( // Red, hue=0
+const vec4[4] COLOR_RAMP_RED = vec4[4]( // Red, hue=0
     // Red, Green, Blue, Intensity
-    vec4(0.1, 0.0, 0.0, 0.00), // black
+    vec4(0.0, 0.0, 0.0, 0.00), // black
     vec4(1.0, 0.0, 0.0, 0.55), // red
     vec4(1.0, 0.5, 0.0, 0.80), // pale orange-red
     vec4(1.0, 0.95, 0.9, 1.00)); // white
 
-vec4[3] COLOR_RAMP_GREEN = vec4[3]( // Green, hue=120
+const vec4[3] COLOR_RAMP_GREEN = vec4[3]( // Green, hue=120
     // Red, Green, Blue, Intensity
-    vec4(0.0, 0.1, 0.0, 0.00), // black
+    vec4(0.0, 0.0, 0.0, 0.00), // black
     vec4(0.0, 1.0, 0.0, 0.70), // green
     vec4(0.95, 1.0, 0.9, 1.00)); // white
+
+const vec4[4] COLOR_RAMP_BLUE = vec4[4]( // Blue, hue=240
+    // Red, Green, Blue, Intensity
+    vec4(0.0, 0.0, 0.0, 0.00), // black
+    vec4(0.0, 0.0, 1.0, 0.38), // blue
+    vec4(0.0, 0.5, 1.0, 0.78), // cyan-blue
+    vec4(0.90, 0.95, 1.0, 1.00)); // white
 
 vec3 ramp_color(in float intensity, in vec4[4] ramp) {
     int ix = 1;
@@ -82,28 +89,27 @@ vec3 ramp_color(in float intensity, in vec4[4] ramp) {
     return mix(col1.rgb, col2.rgb, alpha);
 }
 
-vec3 red_color(in float intensity) {
+vec3 ramp_color(in float intensity, in vec4[3] ramp) {
     int ix = 1;
-    if (intensity > COLOR_RAMP_RED[ix].w)
+    if (intensity > ramp[ix].w)
         ix += 1;
-    if (intensity > COLOR_RAMP_RED[ix].w)
-        ix += 1;
-    vec4 col1 = COLOR_RAMP_RED[ix-1];
-    vec4 col2 = COLOR_RAMP_RED[ix];
+    vec4 col1 = ramp[ix-1];
+    vec4 col2 = ramp[ix];
     float alpha = (intensity - col1.w) / (col2.w - col1.w);
     alpha = clamp(alpha, 0, 1);
     return mix(col1.rgb, col2.rgb, alpha);
 }
 
+vec3 red_color(in float intensity) {
+    return ramp_color(intensity, COLOR_RAMP_RED);
+}
+
 vec3 green_color(in float intensity) {
-    int ix = 1;
-    if (intensity > COLOR_RAMP_GREEN[ix].w)
-        ix = 2;
-    vec4 col1 = COLOR_RAMP_GREEN[ix-1];
-    vec4 col2 = COLOR_RAMP_GREEN[ix];
-    float alpha = (intensity - col1.w) / (col2.w - col1.w);
-    alpha = clamp(alpha, 0, 1);
-    return mix(col1.rgb, col2.rgb, alpha);
+    return ramp_color(intensity, COLOR_RAMP_GREEN);
+}
+
+vec3 blue_color(in float intensity) {
+    return ramp_color(intensity, COLOR_RAMP_BLUE);
 }
 
 void main() {
@@ -127,8 +133,9 @@ void main() {
     // TODO: allow inversion of lightness spectrum
 
     // Use hard coded color ramps
-    vec3 color = green_color(intensity.r);
-    color += red_color(intensity.g);
+    vec3 color = red_color(intensity.r);
+    color += green_color(intensity.g);
+    color += blue_color(intensity.b);
 
     // TODO sRGB should be last thing ever
     // color = pow(color, vec3(0.5, 0.5, 0.5));

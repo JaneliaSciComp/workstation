@@ -34,7 +34,7 @@ import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.apache.commons.io.IOUtils;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector4;
@@ -72,7 +72,7 @@ public class VolumeMipMaterial extends BasicMaterial
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f};
     
-    private final BrightnessModel colorMap;
+    private final ChannelBrightnessModel colorMap;
     
     private int filteringOrderIndex = -1;
     
@@ -94,7 +94,7 @@ public class VolumeMipMaterial extends BasicMaterial
     private float relativeZNear = 0.92f;
     private float relativeZFar = 1.08f;
     
-    public VolumeMipMaterial(Texture3d volumeTexture, BrightnessModel colorMap) 
+    public VolumeMipMaterial(Texture3d volumeTexture, ChannelBrightnessModel colorMap) 
     {
         this.colorMap = colorMap;
         this.volumeTexture = volumeTexture;

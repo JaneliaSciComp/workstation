@@ -29,7 +29,7 @@
  */
 package org.janelia.horta;
 
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.Observer;
@@ -73,8 +73,8 @@ import org.openide.util.Utilities;
 public final class ImageAdjustTopComponent extends TopComponent 
 implements LookupListener
 {
-    private Lookup.Result<BrightnessModel> colorMapResult = null;
-    private BrightnessModel selectedColorMap = null;
+    private Lookup.Result<ChannelBrightnessModel> colorMapResult = null;
+    private ChannelBrightnessModel selectedColorMap = null;
     private Observer colorMapObserver;
 
     public ImageAdjustTopComponent() {
@@ -207,9 +207,9 @@ implements LookupListener
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        colorMapResult = Utilities.actionsGlobalContext().lookupResult(BrightnessModel.class);
+        colorMapResult = Utilities.actionsGlobalContext().lookupResult(ChannelBrightnessModel.class);
         colorMapResult.addLookupListener(this);
-        Collection<? extends BrightnessModel> allColorMaps = colorMapResult.allInstances();
+        Collection<? extends ChannelBrightnessModel> allColorMaps = colorMapResult.allInstances();
         if (allColorMaps.isEmpty()) {
             setColorMap(null);
         }
@@ -238,7 +238,7 @@ implements LookupListener
 
     @Override
     public void resultChanged(LookupEvent le) {
-        Collection<? extends BrightnessModel> allColorMapls = colorMapResult.allInstances();
+        Collection<? extends ChannelBrightnessModel> allColorMapls = colorMapResult.allInstances();
         if (allColorMapls.isEmpty()) {
             setColorMap(null);
             return;
@@ -246,7 +246,7 @@ implements LookupListener
         setColorMap(allColorMapls.iterator().next());
     }
     
-    private void setColorMap(BrightnessModel colorMap) {
+    private void setColorMap(ChannelBrightnessModel colorMap) {
         if (selectedColorMap == colorMap)
             return; // no change
         if (colorMap == null)
@@ -255,13 +255,13 @@ implements LookupListener
         registerColorMap(colorMap);
     }
     
-    private void deregisterColorMap(BrightnessModel colorMap) {
+    private void deregisterColorMap(ChannelBrightnessModel colorMap) {
         if (colorMap == null)
             return;
         colorMap.deleteObserver(colorMapObserver);
     }
 
-    private void registerColorMap(BrightnessModel colorMap) {
+    private void registerColorMap(ChannelBrightnessModel colorMap) {
         selectedColorMap = colorMap;
         if (colorMap == null)
             return;
@@ -360,7 +360,7 @@ implements LookupListener
             return;
         if (selectedColorMap == null)
             return;
-        BrightnessModel colorMap = new BrightnessModel(selectedColorMap);
+        ChannelBrightnessModel colorMap = new ChannelBrightnessModel(selectedColorMap);
         colorMap.setMinimum(minSlider.getValue() / (float)minSlider.getMaximum());
         colorMap.setMaximum(maxSlider.getValue() / (float)maxSlider.getMaximum());
         selectedColorMap.copy(colorMap);

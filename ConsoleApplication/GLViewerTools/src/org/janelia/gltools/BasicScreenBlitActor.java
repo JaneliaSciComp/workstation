@@ -35,7 +35,7 @@ import java.util.Collection;
 import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.CompositeObject3d;

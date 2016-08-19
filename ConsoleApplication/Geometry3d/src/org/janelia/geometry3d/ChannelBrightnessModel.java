@@ -39,21 +39,22 @@ import org.janelia.console.viewerapi.ObservableInterface;
  *
  * @author Christopher Bruns
  */
-public class BrightnessModel 
-implements Copyable<BrightnessModel>, ObservableInterface
+public class ChannelBrightnessModel 
+implements Copyable<ChannelBrightnessModel>, ObservableInterface
 {
     private float minimum = 0; // range 0-1
     private float maximum = 1; // range 0-1
+    private float gamma = 1.0f; // range 0-infinity
     private final ComposableObservable changeObservable = new ComposableObservable();
 
-    public BrightnessModel() {}
+    public ChannelBrightnessModel() {}
 
-    public BrightnessModel(BrightnessModel rhs) {
+    public ChannelBrightnessModel(ChannelBrightnessModel rhs) {
         copy(rhs);
     }
 
     @Override
-    public final void copy(BrightnessModel rhs) {
+    public final void copy(ChannelBrightnessModel rhs) {
         setMinimum(rhs.minimum);
         setMaximum(rhs.maximum);        
     }
@@ -110,6 +111,10 @@ implements Copyable<BrightnessModel>, ObservableInterface
     public boolean hasChanged()
     {
         return changeObservable.hasChanged();
+    }
+
+    public float getGamma() {
+        return gamma;
     }
     
 }

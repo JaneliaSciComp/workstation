@@ -40,7 +40,7 @@ import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.SwingUtilities;
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
@@ -98,13 +98,13 @@ public class HortaVolumeCache
     float cachedZoom = Float.NaN;
     
     private final RequestProcessor loadProcessor = new RequestProcessor("for loading tiles", 10);
-    private final BrightnessModel brightnessModel;
+    private final ChannelBrightnessModel brightnessModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private int currentColorChannel = 0;
 
     public HortaVolumeCache(final PerspectiveCamera camera, 
-            final BrightnessModel brightnessModel,
+            final ChannelBrightnessModel brightnessModel,
             final VolumeMipMaterial.VolumeState volumeState,
             int currentColorChannel) 
     {

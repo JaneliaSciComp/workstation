@@ -63,14 +63,12 @@ public class TetVolumeActor extends BasicGL3Actor
         this.addChild(meshActor);
     }
     
-    public void addTetrahedron(int a, int b, int c, int apex) {
-        List<List<Integer>> tets = ((TetVolumeMeshActor)meshActor).getTetrahedra();
-        List<Integer> tet = new ArrayList<>();
-        tet.add(a);
-        tet.add(b);
-        tet.add(c);
-        tet.add(apex);
-        tets.add(tet);
+    public void addOuterTetrahedron(int a, int b, int c, int apex) {
+        ((TetVolumeMeshActor)meshActor).addOuterTetrahedron(a, b, c, apex);
+    }
+    
+    public void setCentralTetrahedron(int a, int b, int c, int apex) {
+        ((TetVolumeMeshActor)meshActor).setCentralTetrahedron(a, b, c, apex);
     }
     
     @Override

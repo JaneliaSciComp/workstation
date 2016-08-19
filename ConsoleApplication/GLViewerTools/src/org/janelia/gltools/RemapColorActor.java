@@ -34,7 +34,7 @@ import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.texture.Texture2d;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.material.Material;
 import org.openide.util.Exceptions;
@@ -45,7 +45,7 @@ import org.openide.util.Exceptions;
  */
 public class RemapColorActor extends BasicScreenBlitActor {
     
-    public RemapColorActor(Texture2d screenTexture, BrightnessModel colorMap) 
+    public RemapColorActor(Texture2d screenTexture, ChannelBrightnessModel colorMap) 
     {
         super(screenTexture);
         ((ColorMapMaterial)material).setBrightnessModel(colorMap);
@@ -88,9 +88,9 @@ public class RemapColorActor extends BasicScreenBlitActor {
         private int opacityFunctionMinIndex = -1;
         private int opacityFunctionMaxIndex = -1;
         private int opacityFunctionGammaIndex = -1;
-        private BrightnessModel brightnessModel;
+        private ChannelBrightnessModel brightnessModel;
 
-        public void setBrightnessModel(BrightnessModel brightnessModel) {
+        public void setBrightnessModel(ChannelBrightnessModel brightnessModel) {
             this.brightnessModel = brightnessModel;
         }
 
@@ -112,16 +112,20 @@ public class RemapColorActor extends BasicScreenBlitActor {
         public void load(GL3 gl, AbstractCamera camera) {
             super.load(gl, camera);
             // TODO: Use per-channel brightness
-            gl.glUniform2fv(opacityFunctionMinIndex, 1, new float[] {
+            gl.glUniform3fv(opacityFunctionMinIndex, 1, new float[] {
+                brightnessModel.getMinimum(), 
                 brightnessModel.getMinimum(), 
                 brightnessModel.getMinimum()
             }, 0);
-            gl.glUniform2fv(opacityFunctionMaxIndex, 1, new float[] {
+            gl.glUniform3fv(opacityFunctionMaxIndex, 1, new float[] {
+                brightnessModel.getMaximum(), 
                 brightnessModel.getMaximum(), 
                 brightnessModel.getMaximum()
             }, 0);
-            gl.glUniform2fv(opacityFunctionGammaIndex, 1, new float[] {
-                1, 1
+            gl.glUniform3fv(opacityFunctionGammaIndex, 1, new float[] {
+                brightnessModel.getGamma(), 
+                brightnessModel.getGamma(), 
+                brightnessModel.getGamma()
             }, 0);
         }
     }

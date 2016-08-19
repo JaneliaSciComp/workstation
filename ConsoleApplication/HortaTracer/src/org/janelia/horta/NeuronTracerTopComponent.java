@@ -35,7 +35,7 @@ import org.janelia.horta.actors.CenterCrossHairActor;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 // import com.jogamp.opengl.util.awt.TextRenderer;
 // import com.jogamp.opengl.util.awt.Screenshot;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -733,7 +733,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
-    private final BrightnessModel brightnessModel = new BrightnessModel();
+    private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
     
     private void loadStartupPreferences() 
     {

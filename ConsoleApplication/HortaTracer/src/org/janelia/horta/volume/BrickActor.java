@@ -31,7 +31,7 @@
 package org.janelia.horta.volume;
 
 import java.io.IOException;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
@@ -50,7 +50,7 @@ public class BrickActor extends MeshActor
     private final BrickMaterial brickMaterial;
     
     public BrickActor(BrainTileInfo brainTile, 
-            BrightnessModel brightnessModel, 
+            ChannelBrightnessModel brightnessModel, 
             VolumeState volumeState, 
             int colorChannel) throws IOException 
     {
@@ -66,7 +66,7 @@ public class BrickActor extends MeshActor
     public BrickActor(
             BrainTileInfo brainTile, 
             Texture3d texture3d, 
-            BrightnessModel brightnessModel, 
+            ChannelBrightnessModel brightnessModel, 
             VolumeState volumeState) 
     {
         super(
@@ -99,7 +99,7 @@ public class BrickActor extends MeshActor
 
         private BrickMaterial(
                 BrainTileInfo brainTile, 
-                BrightnessModel brightnessModel,
+                ChannelBrightnessModel brightnessModel,
                 VolumeState volumeState,
                 int colorChannel) throws IOException
         {
@@ -110,7 +110,7 @@ public class BrickActor extends MeshActor
         private BrickMaterial(
                 BrainTileInfo brainTile, 
                 Texture3d texture3d, 
-                BrightnessModel brightnessModel, 
+                ChannelBrightnessModel brightnessModel, 
                 VolumeState volumeState) 
         {
             super(texture3d, brightnessModel);

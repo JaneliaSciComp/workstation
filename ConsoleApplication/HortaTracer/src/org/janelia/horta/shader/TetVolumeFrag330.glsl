@@ -57,5 +57,6 @@ void main() {
     if (edge_score < 0.95) discard; // hollow out non-edge region
 #endif
 
-    fragColor = vec4(0.01, 0.5, 0.25, 0.5);
+    // reduce max intensity, to keep color channels from saturating to white
+    fragColor = vec4(0.3 * fragTexCoord.rgb, 0.5);
 }
