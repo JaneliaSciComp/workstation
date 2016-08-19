@@ -57,5 +57,5 @@ void main() {
     if (edge_score < 0.95) discard; // hollow out non-edge region
 #endif
 
-    fragColor = vec4(1, 0, 0, 0.5);
+    fragColor = vec4(0.01, 0.5, 0.25, 0.5);
 }

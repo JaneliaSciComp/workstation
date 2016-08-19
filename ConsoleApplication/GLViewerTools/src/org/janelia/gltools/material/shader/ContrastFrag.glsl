@@ -6,11 +6,17 @@
  * Intensities are expected in the red channel of the input texture.
  */
 
+// For efficiency, limit number of possible color channels
+#define COLOR_VEC vec2
+
 uniform sampler2D upstreamImage;
-uniform vec3 opacityFunction = vec3(
-        0.0, // min
-        1.0, // max
-        1.0); // gamma
+uniform COLOR_VEC opacityFunctionMin = COLOR_VEC(0.0);
+uniform COLOR_VEC opacityFunctionMax = COLOR_VEC(1.0);
+uniform COLOR_VEC opacityFunctionGamma = COLOR_VEC(1.0);
+// uniform vec3 opacityFunction = vec3(
+//        0.0, // min
+//        1.0, // max
+//        1.0); // gamma
 
 in vec2 screenCoord; // from RenderPassVrtx shader
 
@@ -50,46 +56,79 @@ vec3 hslToRgb(vec3 hsl)
     return rgb;
 }
 
+vec4[4] COLOR_RAMP_RED = vec4[4]( // Red, hue=0
+    // Red, Green, Blue, Intensity
+    vec4(0.1, 0.0, 0.0, 0.00), // black
+    vec4(1.0, 0.0, 0.0, 0.55), // red
+    vec4(1.0, 0.5, 0.0, 0.80), // pale orange-red
+    vec4(1.0, 0.95, 0.9, 1.00)); // white
+
+vec4[3] COLOR_RAMP_GREEN = vec4[3]( // Green, hue=120
+    // Red, Green, Blue, Intensity
+    vec4(0.0, 0.1, 0.0, 0.00), // black
+    vec4(0.0, 1.0, 0.0, 0.70), // green
+    vec4(0.95, 1.0, 0.9, 1.00)); // white
+
+vec3 ramp_color(in float intensity, in vec4[4] ramp) {
+    int ix = 1;
+    if (intensity > ramp[ix].w)
+        ix += 1;
+    if (intensity > ramp[ix].w)
+        ix += 1;
+    vec4 col1 = ramp[ix-1];
+    vec4 col2 = ramp[ix];
+    float alpha = (intensity - col1.w) / (col2.w - col1.w);
+    alpha = clamp(alpha, 0, 1);
+    return mix(col1.rgb, col2.rgb, alpha);
+}
+
+vec3 red_color(in float intensity) {
+    int ix = 1;
+    if (intensity > COLOR_RAMP_RED[ix].w)
+        ix += 1;
+    if (intensity > COLOR_RAMP_RED[ix].w)
+        ix += 1;
+    vec4 col1 = COLOR_RAMP_RED[ix-1];
+    vec4 col2 = COLOR_RAMP_RED[ix];
+    float alpha = (intensity - col1.w) / (col2.w - col1.w);
+    alpha = clamp(alpha, 0, 1);
+    return mix(col1.rgb, col2.rgb, alpha);
+}
+
+vec3 green_color(in float intensity) {
+    int ix = 1;
+    if (intensity > COLOR_RAMP_GREEN[ix].w)
+        ix = 2;
+    vec4 col1 = COLOR_RAMP_GREEN[ix-1];
+    vec4 col2 = COLOR_RAMP_GREEN[ix];
+    float alpha = (intensity - col1.w) / (col2.w - col1.w);
+    alpha = clamp(alpha, 0, 1);
+    return mix(col1.rgb, col2.rgb, alpha);
+}
+
 void main() {
     vec4 c = texture(upstreamImage, screenCoord);
-    float intensity = c.r;
+    COLOR_VEC intensity = COLOR_VEC(c);
     float opacityIn = c.a;
 
     if (opacityIn <= 0) discard;
 
     // Discard required on Mac laptop
-    if (intensity <= opacityFunction.x) discard;
+    if (all(greaterThanEqual(opacityFunctionMin, intensity)))
+        discard;
 
-    intensity -= opacityFunction.x;
-    intensity *= 1.0/(opacityFunction.y - opacityFunction.x);
-    intensity = pow(intensity, opacityFunction.z);
+    intensity -= opacityFunctionMin;
+    intensity *= 1.0/(opacityFunctionMax - opacityFunctionMin);
+    intensity = pow(intensity, opacityFunctionGamma);
 
     // float opacity = intensity * opacityIn;
     float opacity = opacityIn;
 
-	// TODO: allow inversion of lightness spectrum
-    // HSL approach
-    if (true) {
-        const float rampOffset = 1.6; // Enhance low-end of lightness spectrum; larger value => blacker color
-        vec3 hsl = vec3( hue.x, saturation.x, pow(intensity, rampOffset) );
-        vec3 rgb = hslToRgb(hsl);
-        fragColor = vec4(rgb, opacity);
-        return;
-    }
+    // TODO: allow inversion of lightness spectrum
 
-    // Hard code a color ramp
-    // TODO - make ramp user adjustable
-    const bool applyColorMap = true;
-    vec3 color = vec3(1,1,1); // white
-    if (applyColorMap) {
-        vec3 color1 = vec3(0, 0.1, 0); // dark dark green
-        vec3 color2 = vec3(0, 1.0, 0.2); // green/cyan
-        vec3 color3 = vec3(1,1,0.80); // white-ish
-        if (intensity < 0.7)
-            color = mix(color1, color2, 2*intensity);
-        else
-            color = mix(color2, color3, 2*intensity-1);
-    }
+    // Use hard coded color ramps
+    vec3 color = green_color(intensity.r);
+    color += red_color(intensity.g);
 
     // TODO sRGB should be last thing ever
     // color = pow(color, vec3(0.5, 0.5, 0.5));

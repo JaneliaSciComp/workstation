@@ -85,7 +85,9 @@ public class RemapColorActor extends BasicScreenBlitActor {
     
     static protected class ColorMapMaterial extends BlitMaterial 
     {
-        private int opacityFunctionIndex = -1;
+        private int opacityFunctionMinIndex = -1;
+        private int opacityFunctionMaxIndex = -1;
+        private int opacityFunctionGammaIndex = -1;
         private BrightnessModel brightnessModel;
 
         public void setBrightnessModel(BrightnessModel brightnessModel) {
@@ -95,17 +97,32 @@ public class RemapColorActor extends BasicScreenBlitActor {
         @Override
         public void init(GL3 gl) {
             super.init(gl);
-            opacityFunctionIndex = gl.glGetUniformLocation(
+            opacityFunctionMinIndex = gl.glGetUniformLocation(
                 shaderProgram.getProgramHandle(),
-                "opacityFunction");            }
+                "opacityFunctionMin");            
+            opacityFunctionMaxIndex = gl.glGetUniformLocation(
+                shaderProgram.getProgramHandle(),
+                "opacityFunctionMax");            
+            opacityFunctionGammaIndex = gl.glGetUniformLocation(
+                shaderProgram.getProgramHandle(),
+                "opacityFunctionGamma");            
+        }
 
         @Override
         public void load(GL3 gl, AbstractCamera camera) {
             super.load(gl, camera);
-            gl.glUniform3fv(opacityFunctionIndex, 1, new float[] {
+            // TODO: Use per-channel brightness
+            gl.glUniform2fv(opacityFunctionMinIndex, 1, new float[] {
                 brightnessModel.getMinimum(), 
-                brightnessModel.getMaximum(),
-                1}, 0);
+                brightnessModel.getMinimum()
+            }, 0);
+            gl.glUniform2fv(opacityFunctionMaxIndex, 1, new float[] {
+                brightnessModel.getMaximum(), 
+                brightnessModel.getMaximum()
+            }, 0);
+            gl.glUniform2fv(opacityFunctionGammaIndex, 1, new float[] {
+                1, 1
+            }, 0);
         }
     }
 }
