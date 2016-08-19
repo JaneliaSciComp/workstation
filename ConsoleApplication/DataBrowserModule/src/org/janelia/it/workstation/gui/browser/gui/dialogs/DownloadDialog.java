@@ -376,6 +376,8 @@ public class DownloadDialog extends ModalDialog {
             protected void resultChanged(ResultDescriptor resultDescriptor) {
                 resultButton.setResultDescriptor(resultDescriptor);
                 resultButton.populate(expandedObjects);
+                typeButton.setResultDescriptor(resultDescriptor);
+                typeButton.populate(expandedObjects);
                 populateDownloadItemList(null);
             }
             @Override
