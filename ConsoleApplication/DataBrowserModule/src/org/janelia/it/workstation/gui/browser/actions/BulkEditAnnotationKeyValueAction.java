@@ -56,27 +56,38 @@ public class BulkEditAnnotationKeyValueAction implements NamedAction {
                 
                 try {
                     ListMultimap<Long,Annotation> annotationsByDomainObjectId = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(DomainUtils.getReferences(selectedObjects)));
-                    
-                    int i = 1;
-                    for (DomainObject selectedObject : selectedObjects) {
-                        List<Annotation> annotations = annotationsByDomainObjectId.get(selectedObject.getId());
-                        if (annotation==null) continue;
-                        for (Annotation annotation : annotations) {
-                            if (annotation.getName().equals(originalAnnotationName)) {
-                                annotation.setValue(newValue);
-                                String tmpName = annotation.getName();
-                                // TODO: move this business logic to the DAO
-                                String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
-                                annotation.setName(namePrefix + newValue);
-                                model.save(annotation);
+
+                    if (selectedObjects.size()==1) {
+                        // If the user has only selected a single domain object, then only update the annotation they actually clicked on
+                        setAnnotationValue(annotation, newValue);
+                    }
+                    else {
+                        // If the user has selected multiple domain objects, then update ALL the matching annotations across ALL the objects they selected
+                        int i = 1;
+                        for (DomainObject selectedObject : selectedObjects) {
+                            List<Annotation> annotations = annotationsByDomainObjectId.get(selectedObject.getId());
+                            if (annotation == null) continue;
+                            for (Annotation annotation : annotations) {
+                                if (annotation.getName().equals(originalAnnotationName)) {
+                                    setAnnotationValue(annotation, newValue);
+                                }
                             }
+                            setProgress(i++, selectedObjects.size());
                         }
-                        setProgress(i++, selectedObjects.size());
                     }
                 }
                 catch (Exception e1) {
                     SessionMgr.getSessionMgr().handleException(e1);
                 }
+            }
+
+            private void setAnnotationValue(Annotation annotation, String newValue) throws Exception {
+                annotation.setValue(newValue);
+                String tmpName = annotation.getName();
+                // TODO: move this business logic to the DAO
+                String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
+                annotation.setName(namePrefix + newValue);
+                model.save(annotation);
             }
 
             @Override
