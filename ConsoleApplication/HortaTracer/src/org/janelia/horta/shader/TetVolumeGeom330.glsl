@@ -62,10 +62,15 @@ void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1, in int p
 }
 
 // Detect front faces
-// http://prideout.net/blog/?p=54
+// Answers the question: Is the camera-space triangle ABC facing the camera?
+bool isFront(vec3 a, vec3 b, vec3 c)
+{
+    return dot(cross(a-b, c-b), b) > 0;
+}
 bool isFront(vec4 A, vec4 B, vec4 C)
 {
-    return 0 < (A.x * B.y - B.x * A.y) + (B.x * C.y - C.x * B.y) + (C.x * A.y - A.x * C.y);
+    // Convert homogenous coordinates to regular 3D
+    return isFront(A.xyz/A.w, B.xyz/B.w, C.xyz/C.w); 
 }
 
 void main() {
@@ -78,7 +83,7 @@ void main() {
 
     // A front-facing tetrahedron has a NON-front-facing base triangle...
     // TODO: this is not working perfectly yet...
-    bool front = ! isFront(projected[0], projected[1], projected[2]);
+    bool front = ! isFront(gl_in[0].gl_Position, gl_in[2].gl_Position, gl_in[4].gl_Position);
     if ((renderPass == 1) && (! front))
         return; // don't draw this tetrahedron on this pass
     else if ((renderPass == 3) && front)
