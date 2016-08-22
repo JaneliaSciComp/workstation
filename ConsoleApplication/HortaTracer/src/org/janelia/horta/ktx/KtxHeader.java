@@ -61,16 +61,16 @@ public class KtxHeader {
     private static final byte[] LITTLE_ENDIAN = new byte[] {1,2,3,4};
     private static final byte[] BIG_ENDIAN = new byte[] {4,3,2,1};
 
-    ByteOrder byteOrder;
-    long glType;
-    long glTypeSize;
-    long glFormat;
-    long glInternalFormat;
-    long glBaseInternalFormat;
-    long pixelWidth, pixelHeight, pixelDepth;
-    long numberOfArrayElements;
-    long numberOfFaces;
-    long numberOfMipmapLevels;
+    public ByteOrder byteOrder;
+    public int glType;
+    int glTypeSize;
+    public int glFormat;
+    public int glInternalFormat;
+    public int glBaseInternalFormat;
+    public int pixelWidth, pixelHeight, pixelDepth;
+    int numberOfArrayElements;
+    int numberOfFaces;
+    public int numberOfMipmapLevels;
     Map<String, String> keyValueMetadata = new LinkedHashMap<>(); // must preserve key order!
     
     public KtxHeader loadStream(InputStream stream) throws IOException
@@ -102,17 +102,17 @@ public class KtxHeader {
         }
         b.order(byteOrder);
         b.rewind();
-        glType = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        glTypeSize = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        glFormat = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        glInternalFormat = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        glBaseInternalFormat = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        pixelWidth = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        pixelHeight = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        pixelDepth = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        numberOfArrayElements = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        numberOfFaces = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
-        numberOfMipmapLevels = (long)b.getInt() & 0xffffffffL; // unsigned so &0xffffffffL
+        glType = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        glTypeSize = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        glFormat = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        glInternalFormat = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        glBaseInternalFormat = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        pixelWidth = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        pixelHeight = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        pixelDepth = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        numberOfArrayElements = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        numberOfFaces = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
+        numberOfMipmapLevels = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
         
         int bytes_of_key_value_data = (int)((long)b.getInt() & 0xffffffffL); // unsigned so &0xffffffffL
         ByteBuffer kv = ByteBuffer.allocate(bytes_of_key_value_data);

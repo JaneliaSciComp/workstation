@@ -36,7 +36,7 @@
 
 #extension GL_ARB_shading_language_420pack : enable
 
-layout(binding = 0) uniform sampler2D volumeTexture;
+layout(binding = 0) uniform sampler3D volumeTexture;
 
 in vec4 barycentricCoord;
 in vec3 fragTexCoord;
@@ -62,5 +62,11 @@ void main() {
 #endif
 
     // reduce max intensity, to keep color channels from saturating to white
-    fragColor = vec4(0.3 * fragTexCoord.rgb, 0.5);
+    vec3 color = textureLod(volumeTexture, fragTexCoord, 5).rgb; // intentionally downsampled
+    float opacity = max(color.r, max(color.g, color.b));
+    fragColor = vec4(
+            // 0.3 * fragTexCoord.rgb, 
+            color,
+            // texture(volumeTexture, fragTexCoord).rgb,
+            opacity);
 }

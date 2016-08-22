@@ -87,8 +87,11 @@ class TetVolumeMeshActor extends MeshActor
     }
     
     @Override
-    public void displayTriangleAdjacencies(GL3 gl) {
+    public void displayTriangleAdjacencies(GL3 gl) 
+    {
         gl.glEnable(GL3.GL_BLEND);
+        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+        
         vertexBufferObject.bind(gl, material.getShaderProgramHandle());
 
         if (vboTriangleAdjacencyIndices == 0)

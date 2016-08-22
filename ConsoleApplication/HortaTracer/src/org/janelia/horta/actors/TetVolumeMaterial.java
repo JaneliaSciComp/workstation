@@ -31,6 +31,8 @@
 package org.janelia.horta.actors;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -40,6 +42,8 @@ import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Material for tetrahedral volume rendering.
@@ -49,6 +53,7 @@ public class TetVolumeMaterial extends BasicMaterial
 {
     private int volumeTextureHandle = 0;
     private KtxData ktxData;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public TetVolumeMaterial(KtxData ktxData) {
         this.ktxData = ktxData;
@@ -73,20 +78,67 @@ public class TetVolumeMaterial extends BasicMaterial
         return false;
     }
     
+    private static int mipmapSize(long level, long baseSize) {
+        int result = (int)Math.max(1, Math.floor(baseSize/(Math.pow(2,level))));
+        return result;
+    }
+    
     @Override
-    public void init(GL3 gl) {
+    public void init(GL3 gl) 
+    {
         super.init(gl);
+        
         // Volume texture
         int[] h = {0};
         gl.glGenTextures(1, h, 0);
         volumeTextureHandle = h[0];
+        
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
+
+        gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 1); // TODO: Verify that this fits data
+        
+        // TODO: Test and verify endian parity behavior
+        /*
+        if (ktxData.header.byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_TRUE);
+        }
+        else {
+            gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_FALSE);
+        }
+         */
+        
+        /* 
+        gl.glTexStorage3D(GL3.GL_TEXTURE_3D, 
+                ktxData.header.numberOfMipmapLevels, 
+                GL3.GL_R8UI, // ktxData.header.glInternalFormat, 
+                ktxData.header.pixelWidth,
+                ktxData.header.pixelHeight,
+                ktxData.header.pixelDepth);
+                */
+        
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST_MIPMAP_NEAREST);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_S, GL3.GL_CLAMP_TO_EDGE);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_CLAMP_TO_EDGE);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_R, GL3.GL_CLAMP_TO_EDGE);
-        gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 4); // TODO: Verify that this fits data
-        
-        // TODO: 
+
+        for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
+        {
+            ByteBuffer buf = ktxData.mipmaps.get(mipmapLevel);
+            buf.rewind();
+            // logger.info("GL Error: " + gl.glGetError());
+            gl.glTexImage3D(
+                    GL3.GL_TEXTURE_3D,
+                    mipmapLevel,
+                    ktxData.header.glBaseInternalFormat,
+                    mipmapSize(mipmapLevel, ktxData.header.pixelWidth),
+                    mipmapSize(mipmapLevel, ktxData.header.pixelHeight),
+                    mipmapSize(mipmapLevel, ktxData.header.pixelDepth),
+                    0, // border
+                    ktxData.header.glFormat,
+                    ktxData.header.glType,
+                    buf);
+        }
     }
     
     @Override
@@ -95,8 +147,6 @@ public class TetVolumeMaterial extends BasicMaterial
         // 3D volume texture
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
-        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
-        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
     }
     
     @Override
