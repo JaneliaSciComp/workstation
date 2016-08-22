@@ -34,7 +34,7 @@ import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
@@ -132,7 +133,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
             return;
         PerformanceTimer timer = new PerformanceTimer();
         super.init(gl);
-        System.out.println("Uploading texture and mipmaps took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Uploading texture and mipmaps took {} ms", timer.reportMsAndRestart());
         unbind(gl);
     }
 
@@ -173,34 +174,40 @@ public class Texture3d extends BasicTexture implements GL3Resource
         return this;
     }
 
-    public Texture3d loadTiffStack(File tiffFile) throws IOException {
+    /**
+     * Loads the given tiff stack into memory and returns true. If the load is not completed for any reason,
+     * this method returns false.
+     * @param tiffFile
+     * @return
+     * @throws IOException
+     */
+    public boolean loadTiffStack(File tiffFile) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
         RenderedImage[] slices = renderedImagesFromTiffStack(tiffFile);
+        if (slices==null) return false;
 
         long logId = System.currentTimeMillis();
 
         float t1=timer.reportMsAndRestart();
-        System.out.println("Tiff load to RenderedImages took "+t1+" ms");
+        log.debug("Tiff load to RenderedImages took {} ms", t1);
 
-        Texture3d result;
-        if (slices.length < 1) {
-            result = this;
-        }
-        else {
+        if (slices.length > 0) {
             Pair<Raster[], ColorModel> slicePair = loadStack(slices);
 
             float t2=timer.reportMsAndRestart();
-            System.out.println("Tiff RenderedImages to raster took "+t2+" ms");
+            log.debug("Tiff RenderedImages to raster took {} ms", t2);
             activityLog.logBrickLoadToRendered(logId, tiffFile.getAbsolutePath(), HttpDataSource.useHttp(), t1+t2);
 
-            result = loadStack(slicePair.getLeft(), slicePair.getRight());
+            loadStack(slicePair.getLeft(), slicePair.getRight());
 
             float t3=timer.reportMsAndRestart();
-            System.out.println("Tiff load raster slices to texture buffer took "+t3+" ms");
-            System.out.println(">>> loadTiffStack() total time="+(t1+t2+t3)+" ms");
+            log.debug("Tiff load raster slices to texture buffer took {} ms", t3);
+            log.info(">>> loadTiffStack() total time = {} ms", (t1+t2+t3));
+            return true;
         }
-
-        return result;
+        else {
+            return false;
+        }
     }
 
     protected void allocatePixels() {
@@ -246,7 +253,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
             raster[i] = stack[i].getData();
         }
 
-        System.out.println("Getting Rasters from RenderedImages took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Getting Rasters from RenderedImages took {} ms", timer.reportMsAndRestart());
         return Pair.of(raster, slice.getColorModel());
     }
 
@@ -280,7 +287,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         allocatePixels();
 
-        System.out.println("Initializing texture buffer took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Initializing texture buffer took {} ms", timer.reportMsAndRestart());
 
         if (getMethod!=null) {
             getMethod.releaseConnection();
@@ -418,11 +425,11 @@ public class Texture3d extends BasicTexture implements GL3Resource
 //        }
 //        pixels.rewind();
 
-        System.out.println("Getting Raster data and populating texture buffer took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Getting Raster data and populating texture buffer took {} ms", timer.reportMsAndRestart());
 
         computeMipmaps();
 
-        System.out.println("Computing mipmaps took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Computing mipmaps took {} ms", timer.reportMsAndRestart());
 
         needsUpload = true;
 
@@ -507,7 +514,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
         PerformanceTimer timer = new PerformanceTimer();
         Texture3d mipmap = createMipmapUsingMaxFilter();
         while (mipmap != null) {
-            // System.out.println("Creating mipmap took "+timer.reportMsAndRestart()+" ms");
+            log.trace("Creating mipmap took {} ms", timer.reportMsAndRestart());
             mipmaps.add(mipmap);
             mipmap = mipmap.createMipmapUsingMaxFilter();
         }
@@ -870,6 +877,30 @@ public class Texture3d extends BasicTexture implements GL3Resource
         return result.substring(startPosition);
     }
 
+    public final boolean readFully(InputStream in, byte b[]) throws IOException {
+        return readFully(in, b, 0, b.length);
+    }
+
+    /**
+     * Copied from DataInputStream, so that we could add a check for interruption.
+     */
+    public final boolean readFully(InputStream in, byte b[], int off, int len) throws IOException {
+        if (len < 0)
+            throw new IndexOutOfBoundsException();
+        int n = 0;
+        while (n < len) {
+            if (Thread.currentThread().isInterrupted()) {
+                log.trace("readFully was interrupted");
+                return false;
+            }
+            int count = in.read(b, off + n, len - n);
+            if (count < 0)
+                throw new EOFException();
+            n += count;
+        }
+        return true;
+    }
+
     private RenderedImage[] renderedImagesFromTiffStack(File tiffFile) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
         // FileSeekableStream is the fastest load method I tested, by far
@@ -894,49 +925,38 @@ public class Texture3d extends BasicTexture implements GL3Resource
         if (optionalFileStreamSource!=null) {
             try {
                 String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
-                log.info("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath="+httpPathFromFilePath);
+                log.debug("renderedImagesFromTiffStack - optionalFileStreamSource - using httpPathFromFilePath={}", httpPathFromFilePath);
                 getMethod = optionalFileStreamSource.getStreamForFile(httpPathFromFilePath);
 
                 // We can now write the stream directly to a buffer, because we know the content length up front.
                 long contentLength = getMethod.getResponseContentLength();
                 byte[] bytes = new byte[(int)contentLength];
-                DataInputStream dataIs = new DataInputStream(getMethod.getResponseBodyAsStream());
-                dataIs.readFully(bytes);
+                if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
 
-                // Back when we didn't know the content length, we had to do this more inefficient read into a growing buffer, and then a copy into a new byte array:
-                //byte[] bytes = IOUtils.toByteArray(getMethod.getResponseBodyAsStream());
-
+                log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
                 SeekableStream s = new ByteArraySeekableStream(bytes);
-                System.out.println("Texture3D STREAM byte load time ms="+timer.reportMsAndRestart());
 
-                // Another way is to read the stream as necessary, but this seems slower.
-//                SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
+                // Another way is to read the stream as necessary, but with this method we can't compare vs file reads.
+                //SeekableStream s = new MemoryCacheSeekableStream(getMethod.getResponseBodyAsStream());
 
                 decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 ex.printStackTrace();
                 getMethod.releaseConnection();
                 getMethod = null;
             }
         }
-        else if (optionalFileByteSource!=null) {
-            // This reads the file into memory ON THE SERVER before streaming it to the client all at once,
-            // which is pointless and delays it getting here. Don't use this.
-            byte[] bytes=null;
-            try {
-                String httpPathFromFilePath=getHttpPathFromFilePath(tiffFile.getAbsolutePath());
-                log.info("renderedImagesFromTiffStack - optionalFileByteSource - using httpPathFromFilePath="+httpPathFromFilePath);
-                bytes = optionalFileByteSource.loadBytesForFile(httpPathFromFilePath);
-                System.out.println("Texture3D HTTP byte load time ms="+timer.reportMsAndRestart());
-            } catch (Exception ex) { ex.printStackTrace(); }
-            SeekableStream s = new ByteArraySeekableStream(bytes);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
-        }
         else if (useFilesReadAllBytesAndByteArraySeekableStream) { // 6.2, 7.0, 7.9, 6.5 seconds - PLEASE USE THIS ONE
-            byte[] bytes= Files.readAllBytes(tiffFile.toPath());
-            System.out.println("Texture3D FILE byte load time ms="+timer.reportMsAndRestart());
-            SeekableStream s = new ByteArraySeekableStream(bytes);
-            decoder = ImageCodec.createImageDecoder("tiff", s, null);
+            try {
+                byte[] bytes = Files.readAllBytes(tiffFile.toPath());
+                log.info("Loading {} bytes from file took {} ms", bytes.length, timer.reportMsAndRestart());
+                SeekableStream s = new ByteArraySeekableStream(bytes);
+                decoder = ImageCodec.createImageDecoder("tiff", s, null);
+            }
+            catch (ClosedByInterruptException e) {
+                return null;
+            }
         }
         else if (useMemoryCache) { // 18.0, 15.5, 13.0, 13.2 seconds
             InputStream tiffStream = new BufferedInputStream( new FileInputStream(tiffFile) );
@@ -963,13 +983,13 @@ public class Texture3d extends BasicTexture implements GL3Resource
             decoder = ImageCodec.createImageDecoder("tiff", s, null);
         }
 
-        System.out.println("Creating image decoder from tiff file took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Creating image decoder from tiff file took {} ms", timer.reportMsAndRestart());
 
         int sz = decoder.getNumPages();
         RenderedImage slices[] = new RenderedImage[sz];
         for (int z = 0; z < sz; ++z)
             slices[z] = decoder.decodeAsRenderedImage(z);
-        System.out.println("Creating RenderedImages for all slices took "+timer.reportMsAndRestart()+" ms");
+        log.debug("Creating RenderedImages for all slices took {} ms", timer.reportMsAndRestart());
         return slices;
     }
 

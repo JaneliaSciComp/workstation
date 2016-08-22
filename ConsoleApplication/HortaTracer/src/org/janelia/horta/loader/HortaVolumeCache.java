@@ -38,7 +38,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.swing.SwingUtilities;
+
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -82,8 +84,10 @@ public class HortaVolumeCache
 
     // Large in-memory cache
     private final Map<BrickInfo, Texture3d> nearVolumeInRam = new ConcurrentHashMap<>();
-    private final Collection<BrickInfo> queuedForLoad = new ConcurrentHashSet();
-    
+
+    private final Map<BrickInfo, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap();
+    private final Map<BrickInfo, RequestProcessor.Task> loadingTiles = new ConcurrentHashMap();
+
     // Fewer on GPU cache
     private final Map<BrickInfo, BrickActor> actualDisplayTiles = new ConcurrentHashMap<>();
     private final Collection<BrickInfo> desiredDisplayTiles = new ConcurrentHashSet<>();
@@ -97,7 +101,7 @@ public class HortaVolumeCache
     float cachedFocusZ = Float.NaN;
     float cachedZoom = Float.NaN;
     
-    private final RequestProcessor loadProcessor = new RequestProcessor("for loading tiles", 10);
+    private final RequestProcessor loadProcessor = new RequestProcessor("VolumeTileLoad", 1, true);
     private final BrightnessModel brightnessModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
@@ -186,6 +190,7 @@ public class HortaVolumeCache
     {
         if (! doUpdateCache)
             return;
+
         // Cache previous location for early termination
         if (xyz[0] == cachedFocusX
                 && xyz[1] == cachedFocusY
@@ -209,8 +214,6 @@ public class HortaVolumeCache
         BrickInfoSet allBricks = NeuronTraceLoader.getBricksForCameraResolution(source, camera);
         Collection<BrickInfo> closestBricks = allBricks.getClosestBricks(xyz, ramTileCount);
         Collection<BrickInfo> veryClosestBricks = allBricks.getClosestBricks(xyz, gpuTileCount);
-
-        log.info("New location: {} (allBricks={}, closestBricks={}, veryClosestBricks={})" , xyz, allBricks.size(), closestBricks.size(), veryClosestBricks.size());
 
         synchronized(desiredDisplayTiles) {
             desiredDisplayTiles.clear();
@@ -242,32 +245,40 @@ public class HortaVolumeCache
 
         // Upload closest tiles to GPU, if already loaded in RAM
         for (BrickInfo brick : desiredDisplayTiles) { // These are the tiles we want do display right now.
-            if (actualDisplayTiles.containsKey(brick)) // Is it already displayed?
+            BrainTileInfo tile = (BrainTileInfo)brick;
+            if (actualDisplayTiles.containsKey(brick)) {// Is it already displayed?
+                log.debug("Already displaying: "+tile.getLocalPath());
                 continue; // already loaded
+            }
             if (nearVolumeInRam.containsKey(brick)) { // Is the texture ready?
+                log.debug("Already in RAM: "+tile.getLocalPath());
                 uploadToGpu((BrainTileInfo)brick); // then display it!
             }
         }
         
         // Begin loading the new tiles asynchronously to RAM
         // ...starting with the ones we want to display right now
-        for (final BrickInfo brick : desiredDisplayTiles) 
-        {
-            if (actualDisplayTiles.containsKey(brick)) // Is it already displayed?
-                continue; // already displayed           
-            if (nearVolumeInRam.containsKey(brick)) // Is the texture already loaded in RAM?
+        for (BrickInfo brick : desiredDisplayTiles) {
+            BrainTileInfo tile = (BrainTileInfo)brick;
+            if (actualDisplayTiles.containsKey(brick)) {// Is it already displayed?
+                continue; // already displayed
+            }
+            if (nearVolumeInRam.containsKey(brick)) { // Is the texture already loaded in RAM?
                 continue; // already loaded
-            log.info("Queueing brick with norm priority: "+brick.getBoundingBox());
-            queueLoad((BrainTileInfo)brick, Thread.NORM_PRIORITY);
+            }
+            log.debug("Queueing brick with norm priority: "+tile.getLocalPath());
+            queueLoad(tile, Thread.NORM_PRIORITY);
         }
-        for (final BrickInfo brick : newBricks) 
-        {
-            log.info("Queueing brick with min priority: "+brick.getBoundingBox());
-            queueLoad((BrainTileInfo)brick, Thread.MIN_PRIORITY); // Don't worry; duplicates will be skipped
+        for (BrickInfo brick : newBricks) {
+            BrainTileInfo tile = (BrainTileInfo)brick;
+            log.debug("Queueing brick with min priority: "+tile.getLocalPath());
+            queueLoad(tile, Thread.MIN_PRIORITY); // Don't worry; duplicates will be skipped
         }
 
         // Begin deleting the old tiles        
         for (BrickInfo brick : obsoleteBricks) {
+            BrainTileInfo tile = (BrainTileInfo)brick;
+            log.info("Removing from RAM: "+tile.getLocalPath());
             nearVolumeInRam.remove(brick);
         }
     }
@@ -276,72 +287,123 @@ public class HortaVolumeCache
     {
         if (! doUpdateCache)
             return;
-        
-        if (queuedForLoad.contains(tile))
+
+        if (loadingTiles.containsKey(tile))
             return; // already loading
-        queuedForLoad.add(tile);
+
         // System.out.println("Horta Volume cache loading tile "+tile.getLocalPath()+"...");
+
         Runnable loadTask = new Runnable() {
             @Override
-            public void run() 
-            {
-                // Check whether this tile is still relevant
-                if (! nearVolumeMetadata.contains(tile)) {
-                    queuedForLoad.remove(tile);
+            public void run() {
+
+                log.info("Beginning load for {}", tile.getLocalPath());
+
+                if (Thread.currentThread().isInterrupted()) {
+                    log.info("loadTask was interrupted before it began");
+                    queuedTiles.remove(tile);
                     return;
                 }
-                
-                // Throttle to slow down loading of too many tiles if user is moving a lot
-                if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
-                    try {
-                        Thread.sleep(1000); // milliseconds to wait before starting load
-                    } catch (InterruptedException ex) {
+
+                // Move from "queued" to "loading" state
+                synchronized(queuedTiles) {
+                    RequestProcessor.Task task = queuedTiles.get(tile);
+                    if (task==null) {
+                        log.warn("Tile has no task: "+tile.getLocalPath());
+                        return;
                     }
+                    loadingTiles.put(tile, task);
+                    queuedTiles.remove(tile);
                 }
-                
-                // Maybe after that wait, this tile is no longer needed
-                if (! nearVolumeMetadata.contains(tile)) {
-                    queuedForLoad.remove(tile);
-                    return;
-                }
-                
-                if (! doUpdateCache) {
-                    queuedForLoad.remove(tile);
-                    return;
-                }
-                
-                ProgressHandle progress
-                    = ProgressHandleFactory.createHandle("Loading Tile " + tile.getLocalPath() + " ...");
-                progress.start();
-                progress.setDisplayName("Loading Tile " + tile.getLocalPath() + " ...");
-                progress.switchToIndeterminate();
+
+                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + tile.getLocalPath() + " ...");
+
                 try {
+                    // Check whether this tile is still relevant
+                    if (! nearVolumeMetadata.contains(tile)) {
+                        return;
+                    }
+
+                    // Throttle to slow down loading of too many tiles if user is moving a lot
+    //                if (queuedForLoad.size() > 2) { // Hmm... Many things are already loading, so maybe I should play it cool...
+    //                    try {
+    //                        Thread.sleep(1000); // milliseconds to wait before starting load
+    //                    } catch (InterruptedException ex) {
+    //                    }
+    //                }
+
+                    // Maybe after that wait, this tile is no longer needed
+                    if (! nearVolumeMetadata.contains(tile)) {
+                        return;
+                    }
+
+                    if (! doUpdateCache) {
+                        return;
+                    }
+
+                    progress.start();
+                    progress.setDisplayName("Loading Tile " + tile.getLocalPath() + " ...");
+                    progress.switchToIndeterminate();
                     Texture3d tileTexture = tile.loadBrick(10, currentColorChannel);
-                    if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
-                        nearVolumeInRam.put(tile, tileTexture);
-                        // Trigger GPU upload, if appropriate
-                        if (desiredDisplayTiles.contains(tile)) {
-                            // Trigger GPU upload
-                            uploadToGpu(tile);
+                    if (tileTexture!=null) {
+                        if (nearVolumeMetadata.contains(tile)) { // Make sure this tile is still desired after loading
+                            nearVolumeInRam.put(tile, tileTexture);
+                            // Trigger GPU upload, if appropriate
+                            if (desiredDisplayTiles.contains(tile)) {
+                                // Trigger GPU upload
+                                uploadToGpu(tile);
+                            }
                         }
                     }
-                } catch (IOException ex) {
+                    else {
+                        log.info("Load was interrupted for: {}", tile.getLocalPath());
+                    }
+                }
+                catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 }
                 finally {
-                    queuedForLoad.remove(tile);
+                    loadingTiles.remove(tile);
                     progress.finish();
                 }
             };
         };
         // Submit load task asynchronously
-        int start_lag = 300; // milliseconds
+        int start_lag = 0; // milliseconds
         if (priority < Thread.NORM_PRIORITY) {
-            start_lag = 1500;
+            start_lag = 0;
         }
-        loadProcessor.post(loadTask, start_lag, priority);
+
+        synchronized (queuedTiles) {
+            if (priority == Thread.NORM_PRIORITY) {
+                log.debug("Cancelling all current tasks to make room for {}", tile.getLocalPath());
+                // Cancel all current tasks so that this one can execute with haste
+                if (expediteTileLoad(queuedTiles, tile)) return;
+                if (expediteTileLoad(loadingTiles, tile)) return;
+            }
+            log.info("Queueing brick {} with priority {} (queued={}, loading={})", tile.getLocalPath(),priority, queuedTiles.size(), loadingTiles.size());
+            queuedTiles.put(tile, loadProcessor.post(loadTask, start_lag, priority));
+        }
     }
-    
+
+    private boolean expediteTileLoad(Map<BrickInfo, RequestProcessor.Task> taskMap, BrainTileInfo wantedTile) {
+        // Walk the map and abort if the given wanted tile is already there. Cancel any other tasks that may be in its way.
+        for(Iterator<Map.Entry<BrickInfo, RequestProcessor.Task>> iterator = taskMap.entrySet().iterator(); iterator.hasNext(); ) {
+            Map.Entry<BrickInfo, RequestProcessor.Task> entry = iterator.next();
+            BrainTileInfo tileToCancel = (BrainTileInfo)entry.getKey();
+            RequestProcessor.Task task = entry.getValue();
+            if (tileToCancel.equals(wantedTile) && task.getPriority()==Thread.NORM_PRIORITY) {
+                // The tile we want is already loading at the correct priority
+                log.debug("Tile is already in flight: {}", tileToCancel.getLocalPath());
+                return true;
+            }
+            log.info("Cancelling load for {} (priority {})", tileToCancel.getLocalPath(), task.getPriority());
+            task.cancel();
+            iterator.remove();
+        }
+        return false;
+    }
+
     private void uploadToGpu(BrainTileInfo brick) {
         if (! doUpdateCache)
             return;
@@ -351,9 +413,13 @@ public class HortaVolumeCache
             return; // not needed
         
         Texture3d texture3d = nearVolumeInRam.get(brick);
-        if (texture3d == null)
+        if (texture3d == null) {
+            log.error("Volume should be loaded but isn't: "+brick.getLocalPath());
             return; // Sorry, that volume is not loaded FIXME: error handling here
-        
+        }
+
+        log.info("Loading to GPU: "+brick.getLocalPath());
+
         // System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
         final BrickActor actor = new BrickActor(brick, texture3d, brightnessModel, volumeState);
         actualDisplayTiles.put(brick, actor);
