@@ -38,6 +38,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
+import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 
 /**
@@ -46,8 +47,11 @@ import org.openide.util.Exceptions;
  */
 public class TetVolumeMaterial extends BasicMaterial
 {
+    private int volumeTextureHandle = 0;
+    private KtxData ktxData;
 
-    public TetVolumeMaterial() {
+    public TetVolumeMaterial(KtxData ktxData) {
+        this.ktxData = ktxData;
         shaderProgram = new TetVolumeShader();
     }
     
@@ -56,10 +60,43 @@ public class TetVolumeMaterial extends BasicMaterial
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
         mesh.displayTriangleAdjacencies(gl);
     }
+
+    @Override
+    public void dispose(GL3 gl) {
+        super.dispose(gl);
+        gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
+        volumeTextureHandle = 0;
+    }
     
     @Override
     public boolean hasPerFaceAttributes() {
         return false;
+    }
+    
+    @Override
+    public void init(GL3 gl) {
+        super.init(gl);
+        // Volume texture
+        int[] h = {0};
+        gl.glGenTextures(1, h, 0);
+        volumeTextureHandle = h[0];
+        gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_S, GL3.GL_CLAMP_TO_EDGE);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_CLAMP_TO_EDGE);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_R, GL3.GL_CLAMP_TO_EDGE);
+        gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 4); // TODO: Verify that this fits data
+        
+        // TODO: 
+    }
+    
+    @Override
+    public void load(GL3 gl, AbstractCamera camera) {
+        super.load(gl, camera);
+        // 3D volume texture
+        gl.glActiveTexture(GL3.GL_TEXTURE0);
+        gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
+        gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
     }
     
     @Override

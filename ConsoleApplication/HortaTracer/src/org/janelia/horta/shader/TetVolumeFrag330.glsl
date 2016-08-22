@@ -34,6 +34,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#extension GL_ARB_shading_language_420pack : enable
+
+layout(binding = 0) uniform sampler2D volumeTexture;
+
 in vec4 barycentricCoord;
 in vec3 fragTexCoord;
 

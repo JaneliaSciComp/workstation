@@ -36,6 +36,7 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
+import org.janelia.horta.ktx.KtxData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,17 +47,15 @@ import org.slf4j.LoggerFactory;
  */
 public class TetVolumeActor extends BasicGL3Actor 
 {
-    private final MeshGeometry meshGeometry;
     private final MeshActor meshActor;
     protected final TetVolumeMaterial material;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     // For scaling efficiency, alternate constructor takes shared resources as argument
-    public TetVolumeActor(MeshGeometry meshGeometry) 
+    public TetVolumeActor(KtxData ktxData, MeshGeometry meshGeometry) 
     {
         super(null);
-        material = new TetVolumeMaterial();
-        this.meshGeometry = meshGeometry;
+        material = new TetVolumeMaterial(ktxData);
         meshActor = new TetVolumeMeshActor(meshGeometry, material, this);
         this.addChild(meshActor);
     }
