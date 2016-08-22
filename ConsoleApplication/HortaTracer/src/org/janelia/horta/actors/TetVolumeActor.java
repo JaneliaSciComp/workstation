@@ -30,8 +30,6 @@
 
 package org.janelia.horta.actors;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;

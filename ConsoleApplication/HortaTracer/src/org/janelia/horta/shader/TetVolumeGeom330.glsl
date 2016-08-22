@@ -9,7 +9,7 @@
 // Project here in the geometry shader
 uniform mat4 projectionMatrix = mat4(1);
 
-uniform int renderPass = 1; // 1: front tetrahedra, 2: central tetrahedra, 3: rear tetrahedra
+// uniform int renderPass = 1; // 1: front tetrahedra, 2: central tetrahedra, 3: rear tetrahedra
 
 /* Receive one tetrahedral mesh as a base triangle, plus three redundant side vertices
    The base of the tetrahedron is triangle 0-4-2, below.
@@ -70,25 +70,24 @@ bool isFront(vec3 a, vec3 b, vec3 c)
 bool isFront(vec4 A, vec4 B, vec4 C)
 {
     // Convert homogenous coordinates to regular 3D
-    return isFront(A.xyz/A.w, B.xyz/B.w, C.xyz/C.w); 
+    return isFront(A.xyz/A.w, B.xyz/B.w, C.xyz/C.w);
 }
 
-void main() {
+void main() 
+{
+    // Only draw "rear" tetrahedra. This way, over the course of three render
+    // passes, the five tetrahedra comprising a block will be drawn in 
+    // painter's algorithm order.
+    // Abuse elements 3&5 to encode front-ness
+    if (! isFront(gl_in[0].gl_Position, gl_in[3].gl_Position, gl_in[5].gl_Position))
+        return;
+
     // We only need to project the 4 unique points, not all six.
     vec4 projected[4] = vec4[4] (
         projectionMatrix * gl_in[0].gl_Position, // base1
         projectionMatrix * gl_in[2].gl_Position, // base2
         projectionMatrix * gl_in[4].gl_Position, // base3
         projectionMatrix * gl_in[1].gl_Position); // apex
-
-    // A front-facing tetrahedron has a NON-front-facing base triangle...
-    // TODO: this is not working perfectly yet...
-    bool front = ! isFront(gl_in[0].gl_Position, gl_in[2].gl_Position, gl_in[4].gl_Position);
-    if ((renderPass == 1) && (! front))
-        return; // don't draw this tetrahedron on this pass
-    else if ((renderPass == 3) && front)
-        return; // don't draw this tetrahedron on this pass
-
     vec3 tc[4] = vec3[4] (
         geomTexCoord[0],
         geomTexCoord[2],

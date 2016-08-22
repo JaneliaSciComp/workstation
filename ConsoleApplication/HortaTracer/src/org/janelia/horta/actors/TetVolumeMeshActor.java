@@ -46,9 +46,11 @@ import org.janelia.gltools.material.Material;
  */
 class TetVolumeMeshActor extends MeshActor 
 {
-    private List<List<Integer>> outerTetrahedra = new ArrayList<>();
-    private List<Integer> centralTetrahedron = new ArrayList<>();
-    protected int vboCentralTriangleAdjacencyIndices = 0;
+    private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
+    private final List<Integer> centralTetrahedron = new ArrayList<>();
+    // First render pass uses parent class vboTriangleAdjacenyIndices
+    protected int vboCentralTriangleAdjacencyIndices = 0; // For second render pass, just the central tetrahedron.
+    protected int vboReversedTriangleAdjacencyIndices = 0; // For the third render pass, front tetrahedra.
 
     public TetVolumeMeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
         super(geometry, material, parent);
@@ -77,9 +79,10 @@ class TetVolumeMeshActor extends MeshActor
         
         super.dispose(gl);
         //
-        int[] vbos = {vboCentralTriangleAdjacencyIndices};
-        gl.glDeleteBuffers(1, vbos, 0);
+        int[] vbos = {vboCentralTriangleAdjacencyIndices, vboReversedTriangleAdjacencyIndices};
+        gl.glDeleteBuffers(2, vbos, 0);
         vboCentralTriangleAdjacencyIndices = 0;
+        vboReversedTriangleAdjacencyIndices = 0;
         super.dispose(gl);
     }
     
@@ -91,24 +94,19 @@ class TetVolumeMeshActor extends MeshActor
             initTriangleAdjacencyIndices(gl);
         
         // First pass: rear tetrahedra
-        int passIndex = gl.glGetUniformLocation(material.getShaderProgramHandle(), "renderPass");
-        gl.glUniform1i(passIndex, 3);
         gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboTriangleAdjacencyIndices);
         gl.glDrawElements(GL3.GL_TRIANGLES_ADJACENCY, triangleAdjacencyIndexCount, GL3.GL_UNSIGNED_INT, 0);
         
         // Second pass: central tetrahedron
         if (centralTetrahedron.size() > 0) {
-            gl.glUniform1i(passIndex, 2);
             gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboCentralTriangleAdjacencyIndices);
-            gl.glDrawElements(GL3.GL_TRIANGLES_ADJACENCY, 6, GL3.GL_UNSIGNED_INT, 0);
+            gl.glDrawElements(GL3.GL_TRIANGLES_ADJACENCY, 12, GL3.GL_UNSIGNED_INT, 0);
         }
         
         // Third pass: front tetrahedra
-        gl.glUniform1i(passIndex, 1);
-        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboTriangleAdjacencyIndices);
+        gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboReversedTriangleAdjacencyIndices);
         gl.glDrawElements(GL3.GL_TRIANGLES_ADJACENCY, triangleAdjacencyIndexCount, GL3.GL_UNSIGNED_INT, 0);
-        
-        //
+
         vertexBufferObject.unbind(gl);
     }
 
@@ -122,47 +120,74 @@ class TetVolumeMeshActor extends MeshActor
         {
             int faceCount = outerTetrahedra.size();
             triangleAdjacencyIndexCount = 6 * faceCount;
-            IntBuffer indices = Buffers.newDirectIntBuffer(triangleAdjacencyIndexCount);
+            IntBuffer indices = Buffers.newDirectIntBuffer(triangleAdjacencyIndexCount); // for first render pass
+            IntBuffer reversedIndices = Buffers.newDirectIntBuffer(triangleAdjacencyIndexCount); // for third render pass
             for (List<Integer> tet : outerTetrahedra) {
                 int a = tet.get(0); 
                 int b = tet.get(1);
                 int c = tet.get(2);
                 int apex = tet.get(3); // apex
+                // Forward
                 indices.put(a);
                 indices.put(apex);
                 indices.put(b);
-                indices.put(apex);
+                indices.put(b); // abuse elements 3&5 to encode front-ness
                 indices.put(c);
-                indices.put(apex);
+                indices.put(c); // abuse elements 3&5 to encode front-ness
+                // Inverted
+                reversedIndices.put(a);
+                reversedIndices.put(apex);
+                reversedIndices.put(b);
+                reversedIndices.put(c); // abuse elements 3&5 to encode front-ness
+                reversedIndices.put(c);
+                reversedIndices.put(b); // abuse elements 3&5 to encode front-ness
             }
 
             indices.flip();
-            IntBuffer vbos = IntBuffer.allocate(1);
+            reversedIndices.flip();
+            IntBuffer vbos = IntBuffer.allocate(2);
             vbos.rewind();
-            gl.glGenBuffers(1, vbos);
+            gl.glGenBuffers(2, vbos);
             vboTriangleAdjacencyIndices = vbos.get(0);
+            vboReversedTriangleAdjacencyIndices = vbos.get(1);
             gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboTriangleAdjacencyIndices);
             gl.glBufferData(
                     GL3.GL_ELEMENT_ARRAY_BUFFER,
                     indices.capacity() * Buffers.SIZEOF_INT,
                     indices,
                     GL3.GL_STATIC_DRAW);
+            gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, vboReversedTriangleAdjacencyIndices);
+            gl.glBufferData(
+                    GL3.GL_ELEMENT_ARRAY_BUFFER,
+                    reversedIndices.capacity() * Buffers.SIZEOF_INT,
+                    reversedIndices,
+                    GL3.GL_STATIC_DRAW);
             gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
         }
         if ((vboCentralTriangleAdjacencyIndices == 0) && (centralTetrahedron.size() > 0))
         {
-            IntBuffer indices = Buffers.newDirectIntBuffer(6);
+            IntBuffer indices = Buffers.newDirectIntBuffer(12);
             List<Integer> tet = centralTetrahedron;
             int a = tet.get(0); 
             int b = tet.get(1);
             int c = tet.get(2);
             int apex = tet.get(3); // apex
+            // Central Tetrahedron gets both forward and reverse forms stored,
+            // so it will always get drawn exactly once, after culling.
+            // 1) forward version
             indices.put(a);
             indices.put(apex);
             indices.put(b);
-            indices.put(apex);
+            indices.put(b); // abuse elements 3&5 to encode front-ness
             indices.put(c);
+            indices.put(c); // abuse elements 3&5 to encode front-ness
+            // 2) reverse version
+            indices.put(a);
             indices.put(apex);
+            indices.put(b);
+            indices.put(c); // abuse elements 3&5 to encode front-ness
+            indices.put(c);
+            indices.put(b); // abuse elements 3&5 to encode front-ness          
 
             indices.flip();
             IntBuffer vbos = IntBuffer.allocate(1);
