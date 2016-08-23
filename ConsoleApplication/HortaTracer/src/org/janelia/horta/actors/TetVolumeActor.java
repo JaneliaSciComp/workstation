@@ -41,7 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO: Special initialization of triangle adjacency indices
+ * Volume rendering actor for blocks consisting of five tetrahedral components.
  *
  * @author Christopher Bruns
  */

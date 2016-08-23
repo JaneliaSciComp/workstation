@@ -32,7 +32,6 @@ package org.janelia.horta.actors;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -52,7 +51,7 @@ import org.slf4j.LoggerFactory;
 public class TetVolumeMaterial extends BasicMaterial
 {
     private int volumeTextureHandle = 0;
-    private KtxData ktxData;
+    private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public TetVolumeMaterial(KtxData ktxData) {
@@ -122,6 +121,7 @@ public class TetVolumeMaterial extends BasicMaterial
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_CLAMP_TO_EDGE);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_R, GL3.GL_CLAMP_TO_EDGE);
 
+        long t0 = System.nanoTime();
         for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
         {
             ByteBuffer buf = ktxData.mipmaps.get(mipmapLevel);
@@ -139,6 +139,8 @@ public class TetVolumeMaterial extends BasicMaterial
                     ktxData.header.glType,
                     buf);
         }
+        long t1 = System.nanoTime();
+        logger.info("Uploading tetrahedral volume texture to GPU took "+(t1-t0)/1.0e9+" seconds");
     }
     
     @Override
