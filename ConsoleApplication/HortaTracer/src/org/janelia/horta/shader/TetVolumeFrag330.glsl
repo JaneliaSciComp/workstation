@@ -65,8 +65,8 @@ void main() {
     vec3 color = textureLod(volumeTexture, fragTexCoord, 5).rgb; // intentionally downsampled
     float opacity = max(color.r, max(color.g, color.b));
     fragColor = vec4(
-            // 0.3 * fragTexCoord.rgb, 
-            color,
-            // texture(volumeTexture, fragTexCoord).rgb,
-            opacity);
+            0.3 * fragTexCoord.rgb, 1.0
+            // color, opacity
+            // texture(volumeTexture, fragTexCoord).rgb, opacity
+    );
 }
