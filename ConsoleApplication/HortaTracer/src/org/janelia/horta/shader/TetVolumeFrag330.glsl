@@ -61,12 +61,14 @@ void main() {
     if (edge_score < 0.95) discard; // hollow out non-edge region
 #endif
 
-    // reduce max intensity, to keep color channels from saturating to white
     vec3 color = textureLod(volumeTexture, fragTexCoord, 5).rgb; // intentionally downsampled
     float opacity = max(color.r, max(color.g, color.b));
     fragColor = vec4(
-            0.3 * fragTexCoord.rgb, 1.0
-            // color, opacity
-            // texture(volumeTexture, fragTexCoord).rgb, opacity
+
+            // reduce max intensity, to keep color channels from saturating to white
+            // 0.3 * fragTexCoord.rgb, 1.0 // For debugging texture coordinates
+
+            color, 1.0 // For debugging texture image
+
     );
 }

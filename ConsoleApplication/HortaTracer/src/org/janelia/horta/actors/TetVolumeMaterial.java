@@ -32,6 +32,9 @@ package org.janelia.horta.actors;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -53,6 +56,7 @@ public class TetVolumeMaterial extends BasicMaterial
     private int volumeTextureHandle = 0;
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private IntBuffer pbos;
 
     public TetVolumeMaterial(KtxData ktxData) {
         this.ktxData = ktxData;
@@ -121,12 +125,30 @@ public class TetVolumeMaterial extends BasicMaterial
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_T, GL3.GL_CLAMP_TO_EDGE);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_WRAP_R, GL3.GL_CLAMP_TO_EDGE);
 
+        // Use pixel buffer objects for asynchronous transfer
+        
+        // Phase 1: Allocate pixel buffer objects (in GL thread)
         long t0 = System.nanoTime();
+        int mapCount = ktxData.header.numberOfMipmapLevels;
+        pbos = IntBuffer.allocate(mapCount);
+        gl.glGenBuffers(mapCount, pbos);
         for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
         {
-            ByteBuffer buf = ktxData.mipmaps.get(mipmapLevel);
-            buf.rewind();
+            ByteBuffer buf1 = ktxData.mipmaps.get(mipmapLevel);
+            buf1.rewind();
+            gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
+            gl.glBufferData(GL3.GL_PIXEL_UNPACK_BUFFER, buf1.capacity(), buf1, GL3.GL_STREAM_DRAW);
+            // mappedPboBuffers.add(gl.glMapBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, GL3.GL_WRITE_ONLY));
+            // gl.glUnmapBuffer(GL3.GL_PIXEL_UNPACK_BUFFER);
+        }
+        long t1 = System.nanoTime();
+        logger.info("Creating pixel buffer objects took "+(t1-t0)/1.0e9+" seconds");
+        
+        // Phase 2: Initiate loading of texture to GPU (in GL thread)
+        for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
+        {
             // logger.info("GL Error: " + gl.glGetError());
+            gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
             gl.glTexImage3D(
                     GL3.GL_TEXTURE_3D,
                     mipmapLevel,
@@ -137,10 +159,13 @@ public class TetVolumeMaterial extends BasicMaterial
                     0, // border
                     ktxData.header.glFormat,
                     ktxData.header.glType,
-                    buf);
+                    0); // zero means read from PBO
         }
-        long t1 = System.nanoTime();
-        logger.info("Uploading tetrahedral volume texture to GPU took "+(t1-t0)/1.0e9+" seconds");
+        gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, 0);
+        long t2 = System.nanoTime();
+        logger.info("Uploading tetrahedral volume texture to GPU took "+(t2-t1)/1.0e9+" seconds");
+        
+        // Phase 3: Use the texture in draw calls, after some delay... TODO:
     }
     
     @Override
