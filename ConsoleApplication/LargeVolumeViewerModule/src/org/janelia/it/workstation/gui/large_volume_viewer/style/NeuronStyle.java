@@ -50,6 +50,10 @@ public class NeuronStyle {
         return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
     }
 
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible);
+    }
+
     /**
      * given a json object, return a NeuronStyle; expected to
      * be in form {"color", [R, G, B in 0-255], "visibility": true/false}

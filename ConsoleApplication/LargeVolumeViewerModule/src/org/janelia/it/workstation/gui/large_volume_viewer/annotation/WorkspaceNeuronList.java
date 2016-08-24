@@ -16,9 +16,10 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronData;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -125,7 +126,7 @@ public class WorkspaceNeuronList extends JPanel {
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
-                    TmNeuron selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
                     if (me.getClickCount() == 1) {
                         // which column?
                         int viewColumn = table.columnAtPoint(me.getPoint());
@@ -229,13 +230,12 @@ public class WorkspaceNeuronList extends JPanel {
      * called when current neuron changes; both selects the neuron visually
      * as well as replaces the old neuron in the model with the new one
      */
-    public void selectNeuron(TmNeuron neuron) {
-        if (neuron == null) {
+    public void selectNeuron(TmNeuronMetadata tmNeuronMetadata) {
+        if (tmNeuronMetadata == null) {
             return;
         }
-
-        updateModel(neuron);
-        int neuronModelRow = neuronTableModel.getRowForNeuron(neuron);
+        updateModel(tmNeuronMetadata);
+        int neuronModelRow = neuronTableModel.getRowForNeuron(tmNeuronMetadata);
         if (neuronModelRow >= 0) {
             int neuronTableRow = neuronTable.convertRowIndexToView(neuronModelRow);
             if (neuronTableRow >= 0) {
@@ -297,12 +297,12 @@ public class WorkspaceNeuronList extends JPanel {
      * update the table neuron with a new version of an
      * existing neuron (replaces in place)
      */
-    private void updateModel(TmNeuron neuron) {
+    private void updateModel(TmNeuronMetadata neuron) {
         neuronTableModel.updateNeuron(neuron);
     }
 
 
-    private void onNeuronDoubleClicked(TmNeuron neuron) {
+    private void onNeuronDoubleClicked(TmNeuronMetadata neuron) {
         // should pan to center of neuron; let's call that the center
         //  of the bounding cube for its annotations
         // I'd prefer this calculation be part of TmNeuron, but
@@ -325,7 +325,7 @@ class NeuronTableModel extends AbstractTableModel {
     // note: creation date column will be hidden!
     private String[] columnNames = {"Name", "Style", "Creation Date"};
 
-    private ArrayList<TmNeuron> neurons = new ArrayList<>();
+    private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
 
     // need this to retrieve colors!
     private AnnotationModel annotationModel;
@@ -339,19 +339,19 @@ class NeuronTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public void addNeuron(TmNeuron neuron) {
+    public void addNeuron(TmNeuronMetadata neuron) {
         neurons.add(neuron);
         fireTableDataChanged();
     }
 
-    public void addNeurons(List<TmNeuron> neuronList) {
+    public void addNeurons(List<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
         fireTableDataChanged();
     }
 
-    public void updateNeuron(TmNeuron neuron) {
-        int neuronRow = getRowForNeuron(neuron);
-        neurons.set(neuronRow, neuron);
+    public void updateNeuron(TmNeuronMetadata tmNeuronMetadata) {
+        int neuronRow = getRowForNeuron(tmNeuronMetadata);
+        neurons.set(neuronRow, tmNeuronMetadata);
         fireTableDataChanged();
     }
 
@@ -368,15 +368,15 @@ class NeuronTableModel extends AbstractTableModel {
         return neurons.size();
     }
 
-    public TmNeuron getNeuronAtRow(int row) {
+    public TmNeuronMetadata getNeuronAtRow(int row) {
         return neurons.get(row);
     }
 
-    public int getRowForNeuron(TmNeuron neuron) {
+    public int getRowForNeuron(TmNeuronMetadata tmNeuronMetadata) {
         // we're matching by ID, not object identity
-        TmNeuron foundNeuron = null;
-        for (TmNeuron n: neurons) {
-            if (n.getId().equals(neuron.getId())) {
+        TmNeuronMetadata foundNeuron = null;
+        for (TmNeuronMetadata n: neurons) {
+            if (n.getId().equals(tmNeuronMetadata.getId())) {
                 foundNeuron = n;
                 break;
             }
@@ -393,7 +393,7 @@ class NeuronTableModel extends AbstractTableModel {
         switch (column) {
             case 0:
                 // neuron
-                return TmNeuron.class;
+                return TmNeuronMetadata.class;
             case 1:
                 // color
                 return Color.class;

@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnnotationSelectionListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
@@ -146,11 +146,10 @@ public class FilteredAnnotationList extends JPanel {
         setCurrentFilter(filters.get("default"));
     }
 
-
     // the next routines are called by PanelController (etc) when data changes;
     //   for now, they all call the same internal, brute force update
 
-    public void loadNeuron(TmNeuron neuron) {
+    public void loadNeuron(TmNeuronMetadata neuron) {
         updateData();
     }
 
@@ -189,7 +188,7 @@ public class FilteredAnnotationList extends JPanel {
         model.clear();
         AnnotationFilter filter = getCurrentFilter();
         String note;
-        for (TmNeuron neuron: annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     note = annotationMgr.getNote(ann.getId(), neuron);
@@ -501,7 +500,7 @@ public class FilteredAnnotationList extends JPanel {
      * neuron" toggle doesn't explicitly set the filter
      */
     public AnnotationFilter getCurrentFilter() {
-        TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
         if (neuronCheckbox.isSelected() && currentNeuron != null) {
             return new AndFilter(new NeuronFilter(currentNeuron), currentFilter);
         } else {
@@ -728,7 +727,7 @@ class PredefNoteFilter implements AnnotationFilter {
 
 class NeuronFilter implements AnnotationFilter {
     private Long neuronID;
-    public NeuronFilter(TmNeuron neuron) {
+    public NeuronFilter(TmNeuronMetadata neuron) {
         this.neuronID = neuron.getId();
     }
     @Override

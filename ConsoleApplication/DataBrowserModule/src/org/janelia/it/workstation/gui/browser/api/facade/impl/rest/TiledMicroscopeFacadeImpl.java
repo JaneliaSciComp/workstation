@@ -20,10 +20,13 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade {
+public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMicroscopeFacade {
+
+    private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
 
     private RESTClientManager manager;
 
@@ -181,6 +184,20 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.jan
     }
 
     @Override
+    public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
+        FormDataMultiPart multiPart = new FormDataMultiPart()
+                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
+        Response response = manager.getTmNeuronEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request()
+                .post(Entity.entity(multiPart, multiPart.getMediaType()));
+        if (checkBadResponse(response.getStatus(), "problem making request updateTmNeuronMetadata to server: " + neuronMetadata)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmNeuronMetadata.class);
+    }
+
+    @Override
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
@@ -206,5 +223,4 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements org.jan
             throw new WebApplicationException(response);
         }
     }
-
 }

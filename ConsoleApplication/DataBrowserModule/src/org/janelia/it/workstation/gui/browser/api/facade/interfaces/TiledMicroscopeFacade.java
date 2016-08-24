@@ -35,6 +35,8 @@ public interface TiledMicroscopeFacade {
 
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception;
 
+    public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception;
+
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception;
 
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception;

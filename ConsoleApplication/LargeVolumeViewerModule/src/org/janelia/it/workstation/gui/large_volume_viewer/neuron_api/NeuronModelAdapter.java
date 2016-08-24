@@ -30,7 +30,6 @@
 
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
-import Jama.Matrix;
 import java.awt.Color;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +38,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import Jama.Matrix;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
@@ -48,15 +49,14 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronModelAdapter implements NeuronModel
 {
-    private TmNeuron neuron;
+    private TmNeuronMetadata neuron;
     private final Long neuronId;
     private final VertexList vertexes;
     private final EdgeList edges;
@@ -90,7 +90,7 @@ public class NeuronModelAdapter implements NeuronModel
     private TmWorkspace workspace;
     private TmSample sample;
 
-    public NeuronModelAdapter(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace, TmSample sample)
+    public NeuronModelAdapter(TmNeuronMetadata neuron, AnnotationModel annotationModel, TmWorkspace workspace, TmSample sample)
     {
         this.neuron = neuron;
         this.neuronId = neuron.getId();
@@ -238,7 +238,7 @@ public class NeuronModelAdapter implements NeuronModel
         return newVertex;
     }
     
-    public void updateWrapping(TmNeuron neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
+    public void updateWrapping(TmNeuronMetadata neuron, AnnotationModel annotationModel, TmWorkspace workspace) {
         if (this.neuron != neuron) {
             this.neuron = neuron;
             assert this.neuronId.equals(neuron.getId()); // Must use .equals() friggin java...
@@ -381,7 +381,7 @@ public class NeuronModelAdapter implements NeuronModel
         return true;
     }
 
-    TmNeuron getTmNeuron()
+    TmNeuronMetadata getTmNeuronMetadata()
     {
         return neuron;
     }

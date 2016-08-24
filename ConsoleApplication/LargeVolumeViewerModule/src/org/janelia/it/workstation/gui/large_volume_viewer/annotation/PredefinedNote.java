@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronData;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,7 @@ public enum PredefinedNote {
      * to every annotation; we don't allow "traced end" to be applied
      * to an annotation that's not an end, for example
      */
-    public boolean isValid(TmNeuron neuron, Long annotationID) {
+    public boolean isValid(TmNeuronMetadata neuron, Long annotationID) {
         TmGeoAnnotation ann = neuron.getGeoAnnotationMap().get(annotationID);
         switch (this) {
             // these guys need to be actual ends:

@@ -1,16 +1,18 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Collection;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.TiledMicroscopeFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.junit.AfterClass;
@@ -71,9 +73,10 @@ public class TmWebClientTest {
         Set<String> testWorkspaces = Sets.newHashSet(TEST_WORKSPACE_CRUD_WORKSPACE, TEST_NEURON_CRUD_WORKSPACE);
         for(TmWorkspace workspace : facade.getTmWorkspaces()) {
             if (testWorkspaces.contains(workspace.getName())) {
-                for(TmNeuron neuron : facade.getWorkspaceNeurons(workspace.getId())) {
-                    log.info("Removing neuron "+neuron.getId());
-                    facade.remove(neuron);
+                for(Pair<TmNeuronMetadata, InputStream> pair : facade.getWorkspaceNeuronPairs(workspace.getId())) {
+                    TmNeuronMetadata tmNeuronMetadata = pair.getLeft();
+                    log.info("Removing neuron "+tmNeuronMetadata.getId());
+                    facade.remove(tmNeuronMetadata);
                 }
                 log.info("Removing workspace "+workspace.getId());
                 facade.remove(workspace);
@@ -137,44 +140,56 @@ public class TmWebClientTest {
         String neuronName = "new neuron";
         String workspaceName = TEST_NEURON_CRUD_WORKSPACE;
 
+        // Create a workspace
         TmWorkspace workspace = new TmWorkspace();
         workspace.setName(workspaceName);
         workspace = facade.create(workspace);
         assertNotNull(workspace);
         assertEquals(workspaceName, workspace.getName());
 
-        TmNeuron tmNeuron = new TmNeuron();
-        tmNeuron.setName(neuronName);
-        tmNeuron.setWorkspaceId(workspace.getId());
-        tmNeuron.addRootAnnotation(1L);
-        TmNeuronMetadata neuronMetadata = facade.create(tmNeuron);
+        // Create a neuron
+        TmNeuronMetadata tmNeuronMetadata = new TmNeuronMetadata();
+        tmNeuronMetadata.initNeuronData();
+        tmNeuronMetadata.setName(neuronName);
+        tmNeuronMetadata.setWorkspaceRef(Reference.createFor(workspace));
+        tmNeuronMetadata.addRootAnnotation(1L);
+        byte[] protobufBytes = exchanger.serializeNeuron(tmNeuronMetadata);
+        TmNeuronMetadata neuronMetadata = facade.create(tmNeuronMetadata, new ByteArrayInputStream(protobufBytes));
         assertEquals(AccessManager.getSubjectKey(), neuronMetadata.getOwnerKey());
         assertEquals(Reference.createFor(TmWorkspace.class, workspace.getId()), neuronMetadata.getWorkspaceRef());
 
-        List<TmNeuron> neurons = facade.getWorkspaceNeurons(workspace.getId());
+        // Get neuron
+        Collection<Pair<TmNeuronMetadata, InputStream>> neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(1, neurons.size());
-        TmNeuron savedNeuron = neurons.get(0);
-
+        TmNeuronMetadata savedNeuron = unpack(neurons.iterator().next());
         assertEquals(AccessManager.getSubjectKey(), savedNeuron.getOwnerKey());
-        assertEquals(workspace.getId(), savedNeuron.getWorkspaceId());
+        assertEquals(workspace.getId(), savedNeuron.getWorkspaceRef().getTargetId());
         assertTrue(savedNeuron.containsRootAnnotation(1L));
         assertFalse(savedNeuron.containsRootAnnotation(2L));
 
-        tmNeuron.addRootAnnotation(2L);
-        facade.update(tmNeuron);
-
-        neurons = facade.getWorkspaceNeurons(workspace.getId());
+        // Modify neuron
+        savedNeuron.addRootAnnotation(2L);
+        facade.update(savedNeuron, new ByteArrayInputStream(exchanger.serializeNeuron(savedNeuron)));
+        neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(1, neurons.size());
-        savedNeuron = neurons.get(0);
+        savedNeuron = unpack(neurons.iterator().next());
         assertTrue(savedNeuron.containsRootAnnotation(2L));
 
-        facade.remove(tmNeuron);
-        neurons = facade.getWorkspaceNeurons(workspace.getId());
+        // Remove neuron
+        facade.remove(savedNeuron);
+        neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(0, neurons.size());
 
+        // Remove workspace
         facade.remove(workspace);
         workspace = DomainUtils.findObjectById(facade.getTmWorkspaces(), workspace.getId());
         assertNull(workspace);
+    }
+
+    private TmNeuronMetadata unpack(Pair<TmNeuronMetadata, InputStream> pair) throws Exception {
+        TmNeuronMetadata neuronMetadata = pair.getLeft();
+        exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
+        return neuronMetadata;
     }
 
 }

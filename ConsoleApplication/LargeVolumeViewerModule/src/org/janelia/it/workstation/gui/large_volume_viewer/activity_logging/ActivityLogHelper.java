@@ -3,7 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.activity_logging;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;

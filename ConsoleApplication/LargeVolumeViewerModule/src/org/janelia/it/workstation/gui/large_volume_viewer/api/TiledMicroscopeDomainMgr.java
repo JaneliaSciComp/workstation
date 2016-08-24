@@ -7,17 +7,14 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -51,7 +48,7 @@ public class TiledMicroscopeDomainMgr {
     }
 
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
-    
+
     public TmSample getSample(Long sampleId) throws Exception {
         log.debug("getSample(sampleId={})",sampleId);
         return model.getDomainObject(TmSample.class, sampleId);
@@ -126,52 +123,40 @@ public class TiledMicroscopeDomainMgr {
         return workspace;
     }
 
-    public List<TmNeuron> getWorkspaceNeurons(Long workspaceId) throws Exception {
+    public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        List<TmNeuron> neurons = new ArrayList<>();
+        List<TmNeuronMetadata> neurons = new ArrayList<>();
         for(Pair<TmNeuronMetadata,InputStream> pair : model.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
-            TmNeuron tmNeuron = exchanger.deserializeNeuron(pair.getRight());
-            log.info("Got neuron {} with payload '{}'", neuronMetadata.getId(), tmNeuron);
-            // TODO: Should these metadata be serialized with protobuf at all? Probably not!
-            // But since they are, let's verify that they're consistent.
-            if (!tmNeuron.getId().equals(neuronMetadata.getId())) {
-                log.error("Neuron's metadata (id) does not match serialized data: "+tmNeuron.getId());
-            }
-            if (!tmNeuron.getOwnerKey().equals(neuronMetadata.getOwnerKey())) {
-                log.error("Neuron's metadata (ownerKey) does not match serialized data: "+tmNeuron.getId());
-            }
-            if (!tmNeuron.getWorkspaceId().equals(neuronMetadata.getWorkspaceRef().getTargetId())) {
-                log.error("Neuron's metadata (ownerKey) does not match serialized data: "+tmNeuron.getId());
-            }
-
-            neurons.add(tmNeuron);
+            exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
+            log.info("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
+            neurons.add(neuronMetadata);
         }
 
         log.info("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
         return neurons;
     }
 
-    public TmNeuronMetadata save(TmNeuron tmNeuron) throws Exception {
-        log.debug("save({})", tmNeuron);
-        TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
+    public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
+        log.debug("save({})", neuronMetadata);
 
-        boolean newNeuron = false;
-        if (tmNeuron.getId()==null) {
-            Long newId = TimebasedIdentifierGenerator.generateIdList(1).get(0);
-            tmNeuron.setId(newId);
-            tmNeuron.setOwnerKey(AccessManager.getSubjectKey());
-            newNeuron = true;
+        if (neuronMetadata.getId()==null) {
+            throw new IllegalArgumentException("Cannot save neuron metadata without id");
+        }
+        else {
+            model.update(neuronMetadata);
         }
 
-        neuronMetadata.setId(tmNeuron.getId());
-        neuronMetadata.setOwnerKey(tmNeuron.getOwnerKey());
-        neuronMetadata.setWorkspaceRef(Reference.createFor(org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace.class, tmNeuron.getWorkspaceId()));
+        return neuronMetadata;
+    }
 
-        byte[] protobufBytes = exchanger.serializeNeuron(tmNeuron);
-        if (newNeuron) {
+    public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
+        log.debug("saveMetadata({})", neuronMetadata);
+        TmProtobufExchanger exchanger = new TmProtobufExchanger();
+        byte[] protobufBytes = exchanger.serializeNeuron(neuronMetadata);
+
+        if (neuronMetadata.getId()==null) {
             model.create(neuronMetadata, new ByteArrayInputStream(protobufBytes));
         }
         else {
@@ -181,7 +166,7 @@ public class TiledMicroscopeDomainMgr {
         return neuronMetadata;
     }
 
-    public void remove(TmNeuron tmNeuron) throws Exception {
+    public void remove(TmNeuronMetadata tmNeuron) throws Exception {
         log.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());

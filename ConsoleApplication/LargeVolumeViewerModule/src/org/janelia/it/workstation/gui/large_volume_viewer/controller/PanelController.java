@@ -1,13 +1,19 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationList;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
 
 /**
  * This will have access to setters, etc. on the panels, to provide
@@ -77,7 +83,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
         
         @Override
-        public void neuronSelected(TmNeuron neuron) {
+        public void neuronSelected(TmNeuronMetadata neuron) {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }
@@ -119,7 +125,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
         
         @Override
-        public void selectNeuron(TmNeuron neuron) {
+        public void selectNeuron(TmNeuronMetadata neuron) {
             model.selectNeuron(neuron);
         }
         

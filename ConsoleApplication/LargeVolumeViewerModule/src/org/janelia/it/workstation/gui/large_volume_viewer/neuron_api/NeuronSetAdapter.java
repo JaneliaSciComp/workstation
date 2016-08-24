@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.janelia.console.viewerapi.model.BasicNeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -46,10 +47,10 @@ import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
@@ -90,7 +91,7 @@ implements NeuronSet// , LookupListener
     
     @Override
     public NeuronModel createNeuron(String neuronName) {
-        TmNeuron neuron;
+        TmNeuronMetadata neuron;
         try {
             neuron = annotationModel.createNeuron(neuronName);
         } catch (Exception ex) {
@@ -105,8 +106,8 @@ implements NeuronSet// , LookupListener
             return false;
         
         NeuronModelAdapter nma = (NeuronModelAdapter) neuron;
-        TmNeuron tmn = nma.getTmNeuron();
-        TmNeuron previousNeuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata tmn = nma.getTmNeuronMetadata();
+        TmNeuronMetadata previousNeuron = annotationModel.getCurrentNeuron();
         boolean removingCurrentNeuron = (previousNeuron.getId() == tmn.getId());
         
         if (! super.remove(nma))
@@ -215,7 +216,7 @@ implements NeuronSet// , LookupListener
             NeuronModelAdapter neuron = null;
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuron().getId().equals(neuronId))
+                if (neuron.getTmNeuronMetadata().getId().equals(neuronId))
                     break;
             }
             if (neuron == null) {
@@ -308,7 +309,7 @@ implements NeuronSet// , LookupListener
             // TODO: is this linear search really the best way to get the neuron that goes with this annotation?
             for (NeuronModel neuron0 : NeuronSetAdapter.this) {
                 NeuronModelAdapter neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuron().getId().equals(neuronId)) {
+                if (neuron.getTmNeuronMetadata().getId().equals(neuronId)) {
                     NeuronVertex parentVertex = neuron.getVertexForAnnotation(annotation);
                     if (parentVertex == null) 
                         return;
@@ -342,11 +343,11 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
-        public void neuronSelected(TmNeuron neuron)
+        public void neuronSelected(TmNeuronMetadata neuron)
         {}
 
         @Override
-        public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style)
+        public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
         {}
         
     }
@@ -392,8 +393,8 @@ implements NeuronSet// , LookupListener
             if (! ( o instanceof NeuronModelAdapter ))
                 return false;
             NeuronModelAdapter neuron = (NeuronModelAdapter) o;
-            TmNeuron tmNeuron = neuron.getTmNeuron();
-            return annotationModel.getNeuronList().contains(tmNeuron);
+            TmNeuronMetadata tmNeuronMetadata = neuron.getTmNeuronMetadata();
+            return annotationModel.getNeuronList().contains(tmNeuronMetadata);
         }
 
         @Override
@@ -403,7 +404,7 @@ implements NeuronSet// , LookupListener
                 // return empty iterator
                 return new ArrayList<NeuronModel>().iterator();
             }
-            final Iterator<TmNeuron> it = annotationModel.getNeuronList().iterator();
+            final Iterator<TmNeuronMetadata> it = annotationModel.getNeuronList().iterator();
             return new Iterator<NeuronModel>() {
 
                 @Override
@@ -415,7 +416,7 @@ implements NeuronSet// , LookupListener
                 @Override
                 public NeuronModel next()
                 {
-                    TmNeuron neuron = it.next();
+                    TmNeuronMetadata neuron = it.next();
                     Long guid = neuron.getId();
                     if (! cachedNeurons.containsKey(guid)) {
                         // NeuronStyle neuronStyle = neuronStyleMap.get(guid);
@@ -508,15 +509,15 @@ implements NeuronSet// , LookupListener
             Set<Long> newNeurons = new HashSet<>();
             boolean neuronMembershipChanged = false;
             boolean neuronsWereRefreshed = false;
-            for (TmNeuron tmNeuron : annotationModel.getNeuronList())
+            for (TmNeuronMetadata tmNeuronMetadata : annotationModel.getNeuronList())
             {
-                Long newId = tmNeuron.getId();
+                Long newId = tmNeuronMetadata.getId();
                 newNeurons.add(newId);
                 // Keep our NeuronModel instances persistent, even when the underlying
-                // TmNeuron instance (annoyingly) changes
+                // TmNeuronMetadata instance (annoyingly) changes
                 if (oldNeurons.contains(newId)) { // we saw this neuron before!
                     NeuronModelAdapter neuron = cachedNeurons.get(newId);
-                    neuron.updateWrapping(tmNeuron, annotationModel, workspace);
+                    neuron.updateWrapping(tmNeuronMetadata, annotationModel, workspace);
                     neuronsWereRefreshed = true;
                 }
                 else {

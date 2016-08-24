@@ -1028,30 +1028,24 @@ public class DomainModel {
 
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         TmNeuronMetadata updatedMetadata = tmFacade.create(neuronMetadata, protobufStream);
-        TmWorkspace workspace = (TmWorkspace)getDomainObject(updatedMetadata.getWorkspaceRef());
-        if (workspace==null) {
-            log.warn("Neuron's workspace is not a valid domain object: "+updatedMetadata);
-        }
+        // Event?
+        return updatedMetadata;
+    }
+
+    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata) throws Exception {
+        TmNeuronMetadata updatedMetadata = tmFacade.updateMetadata(neuronMetadata);
         // Event?
         return updatedMetadata;
     }
 
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         TmNeuronMetadata updatedMetadata = tmFacade.update(neuronMetadata, protobufStream);
-        TmWorkspace workspace = (TmWorkspace)getDomainObject(updatedMetadata.getWorkspaceRef());
-        if (workspace==null) {
-            log.warn("Neuron's workspace is not a valid domain object: "+updatedMetadata);
-        }
         // Event?
         return updatedMetadata;
     }
 
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         tmFacade.remove(neuronMetadata);
-        TmWorkspace workspace = (TmWorkspace)getDomainObject(neuronMetadata.getWorkspaceRef());
-        if (workspace==null) {
-            log.warn("Neuron's workspace is not a valid domain object: "+neuronMetadata);
-        }
         // Event?
     }
 }

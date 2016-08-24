@@ -4,7 +4,7 @@ import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmChannelColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronStyle;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
@@ -68,21 +68,17 @@ public class ModelTranslation {
         }
     }
 
-    public static NeuronStyle translateNeuronStyle(TmNeuronStyle neuronStyle) {
-       return new NeuronStyle(neuronStyle.getColor(), neuronStyle.getVisibility());
+    public static NeuronStyle translateNeuronStyle(TmNeuronMetadata tmNeuronMetadata) {
+        if (tmNeuronMetadata.getColor()==null) {
+            return NeuronStyle.getStyleForNeuron(tmNeuronMetadata.getId(), tmNeuronMetadata.isVisible());
+        }
+        else {
+            return new NeuronStyle(tmNeuronMetadata.getColor(), tmNeuronMetadata.isVisible());
+        }
     }
 
-//    public static TmNeuronStyle translateNeuronStyle(NeuronStyle neuronStyle) {
-//        return new TmNeuronStyle(neuronStyle.isVisible(), neuronStyle.getColor());
-//    }
-
-//    public static void updateNeuronStyle(TmNeuronStyle tmNeuronStyle, NeuronStyle style) {
-//        style.setColor(tmNeuronStyle.getColor());
-//        style.setVisible(tmNeuronStyle.getVisibility());
-//    }
-
-    public static void updateNeuronStyle(NeuronStyle style, TmNeuronStyle tmNeuronStyle) {
-        tmNeuronStyle.setColor(style.getColor());
-        tmNeuronStyle.setVisibility(style.isVisible());
+    public static void updateNeuronStyle(NeuronStyle style, TmNeuronMetadata tmNeuronMetadata) {
+        tmNeuronMetadata.setColor(style.getColor());
+        tmNeuronMetadata.setVisible(style.isVisible());
     }
 }

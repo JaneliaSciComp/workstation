@@ -27,7 +27,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.TmProtobufExchanger;
+import org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf.OldTmProtobufExchanger;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.shared.util.SystemInfo;
@@ -133,7 +133,7 @@ public class AnnotationCollectionWorkspaceCreator implements EntityWrapperCreato
                                 Long workspaceId = workspace.getId();
                                 BASE64Decoder decoder = new BASE64Decoder();
                                 BASE64Encoder encoder = new BASE64Encoder();
-                                TmProtobufExchanger exchanger = new TmProtobufExchanger();
+                                OldTmProtobufExchanger exchanger = new OldTmProtobufExchanger();
                                 Entity workspaceEntity = modelMgr.getEntityById(workspace.getId());
 
                                 for (EntityData neuronEntityData: neurons) {

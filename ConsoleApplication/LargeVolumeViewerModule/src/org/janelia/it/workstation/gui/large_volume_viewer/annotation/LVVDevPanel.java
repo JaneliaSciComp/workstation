@@ -10,7 +10,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -66,20 +66,20 @@ public class LVVDevPanel extends JPanel {
                     @Override
                     protected void doStuff() throws Exception {
                         // remove the first root of the selected neurite from the annotation map
-                        TmNeuron neuron = annotationModel.getCurrentNeuron();
-                        if (neuron == null) {
+                        TmNeuronMetadata tmNeuronMetadata = annotationModel.getCurrentNeuron();
+                        if (tmNeuronMetadata == null) {
                             System.out.println("no selected neuron");
                             return;
                         }
-                        if (neuron.getRootAnnotationCount() == 0) {
+                        if (tmNeuronMetadata.getRootAnnotationCount() == 0) {
                             System.out.printf("neuron has no roots");
                             return;
                         }
 
-                        neuron.getGeoAnnotationMap().remove(neuron.getRootAnnotations().get(0).getId());
+                        tmNeuronMetadata.getGeoAnnotationMap().remove(tmNeuronMetadata.getRootAnnotations().get(0).getId());
                         // at this point, the data should be internally INconsistent,
                         //  which is what we want
-                        neuronManager.saveNeuronData(neuron);
+                        neuronManager.saveNeuronData(tmNeuronMetadata);
                     }
 
                     @Override

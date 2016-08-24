@@ -14,10 +14,11 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
@@ -545,10 +546,10 @@ implements MouseMode, KeyListener
 			if (nextParent != null) {
 				if (event.isAltDown()) {
 				controller.navigationRelative(nextParent.getGuid(),
-						TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP);
+						AnnotationNavigationDirection.ROOTWARD_STEP);
 				} else {
 					controller.navigationRelative(nextParent.getGuid(),
-							TmNeuron.AnnotationNavigationDirection.ROOTWARD_JUMP);
+							AnnotationNavigationDirection.ROOTWARD_JUMP);
 				}
 			}
 			break;
@@ -556,23 +557,23 @@ implements MouseMode, KeyListener
 			if (nextParent != null) {
 				if (event.isAltDown()) {
 					controller.navigationRelative(nextParent.getGuid(),
-							TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP);
+							AnnotationNavigationDirection.ENDWARD_STEP);
 				} else {
 					controller.navigationRelative(nextParent.getGuid(),
-							TmNeuron.AnnotationNavigationDirection.ENDWARD_JUMP);
+							AnnotationNavigationDirection.ENDWARD_JUMP);
 				}
 			}
 			break;
 		case KeyEvent.VK_UP:
 			if (nextParent != null) {
 				controller.navigationRelative(nextParent.getGuid(),
-						TmNeuron.AnnotationNavigationDirection.PREV_PARALLEL);
+						AnnotationNavigationDirection.PREV_PARALLEL);
 			}
 			break;
 		case KeyEvent.VK_DOWN:
 			if (nextParent != null) {
 				controller.navigationRelative(nextParent.getGuid(),
-						TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL);
+						AnnotationNavigationDirection.NEXT_PARALLEL);
 			}
 			break;
 		case KeyEvent.VK_A:

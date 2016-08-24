@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
@@ -11,6 +11,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  */
 public interface GlobalAnnotationListener {
     void workspaceLoaded(TmWorkspace workspace);
-    void neuronSelected(TmNeuron neuron);
-    void neuronStyleChanged(TmNeuron neuron, NeuronStyle style);
+    void neuronSelected(TmNeuronMetadata neuron);
+    void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style);
 }

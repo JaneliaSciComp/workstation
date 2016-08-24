@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import Jama.Matrix;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -227,12 +227,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
-    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+    public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         fireNeuronStyleChangeEvent(neuron, style);
     }
 
     @Override
-    public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
         fireNeuronStylesChangedEvent(neuronStyleMap);
     }
 
@@ -271,8 +271,8 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             //  use a default style
             Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
             NeuronStyle style;
-            Map<TmNeuron, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
-            for (TmNeuron neuron: annModel.getNeuronList()) {
+            Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
+            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
                 if (neuronStyleMap!=null && neuronStyleMap.containsKey(neuron.getId())) {
                     style = neuronStyleMap.get(neuron.getId());
                 } else {
@@ -298,7 +298,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             //  present rather than piecemeal (which will cause problems in
             //  some cases on workspace reloads)
             List<TmGeoAnnotation> addedAnchorList = new ArrayList<>();
-            for (TmNeuron neuron: annModel.getNeuronList()) {
+            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                     addedAnchorList.addAll(neuron.getSubTreeList(root));
                 }
@@ -307,7 +307,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             // draw anchored paths, too, after all the anchors are drawn
             List<TmAnchoredPath> annList = new ArrayList<>();
-            for (TmNeuron neuron: annModel.getNeuronList()) {
+            for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
                     annList.add(path);
                 }
@@ -320,7 +320,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
      * called when the model changes the current neuron
      */
     @Override
-    public void neuronSelected(TmNeuron neuron) {
+    public void neuronSelected(TmNeuronMetadata neuron) {
         if (neuron == null) {
             return;
         }
@@ -390,12 +390,12 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             l.clearAnchors();
         }
     }
-    private void fireNeuronStyleChangeEvent(TmNeuron neuron, NeuronStyle style) {
+    private void fireNeuronStyleChangeEvent(TmNeuronMetadata neuron, NeuronStyle style) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStyleChanged(neuron, style);
         }
     }
-    private void fireNeuronStylesChangedEvent(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
+    private void fireNeuronStylesChangedEvent(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
         for (NeuronStyleChangeListener l: neuronStyleChangeListeners) {
             l.neuronStylesChanged(neuronStyleMap);
         }

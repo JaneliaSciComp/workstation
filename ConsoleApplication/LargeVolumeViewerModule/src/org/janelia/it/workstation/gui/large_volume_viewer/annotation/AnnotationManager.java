@@ -24,12 +24,13 @@ import javax.swing.SwingUtilities;
 import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmStructuredTextAnnotation;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -311,7 +312,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+        final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
             presentError(
                     "You must select a neuron before beginning annotation!",
@@ -591,22 +592,24 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // dialog box with list of neurons, not including current neuron; but
         //  throw in a dummy "create new neuron" option at the top
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
-        TmNeuron sourceNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+        TmNeuronMetadata sourceNeuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
 
-        ArrayList<TmNeuron> neuronList = new ArrayList<>(annotationModel.getNeuronList());
+        ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>(annotationModel.getNeuronList());
         neuronList.remove(sourceNeuron);
         // not sure alphabetical is the best sort; neuron list is selectable (defaults to creation
         //  date), but I don't want to figure out how to grab that sort order and use it here;
         //  however, alphabetical seems reasonable enough (better than arbitrary order)
-        Collections.sort(neuronList, new Comparator<TmNeuron>() {
+        Collections.sort(neuronList, new Comparator<TmNeuronMetadata>() {
             @Override
-            public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
-                return tmNeuron.getName().compareToIgnoreCase(tmNeuron2.getName());
+            public int compare(TmNeuronMetadata tmNeuronMetadata, TmNeuronMetadata tmNeuronMetadata2) {
+                return tmNeuronMetadata.getName().compareToIgnoreCase(tmNeuronMetadata2.getName());
             }
         });
 
         // add "create new" at top of sorted list
-        TmNeuron dummyCreateNewNeuron = new TmNeuron(-1L, "(create new neuron)");
+        TmNeuronMetadata dummyCreateNewNeuron = new TmNeuronMetadata();
+        dummyCreateNewNeuron.setId(-1L);
+        dummyCreateNewNeuron.setName("(create new neuron)");
         neuronList.add(0, dummyCreateNewNeuron);
 
         Object [] choices = neuronList.toArray();
@@ -623,7 +626,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        if (((TmNeuron) choice).getId().equals(dummyCreateNewNeuron.getId())) {
+        if (((TmNeuronMetadata) choice).getId().equals(dummyCreateNewNeuron.getId())) {
             // create new neuron and move neurite to it
             final String neuronName = promptForNeuronName(null);
             if (neuronName == null) {
@@ -642,14 +645,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     //  so we can figure out what the new one is, since create neuron
                     //  can't tell us
                     Set<Long> oldNeuronIDs = new HashSet<>();
-                    for (TmNeuron neuron: annotationModel.getNeuronList()) {
+                    for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
                         oldNeuronIDs.add(neuron.getId());
                     }
 
                     annotationModel.createNeuron(neuronName);
 
-                    TmNeuron newNeuron = null;
-                    for (TmNeuron neuron: annotationModel.getNeuronList()) {
+                    TmNeuronMetadata newNeuron = null;
+                    for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
                         if (!oldNeuronIDs.contains(neuron.getId())) {
                             newNeuron = neuron;
                             break;
@@ -676,7 +679,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         } else {
             // we're moving to an existing neuron; straightforward!
-            final TmNeuron destinationNeuron = (TmNeuron) choice;
+            final TmNeuronMetadata destinationNeuron = (TmNeuronMetadata) choice;
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -872,7 +875,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void clearNote(final Long annotationID) {
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
         if (textAnnotation != null) {
             SimpleWorker deleter = new SimpleWorker() {
@@ -907,7 +910,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         return annotationModel.getNote(annotationID);
     }
 
-    public String getNote(Long annotationID, TmNeuron neuron) {
+    public String getNote(Long annotationID, TmNeuronMetadata neuron) {
         return annotationModel.getNote(annotationID, neuron);
     }
 
@@ -972,7 +975,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void deleteCurrentNeuron() {
-        TmNeuron neuron = annotationModel.getCurrentNeuron();
+        TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
         if (neuron == null) {
             return;
         }
@@ -1012,7 +1015,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * rename the currently selected neuron
      */
     public void renameNeuron() {
-        final TmNeuron neuron = annotationModel.getCurrentNeuron();
+        final TmNeuronMetadata neuron = annotationModel.getCurrentNeuron();
         if (neuron == null) {
             presentError(
                     "No selected neuron!",
@@ -1085,7 +1088,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  standard template; create list of integers found
         ArrayList<Long> intList = new ArrayList<Long>();
         Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
-        for (TmNeuron neuron : annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
             Matcher matcher = pattern.matcher(neuron.getName());
             if (matcher.matches()) {
                 intList.add(Long.parseLong(matcher.group(1)));
@@ -1113,7 +1116,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (annotationID == null) {
             return;
         }
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         annotationModel.selectNeuron(neuron);
     }
 
@@ -1221,9 +1224,9 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * a given direction; to be used in navigation along the skeleton;
      * see code for exact behavior
      */
-    public Long relativeAnnotation(Long annID, TmNeuron.AnnotationNavigationDirection direction) {
+    public Long relativeAnnotation(Long annID, AnnotationNavigationDirection direction) {
         TmGeoAnnotation ann = annotationModel.getGeoAnnotationFromID(annID);
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annID);
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annID);
         switch (direction) {
             case ROOTWARD_JUMP:
             case ROOTWARD_STEP:
@@ -1233,7 +1236,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     break;
                 }
                 ann = neuron.getParentOf(ann);
-                if (direction == TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP) {
+                if (direction == AnnotationNavigationDirection.ROOTWARD_STEP) {
                     break;
                 }
                 while (!ann.isRoot() && !ann.isBranch()) {
@@ -1249,7 +1252,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     break;
                 }
                 ann = neuron.getChildrenOfOrdered(ann).get(0);
-                if (direction == TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP) {
+                if (direction == AnnotationNavigationDirection.ENDWARD_STEP) {
                     break;
                 }
                 while (!ann.isEnd() && !ann.isBranch()) {
@@ -1264,7 +1267,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     if (neuron.getChildrenOf(ann).size() <= 1) {
                         break;
                     } else {
-                        if (direction == TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL) {
+                        if (direction == AnnotationNavigationDirection.NEXT_PARALLEL) {
                             ann = neuron.getChildrenOf(ann).get(0);
                         } else {
                             // PREV_PARALLEL
@@ -1293,7 +1296,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 // now we're on a branch (possibly the root) that has multiple children;
                 //  find the next after the one we've got
                 List<TmGeoAnnotation> children = neuron.getChildrenOfOrdered(current);
-                int offset = (direction == TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL) ? 1 : -1;
+                int offset = (direction == AnnotationNavigationDirection.NEXT_PARALLEL) ? 1 : -1;
                 Collections.rotate(children, -children.indexOf(previous) + offset);
                 ann = children.get(0);
                 break;
@@ -1322,7 +1325,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         chooseNeuronStyle(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
     }
 
-    public void chooseNeuronStyle(final TmNeuron neuron) {
+    public void chooseNeuronStyle(final TmNeuronMetadata neuron) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1345,7 +1348,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  have to worry about missing entries, etc.; so go simple at the
         //  expense of a few more db calls
         NeuronStyle style;
-        for (TmNeuron neuron: annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
             style = getNeuronStyle(neuron);
             if (style.isVisible() != visibility) {
                 style.setVisible(visibility);
@@ -1369,23 +1372,23 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void setNeuronVisibility(Anchor anchor, boolean visibility) {
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(anchor.getGuid());
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(anchor.getGuid());
         setNeuronVisibility(neuron, visibility);
     }
 
-    public void setNeuronVisibility(TmNeuron neuron, boolean visibility) {
+    public void setNeuronVisibility(TmNeuronMetadata neuron, boolean visibility) {
         NeuronStyle style = getNeuronStyle(neuron);
         style.setVisible(visibility);
         setNeuronStyle(neuron, style);
     }
 
-    public NeuronStyle getNeuronStyle(TmNeuron neuron) {
+    public NeuronStyle getNeuronStyle(TmNeuronMetadata neuron) {
         // simple pass through; I want get/set to look the same, and set is *not*
         //  just a pass through
         return annotationModel.getNeuronStyle(neuron);
     }
 
-    public void setNeuronStyle(final TmNeuron neuron, final NeuronStyle style) {
+    public void setNeuronStyle(final TmNeuronMetadata neuron, final NeuronStyle style) {
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
@@ -1470,7 +1473,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+        TmNeuronMetadata neuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
         TmGeoAnnotation parent = neuron.getParentOf(annotation);
         request.setAnchorGuid2(parent.getId());
         request.setXyz1(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
@@ -1500,7 +1503,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             int nneurons = annotationModel.getNeuronList().size();
             int nannotations = 0;
             int maxannotations = 0;
-            for (TmNeuron neuron : annotationModel.getNeuronList()) {
+            for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
                 nannotations += neuron.getGeoAnnotationMap().size();
                 maxannotations = Math.max(maxannotations, neuron.getGeoAnnotationMap().size());
             }
@@ -1516,7 +1519,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
         int nannotations = 0;
-        for (TmNeuron neuron : annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
             nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
         }
