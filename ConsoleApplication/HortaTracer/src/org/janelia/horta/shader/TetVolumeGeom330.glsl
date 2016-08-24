@@ -41,7 +41,8 @@ in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
 
 out vec4 barycentricCoord;
 out vec3 fragTexCoord;
-out vec3 cameraPosInTexCoord;
+flat out vec3 cameraPosInTexCoord;
+flat out mat4 tetPlanesInTexCoord;
 
 // void emit_triangle(in vec4 p1, in vec4 p2, in vec4 p3) 
 void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
@@ -76,12 +77,18 @@ void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1arg, in in
 // Answers the question: Is the camera-space triangle ABC facing the camera?
 bool isFront(vec3 a, vec3 b, vec3 c)
 {
-    return dot(cross(a-b, c-b), b) > 0;
+    return dot(cross(b-a, c-b), b) <= 0;
 }
 bool isFront(vec4 A, vec4 B, vec4 C)
 {
     // Convert homogenous coordinates to regular 3D
     return isFront(A.xyz/A.w, B.xyz/B.w, C.xyz/C.w);
+}
+
+vec4 planeForTriangle(vec3 a, vec3 b, vec3 c) {
+    vec3 normal = normalize(cross(b-a, c-b));
+    float dist = dot(normal, b);
+    return vec4(normal, -dist);
 }
 
 void main() 
@@ -143,6 +150,15 @@ void main()
             // texCoordFromBary * vec4(1, 0, 0, 1);
             // baryFromCamera * vec4(p4, 1);
     cameraPosInTexCoord = camPos.xyz/camPos.w;
+
+    // Emit one inward facing plane equation for each face of the tetrahedron
+    // Because we are clipping to the INSIDE of the tetrahedron, these
+    // triangles wind in the opposite of the usual direction.
+    tetPlanesInTexCoord = mat4(
+        planeForTriangle(t1, t3, t2),
+        planeForTriangle(t1, t4, t3),
+        planeForTriangle(t1, t2, t4),
+        planeForTriangle(t2, t3, t4));
 
     emit_triangle(projected, bary, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, bary, tc, 1, 0, 3);
