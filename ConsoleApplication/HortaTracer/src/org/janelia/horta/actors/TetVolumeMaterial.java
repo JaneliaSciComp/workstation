@@ -138,8 +138,6 @@ public class TetVolumeMaterial extends BasicMaterial
             buf1.rewind();
             gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
             gl.glBufferData(GL3.GL_PIXEL_UNPACK_BUFFER, buf1.capacity(), buf1, GL3.GL_STREAM_DRAW);
-            // mappedPboBuffers.add(gl.glMapBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, GL3.GL_WRITE_ONLY));
-            // gl.glUnmapBuffer(GL3.GL_PIXEL_UNPACK_BUFFER);
         }
         long t1 = System.nanoTime();
         logger.info("Creating pixel buffer objects took "+(t1-t0)/1.0e9+" seconds");

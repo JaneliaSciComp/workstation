@@ -40,6 +40,7 @@ layout(binding = 0) uniform sampler3D volumeTexture;
 
 in vec4 barycentricCoord;
 in vec3 fragTexCoord;
+in vec3 cameraPosInTexCoord;
 
 out vec4 fragColor;
 
@@ -63,12 +64,20 @@ void main() {
 
     vec3 color = textureLod(volumeTexture, fragTexCoord, 5).rgb; // intentionally downsampled
     float opacity = max(color.r, max(color.g, color.b));
+
+    // Ray parameters
+    vec3 x0 = cameraPosInTexCoord; // origin
+    vec3 x1 = fragTexCoord - x0; // direction
+
     fragColor = vec4(
 
             // reduce max intensity, to keep color channels from saturating to white
             // 0.3 * fragTexCoord.rgb, 1.0 // For debugging texture coordinates
+            // 0.3 * barycentricCoord.rgb, 1.0 // For debugging barycentric coordinates
+            0.15 * (normalize(x1) + vec3(1, 1, 1)), 1.0 // Direction toward camera
+            // 0.3 * cameraPosInTexCoord, 1.0 // Direction toward camera
 
-            color, 1.0 // For debugging texture image
+            // color, 1.0 // For debugging texture image
 
     );
 }

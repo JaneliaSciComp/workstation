@@ -41,11 +41,22 @@ in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
 
 out vec4 barycentricCoord;
 out vec3 fragTexCoord;
+out vec3 cameraPosInTexCoord;
 
 // void emit_triangle(in vec4 p1, in vec4 p2, in vec4 p3) 
-void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1, in int p2, in int p3) 
+void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
 {
-    // TODO: reject front-facing triangles
+    int p1 = p1arg;
+    int p2 = p2arg;
+    int p3 = p3arg;
+    const bool useRearTriangles = true;
+    if (useRearTriangles) {
+        // Reject front-facing triangles
+        // reverse sense of triangle, so GL_CULL_FACE(BACK) actually DRAWS these back triangles.
+        p1 = p3arg;
+        p3 = p1arg;
+    }
+
     gl_Position = v[p1];
     barycentricCoord = b[p1];
     fragTexCoord = t[p1];
@@ -100,6 +111,39 @@ void main()
         vec4(0, 0, 0, 1)); // apex
 
     // TODO: show back faces, and color by exit texture coordinates
+    
+    // Need to compute camera position in texture coordinates for this tetrahedron.
+    // So we need to compute a transform that maps camera-space to texCoord-space.
+    // I think I can compose this from two transforms that map to an intermediate
+    // space, partial barycentric coordinates.
+    // TODO: This could be done in advance on the CPU side
+    // First simplify camera-space corner coordinates
+    vec3 p1 = gl_in[0].gl_Position.xyz / gl_in[0].gl_Position.w;
+    vec3 p2 = gl_in[2].gl_Position.xyz / gl_in[2].gl_Position.w;
+    vec3 p3 = gl_in[4].gl_Position.xyz / gl_in[4].gl_Position.w;
+    vec3 p4 = gl_in[1].gl_Position.xyz / gl_in[1].gl_Position.w; 
+    mat4 cameraFromBary = mat4(
+            vec4(p1 - p4, 0),
+            vec4(p2 - p4, 0),
+            vec4(p3 - p4, 0),
+            vec4(p4, 1));
+    vec3 t1 = geomTexCoord[0];
+    vec3 t2 = geomTexCoord[2];
+    vec3 t3 = geomTexCoord[4];
+    vec3 t4 = geomTexCoord[1];
+    mat4 texCoordFromBary = mat4(
+            vec4(t1 - t4, 0),
+            vec4(t2 - t4, 0),
+            vec4(t3 - t4, 0),
+            vec4(t4, 1));
+    mat4 baryFromCamera = inverse(cameraFromBary);
+    mat4 texCoordFromCamera = texCoordFromBary * baryFromCamera;
+    vec4 camPos = 
+            texCoordFromCamera * vec4(0, 0, 0, 1);
+            // texCoordFromBary * vec4(1, 0, 0, 1);
+            // baryFromCamera * vec4(p4, 1);
+    cameraPosInTexCoord = camPos.xyz/camPos.w;
+
     emit_triangle(projected, bary, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, bary, tc, 1, 0, 3);
     emit_triangle(projected, bary, tc, 0, 2, 3);

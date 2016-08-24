@@ -77,8 +77,20 @@ class TetVolumeMeshActor extends MeshActor
     @Override
     public void displayTriangleAdjacencies(GL3 gl) 
     {
-        gl.glEnable(GL3.GL_BLEND);
-        gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+        final boolean doBlend = true;
+        if (doBlend) {
+            gl.glEnable(GL3.GL_BLEND);
+            gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+        }
+        
+        final boolean doCull = true;
+        if (doCull) {
+            // Display Front faces only.
+            gl.glEnable(GL3.GL_CULL_FACE);
+            gl.glCullFace(GL3.GL_BACK);
+            // (secretly the actual initial mesh geometry is the back faces of the tetrahedra though...)
+            // (but semantically, we are showing front faces of the rendered volume)
+        }
         
         vertexBufferObject.bind(gl, material.getShaderProgramHandle());
 
