@@ -1,14 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.jacs.integration;
 
 import java.util.Collection;
 import javax.swing.JFrame;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
+import org.janelia.it.jacs.integration.framework.domain.PreferenceHandler;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.jacs.integration.framework.session_mgr.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.session_mgr.ParentFrame;
@@ -52,6 +47,10 @@ public class FrameworkImplProvider {
     
     public static SettingsModel getSettingsModel() {
         return get(SettingsModel.LOOKUP_PATH, SettingsModel.class);
+    }
+
+    public static PreferenceHandler getPreferenceHandler() {
+        return get(PreferenceHandler.LOOKUP_PATH, PreferenceHandler.class);
     }
     
     public static void handleException(Throwable th){
