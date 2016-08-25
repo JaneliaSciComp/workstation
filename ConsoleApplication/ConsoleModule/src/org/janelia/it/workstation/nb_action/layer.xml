@@ -121,7 +121,6 @@
         <file name="Advanced.instance_hidden"/>
         <file name="Editor.instance_hidden"/>
         <file name="FontsAndColors.instance_hidden"/>
-        <file name="General.instance_hidden"/>
         <file name="Java.instance_hidden"/>
     </folder>
     <file name="OptionsExport_hidden"/>
