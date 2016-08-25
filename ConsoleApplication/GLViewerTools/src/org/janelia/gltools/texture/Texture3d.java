@@ -878,6 +878,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     }
 
     public final boolean readFully(InputStream in, byte b[]) throws IOException {
+        if (in==null) throw new IOException("Input stream is null");
         return readFully(in, b, 0, b.length);
     }
 
@@ -930,6 +931,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
                 // We can now write the stream directly to a buffer, because we know the content length up front.
                 long contentLength = getMethod.getResponseContentLength();
+                log.info("contentLength="+contentLength);
                 byte[] bytes = new byte[(int)contentLength];
                 if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
 
@@ -942,9 +944,11 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 decoder = ImageCodec.createImageDecoder("tiff", s, null);
             }
             catch (Exception ex) {
-                ex.printStackTrace();
-                getMethod.releaseConnection();
-                getMethod = null;
+                log.error("Error reading HTTP stream", ex);
+                if (getMethod!=null) {
+                    getMethod.releaseConnection();
+                    getMethod = null;
+                }
             }
         }
         else if (useFilesReadAllBytesAndByteArraySeekableStream) { // 6.2, 7.0, 7.9, 6.5 seconds - PLEASE USE THIS ONE
@@ -983,14 +987,18 @@ public class Texture3d extends BasicTexture implements GL3Resource
             decoder = ImageCodec.createImageDecoder("tiff", s, null);
         }
 
-        log.debug("Creating image decoder from tiff file took {} ms", timer.reportMsAndRestart());
+        if (decoder!=null) {
+            log.debug("Creating image decoder from tiff file took {} ms", timer.reportMsAndRestart());
 
-        int sz = decoder.getNumPages();
-        RenderedImage slices[] = new RenderedImage[sz];
-        for (int z = 0; z < sz; ++z)
-            slices[z] = decoder.decodeAsRenderedImage(z);
-        log.debug("Creating RenderedImages for all slices took {} ms", timer.reportMsAndRestart());
-        return slices;
+            int sz = decoder.getNumPages();
+            RenderedImage slices[] = new RenderedImage[sz];
+            for (int z = 0; z < sz; ++z)
+                slices[z] = decoder.decodeAsRenderedImage(z);
+            log.debug("Creating RenderedImages for all slices took {} ms", timer.reportMsAndRestart());
+            return slices;
+        }
+        
+        return null;
     }
 
 

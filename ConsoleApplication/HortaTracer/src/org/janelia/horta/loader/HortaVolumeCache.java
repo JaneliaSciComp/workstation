@@ -38,6 +38,9 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.prefs.Preferences;
 
 import javax.swing.SwingUtilities;
 
@@ -48,6 +51,7 @@ import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.BrainTileInfo;
 import org.janelia.horta.NeuronTraceLoader;
+import org.janelia.horta.options.TileLoadingPanel;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
@@ -55,6 +59,7 @@ import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.Exceptions;
+import org.openide.util.NbPreferences;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +106,7 @@ public class HortaVolumeCache
     float cachedFocusZ = Float.NaN;
     float cachedZoom = Float.NaN;
     
-    private final RequestProcessor loadProcessor = new RequestProcessor("VolumeTileLoad", 1, true);
+    private RequestProcessor loadProcessor;
     private final BrightnessModel brightnessModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
@@ -118,6 +123,39 @@ public class HortaVolumeCache
 
         this.camera = camera;
         camera.addObserver(new CameraObserver());
+
+        Preferences pref = NbPreferences.forModule(TileLoadingPanel.class);
+
+        String concurrentLoadsStr = pref.get(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS, TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS_DEFAULT);
+        setConcurrentLoads(concurrentLoadsStr);
+
+        String ramTileCountStr = pref.get(TileLoadingPanel.PREFERENCE_RAM_TILE_COUNT, TileLoadingPanel.PREFERENCE_RAM_TILE_COUNT_DEFAULT);
+        setRamTileCount(ramTileCountStr);
+
+        pref.addPreferenceChangeListener(new PreferenceChangeListener() {
+            public void preferenceChange(PreferenceChangeEvent evt) {
+                if (evt.getKey().equals(TileLoadingPanel.PREFERENCE_CONCURRENT_LOADS)) {
+                    setConcurrentLoads(evt.getNewValue());
+                }
+                else if (evt.getKey().equals(TileLoadingPanel.PREFERENCE_RAM_TILE_COUNT)) {
+                    setRamTileCount(evt.getNewValue());
+                }
+            }
+        });
+    }
+
+    private void setConcurrentLoads(String preferenceValue) {
+        int loadThreads = Integer.parseInt(preferenceValue);
+        log.info("Configuring loadThreads={}", loadThreads);
+        if (loadProcessor!=null) {
+            loadProcessor.shutdown();
+        }
+        loadProcessor = new RequestProcessor("VolumeTileLoad", loadThreads, true);
+    }
+
+    private void setRamTileCount(String preferenceValue) {
+        this.ramTileCount = Integer.parseInt(preferenceValue);
+        log.info("Configuring ramTileCount={}", ramTileCount);
     }
 
     public void registerLoneDisplayedTile(BrickActor actor) 
