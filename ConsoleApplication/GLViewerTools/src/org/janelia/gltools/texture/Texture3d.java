@@ -931,11 +931,10 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
                 // We can now write the stream directly to a buffer, because we know the content length up front.
                 long contentLength = getMethod.getResponseContentLength();
-                log.info("contentLength="+contentLength);
                 byte[] bytes = new byte[(int)contentLength];
                 if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
 
-                log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+                log.debug("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
                 SeekableStream s = new ByteArraySeekableStream(bytes);
 
                 // Another way is to read the stream as necessary, but with this method we can't compare vs file reads.
