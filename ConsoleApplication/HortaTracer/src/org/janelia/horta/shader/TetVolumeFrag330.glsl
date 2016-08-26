@@ -38,7 +38,6 @@
 
 layout(binding = 0) uniform sampler3D volumeTexture;
 
-in vec4 barycentricCoord;
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
 flat in mat4 tetPlanesInTexCoord;
@@ -143,24 +142,8 @@ IntegratedIntensity integrate_max_intensity(in IntegratedIntensity front, in Int
     return IntegratedIntensity(max(front.intensity, back.intensity), max(front.opacity, back.opacity));
 }
 
-void main() {
-    vec4 b = barycentricCoord;
-    float f = min(b.x, min(b.y, min(b.z, b.w)));
-
-    if (f < 0) discard; // outside of tetrahedron; should not happen
-
-#ifdef DISPLAY_EDGES_ONLY
-    // Display only the edges of the triangle
-    float e1 = 0; // b.x + b.y; // first leg of base triangle
-    float e2 = 0; // b.x + b.z; // third leg of base triangle
-    float e3 = 0; // b.y + b.z; // second leg of base triangle
-    float e4 = b.x + b.w;
-    float e5 = b.y + b.w;
-    float e6 = b.z + b.w;
-    float edge_score = max(e1, max(e2, max(e3, max(e4, max(e5, e6)))));
-    if (edge_score < 0.95) discard; // hollow out non-edge region
-#endif
-
+void main() 
+{
     // Ray parameters
     vec3 x0 = cameraPosInTexCoord; // origin
     vec3 x1 = fragTexCoord - x0; // direction
@@ -179,7 +162,7 @@ void main() {
     vec3 rearTexCoord = x0 + maxRay * x1;
 
     // Set up for texel-by-texel ray marching
-    const int levelOfDetail = 0;
+    const int levelOfDetail = 0; // TODO: adjust dynamically
     ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
 
     vec3 rayOriginInTexels = x0 * texelsPerVolume;

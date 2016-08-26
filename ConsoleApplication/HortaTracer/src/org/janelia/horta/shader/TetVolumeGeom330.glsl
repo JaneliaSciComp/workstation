@@ -39,13 +39,12 @@ in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
 // Matrix to convert camera coordinates to (first three) barycentric coordinates
 // out mat4 baryFromCamera;
 
-out vec4 barycentricCoord;
 out vec3 fragTexCoord;
 flat out vec3 cameraPosInTexCoord;
 flat out mat4 tetPlanesInTexCoord;
 
 // void emit_triangle(in vec4 p1, in vec4 p2, in vec4 p3) 
-void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
+void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
 {
     int p1 = p1arg;
     int p2 = p2arg;
@@ -59,15 +58,12 @@ void emit_triangle(in vec4[4] v, in vec4[4] b, in vec3[4] t, in int p1arg, in in
     }
 
     gl_Position = v[p1];
-    barycentricCoord = b[p1];
     fragTexCoord = t[p1];
     EmitVertex();
     gl_Position = v[p2];
-    barycentricCoord = b[p2];
     fragTexCoord = t[p2];
     EmitVertex();
     gl_Position = v[p3];
-    barycentricCoord = b[p3];
     fragTexCoord = t[p3];
     EmitVertex();
     EndPrimitive();
@@ -111,11 +107,6 @@ void main()
         geomTexCoord[2],
         geomTexCoord[4],
         geomTexCoord[1]);
-    const vec4 bary[4] = vec4[4] (
-        vec4(1, 0, 0, 0), // base1
-        vec4(0, 1, 0, 0), // base2
-        vec4(0, 0, 1, 0), // base3
-        vec4(0, 0, 0, 1)); // apex
 
     // TODO: show back faces, and color by exit texture coordinates
     
@@ -160,8 +151,8 @@ void main()
         planeForTriangle(t1, t2, t4),
         planeForTriangle(t2, t3, t4));
 
-    emit_triangle(projected, bary, tc, 0, 1, 2); // base triangle of tetrahedron
-    emit_triangle(projected, bary, tc, 1, 0, 3);
-    emit_triangle(projected, bary, tc, 0, 2, 3);
-    emit_triangle(projected, bary, tc, 2, 1, 3);
+    emit_triangle(projected, tc, 0, 1, 2); // base triangle of tetrahedron
+    emit_triangle(projected, tc, 1, 0, 3);
+    emit_triangle(projected, tc, 0, 2, 3);
+    emit_triangle(projected, tc, 2, 1, 3);
 }
