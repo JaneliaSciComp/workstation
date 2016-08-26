@@ -102,7 +102,7 @@ float advance_to_voxel_edge(
         in float texelsPerRay)
 {
     // Units of ray parameter, t, are roughly texels
-    const float minStep = 0.020 / texelsPerRay;
+    const float minStep = 0.060 / texelsPerRay;
 
     // Advance ray by at least minStep, to avoid getting stuck in tiny corners
     float t = previousEdge + minStep;
@@ -139,7 +139,18 @@ IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDeta
 // Maximum intensity projection
 IntegratedIntensity integrate_max_intensity(in IntegratedIntensity front, in IntegratedIntensity back) 
 {
-    return IntegratedIntensity(max(front.intensity, back.intensity), max(front.opacity, back.opacity));
+    CHANNEL_VEC intensity = max(front.intensity, back.intensity);
+    float opacity = max(front.opacity, back.opacity);
+    return IntegratedIntensity(intensity, opacity);
+}
+
+// Occluding projection
+IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in IntegratedIntensity back) 
+{
+    float opacity = 1.0 - (1.0 - front.opacity) * (1.0 - back.opacity);
+    CHANNEL_VEC b = back.intensity * (1.0 - front.opacity/opacity);
+    CHANNEL_VEC f = front.intensity * (front.opacity/opacity);
+    return IntegratedIntensity(clamp(b + f, 0, 1), opacity);
 }
 
 void main() 
@@ -181,7 +192,7 @@ void main()
     IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0);
     bool rayIsFinished = false;
     float t0 = minRay;
-    for (int s = 0; s < 400; ++s) {
+    for (int s = 0; s < 1000; ++s) {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
                 rayBoxCorner, forwardMask, 
@@ -195,7 +206,9 @@ void main()
         vec3 texCoord = texel / texelsPerVolume;
 
         IntegratedIntensity rearIntensity = sample_nearest_neighbor(texCoord, levelOfDetail); // intentionally downsampled
-        intensity = integrate_max_intensity(intensity, rearIntensity);
+        intensity = 
+                integrate_max_intensity(intensity, rearIntensity);
+                // integrate_occluding(intensity, rearIntensity);
 
         if (rayIsFinished)
             break;
