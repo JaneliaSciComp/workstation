@@ -68,6 +68,41 @@ void clipRayToPlane(
     }
 }
 
+float advance_to_voxel_edge(
+        in float previousEdge,
+        in vec3 rayOriginInTexels,
+        in vec3 rayDirectionInTexels,
+        in vec3 rayBoxCorner,
+        in vec3 forwardMask,
+        in float texelsPerRay)
+{
+    // Units of ray parameter, t, are roughly texels
+    const float minStep = 0.020 / texelsPerRay;
+
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    float t = previousEdge + minStep;
+    vec3 x0 = rayOriginInTexels;
+    vec3 x1 = rayDirectionInTexels; 
+    vec3 currentTexelPos = x0 + t*x1; // apply ray equation to find new voxel
+
+    // Advance ray to next voxel edge.
+    // For NEAREST filter, advance to midplanes between voxel centers.
+    // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
+    vec3 currentTexel = floor(currentTexelPos + rayBoxCorner) 
+            - rayBoxCorner;
+
+    // Three out of six total voxel edges represent forward progress
+    vec3 candidateEdges = currentTexel + forwardMask;
+    // Ray trace to three planar voxel edges at once.
+    vec3 candidateSteps = -(x0 - candidateEdges)/x1;
+    // Choose the closest voxel edge.
+    float nextEdge = min(candidateSteps.x, min(candidateSteps.y, candidateSteps.z));
+    // Advance ray by at least minStep, to avoid getting stuck in tiny corners
+    // Next line should be unneccessary, but prevents (sporadic?) driver crash
+    nextEdge = max(nextEdge, previousEdge + minStep);
+    return nextEdge;
+}
+
 void main() {
     vec4 b = barycentricCoord;
     float f = min(b.x, min(b.y, min(b.z, b.w)));
@@ -86,9 +121,6 @@ void main() {
     if (edge_score < 0.95) discard; // hollow out non-edge region
 #endif
 
-    vec3 color = textureLod(volumeTexture, fragTexCoord, 5).rgb; // intentionally downsampled
-    float opacity = max(color.r, max(color.g, color.b));
-
     // Ray parameters
     vec3 x0 = cameraPosInTexCoord; // origin
     vec3 x1 = fragTexCoord - x0; // direction
@@ -106,16 +138,58 @@ void main() {
     vec3 frontTexCoord = x0 + minRay * x1;
     vec3 rearTexCoord = x0 + maxRay * x1;
 
+    // Set up for texel-by-texel ray marching
+    const int levelOfDetail = 6;
+    ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
+
+    vec3 rayOriginInTexels = x0 * texelsPerVolume;
+    vec3 rayDirectionInTexels = x1 * texelsPerVolume;
+    float texelsPerRay = length(rayDirectionInTexels);
+    const vec3 rayBoxCorner = vec3(0, 0, 0); // nearest neighbor
+    vec3 forwardMask = ceil(normalize(rayDirectionInTexels) * 0.99); // each component is now 0 or 1
+
+    vec3 frontTexel = frontTexCoord * texelsPerVolume;
+    vec3 rearTexel = rearTexCoord * texelsPerVolume;
+
+    // float minRayInTexels = length(frontTexel - rayOriginInTexels); //  / length(rayDirectionInTexels) == 1;
+    // float maxRayInTexels = length(rearTexel - rayOriginInTexels); //  / length(rayDirectionInTexels) == 1;
+
+    // Cast ray through volume
+    vec3 color = vec3(0);
+    bool rayIsFinished = false;
+    float t0 = minRay;
+    for (int s = 0; s < 100; ++s) {
+        float t1 = advance_to_voxel_edge(t0, 
+                rayOriginInTexels, rayDirectionInTexels,
+                rayBoxCorner, forwardMask, 
+                texelsPerRay);
+        if (t1 >= maxRay) {
+            t1 = maxRay;
+            rayIsFinished = true;
+        }
+        float t = mix(t0, t1, 0.5);
+        vec3 texel = rayOriginInTexels + t * rayDirectionInTexels;
+        vec3 texCoord = texel / texelsPerVolume;
+        vec3 c = textureLod(volumeTexture, texCoord, levelOfDetail).rgb; // intentionally downsampled
+        color = max(color, c);
+        if (rayIsFinished)
+            break;
+        t0 = t1;
+    }
+
+    float opacity = max(color.r, max(color.g, color.b));
+
     fragColor = vec4(
 
             // reduce max intensity, to keep color channels from saturating to white
             // 0.3 * fragTexCoord.rgb, 1.0 // For debugging texture coordinates
-            0.3 * frontTexCoord, 1.0 // For debugging texture coordinates
+            // 0.3 * frontTexCoord, 1.0 // For debugging texture coordinates
+            // textureLod(volumeTexture, frontTexCoord, 5).rgb, 1.0
             // 0.3 * barycentricCoord.rgb, 1.0 // For debugging barycentric coordinates
             // 0.15 * (normalize(x1) + vec3(1, 1, 1)), 1.0 // Direction toward camera
             // 0.3 * cameraPosInTexCoord, 1.0 // Direction toward camera
 
-            // color, 1.0 // For debugging texture image
+            color, opacity // For debugging texture image
 
     );
 }

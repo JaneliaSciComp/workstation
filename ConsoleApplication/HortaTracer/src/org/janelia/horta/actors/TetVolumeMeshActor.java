@@ -81,6 +81,7 @@ class TetVolumeMeshActor extends MeshActor
         if (doBlend) {
             gl.glEnable(GL3.GL_BLEND);
             gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glBlendEquation(GL3.GL_MAX);
         }
         
         final boolean doCull = true;

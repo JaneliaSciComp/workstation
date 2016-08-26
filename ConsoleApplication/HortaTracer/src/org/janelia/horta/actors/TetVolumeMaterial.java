@@ -146,14 +146,17 @@ public class TetVolumeMaterial extends BasicMaterial
         for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
         {
             // logger.info("GL Error: " + gl.glGetError());
+            int mw = mipmapSize(mipmapLevel, ktxData.header.pixelWidth);
+            int mh = mipmapSize(mipmapLevel, ktxData.header.pixelHeight);
+            int md = mipmapSize(mipmapLevel, ktxData.header.pixelDepth);
             gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
             gl.glTexImage3D(
                     GL3.GL_TEXTURE_3D,
                     mipmapLevel,
                     ktxData.header.glBaseInternalFormat,
-                    mipmapSize(mipmapLevel, ktxData.header.pixelWidth),
-                    mipmapSize(mipmapLevel, ktxData.header.pixelHeight),
-                    mipmapSize(mipmapLevel, ktxData.header.pixelDepth),
+                    mw,
+                    mh,
+                    md,
                     0, // border
                     ktxData.header.glFormat,
                     ktxData.header.glType,
