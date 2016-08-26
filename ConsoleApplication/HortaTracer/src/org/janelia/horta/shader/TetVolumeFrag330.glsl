@@ -46,14 +46,29 @@ flat in mat4 tetPlanesInTexCoord;
 out vec4 fragColor;
 
 // Optimize for a certain maximum number of color channels
-#define COLOR_VEC vec2
+#define CHANNEL_VEC vec2
+
+struct IntegratedIntensity
+{
+    CHANNEL_VEC intensity;
+    float opacity;
+};
 
 float max_element(in vec2 v) {
     return max(v.r, v.g);
 }
 
-vec3 rgb_from_color(in vec2 c) {
-    return c.grg; // green/magenta
+float opacity_for_color(in CHANNEL_VEC intensity) {
+    // TODO: should use brightness model
+    return max_element(intensity);
+}
+
+vec4 rgba_from_channels(in vec2 c, in float opacity) {
+    return vec4(c.grg, opacity); // green/magenta
+}
+
+vec4 rgba_from_channels(IntegratedIntensity i) {
+    return rgba_from_channels(i.intensity, i.opacity);
 }
 
 // Return ray parameter where ray intersects plane
@@ -115,16 +130,17 @@ float advance_to_voxel_edge(
 }
 
 // Nearest-neighbor filtering
-COLOR_VEC sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
+IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 {
-    COLOR_VEC result = COLOR_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
-    return result;
+    CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
+    float opacity = opacity_for_color(intensity);
+    return IntegratedIntensity(intensity, opacity);
 }
 
 // Maximum intensity projection
-COLOR_VEC integrate_max_intensity(in COLOR_VEC front, in COLOR_VEC back) 
+IntegratedIntensity integrate_max_intensity(in IntegratedIntensity front, in IntegratedIntensity back) 
 {
-    return max(front, back);
+    return IntegratedIntensity(max(front.intensity, back.intensity), max(front.opacity, back.opacity));
 }
 
 void main() {
@@ -179,7 +195,7 @@ void main() {
     // float maxRayInTexels = length(rearTexel - rayOriginInTexels); //  / length(rayDirectionInTexels) == 1;
 
     // Cast ray through volume
-    COLOR_VEC color = COLOR_VEC(0);
+    IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0);
     bool rayIsFinished = false;
     float t0 = minRay;
     for (int s = 0; s < 400; ++s) {
@@ -195,15 +211,13 @@ void main() {
         vec3 texel = rayOriginInTexels + t * rayDirectionInTexels;
         vec3 texCoord = texel / texelsPerVolume;
 
-        COLOR_VEC back = sample_nearest_neighbor(texCoord, levelOfDetail); // intentionally downsampled
-        color = integrate_max_intensity(color, back);
+        IntegratedIntensity rearIntensity = sample_nearest_neighbor(texCoord, levelOfDetail); // intentionally downsampled
+        intensity = integrate_max_intensity(intensity, rearIntensity);
 
         if (rayIsFinished)
             break;
         t0 = t1;
     }
-
-    float opacity = max_element(color);
 
     fragColor = vec4(
 
@@ -215,7 +229,7 @@ void main() {
             // 0.15 * (normalize(x1) + vec3(1, 1, 1)), 1.0 // Direction toward camera
             // 0.3 * cameraPosInTexCoord, 1.0 // Direction toward camera
 
-            rgb_from_color(color), opacity // For debugging texture image
+            rgba_from_channels(intensity) // For debugging texture image
 
     );
 }
