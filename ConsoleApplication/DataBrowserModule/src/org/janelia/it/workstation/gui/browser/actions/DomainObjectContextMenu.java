@@ -17,6 +17,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -50,6 +51,7 @@ import org.janelia.it.workstation.gui.browser.components.SampleResultViewerTopCo
 import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.SecondaryDataRemovalDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
@@ -146,8 +148,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         setNextAddRequiresSeparator(true);
         add(getReportProblemItem());
-//        add(getMarkForReprocessingItem());
         addRerunSamplesAction();
+        // Removing feature to avoid premature release.
+        //addPartialSecondaryDataDeletiontItem();
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getMergeItem());
@@ -609,62 +612,30 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
         return rtnVal;
     }
-
-    protected JMenuItem getMarkForReprocessingItem() {
-
-        final List<Sample> samples = new ArrayList<>();
-        for (DomainObject re : domainObjectList) {
-            if (re instanceof Sample) {
-                samples.add((Sample)re);
-            }
+    
+    protected JMenuItem addPartialSecondaryDataDeletiontItem() {
+        JMenuItem itm = getPartialSecondaryDataDeletionItem();
+        if (itm != null) {
+            add(itm);
         }
-
-        if (samples.isEmpty()) return null;
-
-        final String samplesText = multiple?samples.size()+" Samples":"Sample";
-
-        JMenuItem markItem = new JMenuItem("  Mark "+samplesText+" for Reprocessing");
-        markItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                ActivityLogHelper.logUserAction("DomainObjectContentMenu.markForReprocessing", domainObject);
-
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
-                        + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
-
-                if (result != 0) return;
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        for(final Sample sample : samples) {
-                            DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
-                        }
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
-
-        for(Sample sample : samples) {
-            if (!ClientDomainUtils.hasWriteAccess(sample)) {
-                markItem.setEnabled(false);
-                break;
-            }
+        return itm;
+    }
+    
+    protected JMenuItem getPartialSecondaryDataDeletionItem() {
+        JMenuItem rtnVal = null;
+        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
+            final Sample sample = (Sample)domainObjectList.get(0);
+            rtnVal = new JMenuItem("  Remove secondary data of one or more " + SecondaryDataRemovalDialog.PART_LABEL + "s of sample");
+            rtnVal.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
+                            FrameworkImplProvider.getMainFrame(), sample
+                    );
+                    dialog.setVisible(true);
+                }
+            });
         }
-
-        return markItem;
+        return rtnVal;
     }
 
     protected JMenuItem getAddToFolderItem() {

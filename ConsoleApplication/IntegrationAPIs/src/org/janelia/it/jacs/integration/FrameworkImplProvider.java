@@ -23,7 +23,6 @@ import org.openide.util.lookup.Lookups;
  */
 public class FrameworkImplProvider {
     public static ActivityLogging getSessionSupport() {
-//        return get(ActivityLogging.LOOKUP_PATH, ActivityLogging.class);
         Collection<? extends ActivityLogging> candidates
                 = Lookups.forPath(ActivityLogging.LOOKUP_PATH).lookupAll(ActivityLogging.class);
         if (candidates.size() > 0) {
@@ -35,7 +34,6 @@ public class FrameworkImplProvider {
     }
     
     public static CompressedFileResolverI getCompressedFileResolver() {
-//        return get(CompressedFileResolverI.LOOKUP_PATH, CompressedFileResolverI.class);
         Collection<? extends CompressedFileResolverI> candidates
                 = Lookups.forPath(CompressedFileResolverI.LOOKUP_PATH).lookupAll(CompressedFileResolverI.class);
         if (candidates.size() > 0) {
@@ -66,7 +64,13 @@ public class FrameworkImplProvider {
     
     /** Convenience methods. */
     public static JFrame getMainFrame() {
-        return getParentFrameProvider().getMainFrame();
+        final ParentFrame parentFrameProvider = getParentFrameProvider();
+        if (parentFrameProvider == null) {
+            return null;
+        }
+        else {
+            return parentFrameProvider.getMainFrame();
+        }
     }
 
     public static ParentFrame getParentFrameProvider() {
