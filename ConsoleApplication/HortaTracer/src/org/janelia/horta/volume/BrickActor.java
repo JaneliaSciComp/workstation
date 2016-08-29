@@ -33,6 +33,7 @@ package org.janelia.horta.volume;
 import java.io.IOException;
 import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
@@ -45,6 +46,7 @@ import org.janelia.horta.actors.BrainTileMesh;
  * @author Christopher Bruns
  */
 public class BrickActor extends MeshActor
+implements DepthSlabClipper
 {
     private final BrainTileInfo brainTile;
     private final BrickMaterial brickMaterial;

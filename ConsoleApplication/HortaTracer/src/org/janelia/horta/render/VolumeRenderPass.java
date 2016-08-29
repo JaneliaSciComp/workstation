@@ -37,6 +37,7 @@ import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
+import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.volume.BrickActor;
 
@@ -45,6 +46,7 @@ import org.janelia.horta.volume.BrickActor;
  * @author Christopher Bruns
  */
 public class VolumeRenderPass extends RenderPass
+implements DepthSlabClipper
 {
     private final RenderTarget hdrTarget;
     private final RenderTarget pickBuffer;
@@ -156,12 +158,15 @@ public class VolumeRenderPass extends RenderPass
     public void addActor(GL3Actor actor)
     {
         super.addActor(actor);
-        if (! (actor instanceof BrickActor)) 
-            return;
-        BrickActor ba = (BrickActor) actor;
-        ba.setOpaqueDepthTexture(cachedDepthTexture, cachedOpaqueZNear, cachedOpaqueZFar);
-        ba.setRelativeZNear(relativeZNear);
-        ba.setRelativeZFar(relativeZFar);
+        if (actor instanceof DepthSlabClipper) {
+            DepthSlabClipper dsc = (DepthSlabClipper)actor;
+            dsc.setOpaqueDepthTexture(cachedDepthTexture, relativeZNear, relativeZFar);
+        }
+        if (actor instanceof BrickActor) {
+            BrickActor ba = (BrickActor) actor;
+            ba.setRelativeZNear(relativeZNear);
+            ba.setRelativeZFar(relativeZFar);
+        }
     }
 
     void setRelativeSlabThickness(float zNear, float zFar)

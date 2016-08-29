@@ -55,6 +55,7 @@ import org.openide.util.Exceptions;
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
 public class VolumeMipMaterial extends BasicMaterial 
+implements DepthSlabClipper
 {
     private final Texture3d volumeTexture;
     private Texture2d opaqueDepthTexture = null;

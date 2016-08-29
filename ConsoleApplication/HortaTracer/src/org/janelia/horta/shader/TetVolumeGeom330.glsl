@@ -6,9 +6,11 @@
 #version 430 core
 
 // Project here in the geometry shader
-uniform mat4 projectionMatrix = mat4(1);
+layout(location = 1) uniform mat4 projectionMatrix = mat4(1);
 
-// uniform int renderPass = 1; // 1: front tetrahedra, 2: central tetrahedra, 3: rear tetrahedra
+// explicitly specify "official" near and far clip planes, which might be 
+// less generous than those used to render our bounding geometry.
+layout(location = 2) uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 /* Receive one tetrahedral mesh as a base triangle, plus three redundant side vertices
    The base of the tetrahedron is triangle 0-4-2, below.
@@ -29,18 +31,17 @@ uniform mat4 projectionMatrix = mat4(1);
 layout(triangles_adjacency) in;
 
 // Emit back-facing triangles.
-// When the viewpoint is inside the vertex, we might need to emit all four triangles,
+// When the viewpoint is inside the tetrahedron, we might need to emit all four triangles,
 // for a total of twelve vertices.
 layout(triangle_strip, max_vertices=12) out; 
 
-in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
+in vec3 geomTexCoord[]; // array of 3D intensity texture-coordinates for volume rendering
 
-out vec3 fragTexCoord;
-flat out vec3 cameraPosInTexCoord;
-flat out mat4 tetPlanesInTexCoord;
-flat out vec4 zNearPlaneInTexCoord;
+out vec3 fragTexCoord; // vertex texture coordinate
+flat out vec3 cameraPosInTexCoord; // location of observer view point, in units of texture coordinates
+flat out mat4 tetPlanesInTexCoord; // plane equations for each face of the tetrahedron, for use in ray bound clipping
+flat out vec4 zNearPlaneInTexCoord; // plane equation for near z-clip plane
 
-// void emit_triangle(in vec4 p1, in vec4 p2, in vec4 p3) 
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
 {
     int p1 = p1arg;

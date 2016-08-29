@@ -36,8 +36,8 @@
 
 #extension GL_ARB_shading_language_420pack : enable
 
+// three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
-uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
