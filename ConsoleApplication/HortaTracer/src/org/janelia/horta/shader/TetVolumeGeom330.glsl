@@ -3,8 +3,7 @@
  * to attach vertex information needed to find the front face entry point.
  */
 
-#version 330 core
-#extension GL_EXT_geometry_shader4 : enable
+#version 430 core
 
 // Project here in the geometry shader
 uniform mat4 projectionMatrix = mat4(1);
@@ -36,12 +35,10 @@ layout(triangle_strip, max_vertices=12) out;
 
 in vec3 geomTexCoord[]; // 3D intensity texture coordinate for volume rendering
 
-// Matrix to convert camera coordinates to (first three) barycentric coordinates
-// out mat4 baryFromCamera;
-
 out vec3 fragTexCoord;
 flat out vec3 cameraPosInTexCoord;
 flat out mat4 tetPlanesInTexCoord;
+flat out vec4 zNearPlaneInTexCoord;
 
 // void emit_triangle(in vec4 p1, in vec4 p2, in vec4 p3) 
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
@@ -85,6 +82,14 @@ vec4 planeForTriangle(vec3 a, vec3 b, vec3 c) {
     vec3 normal = normalize(cross(b-a, c-b));
     float dist = dot(normal, b);
     return vec4(normal, -dist);
+}
+
+float zNearFromProjection(mat4 projectionMatrix) {
+    float m22 = projectionMatrix[2][2];
+    float m32 = projectionMatrix[3][2];
+    float near = (2.0f*m32)/(2.0*m22-2.0);
+    // float far = ((m22-1.0)*near)/(m22+1.0);
+    return -near;
 }
 
 void main() 
@@ -138,8 +143,6 @@ void main()
     mat4 texCoordFromCamera = texCoordFromBary * baryFromCamera;
     vec4 camPos = 
             texCoordFromCamera * vec4(0, 0, 0, 1);
-            // texCoordFromBary * vec4(1, 0, 0, 1);
-            // baryFromCamera * vec4(p4, 1);
     cameraPosInTexCoord = camPos.xyz/camPos.w;
 
     // Emit one inward facing plane equation for each face of the tetrahedron
@@ -150,6 +153,22 @@ void main()
         planeForTriangle(t1, t4, t3),
         planeForTriangle(t1, t2, t4),
         planeForTriangle(t2, t3, t4));
+
+    // Precompute plane equation for near clip plane
+    float zNear = zNearFromProjection(projectionMatrix);
+    // 1) compute direction
+    vec4 zn4 = texCoordFromCamera * vec4(0, 0, -1, 0); // convert to texture coordinates from camera coordinates
+    vec3 zn3 = normalize(zn4.xyz / zn4.w); // convert to 3D from homogeneous, and scale length to 1.0
+    // 2) compute distance
+    vec4 zpcam = vec4(0, 0, -zNear, 1); // point known to lie in zNear clip plane
+    vec4 zptc = texCoordFromCamera * zpcam; // convert to texture coordinates from camera coordinates
+    float znD = -dot(zn3, zptc.xyz/zptc.w); // distance from clip plane to origin
+    zNearPlaneInTexCoord = vec4(zn3, znD);
+    // vec4 zNearPlaneInCamera = vec4(0, 0, 1.0/zNear, 1.0);
+    // zNearPlaneInTexCoord = texCoordFromCamera * zNearPlaneInCamera;
+    // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
+    // zNearPlaneInTexCoord = zNearPlaneInCamera * inverse(texCoordFromCamera); // look it up...
+    // zNearPlaneInTexCoord /= length(zNearPlaneInTexCoord.xyz); // Later maths assume unit vector?
 
     emit_triangle(projected, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, tc, 1, 0, 3);

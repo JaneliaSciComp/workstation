@@ -1,4 +1,4 @@
-#version 330
+#version 430 core
 
 /**
  * Tetrahdedral volume rendering fragment shader.
@@ -37,10 +37,12 @@
 #extension GL_ARB_shading_language_420pack : enable
 
 layout(binding = 0) uniform sampler3D volumeTexture;
+uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
 flat in mat4 tetPlanesInTexCoord;
+flat in vec4 zNearPlaneInTexCoord;
 
 out vec4 fragColor;
 
@@ -169,11 +171,13 @@ void main()
     clipRayToPlane(x0, x1, tetPlanesInTexCoord[2], minRay, maxRay);
     clipRayToPlane(x0, x1, tetPlanesInTexCoord[3], minRay, maxRay);
     
+    // clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
+
     vec3 frontTexCoord = x0 + minRay * x1;
     vec3 rearTexCoord = x0 + maxRay * x1;
 
     // Set up for texel-by-texel ray marching
-    const int levelOfDetail = 0; // TODO: adjust dynamically
+    const int levelOfDetail = 5; // TODO: adjust dynamically
     ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
 
     vec3 rayOriginInTexels = x0 * texelsPerVolume;
