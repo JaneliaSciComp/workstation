@@ -110,9 +110,7 @@ extends MultipassRenderer
             @Override
             public void display(GL3 gl, AbstractCamera camera) {
                 volumeRenderPass.setOpaqueDepthTexture(
-                        opaqueRenderPass.getFlatDepthTarget(),
-                        opaqueRenderPass.getZNear(),
-                        opaqueRenderPass.getZFar());
+                        opaqueRenderPass.getFlatDepthTarget());
                 super.display(gl, camera);
             }
         });
@@ -299,9 +297,7 @@ extends MultipassRenderer
         opaqueRenderPass.setRelativeSlabThickness(zNear, zFar);
         volumeRenderPass.setRelativeSlabThickness(zNear, zFar);
         volumeRenderPass.setOpaqueDepthTexture(
-            opaqueRenderPass.getFlatDepthTarget(),
-            opaqueRenderPass.getZNear(),
-            opaqueRenderPass.getZFar());
+            opaqueRenderPass.getFlatDepthTarget());
     }
     
     public float getRelativeZNear() {

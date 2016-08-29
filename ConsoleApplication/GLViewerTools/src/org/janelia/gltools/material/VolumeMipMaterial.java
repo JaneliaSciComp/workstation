@@ -71,7 +71,7 @@ implements DepthSlabClipper
     private int tcToCameraIndex = -1;
     private int opaqueZNearFarIndex = -1;
     
-    private float[] opaqueZNearFar = {1e-2f, 1e4f};
+    private float[] opaqueZNearFar = {1e-2f, 1e4f}; // absolute clip in camera space
     
     private final ChannelBrightnessModel colorMap;
     
@@ -90,8 +90,8 @@ implements DepthSlabClipper
     
     private boolean uniformIndicesAreDirty = true;
     private VolumeState volumeState = new VolumeState();
-    
-    // private float relativeSlabThickness = 0.5f;
+
+    // Relative clip in camera space
     private float relativeZNear = 0.92f;
     private float relativeZFar = 1.08f;
     
@@ -109,20 +109,10 @@ implements DepthSlabClipper
         setShadingStyle(Shading.FLAT);
     }
 
-    public float getRelativeZNear() {
-        return relativeZNear;
-    }
-
-    public void setRelativeZNear(float relativeZNear) {
-        this.relativeZNear = relativeZNear;
-    }
-
-    public float getRelativeZFar() {
-        return relativeZFar;
-    }
-
-    public void setRelativeZFar(float relativeZFar) {
-        this.relativeZFar = relativeZFar;
+    @Override
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        this.relativeZNear = zNear;
+        this.relativeZFar = zFar;
     }
     
     public Texture3d getTexture() {return volumeTexture;}
@@ -240,10 +230,10 @@ implements DepthSlabClipper
                 cameraFocusDistance = pc.getCameraFocusDistance();
             }
             // Plane equation is easy to express in camera frame
-            Vector4 nearSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance * relativeZNear);
-            Vector4 farSlabPlane_camera = new Vector4(0, 0, 1, 
-                    cameraFocusDistance * relativeZFar);
+            float absZNear = cameraFocusDistance * relativeZNear;
+            float absZFar = cameraFocusDistance * relativeZFar;
+            Vector4 nearSlabPlane_camera = new Vector4(0, 0, 1, absZNear);
+            Vector4 farSlabPlane_camera = new Vector4(0, 0, 1, absZFar);
             // But we need plane equation in texture coordinate frame
             Matrix4 planeXform = camera_X_tc.inverse().transpose(); // look it up...
             Vector4 nearSlabPlane_tc = planeXform.multiply( nearSlabPlane_camera );
@@ -276,6 +266,8 @@ implements DepthSlabClipper
             // for isosurface, we need to convert normals from texCoords to camera
             gl.glUniformMatrix4fv(tcToCameraIndex, 1, false, camera_X_tc.inverse().asArray(), 0);
 
+            opaqueZNearFar[0] = absZNear;
+            opaqueZNearFar[1] = absZFar;
             gl.glUniform2fv(opaqueZNearFarIndex, 1, opaqueZNearFar, 0);
         }
        
@@ -396,11 +388,10 @@ implements DepthSlabClipper
         uniformIndicesAreDirty = false;
     }
 
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture, float zNear, float zFar)
+    @Override
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture)
     {
         this.opaqueDepthTexture = opaqueDepthTexture;
-        opaqueZNearFar[0] = zNear;
-        opaqueZNearFar[1] = zFar;
     }
     
     private static class VolumeMipShader extends BasicShaderProgram {

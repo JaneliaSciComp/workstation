@@ -78,8 +78,8 @@ implements DepthSlabClipper
         this.brainTile = brainTile;
         this.brickMaterial = (BrickMaterial)getMaterial();    }
     
-    public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
-        brickMaterial.setOpaqueDepthTexture(depthTexture, zNear, zFar);
+    public void setOpaqueDepthTexture(Texture2d depthTexture) {
+        brickMaterial.setOpaqueDepthTexture(depthTexture);
     }
 
     public BrainTileInfo getBrainTile()
@@ -87,14 +87,8 @@ implements DepthSlabClipper
         return brainTile;
     }
 
-    public void setRelativeZNear(float zNear)
-    {
-        brickMaterial.setRelativeZNear(zNear);
-    }
-
-    public void setRelativeZFar(float zFar)
-    {
-        brickMaterial.setRelativeZFar(zFar);
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        brickMaterial.setRelativeSlabThickness(zNear, zFar);
     }
 
     private static class BrickMaterial extends VolumeMipMaterial {

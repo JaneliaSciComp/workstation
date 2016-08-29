@@ -38,5 +38,6 @@ import org.janelia.gltools.texture.Texture2d;
  * @author brunsc
  */
 public interface DepthSlabClipper {
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture, float zNear, float zFar);
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture);
+    public void setRelativeSlabThickness(float zNear, float zFar);
 }
