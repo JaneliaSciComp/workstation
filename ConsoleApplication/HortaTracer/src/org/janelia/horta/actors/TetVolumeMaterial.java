@@ -33,15 +33,16 @@ package org.janelia.horta.actors;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
+import org.janelia.gltools.material.DepthSlabClipper;
+import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -52,11 +53,15 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns
  */
 public class TetVolumeMaterial extends BasicMaterial
+implements DepthSlabClipper
 {
     private int volumeTextureHandle = 0;
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private IntBuffer pbos;
+    private float zNearRelative = 0.10f;
+    private float zFarRelative = 100.0f; // relative z clip planes
+    private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
 
     public TetVolumeMaterial(KtxData ktxData) {
         this.ktxData = ktxData;
@@ -175,11 +180,28 @@ public class TetVolumeMaterial extends BasicMaterial
         // 3D volume texture
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
+        // Z-clip planes
+        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
+        zNearFar[0] = zNearRelative * focusDistance;
+        zNearFar[1] = zFarRelative * focusDistance;
+        final int zNearFarUniformIndex = 2; // explicitly set in shader
+        gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
     }
     
     @Override
     public boolean usesNormals() {
         return false;
+    }
+
+    @Override
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
+        // TODO: not yet used
+    }
+
+    @Override
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        zNearRelative = zNear;
+        zFarRelative = zFar;
     }
     
     public static class TetVolumeShader extends BasicShaderProgram

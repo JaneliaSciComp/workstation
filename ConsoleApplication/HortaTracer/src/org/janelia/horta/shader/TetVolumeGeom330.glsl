@@ -41,6 +41,7 @@ out vec3 fragTexCoord; // vertex texture coordinate
 flat out vec3 cameraPosInTexCoord; // location of observer view point, in units of texture coordinates
 flat out mat4 tetPlanesInTexCoord; // plane equations for each face of the tetrahedron, for use in ray bound clipping
 flat out vec4 zNearPlaneInTexCoord; // plane equation for near z-clip plane
+flat out vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
 {
@@ -83,14 +84,6 @@ vec4 planeForTriangle(vec3 a, vec3 b, vec3 c) {
     vec3 normal = normalize(cross(b-a, c-b));
     float dist = dot(normal, b);
     return vec4(normal, -dist);
-}
-
-float zNearFromProjection(mat4 projectionMatrix) {
-    float m22 = projectionMatrix[2][2];
-    float m32 = projectionMatrix[3][2];
-    float near = (2.0f*m32)/(2.0*m22-2.0);
-    // float far = ((m22-1.0)*near)/(m22+1.0);
-    return -near;
 }
 
 void main() 
@@ -155,21 +148,19 @@ void main()
         planeForTriangle(t1, t2, t4),
         planeForTriangle(t2, t3, t4));
 
-    // Precompute plane equation for near clip plane
-    float zNear = zNearFromProjection(projectionMatrix);
-    // 1) compute direction
-    vec4 zn4 = texCoordFromCamera * vec4(0, 0, -1, 0); // convert to texture coordinates from camera coordinates
-    vec3 zn3 = normalize(zn4.xyz / zn4.w); // convert to 3D from homogeneous, and scale length to 1.0
-    // 2) compute distance
-    vec4 zpcam = vec4(0, 0, -zNear, 1); // point known to lie in zNear clip plane
-    vec4 zptc = texCoordFromCamera * zpcam; // convert to texture coordinates from camera coordinates
-    float znD = -dot(zn3, zptc.xyz/zptc.w); // distance from clip plane to origin
-    zNearPlaneInTexCoord = vec4(zn3, znD);
-    // vec4 zNearPlaneInCamera = vec4(0, 0, 1.0/zNear, 1.0);
-    // zNearPlaneInTexCoord = texCoordFromCamera * zNearPlaneInCamera;
+    // Precompute plane equation for near/far clip planes
+    float zNear = opaqueZNearFar[0];
+    float zFar = opaqueZNearFar[1];
+
+    // TODO: Plane convention seems to be opposite to VolumeMipMaterial
+    vec4 zNearPlaneInCamera = vec4(0, 0, -1.0, -zNear);
+    // zNearPlaneInTexCoord = transpose(inverse(texCoordFromCamera)) * zNearPlaneInCamera;
     // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
-    // zNearPlaneInTexCoord = zNearPlaneInCamera * inverse(texCoordFromCamera); // look it up...
-    // zNearPlaneInTexCoord /= length(zNearPlaneInTexCoord.xyz); // Later maths assume unit vector?
+    mat4 planeTransform = inverse(texCoordFromCamera);
+    zNearPlaneInTexCoord = zNearPlaneInCamera * planeTransform; // look it up...
+
+    vec4 zFarPlaneInCamera = vec4(0, 0, 1.0, zFar);
+    zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; // look it up...
 
     emit_triangle(projected, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, tc, 1, 0, 3);

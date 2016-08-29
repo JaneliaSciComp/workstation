@@ -36,6 +36,8 @@ import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.DepthSlabClipper;
+import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.ktx.KtxData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns
  */
 public class TetVolumeActor extends BasicGL3Actor 
+implements DepthSlabClipper
 {
     private final MeshActor meshActor;
     protected final TetVolumeMaterial material;
@@ -71,6 +74,16 @@ public class TetVolumeActor extends BasicGL3Actor
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
         super.display(gl, camera, parentModelViewMatrix);
+    }
+
+    @Override
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
+        material.setOpaqueDepthTexture(opaqueDepthTexture);
+    }
+
+    @Override
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        material.setRelativeSlabThickness(zNear, zFar);
     }
 
 }

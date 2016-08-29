@@ -38,22 +38,27 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.Material;
+import org.janelia.gltools.texture.Texture2d;
 
 /**
  *
  * @author brunsc
  */
 class TetVolumeMeshActor extends MeshActor 
+implements DepthSlabClipper
 {
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
+    private final TetVolumeMaterial tetVolumeMaterial;
     // First render pass uses parent class vboTriangleAdjacenyIndices
     // protected int vboCentralTriangleAdjacencyIndices = 0; // For second render pass, just the central tetrahedron.
     // protected int vboReversedTriangleAdjacencyIndices = 0; // For the third render pass, front tetrahedra.
 
-    public TetVolumeMeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
+    public TetVolumeMeshActor(MeshGeometry geometry, TetVolumeMaterial material, CompositeObject3d parent) {
         super(geometry, material, parent);
+        this.tetVolumeMaterial = material;
     }
     
     public void addOuterTetrahedron(int a, int b, int c, int apex) {
@@ -195,6 +200,16 @@ class TetVolumeMeshActor extends MeshActor
                     GL3.GL_STATIC_DRAW);
             gl.glBindBuffer(GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
         }
+    }
+
+    @Override
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
+        tetVolumeMaterial.setOpaqueDepthTexture(opaqueDepthTexture);
+    }
+
+    @Override
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        tetVolumeMaterial.setRelativeSlabThickness(zNear, zFar);
     }
 
 }

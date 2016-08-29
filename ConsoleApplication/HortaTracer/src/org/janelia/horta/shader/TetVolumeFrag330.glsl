@@ -43,6 +43,10 @@ in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
 flat in mat4 tetPlanesInTexCoord;
 flat in vec4 zNearPlaneInTexCoord;
+flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
+
+// debugging only
+in float fragZNear;
 
 out vec4 fragColor;
 
@@ -171,7 +175,8 @@ void main()
     clipRayToPlane(x0, x1, tetPlanesInTexCoord[2], minRay, maxRay);
     clipRayToPlane(x0, x1, tetPlanesInTexCoord[3], minRay, maxRay);
     
-    // clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
+    clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
+    clipRayToPlane(x0, x1, zFarPlaneInTexCoord, minRay, maxRay);
 
     vec3 frontTexCoord = x0 + minRay * x1;
     vec3 rearTexCoord = x0 + maxRay * x1;
