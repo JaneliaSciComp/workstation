@@ -1,10 +1,12 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
 import org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;
@@ -19,8 +21,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
-import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 
 /**
  * Created with IntelliJ IDEA.
@@ -198,7 +198,7 @@ public class AlignmentBoardControls {
         createGui();
         Double downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
         try {
-            downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
+            downsampleRate = (Double)FrameworkImplProvider.getModelProperty(DOWN_SAMPLE_PROP_NAME);
             if ( downsampleRate == null ) {
                 downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
             }
@@ -283,7 +283,7 @@ public class AlignmentBoardControls {
                 throw new RuntimeException();
             }
         } catch ( RuntimeException ex ) {
-            JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to parse count " + selectedValue + " to integer value.");
+            JOptionPane.showMessageDialog( FrameworkImplProvider.getMainFrame(), "Failed to parse count " + selectedValue + " to integer value.");
             constraintTextField.setForeground( Color.red );
         }
 
@@ -498,7 +498,7 @@ public class AlignmentBoardControls {
     }
 
     private void serializeDownsampleRate(double downSampleRate) {
-        SessionMgr.getSessionMgr().setModelProperty(DOWN_SAMPLE_PROP_NAME, downSampleRate);
+        FrameworkImplProvider.setModelProperty(DOWN_SAMPLE_PROP_NAME, downSampleRate);
     }
 
     /**
@@ -794,7 +794,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if ( connectEvents.isSelected() ) {
-                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getMainFrame(),
+                    int confirmation = JOptionPane.showConfirmDialog( FrameworkImplProvider.getMainFrame(),
                             "<html>This will cause Drag-and-Drop, deletion, or color/hide changes to be reflected in your alignment board,<br>" +
                                     "and will incur the usual delays in rebuilding the alignment board after such changes.<br>" +
                                     "Do you wish to rebuild the board now to reflect recent changes?</html>"
@@ -818,7 +818,7 @@ public class AlignmentBoardControls {
                 }
                 else {
                     // Here: toggle the current state of event listening.
-                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getMainFrame(),
+                    int confirmation = JOptionPane.showConfirmDialog( FrameworkImplProvider.getMainFrame(),
                             "<html>This will stop any Drag-and-Drop, deletion, or color/hide changes from appearing in the alignment board<br>" +
                                     "until you turn the link back on.  If you reopen the alignment board or restart the workstation,<br>" +
                                     "the link setting will automatically be turned back on. Please use this with caution.<br>" +

@@ -11,15 +11,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.shared.solr.SolrQueryBuilder;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.exchange.DomainObjectReceiver;
 import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -98,7 +97,7 @@ public class SearchWorker extends SimpleWorker {
     @Override
     protected void hadError(Throwable error) {
         param.getErrorHandler().handleError( error );
-        SessionMgr.getSessionMgr().handleException(error);
+        FrameworkImplProvider.handleException(error);
     }
 
     /**

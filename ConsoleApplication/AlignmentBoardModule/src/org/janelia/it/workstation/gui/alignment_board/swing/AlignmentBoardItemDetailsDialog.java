@@ -17,10 +17,10 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-
 import java.awt.Dialog;
+
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.ModalDialog;
 
@@ -72,7 +72,7 @@ public class AlignmentBoardItemDetailsDialog extends ModalDialog {
 
         alignmentBoardItemPanel = new AlignmentBoardItemPanel(item);
         setTitle("Details: "+alignmentBoardItem);
-        Component mainFrame = SessionMgr.getMainFrame();        
+        Component mainFrame = FrameworkImplProvider.getMainFrame();        
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
         this.add(alignmentBoardItemPanel, BorderLayout.CENTER);
         // Show dialog and wait

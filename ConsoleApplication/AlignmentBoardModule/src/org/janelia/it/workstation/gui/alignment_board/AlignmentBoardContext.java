@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -23,7 +24,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
@@ -329,7 +329,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         Reference sampleRef = neuronFragment.getSample();
         Sample sample = DomainMgr.getDomainMgr().getModel().<Sample>getDomainObject(Sample.class, sampleRef.getTargetId());
         if (sample == null) {
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron fragment is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Neuron fragment is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         if (!compatibilityChecker.isSampleCompatible(context, sample)) {

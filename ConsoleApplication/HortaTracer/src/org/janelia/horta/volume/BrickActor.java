@@ -99,8 +99,16 @@ implements DepthSlabClipper
                 VolumeState volumeState,
                 int colorChannel) throws IOException
         {
-            super(brainTile.loadBrick(10, colorChannel), brightnessModel);
+            super(safeLoadBrick(brainTile, colorChannel), brightnessModel);
             setVolumeState(volumeState);
+        }
+
+        private static Texture3d safeLoadBrick(BrainTileInfo brainTile, int colorChannel) throws IOException {
+            Texture3d brick = brainTile.loadBrick(10, colorChannel);
+            if (brick==null) {
+                throw new IOException("Load was interrupted");
+            }
+            return brick;
         }
 
         private BrickMaterial(
