@@ -673,12 +673,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
 
-    // Append a message about the item under the cursor
-    private void reportPickItem(StringBuilder msg, MouseEvent event) {
-        double itemId = neuronMPRenderer.pickIdForScreenXy(event.getPoint());
-        msg.append("  Item index under cursor = " + itemId);
-    }
-
     private void reportIntensity(StringBuilder msg, MouseEvent event) {
         // TODO: Use neuron cursor position, if available, rather than hardware mouse position.
         Vector3 worldXyz = null;
@@ -687,7 +681,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
             double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
             worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
-            intensity = neuronMPRenderer.intensityForScreenXy(event.getPoint());
+            intensity = neuronMPRenderer.coreIntensityForScreenXy(event.getPoint());
             // System.out.println("non-hover intensity = "+intensity);
 
         mouseStageLocation = worldXyz;
@@ -1477,7 +1471,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     @Override
     public double getIntensity(Point2D xy) {
-        return neuronMPRenderer.intensityForScreenXy(xy);
+        return neuronMPRenderer.coreIntensityForScreenXy(xy);
     }
 
     @Override

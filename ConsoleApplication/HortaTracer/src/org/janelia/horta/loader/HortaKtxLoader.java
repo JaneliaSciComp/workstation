@@ -70,7 +70,7 @@ public class HortaKtxLoader implements FileTypeLoader
         double elapsed = (end - start)/1.0e9;
         logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
         // TODO: use the data
-        renderer.addVolumeActor(data.createActor());
+        renderer.addVolumeActor(data.createActor(renderer.getBrightnessModel()));
         return true;
     }
 

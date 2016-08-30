@@ -114,6 +114,12 @@ vec3 blue_color(in float intensity) {
 
 void main() {
     vec4 c = texture(upstreamImage, screenCoord);
+
+#define RGB_PASS_THROUGH
+    vec3 color = c.rgb;
+    float opacity = c.a;
+#ifdef RGB_PASS_THROUGH
+#else
     COLOR_VEC intensity = COLOR_VEC(c);
     float opacityIn = c.a;
 
@@ -139,6 +145,7 @@ void main() {
 
     // TODO sRGB should be last thing ever
     // color = pow(color, vec3(0.5, 0.5, 0.5));
+#endif
 
     fragColor = vec4(color, opacity);
 }

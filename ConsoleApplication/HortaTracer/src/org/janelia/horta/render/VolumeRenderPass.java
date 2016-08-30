@@ -48,7 +48,7 @@ public class VolumeRenderPass extends RenderPass
 implements DepthSlabClipper
 {
     private final RenderTarget rgbaTarget;
-    private final RenderTarget pickBuffer;
+    private final RenderTarget coreDepthTarget;
     // private final RenderTarget depthTarget;
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
@@ -66,19 +66,19 @@ implements DepthSlabClipper
         
         // Create render targets
         // Create G-Buffer for deferred rendering
-        final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
+        final int rgbaAttachment = GL3.GL_COLOR_ATTACHMENT0;
         // final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
-        final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
-        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA16,
-                hdrAttachment);
+        final int coreDepthAttachment = GL3.GL_COLOR_ATTACHMENT1;
+        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8,
+                rgbaAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);
-        pickBuffer = framebuffer.addRenderTarget(GL3.GL_RG16UI,
-                pickAttachment);
+        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG16UI,
+                coreDepthAttachment);
         
         // Attach render targets to renderer
         addRenderTarget(rgbaTarget);
-        addRenderTarget(pickBuffer);
+        addRenderTarget(coreDepthTarget);
         targetAttachments = new int[renderTargets.size()];
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
@@ -117,7 +117,7 @@ implements DepthSlabClipper
 
         super.renderScene(gl, camera);
 
-        for (RenderTarget rt : new RenderTarget[] {rgbaTarget, pickBuffer}) 
+        for (RenderTarget rt : new RenderTarget[] {rgbaTarget, coreDepthTarget}) 
         {
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);
@@ -125,12 +125,12 @@ implements DepthSlabClipper
         gl.glDrawBuffers(1, targetAttachments, 0);
     }
     
-    public RenderTarget getIntensityTexture() {
+    public RenderTarget getRgbaTexture() {
         return rgbaTarget;
     }
     
-    public RenderTarget getPickTexture() {
-        return pickBuffer;
+    public RenderTarget getCoreDepthTexture() {
+        return coreDepthTarget;
     }
     
     public Framebuffer getFramebuffer() {
@@ -175,7 +175,7 @@ implements DepthSlabClipper
             }
         }
         rgbaTarget.setDirty(true);
-        pickBuffer.setDirty(true);
+        coreDepthTarget.setDirty(true);
     }
 
     public float getRelativeZNear() {

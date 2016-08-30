@@ -32,6 +32,7 @@ package org.janelia.horta.actors;
 
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Viewport;
@@ -58,10 +59,10 @@ implements DepthSlabClipper
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     // For scaling efficiency, alternate constructor takes shared resources as argument
-    public TetVolumeActor(KtxData ktxData, MeshGeometry meshGeometry) 
+    public TetVolumeActor(KtxData ktxData, MeshGeometry meshGeometry, ChannelBrightnessModel brightnessModel) 
     {
         super(null);
-        material = new TetVolumeMaterial(ktxData);
+        material = new TetVolumeMaterial(ktxData, brightnessModel);
         meshActor = new TetVolumeMeshActor(meshGeometry, material, this);
         this.addChild(meshActor);
     }

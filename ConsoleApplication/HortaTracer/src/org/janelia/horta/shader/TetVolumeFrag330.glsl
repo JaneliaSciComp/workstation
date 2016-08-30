@@ -34,10 +34,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#extension GL_ARB_shading_language_420pack : enable
+// Optimize for a certain maximum number of color channels
+#define CHANNEL_VEC vec2
 
 // three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
+// Transfer function
+layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
+layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
+layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
+
 
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
@@ -50,9 +56,6 @@ in float fragZNear;
 
 out vec4 fragColor;
 
-// Optimize for a certain maximum number of color channels
-#define CHANNEL_VEC vec2
-
 struct IntegratedIntensity
 {
     CHANNEL_VEC intensity;
@@ -63,17 +66,29 @@ float max_element(in vec2 v) {
     return max(v.r, v.g);
 }
 
-float opacity_for_color(in CHANNEL_VEC intensity) {
-    // TODO: should use brightness model
-    return max_element(intensity);
+vec2 rampstep(vec2 edge0, vec2 edge1, vec2 x) {
+    return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
-vec4 rgba_from_channels(in vec2 c, in float opacity) {
+float opacity_for_intensities(in CHANNEL_VEC intensity) 
+{
+    // Use brightness model to modulate opacity
+    CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
+    rescaled = pow(rescaled, opacityFunctionGamma);
+    // TODO: Is max across channels OK here? Or should we use something intermediate between MAX and SUM?
+    return max_element(rescaled);
+}
+
+vec4 rgba_for_scaled_intensities(in vec2 c, in float opacity) {
+    // TODO: hot color map
     return vec4(c.grg, opacity); // green/magenta
 }
 
-vec4 rgba_from_channels(IntegratedIntensity i) {
-    return rgba_from_channels(i.intensity, i.opacity);
+vec4 rgba_for_intensities(IntegratedIntensity i) {
+    // Use brightness model to modulate opacity
+    CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, i.intensity);
+    rescaled = pow(rescaled, opacityFunctionGamma);
+    return rgba_for_scaled_intensities(rescaled, i.opacity);
 }
 
 // Return ray parameter where ray intersects plane
@@ -138,7 +153,7 @@ float advance_to_voxel_edge(
 IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
-    float opacity = opacity_for_color(intensity);
+    float opacity = opacity_for_intensities(intensity);
     return IntegratedIntensity(intensity, opacity);
 }
 
@@ -234,7 +249,7 @@ void main()
             // 0.15 * (normalize(x1) + vec3(1, 1, 1)), 1.0 // Direction toward camera
             // 0.3 * cameraPosInTexCoord, 1.0 // Direction toward camera
 
-            rgba_from_channels(intensity) // For debugging texture image
+            rgba_for_intensities(intensity) // For debugging texture image
 
     );
 }

@@ -35,6 +35,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.BasicShaderProgram;
@@ -62,10 +63,14 @@ implements DepthSlabClipper
     private float zNearRelative = 0.10f;
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
+    // TODO: multichannel brightness
+    private final ChannelBrightnessModel brightnessModel;
+    private int colorChannelCount = 2;
 
-    public TetVolumeMaterial(KtxData ktxData) {
+    public TetVolumeMaterial(KtxData ktxData, ChannelBrightnessModel brightnessModel) {
         this.ktxData = ktxData;
         shaderProgram = new TetVolumeShader();
+        this.brightnessModel = brightnessModel;
     }
     
     // Override displayMesh() to display something other than triangles
@@ -186,6 +191,19 @@ implements DepthSlabClipper
         zNearFar[1] = zFarRelative * focusDistance;
         final int zNearFarUniformIndex = 2; // explicitly set in shader
         gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
+        // Brightness correction
+        if (colorChannelCount == 2) {
+            // TODO: Use a multichannel model
+            float min = brightnessModel.getMinimum();
+            float max = brightnessModel.getMaximum();
+            float gamma = brightnessModel.getGamma();
+            gl.glUniform2fv(3, 1, new float[] {min, min}, 0);
+            gl.glUniform2fv(4, 1, new float[] {max, max}, 0);
+            gl.glUniform2fv(5, 1, new float[] {gamma, gamma}, 0);
+        }
+        else {
+            throw new UnsupportedOperationException("Unexpected number of color channels");
+        }
     }
     
     @Override
