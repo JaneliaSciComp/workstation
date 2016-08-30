@@ -43,7 +43,7 @@ layout(binding = 0) uniform sampler3D volumeTexture;
 layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
 layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
 layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
-
+layout(location = 6) uniform int tracingChannel = 0;
 
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
@@ -54,7 +54,8 @@ flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 // debugging only
 in float fragZNear;
 
-out vec4 fragColor;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out ivec2 coreDepth;
 
 struct IntegratedIntensity
 {
@@ -91,6 +92,14 @@ vec4 rgba_for_intensities(IntegratedIntensity i) {
     return rgba_for_scaled_intensities(rescaled, i.opacity);
 }
 
+float intersectRayAndPlane(
+        in vec3 rayStart, in vec3 rayDirection, 
+        in vec4 plane)
+{
+    float intersection = -(dot(rayStart, plane.xyz) + plane.w) / dot(plane.xyz, rayDirection);
+    return intersection;
+}
+
 // Return ray parameter where ray intersects plane
 void clipRayToPlane(
         in vec3 rayStart, in vec3 rayDirection, 
@@ -98,20 +107,14 @@ void clipRayToPlane(
         inout float begin, // current ray start parameter
         inout float end) // current ray end parameter
 {
-    vec3 n = plane.xyz;
-    float d = plane.w;
-    vec3 x0 = rayStart;
-    vec3 x1 = rayDirection;
-    float intersection = -(dot(x0, n) + d) / dot(n, x1);
-    float direction = dot(n, x1);
+    float direction = dot(plane.xyz, rayDirection);
     if (direction == 0)
         return; // ray is parallel to plane
-    if (direction > 0) { // plane normal is along ray direction
+    float intersection = intersectRayAndPlane(rayStart, rayDirection, plane);
+    if (direction > 0) // plane normal is along ray direction
         begin = max(begin, intersection);
-    }
-    else { // plane normal is opposite to ray direction
+    else // plane normal is opposite to ray direction
         end = min(end, intersection);
-    }
 }
 
 float advance_to_voxel_edge(
@@ -158,7 +161,9 @@ IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDeta
 }
 
 // Maximum intensity projection
-IntegratedIntensity integrate_max_intensity(in IntegratedIntensity front, in IntegratedIntensity back) 
+IntegratedIntensity integrate_max_intensity(
+        in IntegratedIntensity front, 
+        in IntegratedIntensity back)
 {
     CHANNEL_VEC intensity = max(front.intensity, back.intensity);
     float opacity = max(front.opacity, back.opacity);
@@ -173,6 +178,17 @@ IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in Integra
     CHANNEL_VEC f = front.intensity * (front.opacity/opacity);
     return IntegratedIntensity(clamp(b + f, 0, 1), opacity);
 }
+
+void updateCoreLocation(
+        inout float coreParam, inout float coreIntensity,
+        in float currentParam, in float currentIntensity)
+{
+    if (currentIntensity > coreIntensity) {
+        coreParam = currentParam;
+        coreIntensity = currentIntensity;
+    }
+}
+
 
 void main() 
 {
@@ -209,13 +225,12 @@ void main()
     vec3 frontTexel = frontTexCoord * texelsPerVolume;
     vec3 rearTexel = rearTexCoord * texelsPerVolume;
 
-    // float minRayInTexels = length(frontTexel - rayOriginInTexels); //  / length(rayDirectionInTexels) == 1;
-    // float maxRayInTexels = length(rearTexel - rayOriginInTexels); //  / length(rayDirectionInTexels) == 1;
-
     // Cast ray through volume
     IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0);
     bool rayIsFinished = false;
     float t0 = minRay;
+    float coreParam = 0.0;
+    float coreIntensity = 0.0;
     for (int s = 0; s < 1000; ++s) {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
@@ -234,22 +249,24 @@ void main()
                 integrate_max_intensity(intensity, rearIntensity);
                 // integrate_occluding(intensity, rearIntensity);
 
+        // TODO: next line causes hang during compile...
+        // updateCoreLocation(coreParam, coreIntensity, t, rearIntensity.intensity[tracingChannel]);
+
         if (rayIsFinished)
             break;
         t0 = t1;
     }
 
-    fragColor = vec4(
+    // Primary render target stores final blended RGBA color
+    fragColor = rgba_for_intensities(intensity);
 
-            // reduce max intensity, to keep color channels from saturating to white
-            // 0.3 * fragTexCoord.rgb, 1.0 // For debugging texture coordinates
-            // 0.3 * frontTexCoord, 1.0 // For debugging texture coordinates
-            // textureLod(volumeTexture, frontTexCoord, 5).rgb, 1.0
-            // 0.3 * barycentricCoord.rgb, 1.0 // For debugging barycentric coordinates
-            // 0.15 * (normalize(x1) + vec3(1, 1, 1)), 1.0 // Direction toward camera
-            // 0.3 * cameraPosInTexCoord, 1.0 // Direction toward camera
-
-            rgba_for_intensities(intensity) // For debugging texture image
-
-    );
+    // Secondary render target stores 16-bit core intensity, plus relative depth
+    /* */
+    float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
+    float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
+    float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
+    int intDepth = int(relativeDepth * 65535);
+    /* */
+    int coreInt = int(65535 * intensity.intensity[tracingChannel]);
+    coreDepth = ivec2(coreInt, intDepth); // OK
 }
