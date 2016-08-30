@@ -34,6 +34,9 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
+import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.camera.BasicViewSlab;
+import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DepthSlabClipper;
@@ -72,8 +75,23 @@ implements DepthSlabClipper
     }
     
     @Override
-    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
-        super.display(gl, camera, parentModelViewMatrix);
+    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
+    {
+        // Adjust actual Z-clip planes to allow imposter geometry to lie
+        // outside the "official" Z-clip planes. Correct final clipping will 
+        // happen in the fragement shader. This is necessary because the
+        // imposter geometry represents multiple voxels at various depths.
+        Viewport vp = camera.getViewport();
+        // Z-near remains unchanged, because we are using back faces for imposter geometry.
+        // But Z-far needs to be pushed back significantly.
+        ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative(), vp.getzFarRelative() + 100.0f);
+        try {
+            camera.pushInternalViewSlab(slab);    
+            super.display(gl, camera, parentModelViewMatrix);
+        }
+        finally {
+            camera.popInternalViewSlab();
+        }
     }
 
     @Override

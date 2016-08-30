@@ -182,7 +182,7 @@ void main()
     vec3 rearTexCoord = x0 + maxRay * x1;
 
     // Set up for texel-by-texel ray marching
-    const int levelOfDetail = 5; // TODO: adjust dynamically
+    const int levelOfDetail = 0; // TODO: adjust dynamically
     ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
 
     vec3 rayOriginInTexels = x0 * texelsPerVolume;

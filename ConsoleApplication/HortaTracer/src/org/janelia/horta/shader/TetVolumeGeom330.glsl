@@ -152,15 +152,14 @@ void main()
     float zNear = opaqueZNearFar[0];
     float zFar = opaqueZNearFar[1];
 
-    // TODO: Plane convention seems to be opposite to VolumeMipMaterial
+    // TODO: This plane convention seems to be opposite to VolumeMipMaterial
     vec4 zNearPlaneInCamera = vec4(0, 0, -1.0, -zNear);
-    // zNearPlaneInTexCoord = transpose(inverse(texCoordFromCamera)) * zNearPlaneInCamera;
     // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
     mat4 planeTransform = inverse(texCoordFromCamera);
     zNearPlaneInTexCoord = zNearPlaneInCamera * planeTransform; // look it up...
 
     vec4 zFarPlaneInCamera = vec4(0, 0, 1.0, zFar);
-    zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; // look it up...
+    zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; 
 
     emit_triangle(projected, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, tc, 1, 0, 3);
