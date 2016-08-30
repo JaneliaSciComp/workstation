@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 public class HortaKtxLoader implements FileTypeLoader
 {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private NeuronMPRenderer renderer;
+    private final NeuronMPRenderer renderer;
     
     public HortaKtxLoader(NeuronMPRenderer renderer) {
         this.renderer = renderer;
@@ -69,7 +69,6 @@ public class HortaKtxLoader implements FileTypeLoader
         long end = System.nanoTime();
         double elapsed = (end - start)/1.0e9;
         logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
-        // TODO: use the data
         renderer.addVolumeActor(data.createActor(renderer.getBrightnessModel()));
         return true;
     }

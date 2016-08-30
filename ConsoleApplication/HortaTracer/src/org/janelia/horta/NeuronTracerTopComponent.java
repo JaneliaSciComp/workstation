@@ -115,6 +115,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -140,6 +141,7 @@ import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
@@ -481,7 +483,11 @@ public final class NeuronTracerTopComponent extends TopComponent
     {
         
         // TODO - refactor all stages to use multipass renderer, like this
-        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(sceneWindow.getGLAutoDrawable(), brightnessModel, metaWorkspace);
+        NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(
+                sceneWindow.getGLAutoDrawable(), 
+                brightnessModel, 
+                metaWorkspace,
+                imageColorModel);
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
         renderers.clear();
         renderers.add(neuronMPRenderer0);
@@ -727,7 +733,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new Vector3(worldXyz.get(0), worldXyz.get(1), worldXyz.get(2));
     }
 
+    // TODO: Obsolete brightness model for ImageColorModel
     private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
+    private final ImageColorModel imageColorModel = new ImageColorModel(65535, 2);
     
     private void loadStartupPreferences() 
     {
@@ -785,6 +793,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                 */
             }
         });
+        imageColorModel.addColorModelListener(new ColorModelListener() {
+            @Override
+            public void colorModelChanged() {
+                neuronMPRenderer.setIntensityBufferDirty();
+                redrawNow();
+            }
+        });
 
         this.setLayout(new BorderLayout());
         sceneWindow = new SceneWindow(vantage, CameraType.PERSPECTIVE);
@@ -812,6 +827,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         associateLookup(Lookups.fixed(
                 vantage, 
                 brightnessModel, 
+                imageColorModel,
                 metaWorkspace, 
                 frameTracker,
                 movieSource,

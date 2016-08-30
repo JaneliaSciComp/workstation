@@ -34,8 +34,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.ChannelBrightnessModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.BasicShaderProgram;
@@ -64,10 +66,9 @@ implements DepthSlabClipper
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
     // TODO: multichannel brightness
-    private final ChannelBrightnessModel brightnessModel;
-    private int colorChannelCount = 2;
+    private final ImageColorModel brightnessModel;
 
-    public TetVolumeMaterial(KtxData ktxData, ChannelBrightnessModel brightnessModel) {
+    public TetVolumeMaterial(KtxData ktxData, ImageColorModel brightnessModel) {
         this.ktxData = ktxData;
         shaderProgram = new TetVolumeShader();
         this.brightnessModel = brightnessModel;
@@ -192,14 +193,14 @@ implements DepthSlabClipper
         final int zNearFarUniformIndex = 2; // explicitly set in shader
         gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
         // Brightness correction
-        if (colorChannelCount == 2) {
-            // TODO: Use a multichannel model
-            float min = brightnessModel.getMinimum();
-            float max = brightnessModel.getMaximum();
-            float gamma = brightnessModel.getGamma();
-            gl.glUniform2fv(3, 1, new float[] {min, min}, 0);
-            gl.glUniform2fv(4, 1, new float[] {max, max}, 0);
-            gl.glUniform2fv(5, 1, new float[] {gamma, gamma}, 0);
+        if (brightnessModel.getChannelCount() == 2) {
+            // Use a multichannel model
+            ChannelColorModel c0 = brightnessModel.getChannel(0);
+            ChannelColorModel c1 = brightnessModel.getChannel(1);
+            float max0 = c0.getDataMax();
+            gl.glUniform2fv(3, 1, new float[] {c0.getBlackLevel()/max0, c1.getBlackLevel()/max0}, 0);
+            gl.glUniform2fv(4, 1, new float[] {c0.getWhiteLevel()/max0, c1.getWhiteLevel()/max0}, 0);
+            gl.glUniform2fv(5, 1, new float[] {(float)c0.getGamma(), (float)c1.getGamma()}, 0);
         }
         else {
             throw new UnsupportedOperationException("Unexpected number of color channels");

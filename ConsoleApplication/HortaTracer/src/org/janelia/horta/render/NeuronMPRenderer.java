@@ -63,6 +63,7 @@ import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.openide.util.Exceptions;
@@ -86,12 +87,19 @@ extends MultipassRenderer
     private final AllSwcActor allSwcActor = new AllSwcActor();
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
-    private final ChannelBrightnessModel brightnessModel;
 
-    public NeuronMPRenderer(GLAutoDrawable drawable, final ChannelBrightnessModel brightnessModel, HortaMetaWorkspace workspace) 
+    // TODO: obsolete brightness model for ImageColorModel
+    private final ChannelBrightnessModel brightnessModel;
+    private final ImageColorModel imageColorModel;
+
+    public NeuronMPRenderer(GLAutoDrawable drawable, 
+            final ChannelBrightnessModel brightnessModel, 
+            HortaMetaWorkspace workspace, 
+            ImageColorModel imageColorModel) 
     {
         this.drawable = drawable;
         this.brightnessModel = brightnessModel;
+        this.imageColorModel = imageColorModel;
         
         this.workspace = workspace;
         workspace.addObserver(neuronListRefresher);
@@ -151,8 +159,8 @@ extends MultipassRenderer
         setRelativeSlabThickness(0.92f, 1.08f);
     }
     
-    public ChannelBrightnessModel getBrightnessModel() {
-        return brightnessModel;
+    public ImageColorModel getBrightnessModel() {
+        return imageColorModel;
     }
     
     public void addMeshActor(GL3Actor meshActor) {
