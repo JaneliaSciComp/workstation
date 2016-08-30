@@ -47,7 +47,7 @@ import org.janelia.gltools.texture.Texture2d;
 public class VolumeRenderPass extends RenderPass
 implements DepthSlabClipper
 {
-    private final RenderTarget hdrTarget;
+    private final RenderTarget rgbaTarget;
     private final RenderTarget pickBuffer;
     // private final RenderTarget depthTarget;
     private final float[] clearColor4 = new float[] {0,0,0,0};
@@ -69,7 +69,7 @@ implements DepthSlabClipper
         final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
         // final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
         final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
-        hdrTarget = framebuffer.addRenderTarget(GL3.GL_RGBA16,
+        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA16,
                 hdrAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);
@@ -77,13 +77,13 @@ implements DepthSlabClipper
                 pickAttachment);
         
         // Attach render targets to renderer
-        addRenderTarget(hdrTarget);
+        addRenderTarget(rgbaTarget);
         addRenderTarget(pickBuffer);
         targetAttachments = new int[renderTargets.size()];
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
         }
-        hdrTarget.setDirty(true);
+        rgbaTarget.setDirty(true);
     }
     
     @Override
@@ -102,7 +102,7 @@ implements DepthSlabClipper
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
         // if (true) return; // TODO
-        if (! hdrTarget.isDirty())
+        if (! rgbaTarget.isDirty())
             return;
 
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
@@ -117,7 +117,7 @@ implements DepthSlabClipper
 
         super.renderScene(gl, camera);
 
-        for (RenderTarget rt : new RenderTarget[] {hdrTarget, pickBuffer}) 
+        for (RenderTarget rt : new RenderTarget[] {rgbaTarget, pickBuffer}) 
         {
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);
@@ -126,7 +126,7 @@ implements DepthSlabClipper
     }
     
     public RenderTarget getIntensityTexture() {
-        return hdrTarget;
+        return rgbaTarget;
     }
     
     public RenderTarget getPickTexture() {
@@ -174,7 +174,7 @@ implements DepthSlabClipper
                 ba.setRelativeSlabThickness(zNear, zFar);
             }
         }
-        hdrTarget.setDirty(true);
+        rgbaTarget.setDirty(true);
         pickBuffer.setDirty(true);
     }
 
