@@ -17,9 +17,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
-import org.janelia.it.jacs.model.domain.DomainConstants;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -614,24 +613,47 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem addPartialSecondaryDataDeletiontItem() {
+        JMenu secondaryDeletionMenu = new JMenu("  Remove secondary data");
         JMenuItem itm = getPartialSecondaryDataDeletionItem();
         if (itm != null) {
-            add(itm);
+            secondaryDeletionMenu.add(itm);
         }
-        return itm;
+        itm = getStitchedImageDeletionItem();
+        if (itm != null) {
+            secondaryDeletionMenu.add(itm);
+        }
+        return secondaryDeletionMenu;
     }
     
     protected JMenuItem getPartialSecondaryDataDeletionItem() {
         JMenuItem rtnVal = null;
         if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
             final Sample sample = (Sample)domainObjectList.get(0);
-            rtnVal = new JMenuItem("  Remove secondary data of one or more " + SecondaryDataRemovalDialog.PART_LABEL + "s of sample");
+            rtnVal = new JMenuItem("  Remove/preclude anatomical area of sample");
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
                             FrameworkImplProvider.getMainFrame(), sample
                     );
                     dialog.setVisible(true);
+                }
+            });
+        }
+        return rtnVal;
+    }
+
+    protected JMenuItem getStitchedImageDeletionItem() {
+        JMenuItem rtnVal = null;
+        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
+            final Sample sample = (Sample)domainObjectList.get(0);
+            rtnVal = new JMenuItem("  Remove/preclude Stitched Image");
+            rtnVal.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    String objectiveOfRemoval = SecondaryDataRemovalDialog.getStitchedImageRemovalTarget(sample);
+                    if (objectiveOfRemoval != null) {
+                        // Carry out removal/preclusion of creation, for the stitched image.
+
+                    }
                 }
             });
         }

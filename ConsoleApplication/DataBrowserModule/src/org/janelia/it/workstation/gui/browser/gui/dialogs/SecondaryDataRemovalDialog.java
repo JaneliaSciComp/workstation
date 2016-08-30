@@ -5,55 +5,32 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Collections;
-//import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-//import javax.swing.JTextField;
-import javax.swing.SwingConstants;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 
-//import org.janelia.it.jacs.model.domain.Subject;
-//import org.janelia.it.jacs.model.domain.sample.DataSet;
-//import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-//import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-//import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-//import org.janelia.it.workstation.gui.browser.api.AccessManager;
-//import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
-//import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-//import org.janelia.it.workstation.gui.browser.api.DomainModel;
-//import org.janelia.it.workstation.gui.browser.gui.support.DataSetComboBoxRenderer;
-//import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-//import org.janelia.it.workstation.gui.util.MembershipListPanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
-
-//import de.javasoft.swing.DateComboBox;
-//import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.TreeMap;
-import javax.swing.JFrame;
-//import javax.swing.JMenuItem;
-//import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.table.DefaultTableModel;
-import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +44,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     public static final String PART_LABEL = "Anatomical Area";
     // For now, keeping it simple.
     private static final String[] COLUMN_HEADERS = new String[] {
-        PART_LABEL,
+        PART_LABEL, "Objective"
     };
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
@@ -128,6 +105,60 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         panel.add(label, "split 2, span" + (first ? "" : ", gaptop 10lp"));
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
+
+    //public static String getAnatomicalAreaRemovalTarget(Sample sample) {
+    //    // Find all anatomical areas.
+    //    sample.getObjectives()
+    //}
+
+    /**
+     * Supporting a remove/preclude for the stitched image.  Multiple, possible objectives may have a stitched
+     * image.
+     *
+     * @param sample which sample to examine.
+     * @return sufficient information for caller to decide what to do.
+     */
+    public static String getStitchedImageRemovalTarget(Sample sample) {
+        // Find all objectives containing a stitched image.
+        List<String> objectivesWithStitchedImages = new ArrayList<>();
+        for (ObjectiveSample os: sample.getObjectiveSamples()) {
+            SamplePipelineRun run = os.getLatestSuccessfulRun();
+            SampleProcessingResult spr = run.getLatestProcessingResult();
+            Map<FileType, String> fileTypeToFile = spr.getFiles();
+            String losslessStack = fileTypeToFile.get(FileType.VisuallyLosslessStack);
+            if (losslessStack.contains("/stitched")) {
+                objectivesWithStitchedImages.add(os.getObjective());
+            }
+            //run.getResultsById()
+        }
+        String foundValue = null;
+        if (! objectivesWithStitchedImages.isEmpty()) {
+            if (objectivesWithStitchedImages.size() == 1) {
+                int response = JOptionPane.showConfirmDialog(
+                        FrameworkImplProvider.getMainFrame(),
+                        "Confirm Removal", "Are you sure you would like to remove " + sample.getName() + "'s Stitched Image?",
+                        JOptionPane.YES_NO_OPTION);
+                if (response == JOptionPane.YES_OPTION) {
+                    foundValue = objectivesWithStitchedImages.get(0);
+                }
+            }
+            else {
+                // Should show a dropdown selection of possibilities.
+                foundValue = (String)JOptionPane.showInputDialog(
+                        FrameworkImplProvider.getMainFrame(),
+                        "Please select an objective for stitched image removal",
+                        "Stitched Image Objective Selection",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        null,
+                        objectivesWithStitchedImages.toArray(new String[objectivesWithStitchedImages.size()]),
+                        objectivesWithStitchedImages.get(0)
+
+                );
+            }
+        }
+
+        return foundValue; // may be "63x", etc.
+    }
     
     private void completeOperation(final List<Object> deletedItems) {
 
@@ -173,19 +204,39 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         sampleSubPartTable.setFillsViewportHeight(true);
         final DefaultTableModel tableModel = new DefaultTableModel();
-        final String[][] tempData = new String[][] {
-            new String[] { "VNC" },       // a row
-            new String[] { "Brain" },     // a row
-        };
-        TreeMap<String,String[]> sortedMap = new TreeMap<String,String[]>();
-        for (String[] rowArr: tempData) {
-            sortedMap.put(rowArr[0], rowArr);
+        Map<String,Set<String>> osToAA = new HashMap<>();
+        int rowCount = 0;
+        for (ObjectiveSample os: sample.getObjectiveSamples()) {
+            Set<String> aaList = new TreeSet<>();
+            osToAA.put(os.getObjective(), aaList);
+
+            SamplePipelineRun run = os.getLatestSuccessfulRun();
+            for (SampleProcessingResult spr: run.getSampleProcessingResults()) {
+                aaList.add(spr.getAnatomicalArea());
+                rowCount ++;
+            }
         }
+        final String[][] rowData = new String[rowCount][COLUMN_HEADERS.length];
         int i = 0;
-        for (String nextKey: sortedMap.keySet()) {
-            tempData[i++] = sortedMap.get(nextKey);
+        for (String key: osToAA.keySet()) {
+            for (String aa: osToAA.get(key)) {
+                rowData[i][0] = aa;
+                rowData[i][1] = key;
+            }
         }
-        tableModel.setDataVector(tempData, COLUMN_HEADERS);
+//        final String[][] tempData = new String[][] {
+//            new String[] { "VNC", },       // a row
+//            new String[] { "Brain", },     // a row
+//        };
+//        TreeMap<String,String[]> sortedMap = new TreeMap<String,String[]>();
+//        for (String[] rowArr: tempData) {
+//            sortedMap.put(rowArr[0], rowArr);
+//        }
+//        int i = 0;
+//        for (String nextKey: sortedMap.keySet()) {
+//            tempData[i++] = sortedMap.get(nextKey);
+//        }
+        tableModel.setDataVector(rowData, COLUMN_HEADERS);
         sampleSubPartTable.setModel(tableModel);
     }
 
