@@ -162,10 +162,10 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
+	private final AnnotationModel annotationModel;
+	private final AnnotationManager annotationMgr;
+    private final LargeVolumeViewerTranslator largeVolumeViewerTranslator;
     private AnnotationPanel annotationPanel;
-	private AnnotationModel annotationModel = new AnnotationModel();
-	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
-    private LargeVolumeViewerTranslator largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(largeVolumeViewer.getComponent(), this);
@@ -290,9 +290,13 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 	/**
 	 * Create the frame.
 	 */
-	public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar)
+	public QuadViewUi(JFrame parentFrame, DomainObject initialObject, boolean overrideFrameMenuBar, AnnotationModel annotationModel)
 	{
         new MemoryCheckDialog().warnOfInsufficientMemory(LVV_PREFERRED_ID, MINIMUM_MEMORY_REQUIRED_GB, WindowLocator.getMainFrame());
+
+        this.annotationModel = annotationModel;
+        this.annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
+        this.largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
 
         volumeImage.addVolumeLoadListener(this);
         volumeImage.addVolumeLoadListener(annotationMgr);

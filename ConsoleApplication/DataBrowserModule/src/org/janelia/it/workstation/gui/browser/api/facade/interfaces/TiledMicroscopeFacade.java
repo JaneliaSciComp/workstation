@@ -33,6 +33,8 @@ public interface TiledMicroscopeFacade {
 
     public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception;
 
+    public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception;
+
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception;
 
     public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception;

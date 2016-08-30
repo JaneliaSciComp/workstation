@@ -16,9 +16,11 @@
  import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
  import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
  import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+ import org.janelia.it.workstation.gui.browser.events.Events;
  import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
  import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
  import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
  import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
  import org.janelia.it.workstation.gui.util.Icons;
@@ -43,9 +45,9 @@ public class LargeVolumeViewViewer extends JPanel {
 
     private TmSample sliceSample;
     private DomainObject initialObject;
+    private AnnotationModel annotationModel;
     private QuadViewUi viewUI;
     private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
-
 
     public LargeVolumeViewViewer() {
         super();
@@ -194,14 +196,16 @@ public class LargeVolumeViewViewer extends JPanel {
     }
 
     public void refresh() {
-        // logger.info("Refresh called.");
+        logger.info("Refreshing");
 
         if (sliceSample != null) {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
-                viewUI = new QuadViewUi(SessionMgr.getMainFrame(), initialObject, false);
-                neuronSetAdapter.observe(viewUI.getAnnotationModel());
+                annotationModel = new AnnotationModel();
+                Events.getInstance().registerOnEventBus(annotationModel);
+                viewUI = new QuadViewUi(SessionMgr.getMainFrame(), initialObject, false, annotationModel);
+                neuronSetAdapter.observe(annotationModel);
             }
             removeAll();
             viewUI.setVisible(true);
@@ -234,6 +238,10 @@ public class LargeVolumeViewViewer extends JPanel {
         if (viewUI != null)
         	viewUI.clearCache();
         viewUI = null;
+        if (annotationModel!=null) {
+            Events.getInstance().unregisterOnEventBus(annotationModel);
+            annotationModel = null;
+        }
     }
 
     public NeuronSet getNeuronSetAdapter() {

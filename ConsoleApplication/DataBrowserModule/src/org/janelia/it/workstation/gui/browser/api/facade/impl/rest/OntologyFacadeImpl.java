@@ -17,12 +17,16 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OntologyFacadeImpl extends RESTClientImpl implements OntologyFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(OntologyFacadeImpl.class);
     private RESTClientManager manager;
     
     public OntologyFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 

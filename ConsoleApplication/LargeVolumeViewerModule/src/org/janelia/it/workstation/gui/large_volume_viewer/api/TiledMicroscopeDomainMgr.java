@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -24,17 +25,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Singleton for managing the Tiled Microscope Domain Model and related data access.
- * 
- * Translates in Mongo-land domain objects to the existing TM classes.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TiledMicroscopeDomainMgr {
 
     private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
-
-    // name of entity that holds our workspaces
-    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
 
     // Singleton
     private static TiledMicroscopeDomainMgr instance;
@@ -77,10 +73,10 @@ public class TiledMicroscopeDomainMgr {
     public TreeNode getOrCreateWorkspacesFolder() throws Exception {
         log.debug("getOrCreateWorkspacesFolder()");
         Workspace defaultWorkspace = model.getDefaultWorkspace();
-        TreeNode folder = DomainUtils.findObjectByTypeAndName(model.getDomainObjects(defaultWorkspace.getChildren()), TreeNode.class, WORKSPACES_FOLDER_NAME);
+        TreeNode folder = DomainUtils.findObjectByTypeAndName(model.getDomainObjects(defaultWorkspace.getChildren()), TreeNode.class, DomainConstants.NAME_TM_WORKSPACE_FOLDER);
         if (folder==null) {
             TreeNode workspacesNode = new TreeNode();
-            workspacesNode.setName(WORKSPACES_FOLDER_NAME);
+            workspacesNode.setName(DomainConstants.NAME_TM_WORKSPACE_FOLDER);
             workspacesNode = model.create(workspacesNode);
             model.addChild(defaultWorkspace, workspacesNode);
         }
@@ -140,30 +136,30 @@ public class TiledMicroscopeDomainMgr {
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         log.debug("save({})", neuronMetadata);
-
         if (neuronMetadata.getId()==null) {
-            throw new IllegalArgumentException("Cannot save neuron metadata without id");
+            return model.createMetadata(neuronMetadata);
         }
         else {
-            model.update(neuronMetadata);
+            return model.updateMetadata(neuronMetadata);
         }
-
-        return neuronMetadata;
     }
 
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
-        log.debug("saveMetadata({})", neuronMetadata);
+        log.debug("save({})", neuronMetadata);
+        log.info("save: "+neuronMetadata);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
-        byte[] protobufBytes = exchanger.serializeNeuron(neuronMetadata);
-
+        InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
+        TmNeuronMetadata metadata;
         if (neuronMetadata.getId()==null) {
-            model.create(neuronMetadata, new ByteArrayInputStream(protobufBytes));
+            metadata = model.create(neuronMetadata, protobufStream);
         }
         else {
-            model.update(neuronMetadata, new ByteArrayInputStream(protobufBytes));
+            metadata = model.update(neuronMetadata, protobufStream);
         }
-
-        return neuronMetadata;
+        // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
+        // already have the data, so let's copy it over into the new object.
+        exchanger.copyNeuronData(neuronMetadata, metadata);
+        return metadata;
     }
 
     public void remove(TmNeuronMetadata tmNeuron) throws Exception {

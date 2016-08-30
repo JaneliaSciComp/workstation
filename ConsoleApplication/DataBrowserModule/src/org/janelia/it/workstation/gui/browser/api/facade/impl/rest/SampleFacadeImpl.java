@@ -15,12 +15,16 @@ import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(SampleFacadeImpl.class);
     private RESTClientManager manager;
 
     public SampleFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 

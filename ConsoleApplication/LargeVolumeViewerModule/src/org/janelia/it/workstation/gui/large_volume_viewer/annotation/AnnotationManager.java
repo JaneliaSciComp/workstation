@@ -641,24 +641,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // need to create neuron, then compare new neuron list to old one,
-                    //  so we can figure out what the new one is, since create neuron
-                    //  can't tell us
-                    Set<Long> oldNeuronIDs = new HashSet<>();
-                    for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
-                        oldNeuronIDs.add(neuron.getId());
-                    }
-
-                    annotationModel.createNeuron(neuronName);
-
-                    TmNeuronMetadata newNeuron = null;
-                    for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
-                        if (!oldNeuronIDs.contains(neuron.getId())) {
-                            newNeuron = neuron;
-                            break;
-                        }
-                    }
-
+                    TmNeuronMetadata newNeuron = annotationModel.createNeuron(neuronName);
                     annotationModel.moveNeurite(annotation, newNeuron);
                 }
 

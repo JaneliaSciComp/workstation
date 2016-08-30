@@ -4,6 +4,8 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+
 public class QuadViewApp extends JFrame {
 	private static final long serialVersionUID = 1L;
 
@@ -25,7 +27,7 @@ public class QuadViewApp extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
         setBounds(100, 100, 994, 653);
-        QuadViewUi contentPane = new QuadViewUi(this, null, true);
+        QuadViewUi contentPane = new QuadViewUi(this, null, true, new AnnotationModel());
         setContentPane(contentPane);
 	}
 	

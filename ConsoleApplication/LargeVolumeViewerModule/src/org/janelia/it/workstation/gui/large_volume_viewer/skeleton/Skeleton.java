@@ -136,15 +136,20 @@ public class Skeleton {
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
 			return anchor;
+        log.info("Adding anchor: Guid:{}, neuronId:{}", anchor.getGuid(), anchor.getNeuronID());
 		anchors.add(anchor);
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
 		anchorHistory.push(anchor);
-        controller.annotationSelected(guid);
-
 		return anchor;
 	}
+
+    public void addAnchors(List<Anchor> anchorList) {
+        for (Anchor anchor: anchorList) {
+            addAnchor(anchor);
+        }
+    }
 
     /**
      * @param tileFormat the tileFormat to set
@@ -156,18 +161,6 @@ public class Skeleton {
     public TileFormat getTileFormat() {
         return tileFormat;
     }
-	
-	public void addAnchors(List<Anchor> anchorList) {
-        for (Anchor anchor: anchorList) {
-            if (anchors.contains(anchor))
-                continue;
-            anchors.add(anchor);
-            Long guid = anchor.getGuid();
-            if (guid != null)
-                anchorsByGuid.put(guid, anchor);
-            anchorHistory.push(anchor);
-        }
-	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
@@ -294,6 +287,7 @@ public class Skeleton {
         Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
         anchor.setGuid(tga.getId());
         addAnchor(anchor);
+        controller.annotationSelected(anchor.getGuid());
         return anchor;
     }
     

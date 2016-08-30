@@ -408,8 +408,8 @@ class NeuronTableModel extends AbstractTableModel {
     public Object getValueAt(int row, int column) {
         switch (column) {
             case 0:
-                // neuron itself, which will display as name
-                return neurons.get(row);
+                // neuron name
+                return neurons.get(row).getName();
             case 1:
                 // color, from style
                 return annotationModel.getNeuronStyle(neurons.get(row)).getColor();

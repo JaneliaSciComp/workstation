@@ -17,12 +17,17 @@ import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
+
+    private static final Logger log = LoggerFactory.getLogger(DomainFacadeImpl.class);
 
     private RESTClientManager manager;
     
     public DomainFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 

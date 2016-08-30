@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -31,6 +33,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
@@ -378,6 +381,25 @@ called from a  SimpleWorker thread.
         return closest;
     }
 
+    @Subscribe
+    public void handleNeuronCreation(DomainObjectCreateEvent event) {
+        DomainObject domainObject = event.getDomainObject();
+        if (domainObject instanceof TmNeuronMetadata) {
+            final TmNeuronMetadata neuron = (TmNeuronMetadata)domainObject;
+            log.info("Neuron was created: "+neuron);
+            getNeuronList().add(neuron);
+            setCurrentNeuron(neuron);
+            final TmWorkspace workspace = getCurrentWorkspace();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    fireWorkspaceLoaded(workspace);
+                    fireNeuronSelected(neuron);
+                    fireWorkspaceChanged();
+                }
+            });
+        }
+    }
     /**
      * create a neuron in the current workspace
      *
@@ -385,23 +407,7 @@ called from a  SimpleWorker thread.
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
-        final TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
-
-        // update local workspace
-        final TmWorkspace workspace = getCurrentWorkspace();
-        getNeuronList().add(neuron);
-        setCurrentNeuron(neuron);
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(workspace);
-                fireNeuronSelected(neuron);
-                fireWorkspaceChanged();
-            }
-        });
-
-        return neuron;
+        return neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
     }
 
     /**

@@ -26,11 +26,12 @@ import org.slf4j.LoggerFactory;
 
 public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMicroscopeFacade {
 
-    private static final Logger log = LoggerFactory.getLogger(RESTClientManager.class);
+    private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeFacadeImpl.class);
 
     private RESTClientManager manager;
 
     public TiledMicroscopeFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 
@@ -40,7 +41,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getTmSamples from server")) {
+        if (checkBadResponse(response, "getTmSamples")) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(new GenericType<List<TmSample>>() {});
@@ -54,7 +55,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         Response response = manager.getTmSampleEndpoint()
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request createTmSample from server")) {
+        if (checkBadResponse(response, "create: "+tmSample)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmSample.class);
@@ -68,7 +69,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         Response response = manager.getTmSampleEndpoint()
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request updateTmSample to server: " + tmSample)) {
+        if (checkBadResponse(response, "update: " + tmSample)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmSample.class);
@@ -81,7 +82,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("tmSampleId", tmSample.getId())
                 .request("application/json")
                 .delete();
-        if (checkBadResponse(response.getStatus(), "problem making request removeTmSample from server: " + tmSample)) {
+        if (checkBadResponse(response, "remove: " + tmSample)) {
             throw new WebApplicationException(response);
         }
     }
@@ -92,7 +93,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request("application/json")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getTmWorkspaces from server")) {
+        if (checkBadResponse(response, "getTmWorkspaces")) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(new GenericType<List<TmWorkspace>>() {});
@@ -106,7 +107,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         Response response = manager.getTmWorkspaceEndpoint()
                 .request("application/json")
                 .put(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request createTmWorkspace from server")) {
+        if (checkBadResponse(response, "create: "+tmWorkspace)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmWorkspace.class);
@@ -120,7 +121,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         Response response = manager.getTmWorkspaceEndpoint()
                 .request("application/json")
                 .post(Entity.json(query));
-        if (checkBadResponse(response.getStatus(), "problem making request updateTmWorkspace to server: " + tmWorkspace)) {
+        if (checkBadResponse(response, "update: " + tmWorkspace)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmWorkspace.class);
@@ -133,7 +134,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("tmWorkspaceId", tmWorkspace.getId())
                 .request("application/json")
                 .delete();
-        if (checkBadResponse(response.getStatus(), "problem making request removeTmWorkspace from server: " + tmWorkspace)) {
+        if (checkBadResponse(response.getStatus(), "remove: " + tmWorkspace)) {
             throw new WebApplicationException(response);
         }
     }
@@ -145,7 +146,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("workspaceId", workspaceId)
                 .request("multipart/mixed")
                 .get();
-        if (checkBadResponse(response.getStatus(), "problem making request getWorkspaceNeurons from server: "+response.getLocation())) {
+        if (checkBadResponse(response, "getWorkspaceNeuronPairs: "+response.getLocation())) {
             throw new WebApplicationException(response);
         }
         MultiPart multipart = response.readEntity(MultiPart.class);
@@ -169,6 +170,20 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
     }
 
     @Override
+    public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
+        FormDataMultiPart multiPart = new FormDataMultiPart()
+                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
+        Response response = manager.getTmNeuronEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request()
+                .put(Entity.entity(multiPart, multiPart.getMediaType()));
+        if (checkBadResponse(response, "createMetadata: "+neuronMetadata)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmNeuronMetadata.class);
+    }
+
+    @Override
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
@@ -177,7 +192,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request()
                 .put(Entity.entity(multiPart, multiPart.getMediaType()));
-        if (checkBadResponse(response.getStatus(), "problem making request createTmNeuron from server: "+neuronMetadata)) {
+        if (checkBadResponse(response, "create: "+neuronMetadata)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmNeuronMetadata.class);
@@ -185,28 +200,19 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
 
     @Override
     public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
-        FormDataMultiPart multiPart = new FormDataMultiPart()
-                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
-        Response response = manager.getTmNeuronEndpoint()
-                .queryParam("subjectKey", AccessManager.getSubjectKey())
-                .request()
-                .post(Entity.entity(multiPart, multiPart.getMediaType()));
-        if (checkBadResponse(response.getStatus(), "problem making request updateTmNeuronMetadata to server: " + neuronMetadata)) {
-            throw new WebApplicationException(response);
-        }
-        return response.readEntity(TmNeuronMetadata.class);
+        return update(neuronMetadata, null);
     }
 
     @Override
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
-        FormDataMultiPart multiPart = new FormDataMultiPart()
-                .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
-                .field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
+        FormDataMultiPart multiPart = new FormDataMultiPart();
+        multiPart.field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
+        if (protobufStream!=null) multiPart.field("protobufBytes", protobufStream, MediaType.APPLICATION_OCTET_STREAM_TYPE);
         Response response = manager.getTmNeuronEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request()
                 .post(Entity.entity(multiPart, multiPart.getMediaType()));
-        if (checkBadResponse(response.getStatus(), "problem making request updateTmNeuron to server: " + neuronMetadata)) {
+        if (checkBadResponse(response, "update: " + neuronMetadata)) {
             throw new WebApplicationException(response);
         }
         return response.readEntity(TmNeuronMetadata.class);
@@ -219,7 +225,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("neuronId", neuronMetadata.getId())
                 .request()
                 .delete();
-        if (checkBadResponse(response.getStatus(), "problem making request removeTmNeuron from server: " + neuronMetadata)) {
+        if (checkBadResponse(response.getStatus(), "remove: " + neuronMetadata)) {
             throw new WebApplicationException(response);
         }
     }

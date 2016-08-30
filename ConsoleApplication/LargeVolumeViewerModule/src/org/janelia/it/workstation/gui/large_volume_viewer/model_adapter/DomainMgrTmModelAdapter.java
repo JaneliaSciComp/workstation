@@ -67,7 +67,8 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
             // check neuron consistency and repair (some) problems
             for (TmNeuronMetadata neuron: neurons) {
-                log.info("Checking neuron: "+neuron);
+                log.info("Checking neuron data for TmNeuronMetadata#{}\nSerializing:",
+                        neuron.getId(),neuron.getDebugString());
                 List<String> results = neuron.checkRepairNeuron();
                 // List<String> results = neuron.checkNeuron();
                 if (results.size() > 0) {
@@ -101,10 +102,6 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         public SaveNeuronRunnable(TmNeuronMetadata tmNeuronMetadata, boolean metadataOnly) {
             this.tmNeuronMetadata = tmNeuronMetadata;
             this.metadataOnly = metadataOnly;
-        }
-        
-        public TmNeuronMetadata getTmNeuronMetadata() {
-            return tmNeuronMetadata;
         }
         
         public boolean isRunning() {
@@ -157,6 +154,10 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         }
     }
 
+    public TmNeuronMetadata createNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
+        return tmDomainMgr.save(tmNeuronMetadata);
+    }
+
     /**
      * Pushes neuron as entity data, to database.
      * 
@@ -165,26 +166,12 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
      */
     @Override
     public void saveNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        if (tmNeuronMetadata.getId()==null) {
-            // New neuron, do not use queue
-            SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(tmNeuronMetadata, false);
-            saveNeuronRunnable.run();
-        }
-        else {
-            saveNeuronToQueue(tmNeuronMetadata, false);
-        }
+        saveNeuronToQueue(tmNeuronMetadata, false);
     }
 
     @Override
     public void saveNeuronMetadata(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        if (tmNeuronMetadata.getId()==null) {
-            // New neuron, do not use queue
-            SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(tmNeuronMetadata, true);
-            saveNeuronRunnable.run();
-        }
-        else {
-            saveNeuronToQueue(tmNeuronMetadata, true);
-        }
+        saveNeuronToQueue(tmNeuronMetadata, true);
     }
 
     @Override

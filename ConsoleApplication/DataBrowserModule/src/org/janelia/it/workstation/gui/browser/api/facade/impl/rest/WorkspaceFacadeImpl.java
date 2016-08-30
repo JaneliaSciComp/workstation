@@ -19,12 +19,16 @@ import org.janelia.it.jacs.shared.solr.SolrParams;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkspaceFacadeImpl extends RESTClientImpl implements WorkspaceFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(WorkspaceFacadeImpl.class);
     private RESTClientManager manager;
     
     public WorkspaceFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 

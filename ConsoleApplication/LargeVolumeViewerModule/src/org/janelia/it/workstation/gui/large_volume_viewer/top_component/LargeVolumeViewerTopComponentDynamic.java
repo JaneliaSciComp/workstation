@@ -45,6 +45,7 @@ public class LargeVolumeViewerTopComponentDynamic {
     protected void close() {
         Runnable runnable = new Runnable() {
             public void run() {
+                lvvv.close();
                 TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
                         "large_volume_viewer_plugin"
                 );

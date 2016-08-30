@@ -13,12 +13,16 @@ import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SubjectFacadeImpl extends RESTClientImpl implements SubjectFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(SubjectFacadeImpl.class);
     private RESTClientManager manager;
     
     public SubjectFacadeImpl() {
+        super(log);
         this.manager = RESTClientManager.getInstance();
     }
 
