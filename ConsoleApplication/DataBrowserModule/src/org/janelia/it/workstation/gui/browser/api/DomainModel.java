@@ -42,6 +42,7 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicrosc
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectRemoveEvent;
@@ -275,7 +276,7 @@ public class DomainModel {
         try {
             canonicalDomainObject = loadDomainObject(ref);
             if (canonicalDomainObject==null) {
-                log.warn("Object no longer exists: "+ref);
+                log.trace("Cannot reload object which no longer exists: "+ref);
                 return;
             }
             canonicalDomainObject = putOrUpdate(canonicalDomainObject);
@@ -601,11 +602,23 @@ public class DomainModel {
         return null;
     }
 
-    public void remove(List<Reference> deleteObjectRefs) throws Exception {
-        List<DomainObject> objects = getDomainObjects(deleteObjectRefs);
-        domainFacade.remove(deleteObjectRefs);
-        invalidate(objects);
-        for(DomainObject object : objects) {
+    public void remove(List<DomainObject> domainObjects) throws Exception {
+
+        // TODO: This is a terrible hack. We need a better way to demarcate which facade is responsible for each object type.
+        for(DomainObject obj : domainObjects) {
+            if (obj instanceof TmSample) {
+                tmFacade.remove((TmSample)obj);
+            }
+            else if (obj instanceof TmWorkspace) {
+                tmFacade.remove((TmWorkspace)obj);
+            }
+            else {
+                domainFacade.remove(Arrays.asList(Reference.createFor(obj)));
+            }
+        }
+
+        invalidate(domainObjects);
+        for(DomainObject object : domainObjects) {
             notifyDomainObjectRemoved(object);
         }
     }
@@ -914,6 +927,13 @@ public class DomainModel {
         Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
     }
 
+    private void notifyDomainObjectChanged(DomainObject domainObject) {
+        if (log.isTraceEnabled()) {
+            log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
+        }
+        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
+    }
+
     private void notifyAnnotationsChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
@@ -990,7 +1010,12 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (object.getId()==null) {
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
         return canonicalObject;
     }
 
@@ -1013,7 +1038,12 @@ public class DomainModel {
         synchronized (this) {
             canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
         }
-        notifyDomainObjectCreated(canonicalObject);
+        if (object.getId()==null) {
+            notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
         return canonicalObject;
     }
 
@@ -1026,26 +1056,32 @@ public class DomainModel {
         return tmFacade.getWorkspaceNeuronPairs(workspaceId);
     }
 
-    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
-        TmNeuronMetadata updatedMetadata = tmFacade.create(neuronMetadata, protobufStream);
-        // Event?
+    public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
+        TmNeuronMetadata updatedMetadata = tmFacade.createMetadata(neuronMetadata);
+        notifyDomainObjectCreated(updatedMetadata);
         return updatedMetadata;
     }
 
-    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata) throws Exception {
+    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
+        TmNeuronMetadata updatedMetadata = tmFacade.create(neuronMetadata, protobufStream);
+        notifyDomainObjectCreated(updatedMetadata);
+        return updatedMetadata;
+    }
+
+    public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         TmNeuronMetadata updatedMetadata = tmFacade.updateMetadata(neuronMetadata);
-        // Event?
+        notifyDomainObjectChanged(updatedMetadata);
         return updatedMetadata;
     }
 
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         TmNeuronMetadata updatedMetadata = tmFacade.update(neuronMetadata, protobufStream);
-        // Event?
+        notifyDomainObjectChanged(updatedMetadata);
         return updatedMetadata;
     }
 
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         tmFacade.remove(neuronMetadata);
-        // Event?
+        notifyDomainObjectRemoved(neuronMetadata);
     }
 }

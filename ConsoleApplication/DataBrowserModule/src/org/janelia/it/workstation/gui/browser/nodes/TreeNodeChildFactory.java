@@ -178,14 +178,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     }
     
     public void removeChild(final DomainObject domainObject) throws Exception {
-        if (treeNode==null) {
-            log.warn("Cannot remove child from unloaded treeNode");
-            return;
-        }
-
-        log.info("Removing child '{}' from '{}'", domainObject.getName(), treeNode.getName());
-
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.removeChild(treeNode, domainObject);
+        // Modifying the domain model is now taken care of by the RemoveItemsFromFolderAction
     }
 }
