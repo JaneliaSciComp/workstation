@@ -283,10 +283,16 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                             log.error("Error deserializing preference "+preference.getId(),e);
                         }
                     }
+                    else {
+                        resultButton.reset();
+                    }
                     Preference preference2 = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_IMAGE_TYPE, parentObject.getId().toString());
                     log.info("Got image type preference: "+preference2);
                     if (preference2!=null) {
                         typeButton.setImageTypeName((String)preference2.getValue());
+                    }
+                    else {
+                        typeButton.reset();
                     }
                 }
 

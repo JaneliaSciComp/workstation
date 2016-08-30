@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorith
 import java.io.File;
 import java.util.Date;
 import net.jpountz.lz4.LZ4Factory;
+import net.jpountz.lz4.LZ4SafeDecompressor;
 import net.jpountz.lz4.LZ4UnknownSizeDecompressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,7 @@ public class LZ4Compression implements CompressionAlgorithm {
         byte[] dest = new byte[fileLen * 3];
         
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
-        LZ4UnknownSizeDecompressor decompressor = factory.unknownSizeDecompressor();
+        LZ4SafeDecompressor decompressor = factory.safeDecompressor();
         int decompressedSize = decompressor.decompress(inbytes, 0, fileLen, dest, 0, dest.length);
         Date endDecompress = new Date();
         log.info("Time required for decompress-in-memory: {}s.", (endDecompress.getTime() - startTime.getTime()) / 1000);

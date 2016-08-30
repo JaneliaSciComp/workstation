@@ -8,6 +8,7 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.TransferHandler;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
@@ -21,7 +22,6 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.nb_action.DropAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
@@ -127,7 +127,7 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
         if ( remainingCapacity < fragmentCount ) {
             // disallow.
             JOptionPane.showMessageDialog(
-                    SessionMgr.getMainFrame(),
+                    FrameworkImplProvider.getMainFrame(),
                     String.format(
                             CAPACITY_EXCEEDED_FMT, alignmentBoard.getName(),
                             (MAX_FRAGMENT_CAPACITY - remainingCapacity),

@@ -1,10 +1,10 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.UnitVec3;
 import org.janelia.it.jacs.shared.geom.Vec3;
@@ -90,9 +90,10 @@ public class UserSettingSerializer implements Serializable {
             // Write back.
             alignmentBoard.setEncodedUserSettings(settingsString);
             domainHelper.saveAlignmentBoardAsync(alignmentBoard);
+            //throw new Exception("Have to test the exception handler.");
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            FrameworkImplProvider.handleException(ex);
         }
     }
 
@@ -110,7 +111,7 @@ public class UserSettingSerializer implements Serializable {
             }
 
         } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException( ex );
+            FrameworkImplProvider.handleException( ex );
         }
 
     }

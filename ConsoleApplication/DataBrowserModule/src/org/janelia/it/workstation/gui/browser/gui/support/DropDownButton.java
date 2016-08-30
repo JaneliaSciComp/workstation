@@ -12,7 +12,7 @@ import de.javasoft.swing.SimpleDropDownButton;
  */
 public class DropDownButton extends SimpleDropDownButton {
 	
-	private static final Insets BUTTON_INSETS = new Insets(0,2,0,2);
+	protected static final Insets BUTTON_INSETS = new Insets(0,2,0,2);
 	
     private JYPopupMenu popupMenu;
 

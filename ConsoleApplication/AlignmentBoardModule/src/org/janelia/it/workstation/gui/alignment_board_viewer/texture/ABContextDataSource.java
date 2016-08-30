@@ -14,18 +14,18 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-//import org.janelia.it.workstation.model.domain.VolumeImage;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.io.File;
 import java.util.*;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
@@ -131,7 +131,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
             return rtnVal;
         } catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            FrameworkImplProvider.handleException(e);
             return null;
         }
     }

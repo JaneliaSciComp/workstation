@@ -97,7 +97,9 @@ public class ConsoleApp {
             String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
             String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
-            AccessManager.getAccessManager().loginSubject(username, password);
+            if (username!=null) {
+                AccessManager.getAccessManager().loginSubject(username, password);
+            }
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 LoginDialog loginDialog = new LoginDialog();

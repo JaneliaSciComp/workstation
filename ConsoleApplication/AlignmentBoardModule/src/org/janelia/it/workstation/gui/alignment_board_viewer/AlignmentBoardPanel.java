@@ -18,6 +18,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
@@ -43,7 +44,6 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -58,6 +58,7 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelp
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.shared.util.SystemInfo;
@@ -203,7 +204,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             // Carry out any steps to prepare GUI for presence of this panel.
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            FrameworkImplProvider.handleException(e);
         }
         handleBoardOpened(abContext);
     }
@@ -282,7 +283,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException( error );
+                        FrameworkImplProvider.handleException( error );
                     }
                 };
                 updateContentsWorker.execute();
@@ -428,7 +429,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             removeAll();
             revalidate();
             repaint();
-            SessionMgr.getSessionMgr().handleException(error);
+            FrameworkImplProvider.handleException(error);
         }
 
         // Here, deal with synchronization of multiple incoming requests.
@@ -491,7 +492,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException( error );
+                        FrameworkImplProvider.handleException( error );
                     }
                 };
                 serializeWorker.execute();
@@ -520,7 +521,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     userSettingSerializer.serializeSettings();
                     preExistingBoardSettings = true;
                 } catch ( Throwable error ) {
-                    SessionMgr.getSessionMgr().handleException( error );
+                    FrameworkImplProvider.handleException( error );
                 }
             }
             else {
@@ -548,7 +549,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
             if ( errorStack.length() > 0 ) {
                 logger.info("Launching message dialog");
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), errorStack.toString());
+                JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), errorStack.toString());
                 logger.info("Message dialog complete.");
             }
         }
@@ -664,7 +665,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
                     IndeterminateNoteProgressMonitor monitor =
                             new IndeterminateNoteProgressMonitor(
-                                    SessionMgr.getMainFrame(), "Updating alignment board...", alignmentBoard.getName()
+                                    FrameworkImplProvider.getMainFrame(), "Updating alignment board...", alignmentBoard.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
                     fileStats.clear();
@@ -680,7 +681,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             //brainGlow.start();  // TEMP
 
         } catch ( Throwable th ) {
-            SessionMgr.getSessionMgr().handleException( th );
+            FrameworkImplProvider.handleException( th );
         }
 
     }
@@ -784,7 +785,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     private void jostleContainingFrame() {
         // To remind a multi-monitor window of where the tool tips should be shown.
-        Component container = SessionMgr.getMainFrame();
+        Component container = FrameworkImplProvider.getMainFrame();
         Point location = container.getLocation();
         container.setLocation( new Point( (int)location.getX()+1, (int)location.getY()+1 ) );
         container.setLocation( location );
@@ -881,7 +882,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 }
             }
         } catch ( Throwable th ) {
-            SessionMgr.getSessionMgr().handleException( th );
+            FrameworkImplProvider.handleException( th );
         }
 
     }
@@ -953,7 +954,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 });
                 thread.start();
             } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
+                FrameworkImplProvider.handleException( ex );
             }
         }
 

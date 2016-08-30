@@ -542,7 +542,7 @@ public final class SessionMgr implements ActivityLogging {
 
         try {
             userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
-            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            final UserToolEvent event = new UserToolEvent(getCurrentSessionId(), userLogin==null?null:userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
