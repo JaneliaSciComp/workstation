@@ -293,19 +293,20 @@ public final class ModelMgr {
     }
 
     public String getSortCriteria(Long entityId) {
-        try {
-            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
-            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-            String entityIdStr = entityId.toString();
-            for (SubjectPreference pref : prefs.values()) {
-                if (pref.getName().equals(entityIdStr)) {
-                    return pref.getValue();
-                }
-            }
-        }
-        catch (Exception e) {
-            log.error("Error loading sort criteria for {}", entityId,e);
-        }
+        // This is waaaay to slow when loading a large entity tree. 
+//        try {
+//            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
+//            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+//            String entityIdStr = entityId.toString();
+//            for (SubjectPreference pref : prefs.values()) {
+//                if (pref.getName().equals(entityIdStr)) {
+//                    return pref.getValue();
+//                }
+//            }
+//        }
+//        catch (Exception e) {
+//            log.error("Error loading sort criteria for {}", entityId,e);
+//        }
         return null;
     }
 
