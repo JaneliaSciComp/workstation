@@ -4,12 +4,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/compute"/>
 	<classpathentry kind="src" path="DataBrowserModule/src"/>
-	<classpathentry kind="src" path="Geometry3d/src"/>
-	<classpathentry kind="src" path="LargeVolumeViewerModule/src"/>
-	<classpathentry kind="src" path="GLViewerTools/src"/>
-	<classpathentry kind="src" path="SceneWindow/src"/>
-	<classpathentry kind="src" path="ViewerAPI/src"/>
-	<classpathentry kind="src" path="IntegrationAPIs/src"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -25,7 +19,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jersey"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/RSyntaxTextArea"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IntegrationAPIs"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl213"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl224"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="build/classes-generated"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test/unit/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Geometry3d"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/GLViewerTools"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/IntegrationAPIs"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ViewerAPI"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ConsoleApplication"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl213"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>
