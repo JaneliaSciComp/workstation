@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,7 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import com.google.common.base.Stopwatch;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -57,6 +54,8 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -582,6 +581,19 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     }
 
+    private class TmDisplayNeuron {
+    	private TmNeuronMetadata tmNeuronMetadata;
+    	TmDisplayNeuron(TmNeuronMetadata tmNeuronMetadata) {
+    		this.tmNeuronMetadata = tmNeuronMetadata;
+    	}
+    	@Override
+    	public String toString() {
+    		return tmNeuronMetadata.getName();
+    	}
+    	public TmNeuronMetadata getTmNeuronMetadata() {
+    		return tmNeuronMetadata;
+    	}
+    }
 
     public void moveNeuriteRequested(Anchor anchor) {
         if (anchor == null) {
@@ -612,7 +624,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         dummyCreateNewNeuron.setName("(create new neuron)");
         neuronList.add(0, dummyCreateNewNeuron);
 
-        Object [] choices = neuronList.toArray();
+        List<TmDisplayNeuron> displayList = new ArrayList<>();
+        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
+        	displayList.add(new TmDisplayNeuron(tmNeuronMetadata));
+        }
+        
+        Object [] choices = displayList.toArray();
         Object choice = JOptionPane.showInputDialog(
                 ComponentUtil.getLVVMainWindow(),
                 "Choose destination neuron:",
@@ -626,7 +643,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        if (((TmNeuronMetadata) choice).getId().equals(dummyCreateNewNeuron.getId())) {
+        if (((TmDisplayNeuron) choice).getTmNeuronMetadata().getId().equals(dummyCreateNewNeuron.getId())) {
             // create new neuron and move neurite to it
             final String neuronName = promptForNeuronName(null);
             if (neuronName == null) {

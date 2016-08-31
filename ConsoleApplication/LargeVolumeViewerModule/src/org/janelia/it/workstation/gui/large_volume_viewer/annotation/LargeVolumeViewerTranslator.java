@@ -16,6 +16,7 @@ import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronStyleChangeListener;
@@ -269,15 +270,9 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 
             // set styles for our neurons; if a neuron isn't in the saved map,
             //  use a default style
-            Map<Long, NeuronStyle> neuronStyleMap = annModel.getNeuronStyleMap();
-            NeuronStyle style;
             Map<TmNeuronMetadata, NeuronStyle> updateNeuronStyleMap = new HashMap<>();
             for (TmNeuronMetadata neuron: annModel.getNeuronList()) {
-                if (neuronStyleMap!=null && neuronStyleMap.containsKey(neuron.getId())) {
-                    style = neuronStyleMap.get(neuron.getId());
-                } else {
-                    style = NeuronStyle.getStyleForNeuron(neuron.getId());
-                }
+            	NeuronStyle style = ModelTranslation.translateNeuronStyle(neuron);
                 updateNeuronStyleMap.put(neuron, style);
             }
             fireNeuronStylesChangedEvent(updateNeuronStyleMap);

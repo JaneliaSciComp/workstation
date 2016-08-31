@@ -1,10 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import com.google.common.base.Stopwatch;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
@@ -14,6 +15,8 @@ import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
@@ -44,7 +47,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
         log.info("Checking neurons for workspace: "+workspace);
-        List<TmNeuronMetadata> neurons;
+        List<TmNeuronMetadata> neurons = new ArrayList<>();
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
 
         try {
@@ -52,13 +55,9 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             progressHandle.setInitialDelay(0);            
             progressHandle.progress(0);
             progressHandle.setDisplayName("Loading neuron data...");
-            neurons = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
+            List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
 
             progressHandle.progress(1);
-
-            progressHandle.setDisplayName("Building neurons...");
-
-            progressHandle.progress(2);
 
             // Await completion.
             log.info("Neuron exchange complete.");
@@ -66,20 +65,20 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             progressHandle.progress(3);
 
             // check neuron consistency and repair (some) problems
-            for (TmNeuronMetadata neuron: neurons) {
-                log.info("Checking neuron data for TmNeuronMetadata#{}\nSerializing:",
-                        neuron.getId(),neuron.getDebugString());
+            for (TmNeuronMetadata neuron: neuronList) {
+                log.info("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
                 List<String> results = neuron.checkRepairNeuron();
                 // List<String> results = neuron.checkNeuron();
                 if (results.size() > 0) {
                     // save results, then output to log; this is unfortunately
                     //  not visible to the user; we aren't in a place in the
                     //  code where we can pop a dialog
-                    saveNeuron(neuron);
                     for (String s: results) {
                         log.warn(s);
                     }
+                	neuron = tmDomainMgr.save(neuron);
                 }
+                neurons.add(neuron);
             }
 
             progressHandle.finish();

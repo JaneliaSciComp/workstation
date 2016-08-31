@@ -975,7 +975,6 @@ called from a  SimpleWorker thread.
             return;
         }
 
-
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
         TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());
@@ -1305,18 +1304,10 @@ called from a  SimpleWorker thread.
      * called from multiple threads, and the update is not atomic
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
-
         ModelTranslation.updateNeuronStyle(style, neuron);
         tmDomainMgr.saveMetadata(neuron);
         // fire change to listeners
         fireNeuronStyleChanged(neuron, style);
-    }
-
-    /**
-     * retrieve the neuron ID: NeuronStyle map from preferences
-     */
-    public Map<Long, NeuronStyle> getNeuronStyleMap() {
-        return null;
     }
 
     /**
@@ -1469,12 +1460,12 @@ called from a  SimpleWorker thread.
             // Build an external, unblessed annotation.  Set the id to the index.
             Date now = new Date();
             TmGeoAnnotation unserializedAnnotation = new TmGeoAnnotation(
-                    new Long(node.getIndex()), null,
+                    new Long(node.getIndex()), null, neuron.getId(),
                     internalPoint[0], internalPoint[1], internalPoint[2], null,
                     now, now
             );
             unserializedAnnotation.setRadius(node.getRadius());
-            unserializedAnnotation.setNeuronId(neuron.getId());
+            
             annotations.put(node.getIndex(), unserializedAnnotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {
                 worker.setProgress(node.getIndex(), totalLength);

@@ -136,7 +136,6 @@ public class Skeleton {
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
 			return anchor;
-        log.info("Adding anchor: Guid:{}, neuronId:{}", anchor.getGuid(), anchor.getNeuronID());
 		anchors.add(anchor);
 		Long guid = anchor.getGuid();
 		if (guid != null)
