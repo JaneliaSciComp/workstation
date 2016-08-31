@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.util.panels;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -14,9 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.IOException;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * This panel holds the memory settings widgets, including the action
@@ -25,11 +20,13 @@ import java.io.IOException;
  * @author fosterl
  */
 public class MemorySettingPanel extends JPanel {
+    
+    private final static Logger logger = LoggerFactory.getLogger(MemorySettingPanel.class);
+    
     public static final String TOOLTIP_TEXT = "Change maximum memory available to this application.\n"
             + "Affects only the current computer.";
     private static final Long ONE_GIG = 1024L*1024L*1024L;
     
-    private Logger logger = LoggerFactory.getLogger( MemorySettingPanel.class );
     private JTextField memorySetting;
     private String existingMemorySetting;
     private SettingListener listener;
@@ -47,22 +44,35 @@ public class MemorySettingPanel extends JPanel {
     }
     
     public boolean saveSettings() throws HeadlessException {
-        String memorySettingStr = memorySetting.getText();
-        try {
-            Integer memorySetting = Integer.parseInt(memorySettingStr.trim());
-            Integer totalAvailableGb = (int) (SystemInfo.getTotalSystemMemory() / ONE_GIG);
-            if (memorySetting<=0 || memorySetting > totalAvailableGb) {
-                JOptionPane.showMessageDialog(
-                        WindowLocator.getMainFrame(),
-                        "Unacceptable value " + memorySettingStr + ".  The system has " + totalAvailableGb + "GB to work with.",
-                        "Please Re-Enter",
-                        JOptionPane.ERROR_MESSAGE,
-                        null
-                );
-            } else if (memorySetting.equals(existingMemorySetting)) {
-                return true; // Do nothing.
-            } else {
-                setMemorySetting(memorySetting);
+        final String memorySettingStr = memorySetting.getText();
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                try {
+                    final Integer memorySetting = Integer.parseInt(memorySettingStr.trim());
+                    Integer totalAvailableGb = (int) (SystemInfo.getTotalSystemMemory() / ONE_GIG);
+                    if (memorySetting<=0 || memorySetting > totalAvailableGb) {
+                        throw new Exception("Unacceptable value " + memorySettingStr + ".  The system has " + totalAvailableGb + "GB to work with.");
+                    } else if (memorySettingStr.trim().equals(existingMemorySetting)) {
+                        // Do nothing.
+                    } else {
+                        setMemorySetting(memorySetting);
+
+                    }
+
+                } catch (NullPointerException | NumberFormatException npe_nfe) {
+                    npe_nfe.printStackTrace();
+                    JOptionPane.showMessageDialog(
+                            WindowLocator.getMainFrame(),
+                            "Unacceptable value " + memorySettingStr + ".  Integer required.",
+                            "Please Re-Enter",
+                            JOptionPane.ERROR_MESSAGE,
+                            null
+                    );
+                }
+            }
+            @Override
+            protected void hadSuccess() {
                 // Now, let user know we will bring down the client,
                 // and subsequently do so.
                 JOptionPane.showMessageDialog(
@@ -72,51 +82,28 @@ public class MemorySettingPanel extends JPanel {
                         JOptionPane.INFORMATION_MESSAGE,
                         null
                 );
-                // Forced exit does not pickup new setting!
-                //LifecycleManager.getDefault().markForRestart();
-                //LifecycleManager.getDefault().exit();
             }
-        } catch (IOException ioe) {
-            logger.error("IOException " + ioe + " while pushing memory setting.");
-            SessionMgr.getSessionMgr().handleException(ioe);
-        } catch (NullPointerException | NumberFormatException npe_nfe) {
-            npe_nfe.printStackTrace();
-            JOptionPane.showMessageDialog(
-                    WindowLocator.getMainFrame(),
-                    "Unacceptable value " + memorySettingStr + ".  Integer required.",
-                    "Please Re-Enter",
-                    JOptionPane.ERROR_MESSAGE,
-                    null
-            );
-        }
-        return false;
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        worker.execute();
+
+        return true;
     }
     
     private void initUI() {
-        memorySetting = new JTextField( 15 );
-        memorySetting.addKeyListener( new KeyListener() {
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-                exec();
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                exec();
-            }
-
+        memorySetting = new JTextField(6);
+        memorySetting.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
-                exec();
-            }
-            
-            private void exec() {
                 if ( listener != null ) {
                     listener.settingChanged();
                 }
             }
-    
         });
 
         try {
@@ -134,11 +121,12 @@ public class MemorySettingPanel extends JPanel {
     private void layoutUI() {
         this.setToolTipText(TOOLTIP_TEXT);
         
-        final BoxLayout boxLayout = new BoxLayout( this, BoxLayout.Y_AXIS);
+        final BoxLayout boxLayout = new BoxLayout( this, BoxLayout.X_AXIS);
         this.setLayout(boxLayout);
         memorySetting.setMaximumSize( memorySetting.getPreferredSize() );
         memorySetting.setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.add( memorySetting );        
+        this.add( memorySetting );
+        this.add( new JLabel("(requires restart)") );
     }
     
     /**
@@ -154,6 +142,7 @@ public class MemorySettingPanel extends JPanel {
      * @param value 
      */
     private void setMemorySetting( Integer value ) throws IOException {
+        logger.info("Saving memory setting: "+value);
         SystemInfo.setMemoryAllocation( value );
     }
     

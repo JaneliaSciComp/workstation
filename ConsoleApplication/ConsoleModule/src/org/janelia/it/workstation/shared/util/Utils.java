@@ -56,6 +56,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
@@ -196,7 +197,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
+            String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
 
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;

@@ -23,11 +23,11 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     public static final String HIDE_ANNOTATED_PROPERTY = "SessionMgr.HideAnnotatedProperty";
     public static final String ONLY_SESSION_ANNOTATIONS_PROPERTY = "SessionMgr.OnlySessionAnnotationsProperty";
     
-    JCheckBox disableImageDrag = new JCheckBox();
-    JCheckBox onlySessionAnnotations = new JCheckBox();
-    JCheckBox hideAnnotatedImages = new JCheckBox();
-    JCheckBox showAnnotationTables = new JCheckBox();
-    JSlider annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+    private JCheckBox disableImageDrag = new JCheckBox();
+    private JCheckBox onlySessionAnnotations = new JCheckBox();
+    private JCheckBox hideAnnotatedImages = new JCheckBox();
+    private JCheckBox showAnnotationTables = new JCheckBox();
+    private JSlider annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
 
     SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
