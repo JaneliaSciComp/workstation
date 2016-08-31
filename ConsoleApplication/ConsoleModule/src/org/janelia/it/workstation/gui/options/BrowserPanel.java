@@ -137,7 +137,6 @@ final class BrowserPanel extends javax.swing.JPanel {
         showAnnotationTables.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 controller.changed();
-                annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
             }
         });
         if (sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
@@ -145,7 +144,6 @@ final class BrowserPanel extends javax.swing.JPanel {
         }
         else {
             showAnnotationTables.setSelected((Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
-            annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
         }
 
         mainPanel.addItem(showAnnotationTables);

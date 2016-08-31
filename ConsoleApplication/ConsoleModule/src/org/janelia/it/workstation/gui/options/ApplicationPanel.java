@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.options;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -80,6 +81,12 @@ final class ApplicationPanel extends javax.swing.JPanel {
             }
         });
 
+        JPanel lafPanel = new JPanel();
+        lafPanel.setLayout(new BoxLayout(lafPanel, BoxLayout.X_AXIS));
+        lookAndFeelCombobox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lafPanel.add(lookAndFeelCombobox);
+        lafPanel.add(new JLabel(" (requires restart)"));
+
         DefaultComboBoxModel model = (DefaultComboBoxModel)lookAndFeelCombobox.getModel();
         String lafClassName = (String)SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         for (UIManager.LookAndFeelInfo info : infos) {
@@ -90,7 +97,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
                 model.setSelectedItem(laf);
             }
         }
-        mainPanel.addItem("Look and Feel", lookAndFeelCombobox);
+        mainPanel.addItem("Look and Feel", lafPanel);
 
         // Memory
 

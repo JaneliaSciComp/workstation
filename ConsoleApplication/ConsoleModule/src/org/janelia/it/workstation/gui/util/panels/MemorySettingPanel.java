@@ -126,7 +126,7 @@ public class MemorySettingPanel extends JPanel {
         memorySetting.setMaximumSize( memorySetting.getPreferredSize() );
         memorySetting.setAlignmentX(Component.LEFT_ALIGNMENT);
         this.add( memorySetting );
-        this.add( new JLabel("(requires restart)") );
+        this.add( new JLabel(" (requires restart)") );
     }
     
     /**

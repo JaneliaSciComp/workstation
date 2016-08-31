@@ -89,7 +89,6 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         this.imagesPanel = imagesPanel;
 
         Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
-        System.out.println("disableImageDrag="+disableImageDrag);
         if (disableImageDrag == null || disableImageDrag == false) {
             if (selectionModel instanceof DomainObjectSelectionModel) {
                 this.source = new DragSource();
