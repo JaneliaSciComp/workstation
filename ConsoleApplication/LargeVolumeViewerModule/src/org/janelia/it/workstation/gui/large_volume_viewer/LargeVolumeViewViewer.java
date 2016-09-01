@@ -60,12 +60,14 @@ public class LargeVolumeViewViewer extends JPanel {
         revalidate();
         repaint();
     }
-
+    
     public void loadDomainObject(final DomainObject domainObject) {
         // NOTE: there must be a better way to handle the tasks in and out of
         //  the UI thread; this version is the result of fixing what
         //  we had w/o serious rewriting
 
+    	logger.info("loadDomainObject({})", domainObject);
+    	
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -80,8 +82,8 @@ public class LargeVolumeViewViewer extends JPanel {
                 });
                 initialObject = domainObject;
 
-                // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
-                //  the intial entity, but we need the sample either way to be able to open it:
+                // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
+                //  the initial entity, but we need the sample either way to be able to open it:
                 if (initialObject instanceof TmSample) {
                     sliceSample = (TmSample) initialObject;
                     HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
@@ -93,26 +95,25 @@ public class LargeVolumeViewViewer extends JPanel {
                         HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                     }
                     catch (Exception e) {
-                        logger.error("Error getting sample",e);
-                    }
-                    if (sliceSample == null) {
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                        "Could not find sample entity for this workspace!",
-                                        "Could not open workspace",
-                                        JOptionPane.ERROR_MESSAGE);
-                            }
-                        });
+                        logger.error("Error getting sample for "+workspace, e);
                     }
                 }
             }
 
             @Override
             protected void hadSuccess() {
+            	
+                if (sliceSample == null) {
+                    JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                            "Could not find sample entity for this workspace!",
+                            "Could not open workspace",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                
                 // refresh is a UI action, has to happen here
                 refresh();
+                
+            	logger.info("Found sample {}", sliceSample.getId());
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
                 final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace...");
@@ -250,9 +251,9 @@ public class LargeVolumeViewViewer extends JPanel {
 
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+    	// Tm objects do not currently respect the domain object cache invalidation scheme, but we can at least reload the UI
         if (event.isTotalInvalidation()) {
-            // Ignore this for now because it's annoying to reload the LVV each time, 
-            // but we really should figure out how to handle it. 
+            refresh();
         }
         else {
             for(DomainObject domainObject : event.getDomainObjects()) {
