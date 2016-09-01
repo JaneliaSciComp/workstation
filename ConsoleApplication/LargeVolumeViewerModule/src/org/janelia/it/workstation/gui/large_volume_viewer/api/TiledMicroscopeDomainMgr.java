@@ -7,15 +7,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -70,19 +66,6 @@ public class TiledMicroscopeDomainMgr {
         model.remove(sample);
     }
 
-    public TreeNode getOrCreateWorkspacesFolder() throws Exception {
-        log.debug("getOrCreateWorkspacesFolder()");
-        Workspace defaultWorkspace = model.getDefaultWorkspace();
-        TreeNode folder = DomainUtils.findObjectByTypeAndName(model.getDomainObjects(defaultWorkspace.getChildren()), TreeNode.class, DomainConstants.NAME_TM_WORKSPACE_FOLDER);
-        if (folder==null) {
-            TreeNode workspacesNode = new TreeNode();
-            workspacesNode.setName(DomainConstants.NAME_TM_WORKSPACE_FOLDER);
-            workspacesNode = model.create(workspacesNode);
-            model.addChild(defaultWorkspace, workspacesNode);
-        }
-        return folder;
-    }
-
     public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
         log.debug("getWorkspace(workspaceId={})",workspaceId);
         return model.getDomainObject(TmWorkspace.class, workspaceId);
@@ -105,7 +88,6 @@ public class TiledMicroscopeDomainMgr {
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {
         log.debug("createTiledMicroscopeWorkspace(sampleId={}, name={})", sampleId, name);
-        TreeNode workspaceRoot = getOrCreateWorkspacesFolder();
         TmSample sample = getSample(sampleId);
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
@@ -115,7 +97,6 @@ public class TiledMicroscopeDomainMgr {
         workspace.setName(name);
         workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
         workspace = save(workspace);
-        model.addChild(workspaceRoot, workspace);
         return workspace;
     }
 

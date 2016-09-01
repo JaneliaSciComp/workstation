@@ -1461,10 +1461,9 @@ called from a  SimpleWorker thread.
             Date now = new Date();
             TmGeoAnnotation unserializedAnnotation = new TmGeoAnnotation(
                     new Long(node.getIndex()), null, neuron.getId(),
-                    internalPoint[0], internalPoint[1], internalPoint[2], null,
+                    internalPoint[0], internalPoint[1], internalPoint[2], node.getRadius(),
                     now, now
             );
-            unserializedAnnotation.setRadius(node.getRadius());
             
             annotations.put(node.getIndex(), unserializedAnnotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {
