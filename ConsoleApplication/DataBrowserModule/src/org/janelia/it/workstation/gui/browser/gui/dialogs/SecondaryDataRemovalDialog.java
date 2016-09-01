@@ -6,7 +6,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,16 +15,20 @@ import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -42,9 +45,13 @@ import org.slf4j.LoggerFactory;
  */
 public class SecondaryDataRemovalDialog extends ModalDialog {
     public static final String PART_LABEL = "Anatomical Area";
+    public static final String OBJECTIVE_LABEL = "Objective";
+    public static final String SAMPLE_NAME_LABEL = "Sample Name";
+    public static final String SAMPLE_ID_LABEL = "Sample ID";
+    
     // For now, keeping it simple.
     private static final String[] COLUMN_HEADERS = new String[] {
-        PART_LABEL, "Objective"
+        PART_LABEL, OBJECTIVE_LABEL, SAMPLE_NAME_LABEL, SAMPLE_ID_LABEL
     };
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
@@ -52,21 +59,28 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     private JButton executeButton;
     private Sample sample;
     private JTable sampleSubPartTable;
+    private String trimDepth;
     private boolean debug = false;
     private final Logger log = LoggerFactory.getLogger(SecondaryDataRemovalDialog.class);
 
-    public SecondaryDataRemovalDialog(JFrame parent, Sample sample, boolean debug) {
-        this(parent, sample);
+    public SecondaryDataRemovalDialog(JFrame parent, Sample sample, String title, String trimDepth, boolean debug) {
+        this(parent, sample, title, trimDepth);
         this.debug = debug;
     }
-    public SecondaryDataRemovalDialog(JFrame parent, Sample sample) {
+    public SecondaryDataRemovalDialog(JFrame parent, Sample sample, String title, String trimDepth) {
 
         super(parent);
         this.sample = sample;
+        this.trimDepth = trimDepth;
 
-        setTitle("Sample Selective Secondary Content Removal");
-
-        setSize(new Dimension(500, 500));
+        setTitle(title);
+        int width = 800;
+        int height = 500;
+        setSize(new Dimension(width, height));
+        int x = parent.getLocation().x + ( parent.getWidth() / 2 ) - ( width / 2 );
+        int y = parent.getLocation().y + ( parent.getHeight() / 2 ) - ( height / 2 );
+        setLocation(x, y);
+        
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without executing deletion");
         cancelButton.addActionListener(new ActionListener() {
@@ -83,7 +97,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             public void actionPerformed(ActionEvent e) {
                 // Need to take the selection in the table, as the list
                 // of things to be deleted.
-                completeOperation(Collections.EMPTY_LIST);
+                completeOperation();
             }
         });
 
@@ -95,7 +109,12 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         buttonPane.add(executeButton);
         
         constructTable();
-        add(sampleSubPartTable, BorderLayout.CENTER);
+        // Scrolling, as needed.  Likely the vertical is never needed.
+        JScrollPane scrollPane = new JScrollPane(sampleSubPartTable);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        sampleSubPartTable.setFillsViewportHeight(true);
+        add(scrollPane, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.SOUTH);
     }
 
@@ -106,61 +125,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
 
-    //public static String getAnatomicalAreaRemovalTarget(Sample sample) {
-    //    // Find all anatomical areas.
-    //    sample.getObjectives()
-    //}
-
-    /**
-     * Supporting a remove/preclude for the stitched image.  Multiple, possible objectives may have a stitched
-     * image.
-     *
-     * @param sample which sample to examine.
-     * @return sufficient information for caller to decide what to do.
-     */
-    public static String getStitchedImageRemovalTarget(Sample sample) {
-        // Find all objectives containing a stitched image.
-        List<String> objectivesWithStitchedImages = new ArrayList<>();
-        for (ObjectiveSample os: sample.getObjectiveSamples()) {
-            SamplePipelineRun run = os.getLatestSuccessfulRun();
-            SampleProcessingResult spr = run.getLatestProcessingResult();
-            Map<FileType, String> fileTypeToFile = spr.getFiles();
-            String losslessStack = fileTypeToFile.get(FileType.VisuallyLosslessStack);
-            if (losslessStack.contains("/stitched")) {
-                objectivesWithStitchedImages.add(os.getObjective());
-            }
-            //run.getResultsById()
-        }
-        String foundValue = null;
-        if (! objectivesWithStitchedImages.isEmpty()) {
-            if (objectivesWithStitchedImages.size() == 1) {
-                int response = JOptionPane.showConfirmDialog(
-                        FrameworkImplProvider.getMainFrame(),
-                        "Confirm Removal", "Are you sure you would like to remove " + sample.getName() + "'s Stitched Image?",
-                        JOptionPane.YES_NO_OPTION);
-                if (response == JOptionPane.YES_OPTION) {
-                    foundValue = objectivesWithStitchedImages.get(0);
-                }
-            }
-            else {
-                // Should show a dropdown selection of possibilities.
-                foundValue = (String)JOptionPane.showInputDialog(
-                        FrameworkImplProvider.getMainFrame(),
-                        "Please select an objective for stitched image removal",
-                        "Stitched Image Objective Selection",
-                        JOptionPane.OK_CANCEL_OPTION,
-                        null,
-                        objectivesWithStitchedImages.toArray(new String[objectivesWithStitchedImages.size()]),
-                        objectivesWithStitchedImages.get(0)
-
-                );
-            }
-        }
-
-        return foundValue; // may be "63x", etc.
-    }
-    
-    private void completeOperation(final List<Object> deletedItems) {
+    private void completeOperation() {
 
         Utils.setWaitingCursor(SecondaryDataRemovalDialog.this);
 
@@ -168,7 +133,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                if (! deletedItems.isEmpty()  &&  !debug) {
+                if (sampleSubPartTable.getSelectedRowCount() > 0  &&  !debug) {
                     launchDeletionTask();
                 }
 
@@ -198,11 +163,6 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         sampleSubPartTable.setColumnSelectionAllowed(false);
         sampleSubPartTable.setRowSelectionAllowed(true);
         sampleSubPartTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        // Scrolling, as needed.  Likely the vertical is never needed.
-        JScrollPane scrollPane = new JScrollPane(sampleSubPartTable);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        sampleSubPartTable.setFillsViewportHeight(true);
         final DefaultTableModel tableModel = new DefaultTableModel();
         Map<String,Set<String>> osToAA = new HashMap<>();
         int rowCount = 0;
@@ -222,44 +182,60 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             for (String aa: osToAA.get(key)) {
                 rowData[i][0] = aa;
                 rowData[i][1] = key;
+                rowData[i][2] = sample.getName();
+                rowData[i][3] = sample.getId().toString();
+                i++;
             }
         }
-//        final String[][] tempData = new String[][] {
-//            new String[] { "VNC", },       // a row
-//            new String[] { "Brain", },     // a row
-//        };
-//        TreeMap<String,String[]> sortedMap = new TreeMap<String,String[]>();
-//        for (String[] rowArr: tempData) {
-//            sortedMap.put(rowArr[0], rowArr);
-//        }
-//        int i = 0;
-//        for (String nextKey: sortedMap.keySet()) {
-//            tempData[i++] = sortedMap.get(nextKey);
-//        }
         tableModel.setDataVector(rowData, COLUMN_HEADERS);
+        TableColumnModel tcModel = new DefaultTableColumnModel();        
+        i = 0;
+        for (String hdr: COLUMN_HEADERS) {
+            TableColumn tcol = new TableColumn(i);
+            tcol.setHeaderValue(hdr);
+            tcModel.addColumn(tcol);
+            i++;
+        }
+        sampleSubPartTable.setColumnModel(tcModel);
         sampleSubPartTable.setModel(tableModel);
+        sampleSubPartTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                final int inx = e.getFirstIndex();
+                Object value = sampleSubPartTable.getValueAt(inx, 0);
+                log.info("Selection at {}: {}", inx, value);
+            }
+            
+        });
     }
 
     private void launchDeletionTask() {
         Task task;
         try {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
-            task = ModelMgr.getModelMgr().submitJob("SamplePartialSecondaryDataRemoval", "Remove Partial Secondary Data", taskParameters);
-            taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+            task = ModelMgr.getModelMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
             int[] selectedRows = sampleSubPartTable.getSelectedRows();
             StringBuilder subpartNames = new StringBuilder();
-            
-            int colnum = 0;
+
+            int aaColnum = 0;
+            int objectiveColnum = 0;
             for (int i = 0; i < sampleSubPartTable.getColumnCount(); i++) {
                 if (PART_LABEL.equals(sampleSubPartTable.getModel().getColumnName(i))) {
-                    colnum = i;
+                    aaColnum = i;
+                }
+                else if (OBJECTIVE_LABEL.equals(sampleSubPartTable.getModel().getColumnName(i))) {
+                    objectiveColnum = i;
                 }
             }
+            StringBuilder bldr = new StringBuilder();
             for (int selectedRow: selectedRows) {
                 if (subpartNames.length() > 0) {
                     subpartNames.append(",");
                 }
-                subpartNames.append(sampleSubPartTable.getModel().getValueAt(selectedRow, colnum));
+                String anatomicalAreaName = (String)sampleSubPartTable.getModel().getValueAt(selectedRow, aaColnum);
+                String objectiveName = (String)sampleSubPartTable.getModel().getValueAt(selectedRow, objectiveColnum);
+                subpartNames.append(anatomicalAreaName);
+                saveBasicAnatomicalAreasToMemento(anatomicalAreaName, objectiveName, sample.getId(), bldr);
             }
 
             // Give the user a last opt-out.
@@ -267,9 +243,11 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             if (JOptionPane.showConfirmDialog(this, message, "Confirm Removal", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
             }
-            
-            taskParameters.add(new TaskParameter("subpart names", subpartNames.toString(), task));
-            log.info("Submitted task ().",  task.getObjectId());
+            String stringifiedAreas = bldr.toString();
+            taskParameters.add(new TaskParameter(Constants.SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), task));
+            taskParameters.add(new TaskParameter(Constants.SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, task));
+            taskParameters.add(new TaskParameter(Constants.TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, task));
+            log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
         } catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
             return;
@@ -301,5 +279,19 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         };
 
         taskWorker.executeWithEvents();
+    }
+
+    /**
+     * We need just enough data to get name/objective/sample to the server.
+     */
+    public static void saveBasicAnatomicalAreasToMemento(String name, String objective, Long sampleId, StringBuilder bldr) {
+        if (bldr.length() > 0) {
+            bldr.append("\n");
+        }
+        bldr.append(name)
+                .append(",")
+                .append(objective)
+                .append(",")
+                .append(sampleId);
     }
 }

@@ -36,6 +36,7 @@
                 <package>org.janelia.it.jacs.model.domain.sample</package>
                 <package>org.janelia.it.jacs.model.domain.screen</package>
                 <package>org.janelia.it.jacs.model.domain.support</package>
+                <package>org.janelia.it.jacs.model.domain.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.domain.workspace</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
@@ -55,6 +56,7 @@
                 <package>org.janelia.it.jacs.model.tasks.fileDiscovery</package>
                 <package>org.janelia.it.jacs.model.tasks.fly</package>
                 <package>org.janelia.it.jacs.model.tasks.geometricSearch</package>
+                <package>org.janelia.it.jacs.model.tasks.lineageClassifier</package>
                 <package>org.janelia.it.jacs.model.tasks.maskSearch</package>
                 <package>org.janelia.it.jacs.model.tasks.mip</package>
                 <package>org.janelia.it.jacs.model.tasks.neuron</package>
