@@ -118,7 +118,6 @@ public class DomainMgr {
     private void loadPreferences() throws Exception {
         if (preferenceMap==null) {
             preferenceMap = new HashMap<>();
-            log.info(subjectFacade.getPreferences().toString());
             for (Preference preference : subjectFacade.getPreferences()) {
                 preferenceMap.put(getPreferenceMapKey(preference), preference);
             }

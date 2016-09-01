@@ -1,14 +1,13 @@
-package org.janelia.it.workstation.gui.large_volume_viewer.creation;
+package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.util.HashSet;
+
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -16,16 +15,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -35,21 +34,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Use this with a known sample, to create a tiled microscope workspace, and load it with
- * SWC input.
+ * Use this with a known sample, to create a tiled microscope workspace, and load it with SWC input.
  * 
  * @author fosterl
  */
-@ServiceProvider(service=EntityWrapperCreator.class,path=EntityWrapperCreator.LOOKUP_PATH)
-public class LoadedWorkspaceCreator implements EntityWrapperCreator {
+@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
+public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
     
     private static final Logger log = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
-    
-    private RootedEntity rootedEntity;
-    
-    public void execute() {
+
+    private static final int MENU_ORDER = 500;
+   
+    @Override
+    public void acceptDomainObject(DomainObject domainObject) {
 
         final JFrame mainFrame = SessionMgr.getMainFrame();
+        final TmSample sample = (TmSample)domainObject;
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -132,46 +132,39 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
                 log.info("Processing " + userInput);
                                 
                 if (userInput != null) {
-                    String ownerKey = SessionMgr.getSessionMgr().getSubject().getKey();
+                    String ownerKey = SessionMgr.getSubjectKey();
                     // Expect the sample to be the 'main entity' of the LVV, since there is
-                    // no workspace.                                                        
-                    try {
-                        Long sampleId = rootedEntity.getEntityId();
-                        HashSet<TaskParameter> taskParameters = new HashSet<>();
-                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
-                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
-                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceNameTextField.getText().trim(), null));
-                        taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
+                    // no workspace.  
+                    Long sampleId = sample.getId();
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_sampleId, sampleId.toString(), null));
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_userName, ownerKey, null));
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_workspaceName, workspaceNameTextField.getText().trim(), null));
+                    taskParameters.add(new TaskParameter(SwcImportTask.PARAM_topLevelFolderName, userInput, null));
 
-                        String taskName = new File(userInput).getName();
-                        String displayName = taskName + " for 3D tiled microscope sample " + sampleId;
-                        final Task task = ModelMgr.getModelMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
+                    String taskName = new File(userInput).getName();
+                    String displayName = taskName + " for 3D tiled microscope sample " + sampleId;
+                    final Task task = ModelMgr.getModelMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
 
-                        // Launch another thread/worker to monitor the 
-                        // remote-running task.
-                        TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
-                            @Override
-                            public void doStuff() throws Exception {
-                                super.doStuff();
+                    // Launch another thread/worker to monitor the 
+                    // remote-running task.
+                    TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
+                        @Override
+                        public void doStuff() throws Exception {
+                            super.doStuff();
+                        }
+                        @Override
+                        public String getName() {
+                            if (userInput != null) {
+                                File uiFile = new File(userInput);
+                                return "import all SWCs in " + uiFile.getName();
+                            } else {
+                                return "import SWC for sample";
                             }
-                            @Override
-                            public String getName() {
-                                if (userInput != null) {
-                                    File uiFile = new File(userInput);
-                                    return "import all SWCs in " + uiFile.getName();
-                                } else {
-                                    return "import SWC for sample";
-                                }
-                            }
-                            
-                        };
-                        tmw.executeWithEvents();
+                        }
                         
-                    } catch (Exception e) {
-                        String errorString = "Error launching : " + e.getMessage();
-                        log.error(errorString);
-                        throw e;
-                    }
+                    };
+                    tmw.executeWithEvents();
                 }
             }                         
 
@@ -188,43 +181,28 @@ public class LoadedWorkspaceCreator implements EntityWrapperCreator {
     }
 
     @Override
-    public void wrapEntity(RootedEntity e) {
-        this.rootedEntity = (RootedEntity)e;
-        execute();
-    }
-
-    @Override
-    public boolean isCompatible(RootedEntity e) {
-        setRootedEntity(e);
-        if ( e == null ) {
-            log.debug("Just nulled-out the rooted entity to LoadedWorkspaceCreator");
-            return true;
-        }
-        else {
-            log.debug("Just UN-Nulled rooted entity in LoadedWorkspaceCreator");            
-            // Caching the test sampleEntity, for use in action label.
-            final String entityTypeName = e.getEntity().getEntityTypeName();
-            return entityTypeName.equals( EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE );
-        }
-    }
-
-    @Override
     public String getActionLabel() {
         return "  Load Linux SWC Folder into New Workspace on Sample";
     }
 
-    /**
-     * @param rootedEntity the rootedEntity to set
-     */
-    private void setRootedEntity(RootedEntity rootedEntity) {
-        this.rootedEntity = rootedEntity;
+    @Override
+    public boolean isCompatible(DomainObject e) {
+        return e != null && (e instanceof TmSample);
     }
 
-    /**
-     * @return the rootedEntity
-     */
-    private RootedEntity getRootedEntity() {
-        return rootedEntity;
+    @Override
+    public Integer getOrder() {
+        return MENU_ORDER;
+    }
+
+    @Override
+    public boolean isPrecededBySeparator() {
+        return false;
+    }
+
+    @Override
+    public boolean isSucceededBySeparator() {
+        return false;
     }
 
 }

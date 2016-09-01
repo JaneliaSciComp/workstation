@@ -18,7 +18,7 @@ import org.openide.windows.WindowManager;
 /**
  * Launches the Data Viewer from a context-menu.
  */
-@ServiceProvider(service = DomainObjectAcceptor.class, path= DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
+@ServiceProvider(service = DomainObjectAcceptor.class, path = DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH)
 public class Launcher implements DomainObjectAcceptor  {
     
     private static final int MENU_ORDER = 300;
@@ -57,9 +57,7 @@ public class Launcher implements DomainObjectAcceptor  {
                 } catch ( Exception ex ) {
                     SessionMgr.getSessionMgr().handleException( ex );
                 }
-
             }
-
         }
         else {
             JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");

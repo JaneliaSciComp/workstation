@@ -1,9 +1,7 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
-import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.beans.IntrospectionException;
@@ -36,13 +34,10 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectNodeFlavor;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
-import org.janelia.it.workstation.gui.browser.nb_action.DownloadAction;
-import org.janelia.it.workstation.gui.browser.nb_action.MoveToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -213,7 +208,12 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         actions.add(RemoveAction.get());
         actions.add(null);
         for (NamedAction namedAction : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
-            actions.add(new NamedActionWrapper(namedAction));
+            if (namedAction==null) {
+                actions.add(null);
+            }
+            else {
+                actions.add(new NamedActionWrapper(namedAction));
+            }
         }
         return actions.toArray(new Action[actions.size()]);
     }
@@ -248,8 +248,6 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         return sheet;
     }
 
-
-    
     protected final class RenameAction extends AbstractAction {
 
         public RenameAction() {

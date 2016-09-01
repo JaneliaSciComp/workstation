@@ -5,13 +5,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
@@ -19,7 +17,6 @@ import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -59,10 +56,8 @@ import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFac
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -152,22 +147,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getMergeItem());
-//        add(getImportItem());
-//
+
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
-        for (JComponent item: getOpenForContextItems() ) {
+        for (JComponent item : ServiceAcceptorActionHelper.getOpenForContextItems(domainObject)) {
             add(item);
         }
 
-        for (JMenuItem item: this.getWrapObjectItems()) {
-			add(item);
-		}
+        for (JMenuItem item : this.getWrapObjectItems()) {
+            add(item);
+        }
 
-		for (JMenuItem item: this.getAppendObjectItems()) {
-			add(item);
-		}
+        for (JMenuItem item : this.getAppendObjectItems()) {
+            add(item);
+        }
 
         add(getSpecialAnnotationSession());
     }
@@ -854,27 +848,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
     }
 
-//    protected JMenuItem getImportItem() {
-//        if (multiple) return null;
-//        
-//        String entityTypeName = rootedEntity.getEntity().getEntityTypeName();
-//        if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-//            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
-//            newAttachmentItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent actionEvent) {
-//                    try {
-//                        browser.getImportDialog().showDialog(rootedEntity);
-//                    } catch (Exception ex) {
-//                        SessionMgr.getSessionMgr().handleException(ex);
-//                    }
-//                }
-//            });
-//
-//            return newAttachmentItem;
-//        }
-//        return null;
-//    }
-//
     private JMenuItem getSpecialAnnotationSession() {
         if (this.multiple) return null;
         if (!SessionMgr.getSubjectKey().equals("user:simpsonj") && !SessionMgr.getSubjectKey().equals("group:simpsonlab")) {
@@ -900,72 +873,6 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         });
 
         return specialAnnotationSession;
-    }
-
-    /** Makes the item for showing the object in its own viewer iff the object type is correct. */
-    public Collection<JComponent> getOpenForContextItems() {
-        if (this.multiple) return null;
-        TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
-        final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-        Collection<DomainObjectAcceptor> domainObjectAcceptors
-                = helper.findHandler(
-                domainObject,
-                DomainObjectAcceptor.class,
-                DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH
-        );
-        boolean lastItemWasSeparator = false;
-        int expectedCount = 0;
-        List<JComponent> actionItemList = new ArrayList<>();
-        for ( DomainObjectAcceptor domainObjectAcceptor: domainObjectAcceptors ) {
-            final Integer order = domainObjectAcceptor.getOrder();
-            if (domainObjectAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
-                orderedMap.put(order - 1, new JSeparator());
-                expectedCount ++;
-            }
-            JMenuItem item = new JMenuItem(domainObjectAcceptor.getActionLabel());
-            item.addActionListener( new DomainObjectAcceptorActionListener( domainObjectAcceptor ) );
-            orderedMap.put(order, item);
-            actionItemList.add( item ); // Bail alternative if ordering fails.
-            expectedCount ++;
-            if (domainObjectAcceptor.isSucceededBySeparator()) {
-                orderedMap.put(order + 1, new JSeparator());
-                expectedCount ++;
-                lastItemWasSeparator = true;
-            }
-            else {
-                lastItemWasSeparator = false;
-            }
-        }
-
-        // This is the bail strategy for order key clashes.
-        if ( orderedMap.size() < expectedCount) {
-            log.warn("With menu items and separators, expected {} but added {} open-for-context items." +
-                            "  This indicates an order key clash.  Please check the getOrder methods of all impls." +
-                            "  Returning an unordered version of item list.",
-                    expectedCount, orderedMap.size());
-            return actionItemList;
-        }
-        return orderedMap.values();
-    }
-
-    public class DomainObjectAcceptorActionListener implements ActionListener {
-
-        private DomainObjectAcceptor domainObjectAcceptor;
-
-        public DomainObjectAcceptorActionListener(DomainObjectAcceptor domainObjectAcceptor) {
-            this.domainObjectAcceptor = domainObjectAcceptor;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                domainObjectAcceptor.acceptDomainObject(domainObject);
-            }
-            catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
-            }
-
-        }
     }
 
     private List<JMenuItem> getWrapObjectItems() {

@@ -8,7 +8,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class TmSampleNode extends DomainObjectNode {
+public class TmSampleNode extends DomainObjectNode<TmSample> {
 
     public TmSampleNode(ChildFactory parentChildFactory, TmSample sample) throws Exception {
         super(parentChildFactory, Children.LEAF, sample);

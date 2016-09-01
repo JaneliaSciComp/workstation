@@ -382,6 +382,12 @@ public class DomainModel {
         return getDomainObjectsAs(DomainObject.class, references);
     }
 
+    public <T extends DomainObject> T getDomainObjectAs(Class<T> domainClass, Reference reference) throws Exception {
+    	List<T> list = getDomainObjectsAs(domainClass, Arrays.asList(reference));
+    	if (list.isEmpty()) return null;
+    	return list.get(0);
+    }
+    
     public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) throws Exception {
 
         if (references==null) return new ArrayList<>();

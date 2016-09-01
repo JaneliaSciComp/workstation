@@ -11,7 +11,7 @@ import org.janelia.it.workstation.gui.browser.actions.NamedAction;
  */
 public class NamedActionWrapper extends AbstractAction {
 
-    private NamedAction action;
+    private final NamedAction action;
 
     public NamedActionWrapper(NamedAction action) {
         this.action = action;
