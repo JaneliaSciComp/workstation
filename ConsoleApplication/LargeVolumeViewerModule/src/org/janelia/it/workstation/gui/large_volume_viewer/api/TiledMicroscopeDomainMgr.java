@@ -56,6 +56,16 @@ public class TiledMicroscopeDomainMgr {
         return model.getTmSamples();
     }
 
+	public TmSample createTiledMicroscopeSample(String name, String filepath) throws Exception {
+        log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
+        TmSample sample = new TmSample();
+        sample.setOwnerKey(SessionMgr.getSubjectKey());
+        sample.setName(name);
+        sample.setFilepath(filepath);
+        sample = save(sample);
+        return sample;
+	}
+	
     public TmSample save(TmSample sample) throws Exception {
         log.debug("save({})",sample);
         return model.save(sample);
@@ -76,16 +86,6 @@ public class TiledMicroscopeDomainMgr {
         return model.getTmWorkspaces();
     }
 
-    public TmWorkspace save(TmWorkspace workspace) throws Exception {
-        log.debug("save({})", workspace);
-        return model.save(workspace);
-    }
-
-    public void remove(TmWorkspace workspace) throws Exception {
-        log.debug("remove({})", workspace);
-        model.remove(workspace);
-    }
-
     public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {
         log.debug("createTiledMicroscopeWorkspace(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
@@ -100,6 +100,16 @@ public class TiledMicroscopeDomainMgr {
         return workspace;
     }
 
+    public TmWorkspace save(TmWorkspace workspace) throws Exception {
+        log.debug("save({})", workspace);
+        return model.save(workspace);
+    }
+
+    public void remove(TmWorkspace workspace) throws Exception {
+        log.debug("remove({})", workspace);
+        model.remove(workspace);
+    }
+    
     public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();

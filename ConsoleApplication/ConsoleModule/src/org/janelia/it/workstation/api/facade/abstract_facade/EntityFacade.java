@@ -104,15 +104,6 @@ public interface EntityFacade {
 
     public EntityData createFolderInWorkspace(Long workspaceId, String entityName) throws Exception;
 
-    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception;
-
-    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception;
-
-    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception;
-
-    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception;
-
-    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception;
 
     CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception;
 

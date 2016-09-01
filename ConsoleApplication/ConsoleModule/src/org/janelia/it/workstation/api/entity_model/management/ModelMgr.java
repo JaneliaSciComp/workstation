@@ -1159,29 +1159,7 @@ public final class ModelMgr {
 
     // Methods associated with the 3D Tiled Microscope viewer
     public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-        try {
-            return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
-        } catch (EJBLookupException ex) {
-            throw ex;
-        }
-    }
-    
-    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
-        TmSample sample = FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
-        notifyEntityChanged(sample.getId());
-        return sample;
-    }
-
-    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().removeWorkspacePreference(workspaceId, key);
-    }
-
-    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().createOrUpdateWorkspacePreference(workspaceId, key, value);
-    }
-
-    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().loadWorkspace(workspaceId);
+    	throw new UnsupportedOperationException();
     }
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {

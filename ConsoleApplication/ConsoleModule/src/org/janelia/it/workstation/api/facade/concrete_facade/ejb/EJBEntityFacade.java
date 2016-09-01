@@ -248,51 +248,8 @@ public class EJBEntityFacade implements EntityFacade {
     	return EJBFactory.getRemoteEntityBean().createFolderInWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityName);
     }
 
-    // Addition of the interface for the Tiled Microscope Data
-    @Override
-    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
-        if (tmBean == null) {
-            throw new EJBLookupException("Communication failure.");
-        }
-        return tmBean.createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
-    }
-
-    @Override
-    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
-        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
-        if (tmBean == null) {
-            throw new EJBLookupException("Communication failure.");
-        }
-        return tmBean.createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
-    }
-
-    @Override
-    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
-        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
-        if (tmBean == null) {
-            throw new EJBLookupException("Communication failure.");
-        }
-        tmBean.removeWorkspacePreference(workspaceId, key);
-    }
-
-    @Override
-    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception {
-        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
-        if (tmBean == null) {
-            throw new EJBLookupException(COMM_FAILURE_MSG_TMB);
-        }
-        tmBean.createOrUpdateWorkspacePreference(workspaceId, key, value);
-    }
-
-    @Override
-    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
-        TiledMicroscopeBeanRemote tmBean = getRemoteTMBWithRetries();
-        if (tmBean == null) {
-            throw new EJBLookupException("Communication failure.");
-        }
-        return tmBean.loadWorkspace(workspaceId);
-    }
+    
+    
 
     @Override
     public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
