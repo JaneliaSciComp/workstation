@@ -5,10 +5,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -213,7 +211,6 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         Task task;
         try {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
-            task = ModelMgr.getModelMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
             int[] selectedRows = sampleSubPartTable.getSelectedRows();
             StringBuilder subpartNames = new StringBuilder();
 
@@ -243,10 +240,13 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             if (JOptionPane.showConfirmDialog(this, message, "Confirm Removal", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
             }
+
             String stringifiedAreas = bldr.toString();
-            taskParameters.add(new TaskParameter(Constants.SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), task));
-            taskParameters.add(new TaskParameter(Constants.SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, task));
-            taskParameters.add(new TaskParameter(Constants.TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, task));
+            taskParameters.add(new TaskParameter(Constants.SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), null));
+            taskParameters.add(new TaskParameter(Constants.SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, null));
+            taskParameters.add(new TaskParameter(Constants.TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, null));
+            task = ModelMgr.getModelMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
+
             log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
         } catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
