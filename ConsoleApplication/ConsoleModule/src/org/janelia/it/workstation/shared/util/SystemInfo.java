@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.shared.util;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,11 +121,11 @@ public class SystemInfo {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
+        SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
     }
 
     public static File getDownloadsDir() {
-        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
+        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DOWNLOADS_DIR);
         File downloadsDirFile;
         // Check for existence and clear out references to tmp
         if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {
@@ -210,7 +211,8 @@ public class SystemInfo {
         String value = (String)props.get( DEFAULT_OPTIONS_PROP );
         if ( value == null ) {
             //Last-ditch effort to save settings.
-            value = "\"--branding janeliawsng -J-Dapple.awt.brushMetalLook=false -J-XX:PermSize=192m -J-XX:MaxPermSize=1024m -J-Xms1024m -J-Xmx8192 -J-Dnetbeans.exception.report.min.level=9999 -J-Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms\"";
+            // TODO: THIS IS NOT CORRECT!!! It gets out of sync with the project.properties file, and then all bets are off.
+            value = "\"--branding janeliaws -J-Dapple.awt.brushMetalLook=false -J-XX:PermSize=192m -J-XX:MaxPermSize=1024m -J-Xms1024m -J-Xmx8192 -J-Dnetbeans.exception.report.min.level=9999 -J-Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms\"";
             log.warn("Using local-constant version of settings, '{}'.  Unable to find old memory setting.", value);
         }
         int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
