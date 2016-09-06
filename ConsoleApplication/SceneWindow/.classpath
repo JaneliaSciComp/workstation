@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="build/classes-generated"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Geometry3d"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl224"/>
@@ -8,5 +9,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/IntegrationAPIs"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ViewerAPI"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/GLViewerTools"/>
+	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

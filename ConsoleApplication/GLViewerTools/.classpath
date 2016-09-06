@@ -11,5 +11,5 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl224"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
-	<classpathentry kind="output" path="build/classes"/>
+	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
