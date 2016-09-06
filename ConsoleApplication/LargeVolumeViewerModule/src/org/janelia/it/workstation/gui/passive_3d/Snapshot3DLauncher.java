@@ -293,7 +293,7 @@ public class Snapshot3DLauncher {
     }
 
     private void setIndependentColorFromPrefs() {
-        if (annotationManager != null) {
+        if (getAnnotationManager() != null && getAnnotationManager().getCurrentWorkspace()!=null) {
             TmColorModel colorModel = getAnnotationManager().getCurrentWorkspace().getColorModel3d();
             if (colorModel!=null) {
                 ModelTranslation.updateColorModel(colorModel, independentCM);
