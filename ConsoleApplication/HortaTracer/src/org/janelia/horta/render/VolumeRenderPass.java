@@ -69,7 +69,7 @@ implements DepthSlabClipper
         final int rgbaAttachment = GL3.GL_COLOR_ATTACHMENT0;
         // final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
         final int coreDepthAttachment = GL3.GL_COLOR_ATTACHMENT1;
-        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA8,
+        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA12,
                 rgbaAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);

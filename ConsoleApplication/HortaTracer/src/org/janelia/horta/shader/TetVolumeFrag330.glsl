@@ -43,7 +43,7 @@ layout(binding = 0) uniform sampler3D volumeTexture;
 layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
 layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
 layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
-layout(location = 6) uniform int tracingChannel = 0;
+layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
 
 in vec3 fragTexCoord;
 flat in vec3 cameraPosInTexCoord;
@@ -179,16 +179,6 @@ IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in Integra
     return IntegratedIntensity(clamp(b + f, 0, 1), opacity);
 }
 
-void updateCoreLocation(
-        inout float coreParam, inout float coreIntensity,
-        in float currentParam, in float currentIntensity)
-{
-    if (currentIntensity > coreIntensity) {
-        coreParam = currentParam;
-        coreIntensity = currentIntensity;
-    }
-}
-
 
 void main() 
 {
@@ -249,24 +239,28 @@ void main()
                 integrate_max_intensity(intensity, rearIntensity);
                 // integrate_occluding(intensity, rearIntensity);
 
-        // TODO: next line causes hang during compile...
-        // updateCoreLocation(coreParam, coreIntensity, t, rearIntensity.intensity[tracingChannel]);
+        float tracingIntensity = dot(rearIntensity.intensity, tracingChannelMask);
+        if (tracingIntensity >= coreIntensity) { // MIP criterion
+            coreIntensity = tracingIntensity;
+            coreParam = t;
+        }
 
         if (rayIsFinished)
             break;
         t0 = t1;
     }
 
-    // Primary render target stores final blended RGBA color
-    fragColor = rgba_for_intensities(intensity);
-
     // Secondary render target stores 16-bit core intensity, plus relative depth
     /* */
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
-    int intDepth = int(relativeDepth * 65535);
+    uint intDepth = uint(relativeDepth * 65535);
     /* */
-    int coreInt = int(65535 * intensity.intensity[tracingChannel]);
+    uint coreInt = uint(65535 * coreIntensity);
     coreDepth = ivec2(coreInt, intDepth); // OK
+
+    // Primary render target stores final blended RGBA color
+    fragColor =
+            rgba_for_intensities(intensity);
 }
