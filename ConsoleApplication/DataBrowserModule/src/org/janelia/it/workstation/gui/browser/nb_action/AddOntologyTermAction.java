@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.Tag;
 import org.janelia.it.jacs.model.domain.ontology.Text;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -109,8 +110,9 @@ public class AddOntologyTermAction extends NodePresenterAction {
     }
     
     private void createTerm(final OntologyTermNode parentNode, Ontology ontology, Class<? extends OntologyTerm> termClass) {
-       
+
         final OntologyTerm ontologyTerm = createTypeByName(termClass);
+        ActivityLogHelper.logUserAction("AddOntologyTermAction.createTerm", ontologyTerm.getTypeName());
 
         final String termName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Ontology Term:\n", 
                 "Adding to " + parentNode.getDisplayName(), JOptionPane.PLAIN_MESSAGE, null, null, null);

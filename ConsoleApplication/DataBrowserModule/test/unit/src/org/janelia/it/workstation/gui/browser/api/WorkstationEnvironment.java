@@ -1,14 +1,12 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import javax.swing.JOptionPane;
+
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.openide.LifecycleManager;
-
-import javax.swing.*;
 
 /**
  * Helps mock out the Workstation well enough to carry out tests. Logs in, etc.
@@ -34,7 +32,7 @@ public class WorkstationEnvironment {
             final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer == 0) {
-                PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
+                throw new IllegalStateException("Please enter your login information");
             }
             else {
                 LifecycleManager.getDefault().exit(0);

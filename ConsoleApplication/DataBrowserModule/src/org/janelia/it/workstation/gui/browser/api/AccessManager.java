@@ -37,7 +37,6 @@ public final class AccessManager {
     private static AccessManager accessManager;
     private static String bypassSubjectKey;
 
-    private ActivityLogHelper activityLogHelper = new ActivityLogHelper();
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
@@ -118,12 +117,13 @@ public final class AccessManager {
         if (null!=loginEvent && null!=loginEvent.getSessionId()) {
             SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
         }
-        activityLogHelper.logUserInfo(authenticatedSubject);
+        ActivityLogHelper.logSessionBegin();
+        ActivityLogHelper.logUserInfo(authenticatedSubject);
     }
 
     private void endSession() {
         // TO DO: add to eventBus server logging
-        activityLogHelper.logSessionEnd();
+        ActivityLogHelper.logSessionEnd();
     }
 
     public boolean setRunAsUser(String runAsUser) {

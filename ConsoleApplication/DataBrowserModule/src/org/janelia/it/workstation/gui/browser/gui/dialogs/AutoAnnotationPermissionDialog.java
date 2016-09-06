@@ -22,6 +22,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
@@ -142,7 +143,8 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
                     writeCheckbox.setSelected(permissions.contains("w"));
                 }
             }
-            
+
+            ActivityLogHelper.logUserAction("AutoAnnotationPermissionDialog.showAutoAnnotationConfiguration");
             packAndShow();
         }
         catch (Exception e) {

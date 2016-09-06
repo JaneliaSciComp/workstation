@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
@@ -29,24 +30,26 @@ public class RemoveAnnotationsAction implements NamedAction {
 
     private final ImageModel<DomainObject,Reference> imageModel;
     private final List<DomainObject> selectedObjects;
-    private Annotation tag;
+    private Annotation annotation;
     private boolean matchIdOrName = false;
 
-    public RemoveAnnotationsAction(ImageModel<DomainObject,Reference> imageModel, List<DomainObject> selectedObjects, Annotation tag, boolean matchIdOrName) {
+    public RemoveAnnotationsAction(ImageModel<DomainObject,Reference> imageModel, List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
         this.imageModel = imageModel;
         this.selectedObjects = selectedObjects;
-        this.tag = tag;
+        this.annotation = annotation;
         this.matchIdOrName = matchIdOrName;
     }
 
     @Override
     public String getName() {
-        String target = matchIdOrName ? tag.getName() : tag.getKey();
+        String target = matchIdOrName ? annotation.getName() : annotation.getKey();
         return selectedObjects.size() > 1 ? "Remove \"" + target + "\" Annotation From " + selectedObjects.size() + " Items" : "Remove Annotation";
     }
 
     @Override
     public void doAction() {
+
+        ActivityLogHelper.logUserAction("RemoveAnnotationsAction.doAction", annotation);
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -63,17 +66,17 @@ public class RemoveAnnotationsAction implements NamedAction {
             protected void doStuff() throws Exception {
 
                 if (selectedObjects.size()==1 && matchIdOrName) {
-                    model.remove(tag);    
+                    model.remove(annotation);
                     return;
                 }
                 
                 List<Annotation> toRemove = new ArrayList<>();
                 for (DomainObject selectedObject : selectedObjects) {
                     for (Annotation annotation : imageModel.getAnnotations(selectedObject)) {
-                        if (matchIdOrName && StringUtils.equals(annotation.getName(),tag.getName())) {
+                        if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
                             toRemove.add(annotation);            
                         }
-                        else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(tag.getKeyTerm().getOntologyTermId())) {
+                        else if (!matchIdOrName && annotation.getKeyTerm().getOntologyTermId().equals(RemoveAnnotationsAction.this.annotation.getKeyTerm().getOntologyTermId())) {
                             toRemove.add(annotation);            
                         }
                     }

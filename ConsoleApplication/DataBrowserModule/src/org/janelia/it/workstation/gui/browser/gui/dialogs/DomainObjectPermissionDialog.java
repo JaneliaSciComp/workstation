@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
@@ -148,7 +149,8 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         readCheckbox.setSelected(dop == null || dop.isRead());
         writeCheckbox.setSelected(dop != null && dop.isWrite());
-        
+
+        ActivityLogHelper.logUserAction("DomainObjectPermissionDialog.showDialog", domainObject);
         packAndShow();
     }
 

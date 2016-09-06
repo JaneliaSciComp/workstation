@@ -15,9 +15,9 @@ import javax.swing.*;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -90,7 +90,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         this.iconPanel = iconPanel;
         this.rootedEntity = rootedEntity;
 
-        Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
+        Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             this.source = new DragSource();
             source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);

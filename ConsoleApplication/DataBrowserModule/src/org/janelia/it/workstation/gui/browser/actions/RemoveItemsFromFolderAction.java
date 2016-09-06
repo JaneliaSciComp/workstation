@@ -7,17 +7,19 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * Remove items from a tree node.
@@ -43,7 +45,8 @@ public class RemoveItemsFromFolderAction implements NamedAction {
 
     @Override
     public void doAction() {
-
+    	
+        ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", treeNode);
 
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         final Multimap<TreeNode,DomainObject> removeFromFolders = ArrayListMultimap.create();

@@ -18,6 +18,7 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.LifecycleManager;
@@ -129,7 +130,8 @@ public class LoginDialog extends ModalDialog {
         usernameField.setText(username);
         passwordField.setText(password);
         rememberCheckbox.setSelected(remember);
-        
+
+        ActivityLogHelper.logUserAction("LoginDialog.showDialog");
         packAndShow();
     }
 

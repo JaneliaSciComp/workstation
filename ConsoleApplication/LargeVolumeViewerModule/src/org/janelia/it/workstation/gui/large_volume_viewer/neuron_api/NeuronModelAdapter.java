@@ -31,6 +31,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +103,7 @@ public class NeuronModelAdapter implements NeuronModel
         this.sample = sample;
     }
 
-    public boolean hasCachedVertex(Long vertexId) {
+    protected boolean hasCachedVertex(Long vertexId) {
         return vertexes.hasCachedVertex(vertexId);
     }
         
@@ -294,8 +295,23 @@ public class NeuronModelAdapter implements NeuronModel
             return;
         if (color.equals(cachedColor))
             return;
-        // TODO: set color in actual wrapped Style
         cachedColor = color;
+
+        // Set color in actual wrapped Style
+        boolean vis = true;
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        if (style != null)
+            vis = style.isVisible();
+        else
+            vis = isVisible();
+        
+        try {
+            annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, vis));
+        } catch (Exception ex) {
+        	logger.error("Error setting neuron style", ex);
+        }
+
+        getColorChangeObservable().setChanged();
     }
 
     @Override
@@ -353,6 +369,18 @@ public class NeuronModelAdapter implements NeuronModel
         if (bIsVisible == visible)
             return; // no change
         bIsVisible = visible;
+        
+        // Synchronize with TmNeuron Style
+        NeuronStyle style = annotationModel.getNeuronStyle(neuron);
+        Color color = cachedColor;
+        if (style != null)
+            color = style.getColor();
+        try {
+            annotationModel.setNeuronStyle(neuron, new NeuronStyle(color, visible));
+        } catch (Exception ex) {
+        	logger.error("Error setting neuron style", ex);
+        }
+        
         getVisibilityChangeObservable().setChanged();
     }
 

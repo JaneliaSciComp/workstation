@@ -144,23 +144,21 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         List<VoxelPosition> rtnVal = new ArrayList<>();
         
         // Doing checks: along same lines?
-        Vec3 prevNormal = null;
+        Vec3 prevDirection = null;
         ZoomedVoxelIndex prevIndex = null;
         Iterator<ZoomedVoxelIndex> iter = path.iterator();
         for ( int i = 0; i < path.size(); i++ ) {
             ZoomedVoxelIndex index = iter.next();
             if ( prevIndex != null ) {
-                Vec3 normal = calcNormal( prevIndex, index );
-                if ( sameLine( prevNormal, normal ) ) {
+                Vec3 direction = calcDirection( prevIndex, index );
+                if ( sameLine( prevDirection, direction ) ) {
                     rtnVal.remove(zviToVoxel(prevIndex));
                 }
-                prevNormal = normal;
+                prevDirection = direction;
             }
             rtnVal.add(zviToVoxel(index));
             prevIndex = index;
         }
-        rtnVal.add(zviToVoxel(prevIndex));   // Ensure that end point is in the return.
-        
         return rtnVal;
     }
     
@@ -181,23 +179,25 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         }
         return rtnVal;
     }
-    
-    private Vec3 calcNormal(ZoomedVoxelIndex prev, ZoomedVoxelIndex curr) {
+
+    private Vec3 calcDirection(ZoomedVoxelIndex prev, ZoomedVoxelIndex curr) {
         double magnitude = 0;
         Vec3 prevVec = new Vec3( prev.getX(), prev.getY(), prev.getZ() );
         Vec3 currVec = new Vec3( curr.getX(), curr.getY(), curr.getZ() );
+        // note: diff is in opposite direction of what you'd expect;
+        //  not sure why the author chose this, but it's good enough for us
         Vec3 diff = prevVec.minus(currVec);
         magnitude = Math.sqrt(
                 diff.getX() * diff.getX() + 
                 diff.getY() * diff.getY() +
                 diff.getZ() * diff.getZ() 
         );
-        Vec3 diffNorm = new Vec3( 
+        Vec3 diffNormalized = new Vec3(
                 diff.getX() / magnitude,
                 diff.getY() / magnitude,
                 diff.getZ() / magnitude 
         );
-        return diffNorm;
+        return diffNormalized;
     }
 
 }

@@ -17,6 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.WrapLayout;
@@ -57,6 +58,7 @@ public final class ConfigPanel extends JPanel {
         showConfigPanelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+				ActivityLogHelper.logUserAction("ConfigPanel.setExpanded", !configExpanded);
                 toggleCriteriaPanelState();
             }
         });

@@ -117,6 +117,13 @@
             <file name="org-netbeans-modules-tasks-ui-DashboardTopComponent.shadow_hidden"/>
         </folder>
     </folder>
+    <folder name="OptionsDialog">
+        <file name="Advanced.instance_hidden"/>
+        <file name="Editor.instance_hidden"/>
+        <file name="FontsAndColors.instance_hidden"/>
+        <file name="Java.instance_hidden"/>
+    </folder>
+    <file name="OptionsExport_hidden"/>
     <folder name="Services">
         <folder name="AutoupdateType">
             <file name="org_janelia_it_workstation_nb_action_update_center.instance">

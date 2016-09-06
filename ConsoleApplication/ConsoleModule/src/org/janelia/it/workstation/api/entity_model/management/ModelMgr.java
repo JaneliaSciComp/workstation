@@ -293,19 +293,20 @@ public final class ModelMgr {
     }
 
     public String getSortCriteria(Long entityId) {
-        try {
-            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
-            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
-            String entityIdStr = entityId.toString();
-            for (SubjectPreference pref : prefs.values()) {
-                if (pref.getName().equals(entityIdStr)) {
-                    return pref.getValue();
-                }
-            }
-        }
-        catch (Exception e) {
-            log.error("Error loading sort criteria for {}", entityId,e);
-        }
+        // This is waaaay to slow when loading a large entity tree. 
+//        try {
+//            Subject subject = getSubjectWithPreferences(SessionMgr.getSubjectKey());
+//            Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+//            String entityIdStr = entityId.toString();
+//            for (SubjectPreference pref : prefs.values()) {
+//                if (pref.getName().equals(entityIdStr)) {
+//                    return pref.getValue();
+//                }
+//            }
+//        }
+//        catch (Exception e) {
+//            log.error("Error loading sort criteria for {}", entityId,e);
+//        }
         return null;
     }
 
@@ -959,6 +960,20 @@ public final class ModelMgr {
 
     public TaskRequest submitJob(String processDefName, Task task) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
+        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+    }
+
+    /**
+     * Like the submitJob method, but this one pushes the task to a dispatcher, for scheduled (balanced?)
+     * retrieval by waiting servers.
+     *
+     * @param processDefName name for labeling.
+     * @param task with all params
+     * @return the requiest created.
+     * @throws Exception
+     */
+    public TaskRequest dispatchJob(String processDefName, Task task) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().dispatchJob(processDefName, task.getObjectId());
         return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
     }
 

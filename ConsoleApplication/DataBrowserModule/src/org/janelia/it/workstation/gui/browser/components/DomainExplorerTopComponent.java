@@ -20,6 +20,7 @@ import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.Events;
@@ -57,6 +58,7 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
 import org.openide.windows.TopComponent;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -382,8 +384,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             log.debug("Skipping refresh, since there is one already in progress");
             return;
         }
-        
+
         log.info("refresh(restoreState={})",restoreState);
+        final StopWatch w = new StopWatch();
         
         final List<Long[]> expanded = root!=null && restoreState ? beanTreeView.getExpandedPaths() : null;
         final List<Long[]> selected = root!=null && restoreState ? beanTreeView.getSelectedPaths() : null;
@@ -414,6 +417,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             break; // For now, we'll only expand first node
                         }
                     }
+
+                    ActivityLogHelper.logElapsed("DomainExplorer.refresh", w);
                     debouncer.success();
                 }
                 catch (Exception e) {
@@ -438,9 +443,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             return;
         }
         final Node selectedNode = allNodes.iterator().next();
-        // This method currently doesn't do anything, because we had to add a custom MouseListener to listen
-        // for selection events, to disambiguate left-clicks from right-clicks. In the future we may want something
-        // that responds to either type of selection and this is where that code would go.
+        ActivityLogHelper.logUserAction("DomainExplorerTopComponent.resultChanged", selectedNode.getDisplayName());
     }
 
     public WorkspaceNode getWorkspaceNode() {

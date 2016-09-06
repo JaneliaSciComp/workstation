@@ -60,7 +60,13 @@ public class EJBComputeFacade implements ComputeFacade {
     	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
         EJBFactory.getRemoteComputeBean(true).submitJob(processDefName, taskId);
     }
-    
+
+    @Override
+    public void dispatchJob(String processDefName, Long taskId) throws Exception {
+        if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
+        EJBFactory.getRemoteComputeBean(true).dispatchJob(processDefName, taskId);
+    }
+
     @Override
     public List<Task> getUserTasks() throws Exception {
         return null;

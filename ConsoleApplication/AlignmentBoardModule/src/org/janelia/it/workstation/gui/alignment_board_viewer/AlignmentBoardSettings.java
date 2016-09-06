@@ -133,4 +133,16 @@ public class AlignmentBoardSettings {
     public void setEventConnected(boolean eventConnected) {
         this.eventConnected = eventConnected;
     }
+
+    /** For dumping the settings in semi-human-readable fashion. */
+    public String printSettings() {
+        return String.format(
+                "uDnSamp=%4.2f;gDnSamp=%4.2f;gamma=%4.3f;chan=%s;conn=%s;minVox=%d;maxNeu=%d",
+                chosenDownSampleRate, downSampleGuess,
+                gammaFactor,
+                new Boolean(showChannelData).toString(), 
+                new Boolean(eventConnected).toString(),
+                minimumVoxelCount, maximumNeuronCount
+        );
+    }
 }

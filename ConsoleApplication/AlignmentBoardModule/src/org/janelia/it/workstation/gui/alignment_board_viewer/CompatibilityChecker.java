@@ -10,6 +10,7 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
@@ -20,7 +21,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,6 +120,25 @@ public class CompatibilityChecker {
     /**
      * Only aligned neuron fragments may be presented in the alignment board.
      * 
+     * @param sample may/may not have alignment context.
+     * @return T: has the context.  F: not.
+     */
+    public boolean isAligned(Sample sample) {
+        boolean rtnVal = false;
+        try {
+            List<AlignmentContext> contexts = domainHelper.getAvailableAlignmentContexts(sample);
+            if (contexts != null && !contexts.isEmpty()) {
+                rtnVal = true;
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
+    }
+    
+    /**
+     * Only aligned neuron fragments may be presented in the alignment board.
+     * 
      * @param neuronFragment may/may not have alignment context.
      * @return T: has the context.  F: not.
      */
@@ -147,7 +166,7 @@ public class CompatibilityChecker {
         try {
             return isSampleCompatibleThrowsEx(standardContext, sample);
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            FrameworkImplProvider.handleException(ex);
             return false;
         }
     }
@@ -160,7 +179,7 @@ public class CompatibilityChecker {
         try {
             return isEqual(standardContext, compartmentSet.getAlignmentSpace(), compartmentSet.getOpticalResolution(), compartmentSet.getImageSize());
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            FrameworkImplProvider.handleException(ex);
             return false;
         }
     }

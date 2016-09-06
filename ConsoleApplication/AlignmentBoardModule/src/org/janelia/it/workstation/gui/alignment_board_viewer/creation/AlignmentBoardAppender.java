@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.awt.Component;
 import java.util.List;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -11,7 +12,6 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
@@ -42,7 +42,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
     
     public void execute() {
 
-        final Component mainFrame = SessionMgr.getMainFrame();
+        final Component mainFrame = FrameworkImplProvider.getParentFrameProvider().getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -111,7 +111,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
 
                 };
@@ -121,7 +121,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
             
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Finding alignments...", ""));
@@ -170,7 +170,7 @@ public class AlignmentBoardAppender implements DomainObjectAppender {
 
             return rtnVal;
         } catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            FrameworkImplProvider.handleException(e);
             return false;
         }
     }

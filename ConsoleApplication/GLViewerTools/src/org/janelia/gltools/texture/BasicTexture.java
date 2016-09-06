@@ -274,7 +274,7 @@ public abstract class BasicTexture implements GL3Resource
             int[] h = {handle};
             gl.glDeleteTextures(1, h, 0);
             handle = 0;
-            log.debug("deleted texture");
+            log.trace("deleted texture");
         }
     }
 

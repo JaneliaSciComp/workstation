@@ -32,13 +32,17 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
@@ -66,10 +70,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.Icon;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -407,7 +407,7 @@ public class LayersPanel extends JPanel implements Refreshable {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                FrameworkImplProvider.handleException(error);
                 loadInProgress.set(false);
                 showNothing();
             }
@@ -580,7 +580,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     public void chooseColor(final AlignmentBoardItem alignedItem) {
 
         Color currColor = RenderUtils.getColorFromRGBStr(alignedItem.getColor());
-        final Color newColor = JColorChooser.showDialog(SessionMgr.getMainFrame(), "Choose color", currColor);
+        final Color newColor = JColorChooser.showDialog(FrameworkImplProvider.getMainFrame(), "Choose color", currColor);
         if (newColor==null) return;
         
         SimpleWorker localWorker = new SimpleWorker() {
@@ -598,7 +598,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                FrameworkImplProvider.handleException(error);
             }
         };
         localWorker.execute();
@@ -884,7 +884,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    FrameworkImplProvider.handleException(error);
                 }
             };
             worker.execute();

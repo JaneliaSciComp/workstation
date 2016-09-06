@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,10 @@ public class ImageTypeSelectionButton extends DropDownButton {
     	this.showTitle = showTitle;
         setIcon(Icons.getIcon("image.png"));
         setToolTipText("Select the result type to display");
+        reset();
+    }
+
+    public void reset() {
         setImageType(DEFAULT_TYPE);
     }
 
@@ -113,12 +118,16 @@ public class ImageTypeSelectionButton extends DropDownButton {
         for(final FileType fileType : FileType.values()) {
             String typeName = fileType.name();
             log.debug("Type {} has count={}",typeName,countedTypeNames.count(typeName));
-            if (countedTypeNames.count(typeName)>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
-                JMenuItem menuItem = new JRadioButtonMenuItem(fileType.getLabel(), fileType.equals(currImageType));
+            int count = countedTypeNames.count(typeName);
+            if (count>0 || (only2d && fileType.equals(FileType.FirstAvailable2d)) || (!only2d && fileType.equals(FileType.FirstAvailable3d))) {
+                String typeLabel = fileType.getLabel();
+                if (count>0) typeLabel += " ("+count+" items)";
+                JMenuItem menuItem = new JRadioButtonMenuItem(typeLabel, fileType.equals(currImageType));
                 menuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                         setImageType(fileType);
                         imageTypeChanged(fileType);
+                        ActivityLogHelper.logUserAction("ImageTypeSelectionButton.imageTypeChanged", fileType.getLabel());
                     }
                 });
                 getPopupMenu().add(menuItem);

@@ -86,7 +86,7 @@ public class DomainMgr {
         }
         throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
     }
-    
+
     @Subscribe
     public void runAsUserChanged(RunAsEvent event) {
         log.info("User changed, resetting model");
@@ -136,6 +136,12 @@ public class DomainMgr {
         return preferenceMap.get(mapKey);
     }
 
+    public Object getPreferenceValue(String category, String key, Object defaultValue) throws Exception {
+        Preference preference = getPreference(category, key);
+        if (preference==null) return defaultValue;
+        return preference.getValue();
+    }
+
     public List<Preference> getPreferences(String category) throws Exception {
         loadPreferences();
         List<Preference> categoryPreferences = new ArrayList<>();
@@ -166,7 +172,7 @@ public class DomainMgr {
      * @param value
      * @throws Exception
      */
-    public void setPreference(String category, String key, String value) throws Exception {
+    public void setPreference(String category, String key, Object value) throws Exception {
         Preference preference = DomainMgr.getDomainMgr().getPreference(category, key);
         if (preference==null) {
             preference = new Preference(AccessManager.getSubjectKey(), category, key, value);
