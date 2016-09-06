@@ -30,9 +30,11 @@
 
 package org.janelia.horta.actors;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
@@ -59,19 +61,36 @@ public class TetVolumeMaterial extends BasicMaterial
 implements DepthSlabClipper
 {
     private int volumeTextureHandle = 0;
+    private int colorMapTextureHandle = 0;
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private IntBuffer pbos;
     private float zNearRelative = 0.10f;
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
-    // TODO: multichannel brightness
+    // multichannel brightness
     private final ImageColorModel brightnessModel;
+    private Texture2d colorMapTexture = new Texture2d();
 
     public TetVolumeMaterial(KtxData ktxData, ImageColorModel brightnessModel) {
         this.ktxData = ktxData;
         shaderProgram = new TetVolumeShader();
         this.brightnessModel = brightnessModel;
+        
+        BufferedImage colorMapImage = null;
+        try {
+            colorMapImage = ImageIO.read(
+                    getClass().getResourceAsStream(
+                            "/org/janelia/horta/images/"
+                            + "HotColorMap.png"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        colorMapTexture.loadFromBufferedImage(colorMapImage);
+        colorMapTexture.setGenerateMipmaps(false);
+        colorMapTexture.setMinFilter(GL3.GL_LINEAR);
+        colorMapTexture.setMagFilter(GL3.GL_LINEAR);
+
     }
     
     // Override displayMesh() to display something other than triangles
@@ -83,8 +102,9 @@ implements DepthSlabClipper
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
+        gl.glDeleteTextures(2, new int[] {volumeTextureHandle, colorMapTextureHandle}, 0);
         volumeTextureHandle = 0;
+        colorMapTextureHandle = 0;
     }
     
     @Override
@@ -103,10 +123,12 @@ implements DepthSlabClipper
         super.init(gl);
         
         // Volume texture
-        int[] h = {0};
-        gl.glGenTextures(1, h, 0);
+        int[] h = {0, 0};
+        gl.glGenTextures(2, h, 0);
         volumeTextureHandle = h[0];
-        
+        colorMapTextureHandle = h[1];
+
+        gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
 
         gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 1); // TODO: Verify that this fits data
@@ -205,6 +227,8 @@ implements DepthSlabClipper
         else {
             throw new UnsupportedOperationException("Unexpected number of color channels");
         }
+        // Color map
+        colorMapTexture.bind(gl, 1); // texture unit 1
     }
     
     @Override

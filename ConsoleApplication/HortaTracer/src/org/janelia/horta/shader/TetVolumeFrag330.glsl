@@ -39,10 +39,13 @@
 
 // three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
+layout(binding = 1) uniform sampler2D colorMapTexture;
+
 // Transfer function
 layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
 layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
 layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
+
 layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
 
 in vec3 fragTexCoord;
@@ -80,9 +83,24 @@ float opacity_for_intensities(in CHANNEL_VEC intensity)
     return max_element(rescaled);
 }
 
+vec3 hot_color_for_hue_intensity(in float hue, in float intensity) {
+    // hue
+    float h = fract(2.0 + hue / 360.0); // normalize 360 degrees to range 0.0-1.0
+    float s = (0.7500 * h + 0.1875); // restrict to rainbow region of color map
+    // intensity
+    float i = pow(intensity, 2.2); // crude gamma correction of sRGB texture
+    float r = (0.93750 * i + 0.03125); // dark to light, terminating at pixel centers
+    return texture(colorMapTexture, vec2(r, s)).rgb;
+}
+
 vec4 rgba_for_scaled_intensities(in vec2 c, in float opacity) {
-    // TODO: hot color map
-    return vec4(c.grg, opacity); // green/magenta
+    // return vec4(c.grg, opacity); // green/magenta
+
+    // hot color map
+    vec3 ch1 = hot_color_for_hue_intensity(120, c.r); // green
+    vec3 ch2 = hot_color_for_hue_intensity(300, c.g); // magenta
+    vec3 combined = ch1 + ch2 - ch1*ch2; // compromise between sum and max
+    return vec4(combined, opacity);
 }
 
 vec4 rgba_for_intensities(IntegratedIntensity i) {
@@ -198,6 +216,8 @@ void main()
     
     clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
     clipRayToPlane(x0, x1, zFarPlaneInTexCoord, minRay, maxRay);
+
+    if (minRay > maxRay) discard; // draw nothing if ray is completely clipped away
 
     vec3 frontTexCoord = x0 + minRay * x1;
     vec3 rearTexCoord = x0 + maxRay * x1;
