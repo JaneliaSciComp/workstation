@@ -109,7 +109,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             list.addAll(temp);
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            log.error("Error creating tree node child keys",ex);
             return false;
         }
         return true;
