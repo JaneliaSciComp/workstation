@@ -31,6 +31,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
@@ -381,7 +382,7 @@ public class Browser implements Cloneable {
         position.setVerticalDividerLocation(800);
 
         int offsetY = 0;
-        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL);
+        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
             offsetY = 20;
         }

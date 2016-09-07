@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.37</specification-version>
+                        <specification-version>1.43</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.37</specification-version>
+                        <specification-version>1.43</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -30,7 +30,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.37</specification-version>
+                        <specification-version>1.43</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -39,7 +39,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.37</specification-version>
+                        <specification-version>1.43</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -177,7 +177,6 @@
                 <package>org.janelia.it.workstation.api.facade.facade_mgr</package>
                 <package>org.janelia.it.workstation.api.facade.roles</package>
                 <package>org.janelia.it.workstation.api.stub.data</package>
-                <package>org.janelia.it.workstation.geom</package>
                 <package>org.janelia.it.workstation.gui</package>
                 <package>org.janelia.it.workstation.gui.animate</package>
                 <package>org.janelia.it.workstation.gui.application</package>
@@ -185,15 +184,14 @@
                 <package>org.janelia.it.workstation.gui.camera</package>
                 <package>org.janelia.it.workstation.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.dialogs.choose</package>
-                <package>org.janelia.it.workstation.gui.dialogs.search</package>
                 <package>org.janelia.it.workstation.gui.framework.actions</package>
                 <package>org.janelia.it.workstation.gui.framework.bookmark</package>
+                <package>org.janelia.it.workstation.gui.framework.compression</package>
                 <package>org.janelia.it.workstation.gui.framework.console</package>
                 <package>org.janelia.it.workstation.gui.framework.console.nb_action</package>
                 <package>org.janelia.it.workstation.gui.framework.context_menu</package>
                 <package>org.janelia.it.workstation.gui.framework.exception_handlers</package>
                 <package>org.janelia.it.workstation.gui.framework.external_listener</package>
-                <package>org.janelia.it.workstation.gui.framework.keybind</package>
                 <package>org.janelia.it.workstation.gui.framework.navigation_tools</package>
                 <package>org.janelia.it.workstation.gui.framework.outline</package>
                 <package>org.janelia.it.workstation.gui.framework.outline.ontology</package>
@@ -206,13 +204,12 @@
                 <package>org.janelia.it.workstation.gui.framework.tool_manager</package>
                 <package>org.janelia.it.workstation.gui.framework.tree</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer</package>
-                <package>org.janelia.it.workstation.gui.framework.viewer.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer.search</package>
-                <package>org.janelia.it.workstation.gui.ontology</package>
                 <package>org.janelia.it.workstation.gui.opengl</package>
                 <package>org.janelia.it.workstation.gui.opengl.demo</package>
                 <package>org.janelia.it.workstation.gui.opengl.shader</package>
                 <package>org.janelia.it.workstation.gui.opengl.stereo3d</package>
+                <package>org.janelia.it.workstation.gui.options</package>
                 <package>org.janelia.it.workstation.gui.static_view</package>
                 <package>org.janelia.it.workstation.gui.static_view.shader</package>
                 <package>org.janelia.it.workstation.gui.top_component</package>
@@ -224,7 +221,6 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.axes</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.buffering</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.error_trap</package>
-                <package>org.janelia.it.workstation.gui.viewer3d.events</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.interfaces</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.learning</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.loader</package>
@@ -247,7 +243,6 @@
                 <package>org.janelia.it.workstation.model.utils</package>
                 <package>org.janelia.it.workstation.model.viewer</package>
                 <package>org.janelia.it.workstation.nb_action</package>
-                <package>org.janelia.it.workstation.octree</package>
                 <package>org.janelia.it.workstation.raster</package>
                 <package>org.janelia.it.workstation.run_config</package>
                 <package>org.janelia.it.workstation.shared.annotations</package>
@@ -260,8 +255,6 @@
                 <package>org.janelia.it.workstation.shared.util.text_component</package>
                 <package>org.janelia.it.workstation.shared.workers</package>
                 <package>org.janelia.it.workstation.signal</package>
-                <package>org.janelia.it.workstation.units</package>
-                <package>org.janelia.it.workstation.web</package>
                 <package>org.janelia.it.workstation.ws</package>
                 <package>org.jnp.interfaces</package>
                 <package>org.jnp.interfaces.java</package>

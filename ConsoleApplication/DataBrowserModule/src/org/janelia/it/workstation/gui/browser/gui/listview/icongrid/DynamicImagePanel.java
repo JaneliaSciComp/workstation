@@ -18,6 +18,8 @@ import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.janelia.it.workstation.gui.options.OptionConstants;
+
 /**
  * An image panel that supports dynamic loading/unloading of image data to conserve memory usage when the panel is not
  * visible. Also supports on-the-fly resizing.
@@ -208,7 +210,7 @@ public class DynamicImagePanel extends JPanel {
                     loadWorker.cancel(true);
                     loadWorker = null;
                 }
-                if (SessionMgr.getSessionMgr().isUnloadImages()) {
+                if (isUnloadImages()) {
                     // Clear all references to the image data so that it can be cleared out of memory
                     maxSizeImage = null;
                     imageLabel.setIcon(null);
@@ -227,6 +229,11 @@ public class DynamicImagePanel extends JPanel {
             }
         }
         this.viewable = wantViewable;
+    }
+
+    private boolean isUnloadImages() {
+        Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
+        return unloadImagesBool != null && unloadImagesBool;
     }
 
     public BufferedImage getMaxSizeImage() {

@@ -29,6 +29,14 @@
  */
 package org.janelia.horta;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import Jama.Matrix;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.geometry3d.Box3;
@@ -37,18 +45,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.VoxelIndex;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
-import org.janelia.it.jacs.shared.img_3d_loader.FileByteSource;
 import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
@@ -74,13 +72,13 @@ implements BrickInfo
     //  transform: [-377.607422, 0.0, 0.0, 0.0, 85320872.0, 0.0, -260.144531, 0.0, 0.0,
     //    17912676.0, 0.0, 0.485852, 995.024902, 0.0, 9909023.0, 0.0, 0.0, 0.0, 1.0, 0.0,
     //    0.0, 0.0, 0.0, 0.0, 1.0]
-    final int[] bbOriginNanometers = new int[3];
-    final int[] bbShapeNanometers = new int[3];
+    private final int[] bbOriginNanometers = new int[3];
+    private final int[] bbShapeNanometers = new int[3];
     private String localPath;
     private String parentPath;
-    final int[] pixelDims = new int[4]; // includes color channel count
-    String intensityType;
-    Matrix transform; // converts voxels to stage coordinates in nanometers
+    private final int[] pixelDims = new int[4]; // includes color channel count
+    private String intensityType;
+    private Matrix transform; // converts voxels to stage coordinates in nanometers
     private Matrix texCoord_X_stageUm; // cached transform inverse; after conversion to micrometers
     
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
@@ -206,12 +204,12 @@ implements BrickInfo
 
     @Override
     public List<Vector3> getValidCornerLocations() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public List<Vector3> getTilingSubsetLocations() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -269,7 +267,13 @@ implements BrickInfo
     public void setColorChannelIndex(int index) {
         this.colorChannelIndex = index;
     }
-    
+
+    /**
+     * Loads the texture and returns it.
+     *
+     * Returns null if the load is interrupted. It would be better to use an InterruptedIOException for that,
+     * but it's too slow.
+     */
     public Texture3d loadBrick(double maxEdgePadWidth, int colorChannel) throws IOException
     {
         setColorChannelIndex(colorChannel);
@@ -293,7 +297,6 @@ implements BrickInfo
 
         if (!HttpDataSource.useHttp()) {
 
-            //System.out.println(folderPath.getAbsolutePath());
             if (!folderExists())
                 throw new IOException("no such tile folder " + folderPath.getAbsolutePath());
 
@@ -330,20 +333,19 @@ implements BrickInfo
                     log.info("Decompressed as {}.", tileFile);
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
-                    throw new IOException("Decompression step failed. " + compressedTileFile, ex);
+                    throw new IOException("Decompression step failed for " + compressedTileFile, ex);
                 }
             }
             if (tileFile == null){
                 throw new IOException("No channel tiff file found");
             } else {
-                System.out.println("BrainTileInfo loadBrick() - using tileFile="+tileFile.getAbsolutePath());
+                log.debug("loadBrick {}", tileFile.getAbsolutePath());
             }
 
         } else {
 
             tileFile=new File(folderPath, "default."+colorChannelIndex);
-            log.info("loadBrick() http using tileFile="+tileFile.getAbsolutePath());
+            log.debug("loadBrick {}", tileFile.getAbsolutePath());
 
             texture.setOptionalFileStreamSource(new FileStreamSource() {
                 @Override
@@ -361,7 +363,9 @@ implements BrickInfo
 
         }
 
-        texture.loadTiffStack(tileFile);
+        if (!texture.loadTiffStack(tileFile)) {
+            return null;
+        }
 
         return texture;
     }
@@ -397,6 +401,4 @@ implements BrickInfo
         return rhs.parentPath.equals(parentPath) && rhs.localPath.equals(localPath);
 
     }
-    
-    
 }

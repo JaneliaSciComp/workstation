@@ -52,10 +52,10 @@ import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.model.utils.ModelUtils;
@@ -551,13 +551,13 @@ public class IconDemoPanel extends IconPanel {
                     return false;
                 }
                 AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-
-                // Hidden by session?
-                Boolean onlySession = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-                        ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
-                if ((onlySession != null && !onlySession) || session == null) {
-                    return true;
-                }
+//
+//                // Hidden by session?
+//                Boolean onlySession = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+//                        ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
+//                if ((onlySession != null && !onlySession) || session == null) {
+//                    return true;
+//                }
 
                 // At this point we know there is a current session, and we have to match it
                 return (annotation.getSessionId() != null && annotation.getSessionId().equals(session.getId()));
@@ -569,16 +569,16 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
 
-                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
-                    refreshAnnotations(null);
-                }
-                else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
-                    filterEntities();
-                }
-                else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+//                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+//                    refreshAnnotations(null);
+//                }
+//                else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
+//                    filterEntities();
+//                }
+                if (OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
                     refresh();
                 }
-                else if (ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+                else if (OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
                     int tableHeight = (Integer) newValue;
                     if (currTableHeight == tableHeight) {
                         return;
@@ -1108,7 +1108,7 @@ public class IconDemoPanel extends IconPanel {
 
         // Update preferences for each button
         Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-                ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
+                OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
         if (tagTable == null) {
             tagTable = false;
         }
@@ -1189,19 +1189,19 @@ public class IconDemoPanel extends IconPanel {
 
     private void filterEntities() {
 
-        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
-        if (session == null) {
-            return;
-        }
-        session.clearCompletedIds();
-        Set<Long> completed = session.getCompletedEntityIds();
-
-        imagesPanel.showAllButtons();
-        Boolean hideAnnotated = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-                ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
-        if (hideAnnotated != null && hideAnnotated) {
-            imagesPanel.hideButtons(completed);
-        }
+//        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+//        if (session == null) {
+//            return;
+//        }
+//        session.clearCompletedIds();
+//        Set<Long> completed = session.getCompletedEntityIds();
+//
+//        imagesPanel.showAllButtons();
+//        Boolean hideAnnotated = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+//                OptionConstants.HIDE_ANNOTATED_PROPERTY);
+//        if (hideAnnotated != null && hideAnnotated) {
+//            imagesPanel.hideButtons(completed);
+//        }
     }
 
     /**

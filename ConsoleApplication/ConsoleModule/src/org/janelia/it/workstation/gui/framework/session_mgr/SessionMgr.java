@@ -44,6 +44,7 @@ import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
@@ -69,19 +70,28 @@ public final class SessionMgr implements ActivityLogging {
     
     public static String USER_EMAIL = "UserEmail";
 
-    public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
-    public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
-    public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
     public static String JACS_INTERACTIVE_SERVER_PROPERTY = "SessionMgr.JacsInteractiveServerProperty";
     public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String REMEMBER_PASSWORD = LoginProperties.REMEMBER_PASSWORD;
+
+    // Delete these after deleting settings panels
+
+    @Deprecated
+    public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
+    @Deprecated
+    public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
+    @Deprecated
+    public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
+    @Deprecated
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
+    @Deprecated
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
-    public static String DOWNLOADS_DIR = "DownloadsDir";
+    @Deprecated
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
+    @Deprecated
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
 
     public static boolean isDarkLook = false;
@@ -144,28 +154,24 @@ public final class SessionMgr implements ActivityLogging {
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
 
-        setFileCacheGigabyteCapacity((Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+        setFileCacheGigabyteCapacity((Integer) getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY))));
+                getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));
 
         // -----------------------------------------------
         if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null) {
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
         }
 
-        if (getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
-            setModelProperty(UNLOAD_IMAGES_PROPERTY, false);
+        if (getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+            setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
         }
 
-        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) {
-            setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true);
+        if (getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+            setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
         }
 
-        if (getModelProperty(SessionMgr.DISPLAY_RENDERER_2D) == null) {
-            setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
-        }
-
-        log.info("Using 2d renderer: {}", getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
+        log.info("Using 2d renderer: {}", getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
 
         // Look for user's model-property-designated look-and-feel.
         //  If it is found, and it is installed (not defunct/obsolete) use it.
@@ -199,7 +205,7 @@ public final class SessionMgr implements ActivityLogging {
         UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
         LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
 
-        String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
+        String lafName = (String) getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
         LookAndFeelInfo currentLafInfo = null;
         if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
@@ -218,7 +224,7 @@ public final class SessionMgr implements ActivityLogging {
             }
             else if (currentLafInfo != null) {
                 setLookAndFeel(currentLafInfo.getName());
-                setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
             }
             else {
                 log.error("Could not set Look and Feel: {}",lafName);
@@ -234,9 +240,9 @@ public final class SessionMgr implements ActivityLogging {
             PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
         }
-        Integer tmpCache = (Integer) getModelProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        Integer tmpCache = (Integer) getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null != tmpCache) {
-            PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
+            PropertyConfigurator.getProperties().setProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
 
     } //Singleton enforcement
@@ -383,7 +389,7 @@ public final class SessionMgr implements ActivityLogging {
      */
     public void setFileCacheDisabled(boolean isDisabled) {
 
-        setModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
+        setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
@@ -419,7 +425,7 @@ public final class SessionMgr implements ActivityLogging {
      * @return the maximum number of gigabytes to store in the local file cache.
      */
     public int getFileCacheGigabyteCapacity() {
-        return (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        return (Integer) getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
 
     /**
@@ -439,7 +445,7 @@ public final class SessionMgr implements ActivityLogging {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
-        setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+        setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
         if (isFileCacheAvailable()) {
@@ -708,7 +714,7 @@ public final class SessionMgr implements ActivityLogging {
 
             // The main frame is not presented until after this time.
             //  No need to update its LaF.
-            setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+            setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
 
             log.info("Configured Look and Feel: {}", lookAndFeelClassName);
         }

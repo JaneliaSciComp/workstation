@@ -13,6 +13,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
@@ -22,9 +23,9 @@ import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDe
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class LayerContextMenu extends JPopupMenu {
         add(getDropColorItem());
         add(getShowOverlapsItem());
         // This is a special debug item. It may also not be working as intended. LLF, 1/10/2014
-        if ( SessionMgr.getUsername().equals( "fosterl" ) ) {
+        if ( AccessManager.getUsername().equals( "fosterl" ) ) {
             add(getRawRenderToggle());
         }
         add(getRenameItem());
@@ -180,7 +181,7 @@ public class LayerContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -210,7 +211,7 @@ public class LayerContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -241,7 +242,7 @@ public class LayerContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
@@ -256,7 +257,7 @@ public class LayerContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
 
-                final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Alias:\n", "Set Alias For "
+                final String newName = (String) JOptionPane.showInputDialog(FrameworkImplProvider.getMainFrame(), "Alias:\n", "Set Alias For "
                         + alignedItemTarget.getName()+" in this Alignment Board", JOptionPane.PLAIN_MESSAGE, 
                         null, null, alignedItemTarget.getName());
                 if ((newName == null) || (newName.length() <= 0)) {
@@ -279,7 +280,7 @@ public class LayerContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        FrameworkImplProvider.handleException(error);
                     }
                 };
                 worker.execute();
