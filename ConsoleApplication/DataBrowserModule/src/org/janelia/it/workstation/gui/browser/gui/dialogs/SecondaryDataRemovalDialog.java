@@ -257,7 +257,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             @Override
             public String getName() {
-                return "Trimming unwanted "+PART_LABEL+"(s) of the sample";
+                return "Trimming images from "+PART_LABEL+"(s) of the sample";
             }
 
             @Override
