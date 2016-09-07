@@ -155,10 +155,13 @@ public class KtxData
 
         // Compose the brick from five tetrahedra
         actor.addOuterTetrahedron(0, 5, 3, 1); // upper right front
-        actor.addOuterTetrahedron(0, 6, 5, 4); // upper left rear
-        actor.setCentralTetrahedron(0, 3, 5, 6); // inner tetrahedron
-        actor.addOuterTetrahedron(3, 5, 6, 7); // lower right rear
-        actor.addOuterTetrahedron(0, 3, 6, 2); // lower left front
+        final boolean showFullBlock = false; // for debugging
+        if (showFullBlock) {
+            actor.addOuterTetrahedron(0, 6, 5, 4); // upper left rear
+            actor.setCentralTetrahedron(0, 3, 5, 6); // inner tetrahedron
+            actor.addOuterTetrahedron(3, 5, 6, 7); // lower right rear
+            actor.addOuterTetrahedron(0, 3, 6, 2); // lower left front
+        }
 
         // TODO: alternate tetrahedralization - used for alternating subblocks in raw tiles.
         /** @TODO something */

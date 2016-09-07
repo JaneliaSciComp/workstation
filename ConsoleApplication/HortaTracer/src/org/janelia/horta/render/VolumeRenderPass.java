@@ -73,7 +73,7 @@ implements DepthSlabClipper
                 rgbaAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);
-        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG16UI,
+        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG32UI,
                 coreDepthAttachment);
         
         // Attach render targets to renderer

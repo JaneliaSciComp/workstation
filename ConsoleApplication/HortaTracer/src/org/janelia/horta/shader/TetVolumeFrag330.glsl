@@ -275,10 +275,22 @@ void main()
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
-    uint intDepth = uint(relativeDepth * 65535);
+    // When rendering multiple blocks, we need to store a relative-depth value 
+    // that could win a GL_MAX blend contest.
+    //   1) pad the most significant bits with the opacity, so the most
+    //      opaque ray segment wins. Not perfect, but should work pretty
+    //      well in most sparse rendering contexts.
+    //   2) reverse the sense of the relative depth, so in case of an
+    //      opacity tie, the NEARER ray segment wins.
+    // Pack the opacity into the first 8 bits of a 32-bit unsigned integer:
+    // Leave the very most significant bit zero, because JAVA...
+    uint opacityInt = clamp(uint(127 * intensity.opacity), 0, 127) << 24; // 7or8 bits of opacity
+    const uint maxDepth = 16777215; // 2^24 - 1
+    uint depthInt = clamp(uint((1.0 - relativeDepth) * maxDepth), 0, maxDepth);
+    uint opacityDepthInt = opacityInt + depthInt;
     /* */
-    uint coreInt = uint(65535 * coreIntensity);
-    coreDepth = ivec2(coreInt, intDepth); // OK
+    uint coreInt = uint(65535 * coreIntensity); // intensity data is still 16-bit data, even if we have 32 bits to store it in here.
+    coreDepth = ivec2(coreInt, opacityDepthInt); // OK
 
     // Primary render target stores final blended RGBA color
     fragColor =

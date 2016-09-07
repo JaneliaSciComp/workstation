@@ -223,7 +223,7 @@ extends MultipassRenderer
         return result;
     }
     
-    // Ranges from zNear(returns -1.0) to zFar(returns 1.0)
+    // Ranges from zNear(returns 0.0) to zFar(returns 1.0)
     private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
         double intensity = coreIntensityForScreenXy(xy);
@@ -243,7 +243,10 @@ extends MultipassRenderer
                 // y convention is opposite between screen and texture buffer
                 coreDepthTarget.getHeight() - (int) xy.getY(),
                 1); // channel index
-        result = 2.0f * (relDepth / 65535.0f - 0.5f); // range [-1,1]
+        // Mask out first 8 bits to remove opacity sidecar, used to improve multiblock sorting
+        relDepth = relDepth & 0x00ffffff; // leaving a 24-bit value
+        float relDepthFloat = ((float)relDepth) / 0x00ffffff; // normalize to 0-1
+        result = 1.0f - relDepthFloat; // Reverse sense of relative depth to near-small from far-small
         return result;
     }
 
@@ -289,8 +292,7 @@ extends MultipassRenderer
             return zEye - zFocus;
         }
         else if (isVisibleTransparentAtScreenXy(xy, camera)) {
-            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [-1,1]
-            zRel = 0.5*(zRel + 1.0); // rescale to range [0,1]
+            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [0,1]
             double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
             double zNear = getRelativeZNear() * focusDistance;
             double zFar = getRelativeZFar() * focusDistance;
