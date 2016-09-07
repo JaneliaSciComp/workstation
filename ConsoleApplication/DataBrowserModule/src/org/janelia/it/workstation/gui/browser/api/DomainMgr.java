@@ -124,6 +124,7 @@ public class DomainMgr {
             log.info("Loaded {} user preferences", preferenceMap.size());
         }
     }
+    
     /**
      * Queries the backend and returns the list of preferences for the given subject.
      * @param category

@@ -1002,6 +1002,14 @@ public class DomainModel {
         objects.add(domainObject);
     }
 
+    public List<String> getTmSamplePaths() throws Exception {
+    	return tmFacade.getTmSamplePaths();
+    }
+    
+    public void setTmSamplePaths(List<String> paths) throws Exception {
+    	tmFacade.updateSamplePaths(paths);
+    }
+    
     public Collection<TmSample> getTmSamples() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         Collection<TmSample> samples = tmFacade.getTmSamples();

@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.api.facade.interfaces;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -14,7 +15,11 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface TiledMicroscopeFacade {
+	
+    public List<String> getTmSamplePaths() throws Exception;
 
+    public void updateSamplePaths(List<String> paths) throws Exception;
+    
     public Collection<TmSample> getTmSamples() throws Exception;
 
     public TmSample create(TmSample tmSample) throws Exception;

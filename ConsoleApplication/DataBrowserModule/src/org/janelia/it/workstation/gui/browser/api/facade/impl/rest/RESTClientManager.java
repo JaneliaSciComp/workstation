@@ -76,6 +76,7 @@ public class RESTClientManager {
         serviceEndpoints.put("search", client.target(serverUrl + REMOTE_DATA_PREFIX + "/search"));
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
+        serviceEndpoints.put("tmSampleRootPaths", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/sampleRootPaths"));
         serviceEndpoints.put("tmSample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/sample"));
         serviceEndpoints.put("tmWorkspace", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/workspace"));
         serviceEndpoints.put("tmNeuron", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/tm/workspace/neuron"));
@@ -138,6 +139,10 @@ public class RESTClientManager {
 
     public WebTarget getReleaseEndpoint() {
         return serviceEndpoints.get("release");
+    }
+    
+    public WebTarget getTmSamplePathsEndpoint() {
+        return serviceEndpoints.get("tmSampleRootPaths");
     }
 
     public WebTarget getTmSampleEndpoint() {

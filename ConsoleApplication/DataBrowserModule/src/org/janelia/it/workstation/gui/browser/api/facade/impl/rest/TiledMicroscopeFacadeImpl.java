@@ -34,7 +34,30 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         super(log);
         this.manager = RESTClientManager.getInstance();
     }
+    
+    @Override
+    public List<String> getTmSamplePaths() throws Exception {
+        Response response = manager.getTmSamplePathsEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response, "getTmSamplePaths")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<List<String>>() {});
+    }
 
+    @Override
+    public void updateSamplePaths(List<String> paths) throws Exception {
+        Response response = manager.getTmSamplePathsEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request("application/json")
+                .post(Entity.json(paths));
+        if (checkBadResponse(response, "update: " + paths)) {
+            throw new WebApplicationException(response);
+        }
+    }
+    
     @Override
     public Collection<TmSample> getTmSamples() throws Exception {
         Response response = manager.getTmSampleEndpoint()

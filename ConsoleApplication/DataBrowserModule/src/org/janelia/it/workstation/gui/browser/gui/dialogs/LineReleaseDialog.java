@@ -45,7 +45,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.support.DataSetComboBoxRenderer;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.MembershipListPanel;
+import org.janelia.it.workstation.gui.util.ComboMembershipListPanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
@@ -71,9 +71,9 @@ public class LineReleaseDialog extends ModalDialog {
     private DateComboBox dateInput = new DateComboBox();
     private JTextField lagTimeInput = new JTextField(10);
     private JCheckBox sageSyncCheckbox;
-    private MembershipListPanel<DataSet> dataSetPanel;
-    private MembershipListPanel<Subject> annotatorsPanel;
-    private MembershipListPanel<Subject> subscribersPanel;
+    private ComboMembershipListPanel<DataSet> dataSetPanel;
+    private ComboMembershipListPanel<Subject> annotatorsPanel;
+    private ComboMembershipListPanel<Subject> subscribersPanel;
     private JButton syncButton;
     private JButton okButton;
 
@@ -203,7 +203,7 @@ public class LineReleaseDialog extends ModalDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
-        dataSetPanel = new MembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
+        dataSetPanel = new ComboMembershipListPanel<>("Data Sets", DataSetComboBoxRenderer.class);
         dataSetPanel.setEditable(editable);
         bottomPanel.add(dataSetPanel, c);
 
@@ -213,7 +213,7 @@ public class LineReleaseDialog extends ModalDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
-        annotatorsPanel = new MembershipListPanel<>("Annotators", SubjectComboBoxRenderer.class);
+        annotatorsPanel = new ComboMembershipListPanel<>("Annotators", SubjectComboBoxRenderer.class);
         bottomPanel.add(annotatorsPanel, c);
 
         c.gridx = 2;
@@ -222,7 +222,7 @@ public class LineReleaseDialog extends ModalDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
-        subscribersPanel = new MembershipListPanel<>("Subscribers", SubjectComboBoxRenderer.class);
+        subscribersPanel = new ComboMembershipListPanel<>("Subscribers", SubjectComboBoxRenderer.class);
         bottomPanel.add(subscribersPanel, c);
 
         attrPanel.add(bottomPanel, "span 2");
@@ -263,9 +263,9 @@ public class LineReleaseDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                dataSetPanel.init(dataSets);
-                annotatorsPanel.init(subjects);
-                subscribersPanel.init(subjects);
+                dataSetPanel.initItemsInCombo(dataSets);
+                annotatorsPanel.initItemsInCombo(subjects);
+                subscribersPanel.initItemsInCombo(subjects);
 
                 if (release != null) {
                     nameInput.setText(release.getName());

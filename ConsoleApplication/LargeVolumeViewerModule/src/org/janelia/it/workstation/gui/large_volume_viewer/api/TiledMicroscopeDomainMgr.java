@@ -14,7 +14,6 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +33,6 @@ public class TiledMicroscopeDomainMgr {
     public static TiledMicroscopeDomainMgr getDomainMgr() {
         if (instance==null) {
             instance = new TiledMicroscopeDomainMgr();
-            Events.getInstance().registerOnEventBus(instance);
         }
         return instance;
     }
@@ -159,4 +157,12 @@ public class TiledMicroscopeDomainMgr {
         neuronMetadata.setId(tmNeuron.getId());
         model.remove(neuronMetadata);
     }
+    
+	public List<String> getTmSamplePaths() throws Exception {
+		return model.getTmSamplePaths();
+	}
+
+	public void setTmSamplePaths(List<String> paths) throws Exception {
+		model.setTmSamplePaths(paths);
+	}
 }
