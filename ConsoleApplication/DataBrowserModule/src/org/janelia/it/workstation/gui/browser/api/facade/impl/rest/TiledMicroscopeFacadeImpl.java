@@ -169,7 +169,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .queryParam("workspaceId", workspaceId)
                 .request("multipart/mixed")
                 .get();
-        if (checkBadResponse(response, "getWorkspaceNeuronPairs: "+response.getLocation())) {
+        if (checkBadResponse(response, "getWorkspaceNeuronPairs: "+workspaceId)) {
             throw new WebApplicationException(response);
         }
         MultiPart multipart = response.readEntity(MultiPart.class);
