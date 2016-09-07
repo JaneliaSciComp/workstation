@@ -236,7 +236,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             }
 
             // Give the user a last opt-out.
-            final String message = "Are you sure you want to remove " + subpartNames.toString() + " from sample " + sample.getName() + "?";
+            final String message = "Are you sure you want to remove image(s) from " + subpartNames.toString() + " of sample " + sample.getName() + "?";
             if (JOptionPane.showConfirmDialog(this, message, "Confirm Removal", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
             }
