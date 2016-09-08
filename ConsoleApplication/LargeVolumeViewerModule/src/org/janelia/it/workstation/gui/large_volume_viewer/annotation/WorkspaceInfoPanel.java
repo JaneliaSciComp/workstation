@@ -1,10 +1,16 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import javax.swing.*;
+import java.awt.Dimension;
+import java.util.HashSet;
 
-import java.awt.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -17,6 +23,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  */
 public class WorkspaceInfoPanel extends JPanel {
 
+    private JLabel titleLabel;
     private JLabel workspaceNameLabel;
     private JLabel sampleNameLabel;
 
@@ -27,8 +34,10 @@ public class WorkspaceInfoPanel extends JPanel {
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
+        titleLabel = new JLabel("Workspace", JLabel.LEADING);
+        
         // workspace information; show name, whatever attributes
-        add(new JLabel("Workspace", JLabel.LEADING));
+        add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
 
         workspaceNameLabel = new JLabel("", JLabel.LEADING);
@@ -53,9 +62,9 @@ public class WorkspaceInfoPanel extends JPanel {
     private void updateMetaData(final TmWorkspace workspace) {
         if (workspace == null) {
             setWorkspaceName("(no workspace)");
-            // sampleNameLabel.setText("Sample:");
             setSampleName("");
-        } else {
+        } 
+        else {
             setWorkspaceName(workspace.getName());
 
             SimpleWorker labelFiller = new SimpleWorker() {
@@ -68,7 +77,13 @@ public class WorkspaceInfoPanel extends JPanel {
 
                 @Override
                 protected void hadSuccess() {
-                    // sampleNameLabel.setText("Sample: " + sampleName);
+                    if (!DomainUtils.hasWriteAccess(workspace, new HashSet<>(AccessManager.getSubjectKeys()))) {
+                        setTitle("Workspace (read-only)");
+                    }
+                    else {
+                        setTitle("Workspace");
+                    }
+                    
                     setSampleName(sampleName);
                 }
 
@@ -81,6 +96,10 @@ public class WorkspaceInfoPanel extends JPanel {
         }
     }
 
+    private void setTitle(String title) {
+        titleLabel.setText(title);
+    }
+    
     private void setSampleName(String name) {
         // if name is too wide, it messes up our panel width; tooltip has full name
         sampleNameLabel.setToolTipText(name);

@@ -108,6 +108,7 @@ public class LargeVolumeViewViewer extends JPanel {
                             "Could not find sample entity for this workspace!",
                             "Could not open workspace",
                             JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
                 
                 // refresh is a UI action, has to happen here

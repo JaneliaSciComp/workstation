@@ -41,7 +41,11 @@ public class TiledMicroscopeDomainMgr {
 
     public TmSample getSample(Long sampleId) throws Exception {
         log.debug("getSample(sampleId={})",sampleId);
-        return model.getDomainObject(TmSample.class, sampleId);
+        TmSample sample = model.getDomainObject(TmSample.class, sampleId);
+        if (sample==null) {
+            throw new Exception("Sample with id="+sampleId+" does not exist");
+        }
+        return sample;
     }
 
     public TmSample getSample(TmWorkspace workspace) throws Exception {
@@ -54,7 +58,7 @@ public class TiledMicroscopeDomainMgr {
         return model.getTmSamples();
     }
 
-	public TmSample createTiledMicroscopeSample(String name, String filepath) throws Exception {
+    public TmSample createTiledMicroscopeSample(String name, String filepath) throws Exception {
         log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         TmSample sample = new TmSample();
         sample.setOwnerKey(SessionMgr.getSubjectKey());
@@ -62,8 +66,8 @@ public class TiledMicroscopeDomainMgr {
         sample.setFilepath(filepath);
         sample = save(sample);
         return sample;
-	}
-	
+    }
+
     public TmSample save(TmSample sample) throws Exception {
         log.debug("save({})",sample);
         return model.save(sample);
@@ -76,7 +80,11 @@ public class TiledMicroscopeDomainMgr {
 
     public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
         log.debug("getWorkspace(workspaceId={})",workspaceId);
-        return model.getDomainObject(TmWorkspace.class, workspaceId);
+        TmWorkspace workspace = model.getDomainObject(TmWorkspace.class, workspaceId);
+        if (workspace==null) {
+            throw new Exception("Workspace with id="+workspaceId+" does not exist");
+        }
+        return workspace;
     }
 
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
@@ -157,12 +165,12 @@ public class TiledMicroscopeDomainMgr {
         neuronMetadata.setId(tmNeuron.getId());
         model.remove(neuronMetadata);
     }
-    
-	public List<String> getTmSamplePaths() throws Exception {
-		return model.getTmSamplePaths();
-	}
 
-	public void setTmSamplePaths(List<String> paths) throws Exception {
-		model.setTmSamplePaths(paths);
-	}
+    public List<String> getTmSamplePaths() throws Exception {
+        return model.getTmSamplePaths();
+    }
+
+    public void setTmSamplePaths(List<String> paths) throws Exception {
+        model.setTmSamplePaths(paths);
+    }
 }
