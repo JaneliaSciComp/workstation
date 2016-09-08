@@ -102,7 +102,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
     public void remove(TmSample tmSample) throws Exception {
         Response response = manager.getTmSampleEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
-                .queryParam("tmSampleId", tmSample.getId())
+                .queryParam("sampleId", tmSample.getId())
                 .request("application/json")
                 .delete();
         if (checkBadResponse(response, "remove: " + tmSample)) {
@@ -122,6 +122,18 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(new GenericType<List<TmWorkspace>>() {});
     }
 
+    public Collection<TmWorkspace> getTmWorkspacesForSample(Long sampleId) throws Exception {
+        Response response = manager.getTmWorkspaceEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("sampleId", sampleId)
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response, "getTmWorkspaces")) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(new GenericType<List<TmWorkspace>>() {});
+    }
+    
     @Override
     public TmWorkspace create(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
@@ -154,7 +166,7 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
     public void remove(TmWorkspace tmWorkspace) throws Exception {
         Response response = manager.getTmWorkspaceEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
-                .queryParam("tmWorkspaceId", tmWorkspace.getId())
+                .queryParam("workspaceId", tmWorkspace.getId())
                 .request("application/json")
                 .delete();
         if (checkBadResponse(response.getStatus(), "remove: " + tmWorkspace)) {

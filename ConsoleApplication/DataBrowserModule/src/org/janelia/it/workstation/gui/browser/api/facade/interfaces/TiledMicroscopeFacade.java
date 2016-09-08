@@ -29,6 +29,8 @@ public interface TiledMicroscopeFacade {
     public void remove(TmSample tmSample) throws Exception;
 
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception;
+    
+    public Collection<TmWorkspace> getTmWorkspacesForSample(Long sampleId) throws Exception;
 
     public TmWorkspace create(TmWorkspace tmWorkspace) throws Exception;
 

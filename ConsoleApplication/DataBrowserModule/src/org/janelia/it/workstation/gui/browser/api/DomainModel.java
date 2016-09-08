@@ -1047,6 +1047,15 @@ public class DomainModel {
         return canonicalObjects;
     }
 
+    public List<TmWorkspace> getTmWorkspaces(Long sampleId) throws Exception {
+        StopWatch w = TIMER ? new LoggingStopWatch() : null;
+        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspacesForSample(sampleId);
+        List<TmWorkspace> canonicalObjects = putOrUpdate(workspaces, false);
+        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        if (TIMER) w.stop("getTmWorkspaces");
+        return canonicalObjects;
+    }
+
     public TmWorkspace save(TmWorkspace object) throws Exception {
         TmWorkspace canonicalObject;
         synchronized (this) {

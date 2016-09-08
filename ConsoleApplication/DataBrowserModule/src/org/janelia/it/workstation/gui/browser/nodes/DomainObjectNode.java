@@ -333,21 +333,6 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
 
     @Override
     public void destroy() throws IOException {
-        if (parentChildFactory==null) {
-            throw new IllegalStateException("Cannot destroy node without parent");
-        }
-        if (parentChildFactory instanceof TreeNodeChildFactory) {
-            TreeNodeChildFactory treeNodeChildFactory = (TreeNodeChildFactory) parentChildFactory;
-            try {
-                treeNodeChildFactory.removeChild(getDomainObject());
-            }
-            catch (Exception e) {
-                throw new IOException("Error destroying node",e);
-            }
-        }
-        else {
-            throw new IllegalStateException("Cannot destroy domain object without parent");
-        }
         DomainObjectNodeTracker.getInstance().deregisterNode(DomainObjectNode.this);
     }
     
