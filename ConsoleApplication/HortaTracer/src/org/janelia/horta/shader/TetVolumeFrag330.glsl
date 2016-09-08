@@ -239,9 +239,10 @@ void main()
     IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0);
     bool rayIsFinished = false;
     float t0 = minRay;
-    float coreParam = 0.0;
-    float coreIntensity = 0.0;
-    for (int s = 0; s < 1000; ++s) {
+    float coreParam = mix(minRay, maxRay, 0.5);
+    float coreIntensity = -1.0;
+    for (int s = 0; s < 1000; ++s) 
+    {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
                 rayBoxCorner, forwardMask, 
@@ -265,9 +266,18 @@ void main()
             coreParam = t;
         }
 
+        // Terminate early if we hit an opaque surface
+        if (intensity.opacity > 0.999) {
+            rayIsFinished = true;
+        }
+
         if (rayIsFinished)
             break;
         t0 = t1;
+    }
+
+    if (intensity.opacity < 0.001) { 
+        discard; // terminate early if there is nothing to show
     }
 
     // Secondary render target stores 16-bit core intensity, plus relative depth
@@ -285,14 +295,14 @@ void main()
     // Pack the opacity into the first 8 bits of a 32-bit unsigned integer:
     // Leave the very most significant bit zero, because JAVA...
     uint opacityInt = clamp(uint(127 * intensity.opacity), 0, 127) << 24; // 7or8 bits of opacity
-    const uint maxDepth = 16777215; // 2^24 - 1
+    const uint maxDepth = 0x00ffffff; // 2^24 - 1
     uint depthInt = clamp(uint((1.0 - relativeDepth) * maxDepth), 0, maxDepth);
-    uint opacityDepthInt = opacityInt + depthInt;
+    uint opacityDepthInt = opacityInt | depthInt;
     /* */
+    coreIntensity = clamp(coreIntensity, 0, 1);
     uint coreInt = uint(65535 * coreIntensity); // intensity data is still 16-bit data, even if we have 32 bits to store it in here.
-    coreDepth = ivec2(coreInt, opacityDepthInt); // OK
+    coreDepth = ivec2(coreInt, opacityDepthInt);
 
     // Primary render target stores final blended RGBA color
-    fragColor =
-            rgba_for_intensities(intensity);
+        fragColor = rgba_for_intensities(intensity);
 }

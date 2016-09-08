@@ -155,7 +155,7 @@ public class KtxData
 
         // Compose the brick from five tetrahedra
         actor.addOuterTetrahedron(0, 5, 3, 1); // upper right front
-        final boolean showFullBlock = false; // for debugging
+        final boolean showFullBlock = true; // false for easier debugging
         if (showFullBlock) {
             actor.addOuterTetrahedron(0, 6, 5, 4); // upper left rear
             actor.setCentralTetrahedron(0, 3, 5, 6); // inner tetrahedron

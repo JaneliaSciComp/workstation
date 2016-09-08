@@ -684,17 +684,22 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vector3 worldXyz = null;
         double intensity = 0;
         
-            PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
-            double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
-            worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
-            intensity = neuronMPRenderer.coreIntensityForScreenXy(event.getPoint());
-            // System.out.println("non-hover intensity = "+intensity);
+        PerspectiveCamera camera = (PerspectiveCamera) sceneWindow.getCamera();
+        double relDepthF = neuronMPRenderer.depthOffsetForScreenXy(event.getPoint(), camera);
+        worldXyz = worldXyzForScreenXy(event.getPoint(), camera, relDepthF);
+        intensity = neuronMPRenderer.coreIntensityForScreenXy(event.getPoint());
+        double volOpacity = neuronMPRenderer.volumeOpacityForScreenXy(event.getPoint());
+        // System.out.println("non-hover intensity = "+intensity);
 
         mouseStageLocation = worldXyz;
         msg.append(String.format("[% 7.1f, % 7.1f, % 7.1f] \u00B5m",
                 worldXyz.get(0), worldXyz.get(1), worldXyz.get(2)));
-        if (intensity != -1) {
-            msg.append(String.format("  Intensity: % d", (int)intensity));
+        if (intensity == -1) {
+            // logger.info("No intensity");
+        }
+        else {
+            msg.append(String.format(";  Intensity: %d", (int)intensity));
+            msg.append(String.format(";  Max Opacity: %4.2f", (float)volOpacity));
             // System.out.println("message intensity = "+intensity); // Why is this 0 when depth intensity is nonzero?
         }
         // TODO - print out tile X, Y, Z (voxels)

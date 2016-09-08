@@ -31,6 +31,7 @@
 package org.janelia.horta.render;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.Collection;
@@ -67,6 +68,8 @@ import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Multi-pass renderer for Horta volumes and neuron models
@@ -91,6 +94,8 @@ extends MultipassRenderer
     // TODO: obsolete brightness model for ImageColorModel
     private final ChannelBrightnessModel brightnessModel;
     private final ImageColorModel imageColorModel;
+    
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public NeuronMPRenderer(GLAutoDrawable drawable, 
             final ChannelBrightnessModel brightnessModel, 
@@ -206,8 +211,7 @@ extends MultipassRenderer
         super.dispose(gl);
     }
     
-    public double coreIntensityForScreenXy(Point2D xy) {
-       
+    public double coreIntensityForScreenXy(Point2D xy) {     
         double result;
         if (false) { // TODO: Testing depth access
             result = opaqueDepthForScreenXy(xy);
@@ -218,11 +222,39 @@ extends MultipassRenderer
         // Neurite core tracing intensity is located in the first channel of the coreDepth target
         result = valueForScreenXy(xy, volumeRenderPass.getCoreDepthTexture().getAttachment(), 0);
         if (result <= 0) {
+            // logger.info("Nonpositive intensity = " + result);
             return -1;
         }
         return result;
     }
     
+    public double volumeOpacityForScreenXy(Point xy)
+    {
+        float result = -1;
+        double intensity = coreIntensityForScreenXy(xy);
+        if (intensity == -1) {
+            return result;
+        }
+        if (volumeRenderPass.getFramebuffer() == null) {
+            return result;
+        }
+        RenderTarget coreDepthTarget = volumeRenderPass.getCoreDepthTexture();
+        if (coreDepthTarget == null) {
+            return result;
+        }
+        // Opacity is packed together with the relative depth
+        int opacity = (int)coreDepthTarget.getIntensity(
+                drawable,
+                (int) xy.getX(),
+                // y convention is opposite between screen and texture buffer
+                coreDepthTarget.getHeight() - (int) xy.getY(),
+                1); // channel index
+        // Mask out first 8 bits to remove opacity sidecar, used to improve multiblock sorting
+        opacity = (opacity & 0xff000000) >> 24; // leaving a 24-bit value
+        float opacityFloat = ((float)opacity) / 127.0f; // normalize to 0-1
+        return opacityFloat;
+    }
+
     // Ranges from zNear(returns 0.0) to zFar(returns 1.0)
     private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
         float result = 0;
@@ -249,7 +281,7 @@ extends MultipassRenderer
         result = 1.0f - relDepthFloat; // Reverse sense of relative depth to near-small from far-small
         return result;
     }
-
+    
     // TODO: move to volumeRenderpass
     private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
         double result = valueForScreenXy(xy, volumeRenderPass.getRgbaTexture().getAttachment(), 3);
@@ -399,7 +431,7 @@ extends MultipassRenderer
     public void queueObsoleteResource(GL3Resource resource) {
         obsoleteGLResources.add(resource);
     }
-    
+
     private class VolumeLayerExpirer implements Observer
     {
 
