@@ -143,7 +143,6 @@ public class TiledMicroscopeDomainMgr {
 
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         log.debug("save({})", neuronMetadata);
-        log.info("save: "+neuronMetadata);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata metadata;
