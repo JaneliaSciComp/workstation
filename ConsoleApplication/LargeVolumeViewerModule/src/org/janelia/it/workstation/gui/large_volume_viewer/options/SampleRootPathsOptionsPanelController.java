@@ -7,13 +7,15 @@ import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
 
-@OptionsPanelController.SubRegistration(
-        location = "LargeVolumeViewer",
-        displayName = "#AdvancedOption_DisplayName_SampleRootPaths",
-        keywords = "#AdvancedOption_Keywords_SampleRootPaths",
-        keywordsCategory = "LargeVolumeViewer/SampleRootPaths"
-)
-@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_SampleRootPaths=Sample Root Paths", "AdvancedOption_Keywords_SampleRootPaths=paths"})
+// This component is hidden for now, because the users are not sure if they want to use it. In the future it can either be removed or reinstated. 
+//
+//@OptionsPanelController.SubRegistration(
+//        location = "LargeVolumeViewer",
+//        displayName = "#AdvancedOption_DisplayName_SampleRootPaths",
+//        keywords = "#AdvancedOption_Keywords_SampleRootPaths",
+//        keywordsCategory = "LargeVolumeViewer/SampleRootPaths"
+//)
+//@org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_SampleRootPaths=Sample Root Paths", "AdvancedOption_Keywords_SampleRootPaths=paths"})
 public final class SampleRootPathsOptionsPanelController extends OptionsPanelController {
 
     private SampleRootPathsPanel panel;
