@@ -1,16 +1,14 @@
 package org.janelia.it.workstation.gui.top_component;
 
-import java.awt.BorderLayout;
 import java.util.Properties;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.console.ViewerManager;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import javax.swing.JTextArea;
+
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,21 +55,11 @@ public final class IconPanelTopComponent extends TopComponent {
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        jPanel1 = new javax.swing.JPanel();
-
-        jPanel1.setLayout(new java.awt.BorderLayout());
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        setLayout(new java.awt.BorderLayout());
+        JTextArea area = new JTextArea("The Legacy Browser is no longer available. Please use Window->Core->Data Inspector instead.");
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        add(area);
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -80,17 +68,6 @@ public final class IconPanelTopComponent extends TopComponent {
     
     @Override
     public void componentOpened() {
-        final Browser browser = SessionMgr.getBrowser();
-        if (browser == null) {
-            throw new IllegalStateException("Failed to obtain browser object for component.");
-        }
-        final ViewerManager viewerManager = browser.getViewerManager();
-        if (viewerManager == null) {
-            throw new IllegalStateException("No viewer manager located.");
-        }
-        else {
-            jPanel1.add(viewerManager.getViewerContainer(), BorderLayout.CENTER);
-        }
     }
 
     @Override
