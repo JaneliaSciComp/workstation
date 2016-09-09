@@ -25,9 +25,9 @@ public class ImageColorModel
 	};
 	
 	private Vector<ChannelColorModel> channels = new Vector<>();
-	private boolean blackSynchronized = true;
-	private boolean gammaSynchronized = true;
-	private boolean whiteSynchronized = true;
+	private boolean blackSynchronized = false;
+	private boolean gammaSynchronized = false;
+	private boolean whiteSynchronized = false;
     
     private Collection<ColorModelListener> colorModelListeners = new ArrayList<>();
     private Collection<ColorModelInitListener> colorModelInitListeners = new ArrayList<>();
