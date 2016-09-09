@@ -429,7 +429,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
         }
         // Set starting interaction modes
-        panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+        traceMouseModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
 
