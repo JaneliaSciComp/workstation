@@ -73,7 +73,8 @@ implements DepthSlabClipper
                 rgbaAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);
-        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG32UI,
+        // Target needs to be floating point, not integer; otherwise blending will not work with multiple blocks.
+        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG32F,
                 coreDepthAttachment);
         
         // Attach render targets to renderer
@@ -109,7 +110,7 @@ implements DepthSlabClipper
 
         gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
         // gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
-        gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
+        gl.glClearBufferfv(GL3.GL_COLOR, 1, clearColor4, 0); // core intensity/depth buffer
 
         // Blend intensity channel, but not pick channel
         gl.glDisablei(GL3.GL_BLEND, 0); // TODO

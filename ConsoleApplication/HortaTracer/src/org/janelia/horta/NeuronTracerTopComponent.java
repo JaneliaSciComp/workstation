@@ -1613,15 +1613,13 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public boolean isNeuronModelAt(Point2D xy)
     {
-        return neuronMPRenderer.isNeuronModelAt(xy, 
-                sceneWindow.getCamera());
+        return neuronMPRenderer.isNeuronModelAt(xy);
     }
 
     @Override
     public boolean isVolumeDensityAt(Point2D xy)
     {
-        return neuronMPRenderer.isVolumeDensityAt(xy,
-                sceneWindow.getCamera());
+        return neuronMPRenderer.isVolumeDensityAt(xy);
     }
 
     @Override

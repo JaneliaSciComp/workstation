@@ -33,8 +33,6 @@ import org.janelia.gltools.texture.Texture2d;
 import com.jogamp.common.nio.Buffers;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import javax.media.opengl.DebugGL3;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
@@ -134,16 +132,17 @@ public class RenderTarget extends Texture2d
         int sx = numberOfComponents*sc;
         int sy = width*sx + widthPadInBytes/bytesPerIntensity;
         int offset = sx*x + sy*y + sc*channel;
-        if (format == GL3.GL_DEPTH_COMPONENT) {
+        if (format == GL3.GL_DEPTH_COMPONENT)
             result = hostTextureBuffer.asFloatBuffer().get(offset);
-        }
+        else if (type == GL3.GL_FLOAT)
+            result = hostTextureBuffer.asFloatBuffer().get(offset);
         else if (bytesPerIntensity == 4)
             result = hostTextureBuffer.asIntBuffer().get(offset);
         else if (bytesPerIntensity == 2)
             result = hostTextureBuffer.asShortBuffer().get(offset) & 0xffff;
         else
             result = hostTextureBuffer.get(offset) & 0xff;
-        return result; // null result
+        return result;
     }
             
     @Override
@@ -173,7 +172,7 @@ public class RenderTarget extends Texture2d
         // glTexStorage2D cannot be resized, so use glTexImage3D
         // http://stackoverflow.com/questions/23362497/how-can-i-resize-existing-texture-attachments-at-my-framebuffer
         // gl.glTexStorage2D(
-        
+
         // Setting width/height here corrects aspect ratio problem after resizing
         width = w;
         height = h;

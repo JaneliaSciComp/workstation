@@ -57,8 +57,8 @@ flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 // debugging only
 in float fragZNear;
 
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out ivec2 coreDepth;
+layout(location = 0) out vec4 fragColor; // store final output color in the usual way
+layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
 
 struct IntegratedIntensity
 {
@@ -267,7 +267,7 @@ void main()
         }
 
         // Terminate early if we hit an opaque surface
-        if (intensity.opacity > 0.999) {
+        if (intensity.opacity > 0.99) {
             rayIsFinished = true;
         }
 
@@ -276,12 +276,11 @@ void main()
         t0 = t1;
     }
 
-    if (intensity.opacity < 0.001) { 
+    if (intensity.opacity < 0.01) { 
         discard; // terminate early if there is nothing to show
     }
 
     // Secondary render target stores 16-bit core intensity, plus relative depth
-    /* */
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
@@ -292,17 +291,16 @@ void main()
     //      well in most sparse rendering contexts.
     //   2) reverse the sense of the relative depth, so in case of an
     //      opacity tie, the NEARER ray segment wins.
-    // Pack the opacity into the first 8 bits of a 32-bit unsigned integer:
-    // Leave the very most significant bit zero, because JAVA...
-    uint opacityInt = clamp(uint(127 * intensity.opacity), 0, 127) << 24; // 7or8 bits of opacity
-    const uint maxDepth = 0x00ffffff; // 2^24 - 1
-    uint depthInt = clamp(uint((1.0 - relativeDepth) * maxDepth), 0, maxDepth);
-    uint opacityDepthInt = opacityInt | depthInt;
-    /* */
+    // Use a floating point render target, because integer targets won't blend.
+    // Pack the opacity into the first 7 bits of a 32-bit float mantissa
+    uint opacityInt = clamp(uint(0x7f * intensity.opacity), 0, 0x7f); // 7 bits of opacity, range 0-127
+    relativeDepth = 1.0 - relativeDepth; // In case of equal opacity, we want NEAR depths to beat FAR depths in a GL_MAX comparison
+    // Keep depth strictly fractional, for unambiguous packing with integer opacity
+    relativeDepth = clamp(relativeDepth, 0.0, 0.999);
+    float opacityDepth = opacityInt + relativeDepth;
     coreIntensity = clamp(coreIntensity, 0, 1);
-    uint coreInt = uint(65535 * coreIntensity); // intensity data is still 16-bit data, even if we have 32 bits to store it in here.
-    coreDepth = ivec2(coreInt, opacityDepthInt);
+    coreDepth = vec2(coreIntensity, opacityDepth); // populates both channels of secondary render target
 
     // Primary render target stores final blended RGBA color
-        fragColor = rgba_for_intensities(intensity);
+    fragColor = rgba_for_intensities(intensity);
 }

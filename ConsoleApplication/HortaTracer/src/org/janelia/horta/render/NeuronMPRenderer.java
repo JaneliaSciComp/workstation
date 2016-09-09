@@ -213,14 +213,10 @@ extends MultipassRenderer
     
     public double coreIntensityForScreenXy(Point2D xy) {     
         double result;
-        if (false) { // TODO: Testing depth access
-            result = opaqueDepthForScreenXy(xy);
-            // System.out.println("opaque depth intensity = "+result);
-            return result;
-        }
-        
         // Neurite core tracing intensity is located in the first channel of the coreDepth target
         result = valueForScreenXy(xy, volumeRenderPass.getCoreDepthTexture().getAttachment(), 0);
+        // Convert from range 0-1 to range 0-65535
+        result *= 65535.0;
         if (result <= 0) {
             // logger.info("Nonpositive intensity = " + result);
             return -1;
@@ -228,7 +224,7 @@ extends MultipassRenderer
         return result;
     }
     
-    public double volumeOpacityForScreenXy(Point xy)
+    public double volumeOpacityForScreenXy(Point2D xy)
     {
         float result = -1;
         double intensity = coreIntensityForScreenXy(xy);
@@ -243,21 +239,20 @@ extends MultipassRenderer
             return result;
         }
         // Opacity is packed together with the relative depth
-        int opacity = (int)coreDepthTarget.getIntensity(
+        double opacity = coreDepthTarget.getIntensity(
                 drawable,
                 (int) xy.getX(),
                 // y convention is opposite between screen and texture buffer
                 coreDepthTarget.getHeight() - (int) xy.getY(),
                 1); // channel index
-        // Mask out first 8 bits to remove opacity sidecar, used to improve multiblock sorting
-        opacity = (opacity & 0xff000000) >> 24; // leaving a 24-bit value
-        float opacityFloat = ((float)opacity) / 127.0f; // normalize to 0-1
-        return opacityFloat;
+        // Truncate fractional part, and rescale from range 0-127 to 0-1
+        opacity = ((long)opacity) / 127.0;
+        return opacity;
     }
 
     // Ranges from zNear(returns 0.0) to zFar(returns 1.0)
-    private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
-        float result = 0;
+    private double relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
+        double result = 0;
         double intensity = coreIntensityForScreenXy(xy);
         if (intensity == -1) {
             return result;
@@ -269,16 +264,16 @@ extends MultipassRenderer
         if (coreDepthTarget == null) {
             return result;
         }
-        int relDepth = (int)coreDepthTarget.getIntensity(
+        double relDepth = coreDepthTarget.getIntensity(
                 drawable,
                 (int) xy.getX(),
                 // y convention is opposite between screen and texture buffer
                 coreDepthTarget.getHeight() - (int) xy.getY(),
                 1); // channel index
-        // Mask out first 8 bits to remove opacity sidecar, used to improve multiblock sorting
-        relDepth = relDepth & 0x00ffffff; // leaving a 24-bit value
-        float relDepthFloat = ((float)relDepth) / 0x00ffffff; // normalize to 0-1
-        result = 1.0f - relDepthFloat; // Reverse sense of relative depth to near-small from far-small
+        // Remove integer part, which contains opacity, for blending purposes
+        long opacityPart = (long)relDepth;
+        relDepth = relDepth - opacityPart;
+        result = 1.0 - relDepth; // Reverse sense of relative depth to near-small from far-small
         return result;
     }
     
@@ -290,11 +285,11 @@ extends MultipassRenderer
         return result / 255.0; // rescale to range 0-1
     }
     
-    private boolean isVisibleOpaqueAtScreenXy(Point2D xy, AbstractCamera camera) {
+    private boolean isVisibleOpaqueAtScreenXy(Point2D xy) {
         double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
         if (od >= 1.0) 
             return false; // far clip value means no geometry there
-        double opacity = opacityForScreenXy(xy, camera);
+        double opacity = volumeOpacityForScreenXy(xy);
         // TODO: threshold might need to be tuned
         // 0.5 seems too small, I want to select that vertex!
         final double opacityThreshold = 0.9; // Always use transparent material, if it's dense enough
@@ -303,15 +298,15 @@ extends MultipassRenderer
         return true; // I see a neuron model at this spot
     }
     
-    private boolean isVisibleTransparentAtScreenXy(Point2D xy, AbstractCamera camera) {
-        double opacity = opacityForScreenXy(xy, camera);
+    private boolean isVisibleTransparentAtScreenXy(Point2D xy) {
+        double opacity = volumeOpacityForScreenXy(xy);
         return (opacity > 0);
     }
     
     // Returns signed difference between focusDistance depth, and depth of item at screen point xy
     public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
     {
-        if (isVisibleOpaqueAtScreenXy(xy, camera)) {
+        if (isVisibleOpaqueAtScreenXy(xy)) {
             double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
             // Definitely use opaque geometry for depth at this point
             // TODO - transform to scene units (micrometers)
@@ -323,7 +318,7 @@ extends MultipassRenderer
             double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));
             return zEye - zFocus;
         }
-        else if (isVisibleTransparentAtScreenXy(xy, camera)) {
+        else if (isVisibleTransparentAtScreenXy(xy)) {
             double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [0,1]
             double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
             double zNear = getRelativeZNear() * focusDistance;
@@ -418,14 +413,14 @@ extends MultipassRenderer
         return result;
     }
 
-    public boolean isNeuronModelAt(Point2D xy, AbstractCamera camera)
+    public boolean isNeuronModelAt(Point2D xy)
     {
-        return isVisibleOpaqueAtScreenXy(xy, camera);
+        return isVisibleOpaqueAtScreenXy(xy);
     }
 
-    public boolean isVolumeDensityAt(Point2D xy, AbstractCamera camera)
+    public boolean isVolumeDensityAt(Point2D xy)
     {
-        return isVisibleTransparentAtScreenXy(xy, camera);
+        return isVisibleTransparentAtScreenXy(xy);
     }
 
     public void queueObsoleteResource(GL3Resource resource) {

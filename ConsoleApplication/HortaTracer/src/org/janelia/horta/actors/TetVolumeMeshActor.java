@@ -35,6 +35,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.gltools.MeshActor;
@@ -85,8 +86,8 @@ implements DepthSlabClipper
         final boolean doBlend = true;
         if (doBlend) {
             gl.glEnable(GL3.GL_BLEND);
-            gl.glBlendFunc(GL3.GL_SRC_ALPHA, GL3.GL_ONE_MINUS_SRC_ALPHA);
-            gl.glBlendEquation(GL3.GL_MAX);
+            ((GL4)gl).glBlendEquationi(0, GL4.GL_MAX); // RGBA color target
+            ((GL4)gl).glBlendEquationi(1, GL4.GL_MAX); // core intensity/depth target
         }
         
         final boolean doCull = true;
