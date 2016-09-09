@@ -27,7 +27,7 @@
             <output name="RESULT_FILE_NODE_ID"/>
             <output name="RESULT_FILE_NODE_DIR" />
         </operation>
-        <operation name="Blast Submission To TeraGrid" processor="org.janelia.it.jacs.compute.service.common.grid.submit.teragrid.BlastTeraGridSubmitJobService"/>
+        <operation name="Blast Submission To TeraGrid" processor="src.org.janelia.it.jacs.compute.service.common.grid.submit.teragrid.BlastTeraGridSubmitJobService"/>
         <!--<sequence name="BlastSubmitJob" waitForAsync="true" startEvent="running">-->
             <!--<operation name="Submit Job" processor="queue/gridSubmitAndWait">-->
                 <!--<input name="iservice" value="org.janelia.it.jacs.compute.service.common.grid.submit.teragrid.BlastTeraGridSubmitJobService"/>-->

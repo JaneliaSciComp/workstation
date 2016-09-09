@@ -403,7 +403,7 @@ public class FilteredAnnotationList extends JPanel {
 
         // checkbox for current neuron only
         neuronCheckbox = new JCheckBox("Current neuron only");
-        neuronCheckbox.setSelected(false);
+        neuronCheckbox.setSelected(true);
         neuronCheckbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
