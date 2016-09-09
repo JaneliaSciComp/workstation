@@ -158,7 +158,7 @@ implements DepthSlabClipper
         // Use pixel buffer objects for asynchronous transfer
         
         // Phase 1: Allocate pixel buffer objects (in GL thread)
-        final boolean usePixelBufferObjects = false;
+        final boolean usePixelBufferObjects = false; // false is faster
         long t0 = System.nanoTime();
         long t1 = t0;
         if (usePixelBufferObjects) {
@@ -176,7 +176,7 @@ implements DepthSlabClipper
             logger.info("Creating pixel buffer objects took "+(t1-t0)/1.0e9+" seconds");
         }
         
-        final boolean useStorageSubimage = false;
+        final boolean useStorageSubimage = true; // true is much faster
         if (useStorageSubimage) {
             gl.glTexStorage3D(GL3.GL_TEXTURE_3D,
                     ktxData.header.numberOfMipmapLevels,
