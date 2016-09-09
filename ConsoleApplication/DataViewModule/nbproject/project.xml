@@ -39,7 +39,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>4.11</specification-version>
+                        <specification-version>5.0</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
