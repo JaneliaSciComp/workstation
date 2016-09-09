@@ -33,6 +33,7 @@ package org.janelia.horta.actors;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
@@ -134,23 +135,19 @@ implements DepthSlabClipper
         gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 1); // TODO: Verify that this fits data
         
         // TODO: Test and verify endian parity behavior
-        /*
-        if (ktxData.header.byteOrder == ByteOrder.LITTLE_ENDIAN) {
-            gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_TRUE);
-        }
-        else {
+        /* */
+        if (ktxData.header.byteOrder == ByteOrder.nativeOrder()) {
             gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_FALSE);
         }
-         */
+        else {
+            gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_TRUE);
+        }
+        /*  */
         
-        /* 
-        gl.glTexStorage3D(GL3.GL_TEXTURE_3D, 
-                ktxData.header.numberOfMipmapLevels, 
-                GL3.GL_R8UI, // ktxData.header.glInternalFormat, 
-                ktxData.header.pixelWidth,
-                ktxData.header.pixelHeight,
-                ktxData.header.pixelDepth);
-                */
+        int glInternalFormat = ktxData.header.glInternalFormat;
+        // Work around problem with my initial 2-channel KTX files...
+        if (glInternalFormat == GL3.GL_RG16UI)
+            glInternalFormat = GL3.GL_RG16;
         
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST_MIPMAP_NEAREST);
@@ -161,20 +158,34 @@ implements DepthSlabClipper
         // Use pixel buffer objects for asynchronous transfer
         
         // Phase 1: Allocate pixel buffer objects (in GL thread)
+        final boolean usePixelBufferObjects = false;
         long t0 = System.nanoTime();
-        int mapCount = ktxData.header.numberOfMipmapLevels;
-        pbos = IntBuffer.allocate(mapCount);
-        gl.glGenBuffers(mapCount, pbos);
-        for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
-        {
-            ByteBuffer buf1 = ktxData.mipmaps.get(mipmapLevel);
-            buf1.rewind();
-            gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
-            gl.glBufferData(GL3.GL_PIXEL_UNPACK_BUFFER, buf1.capacity(), buf1, GL3.GL_STREAM_DRAW);
+        long t1 = t0;
+        if (usePixelBufferObjects) {
+            int mapCount = ktxData.header.numberOfMipmapLevels;
+            pbos = IntBuffer.allocate(mapCount);
+            gl.glGenBuffers(mapCount, pbos);
+            for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
+            {
+                ByteBuffer buf1 = ktxData.mipmaps.get(mipmapLevel);
+                buf1.rewind();
+                gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
+                gl.glBufferData(GL3.GL_PIXEL_UNPACK_BUFFER, buf1.capacity(), buf1, GL3.GL_STREAM_DRAW);
+            }
+            t1 = System.nanoTime();
+            logger.info("Creating pixel buffer objects took "+(t1-t0)/1.0e9+" seconds");
         }
-        long t1 = System.nanoTime();
-        logger.info("Creating pixel buffer objects took "+(t1-t0)/1.0e9+" seconds");
         
+        final boolean useStorageSubimage = false;
+        if (useStorageSubimage) {
+            gl.glTexStorage3D(GL3.GL_TEXTURE_3D,
+                    ktxData.header.numberOfMipmapLevels,
+                    glInternalFormat,
+                    ktxData.header.pixelWidth,
+                    ktxData.header.pixelHeight,
+                    ktxData.header.pixelDepth);
+        }
+
         // Phase 2: Initiate loading of texture to GPU (in GL thread)
         for(int mipmapLevel = 0; mipmapLevel < ktxData.header.numberOfMipmapLevels; ++mipmapLevel)
         {
@@ -182,18 +193,47 @@ implements DepthSlabClipper
             int mw = mipmapSize(mipmapLevel, ktxData.header.pixelWidth);
             int mh = mipmapSize(mipmapLevel, ktxData.header.pixelHeight);
             int md = mipmapSize(mipmapLevel, ktxData.header.pixelDepth);
-            gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
-            gl.glTexImage3D(
-                    GL3.GL_TEXTURE_3D,
-                    mipmapLevel,
-                    ktxData.header.glBaseInternalFormat,
-                    mw,
-                    mh,
-                    md,
-                    0, // border
-                    ktxData.header.glFormat,
-                    ktxData.header.glType,
-                    0); // zero means read from PBO
+            if (usePixelBufferObjects) {
+                gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, pbos.get(mipmapLevel));
+                gl.glTexImage3D(
+                        GL3.GL_TEXTURE_3D,
+                        mipmapLevel,
+                        glInternalFormat,
+                        mw,
+                        mh,
+                        md,
+                        0, // border
+                        ktxData.header.glFormat,
+                        ktxData.header.glType,
+                        0); // zero means read from PBO
+            }
+            else {
+                ByteBuffer buf1 = ktxData.mipmaps.get(mipmapLevel);
+                buf1.rewind();
+                if (useStorageSubimage) {
+                    gl.glTexSubImage3D(
+                            GL3.GL_TEXTURE_3D,
+                            mipmapLevel,
+                            0, 0, 0,// offsets
+                            mw, mh, md,
+                            ktxData.header.glFormat,
+                            ktxData.header.glType,
+                            buf1);
+                }
+                else {
+                    gl.glTexImage3D(
+                            GL3.GL_TEXTURE_3D,
+                            mipmapLevel,
+                            glInternalFormat,
+                            mw,
+                            mh,
+                            md,
+                            0, // border
+                            ktxData.header.glFormat,
+                            ktxData.header.glType,
+                            buf1);
+                }
+            }
         }
         gl.glBindBuffer(GL3.GL_PIXEL_UNPACK_BUFFER, 0);
         long t2 = System.nanoTime();
