@@ -26,7 +26,7 @@ uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 // additional render target for picking
 // TODO: Remove pick part, until it is actually needed
-layout(location = 1) out ivec2 pickId;
+layout(location = 1) out vec2 pickId;
 uniform int pickIndex = 3; // default value for pick buffer
 
 // Mouse Light is restricted to two color channels for the forseeable future
@@ -666,9 +666,14 @@ void sample_intensity(
 // Write out the final color/data after volume ray casting
 void save_color(in IntegratedIntensity i, in ViewSlab slab) 
 {
-    colorOut = vec4(i.intensity, i.coreIntensity, i.opacity);
+    // primary render target contains RGBA
+    // TODO: fire color map
+    colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
+    // secondary render target contains 1) core intensity and 2) packed combination of opacity and relative depth
     float relativeDepth = (i.coreRayParameter - slab.minRayParam) / (slab.maxRayParam - slab.minRayParam);
-    pickId = ivec2(3, int(relativeDepth * 65535));
+    relativeDepth = clamp(1.0 - relativeDepth, 0, 0.999); // invert and ensure fractionality
+    uint opacityInt = uint(clamp(int(i.opacity * 0x7f), 0, 0x7f));
+    pickId = vec2(i.coreIntensity, opacityInt + relativeDepth);
 }
 
 // Advance ray by one voxel
