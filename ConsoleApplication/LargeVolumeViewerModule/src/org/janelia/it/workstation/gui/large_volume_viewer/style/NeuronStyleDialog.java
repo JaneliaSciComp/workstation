@@ -13,18 +13,21 @@ import javax.swing.*;
  */
 public class NeuronStyleDialog extends JDialog {
 
-    private NeuronStyle inputStyle;
     private NeuronStyle chosenStyle;
+
+
 
     // did the user choose a style or cancel?
     private boolean success = false;
 
 
-    public NeuronStyleDialog(Frame parent, final NeuronStyle inputStyle) {
+    public NeuronStyleDialog(Frame parent, NeuronStyle inputStyle) {
 
         super(parent, "Choose style", true);
 
-        this.inputStyle = inputStyle;
+        if (inputStyle == null) {
+            inputStyle = new NeuronStyle();
+        }
 
 
         // set up the UI

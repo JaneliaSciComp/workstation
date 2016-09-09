@@ -80,6 +80,11 @@ public class NeuronStyle {
         return new NeuronStyle(color, visibility);
     }
 
+    public NeuronStyle() {
+        setColor(NeuronStyle.neuronColors[2]);
+        this.visible = true;
+    }
+
     public NeuronStyle(Color color, boolean visible) {
         setColor(color);
         this.visible = visible;

@@ -40,6 +40,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDom
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -56,6 +57,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.net.URL;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -132,6 +146,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void addEditNoteRequested(Anchor anchor) {
         if (anchor != null) {
             addEditNote(anchor.getGuid());
+        }
+    }
+
+    public void editNeuronTagsRequested(Anchor anchor) {
+        if (anchor != null) {
+            editNeuronTags(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
         }
     }
 
@@ -937,6 +957,14 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setter.execute();
     }
 
+    public void editNeuronTags(TmNeuronMetadata neuron) {
+        // reuse the action; note that the action doesn't actually
+        //  use the event, so we can throw in an empty one
+        NeuronTagsAction action = new NeuronTagsAction(annotationModel);
+        action.setTargetNeuron(neuron);
+        action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
+    }
+
     /**
      * create a new neuron in the current workspace, prompting for name
      */
@@ -1311,6 +1339,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * from different input sources
      */
     public void chooseNeuronStyle() {
+        // called from annotation panel neuron gear menu "choose neuron style"
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1322,10 +1351,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void chooseNeuronStyle(Anchor anchor) {
+        // called from right-click on neuron in 2d view, "set neuron style"
         chooseNeuronStyle(annotationModel.getNeuronFromAnnotationID(anchor.getGuid()));
     }
 
     public void chooseNeuronStyle(final TmNeuronMetadata neuron) {
+        // called from neuron list, clicking on color swatch
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1334,12 +1365,21 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
+        NeuronStyle chosenStyle = askForNeuronStyle(getNeuronStyle(neuron));
+        if (chosenStyle != null) {
+            setNeuronStyle(neuron, chosenStyle);
+        }
+    }
+
+    public static NeuronStyle askForNeuronStyle(NeuronStyle inputStyle) {
         NeuronStyleDialog dialog = new NeuronStyleDialog(
                 (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
-                getNeuronStyle(neuron));
+                inputStyle);
         dialog.setVisible(true);
         if (dialog.styleChosen()) {
-            setNeuronStyle(neuron, dialog.getChosenStyle());
+            return dialog.getChosenStyle();
+        } else {
+            return null;
         }
     }
 
@@ -1348,13 +1388,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         //  have to worry about missing entries, etc.; so go simple at the
         //  expense of a few more db calls
         NeuronStyle style;
+        Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
             style = getNeuronStyle(neuron);
             if (style.isVisible() != visibility) {
                 style.setVisible(visibility);
-                setNeuronStyle(neuron, style);
+                updateMap.put(neuron, style);
             }
         }
+        updateNeuronStyles(updateMap);
     }
 
     /**
@@ -1424,6 +1466,26 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
+    }
+    
+    public void updateNeuronStyles(final Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.updateNeuronStyles(neuronStyleMap);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
     }
 
     public void saveColorModel3d(ImageColorModel colorModel) {

@@ -223,10 +223,8 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     @Override
     public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
-            for (SkeletonActor actor: actors) {
-                actor.getModel().changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
-            }
+        for (SkeletonActor actor: actors) {
+            actor.getModel().updateNeuronStyles(neuronStyleMap);
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
@@ -269,6 +267,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public void addEditNoteRequested(Anchor anchor) {
         annoMgr.addEditNoteRequested(anchor);
+    }
+
+    public void editNeuronTagRequested(Anchor anchor) {
+        annoMgr.editNeuronTagsRequested(anchor);
     }
 
     public void moveNeuriteRequested(Anchor anchor) {

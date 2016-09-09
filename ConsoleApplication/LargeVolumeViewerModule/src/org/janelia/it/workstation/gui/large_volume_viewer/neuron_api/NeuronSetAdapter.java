@@ -373,6 +373,14 @@ implements NeuronSet// , LookupListener
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
             }
         }
+
+        @Override
+        public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap)
+        {}
+
+        @Override
+        public void neuronTagsChanged(List<TmNeuronMetadata> neuronList)
+        {}
         
     }
     

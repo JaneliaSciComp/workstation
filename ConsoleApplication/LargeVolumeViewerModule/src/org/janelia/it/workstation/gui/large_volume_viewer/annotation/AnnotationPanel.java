@@ -10,6 +10,9 @@ import java.awt.Insets;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import javax.swing.*;
@@ -249,12 +252,15 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
+        neuronToolMenu.add(new NeuronTagsAction(annotationModel));
+        neuronToolMenu.add(new BulkNeuronTagAction(annotationModel, workspaceNeuronList));
         neuronToolMenu.add(new AbstractAction("Choose neuron style...") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.chooseNeuronStyle();
             }
         });
+        neuronToolMenu.add(new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList));
         neuronToolMenu.add(new AbstractAction("Show neuron") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -265,6 +271,14 @@ public class AnnotationPanel extends JPanel
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.setNeuronVisibility(false);
+            }
+        });
+        neuronToolMenu.add(new AbstractAction("Hide others") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // hide others = hide all then show current; this is purely a convenience function
+                annotationMgr.setAllNeuronVisibility(false);
+                annotationMgr.setNeuronVisibility(true);
             }
         });
         neuronToolMenu.add(new AbstractAction("Show all neurons") {
