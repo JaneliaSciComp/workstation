@@ -30,8 +30,8 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -110,7 +110,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             @Override
             protected void doubleLeftClicked(MouseEvent e) {
                 SessionMgr.getSessionMgr().setModelProperty(
-                        ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+                        OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
                 e.consume();
             }
 

@@ -114,9 +114,9 @@ public class ExportResultsAction<T> implements NamedAction {
                     for (DomainObject domainObject : resultPage.getDomainObjects()) {
 
                         buf = new StringBuffer();
-                        int i = 0; 
+                        int i = 0;
                         for (DynamicColumn column : domainObjectTableViewer.getColumns()) {
-                            Object value = domainObjectTableViewer.getValue(domainObject, column.getName());
+                            Object value = domainObjectTableViewer.getValue(resultPage, domainObject, column.getName());
                             if (i++ > 0) {
                                 buf.append("\t");
                             }

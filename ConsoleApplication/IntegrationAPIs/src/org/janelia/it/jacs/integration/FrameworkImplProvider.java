@@ -1,14 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.jacs.integration;
 
 import java.util.Collection;
 import javax.swing.JFrame;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
+import org.janelia.it.jacs.integration.framework.domain.PreferenceHandler;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.jacs.integration.framework.session_mgr.ErrorHandler;
 import org.janelia.it.jacs.integration.framework.session_mgr.ParentFrame;
@@ -23,7 +18,6 @@ import org.openide.util.lookup.Lookups;
  */
 public class FrameworkImplProvider {
     public static ActivityLogging getSessionSupport() {
-//        return get(ActivityLogging.LOOKUP_PATH, ActivityLogging.class);
         Collection<? extends ActivityLogging> candidates
                 = Lookups.forPath(ActivityLogging.LOOKUP_PATH).lookupAll(ActivityLogging.class);
         if (candidates.size() > 0) {
@@ -35,7 +29,6 @@ public class FrameworkImplProvider {
     }
     
     public static CompressedFileResolverI getCompressedFileResolver() {
-//        return get(CompressedFileResolverI.LOOKUP_PATH, CompressedFileResolverI.class);
         Collection<? extends CompressedFileResolverI> candidates
                 = Lookups.forPath(CompressedFileResolverI.LOOKUP_PATH).lookupAll(CompressedFileResolverI.class);
         if (candidates.size() > 0) {
@@ -53,6 +46,10 @@ public class FrameworkImplProvider {
     public static SettingsModel getSettingsModel() {
         return get(SettingsModel.LOOKUP_PATH, SettingsModel.class);
     }
+
+    public static PreferenceHandler getPreferenceHandler() {
+        return get(PreferenceHandler.LOOKUP_PATH, PreferenceHandler.class);
+    }
     
     public static void handleException(Throwable th){
         ErrorHandler eh = getErrorHandler();
@@ -66,7 +63,13 @@ public class FrameworkImplProvider {
     
     /** Convenience methods. */
     public static JFrame getMainFrame() {
-        return getParentFrameProvider().getMainFrame();
+        final ParentFrame parentFrameProvider = getParentFrameProvider();
+        if (parentFrameProvider == null) {
+            return null;
+        }
+        else {
+            return parentFrameProvider.getMainFrame();
+        }
     }
 
     public static ParentFrame getParentFrameProvider() {
