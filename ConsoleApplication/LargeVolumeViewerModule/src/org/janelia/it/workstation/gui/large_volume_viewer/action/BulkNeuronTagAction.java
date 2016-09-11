@@ -118,20 +118,14 @@ public class BulkNeuronTagAction extends AbstractAction {
     }
 
     private void clearTag(final String tag) {
-        final List<TmNeuronMetadata> neuronList = new ArrayList<>();
-        Set<Long> taggedNeurons = annModel.getNeuronIDsForTag(tag);
-        for (TmNeuronMetadata neuron: listProvider.getNeuronList()) {
-            if (taggedNeurons.contains(neuron.getId())) {
-                neuronList.add(neuron);
-            }
-        }
+        final List<TmNeuronMetadata> taggedNeurons = new ArrayList<>(annModel.getNeuronsForTag(tag));
 
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 // Stopwatch stopwatch = new Stopwatch();
                 // stopwatch.start();
-                annModel.removeNeuronTag(tag, neuronList);
+                annModel.removeNeuronTag(tag, taggedNeurons);
                 // System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
                 // stopwatch.stop();
             }

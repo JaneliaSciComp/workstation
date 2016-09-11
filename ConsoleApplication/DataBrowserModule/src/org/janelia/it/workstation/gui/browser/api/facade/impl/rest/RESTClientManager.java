@@ -84,6 +84,7 @@ public class RESTClientManager {
         serviceEndpoints.put("tmSample", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("tmWorkspace", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace"));
         serviceEndpoints.put("tmNeuron", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace/neuron"));
+        serviceEndpoints.put("tmNeuronTags", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace/neuron/tags"));
         
     }
 
@@ -160,5 +161,9 @@ public class RESTClientManager {
 
     public WebTarget getTmNeuronEndpoint() {
         return serviceEndpoints.get("tmNeuron");
+    }
+    
+    public WebTarget getTmNeuronTagsEndpoint() {
+        return serviceEndpoints.get("tmNeuronTags");
     }
 }

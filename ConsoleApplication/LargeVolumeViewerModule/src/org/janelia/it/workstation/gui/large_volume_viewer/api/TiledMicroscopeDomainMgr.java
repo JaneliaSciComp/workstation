@@ -39,6 +39,14 @@ public class TiledMicroscopeDomainMgr {
 
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
+    public List<String> getTmSamplePaths() throws Exception {
+        return model.getTmSamplePaths();
+    }
+
+    public void setTmSamplePaths(List<String> paths) throws Exception {
+        model.setTmSamplePaths(paths);
+    }
+    
     public TmSample getSample(Long sampleId) throws Exception {
         log.debug("getSample(sampleId={})",sampleId);
         TmSample sample = model.getDomainObject(TmSample.class, sampleId);
@@ -141,6 +149,16 @@ public class TiledMicroscopeDomainMgr {
         }
     }
 
+    public List<TmNeuronMetadata> saveMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
+        log.debug("save({})", neuronList);
+        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
+            if (tmNeuronMetadata.getId()==null) {
+                throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
+            }
+        }
+        return model.updateMetadata(neuronList);
+    }
+    
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         log.debug("save({})", neuronMetadata);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
@@ -165,11 +183,7 @@ public class TiledMicroscopeDomainMgr {
         model.remove(neuronMetadata);
     }
 
-    public List<String> getTmSamplePaths() throws Exception {
-        return model.getTmSamplePaths();
-    }
-
-    public void setTmSamplePaths(List<String> paths) throws Exception {
-        model.setTmSamplePaths(paths);
+    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception {
+        model.bulkEditTags(neurons, tags, addOrRemove);
     }
 }

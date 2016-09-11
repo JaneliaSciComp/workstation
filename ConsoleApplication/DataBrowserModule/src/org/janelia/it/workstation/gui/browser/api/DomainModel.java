@@ -1097,6 +1097,14 @@ public class DomainModel {
         return updatedMetadata;
     }
 
+    public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
+        List<TmNeuronMetadata> updatedMetadata = tmFacade.updateMetadata(neuronList);
+        for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
+            notifyDomainObjectChanged(tmNeuronMetadata);
+        }
+        return updatedMetadata;
+    }
+
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         TmNeuronMetadata updatedMetadata = tmFacade.update(neuronMetadata, protobufStream);
         notifyDomainObjectChanged(updatedMetadata);
@@ -1106,5 +1114,9 @@ public class DomainModel {
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         tmFacade.remove(neuronMetadata);
         notifyDomainObjectRemoved(neuronMetadata);
+    }
+    
+    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception {
+        tmFacade.bulkEditTags(neurons, tags, addOrRemove);
     }
 }

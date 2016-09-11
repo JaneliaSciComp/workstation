@@ -45,8 +45,15 @@ public interface TiledMicroscopeFacade {
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception;
 
     public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception;
-
+    
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception;
 
+    public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception; 
+    
+    public List<TmNeuronMetadata> update(Collection<Pair<TmNeuronMetadata,InputStream>> neuronPairs) throws Exception;
+    
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception;
+    
+    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception;
+
 }

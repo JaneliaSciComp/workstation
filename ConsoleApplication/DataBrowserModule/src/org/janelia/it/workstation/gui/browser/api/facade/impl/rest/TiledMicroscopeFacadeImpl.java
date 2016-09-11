@@ -15,6 +15,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartMediaTypes;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
@@ -254,6 +256,35 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
     }
 
     @Override
+    public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
+        List<Pair<TmNeuronMetadata,InputStream>> pairs = new ArrayList<>();
+        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
+            pairs.add(Pair.of(tmNeuronMetadata, (InputStream)null));
+        }
+        return update(pairs);
+    }
+
+    @Override
+    public List<TmNeuronMetadata> update(Collection<Pair<TmNeuronMetadata,InputStream>> neuronPairs) throws Exception {
+                
+        MultiPart multiPartEntity = new MultiPart();
+        for (Pair<TmNeuronMetadata, InputStream> neuronPair : neuronPairs) {
+            multiPartEntity.bodyPart(new BodyPart(neuronPair.getLeft(), MediaType.APPLICATION_JSON_TYPE));
+            if (neuronPair.getRight()!=null) multiPartEntity.bodyPart(new BodyPart(neuronPair.getRight(), MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        }
+        
+        Response response = manager.getTmNeuronEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .request()
+                .post(Entity.entity(multiPartEntity, MultiPartMediaTypes.MULTIPART_MIXED));
+        if (checkBadResponse(response, "update: " +neuronPairs.size()+" neurons")) {
+            throw new WebApplicationException(response);
+        }
+        
+        return response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
+    }
+    
+    @Override
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         Response response = manager.getTmNeuronEndpoint()
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -261,6 +292,21 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
                 .request()
                 .delete();
         if (checkBadResponse(response.getStatus(), "remove: " + neuronMetadata)) {
+            throw new WebApplicationException(response);
+        }
+    }
+    
+    @Override
+    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception {
+        List<Long> neuronIds = DomainUtils.getIds(neurons);
+        Response response = manager.getTmNeuronTagsEndpoint()
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
+                .queryParam("neuronIds", neuronIds)
+                .queryParam("tags", neuronIds)
+                .queryParam("addOrRemove", addOrRemove)
+                .request("application/json")
+                .post(Entity.json(null));
+        if (checkBadResponse(response, "bulkEditTags")) {
             throw new WebApplicationException(response);
         }
     }

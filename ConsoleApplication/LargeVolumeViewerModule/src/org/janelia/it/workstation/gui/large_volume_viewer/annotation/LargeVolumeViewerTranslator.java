@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * somewhat interchangeably, which can be confusing
  */
 public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener,
-    GlobalAnnotationListener {
+        GlobalAnnotationListener {
 
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewerTranslator.class);
 

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -223,11 +224,9 @@ called from a  SimpleWorker thread.
                 neuronManager.loadWorkspaceNeurons(workspace);
             }
             catch (Exception ex) {
-                log.error(ex.getMessage());
+                log.error("Error loading workspace "+workspace, ex);
                 SessionMgr.getSessionMgr().handleException(ex);
             }
-            // likewise, we load the neuron tag map separately:
-            loadNeuronTagMap();
 
         } else {
             currentWorkspace = null;
@@ -1329,25 +1328,27 @@ called from a  SimpleWorker thread.
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
-    public synchronized void setNeuronStyles(List<TmNeuronMetadata> neuronList, NeuronStyle style) throws IOException {
-        // TODO: FIX THIS
-//        Map<Long, NeuronStyle> neuronStyleMap = getNeuronStyleMap();
-//        Map<Long, NeuronStyle> updateMap = new HashMap<>();
-//        for (TmNeuronMetadata neuron: neuronList) {
-//            neuronStyleMap.put(neuron.getId(), style);
-//            updateMap.put(neuron.getId(), style);
-//        }
-//        setNeuronStyleMap(neuronStyleMap);
-//        fireNeuronStylesChanged(updateMap);
+    public synchronized void setNeuronStyles(List<TmNeuronMetadata> neuronList, NeuronStyle style) throws Exception {
+        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
+            ModelTranslation.updateNeuronStyle(style, tmNeuronMetadata);
+        }
+        tmDomainMgr.saveMetadata(neuronList);
+        Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
+        for (TmNeuronMetadata neuron: neuronList) {
+            updateMap.put(neuron, style);
+        }
+        fireNeuronStylesChanged(updateMap);
     }
 
-    public synchronized void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) throws IOException {
-        // TODO: FIX THIS
-//        Map<TmNeuronMetadata, NeuronStyle> currentNeuronStyleMap = getNeuronStyleMap();
-//        currentNeuronStyleMap.putAll(neuronStyleMap);
-//        setNeuronStyleMap(currentNeuronStyleMap);
-//        // only need to notify on the ones that changed
-//        fireNeuronStylesChanged(neuronStyleMap);
+    public synchronized void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) throws Exception {
+        List<TmNeuronMetadata> neuronList = new ArrayList<>();
+        for(TmNeuronMetadata tmNeuronMetadata : neuronStyleMap.keySet()) {
+            NeuronStyle style = neuronStyleMap.get(tmNeuronMetadata);
+            ModelTranslation.updateNeuronStyle(style, tmNeuronMetadata);
+            neuronList.add(tmNeuronMetadata);
+        }
+        tmDomainMgr.saveMetadata(neuronList);
+        fireNeuronStylesChanged(neuronStyleMap);
     }
 
     /**
@@ -1545,72 +1546,6 @@ called from a  SimpleWorker thread.
 
     }
 
-    /**
-     * the neuron tag map is currently stored in the workspace preferences;
-     * we read and write it here, in the AnnModel, which means it's not
-     * really available if you load the workspace via the DAO; this is
-     * expected to change soon, when we go to Mongo world; at that point,
-     * we'll improve this hack
-     *
-     * json format: {"tag": [list of neuron IDs], ...}
-     */
-    private void loadNeuronTagMap() {
-        if (currentTagMap == null) {
-            currentTagMap = new TmNeuronTagMap();
-        } else {
-            currentTagMap.clearAll();
-        }
-
-        if (getCurrentWorkspace() == null) {
-            return;
-        }
-
-        // TODO: FIX THIS
-        String tagMapString = null;//getPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP);
-        if (tagMapString == null) {
-            return;
-        }
-
-        // decode the string and fill the tag map; brute force for now,
-        //  but I'd like to implement a bulk update in TmNeuronTagMap at some point
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = null;
-        try {
-            rootNode = (ObjectNode) mapper.readTree(tagMapString);
-        } catch (IOException e) {
-            // failed to read
-            return;
-        }
-
-        Iterator<Map.Entry<String, JsonNode>> nodeIterator = rootNode.fields();
-        while (nodeIterator.hasNext()) {
-            Map.Entry<String, JsonNode> entry = nodeIterator.next();
-            String tag = entry.getKey();
-            JsonNode neuronIDArray = entry.getValue();
-            if (neuronIDArray.isArray()) {
-                for (JsonNode node: neuronIDArray) {
-                    Long neuronID = node.asLong();
-                    currentTagMap.addTag(tag, neuronID);
-                }
-            }
-        }
-    }
-
-    private synchronized void saveNeuronTagMap() {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
-
-        for (String tag: currentTagMap.getAllTags()) {
-            ArrayNode array = mapper.createArrayNode();
-            for (Long neuronID: currentTagMap.getNeuronIDs(tag)) {
-                array.add(neuronID);
-            }
-            rootNode.set(tag, array);
-        }
-        // TODO: FIX THIS
-        //setPreference(AnnotationsConstants.PREF_NEURON_TAG_MAP, rootNode.toString());
-    }
-
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
     //  wrapper where for mutating calls, we save the map and fire appropriate updates
 
@@ -1625,90 +1560,66 @@ called from a  SimpleWorker thread.
     }
 
     public Set<String> getNeuronTags(TmNeuronMetadata neuron) {
-        return getNeuronTags(neuron.getId());
-    }
-
-    public Set<String> getNeuronTags(Long neuronID) {
-        return currentTagMap.getTags(neuronID);
+        return currentTagMap.getTags(neuron);
     }
 
     public Set<String> getAllNeuronTags() {
         return currentTagMap.getAllTags();
     }
 
-    public Set<Long> getNeuronIDsForTag(String tag) {
-        return currentTagMap.getNeuronIDs(tag);
+    public Set<TmNeuronMetadata> getNeuronsForTag(String tag) {
+        return currentTagMap.getNeurons(tag);
     }
 
     public boolean hasNeuronTag(TmNeuronMetadata neuron, String tag) {
-        return hasNeuronTag(neuron.getId(), tag);
+        return currentTagMap.hasTag(neuron, tag);
     }
 
-    public boolean hasNeuronTag(Long neuronID, String tag) {
-        return currentTagMap.hasTag(neuronID, tag);
+    public void addNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
+        addNeuronTag(tag, Arrays.asList(neuron));
     }
 
-    public void addNeuronTag(String tag, TmNeuronMetadata neuron) {
-        addNeuronTag(tag, neuron.getId());
-    }
-
-    public void addNeuronTag(String tag, Long neuronID) {
-        currentTagMap.addTag(tag, neuronID);
-        saveNeuronTagMap();
-        List<TmNeuronMetadata> changed = new ArrayList<>();
-        changed.add(getNeuronFromNeuronID(neuronID));
-        fireNeuronTagsChanged(changed);
-    }
-
-    public void addNeuronTag(String tag, List<TmNeuronMetadata> neuronList) {
+    public void addNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
+        tmDomainMgr.bulkEditTags(neuronList, Arrays.asList(tag), true);
         for (TmNeuronMetadata neuron: neuronList) {
-            currentTagMap.addTag(tag, neuron.getId());
+            currentTagMap.addTag(tag, neuron);
+            neuron.getTags().add(tag);
         }
-        saveNeuronTagMap();
+        //tmDomainMgr.saveMetadata(neuronList);
         fireNeuronTagsChanged(neuronList);
     }
 
-    public void removeNeuronTag(String tag, TmNeuronMetadata neuron) {
-        removeNeuronTag(tag, neuron.getId());
+    public void removeNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
+        removeNeuronTag(tag, Arrays.asList(neuron));
     }
 
-    public void removeNeuronTag(String tag, Long neuronID) {
-        currentTagMap.removeTag(tag, neuronID);
-        saveNeuronTagMap();
-        List<TmNeuronMetadata> changed = new ArrayList<>();
-        changed.add(getNeuronFromNeuronID(neuronID));
-        fireNeuronTagsChanged(changed);
-    }
-
-    public void removeNeuronTag(String tag, List<TmNeuronMetadata> neuronList) {
+    public void removeNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
+        tmDomainMgr.bulkEditTags(neuronList, Arrays.asList(tag), false);
         for (TmNeuronMetadata neuron: neuronList) {
-            currentTagMap.removeTag(tag, neuron.getId());
+            currentTagMap.removeTag(tag, neuron);
+            neuron.getTags().remove(tag);
         }
-        saveNeuronTagMap();
+        //tmDomainMgr.saveMetadata(neuronList);
         fireNeuronTagsChanged(neuronList);
     }
 
-    public void clearNeuronTags(TmNeuronMetadata neuron) {
-        clearNeuronTags(neuron.getId());
+    public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
+        tmDomainMgr.bulkEditTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
+        currentTagMap.clearTags(neuron);
+        neuron.getTags().clear();
+        fireNeuronTagsChanged(Arrays.asList(neuron));
     }
 
-    public void clearNeuronTags(Long neuronID) {
-        currentTagMap.clearTags(neuronID);
-        saveNeuronTagMap();
-        List<TmNeuronMetadata> changed = new ArrayList<>();
-        changed.add(getNeuronFromNeuronID(neuronID));
-        fireNeuronTagsChanged(changed);
-    }
-
-    public void clearAll() {
-        List<TmNeuronMetadata> changed = new ArrayList<>();
-        for (Long neuronID: currentTagMap.getAllNeuronIDs()) {
-            changed.add(getNeuronFromNeuronID(neuronID));
-        }
-        currentTagMap.clearAll();
-        saveNeuronTagMap();
-        fireNeuronTagsChanged(changed);
-    }
+//    public void clearAllTags() throws Exception {
+//        List<TmNeuronMetadata> changed = new ArrayList<>();
+//        for (TmNeuronMetadata neuron: currentTagMap.getAllNeurons()) {
+//            changed.add(neuron);
+//            neuron.getTags().clear();
+//        }
+//        currentTagMap.clearAll();
+//        tmDomainMgr.saveMetadata(changed);
+//        fireNeuronTagsChanged(changed);
+//    }
 
     /**
      * given the ID of an annotation, return an object wrapping it (or null)
