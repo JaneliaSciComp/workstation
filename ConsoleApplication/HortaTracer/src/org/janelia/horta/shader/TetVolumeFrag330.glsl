@@ -51,6 +51,8 @@ layout(location = 3) uniform OUTPUT_CHANNEL_VEC opacityFunctionMin = OUTPUT_CHAN
 layout(location = 4) uniform OUTPUT_CHANNEL_VEC opacityFunctionMax = OUTPUT_CHANNEL_VEC(1);
 layout(location = 5) uniform OUTPUT_CHANNEL_VEC opacityFunctionGamma = OUTPUT_CHANNEL_VEC(1);
 
+layout(location = 6) uniform OUTPUT_CHANNEL_VEC channelVisibilityMask = OUTPUT_CHANNEL_VEC(1);
+
 // use a linear combination of input color channels to create one channel used for neuron tracing
 // used for computing "core" depth and intensity
 // TODO: this should include an offset parameter
@@ -157,6 +159,7 @@ float opacity_for_intensities(in OUTPUT_CHANNEL_VEC intensity)
     // Use brightness model to modulate opacity
     OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
     rescaled = pow(rescaled, opacityFunctionGamma);
+    rescaled *= channelVisibilityMask;
     // TODO: Is max across channels OK here? Or should we use something intermediate between MAX and SUM?
     return blend_channel_opacities(rescaled);
 }
@@ -197,6 +200,7 @@ vec4 rgba_for_intensities(IntegratedIntensity i) {
     OUTPUT_CHANNEL_VEC v = OUTPUT_CHANNEL_VEC(i.intensity, i.tracing_intensity);
     OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, v);
     rescaled = pow(rescaled, opacityFunctionGamma);
+    rescaled *= channelVisibilityMask;
     return rgba_for_scaled_intensities(rescaled, i.opacity);
 }
 

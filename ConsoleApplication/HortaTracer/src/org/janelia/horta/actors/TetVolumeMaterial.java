@@ -282,6 +282,12 @@ implements DepthSlabClipper
                     (float)c1.getGamma(),
                     (float)c2.getGamma()
                 }, 0);
+            // visibility
+            gl.glUniform3fv(6, 1, new float[] {
+                    c0.isVisible() ? 1.0f : 0.0f,
+                    c1.isVisible() ? 1.0f : 0.0f,
+                    c2.isVisible() ? 1.0f : 0.0f
+                }, 0);
         }
         else {
             throw new UnsupportedOperationException("Unexpected number of color channels");

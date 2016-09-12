@@ -798,6 +798,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                 */
             }
         });
+        // Set default colors to mouse light standard...
+        imageColorModel.getChannel(0).setColor(Color.green);
+        imageColorModel.getChannel(1).setColor(Color.magenta);
+        imageColorModel.getChannel(2).setColor(new Color(0f, 0.5f, 1.0f)); // unmixed channel in Economo blue
         imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {
