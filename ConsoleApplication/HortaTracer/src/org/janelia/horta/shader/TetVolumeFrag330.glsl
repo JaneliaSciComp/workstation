@@ -39,27 +39,30 @@
 
 // three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
+
+// palette used to compose "fire" color transfer functions from hue/saturation bases
 layout(binding = 1) uniform sampler2D colorMapTexture;
 
-// Transfer function
+// per-channel intensity transfer function
 layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
 layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
 layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
 
+// use a linear combination of input color channels to create one channel used for neuron tracing
+// used for computing "core" depth and intensity
+// TODO: this should be a homogeneous matrix
 layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
 
-in vec3 fragTexCoord;
-flat in vec3 cameraPosInTexCoord;
-flat in mat4 tetPlanesInTexCoord;
-flat in vec4 zNearPlaneInTexCoord;
+in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
+flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
+flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetrhedron
+flat in vec4 zNearPlaneInTexCoord; // clip plane equation at near view slab plane
 flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
-
-// debugging only
-in float fragZNear;
 
 layout(location = 0) out vec4 fragColor; // store final output color in the usual way
 layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
 
+// We will be building up an intensity integrated along the view ray.
 struct IntegratedIntensity
 {
     CHANNEL_VEC intensity;
@@ -74,13 +77,33 @@ vec2 rampstep(vec2 edge0, vec2 edge1, vec2 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
+// For one-channel, blending is trivial
+float blend_channel_opacities(float opacity) {
+    return opacity;
+}
+
+// Opacity values must be between zero and one
+float blend_channel_opacities(vec2 opacities) {
+    float a = opacities.x;
+    float b = opacities.y;
+    return a + b - a*b; // Good compromise between MAX and SUM
+}
+
+// Opacity values must be between zero and one
+float blend_channel_opacities(vec3 opacities) {
+    float a = opacities.x;
+    float b = opacities.y;
+    float c = opacities.z;
+    return a + b + c - a*b - a*c - b*c + a*b*c; // Good compromise between MAX and SUM
+}
+
 float opacity_for_intensities(in CHANNEL_VEC intensity) 
 {
     // Use brightness model to modulate opacity
     CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
     rescaled = pow(rescaled, opacityFunctionGamma);
     // TODO: Is max across channels OK here? Or should we use something intermediate between MAX and SUM?
-    return max_element(rescaled);
+    return blend_channel_opacities(rescaled);
 }
 
 vec3 hot_color_for_hue_intensity(in float hue, in float intensity) {

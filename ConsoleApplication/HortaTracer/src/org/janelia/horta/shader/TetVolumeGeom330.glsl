@@ -1,11 +1,12 @@
 /*
  * Tetrahedral volume rendering geometry shader 
- * to attach vertex information needed to find the front face entry point.
+ * Attaches vertex information needed to find the front face entry point,
+ * while actually emitting the back face geometry.
  */
 
 #version 430 core
 
-// Project here in the geometry shader
+// We will project vertices here in the geometry shader
 layout(location = 1) uniform mat4 projectionMatrix = mat4(1);
 
 // explicitly specify "official" near and far clip planes, which might be 
@@ -14,20 +15,24 @@ layout(location = 2) uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 /* Receive one tetrahedral mesh as a base triangle, plus three redundant side vertices
    The base of the tetrahedron is triangle 0-4-2, below.
-   Vertices 1, 3, and 5 are all the same fourth apex vertex of the tetrahedron.
+   Vertex 1 is the fourth apex vertex of the tetrahedron.
+   Vertices 3 & 5 are actually the same as vertices 4 & 2, but ordered so that the 
+     orientation of the 0-3-5 triangle indicates whether this tetrahedron is
+     currently near the front of the full 5-tetrahedron cube. This information
+     is used to draw the tetrahedra in strict back-to-front order within the cube.
 
    six-vertex                      four-vertex
    triangle adjacency:             tetrahedron:
 
-         1---2---3                       2(1)
+         1---2---3                       2
           \  |\  |                      /|\
            \ | \ |                     / | \ (base)
             \|  \|                    /  |  \
-             0---4                   0---|---4(2)
+             0---4                   0---|---4
               \  |                    \  |  /
                \ |                     \ | /
                 \|                      \|/
-                 5                    1/3/5(3) (apex)         */
+                 5                       1(3/5) (apex)         */
 layout(triangles_adjacency) in;
 
 // Emit back-facing triangles.
@@ -43,18 +48,20 @@ flat out mat4 tetPlanesInTexCoord; // plane equations for each face of the tetra
 flat out vec4 zNearPlaneInTexCoord; // plane equation for near z-clip plane
 flat out vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 
+// pass one face of this tetrahedron down to the fragment shader
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
 {
     int p1 = p1arg;
     int p2 = p2arg;
     int p3 = p3arg;
-    const bool useRearTriangles = true;
+    const bool useRearTriangles = true; // Definitely use rear triangles here
     if (useRearTriangles) {
         // Reject front-facing triangles
         // reverse sense of triangle, so GL_CULL_FACE(BACK) actually DRAWS these back triangles.
         p1 = p3arg;
         p3 = p1arg;
     }
+    // TODO: maybe perform back face culling directly here, instead of relying on glCullFace(GL_BACK)...
 
     gl_Position = v[p1];
     fragTexCoord = t[p1];
@@ -80,6 +87,7 @@ bool isFront(vec4 A, vec4 B, vec4 C)
     return isFront(A.xyz/A.w, B.xyz/B.w, C.xyz/C.w);
 }
 
+// Returns an implicit plane equation for the plane containing the oriented triangle abc
 vec4 planeForTriangle(vec3 a, vec3 b, vec3 c) {
     vec3 normal = normalize(cross(b-a, c-b));
     float dist = dot(normal, b);
@@ -107,7 +115,7 @@ void main()
         geomTexCoord[4],
         geomTexCoord[1]);
 
-    // TODO: show back faces, and color by exit texture coordinates
+    // Our goal is to emit imposter geometry, consisting of only the back faces of the tetrahedron.
     
     // Need to compute camera position in texture coordinates for this tetrahedron.
     // So we need to compute a transform that maps camera-space to texCoord-space.
@@ -118,7 +126,7 @@ void main()
     vec3 p1 = gl_in[0].gl_Position.xyz / gl_in[0].gl_Position.w;
     vec3 p2 = gl_in[2].gl_Position.xyz / gl_in[2].gl_Position.w;
     vec3 p3 = gl_in[4].gl_Position.xyz / gl_in[4].gl_Position.w;
-    vec3 p4 = gl_in[1].gl_Position.xyz / gl_in[1].gl_Position.w; 
+    vec3 p4 = gl_in[1].gl_Position.xyz / gl_in[1].gl_Position.w;
     mat4 cameraFromBary = mat4(
             vec4(p1 - p4, 0),
             vec4(p2 - p4, 0),
@@ -135,11 +143,10 @@ void main()
             vec4(t4, 1));
     mat4 baryFromCamera = inverse(cameraFromBary);
     mat4 texCoordFromCamera = texCoordFromBary * baryFromCamera;
-    vec4 camPos = 
-            texCoordFromCamera * vec4(0, 0, 0, 1);
-    cameraPosInTexCoord = camPos.xyz/camPos.w;
+    vec4 camPosHomo = texCoordFromCamera * vec4(0, 0, 0, 1);
+    cameraPosInTexCoord = camPosHomo.xyz/camPosHomo.w;
 
-    // Emit one inward facing plane equation for each face of the tetrahedron
+    // For ray-clipping, compute one inward facing plane equation for each face of the tetrahedron
     // Because we are clipping to the INSIDE of the tetrahedron, these
     // triangles wind in the opposite of the usual direction.
     tetPlanesInTexCoord = mat4(
@@ -148,16 +155,14 @@ void main()
         planeForTriangle(t1, t2, t4),
         planeForTriangle(t2, t3, t4));
 
-    // Precompute plane equation for near/far clip planes
+    // precompute plane equation for near/far clip planes
     float zNear = opaqueZNearFar[0];
     float zFar = opaqueZNearFar[1];
-
     // TODO: This plane convention seems to be opposite to VolumeMipMaterial
     vec4 zNearPlaneInCamera = vec4(0, 0, -1.0, -zNear);
     // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
     mat4 planeTransform = inverse(texCoordFromCamera);
     zNearPlaneInTexCoord = zNearPlaneInCamera * planeTransform; // look it up...
-
     vec4 zFarPlaneInCamera = vec4(0, 0, 1.0, zFar);
     zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; 
 
