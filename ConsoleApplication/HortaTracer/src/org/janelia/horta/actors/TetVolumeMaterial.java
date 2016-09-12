@@ -146,8 +146,11 @@ implements DepthSlabClipper
         
         int glInternalFormat = ktxData.header.glInternalFormat;
         // Work around problem with my initial 2-channel KTX files...
+        // Future versions should be OK and won't need this hack.
         if (glInternalFormat == GL3.GL_RG16UI)
             glInternalFormat = GL3.GL_RG16;
+        if (glInternalFormat == GL3.GL_RG8UI)
+            glInternalFormat = GL3.GL_RG8;
         
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
         gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST_MIPMAP_NEAREST);

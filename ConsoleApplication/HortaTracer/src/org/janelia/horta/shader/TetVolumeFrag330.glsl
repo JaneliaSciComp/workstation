@@ -35,12 +35,15 @@
  */
 
 // Optimize for a certain maximum number of color channels
+// Input image channels
 #define CHANNEL_VEC vec2
+// Total output channels, including synthetic channels constructed here, in the fragment shader
+#define OUTPUT_CHANNEL_VEC vec3
 
 // three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
 
-// palette used to compose "fire" color transfer functions from hue/saturation bases
+// palette used to compose "hot" color transfer functions from hue/saturation bases
 layout(binding = 1) uniform sampler2D colorMapTexture;
 
 // per-channel intensity transfer function
@@ -77,6 +80,43 @@ vec2 rampstep(vec2 edge0, vec2 edge1, vec2 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
+// Multiple tracing modes...
+
+float tracing_channel_one(vec2 intensities) {
+    return intensities.x;
+}
+
+float tracing_channel_two(vec2 intensities) {
+    return intensities.y;
+}
+
+/*
+ * Parameters:
+ *   primaryAndBackground: samples from each of two channels
+ *   mins: equivalent low-intensity values from each channel
+ *   maxes: equivalent higher-intensity values from each channel
+ *
+ *   returns: unmixed intensity of channel1 minus channel2
+ */
+float unmix_channels(vec2 primaryAndBackground, vec2 mins, vec2 maxes) {
+    float k1 = 1.0; // mixing ratio of channel 1
+    float ratio = (maxes.x - mins.x) / (maxes.y - mins.y);
+    float k2 = -ratio; // mixing ratio of channel 1
+    float k3 = min(0.05, mins.x); // offset from zero
+    vec3 signals = vec3(primaryAndBackground, 1);
+    vec3 transform = vec3(k1, k2, k3);
+    float result = clamp(dot(signals, transform), 0, 1);
+    return result;
+}
+
+float tracing_channel_one_unmixed(vec2 intensities) {
+    return unmix_channels(intensities.xy, opacityFunctionMin.xy, opacityFunctionMax.xy);
+}
+
+float tracing_channel_two_unmixed(vec2 intensities) {
+    return unmix_channels(intensities.yx, opacityFunctionMin.yx, opacityFunctionMax.yx);
+}
+
 // For one-channel, blending is trivial
 float blend_channel_opacities(float opacity) {
     return opacity;
@@ -86,7 +126,8 @@ float blend_channel_opacities(float opacity) {
 float blend_channel_opacities(vec2 opacities) {
     float a = opacities.x;
     float b = opacities.y;
-    return a + b - a*b; // Good compromise between MAX and SUM
+    // return a + b - a*b; // Good compromise between MAX and SUM
+    return max(a, b);
 }
 
 // Opacity values must be between zero and one
@@ -94,7 +135,8 @@ float blend_channel_opacities(vec3 opacities) {
     float a = opacities.x;
     float b = opacities.y;
     float c = opacities.z;
-    return a + b + c - a*b - a*c - b*c + a*b*c; // Good compromise between MAX and SUM
+    // return a + b + c - a*b - a*c - b*c + a*b*c; // Good compromise between MAX and SUM
+    return max(max(a, b), c);
 }
 
 float opacity_for_intensities(in CHANNEL_VEC intensity) 
@@ -167,7 +209,7 @@ float advance_to_voxel_edge(
         in float texelsPerRay)
 {
     // Units of ray parameter, t, are roughly texels
-    const float minStep = 0.060 / texelsPerRay;
+    const float minStep = 0.020 / texelsPerRay;
 
     // Advance ray by at least minStep, to avoid getting stuck in tiny corners
     float t = previousEdge + minStep;

@@ -180,7 +180,9 @@ implements LookupListener
         farSlabSlider = new javax.swing.JSlider();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        wideSlabButton = new javax.swing.JButton();
+        narrowSlabButton = new javax.swing.JButton();
+        zeroSlabButton = new javax.swing.JButton();
         jXCollapsiblePane1 = new org.jdesktop.swingx.JXCollapsiblePane();
 
         focusPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.focusPanel.border.title"))); // NOI18N
@@ -538,10 +540,30 @@ implements LookupListener
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel9, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jLabel9.text")); // NOI18N
 
-        org.openide.awt.Mnemonics.setLocalizedText(jButton1, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.jButton1.text")); // NOI18N
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        wideSlabButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/janelia/scenewindow/Slab2.png"))); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(wideSlabButton, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.wideSlabButton.text")); // NOI18N
+        wideSlabButton.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.wideSlabButton.toolTipText")); // NOI18N
+        wideSlabButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                wideSlabButtonActionPerformed(evt);
+            }
+        });
+
+        narrowSlabButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/janelia/scenewindow/Slab1.png"))); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(narrowSlabButton, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.narrowSlabButton.text")); // NOI18N
+        narrowSlabButton.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.narrowSlabButton.toolTipText")); // NOI18N
+        narrowSlabButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                narrowSlabButtonActionPerformed(evt);
+            }
+        });
+
+        zeroSlabButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/org/janelia/scenewindow/Slab0.png"))); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(zeroSlabButton, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.zeroSlabButton.text")); // NOI18N
+        zeroSlabButton.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.zeroSlabButton.toolTipText")); // NOI18N
+        zeroSlabButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                zeroSlabButtonActionPerformed(evt);
             }
         });
 
@@ -551,15 +573,19 @@ implements LookupListener
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(nearSlabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(farSlabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 206, Short.MAX_VALUE))
+                    .addComponent(nearSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(farSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel8)
                     .addComponent(jLabel9)))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jButton1)
+                .addContainerGap(21, Short.MAX_VALUE)
+                .addComponent(zeroSlabButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(narrowSlabButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(wideSlabButton)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -573,7 +599,10 @@ implements LookupListener
                     .addComponent(farSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel9))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButton1))
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(wideSlabButton)
+                    .addComponent(narrowSlabButton)
+                    .addComponent(zeroSlabButton)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -754,11 +783,20 @@ implements LookupListener
         selectedViewSlab.getChangeObservable().notifyObservers();
     }//GEN-LAST:event_farSlabSliderStateChanged
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
-        farSlabSlider.setValue(50);
-        nearSlabSlider.setValue(50);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void wideSlabButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_wideSlabButtonActionPerformed
+        farSlabSlider.setValue(75); // 10.0
+        nearSlabSlider.setValue(25); // 0.50
+    }//GEN-LAST:event_wideSlabButtonActionPerformed
+
+    private void narrowSlabButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_narrowSlabButtonActionPerformed
+        farSlabSlider.setValue(50); // 1.10
+        nearSlabSlider.setValue(50); // 0.90
+    }//GEN-LAST:event_narrowSlabButtonActionPerformed
+
+    private void zeroSlabButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_zeroSlabButtonActionPerformed
+        farSlabSlider.setValue(0); // 1.001
+        nearSlabSlider.setValue(100); // 0.999
+    }//GEN-LAST:event_zeroSlabButtonActionPerformed
 
     private void incrementLocalRotation(JSpinner spinner, Vector3 axis)
     {
@@ -798,7 +836,6 @@ implements LookupListener
     private javax.swing.JSpinner focusYSpinner;
     private javax.swing.JLabel focusZLabel;
     private javax.swing.JSpinner focusZSpinner;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -816,6 +853,7 @@ implements LookupListener
     private javax.swing.JSpinner localTranslateXSpinner;
     private javax.swing.JSpinner localTranslateYSpinner;
     private javax.swing.JSpinner localTranslateZSpinner;
+    private javax.swing.JButton narrowSlabButton;
     private javax.swing.JSlider nearSlabSlider;
     private javax.swing.JButton resetAllButton;
     private javax.swing.JButton resetFocusButton;
@@ -829,6 +867,8 @@ implements LookupListener
     private javax.swing.JSpinner rotZSpinner;
     private javax.swing.JPanel rotationPanel;
     private javax.swing.JCheckBox stayUpCheckBox;
+    private javax.swing.JButton wideSlabButton;
+    private javax.swing.JButton zeroSlabButton;
     private javax.swing.JPanel zoomPanl;
     private javax.swing.JSpinner zoomSpinner;
     // End of variables declaration//GEN-END:variables
