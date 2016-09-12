@@ -740,7 +740,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     // TODO: Obsolete brightness model for ImageColorModel
     private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
-    private final ImageColorModel imageColorModel = new ImageColorModel(65535, 2);
+    private final ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
     
     private void loadStartupPreferences() 
     {

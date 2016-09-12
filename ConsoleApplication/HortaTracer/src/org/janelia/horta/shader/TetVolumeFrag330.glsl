@@ -47,9 +47,9 @@ layout(binding = 0) uniform sampler3D volumeTexture;
 layout(binding = 1) uniform sampler2D colorMapTexture;
 
 // per-channel intensity transfer function
-layout(location = 3) uniform CHANNEL_VEC opacityFunctionMin = CHANNEL_VEC(0);
-layout(location = 4) uniform CHANNEL_VEC opacityFunctionMax = CHANNEL_VEC(1);
-layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
+layout(location = 3) uniform OUTPUT_CHANNEL_VEC opacityFunctionMin = OUTPUT_CHANNEL_VEC(0);
+layout(location = 4) uniform OUTPUT_CHANNEL_VEC opacityFunctionMax = OUTPUT_CHANNEL_VEC(1);
+layout(location = 5) uniform OUTPUT_CHANNEL_VEC opacityFunctionGamma = OUTPUT_CHANNEL_VEC(1);
 
 // use a linear combination of input color channels to create one channel used for neuron tracing
 // used for computing "core" depth and intensity
@@ -78,6 +78,10 @@ float max_element(in vec2 v) {
 }
 
 vec2 rampstep(vec2 edge0, vec2 edge1, vec2 x) {
+    return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
+}
+
+vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
@@ -148,10 +152,10 @@ float blend_channel_opacities(vec3 opacities) {
     return max(max(a, b), c);
 }
 
-float opacity_for_intensities(in CHANNEL_VEC intensity) 
+float opacity_for_intensities(in OUTPUT_CHANNEL_VEC intensity) 
 {
     // Use brightness model to modulate opacity
-    CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
+    OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
     rescaled = pow(rescaled, opacityFunctionGamma);
     // TODO: Is max across channels OK here? Or should we use something intermediate between MAX and SUM?
     return blend_channel_opacities(rescaled);
@@ -177,9 +181,21 @@ vec4 rgba_for_scaled_intensities(in vec2 c, in float opacity) {
     return vec4(combined, opacity);
 }
 
+vec4 rgba_for_scaled_intensities(in vec3 c, in float opacity) {
+    // return vec4(c.grg, opacity); // green/magenta
+
+    // hot color map
+    vec3 ch1 = hot_color_for_hue_intensity(120, c.r); // green
+    vec3 ch2 = hot_color_for_hue_intensity(300, c.g); // magenta
+    vec3 ch3 = hot_color_for_hue_intensity(210, c.b); // aqua blue
+    vec3 combined = ch1 + ch2 + ch3 - ch1*ch2 - ch1*ch3 - ch2*ch3 + ch1*ch2*ch3; // compromise between sum and max
+    return vec4(combined, opacity);
+}
+
 vec4 rgba_for_intensities(IntegratedIntensity i) {
     // Use brightness model to modulate opacity
-    CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, i.intensity);
+    OUTPUT_CHANNEL_VEC v = OUTPUT_CHANNEL_VEC(i.intensity, i.tracing_intensity);
+    OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, v);
     rescaled = pow(rescaled, opacityFunctionGamma);
     return rgba_for_scaled_intensities(rescaled, i.opacity);
 }
@@ -248,8 +264,9 @@ float advance_to_voxel_edge(
 IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
-    float opacity = opacity_for_intensities(intensity);
-    return IntegratedIntensity(intensity, 0, opacity);
+    float tracing = tracing_channel_from_raw(intensity);
+    float opacity = opacity_for_intensities(OUTPUT_CHANNEL_VEC(intensity, tracing));
+    return IntegratedIntensity(intensity, tracing, opacity);
 }
 
 // Maximum intensity projection
@@ -258,8 +275,9 @@ IntegratedIntensity integrate_max_intensity(
         in IntegratedIntensity back)
 {
     CHANNEL_VEC intensity = max(front.intensity, back.intensity);
+    float tracing = max(front.tracing_intensity, back.tracing_intensity);
     float opacity = max(front.opacity, back.opacity);
-    return IntegratedIntensity(intensity, 0, opacity);
+    return IntegratedIntensity(intensity, tracing, opacity);
 }
 
 // Occluding projection
