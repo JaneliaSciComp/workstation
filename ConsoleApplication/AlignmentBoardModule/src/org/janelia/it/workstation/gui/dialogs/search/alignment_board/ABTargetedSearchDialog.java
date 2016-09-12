@@ -11,6 +11,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
@@ -20,7 +21,6 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCardPanel;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.domain.Sample;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -77,7 +77,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     //------------------------------------------------GUI elements for the search inputs.
     private void initGeneralGui() {
-        Component mainFrame = SessionMgr.getMainFrame();
+        Component mainFrame = FrameworkImplProvider.getMainFrame();
         setLayout( new BorderLayout() );
         Dimension preferredSize = new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.8));
         setPreferredSize( preferredSize );
@@ -96,7 +96,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             @Override
             public void handleError(Throwable th) {
                 ABTargetedSearchDialog.this.setVisible(false);
-                SessionMgr.getSessionMgr().handleException( th );
+                FrameworkImplProvider.handleException( th );
             }
         };
         final QueryLaunchAction searchAction = new QueryLaunchAction(

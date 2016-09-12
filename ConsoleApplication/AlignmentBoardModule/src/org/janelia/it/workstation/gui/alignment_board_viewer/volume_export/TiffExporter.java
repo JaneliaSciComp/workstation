@@ -4,7 +4,7 @@ import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.TIFFEncodeParam;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -403,7 +403,7 @@ public class TiffExporter {
 
         @Override
         protected void hadError(Throwable error) {
-            SessionMgr.getSessionMgr().handleException( error );
+            FrameworkImplProvider.handleException( error );
         }
 
     }

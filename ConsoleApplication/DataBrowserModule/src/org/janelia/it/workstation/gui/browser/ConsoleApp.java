@@ -17,9 +17,6 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
-import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -82,10 +79,6 @@ public class ConsoleApp {
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
         	
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
-            
-            sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(UserAccountSettingsPanel.class, UserAccountSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 
             ServerStatusReportManager.getReportManager().startCheckingForReport();
 
@@ -97,7 +90,9 @@ public class ConsoleApp {
             String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
             String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
 
-            AccessManager.getAccessManager().loginSubject(username, password);
+            if (username!=null) {
+                AccessManager.getAccessManager().loginSubject(username, password);
+            }
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 LoginDialog loginDialog = new LoginDialog();

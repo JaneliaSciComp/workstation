@@ -16,6 +16,12 @@ import java.util.List;
 /**
  * User: tsafford, naxelrod
  * Date: Sep 03, 2009
+ * From jacs.properties
+ * # Profile Comparison
+ ProfileComparison.PERL5LIB=/usr/local/perl
+ ProfileComparison.PerlBase=16sDataAnalysis/site_comparison/profile_comparison_pipeline
+ ProfileComparison.Cmd=/profile_comparison.pl
+ Wiki.ProfileComparisonHelp=DAS/Automatic+Bar+Code+Designer+and+Deconvolution
  */
 public class ProfileComparisonSubmitJobService extends SubmitDrmaaJobService {
     private static final String CONFIG_PREFIX = "profileComparisonConfiguration.";

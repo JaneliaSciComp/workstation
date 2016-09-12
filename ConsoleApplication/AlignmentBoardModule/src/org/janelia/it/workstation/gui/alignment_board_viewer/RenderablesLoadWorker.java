@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
@@ -15,7 +19,6 @@ import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanMultiFileLo
 import org.janelia.it.workstation.gui.alignment_board.loader.RemaskingAcceptorDecorator;
 import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -30,9 +33,6 @@ import javax.swing.*;
 import java.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.*;
-import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 
 /**
  * Created with IntelliJ IDEA.
@@ -655,7 +655,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         } catch ( Exception ex ) {
             ex.printStackTrace();
-            SessionMgr.getSessionMgr().handleException( ex );
+            FrameworkImplProvider.handleException( ex );
         }
 
         //todo find some way to return this and avoid re-processing.

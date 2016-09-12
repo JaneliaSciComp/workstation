@@ -19,15 +19,15 @@ import static org.janelia.it.jacs.shared.sample_discovery.SampleDiscoveryConstan
 //Temporarily out of action.  The target values are unused, and changes
 // are needed for the PathCollectionEditor.  see that class for todo list.
 
-@ActionID(
-		category = "File/New",
-		id = "org.janelia.it.workstation.gui.large_volume_viewer.nb_action.LvvBaseListAction"
-)
-@ActionRegistration(
-		displayName = "#CTL_LvvBaseListAction"
-)
-@ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
-@Messages("CTL_LvvBaseListAction=Mouse Light Directories")
+//@ActionID(
+//		category = "File/New",
+//		id = "org.janelia.it.workstation.gui.large_volume_viewer.nb_action.LvvBaseListAction"
+//)
+//@ActionRegistration(
+//		displayName = "#CTL_LvvBaseListAction"
+//)
+//@ActionReference(path = "Menu/Edit", position = 5100, separatorBefore = 5050)
+//@Messages("CTL_LvvBaseListAction=Mouse Light Directories")
 public final class LvvBaseListAction implements ActionListener {
     public static final String DIALOG_TITLE = "Edit Large Volume Base Paths";
     

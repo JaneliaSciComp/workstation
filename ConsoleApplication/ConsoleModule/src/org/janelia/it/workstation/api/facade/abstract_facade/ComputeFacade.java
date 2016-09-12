@@ -23,7 +23,9 @@ public interface ComputeFacade {
     public void cancelTaskById(Long taskId) throws Exception;
 
     public void submitJob(String processDefName, Long taskId) throws Exception;
-    
+
+    public void dispatchJob(String processDefName, Long taskId) throws Exception;
+
     public List<Task> getUserTasks() throws Exception;
 
     public List<Task> getUserParentTasks() throws Exception;

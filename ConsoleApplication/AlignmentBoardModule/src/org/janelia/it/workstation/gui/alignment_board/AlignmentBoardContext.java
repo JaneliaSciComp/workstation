@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -23,7 +24,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
@@ -329,7 +329,7 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
         Reference sampleRef = neuronFragment.getSample();
         Sample sample = DomainMgr.getDomainMgr().getModel().<Sample>getDomainObject(Sample.class, sampleRef.getTargetId());
         if (sample == null) {
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron fragment is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Neuron fragment is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         if (!compatibilityChecker.isSampleCompatible(context, sample)) {
@@ -354,28 +354,39 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
             return false;
         }
         AlignmentBoardItem oldSampleItem = this.getPreviouslyAddedItem(sample);
-        if (oldSampleItem == null) {
-            String refChannelPath = domainHelper.getRefChannelPath(sample, context);
+        String refChannelPath = domainHelper.getRefChannelPath(sample, context);
             
-            ReverseReference fragmentsReference = domainHelper.getNeuronRRefForSample(sample, context);
-            if (fragmentsReference == null  &&  refChannelPath == null) {
-                log.warn("No fragments or ref channel found for sample {}.", sample.getName());
-                return false;
+        ReverseReference fragmentsReference = domainHelper.getNeuronRRefForSample(sample, context);
+        if (fragmentsReference == null  &&  refChannelPath == null) {
+            log.warn("No fragments or ref channel found for sample {}.", sample.getName());
+            return false;
+        }
+        if (oldSampleItem == null) {
+            AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events, false);
+
+            // Settle the Reference channel, if it exists.
+            addReferenceChannel(sampleItem, sample, events);
+
+            // Settle any fragments available in the sample.
+            List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
+            for (DomainObject fragmentDO : fragments) {
+                // Need to add neuron to sample.
+                addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
             }
-            else {
-                AlignmentBoardItem sampleItem = addItem(Sample.class, sample, events, false);
-
-                // Settle the Reference channel, if it exists.
-                addReferenceChannel(sampleItem, sample, events);
-
-                // Settle any fragments available in the sample.
-                List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
-                for (DomainObject fragmentDO : fragments) {
-                    // Need to add neuron to sample.
-                    addSubItem(NeuronFragment.class, sampleItem, fragmentDO, events);
+        }
+        else if (fragmentsReference.getCount() > oldSampleItem.getChildren().size()) {
+            // Adding novel fragments from an existing sample.
+            Map<String,AlignmentBoardItem> oldSubItems = new HashMap<>();
+            for (AlignmentBoardItem item: oldSampleItem.getChildren()) {
+                oldSubItems.put(item.getName(), item);
+            }
+            List<DomainObject> fragments = DomainMgr.getDomainMgr().getModel().getDomainObjects(fragmentsReference);
+            for (DomainObject fragmentDO : fragments) {
+                // Need to add neuron to sample.
+                if (! oldSubItems.containsKey(fragmentDO.getName())) {
+                    addNewNeuronFragment(fragmentDO, events);
                 }
             }
-
         }
         else {
             events.add(new AlignmentBoardItemChangeEvent(this, oldSampleItem, ChangeType.VisibilityChange));
@@ -484,25 +495,25 @@ public class AlignmentBoardContext extends AlignmentBoardItem {
     }
 
     private AlignmentBoardItem getPreviouslyAddedItem(DomainObject domainObject) {
-        // Add the compartments and the compartment set itself.
-        AlignmentBoardItem compartmentSetAlignmentBoardItem = null;
+        // Find item corresponding to the domain object, if it was added before.
+        AlignmentBoardItem alignmentBoardItem = null;
         for (AlignmentBoardItem abi: alignmentBoard.getChildren()) {
             if (abi.getTarget().getObjectRef().getTargetId().equals(domainObject.getId())) {
-                compartmentSetAlignmentBoardItem = abi;
+                alignmentBoardItem = abi;
             }
         }
-        return compartmentSetAlignmentBoardItem;
+        return alignmentBoardItem;
     }
     
     private AlignmentBoardItem getPreviouslyAddedSubItem(AlignmentBoardItem parent, DomainObject domainObject) {
-        // Add the compartments and the compartment set itself.
-        AlignmentBoardItem compartmentSetAlignmentBoardItem = null;
+        // Find item corresponding to the domain object, if it was added before.
+        AlignmentBoardItem alignmentBoardItem = null;
         for (AlignmentBoardItem abi: parent.getChildren()) {
             if (abi.getTarget().getObjectRef().getTargetId().equals(domainObject.getId())) {
-                compartmentSetAlignmentBoardItem = abi;
+                alignmentBoardItem = abi;
             }
         }
-        return compartmentSetAlignmentBoardItem;
+        return alignmentBoardItem;
     }
     
 }

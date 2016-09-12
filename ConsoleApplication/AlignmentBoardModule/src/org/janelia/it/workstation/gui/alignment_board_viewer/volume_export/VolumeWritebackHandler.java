@@ -16,6 +16,7 @@ import java.util.Map;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
@@ -27,7 +28,6 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.Comple
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
@@ -120,7 +120,7 @@ public class VolumeWritebackHandler {
 
                     ex.printStackTrace();
                     logger.error( ex.getMessage() );
-                    SessionMgr.getSessionMgr().handleException( ex );
+                    FrameworkImplProvider.handleException( ex );
                 }
             };
             mipExportWorker.execute();
@@ -212,7 +212,7 @@ public class VolumeWritebackHandler {
         public void loadFailed(Throwable ex) {
             completionListener.complete();
             ex.printStackTrace();
-            SessionMgr.getSessionMgr().handleException( ex );
+            FrameworkImplProvider.handleException( ex );
         }
 
         @Override
@@ -228,7 +228,7 @@ public class VolumeWritebackHandler {
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
                     logger.error( "Exception on tif export " + ex.getMessage() );
-                    SessionMgr.getSessionMgr().handleException( ex );
+                    FrameworkImplProvider.handleException( ex );
 
                 }
 
