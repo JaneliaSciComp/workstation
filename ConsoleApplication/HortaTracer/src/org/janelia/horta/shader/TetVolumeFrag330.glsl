@@ -53,8 +53,8 @@ layout(location = 5) uniform CHANNEL_VEC opacityFunctionGamma = CHANNEL_VEC(1);
 
 // use a linear combination of input color channels to create one channel used for neuron tracing
 // used for computing "core" depth and intensity
-// TODO: this should be a homogeneous matrix
-layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
+// TODO: this should include an offset parameter
+// layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
@@ -69,6 +69,7 @@ layout(location = 1) out vec2 coreDepth; // also store intensity and relative de
 struct IntegratedIntensity
 {
     CHANNEL_VEC intensity;
+    float tracing_intensity;
     float opacity;
 };
 
@@ -98,15 +99,19 @@ float tracing_channel_two(vec2 intensities) {
  *
  *   returns: unmixed intensity of channel1 minus channel2
  */
-float unmix_channels(vec2 primaryAndBackground, vec2 mins, vec2 maxes) {
-    float k1 = 1.0; // mixing ratio of channel 1
-    float ratio = (maxes.x - mins.x) / (maxes.y - mins.y);
-    float k2 = -ratio; // mixing ratio of channel 1
-    float k3 = min(0.05, mins.x); // offset from zero
-    vec3 signals = vec3(primaryAndBackground, 1);
-    vec3 transform = vec3(k1, k2, k3);
-    float result = clamp(dot(signals, transform), 0, 1);
-    return result;
+float unmix_channels(vec2 primaryAndBackground, vec2 mins, vec2 maxes) 
+{
+    // Normalize to range 0-1 within min-max region
+    vec2 norm = primaryAndBackground - mins; // shift to origin
+    vec2 ranges = maxes - mins;
+    norm /= ranges; // scale to 0.0-1.0 within min-max region
+    // Subtract background from signal
+    float unmixed = norm.x - norm.y;
+    // Restore to channel 1 range
+    unmixed *= ranges.x;
+    unmixed += min(0.05, mins.x);
+    unmixed = clamp(unmixed, 0, 1);
+    return unmixed;
 }
 
 float tracing_channel_one_unmixed(vec2 intensities) {
@@ -115,6 +120,10 @@ float tracing_channel_one_unmixed(vec2 intensities) {
 
 float tracing_channel_two_unmixed(vec2 intensities) {
     return unmix_channels(intensities.yx, opacityFunctionMin.yx, opacityFunctionMax.yx);
+}
+
+float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
+    return tracing_channel_one_unmixed(raw_channels);
 }
 
 // For one-channel, blending is trivial
@@ -240,7 +249,7 @@ IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDeta
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
     float opacity = opacity_for_intensities(intensity);
-    return IntegratedIntensity(intensity, opacity);
+    return IntegratedIntensity(intensity, 0, opacity);
 }
 
 // Maximum intensity projection
@@ -250,7 +259,7 @@ IntegratedIntensity integrate_max_intensity(
 {
     CHANNEL_VEC intensity = max(front.intensity, back.intensity);
     float opacity = max(front.opacity, back.opacity);
-    return IntegratedIntensity(intensity, opacity);
+    return IntegratedIntensity(intensity, 0, opacity);
 }
 
 // Occluding projection
@@ -259,7 +268,7 @@ IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in Integra
     float opacity = 1.0 - (1.0 - front.opacity) * (1.0 - back.opacity);
     CHANNEL_VEC b = back.intensity * (1.0 - front.opacity/opacity);
     CHANNEL_VEC f = front.intensity * (front.opacity/opacity);
-    return IntegratedIntensity(clamp(b + f, 0, 1), opacity);
+    return IntegratedIntensity(clamp(b + f, 0, 1), 0, opacity);
 }
 
 
@@ -301,7 +310,7 @@ void main()
     vec3 rearTexel = rearTexCoord * texelsPerVolume;
 
     // Cast ray through volume
-    IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0);
+    IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0, 0);
     bool rayIsFinished = false;
     float t0 = minRay;
     float coreParam = mix(minRay, maxRay, 0.5);
@@ -325,7 +334,9 @@ void main()
                 integrate_max_intensity(intensity, rearIntensity);
                 // integrate_occluding(intensity, rearIntensity);
 
-        float tracingIntensity = dot(rearIntensity.intensity, tracingChannelMask);
+        float tracingIntensity = 
+                tracing_channel_from_raw(rearIntensity.intensity);
+                // dot(rearIntensity.intensity, tracingChannelMask);
         if (tracingIntensity >= coreIntensity) { // MIP criterion
             coreIntensity = tracingIntensity;
             coreParam = t;
