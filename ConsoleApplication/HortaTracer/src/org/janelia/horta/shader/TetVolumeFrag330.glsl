@@ -71,7 +71,7 @@ layout(location = 1) out vec2 coreDepth; // also store intensity and relative de
 struct IntegratedIntensity
 {
     CHANNEL_VEC intensity;
-    float tracing_intensity;
+    float tracing_intensity; // integration of tracing intensity
     float opacity;
 };
 
@@ -288,9 +288,13 @@ IntegratedIntensity integrate_max_intensity(
 IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in IntegratedIntensity back) 
 {
     float opacity = 1.0 - (1.0 - front.opacity) * (1.0 - back.opacity);
-    CHANNEL_VEC b = back.intensity * (1.0 - front.opacity/opacity);
-    CHANNEL_VEC f = front.intensity * (front.opacity/opacity);
-    return IntegratedIntensity(clamp(b + f, 0, 1), 0, opacity);
+    float kf = front.opacity;
+    float kb = 1.0 - kf;
+    CHANNEL_VEC bi = back.intensity * kb;
+    CHANNEL_VEC fi = front.intensity * kf;
+    // This is the visible VIEWER tracing channel, so apply occluding here too.
+    float tracing = clamp(front.tracing_intensity * kf + back.tracing_intensity * kb, 0, 1);
+    return IntegratedIntensity(clamp(bi + fi, 0, 1), tracing, opacity);
 }
 
 
