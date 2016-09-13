@@ -228,7 +228,7 @@ of adapter.
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
             <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
             <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
-            <arg value="-Dsuite.nbi.product.uid=janeliawsng"/>
+            <arg value="-Dsuite.nbi.product.uid=janeliaws"/>
             <arg value="-Dsuite.location=${basedir}"/>
             <arg value="-Dpack200.enabled=false"/>
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
@@ -248,7 +248,7 @@ of adapter.
         </condition>
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
 
-        <zip destfile="JaneliaWorkstation-windows.zip" basedir="${basedir}/dist/" includes="JaneliaWorkstation-windows.exe"/>
+        <zip destfile="${basedir}/dist/JaneliaWorkstation-windows.zip" includes="${basedir}/dist/JaneliaWorkstation-windows.exe"/>
 
         <!-- Compress the Linux script to tgz -->
         <chmod file="'${basedir}/dist/JaneliaWorkstation-linux.sh" perm="ugo+rx"/>
