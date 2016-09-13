@@ -234,7 +234,7 @@ of adapter.
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
             <arg value="-Dnbi.engine.jar=${basedir}/harness/modules/ext/nbi-engine.jar"/>
             <arg value="-Dnbi.stub.common.location=${basedir}/harness/nbi/.common"/>
-            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.icns"/>
+            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.png"/>
             <arg value="-Dnbi.ant.tasks.jar=${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
             <arg value="-Dnbi.dock.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.registries.management.jar=${basedir}/harness/modules/ext/nbi-registries-management.jar" />
@@ -248,7 +248,10 @@ of adapter.
         </condition>
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
 
+        <zip destfile="JaneliaWorkstation-windows.zip" basedir="${basedir}/dist/" includes="JaneliaWorkstation-windows.exe"/>
+
         <!-- Compress the Linux script to tgz -->
+        <chmod file="'${basedir}/dist/JaneliaWorkstation-linux.sh" perm="ugo+rx"/>
         <tar tarfile="${basedir}/dist/JaneliaWorkstation-linux.tgz" compression="gzip">
             <tarfileset dir="${basedir}/dist/" mode="644">
                 <include name="JaneliaWorkstation-linux.sh"/>
