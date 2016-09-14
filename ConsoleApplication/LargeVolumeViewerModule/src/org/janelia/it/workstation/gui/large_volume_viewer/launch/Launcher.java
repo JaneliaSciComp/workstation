@@ -80,6 +80,11 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     @Override
+    public boolean isEnabled(DomainObject e) {
+        return true;
+    }
+    
+    @Override
     public Integer getOrder() {
         return MENU_ORDER;
     }

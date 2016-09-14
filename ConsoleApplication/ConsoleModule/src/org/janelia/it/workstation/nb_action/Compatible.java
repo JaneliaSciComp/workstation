@@ -6,5 +6,7 @@ package org.janelia.it.workstation.nb_action;
  * @author fosterl
  */
 public interface Compatible<T> {
-    boolean isCompatible( T object );
+    
+    boolean isCompatible(T object);
+    
 }

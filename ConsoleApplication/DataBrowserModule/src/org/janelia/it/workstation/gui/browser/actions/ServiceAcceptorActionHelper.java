@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.TreeMap;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
@@ -32,9 +34,9 @@ public class ServiceAcceptorActionHelper {
      * Makes the item for showing the object in its own viewer iff the object
      * type is correct.
      */
-    public static Collection<NamedAction> getOpenForContextActions(final DomainObject domainObject) {
+    public static Collection<AbstractAction> getOpenForContextActions(final DomainObject domainObject) {
 
-        TreeMap<Integer, NamedAction> orderedMap = new TreeMap<>();
+        TreeMap<Integer, AbstractAction> orderedMap = new TreeMap<>();
         Collection<DomainObjectAcceptor> domainObjectAcceptors
                 = ServiceAcceptorHelper.findHandler(
                         domainObject,
@@ -43,7 +45,7 @@ public class ServiceAcceptorActionHelper {
                 );
         boolean lastItemWasSeparator = false;
         int expectedCount = 0;
-        List<NamedAction> actionItemList = new ArrayList<>();
+        List<AbstractAction> actionItemList = new ArrayList<>();
         for (final DomainObjectAcceptor domainObjectAcceptor : domainObjectAcceptors) {
             final Integer order = domainObjectAcceptor.getOrder();
             if (domainObjectAcceptor.isPrecededBySeparator() && (!lastItemWasSeparator)) {
@@ -51,17 +53,14 @@ public class ServiceAcceptorActionHelper {
                 expectedCount++;
             }
 
-            NamedAction action = new NamedAction() {
+            AbstractAction action = new AbstractAction(domainObjectAcceptor.getActionLabel()) {
                 @Override
-                public String getName() {
-                    return domainObjectAcceptor.getActionLabel();
-                }
-
-                @Override
-                public void doAction() {
+                public void actionPerformed(ActionEvent e) {
                     domainObjectAcceptor.acceptDomainObject(domainObject);
                 }
             };
+            action.setEnabled(domainObjectAcceptor.isEnabled(domainObject));
+            
             actionItemList.add(action);
 
             orderedMap.put(order, action);
@@ -87,11 +86,11 @@ public class ServiceAcceptorActionHelper {
 
         log.debug("Created context menu items from domain object acceptors:");
         for (Integer key : orderedMap.keySet()) {
-            NamedAction action = orderedMap.get(key);
+            AbstractAction action = orderedMap.get(key);
             if (action == null) {
                 log.debug("{} = Separator", key);
             } else {
-                log.debug("{} = {}", key, action.getName());
+                log.debug("{} = {}", key, action.getValue(Action.NAME));
             }
         }
 
@@ -100,33 +99,14 @@ public class ServiceAcceptorActionHelper {
 
     public static Collection<JComponent> getOpenForContextItems(final DomainObject domainObject) {
         List<JComponent> components = new ArrayList<>();
-        for (NamedAction action : getOpenForContextActions(domainObject)) {
+        for (AbstractAction action : getOpenForContextActions(domainObject)) {
             if (action == null) {
                 components.add(new JSeparator());
-            } else {
-                JMenuItem item = new JMenuItem(action.getName());
-                item.addActionListener(new DomainObjectAcceptorActionListener(action));
-                components.add(item);
+            } 
+            else {
+                components.add(new JMenuItem(action));
             }
         }
         return components;
-    }
-
-    public static class DomainObjectAcceptorActionListener implements ActionListener {
-
-        private NamedAction action;
-
-        public DomainObjectAcceptorActionListener(NamedAction action) {
-            this.action = action;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            try {
-                action.doAction();
-            } catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
-            }
-        }
     }
 }
