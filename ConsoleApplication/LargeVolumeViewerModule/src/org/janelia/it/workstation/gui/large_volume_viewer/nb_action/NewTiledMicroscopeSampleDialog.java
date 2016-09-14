@@ -106,4 +106,5 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 
 		add(buttonPane, BorderLayout.SOUTH);
 	}
+	
 }

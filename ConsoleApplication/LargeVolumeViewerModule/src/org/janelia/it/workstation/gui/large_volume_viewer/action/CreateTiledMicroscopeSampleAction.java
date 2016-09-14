@@ -21,7 +21,8 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
     private String name, pathToRenderFolder;
 
     public CreateTiledMicroscopeSampleAction(String name, String pathToRenderFolder) {
-        super(name);
+        super("Create Tiled Microscope Sample");
+        this.name = name;
         this.pathToRenderFolder = pathToRenderFolder;
     }
 
