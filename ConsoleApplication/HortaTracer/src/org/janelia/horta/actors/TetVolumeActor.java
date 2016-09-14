@@ -79,6 +79,8 @@ implements DepthSlabClipper
     private float zNearRelative = 0.10f;
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
+    // Initialize tracing channel to average of the first two channels
+    private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     public TetVolumeActor() {
@@ -191,6 +193,9 @@ implements DepthSlabClipper
                         c1.isVisible() ? 1.0f : 0.0f,
                         c2.isVisible() ? 1.0f : 0.0f
                     }, 0);
+                
+                // unmixing parameters
+                gl.glUniform4fv(7, 1, unmixMinScale, 0);
             }
             else {
                 throw new UnsupportedOperationException("Unexpected number of color channels");
@@ -214,6 +219,36 @@ implements DepthSlabClipper
         return brightnessModel;
     }
 
+    /* Compute unmixing parameters for 
+     *  channel 1 minus channel 2, 
+     * using current brightness settings.
+     */
+    public void unmixChannelOne() {
+        float scale = setChannelMins();
+        unmixMinScale[2] = 1.0f;
+        unmixMinScale[3] = scale;
+    }
+    
+    public void unmixChannelTwo() {
+        float scale = setChannelMins();
+        unmixMinScale[2] = 1.0f/scale;
+        unmixMinScale[3] = 1.0f;
+    }
+    
+    private float setChannelMins() {
+        // Populate first two params, the min intensities, with absolute channel values
+        ChannelColorModel c1 = brightnessModel.getChannel(0);
+        ChannelColorModel c2 = brightnessModel.getChannel(1);
+        float minA = c1.getBlackLevel()/(float)c1.getDataMax();
+        float minB = c2.getBlackLevel()/(float)c2.getDataMax();
+        unmixMinScale[0] = minA;
+        unmixMinScale[1] = minB;
+        float range1 = c1.getWhiteLevel() - c1.getBlackLevel();
+        float range2 = c2.getWhiteLevel() - c2.getBlackLevel();
+        float scaleB = -range1/range2;
+        return scaleB;
+    }
+    
     public void setBrightnessModel(ImageColorModel brightnessModel) {
         this.brightnessModel = brightnessModel;
     }
@@ -227,6 +262,10 @@ implements DepthSlabClipper
     public void setRelativeSlabThickness(float zNear, float zFar) {
         zNearRelative = zNear;
         zFarRelative = zFar;
+    }
+
+    public int getBlockCount() {
+        return getChildren().size();
     }
 
 }

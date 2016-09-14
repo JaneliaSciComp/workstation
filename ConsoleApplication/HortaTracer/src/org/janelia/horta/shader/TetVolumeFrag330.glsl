@@ -53,6 +53,8 @@ layout(location = 5) uniform OUTPUT_CHANNEL_VEC opacityFunctionGamma = OUTPUT_CH
 
 layout(location = 6) uniform OUTPUT_CHANNEL_VEC channelVisibilityMask = OUTPUT_CHANNEL_VEC(1);
 
+layout(location = 7) uniform vec4 unmixMinScale = vec4(0.0, 0.0, 0.5, 0.5);
+
 // use a linear combination of input color channels to create one channel used for neuron tracing
 // used for computing "core" depth and intensity
 // TODO: this should include an offset parameter
@@ -87,49 +89,15 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
-// Multiple tracing modes...
-
-float tracing_channel_one(vec2 intensities) {
-    return intensities.x;
-}
-
-float tracing_channel_two(vec2 intensities) {
-    return intensities.y;
-}
-
-/*
- * Parameters:
- *   primaryAndBackground: samples from each of two channels
- *   mins: equivalent low-intensity values from each channel
- *   maxes: equivalent higher-intensity values from each channel
- *
- *   returns: unmixed intensity of channel1 minus channel2
- */
-float unmix_channels(vec2 primaryAndBackground, vec2 mins, vec2 maxes) 
-{
-    // Normalize to range 0-1 within min-max region
-    vec2 norm = primaryAndBackground - mins; // shift to origin
-    vec2 ranges = maxes - mins;
-    norm /= ranges; // scale to 0.0-1.0 within min-max region
-    // Subtract background from signal
-    float unmixed = norm.x - norm.y;
-    // Restore to channel 1 range
-    unmixed *= ranges.x;
-    unmixed += min(0.05, mins.x);
-    unmixed = clamp(unmixed, 0, 1);
-    return unmixed;
-}
-
-float tracing_channel_one_unmixed(vec2 intensities) {
-    return unmix_channels(intensities.xy, opacityFunctionMin.xy, opacityFunctionMax.xy);
-}
-
-float tracing_channel_two_unmixed(vec2 intensities) {
-    return unmix_channels(intensities.yx, opacityFunctionMin.yx, opacityFunctionMax.yx);
-}
-
 float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
-    return tracing_channel_one_unmixed(raw_channels);
+    vec2 raw = raw_channels.xy;
+    // Avoid extreme differences at low intensity
+    if (raw.x < unmixMinScale.x) return 0; // below threshold -> no data
+    if (raw.y < unmixMinScale.y) return 0;
+    float result = dot(raw_channels.xy, unmixMinScale.zw);
+    result += min(unmixMinScale.x, unmixMinScale.y); // allow room to explore negative differences
+    result = clamp(result, 0, 1);
+    return result;
 }
 
 // For one-channel, blending is trivial

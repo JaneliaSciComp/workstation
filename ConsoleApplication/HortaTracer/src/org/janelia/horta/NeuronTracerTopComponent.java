@@ -142,6 +142,7 @@ import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
@@ -1262,6 +1263,37 @@ public final class NeuronTracerTopComponent extends TopComponent
                         item.setSelected(doCubifyVoxels);
                     }
                 });
+                
+                // Unmixing menu
+                if (TetVolumeActor.getInstance().getBlockCount() > 0) 
+                {
+                    JMenu unmixMenu = new JMenu("Unmix");
+                    
+                    unmixMenu.add(new JMenuItem(
+                            new AbstractAction("Channel 1 using current brightness") 
+                    {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TetVolumeActor.getInstance().unmixChannelOne();
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            redrawNow();
+                        }
+                    }));
+                    
+                    unmixMenu.add(new JMenuItem(
+                            new AbstractAction("Channel 2 using current brightness") 
+                    {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TetVolumeActor.getInstance().unmixChannelTwo();
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            redrawNow();
+                        }
+                    }));
+                    
+                    menu.add(unmixMenu);
+                }
+
                 
                 menu.add(new AbstractAction("Save Screen Shot...") {
                     @Override
