@@ -3,13 +3,11 @@ package org.janelia.it.workstation.gui.large_volume_viewer.launch;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.browser.actions.DomainObjectContextMenu;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;

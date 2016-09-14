@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.api.facade.impl.rest;
+package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -26,7 +26,8 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.RESTClientImpl;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.RESTClientManager;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.nb_action;
+package org.janelia.it.jacs.integration.framework.domain;
 
 import java.util.List;
 import javax.swing.JComponent;
@@ -12,5 +12,5 @@ import org.janelia.it.jacs.model.domain.DomainObject;
  */
 public interface DropAcceptor extends Compatible<JComponent> {
     public final static String LOOKUP_PATH = "EntityPerspective/DropTarget";
-    void drop(List<DomainObject> entitiesToAdd, String objective);
+    void drop(List<DomainObject> objectToAdd, String objective);
 }

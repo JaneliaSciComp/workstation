@@ -13,10 +13,10 @@ import java.util.Collection;
 import java.util.List;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

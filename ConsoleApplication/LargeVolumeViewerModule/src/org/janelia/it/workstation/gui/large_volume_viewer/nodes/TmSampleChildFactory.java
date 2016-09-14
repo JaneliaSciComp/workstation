@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.large_volume_viewer.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -43,8 +44,8 @@ public class TmSampleChildFactory extends ChildFactory<TmWorkspace> {
 
             log.debug("Creating children keys for {}",sample.getName());
             
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<TmWorkspace> children = model.getTmWorkspaces(sample.getId());
+            TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
+            List<TmWorkspace> children = mgr.getTmWorkspaces(sample.getId());
             log.debug("Got children: {}",children);
 
             List<TmWorkspace> temp = new ArrayList<>();

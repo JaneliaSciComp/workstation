@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.nb_action;
+package org.janelia.it.jacs.integration.framework.domain;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 

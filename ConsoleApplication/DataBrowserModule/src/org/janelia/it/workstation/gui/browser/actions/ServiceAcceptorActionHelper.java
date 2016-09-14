@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -13,10 +12,9 @@ import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

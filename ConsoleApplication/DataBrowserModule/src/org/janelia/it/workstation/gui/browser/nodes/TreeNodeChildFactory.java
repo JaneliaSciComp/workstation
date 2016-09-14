@@ -5,15 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -45,18 +45,27 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     public boolean hasNodeChildren() {
         for(Reference reference : treeNode.getChildren()) {
             if (reference==null) continue;
+
             if (reference.getTargetClassName().equals("TreeNode")) {
                 return true;
             }
             else if (reference.getTargetClassName().equals("Filter")) {
                 return true;
             }
-            else if (reference.getTargetClassName().equals("TmSample")) {
-                return true;
+            
+            Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(reference.getTargetClassName());
+            
+            try {
+                DomainObject dummyChild = (DomainObject)clazz.newInstance();
+                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
+                if (provider!=null) {
+                    return true;
+                }
             }
-            else if (reference.getTargetClassName().equals("TmWorkspace")) {
-                return true;
+            catch (InstantiationException | IllegalAccessException e) {
+                log.error("Error instantiating purported domain class "+reference.getTargetClassName(), e);
             }
+            
         }
         return false;
     }
@@ -93,11 +102,11 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                         else if (Filter.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                        else if (TmSample.class.isAssignableFrom(obj.getClass())) {
-                            temp.add(obj);
-                        }
-                        else if (TmWorkspace.class.isAssignableFrom(obj.getClass())) {
-                            temp.add(obj);
+                        else {
+                            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(obj);
+                            if (provider!=null) {
+                                temp.add(obj);
+                            }
                         }
                     }
                     else {
@@ -125,16 +134,13 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             else if (Filter.class.isAssignableFrom(key.getClass())) {
                 return new FilterNode(this, (Filter)key);
             }
-            // TODO: these classes should be registered and handled dynamically, not hard-coded here, so that they can be moved to another module (such as LVV)
-            else if (TmSample.class.isAssignableFrom(key.getClass())) {
-                return new TmSampleNode(this, (TmSample)key);
-            }
-            else if (TmWorkspace.class.isAssignableFrom(key.getClass())) {
-                return new TmWorkspaceNode(this, (TmWorkspace)key);
-            }
             else {
-                return null;
+                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
+                if (provider!=null) {
+                    return provider.getNode(key, this);
+                }
             }
+            return null;
         }
         catch (Exception e) {
             log.error("Error creating node for '"+key+"'", e);

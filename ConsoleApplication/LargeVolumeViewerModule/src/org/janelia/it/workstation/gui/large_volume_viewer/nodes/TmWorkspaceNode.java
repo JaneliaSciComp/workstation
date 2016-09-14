@@ -1,9 +1,10 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.large_volume_viewer.nodes;
 
 import java.awt.Image;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

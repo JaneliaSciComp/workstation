@@ -1,15 +1,20 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import javax.swing.SwingUtilities;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -27,10 +32,6 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
@@ -39,7 +40,6 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
@@ -52,6 +52,11 @@ import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses
@@ -87,21 +92,19 @@ public class DomainModel {
     private final SampleFacade sampleFacade;
     private final SubjectFacade subjectFacade;
     private final WorkspaceFacade workspaceFacade;
-    private final TiledMicroscopeFacade tmFacade;
 
     private final Cache<Reference, DomainObject> objectCache;
     private final Map<Reference, Workspace> workspaceCache;
     private final Map<Reference, Ontology> ontologyCache;
 
     public DomainModel(DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
-            SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade, TiledMicroscopeFacade tmFacade) {
+            SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade) {
         
         this.domainFacade = domainFacade;
         this.ontologyFacade = ontologyFacade;
         this.sampleFacade = sampleFacade;
         this.subjectFacade = subjectFacade;
         this.workspaceFacade = workspaceFacade;
-        this.tmFacade = tmFacade;
 
         this.objectCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Reference, DomainObject>() {
             @Override
@@ -176,7 +179,7 @@ public class DomainModel {
      * @param <T>
      * @return
      */
-    private <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects, boolean invalidateTree) {
+    public <T extends DomainObject> List<T> putOrUpdate(Collection<T> domainObjects, boolean invalidateTree) {
         List<T> canonicalObjects = new ArrayList<>();
         if (domainObjects == null || domainObjects.isEmpty()) {
             // This is a null object, which cannot go into the cache
@@ -624,16 +627,13 @@ public class DomainModel {
 
     public void remove(List<DomainObject> domainObjects) throws Exception {
 
-        // TODO: This is a terrible hack. We need a better way to demarcate which facade is responsible for each object type.
-        for(DomainObject obj : domainObjects) {
-            if (obj instanceof TmSample) {
-                tmFacade.remove((TmSample)obj);
-            }
-            else if (obj instanceof TmWorkspace) {
-                tmFacade.remove((TmWorkspace)obj);
+        for(DomainObject domainObject : domainObjects) {
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+            if (provider!=null) {
+                provider.remove(domainObject);
             }
             else {
-                domainFacade.remove(Arrays.asList(Reference.createFor(obj)));
+                domainFacade.remove(Arrays.asList(Reference.createFor(domainObject)));
             }
         }
 
@@ -1015,15 +1015,4 @@ public class DomainModel {
 
         objects.add(domainObject);
     }
-
-    // TODO: this is a temporary hack. DomainModel should not know about TM objects or the TM facade
-    public List<TmWorkspace> getTmWorkspaces(Long sampleId) throws Exception {
-        StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspacesForSample(sampleId);
-        List<TmWorkspace> canonicalObjects = putOrUpdate(workspaces, false);
-        Collections.sort(canonicalObjects, new DomainObjectComparator());
-        if (TIMER) w.stop("getTmWorkspaces");
-        return canonicalObjects;
-    }
-
 }

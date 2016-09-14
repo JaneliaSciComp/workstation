@@ -16,5 +16,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/ConsoleApplication"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl213"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JAX-RS"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jersey"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

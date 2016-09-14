@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.nb_action;
+package org.janelia.it.jacs.integration.framework.domain;
 
 /**
  * Implement this for a compatibility check.

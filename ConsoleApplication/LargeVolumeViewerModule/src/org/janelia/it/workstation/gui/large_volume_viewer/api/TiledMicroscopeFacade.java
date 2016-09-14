@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.api.facade.interfaces;
+package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
 import java.io.InputStream;
 import java.util.Collection;

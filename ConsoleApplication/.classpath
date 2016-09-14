@@ -6,6 +6,7 @@
 	<classpathentry kind="src" path="DataBrowserModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
+	<classpathentry kind="src" path="DataBrowserModule/test/unit/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MongoDB"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons"/>

@@ -13,13 +13,11 @@ import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.DomainFacadeI
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.OntologyFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SampleFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SubjectFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.TiledMicroscopeFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.WorkspaceFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.junit.After;
 import org.junit.Before;
@@ -45,12 +43,11 @@ public class DomainModelTest {
         SampleFacade sampleFacade = new SampleFacadeImpl();
         SubjectFacade subjectFacade = new SubjectFacadeImpl();
         WorkspaceFacade workspaceFacade = new WorkspaceFacadeImpl();
-        TiledMicroscopeFacade tmFacade = new TiledMicroscopeFacadeImpl();
         /*
         DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
             SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade
          */
-        domainModel = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade, tmFacade);
+        domainModel = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
     }
     
     @After

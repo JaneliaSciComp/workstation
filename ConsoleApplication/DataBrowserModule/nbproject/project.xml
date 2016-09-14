@@ -171,6 +171,7 @@
                 <package>org.janelia.it.workstation.gui.browser.model.search</package>
                 <package>org.janelia.it.workstation.gui.browser.nb_action</package>
                 <package>org.janelia.it.workstation.gui.browser.nodes</package>
+                <package>org.janelia.it.workstation.gui.browser.sample_trimming</package>
                 <package>org.janelia.it.workstation.gui.browser.web</package>
                 <package>org.janelia.it.workstation.gui.browser.ws</package>
             </public-packages>

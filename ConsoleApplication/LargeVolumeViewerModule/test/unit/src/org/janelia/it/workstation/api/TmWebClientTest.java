@@ -1,11 +1,16 @@
-package org.janelia.it.workstation.gui.browser.api;
+package org.janelia.it.workstation.api;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -13,19 +18,16 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.TiledMicroscopeFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeFacade;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeFacadeImpl;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import com.google.common.collect.Sets;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -149,7 +151,7 @@ public class TmWebClientTest {
 
         // Create a neuron
         TmNeuronMetadata tmNeuronMetadata = new TmNeuronMetadata();
-        tmNeuronMetadata.initNeuronData();
+//        tmNeuronMetadata.initNeuronData();
         tmNeuronMetadata.setName(neuronName);
         tmNeuronMetadata.setWorkspaceRef(Reference.createFor(workspace));
         tmNeuronMetadata.addRootAnnotation(1L);

@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,7 +18,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
+import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +45,7 @@ public class TiledMicroscopeDomainMgr {
     private final TiledMicroscopeFacade tmFacade;
     
     private TiledMicroscopeDomainMgr() {
-        tmFacade = DomainMgr.getDomainMgr().getTmFacade();
+        tmFacade = new TiledMicroscopeFacadeImpl();
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -104,6 +106,13 @@ public class TiledMicroscopeDomainMgr {
         log.debug("remove({})",sample);
         tmFacade.remove(sample);
         model.notifyDomainObjectRemoved(sample);
+    }
+
+    public List<TmWorkspace> getTmWorkspaces(Long sampleId) throws Exception {
+        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspacesForSample(sampleId);
+        List<TmWorkspace> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(workspaces, false);
+        Collections.sort(canonicalObjects, new DomainObjectComparator());
+        return canonicalObjects;
     }
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {

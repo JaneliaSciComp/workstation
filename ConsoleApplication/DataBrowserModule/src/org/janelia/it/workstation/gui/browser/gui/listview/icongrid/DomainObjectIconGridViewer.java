@@ -10,6 +10,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -24,8 +26,6 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.DynamicDomainObjectProxy;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.AnnotationContextMenu;
@@ -55,8 +55,6 @@ import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.janelia.it.jacs.model.domain.support.DomainUtils.abbr;
 
 /**
  * An IconGridViewer implementation for viewing domain objects. 
@@ -102,18 +100,17 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
             String filename = "question_block_large.png";
-            // TODO: these classes should be registered and handled dynamically, not hard-coded here, so that they can be moved to another module (such as LVV for the Tm objects)
             if (imageObject instanceof Filter) {
                 filename = "search_large.png";
             }
             else if (imageObject instanceof TreeNode) {
                 filename = "folder_large.png";
             }
-            else if (imageObject instanceof TmWorkspace) {
-                filename = "workspace_large.png";
-            }
-            else if (imageObject instanceof TmSample) {
-                filename = "folder_files_large.png";
+            else {
+                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
+                if (provider!=null) {
+                    filename = provider.getLargeIcon(imageObject);
+                }
             }
             ImageIcon icon = Icons.getIcon(filename);
             if (icon==null) return null;

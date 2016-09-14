@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.event.ActionEvent;
@@ -13,12 +7,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JPopupMenu;
+
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
