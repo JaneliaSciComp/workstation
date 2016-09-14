@@ -289,7 +289,7 @@ IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in Integra
 {
     float opacity = 1.0 - (1.0 - front.opacity) * (1.0 - back.opacity);
     float kf = front.opacity;
-    float kb = 1.0 - kf;
+    float kb = 1.0 - front.opacity;
     CHANNEL_VEC bi = back.intensity * kb;
     CHANNEL_VEC fi = front.intensity * kf;
     // This is the visible VIEWER tracing channel, so apply occluding here too.

@@ -30,20 +30,24 @@
 
 package org.janelia.horta.actors;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.MeshGeometry;
+import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
-import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.ktx.KtxData;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,25 +59,54 @@ import org.slf4j.LoggerFactory;
 public class TetVolumeActor extends BasicGL3Actor 
 implements DepthSlabClipper
 {
-    private final MeshActor meshActor;
-    protected final TetVolumeMaterial material;
+    private static TetVolumeActor singletonInstance;
+
+    // Singleton access
+    static public TetVolumeActor getInstance() {
+        if (singletonInstance == null)
+            singletonInstance = new TetVolumeActor();
+        return singletonInstance;
+    }
+    
+    // private final MeshActor meshActor;
+    // protected final TetVolumeMaterial material;
+    private final TetVolumeMaterial.TetVolumeShader shader;
+    private ImageColorModel brightnessModel;
+    private final Texture2d colorMapTexture = new Texture2d();
+    private float zNearRelative = 0.10f;
+    private float zFarRelative = 100.0f; // relative z clip planes
+    private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    // For scaling efficiency, alternate constructor takes shared resources as argument
-    public TetVolumeActor(KtxData ktxData, MeshGeometry meshGeometry, ImageColorModel brightnessModel) 
-    {
+    public TetVolumeActor() {
         super(null);
-        material = new TetVolumeMaterial(ktxData, brightnessModel);
-        meshActor = new TetVolumeMeshActor(meshGeometry, material, this);
-        this.addChild(meshActor);
+        shader = new TetVolumeMaterial.TetVolumeShader();
+        BufferedImage colorMapImage = null;
+        try {
+            colorMapImage = ImageIO.read(
+                    getClass().getResourceAsStream(
+                            "/org/janelia/horta/images/"
+                            + "HotColorMap.png"));
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
+        colorMapTexture.loadFromBufferedImage(colorMapImage);
+        colorMapTexture.setGenerateMipmaps(false);
+        colorMapTexture.setMinFilter(GL3.GL_LINEAR);
+        colorMapTexture.setMagFilter(GL3.GL_LINEAR);
+    }
+
+    public void addKtxBlock(KtxData ktxData) 
+    {    
+        this.addChild(new TetVolumeMeshActor(ktxData, shader, this));
     }
     
-    public void addOuterTetrahedron(int a, int b, int c, int apex) {
-        ((TetVolumeMeshActor)meshActor).addOuterTetrahedron(a, b, c, apex);
-    }
-    
-    public void setCentralTetrahedron(int a, int b, int c, int apex) {
-        ((TetVolumeMeshActor)meshActor).setCentralTetrahedron(a, b, c, apex);
+    @Override
+    public void init(GL3 gl) 
+    {
+        super.init(gl);
+        colorMapTexture.init(gl);
+        shader.init(gl);
     }
     
     @Override
@@ -88,22 +121,83 @@ implements DepthSlabClipper
         // But Z-far needs to be pushed back significantly.
         ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative(), vp.getzFarRelative() + 100.0f);
         try {
-            camera.pushInternalViewSlab(slab);    
+            camera.pushInternalViewSlab(slab);
+            // Bind color map to texture unit 1, because 3D volume textures will use unit zero.
+            colorMapTexture.bind(gl, 1);
+            shader.load(gl);
+            // Z-clip planes
+            float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
+            zNearFar[0] = zNearRelative * focusDistance;
+            zNearFar[1] = zFarRelative * focusDistance;
+            final int zNearFarUniformIndex = 2; // explicitly set in shader
+            gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
+            // Brightness correction
+            if (brightnessModel.getChannelCount() == 3) {
+                // Use a multichannel model
+                ChannelColorModel c0 = brightnessModel.getChannel(0);
+                ChannelColorModel c1 = brightnessModel.getChannel(1);
+                ChannelColorModel c2 = brightnessModel.getChannel(2);
+                float max0 = c0.getDataMax();
+                // min
+                gl.glUniform3fv(3, 1, new float[] {
+                        c0.getBlackLevel()/max0, 
+                        c1.getBlackLevel()/max0,
+                        c2.getBlackLevel()/max0
+                    }, 0);
+                // max
+                gl.glUniform3fv(4, 1, new float[] {
+                        c0.getWhiteLevel()/max0, 
+                        c1.getWhiteLevel()/max0,
+                        c2.getWhiteLevel()/max0
+                    }, 0);
+                // gamma
+                gl.glUniform3fv(5, 1, new float[] {
+                        (float)c0.getGamma(), 
+                        (float)c1.getGamma(),
+                        (float)c2.getGamma()
+                    }, 0);
+                // visibility
+                gl.glUniform3fv(6, 1, new float[] {
+                        c0.isVisible() ? 1.0f : 0.0f,
+                        c1.isVisible() ? 1.0f : 0.0f,
+                        c2.isVisible() ? 1.0f : 0.0f
+                    }, 0);
+            }
+            else {
+                throw new UnsupportedOperationException("Unexpected number of color channels");
+            }
+            
             super.display(gl, camera, parentModelViewMatrix);
         }
         finally {
             camera.popInternalViewSlab();
+            shader.unload(gl);
         }
+    }
+    
+    @Override
+    public void dispose(GL3 gl) {
+        colorMapTexture.dispose(gl);
+        shader.dispose(gl);
+    }
+
+    public ImageColorModel getBrightnessModel() {
+        return brightnessModel;
+    }
+
+    public void setBrightnessModel(ImageColorModel brightnessModel) {
+        this.brightnessModel = brightnessModel;
     }
 
     @Override
     public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
-        material.setOpaqueDepthTexture(opaqueDepthTexture);
+        // TODO: not yet used
     }
 
     @Override
     public void setRelativeSlabThickness(float zNear, float zFar) {
-        material.setRelativeSlabThickness(zNear, zFar);
+        zNearRelative = zNear;
+        zFarRelative = zFar;
     }
 
 }

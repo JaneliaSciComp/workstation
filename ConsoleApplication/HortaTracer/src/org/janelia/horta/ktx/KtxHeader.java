@@ -71,7 +71,7 @@ public class KtxHeader {
     int numberOfArrayElements;
     int numberOfFaces;
     public int numberOfMipmapLevels;
-    Map<String, String> keyValueMetadata = new LinkedHashMap<>(); // must preserve key order!
+    public Map<String, String> keyValueMetadata = new LinkedHashMap<>(); // must preserve key order!
     
     public KtxHeader loadStream(InputStream stream) throws IOException
     {

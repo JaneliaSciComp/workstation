@@ -124,11 +124,12 @@ public abstract class BasicMaterial implements Material
     public void init(GL3 gl) {
         if (isInitialized)
             return;
-        if (shaderProgram != null)
+        if (shaderProgram != null) {
             shaderProgram.init(gl);
-        int s = shaderProgram.getProgramHandle();
-        modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix"); // -1 means no such item
-        projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
+            int s = shaderProgram.getProgramHandle();
+            modelViewIndex = gl.glGetUniformLocation(s, "modelViewMatrix"); // -1 means no such item
+            projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
+        }
         
         isInitialized = true;
     }
@@ -136,12 +137,14 @@ public abstract class BasicMaterial implements Material
     @Override
     public void load(GL3 gl, AbstractCamera camera) {
         if (! isInitialized) init(gl);
-        shaderProgram.load(gl);
+        if (shaderProgram != null)
+            shaderProgram.load(gl);
     }
 
     @Override
     public void unload(GL3 gl) {
-        shaderProgram.unload(gl);
+        if (shaderProgram != null)
+            shaderProgram.unload(gl);
         gl.glPolygonMode(GL3.GL_FRONT_AND_BACK, GL3.GL_FILL);
     }
 

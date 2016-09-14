@@ -33,6 +33,7 @@ package org.janelia.horta.actors;
 import java.awt.Color;
 import java.io.IOException;
 import javax.media.opengl.GL3;
+import javax.media.opengl.GLException;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;
@@ -93,6 +94,7 @@ public class SpheresMaterial extends BasicMaterial
     {
         if (manageLightProbeTexture) {
             lightProbeTexture.bind(gl, 0);
+            shaderProgram.load(gl);
             gl.glUniform4fv(colorIndex, 1, color, 0);
             float micrometersPerPixel = 
                 camera.getVantage().getSceneUnitsPerViewportHeight()

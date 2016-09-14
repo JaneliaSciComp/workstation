@@ -33,6 +33,7 @@ package org.janelia.horta.loader;
 import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.io.FilenameUtils;
+import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.slf4j.Logger;
@@ -69,7 +70,12 @@ public class HortaKtxLoader implements FileTypeLoader
         long end = System.nanoTime();
         double elapsed = (end - start)/1.0e9;
         logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
-        renderer.addVolumeActor(data.createActor(renderer.getBrightnessModel()));
+        TetVolumeActor actor = TetVolumeActor.getInstance();
+        actor.addKtxBlock(data);
+        if ( ! renderer.containsVolumeActor(actor) ) { // just add singleton actor once...
+            actor.setBrightnessModel(renderer.getBrightnessModel());
+            renderer.addVolumeActor(actor);
+        }
         return true;
     }
 

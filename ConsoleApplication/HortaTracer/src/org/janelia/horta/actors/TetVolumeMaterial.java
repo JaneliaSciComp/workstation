@@ -30,15 +30,12 @@
 
 package org.janelia.horta.actors;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
-import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
@@ -47,8 +44,6 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
-import org.janelia.gltools.material.DepthSlabClipper;
-import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -59,41 +54,17 @@ import org.slf4j.LoggerFactory;
  * @author Christopher Bruns
  */
 public class TetVolumeMaterial extends BasicMaterial
-implements DepthSlabClipper
 {
     private int volumeTextureHandle = 0;
-    private int colorMapTextureHandle = 0;
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private IntBuffer pbos;
-    private float zNearRelative = 0.10f;
-    private float zFarRelative = 100.0f; // relative z clip planes
-    private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
-    // multichannel brightness
-    private final ImageColorModel brightnessModel;
-    private Texture2d colorMapTexture = new Texture2d();
 
-    public TetVolumeMaterial(KtxData ktxData, ImageColorModel brightnessModel) {
+    public TetVolumeMaterial(KtxData ktxData, TetVolumeShader shader) {
         this.ktxData = ktxData;
-        shaderProgram = new TetVolumeShader();
-        this.brightnessModel = brightnessModel;
-        
-        BufferedImage colorMapImage = null;
-        try {
-            colorMapImage = ImageIO.read(
-                    getClass().getResourceAsStream(
-                            "/org/janelia/horta/images/"
-                            + "HotColorMap.png"));
-        } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        colorMapTexture.loadFromBufferedImage(colorMapImage);
-        colorMapTexture.setGenerateMipmaps(false);
-        colorMapTexture.setMinFilter(GL3.GL_LINEAR);
-        colorMapTexture.setMagFilter(GL3.GL_LINEAR);
-
+        shaderProgram = shader;
     }
-    
+
     // Override displayMesh() to display something other than triangles
     @Override
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
@@ -103,9 +74,8 @@ implements DepthSlabClipper
     @Override
     public void dispose(GL3 gl) {
         super.dispose(gl);
-        gl.glDeleteTextures(2, new int[] {volumeTextureHandle, colorMapTextureHandle}, 0);
+        gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
         volumeTextureHandle = 0;
-        colorMapTextureHandle = 0;
     }
     
     @Override
@@ -124,10 +94,9 @@ implements DepthSlabClipper
         super.init(gl);
         
         // Volume texture
-        int[] h = {0, 0};
-        gl.glGenTextures(2, h, 0);
+        int[] h = {0};
+        gl.glGenTextures(1, h, 0);
         volumeTextureHandle = h[0];
-        colorMapTextureHandle = h[1];
 
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
@@ -251,67 +220,13 @@ implements DepthSlabClipper
         // 3D volume texture
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
-        // Z-clip planes
-        float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
-        zNearFar[0] = zNearRelative * focusDistance;
-        zNearFar[1] = zFarRelative * focusDistance;
-        final int zNearFarUniformIndex = 2; // explicitly set in shader
-        gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
-        // Brightness correction
-        if (brightnessModel.getChannelCount() == 3) {
-            // Use a multichannel model
-            ChannelColorModel c0 = brightnessModel.getChannel(0);
-            ChannelColorModel c1 = brightnessModel.getChannel(1);
-            ChannelColorModel c2 = brightnessModel.getChannel(2);
-            float max0 = c0.getDataMax();
-            // min
-            gl.glUniform3fv(3, 1, new float[] {
-                    c0.getBlackLevel()/max0, 
-                    c1.getBlackLevel()/max0,
-                    c2.getBlackLevel()/max0
-                }, 0);
-            // max
-            gl.glUniform3fv(4, 1, new float[] {
-                    c0.getWhiteLevel()/max0, 
-                    c1.getWhiteLevel()/max0,
-                    c2.getWhiteLevel()/max0
-                }, 0);
-            // gamma
-            gl.glUniform3fv(5, 1, new float[] {
-                    (float)c0.getGamma(), 
-                    (float)c1.getGamma(),
-                    (float)c2.getGamma()
-                }, 0);
-            // visibility
-            gl.glUniform3fv(6, 1, new float[] {
-                    c0.isVisible() ? 1.0f : 0.0f,
-                    c1.isVisible() ? 1.0f : 0.0f,
-                    c2.isVisible() ? 1.0f : 0.0f
-                }, 0);
-        }
-        else {
-            throw new UnsupportedOperationException("Unexpected number of color channels");
-        }
-        // Color map
-        colorMapTexture.bind(gl, 1); // texture unit 1
     }
-    
+
     @Override
     public boolean usesNormals() {
         return false;
     }
 
-    @Override
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
-        // TODO: not yet used
-    }
-
-    @Override
-    public void setRelativeSlabThickness(float zNear, float zFar) {
-        zNearRelative = zNear;
-        zFarRelative = zFar;
-    }
-    
     public static class TetVolumeShader extends BasicShaderProgram
     {
         public TetVolumeShader()

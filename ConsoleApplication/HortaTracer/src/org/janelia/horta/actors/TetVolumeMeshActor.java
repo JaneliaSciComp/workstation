@@ -34,32 +34,61 @@ import com.jogamp.common.nio.Buffers;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GL4;
 import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.MeshGeometry;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshActor;
-import org.janelia.gltools.material.DepthSlabClipper;
-import org.janelia.gltools.material.Material;
-import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.actors.TetVolumeMaterial.TetVolumeShader;
+import org.janelia.horta.ktx.KtxData;
 
 /**
  *
  * @author brunsc
  */
-class TetVolumeMeshActor extends MeshActor 
-implements DepthSlabClipper
+public class TetVolumeMeshActor extends MeshActor
 {
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
-    private final TetVolumeMaterial tetVolumeMaterial;
-    // First render pass uses parent class vboTriangleAdjacenyIndices
-    // protected int vboCentralTriangleAdjacencyIndices = 0; // For second render pass, just the central tetrahedron.
-    // protected int vboReversedTriangleAdjacencyIndices = 0; // For the third render pass, front tetrahedra.
 
-    public TetVolumeMeshActor(MeshGeometry geometry, TetVolumeMaterial material, CompositeObject3d parent) {
+    private TetVolumeMeshActor(MeshGeometry geometry, TetVolumeMaterial material, CompositeObject3d parent) {
         super(geometry, material, parent);
-        this.tetVolumeMaterial = material;
+    }
+    
+    public TetVolumeMeshActor(KtxData ktxData, TetVolumeShader shader, CompositeObject3d parent) {
+        super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, shader), parent);
+
+        /*
+                4___________5                  
+                /|         /|             These are texture coordinate axes,
+               / |        / |             not world axes.
+             0/_________1/  |                   z
+              | 6|_______|__|7                 /
+              |  /       |  /                 /
+              | /        | /                 |---->X
+              |/_________|/                  |
+              2          3                   | 
+                                             v
+                                             Y
+        */
+
+        // Compose the brick from five tetrahedra
+        addOuterTetrahedron(0, 5, 3, 1); // upper right front
+        final boolean showFullBlock = true; // false for easier debugging of non-blending issues
+        if (showFullBlock) {
+            addOuterTetrahedron(0, 6, 5, 4); // upper left rear
+            setCentralTetrahedron(0, 3, 5, 6); // inner tetrahedron
+            addOuterTetrahedron(3, 5, 6, 7); // lower right rear
+            addOuterTetrahedron(0, 3, 6, 2); // lower left front
+        }
+
+        // TODO: alternate tetrahedralization - used for alternating subblocks in raw tiles.
+        /** @TODO something */
     }
     
     public void addOuterTetrahedron(int a, int b, int c, int apex) {
@@ -120,8 +149,6 @@ implements DepthSlabClipper
         vertexBufferObject.unbind(gl);
     }
 
-
-    
     @Override
     protected void initTriangleAdjacencyIndices(GL3 gl) 
     {
@@ -212,14 +239,44 @@ implements DepthSlabClipper
         }
     }
 
-    @Override
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
-        tetVolumeMaterial.setOpaqueDepthTexture(opaqueDepthTexture);
-    }
+    private static class TetVolumeMeshGeometry extends MeshGeometry {
 
-    @Override
-    public void setRelativeSlabThickness(float zNear, float zFar) {
-        tetVolumeMaterial.setRelativeSlabThickness(zNear, zFar);
+        public TetVolumeMeshGeometry(KtxData ktxData)
+        {
+            // Parse spatial transformation matrix from block metadata
+            String xformString = ktxData.header.keyValueMetadata.get("xyz_from_texcoord_xform");
+            // [[  1.05224424e+04   0.00000000e+00   0.00000000e+00   7.27855312e+04]  [  0.00000000e+00   7.26326904e+03   0.00000000e+00   4.04875508e+04]  [  0.00000000e+00   0.00000000e+00   1.12891562e+04   1.78165703e+04]  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   1.00000000e+00]]
+            String np = "([-+0-9.e]+)"; // regular expression for parsing and capturing one number from the matrix
+            String rp = "\\[\\s*"+np+"\\s+"+np+"\\s+"+np+"\\s+"+np+"\\s*\\]"; // regex for parsing one matrix row
+            String mp = "\\["+rp+"\\s*"+rp+"\\s*"+rp+"\\s*"+rp+"\\s*\\]"; // regex for entire matrix
+            Pattern p = Pattern.compile("^"+mp+".*$", Pattern.DOTALL);
+            Matcher m = p.matcher(xformString);
+            boolean b = m.matches();
+            double[][] m1 = new double[4][4];
+            int n = m.groupCount();
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    m1[i][j] = Double.parseDouble(m.group(4*i+j+1));
+                }
+            }
+            Jama.Matrix mat = new Jama.Matrix(m1);
+            // Loop over texture coordinate extremes
+            float[] tt = {0.0f, 1.0f};
+            for (float tz : tt) {
+                for (float ty : tt) {
+                    for (float tx :tt) {
+                        Jama.Matrix texCoord = new Jama.Matrix(new double[]{tx, ty, tz, 1.0}, 1);
+                        Jama.Matrix xyz = mat.times(texCoord.transpose());
+                        ConstVector3 v = new Vector3((float)xyz.get(0,0), (float)xyz.get(1,0), (float)xyz.get(2,0));
+                        ConstVector3 t = new Vector3((float)texCoord.get(0,0), (float)texCoord.get(0,1), (float)texCoord.get(0,2));
+                        Vertex vertex = new Vertex(v);
+                        vertex.setAttribute("texCoord", t);
+                        add(vertex);
+                        // logger.info(v.toString());
+                    }
+                }
+            }
+        }
     }
 
 }

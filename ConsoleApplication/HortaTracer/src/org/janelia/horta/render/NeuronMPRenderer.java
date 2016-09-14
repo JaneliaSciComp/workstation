@@ -178,6 +178,10 @@ extends MultipassRenderer
         setIntensityBufferDirty();
     }
     
+    public boolean containsVolumeActor(GL3Actor actor) {
+        return volumeRenderPass.containsActor(actor);
+    }
+    
     public void clearVolumeActors() {
         for (GL3Actor actor: volumeRenderPass.getActors()) {
             obsoleteGLResources.add(actor);
