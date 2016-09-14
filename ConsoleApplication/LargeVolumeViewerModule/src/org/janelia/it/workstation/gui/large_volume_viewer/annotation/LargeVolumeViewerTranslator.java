@@ -11,7 +11,9 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.util.MatrixUtilities;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -260,9 +262,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             // require knowledge of the sample ID, rather than file path.
             TileFormat tileFormat = getTileFormat();
             if (tileFormat != null) {
-                Matrix micronToVoxMatrix = annModel.getMicronToVoxMatrix();
-                Matrix voxToMicronMatrix = annModel.getVoxToMicronMatrix();
-                if (micronToVoxMatrix != null  &&  voxToMicronMatrix != null) {                    
+                TmSample sample = annModel.getCurrentSample();
+                if (sample.getMicronToVoxMatrix()!=null && sample.getVoxToMicronMatrix()!=null) {
+                    Matrix micronToVoxMatrix = MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix");
+                    Matrix voxToMicronMatrix = MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix");            
                     tileFormat.setMicronToVoxMatrix(micronToVoxMatrix);
                     tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
                 }
@@ -430,7 +433,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             sw.execute();
             
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.error("Error adding matricies to TmSample",ex);
         }
     }
 

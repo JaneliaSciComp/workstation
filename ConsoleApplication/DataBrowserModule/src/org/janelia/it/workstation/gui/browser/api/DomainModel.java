@@ -573,6 +573,19 @@ public class DomainModel {
         }
         throw new IllegalStateException("Cannot find default workspace");
     }
+    
+    public TreeNode getDefaultWorkspaceFolder(String folderName, boolean createIfNecessary) throws Exception {
+        Workspace workspace = getDefaultWorkspace();
+        List<DomainObject> children = getDomainObjects(workspace.getChildren());
+        TreeNode treeNode = DomainUtils.findObjectByTypeAndName(children, TreeNode.class, folderName);
+        if (treeNode==null && createIfNecessary) {
+            treeNode = new TreeNode();
+            treeNode.setName(folderName);
+            create(treeNode);
+            addChild(workspace, treeNode);
+        }
+        return treeNode;
+    }
 
     public List<DataSet> getDataSets() throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;

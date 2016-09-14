@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
@@ -75,6 +77,11 @@ public class TiledMicroscopeDomainMgr {
         sample.setName(name);
         sample.setFilepath(filepath);
         sample = save(sample);
+
+        // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
+        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
+        model.invalidate(folder);
+        
         return sample;
     }
 
@@ -105,11 +112,17 @@ public class TiledMicroscopeDomainMgr {
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
         }
+        
         TmWorkspace workspace = new TmWorkspace();
         workspace.setOwnerKey(SessionMgr.getSubjectKey());
         workspace.setName(name);
         workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
         workspace = save(workspace);
+        
+        // Server should have put the workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
+        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+        model.invalidate(folder);
+        
         return workspace;
     }
 
@@ -181,17 +194,19 @@ public class TiledMicroscopeDomainMgr {
         log.debug("save({})", neuronMetadata);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
-        TmNeuronMetadata metadata;
+        TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            metadata = tmFacade.create(neuronMetadata, protobufStream);
+            savedMetadata = tmFacade.create(neuronMetadata, protobufStream);
+            model.notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            metadata = tmFacade.update(neuronMetadata, protobufStream);
+            savedMetadata = tmFacade.update(neuronMetadata, protobufStream);
+            model.notifyDomainObjectChanged(savedMetadata);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
-        exchanger.copyNeuronData(neuronMetadata, metadata);
-        return metadata;
+        exchanger.copyNeuronData(neuronMetadata, savedMetadata);
+        return savedMetadata;
     }
     
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {

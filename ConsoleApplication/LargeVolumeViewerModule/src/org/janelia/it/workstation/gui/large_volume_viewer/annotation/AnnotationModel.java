@@ -33,9 +33,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
-import org.janelia.it.jacs.shared.utils.ColorUtils;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
@@ -96,8 +94,6 @@ called from a  SimpleWorker thread.
     private final DomainMgrTmModelAdapter modelAdapter;
 
     private TmSample currentSample;
-    private Matrix micronToVoxMatrix;
-    private Matrix voxToMicronMatrix;
     private TmWorkspace currentWorkspace;
     private TmNeuronMetadata currentNeuron;
     private TmNeuronTagMap currentTagMap;
@@ -179,27 +175,15 @@ called from a  SimpleWorker thread.
         this.notesUpdateListener = notesUpdateListener;
     }
 
-    // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
     }
 
-    // current workspace methods
     public TmSample getCurrentSample() {
         return currentSample;
     }
 
-    public Matrix getMicronToVoxMatrix() {
-        return micronToVoxMatrix;
-    }
-
-    public Matrix getVoxToMicronMatrix() {
-        return voxToMicronMatrix;
-    }
-
     public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
-        this.micronToVoxMatrix = micronToVoxMatrix;
-        this.voxToMicronMatrix = voxToMicronMatrix;
         currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
         currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
         tmDomainMgr.save(currentSample);
@@ -214,29 +198,20 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void loadWorkspace(final TmWorkspace workspace) {
+    public synchronized void loadWorkspace(final TmWorkspace workspace) throws Exception {
         if (workspace != null) {
-            try {
-                currentWorkspace = workspace;
-                currentSample = tmDomainMgr.getSample(workspace);
+            currentWorkspace = workspace;
+            currentSample = tmDomainMgr.getSample(workspace);
 
-                micronToVoxMatrix = MatrixUtilities.deserializeMatrix(currentSample.getMicronToVoxMatrix(), "micronToVoxMatrix");
-                voxToMicronMatrix = MatrixUtilities.deserializeMatrix(currentSample.getVoxToMicronMatrix(), "voxToMicronMatrix");
+            // Neurons need to be loaded en masse from raw data from server.
+            neuronManager.loadWorkspaceNeurons(workspace);
 
-                // Neurons need to be loaded en masse from raw data from server.
-                neuronManager.loadWorkspaceNeurons(workspace);
-                
-                // Create the local tag map for cached access to tags
-                currentTagMap = new TmNeuronTagMap();
-                for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
-                    for(String tag : tmNeuronMetadata.getTags()) {
-                        currentTagMap.addTag(tag, tmNeuronMetadata);
-                    }
+            // Create the local tag map for cached access to tags
+            currentTagMap = new TmNeuronTagMap();
+            for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
+                for(String tag : tmNeuronMetadata.getTags()) {
+                    currentTagMap.addTag(tag, tmNeuronMetadata);
                 }
-            }
-            catch (Exception ex) {
-                log.error("Error loading workspace "+workspace, ex);
-                SessionMgr.getSessionMgr().handleException(ex);
             }
         }
         else {
@@ -257,7 +232,6 @@ called from a  SimpleWorker thread.
                 }
             }
         });
-
     }
 
     public void setSWCDataConverter( SWCDataConverter converter ) {
