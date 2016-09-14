@@ -17,7 +17,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class FilterNode extends DomainObjectNode {
+public class FilterNode extends DomainObjectNode<Filter> {
         
     public FilterNode(ChildFactory parentChildFactory, Filter filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
@@ -52,8 +52,8 @@ public class FilterNode extends DomainObjectNode {
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
+        actions.add(new CopyToClipboardAction("Name", getName()));
+        actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);

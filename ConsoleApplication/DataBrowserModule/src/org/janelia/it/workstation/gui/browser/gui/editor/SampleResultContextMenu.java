@@ -222,9 +222,9 @@ public class SampleResultContextMenu extends PopupContextMenu {
         
         JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
         movieItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
+            public void actionPerformed(ActionEvent event) {
                 OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path);
-                action.doAction();
+                action.actionPerformed(event);
             }
         });
 

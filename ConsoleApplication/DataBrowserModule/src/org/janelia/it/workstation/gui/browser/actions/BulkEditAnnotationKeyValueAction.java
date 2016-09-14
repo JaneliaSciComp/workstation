@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -22,23 +24,19 @@ import com.google.common.collect.ListMultimap;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class BulkEditAnnotationKeyValueAction implements NamedAction {
+public class BulkEditAnnotationKeyValueAction extends AbstractAction {
 
     private final List<DomainObject> selectedObjects;
     private Annotation annotation;
 
     public BulkEditAnnotationKeyValueAction(List<DomainObject> selectedObjects, Annotation annotation) {
+        super(selectedObjects.size() > 1 ? "Edit \"" + annotation.getName() + "\" Annotation On " + selectedObjects.size() + " Items" : "Edit Annotation");
         this.selectedObjects = selectedObjects;
         this.annotation = annotation;
     }
 
     @Override
-    public String getName() {
-        return selectedObjects.size() > 1 ? "Edit \"" + annotation.getName() + "\" Annotation On " + selectedObjects.size() + " Items" : "Edit Annotation";
-    }
-
-    @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("BulkEditAnnotationKeyValueAction.doAction", annotation);
 

@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
@@ -16,7 +18,7 @@ import org.janelia.it.workstation.shared.util.Utils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OpenInFinderAction implements NamedAction {
+public class OpenInFinderAction extends AbstractAction {
 
     private final String filepath;
 
@@ -28,11 +30,11 @@ public class OpenInFinderAction implements NamedAction {
     }
 
     public OpenInFinderAction(String filepath) {
+        super(getName());
         this.filepath = filepath;
     }
 
-    @Override
-    public String getName() {
+    public static final String getName() {
         if (SystemInfo.isMac) {
             return "Reveal In Finder";
         }
@@ -46,7 +48,7 @@ public class OpenInFinderAction implements NamedAction {
     }
 
     @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
         try {
             ActivityLogHelper.logUserAction("OpenInFinderAction.doAction", filepath);
             Utils.processStandardFilepath(filepath, new FileCallable() {

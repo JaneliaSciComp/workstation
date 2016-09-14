@@ -288,7 +288,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 TreeNode treeNode = (TreeNode) parent;
                 if (ClientDomainUtils.hasWriteAccess(treeNode)) {
                     RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, getSelectedObjects());
-                    action.doAction();
+                    action.actionPerformed(null);
                 }
             }
         } catch (Exception ex) {

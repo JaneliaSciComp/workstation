@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileWriter;
 
+import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
@@ -23,7 +25,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ExportResultsAction<T> implements NamedAction {
+public class ExportResultsAction<T> extends AbstractAction {
 
     /**
      * Default directory for exports
@@ -34,6 +36,7 @@ public class ExportResultsAction<T> implements NamedAction {
     private DomainObjectTableViewer domainObjectTableViewer;
 
     public ExportResultsAction(SearchResults searchResults, DomainObjectTableViewer domainObjectTableViewer) {
+        super("Export table");
         this.searchResults = searchResults;
         this.domainObjectTableViewer = domainObjectTableViewer;
         // TODO: what to do if domainObjectTableViewer is null? 
@@ -44,12 +47,7 @@ public class ExportResultsAction<T> implements NamedAction {
     }
     
     @Override
-    public String getName() {
-        return "Export table";
-    }
-
-    @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("ExportResultsAction.doAction");
 
@@ -145,7 +143,7 @@ public class ExportResultsAction<T> implements NamedAction {
                         "Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (rv == JOptionPane.YES_OPTION) {
                     OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
-                    openAction.doAction();
+                    openAction.actionPerformed(null);
                 }
             }
 

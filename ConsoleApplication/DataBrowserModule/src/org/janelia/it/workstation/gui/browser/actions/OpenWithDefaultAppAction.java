@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.io.File;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
@@ -17,7 +19,7 @@ import org.janelia.it.workstation.shared.util.Utils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OpenWithDefaultAppAction implements NamedAction {
+public class OpenWithDefaultAppAction extends AbstractAction {
 
     private final String filepath;
 
@@ -29,16 +31,13 @@ public class OpenWithDefaultAppAction implements NamedAction {
     }
 
     public OpenWithDefaultAppAction(String filepath) {
+        super("Open With OS");
         this.filepath = filepath;
     }
 
     @Override
-    public String getName() {
-        return "Open With OS";
-    }
+    public void actionPerformed(ActionEvent event) {
 
-    @Override
-    public void doAction() {
         try {
             if (filepath == null) {
                 throw new Exception("Entity has no file path");

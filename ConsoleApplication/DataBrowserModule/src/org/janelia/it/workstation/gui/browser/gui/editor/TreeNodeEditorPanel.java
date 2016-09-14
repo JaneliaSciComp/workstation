@@ -261,7 +261,7 @@ public class TreeNodeEditorPanel extends JPanel
             viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
-        action.doAction();
+        action.actionPerformed(null);
     }
 
     private void loadPreferences() {

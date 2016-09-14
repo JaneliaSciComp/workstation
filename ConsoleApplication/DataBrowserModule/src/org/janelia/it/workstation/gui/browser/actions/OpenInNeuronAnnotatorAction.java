@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
@@ -25,7 +27,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OpenInNeuronAnnotatorAction implements NamedAction {
+public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
     private final static Logger log = LoggerFactory.getLogger(OpenInNeuronAnnotatorAction.class);
 
@@ -33,20 +35,17 @@ public class OpenInNeuronAnnotatorAction implements NamedAction {
     private NeuronSeparation separation;
 
     public OpenInNeuronAnnotatorAction(NeuronFragment fragment) {
+        super("View In Neuron Annotator");
         this.fragment = fragment;
     }
 
     public OpenInNeuronAnnotatorAction(NeuronSeparation separation) {
+        super("View In Neuron Annotator");
         this.separation = separation;
     }
-
+    
     @Override
-    public String getName() {
-        return "View In Neuron Annotator";
-    }
-
-    @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("OpenInNeuronAnnotatorAction.doAction", fragment==null?separation:fragment.getSeparationId());
 

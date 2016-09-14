@@ -21,7 +21,6 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -196,8 +195,8 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
+        actions.add(new CopyToClipboardAction("Name", getName()));
+        actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
@@ -207,12 +206,16 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         actions.add(new RenameAction());
         actions.add(RemoveAction.get());
         actions.add(null);
-        for (NamedAction namedAction : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
-            if (namedAction==null) {
+        for (AbstractAction action : ServiceAcceptorActionHelper.getOpenForContextActions(getDomainObject())) {
+            if (action==null) {
                 actions.add(null);
             }
             else {
-                actions.add(new NamedActionWrapper(namedAction));
+                String name = (String)action.getValue(Action.NAME);
+                if (name!=null) {
+                    action.putValue(Action.NAME, name.trim());
+                }
+                actions.add(action);
             }
         }
         return actions.toArray(new Action[actions.size()]);

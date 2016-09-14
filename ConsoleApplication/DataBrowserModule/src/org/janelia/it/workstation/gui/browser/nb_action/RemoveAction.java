@@ -93,6 +93,6 @@ public final class RemoveAction extends NodeAction {
     @Override
     protected void performAction (Node[] activatedNodes) {
         RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(parentTreeNode, toRemove);
-        action.doAction();
+        action.actionPerformed(null);
     }
 }

@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.ProgressMonitor;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -19,21 +21,17 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class PasteAnnotationTermAction implements NamedAction {
+public class PasteAnnotationTermAction extends AbstractAction {
 
     private final List<DomainObject> selectedObjects;
 
     public PasteAnnotationTermAction(List<DomainObject> selectedObjects) {
+        super("Paste Annotation");
         this.selectedObjects = selectedObjects;
     }
 
     @Override
-    public String getName() {
-        return "Paste Annotation";
-    }
-
-    @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent e) {
 
         ActivityLogHelper.logUserAction("PasteAnnotationTermAction.doAction");
 

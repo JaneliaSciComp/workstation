@@ -3,6 +3,9 @@ package org.janelia.it.workstation.gui.browser.actions;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -12,23 +15,17 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class CopyToClipboardAction implements NamedAction {
+public class CopyToClipboardAction extends AbstractAction {
 
-    private final String name;
     private final String value;
 
     public CopyToClipboardAction(String name, String value) {
-        this.name = name;
+        super("Copy "+name+" To Clipboard");
         this.value = value;
     }
 
     @Override
-    public String getName() {
-        return "Copy "+name+" To Clipboard";
-    }
-
-    @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
         try {
             ActivityLogHelper.logUserAction("CopyToClipboardAction.doAction", value);
             Transferable t = new StringSelection(value);

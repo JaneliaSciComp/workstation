@@ -1,10 +1,12 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -29,7 +31,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by fosterl on 8/15/2016.
  */
-public class RerunSamplesAction implements NamedAction {
+public class RerunSamplesAction extends AbstractAction {
     private static final String TASK_LABEL = "GSPS_CompleteSamplePipeline";
     private static final int MAX_SAMPLE_RERUN_COUNT = 10;
     private List<Sample> samples;
@@ -77,17 +79,18 @@ public class RerunSamplesAction implements NamedAction {
      * @param samples what to re-run.
      */
     private RerunSamplesAction(List<Sample> samples) {
+        super(getName(samples));
         this.samples = samples;
     }
 
-    @Override
-    public String getName() {
+    public static final String getName(List<Sample> samples) {
         final String samplesText = (samples.size() > 1)?samples.size()+" Samples":"Sample";
         return ("Mark "+samplesText+" for Reprocessing");
     }
-
+    
     @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
+        
         StringBuilder sampleText = new StringBuilder();
         if (samples.size() == 1) {
             sampleText.append("sample");

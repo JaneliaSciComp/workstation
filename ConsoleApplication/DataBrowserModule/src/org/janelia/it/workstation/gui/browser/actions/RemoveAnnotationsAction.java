@@ -1,12 +1,14 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
-import org.apache.commons.lang.StringUtils;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -26,7 +28,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RemoveAnnotationsAction implements NamedAction {
+public class RemoveAnnotationsAction extends AbstractAction {
 
     private final ImageModel<DomainObject,Reference> imageModel;
     private final List<DomainObject> selectedObjects;
@@ -34,20 +36,20 @@ public class RemoveAnnotationsAction implements NamedAction {
     private boolean matchIdOrName = false;
 
     public RemoveAnnotationsAction(ImageModel<DomainObject,Reference> imageModel, List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
+        super(getName(selectedObjects, annotation, matchIdOrName));
         this.imageModel = imageModel;
         this.selectedObjects = selectedObjects;
         this.annotation = annotation;
         this.matchIdOrName = matchIdOrName;
     }
 
-    @Override
-    public String getName() {
+    public static final String getName(List<DomainObject> selectedObjects, Annotation annotation, boolean matchIdOrName) {
         String target = matchIdOrName ? annotation.getName() : annotation.getKey();
         return selectedObjects.size() > 1 ? "Remove \"" + target + "\" Annotation From " + selectedObjects.size() + " Items" : "Remove Annotation";
-    }
+    }    
 
     @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
 
         ActivityLogHelper.logUserAction("RemoveAnnotationsAction.doAction", annotation);
 

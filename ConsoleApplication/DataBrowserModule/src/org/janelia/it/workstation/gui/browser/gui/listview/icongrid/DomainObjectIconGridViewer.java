@@ -428,7 +428,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 if (ClientDomainUtils.hasWriteAccess(treeNode)) {
                     List<DomainObject> selectedObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
                     RemoveItemsFromFolderAction action = new RemoveItemsFromFolderAction(treeNode, selectedObjects);
-                    action.doAction();
+                    action.actionPerformed(null);
                 }
             }
         }

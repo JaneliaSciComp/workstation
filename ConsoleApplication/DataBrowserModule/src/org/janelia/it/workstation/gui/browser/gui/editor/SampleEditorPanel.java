@@ -384,7 +384,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             viewer = (DomainObjectTableViewer)lsmPanel.getViewer();
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(lsmSearchResults, viewer);
-        action.doAction();
+        action.actionPerformed(null);
     }
 
     private void loadPreferences() {

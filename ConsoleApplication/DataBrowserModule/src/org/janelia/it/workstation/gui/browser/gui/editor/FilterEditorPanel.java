@@ -849,7 +849,7 @@ public class FilterEditorPanel extends JPanel
                     viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
                 }
                 ExportResultsAction<DomainObject> action = new ExportResultsAction<>(exportSearchResults, viewer);
-                action.doAction();
+                action.actionPerformed(null);
             }
 
             @Override

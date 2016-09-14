@@ -17,7 +17,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -30,7 +29,6 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.actions.ExportResultsAction;
-import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.browser.actions.OpenInNeuronAnnotatorAction;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
@@ -53,6 +51,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -145,12 +145,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
-        openInNAButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openInNA();
-            }
-        });
+        openInNAButton.addActionListener(new OpenInNeuronAnnotatorAction(separation));
         
         configPanel = new ConfigPanel(true);
         configPanel.addTitleComponent(fragmentSortButton, true, true);
@@ -274,12 +269,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             log.error("Problem encountered saving preferences", e);
         }
         cancelEditMode();
-    }
-
-
-    private void openInNA() {
-        NamedAction action = new OpenInNeuronAnnotatorAction(separation);
-        action.doAction();
     }
 
     private void sortByFragmentWeight() {
@@ -461,7 +450,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             viewer = (DomainObjectTableViewer)resultsPanel.getViewer();
         }
         ExportResultsAction<DomainObject> action = new ExportResultsAction<>(searchResults, viewer);
-        action.doAction();
+        action.actionPerformed(null);
     }
 
     private void loadPreferences() {

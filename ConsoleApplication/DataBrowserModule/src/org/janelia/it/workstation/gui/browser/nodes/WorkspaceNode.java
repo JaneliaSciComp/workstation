@@ -64,8 +64,8 @@ public class WorkspaceNode extends TreeNodeNode {
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("Name", getName())));
-        actions.add(new NamedActionWrapper(new CopyToClipboardAction("GUID", getId()+"")));
+        actions.add(new CopyToClipboardAction("Name", getName()));
+        actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
         actions.add(NewDomainObjectAction.get());
         actions.add(new RenameAction());

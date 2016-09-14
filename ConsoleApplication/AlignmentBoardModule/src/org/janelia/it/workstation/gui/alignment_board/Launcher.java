@@ -1,16 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.alignment_board;
 
 import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.nb_action.DomainObjectAcceptor;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
@@ -83,6 +76,11 @@ public class Launcher implements DomainObjectAcceptor  {
     public boolean isCompatible(DomainObject dObj) {
         log.trace(dObj.getType() + " called " + dObj.getName() + " class: " + dObj.getClass().getSimpleName());
         return dObj instanceof AlignmentBoard;
+    }
+    
+    @Override
+    public boolean isEnabled(DomainObject dObj) {
+        return true;
     }
     
     @Override

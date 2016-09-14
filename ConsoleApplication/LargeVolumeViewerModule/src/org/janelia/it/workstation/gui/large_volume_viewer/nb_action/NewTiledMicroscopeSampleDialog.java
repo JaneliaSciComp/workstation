@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -81,8 +82,8 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		JButton okButton = new JButton("Add Sample");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText())
-						.doAction();
+			    Action action = new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText());
+			    action.actionPerformed(e);
 				NewTiledMicroscopeSampleDialog.this.dispose();
 			}
 		});

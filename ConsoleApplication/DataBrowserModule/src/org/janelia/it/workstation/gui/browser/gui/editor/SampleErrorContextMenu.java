@@ -45,7 +45,7 @@ public class SampleErrorContextMenu extends PopupContextMenu {
     public void runDefaultAction() {
         String path = run.getError().getFilepath();
         OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(path);
-        action.doAction();
+        action.actionPerformed(null);
     }
     
     protected JMenuItem getTitleItem() {

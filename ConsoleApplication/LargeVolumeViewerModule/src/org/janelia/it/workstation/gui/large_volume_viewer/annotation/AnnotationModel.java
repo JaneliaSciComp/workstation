@@ -47,6 +47,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateLi
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -539,17 +540,15 @@ called from a  SimpleWorker thread.
         }
 
         addTimer.mark("start addChildAnn");
-        // Stopwatch stopwatch = new Stopwatch();
-        // stopwatch.start();
-        // System.out.println("entering addChildAnnotation: " + stopwatch);
-
-        final TmNeuronMetadata neuron = getNeuronFromAnnotationID(parentAnn.getId());
+                 
+        final TmNeuronMetadata neuron = getNeuronFromNeuronID(parentAnn.getNeuronId());
+                
         final TmGeoAnnotation annotation = neuronManager.addGeometricAnnotation(
                 neuron, parentAnn.getId(), xyz.x(), xyz.y(), xyz.z());
-
+        
         // the parent may lose some predefined notes (finished end, possible branch)
         stripPredefNotes(neuron, parentAnn.getId());
-
+        
         if (automatedTracingEnabled()) {
             if (viewStateListener != null)
                 viewStateListener.pathTraceRequested(annotation.getId());
@@ -563,9 +562,7 @@ called from a  SimpleWorker thread.
                 activityLog.logEndOfOperation(getWsId(), xyz);
             }
         });
-
-        // System.out.println("leaving addChildAnnotation: " + stopwatch);
-        // stopwatch.stop();
+        
         addTimer.mark("end addChildAnn");
         // reset timer state; we don't care about end > start
         addTimer.clearPreviousStepName();

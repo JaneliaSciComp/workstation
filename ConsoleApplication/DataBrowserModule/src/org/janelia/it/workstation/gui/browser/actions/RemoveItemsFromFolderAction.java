@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
@@ -26,7 +28,7 @@ import com.google.common.collect.Multimap;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RemoveItemsFromFolderAction implements NamedAction {
+public class RemoveItemsFromFolderAction extends AbstractAction {
 
     private final static Logger log = LoggerFactory.getLogger(RemoveItemsFromFolderAction.class);
 
@@ -34,17 +36,17 @@ public class RemoveItemsFromFolderAction implements NamedAction {
     private final Collection<DomainObject> domainObjects;
 
     public RemoveItemsFromFolderAction(TreeNode treeNode, Collection<DomainObject> domainObjects) {
+        super(getName(treeNode, domainObjects));
         this.treeNode = treeNode;
         this.domainObjects = domainObjects;
     }
 
-    @Override
-    public String getName() {
+    public static final String getName(TreeNode treeNode, Collection<DomainObject> domainObjects) {
         return domainObjects.size() > 1 ? "Remove " + domainObjects.size() + " Items From Folder '"+treeNode.getName()+"'" : "Remove This Item From Folder '"+treeNode.getName()+"'";
     }
 
     @Override
-    public void doAction() {
+    public void actionPerformed(ActionEvent event) {
     	
         ActivityLogHelper.logUserAction("RemoveItemsFromFolderAction.doAction", treeNode);
 

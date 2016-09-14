@@ -1,15 +1,12 @@
 package org.janelia.it.workstation.gui.browser.gui.support;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.Action;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.workstation.gui.browser.actions.NamedAction;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
@@ -56,15 +53,13 @@ public abstract class PopupContextMenu extends JPopupMenu {
         this.nextAddRequiresSeparator = nextAddRequiresSeparator;
     }
 
-    protected JMenuItem getNamedActionItem(final NamedAction action) {
-        JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
-        actionMenuItem.addActionListener(new ActionListener() {
+    protected JMenuItem getNamedActionItem(Action action) {
+        return new JMenuItem(action) {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                action.doAction();
+            public String getText() {
+                return "  "+super.getText();
             }
-        });
-        return actionMenuItem;
+        };
     }
 
     protected JMenuItem getActionItem(final Action action) {

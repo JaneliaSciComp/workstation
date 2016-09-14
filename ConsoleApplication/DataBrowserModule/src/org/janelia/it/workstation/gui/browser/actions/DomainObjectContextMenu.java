@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
+import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -181,12 +182,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyNameToClipboardItem() {
         if (multiple) return null;
-        return getNamedActionItem(new CopyToClipboardAction("Name",domainObject.getName()));
+        return new JMenuItem(new CopyToClipboardAction("Name",domainObject.getName()));
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
         if (multiple) return null;
-        return getNamedActionItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
+        return new JMenuItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
     }
 
     protected JMenuItem getOpenInNewEditorItem() {
@@ -318,7 +319,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (null == StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation()) {
             return null;
         }
-        NamedAction action = new PasteAnnotationTermAction(domainObjectList);
+        Action action = new PasteAnnotationTermAction(domainObjectList);
         JMenuItem pasteItem = getNamedActionItem(action);
         return pasteItem;
     }
@@ -605,7 +606,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem addRerunSamplesAction() {
 
         JMenuItem rtnVal = null;
-        NamedAction rerunAction = RerunSamplesAction.createAction(domainObjectList);
+        Action rerunAction = RerunSamplesAction.createAction(domainObjectList);
         if (rerunAction != null) {
             rtnVal = getNamedActionItem(rerunAction);
             add(rtnVal);
@@ -671,7 +672,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getRemoveFromFolderItem() {
 
-        NamedAction action;
+        Action action;
         if (contextObject instanceof TreeNode) {
             action = new RemoveItemsFromFolderAction((TreeNode)contextObject, domainObjectList);
         }
@@ -711,7 +712,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     protected JMenuItem getNeuronAnnotatorItem() {
         if (multiple) return null;
         if (domainObject instanceof NeuronFragment) {
-            return getNamedActionItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
+            return new JMenuItem(new OpenInNeuronAnnotatorAction((NeuronFragment)domainObject));
         }
         return null;
     }
