@@ -58,17 +58,14 @@ public class NeuronTagsAction extends AbstractAction {
         // if target neuron hasn't been set, check for selected
         //  neuron; that's our default target neuron; but if
         //  there still isn't a valid target neuron, we're done
-        if (targetNeuron == null) {
-            targetNeuron = annModel.getCurrentNeuron();
-        }
-        if (targetNeuron == null) {
+        if (getTargetNeuron() == null) {
             return;
         }
 
         Object[] options = {"Close"};
         JOptionPane.showOptionDialog(null,
             getInterface(),
-            "Edit tags for " + targetNeuron.getName(),
+            "Edit tags for " + getTargetNeuron().getName(),
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.PLAIN_MESSAGE,
             null,
@@ -81,6 +78,13 @@ public class NeuronTagsAction extends AbstractAction {
         this.targetNeuron = neuron;
     }
 
+    public TmNeuronMetadata getTargetNeuron() {
+        if (targetNeuron == null) {
+            return annModel.getCurrentNeuron();
+        }
+        return targetNeuron;
+    }
+    
     /**
      * add given tag to target neuron
      */
@@ -88,7 +92,7 @@ public class NeuronTagsAction extends AbstractAction {
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.addNeuronTag(tag, targetNeuron);
+                annModel.addNeuronTag(tag, getTargetNeuron());
             }
 
             @Override
@@ -98,7 +102,7 @@ public class NeuronTagsAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                logger.error("error adding tag " + tag + " to neuron " + targetNeuron.getName());
+                logger.error("error adding tag " + tag + " to neuron " + getTargetNeuron().getName());
                 showError("There was an error adding the " + tag + " tag!", "Error");
             }
         };
@@ -112,7 +116,7 @@ public class NeuronTagsAction extends AbstractAction {
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.removeNeuronTag(tag, targetNeuron);
+                annModel.removeNeuronTag(tag, getTargetNeuron());
             }
 
             @Override
@@ -142,7 +146,7 @@ public class NeuronTagsAction extends AbstractAction {
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annModel.clearNeuronTags(targetNeuron);
+                annModel.clearNeuronTags(getTargetNeuron());
             }
 
             @Override
@@ -170,7 +174,7 @@ public class NeuronTagsAction extends AbstractAction {
 
         // OMG Java makes everything hard...JList can't take List<>, only
         //  arrays and vectors
-        Set<String> appliedTagSet = annModel.getNeuronTags(targetNeuron);
+        Set<String> appliedTagSet = annModel.getNeuronTags(getTargetNeuron());
         String[] appliedTags = appliedTagSet.toArray(new String[appliedTagSet.size()]);
         Arrays.sort(appliedTags);
         appliedTagsList.setListData(appliedTags);
@@ -306,6 +310,7 @@ public class NeuronTagsAction extends AbstractAction {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
                     int index = appliedTagsList.locationToIndex(e.getPoint());
+                    if (index<0) return;
                     removeTag((String) appliedTagsList.getModel().getElementAt(index));
                 }
             }
@@ -317,6 +322,7 @@ public class NeuronTagsAction extends AbstractAction {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 1) {
                     int index = availableTagsList.locationToIndex(e.getPoint());
+                    if (index<0) return;
                     addTag((String) availableTagsList.getModel().getElementAt(index));
                 }
             }
