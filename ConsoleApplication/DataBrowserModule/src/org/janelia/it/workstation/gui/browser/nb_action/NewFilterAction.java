@@ -25,7 +25,7 @@ import org.openide.util.actions.CallableSystemAction;
 @ActionReferences({
         @ActionReference(path = "Menu/File/New", position = 2),
         @ActionReference(path = "Toolbars/Navigation", position = 2),
-        @ActionReference(path = "Shortcuts", name = "M-S")
+        @ActionReference(path = "Shortcuts", name = "D-S")
 })
 @Messages("CTL_NewFilterAction=Filter")
 public final class NewFilterAction extends CallableSystemAction {

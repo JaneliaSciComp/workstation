@@ -20,7 +20,7 @@ import org.openide.util.actions.CallableSystemAction;
 @ActionReferences({
     @ActionReference(path = "Menu/View", position = -100, separatorBefore = -150),
     @ActionReference(path = "Toolbars/Navigation", position = 100),
-    @ActionReference(path = "Shortcuts", name = "M-LEFT")
+    @ActionReference(path = "Shortcuts", name = "D-LEFT")
 })
 @Messages("CTL_NavigateBack=Back")
 public final class NavigateBack extends CallableSystemAction {
