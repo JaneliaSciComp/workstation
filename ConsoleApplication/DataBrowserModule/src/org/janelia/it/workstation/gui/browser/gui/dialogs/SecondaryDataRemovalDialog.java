@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +31,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
@@ -46,13 +49,17 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     public static final String OBJECTIVE_LABEL = "Objective";
     public static final String SAMPLE_NAME_LABEL = "Sample Name";
     public static final String SAMPLE_ID_LABEL = "Sample ID";
-    
+
+    public static final String WHOLE_AA_IMPLICATIONS_PROP = "SecondaryDataRemoval.aa_rm_implications";
+    public static final String STITCHED_IMPLICATIONS_PROP = "SecondaryDataRemoval.stitched_file_rm_implications";
+
     // For now, keeping it simple.
     private static final String[] COLUMN_HEADERS = new String[] {
         PART_LABEL, OBJECTIVE_LABEL, SAMPLE_NAME_LABEL, SAMPLE_ID_LABEL
     };
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
+    public static final String IMAGE_DELETION_WARNING_FMT = "<html>Are you sure you want to remove image(s) from %s of sample %s?<br>%s</html>";
 
     private JButton executeButton;
     private Sample sample;
@@ -236,7 +243,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             }
 
             // Give the user a last opt-out.
-            final String message = "Are you sure you want to remove image(s) from " + subpartNames.toString() + " of sample " + sample.getName() + "?";
+            final String message = getDeletionWarning(subpartNames);
             if (JOptionPane.showConfirmDialog(this, message, "Confirm Removal", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
             }
@@ -293,5 +300,46 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
                 .append(objective)
                 .append(",")
                 .append(sampleId);
+    }
+
+    private String getDeletionWarning(StringBuilder subpartNames) {
+        if (trimDepth.equals(Constants.TRIM_DEPTH_AREA_IMAGE_VALUE)) {
+            return getStitchedFileDeletionWarning(subpartNames);
+        }
+        else if (trimDepth.equals(Constants.TRIM_DEPTH_WHOLE_AREA_VALUE)) {
+            return getWholeAADeletionWarning(subpartNames);
+        }
+        else {
+            return null;
+        }
+    }
+
+    private String getWholeAADeletionWarning(StringBuilder subpartNames) {
+        String format = IMAGE_DELETION_WARNING_FMT;
+        String appendedTextFile = ConsoleProperties.getInstance().getProperty(WHOLE_AA_IMPLICATIONS_PROP);
+        String extraText = readFromResource(appendedTextFile);
+        return String.format(format, subpartNames.toString(), sample.getName(), extraText);
+    }
+
+    private String getStitchedFileDeletionWarning(StringBuilder subpartNames) {
+        String format = IMAGE_DELETION_WARNING_FMT;
+        String appendedTextFile = ConsoleProperties.getInstance().getProperty(STITCHED_IMPLICATIONS_PROP);
+        String extraText = readFromResource(appendedTextFile);
+        return String.format(format, subpartNames.toString(), sample.getName(), extraText);
+    }
+
+    private String readFromResource(String resource) {
+        StringBuilder builder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(SecondaryDataRemovalDialog.class.getResourceAsStream(resource)))) {
+            String inputLine = null;
+            while (null != (inputLine = br.readLine())) {
+                builder.append(inputLine);
+            }
+
+        } catch (Exception ex) {
+            builder.append("<span>Other downstream dependencies will be affected.</span>");
+            ex.printStackTrace();
+        }
+        return builder.toString();
     }
 }
