@@ -87,6 +87,30 @@ public class DomainMgr {
         throw new IllegalStateException("No implementation for "+clazz.getName()+" found in "+DOMAIN_FACADE_PACKAGE_NAME);
     }
 
+    public DomainFacade getDomainFacade() {
+        return domainFacade;
+    }
+
+    public OntologyFacade getOntologyFacade() {
+        return ontologyFacade;
+    }
+
+    public SampleFacade getSampleFacade() {
+        return sampleFacade;
+    }
+
+    public SubjectFacade getSubjectFacade() {
+        return subjectFacade;
+    }
+
+    public WorkspaceFacade getWorkspaceFacade() {
+        return workspaceFacade;
+    }
+
+    public TiledMicroscopeFacade getTmFacade() {
+        return tmFacade;
+    }
+
     @Subscribe
     public void runAsUserChanged(RunAsEvent event) {
         log.info("User changed, resetting model");

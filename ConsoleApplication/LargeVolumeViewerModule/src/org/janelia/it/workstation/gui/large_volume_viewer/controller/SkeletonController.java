@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDire
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
@@ -59,6 +60,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public static SkeletonController getInstance() {
         return instance;
+    }
+    
+    public boolean editsAllowed() {
+        return annoMgr.editsAllowed();
     }
     
     /** In a "driving" client that would normally construct, call this instead. */

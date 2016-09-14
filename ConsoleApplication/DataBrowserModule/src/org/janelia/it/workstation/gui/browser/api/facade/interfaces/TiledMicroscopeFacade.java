@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
@@ -51,9 +52,11 @@ public interface TiledMicroscopeFacade {
     public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception; 
     
     public List<TmNeuronMetadata> update(Collection<Pair<TmNeuronMetadata,InputStream>> neuronPairs) throws Exception;
-    
+
+    public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception;
+     
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception;
     
-    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception;
+    public void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception;
 
 }

@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.awt.*;
 
+import org.janelia.it.jacs.shared.utils.ColorUtils;
+
 /**
  * This class encapsulates the visual draw style for a particular neuron;
  * we'll start with color and visibility, and perhaps later add other

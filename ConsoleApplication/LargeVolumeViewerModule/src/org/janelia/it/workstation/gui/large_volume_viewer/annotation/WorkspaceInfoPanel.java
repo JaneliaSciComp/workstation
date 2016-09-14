@@ -1,16 +1,14 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.Dimension;
-import java.util.HashSet;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -77,11 +75,11 @@ public class WorkspaceInfoPanel extends JPanel {
 
                 @Override
                 protected void hadSuccess() {
-                    if (!DomainUtils.hasWriteAccess(workspace, new HashSet<>(AccessManager.getSubjectKeys()))) {
-                        setTitle("Workspace (read-only)");
+                    if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                        setTitle("Workspace");
                     }
                     else {
-                        setTitle("Workspace");
+                        setTitle("Workspace (read-only)");
                     }
                     
                     setSampleName(sampleName);

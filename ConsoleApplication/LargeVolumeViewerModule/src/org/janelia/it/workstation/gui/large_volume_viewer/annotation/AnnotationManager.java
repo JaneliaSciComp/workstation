@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.Frame;
 import java.awt.HeadlessException;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +22,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
@@ -30,17 +33,18 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmStructuredTextAnnotati
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -57,19 +61,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Stopwatch;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.net.URL;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
 
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
@@ -119,12 +110,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     }
 
+    public boolean editsAllowed() {
+        if (getCurrentWorkspace()==null) return false;
+        return ClientDomainUtils.hasWriteAccess(getCurrentWorkspace());
+    }
+    
     public void deleteSubtreeRequested(Anchor anchor) {
         if (anchor != null) {
             deleteSubTree(anchor.getGuid());
-        } else {
-            int x = 0;
-        }
+        } 
     }
 
     public void splitAnchorRequested(Anchor anchor) {
@@ -158,8 +152,15 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public void anchorAdded(AnchorSeed seed) {
         addAnnotation(seed.getLocation(), seed.getParentGuid());
     }
-
+    
     public void moveAnchor(Anchor anchor) {
+
+        if (!editsAllowed()) {
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Workspace is read-only", "Cannot edit annotation", JOptionPane.INFORMATION_MESSAGE);
+            annotationModel.fireAnnotationNotMoved(annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+            return;
+        }
+        
         // find closest to new anchor location that isn't the annotation already
         //  associated with anchor; remember that anchors are in micron
         //  coords, and we need voxels!
@@ -324,13 +325,18 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
 
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (getCurrentWorkspace() == null) {
             presentError(
                     "You must load a workspace before beginning annotation!",
                     "No workspace!");
             return;
         }
 
+        if (!editsAllowed()) {
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "Workspace is read-only", "Cannot add annotation", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
         final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
             presentError(
@@ -662,8 +668,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         if (choice == null) {
             return;
         }
+        
+        final TmDisplayNeuron choiceNeuron = (TmDisplayNeuron) choice;
+        final TmNeuronMetadata destinationNeuron = choiceNeuron.getTmNeuronMetadata();
 
-        if (((TmDisplayNeuron) choice).getTmNeuronMetadata().getId().equals(dummyCreateNewNeuron.getId())) {
+        if (destinationNeuron.getId().equals(dummyCreateNewNeuron.getId())) {
             // create new neuron and move neurite to it
             final String neuronName = promptForNeuronName(null);
             if (neuronName == null) {
@@ -699,7 +708,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
         } else {
             // we're moving to an existing neuron; straightforward!
-            final TmNeuronMetadata destinationNeuron = (TmNeuronMetadata) choice;
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -958,6 +966,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void editNeuronTags(TmNeuronMetadata neuron) {
+        log.info("editNeuronTags({})",neuron);
         // reuse the action; note that the action doesn't actually
         //  use the event, so we can throw in an empty one
         NeuronTagsAction action = new NeuronTagsAction(annotationModel);
@@ -1383,20 +1392,24 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void setAllNeuronVisibility(boolean visibility) {
-        // feels like I should get the full NeuronStyle map here, but then I'd
-        //  have to worry about missing entries, etc.; so go simple at the
-        //  expense of a few more db calls
-        NeuronStyle style;
-        Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
-            style = getNeuronStyle(neuron);
-            if (style.isVisible() != visibility) {
-                style.setVisible(visibility);
-                updateMap.put(neuron, style);
+    public void setAllNeuronVisibility(final boolean visibility) {
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setAllNeuronVisibility(visibility);
             }
-        }
-        updateNeuronStyles(updateMap);
+
+            @Override
+            protected void hadSuccess() {
+                // nothing; listeners will update
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
     }
 
     /**

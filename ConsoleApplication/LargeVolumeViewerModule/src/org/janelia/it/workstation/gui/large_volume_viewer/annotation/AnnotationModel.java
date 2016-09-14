@@ -9,21 +9,15 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
-import Jama.Matrix;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Stopwatch;
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -39,6 +33,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.utils.ColorUtils;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
@@ -56,6 +51,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Stopwatch;
+import com.google.common.eventbus.Subscribe;
+
+import Jama.Matrix;
 
 public class AnnotationModel
 /*
@@ -87,7 +90,7 @@ called from a  SimpleWorker thread.
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
 
-    private TiledMicroscopeDomainMgr tmDomainMgr;
+    private final TiledMicroscopeDomainMgr tmDomainMgr;
 
     private SWCDataConverter swcDataConverter;
     private final DomainMgrTmModelAdapter modelAdapter;
@@ -102,18 +105,18 @@ called from a  SimpleWorker thread.
     private ViewStateListener viewStateListener;
     private NotesUpdateListener notesUpdateListener;
 
-    private FilteredAnnotationModel filteredAnnotationModel;
+    private final FilteredAnnotationModel filteredAnnotationModel;
 
-    private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
-    private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
-    private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
+    private final Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
+    private final Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
+    private final Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
 
-    private TmModelManipulator neuronManager;
+    private final TmModelManipulator neuronManager;
 
     private LoadTimer addTimer = new LoadTimer();
 
-    private ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
-    private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
+    private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
+    private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
 
 
     // ----- constants
@@ -222,15 +225,25 @@ called from a  SimpleWorker thread.
 
                 // Neurons need to be loaded en masse from raw data from server.
                 neuronManager.loadWorkspaceNeurons(workspace);
+                
+                // Create the local tag map for cached access to tags
+                currentTagMap = new TmNeuronTagMap();
+                for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
+                    for(String tag : tmNeuronMetadata.getTags()) {
+                        currentTagMap.addTag(tag, tmNeuronMetadata);
+                    }
+                }
             }
             catch (Exception ex) {
                 log.error("Error loading workspace "+workspace, ex);
                 SessionMgr.getSessionMgr().handleException(ex);
             }
-
-        } else {
-            currentWorkspace = null;
         }
+        else {
+            currentWorkspace = null;
+            currentTagMap = null;
+        }
+        
         setCurrentNeuron(null);
 
         final TmWorkspace updateWorkspace = getCurrentWorkspace();
@@ -239,7 +252,9 @@ called from a  SimpleWorker thread.
             public void run() {
                 fireWorkspaceLoaded(updateWorkspace);
                 fireNeuronSelected(null);
-                activityLog.logLoadWorkspace(workspace.getId());
+                if (workspace!=null) {
+                    activityLog.logLoadWorkspace(updateWorkspace.getId());
+                }
             }
         });
 
@@ -311,7 +326,7 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
-        log.info("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
+        log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }
 
@@ -323,7 +338,7 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
-        log.info("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
+        log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
     }
 
@@ -1316,6 +1331,30 @@ called from a  SimpleWorker thread.
         });
     }
 
+    public void setAllNeuronVisibility(final boolean visibility) throws Exception {
+
+        List<TmNeuronMetadata> neuronList = getNeuronList();
+        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
+        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
+        bulkNeuronStyleUpdate.setVisible(visibility);
+        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
+                for (TmNeuronMetadata neuron: getNeuronList()) {
+                    if (neuron.isVisible() != visibility) {
+                        neuron.setVisible(visibility);
+                        updateMap.put(neuron, getNeuronStyle(neuron));
+                    }
+                }
+                fireNeuronStylesChanged(updateMap);
+            }
+        });
+        
+    }
+    
     /**
      * change the style for a neuron; synchronized because it could be
      * called from multiple threads, and the update is not atomic
@@ -1329,14 +1368,19 @@ called from a  SimpleWorker thread.
     }
 
     public synchronized void setNeuronStyles(List<TmNeuronMetadata> neuronList, NeuronStyle style) throws Exception {
-        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
-            ModelTranslation.updateNeuronStyle(style, tmNeuronMetadata);
-        }
-        tmDomainMgr.saveMetadata(neuronList);
+        
+        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
+        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
+        bulkNeuronStyleUpdate.setColorHex(ModelTranslation.getColorHex(style.getColor()));
+        bulkNeuronStyleUpdate.setVisible(style.isVisible());
+        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+
         Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-        for (TmNeuronMetadata neuron: neuronList) {
+        for (TmNeuronMetadata neuron : neuronList) {
+            ModelTranslation.updateNeuronStyle(style, neuron);
             updateMap.put(neuron, style);
         }
+        
         fireNeuronStylesChanged(updateMap);
     }
 
@@ -1346,9 +1390,11 @@ called from a  SimpleWorker thread.
             NeuronStyle style = neuronStyleMap.get(tmNeuronMetadata);
             ModelTranslation.updateNeuronStyle(style, tmNeuronMetadata);
             neuronList.add(tmNeuronMetadata);
+        }        
+        if (!neuronList.isEmpty()) {
+            tmDomainMgr.saveMetadata(neuronList);
+            fireNeuronStylesChanged(neuronStyleMap);
         }
-        tmDomainMgr.saveMetadata(neuronList);
-        fireNeuronStylesChanged(neuronStyleMap);
     }
 
     /**
@@ -1574,7 +1620,7 @@ called from a  SimpleWorker thread.
     public boolean hasNeuronTag(TmNeuronMetadata neuron, String tag) {
         return currentTagMap.hasTag(neuron, tag);
     }
-
+    
     public void addNeuronTag(String tag, TmNeuronMetadata neuron) throws Exception {
         addNeuronTag(tag, Arrays.asList(neuron));
     }
@@ -1585,7 +1631,6 @@ called from a  SimpleWorker thread.
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);
         }
-        //tmDomainMgr.saveMetadata(neuronList);
         fireNeuronTagsChanged(neuronList);
     }
 
@@ -1599,7 +1644,6 @@ called from a  SimpleWorker thread.
             currentTagMap.removeTag(tag, neuron);
             neuron.getTags().remove(tag);
         }
-        //tmDomainMgr.saveMetadata(neuronList);
         fireNeuronTagsChanged(neuronList);
     }
 
@@ -1609,17 +1653,6 @@ called from a  SimpleWorker thread.
         neuron.getTags().clear();
         fireNeuronTagsChanged(Arrays.asList(neuron));
     }
-
-//    public void clearAllTags() throws Exception {
-//        List<TmNeuronMetadata> changed = new ArrayList<>();
-//        for (TmNeuronMetadata neuron: currentTagMap.getAllNeurons()) {
-//            changed.add(neuron);
-//            neuron.getTags().clear();
-//        }
-//        currentTagMap.clearAll();
-//        tmDomainMgr.saveMetadata(changed);
-//        fireNeuronTagsChanged(changed);
-//    }
 
     /**
      * given the ID of an annotation, return an object wrapping it (or null)

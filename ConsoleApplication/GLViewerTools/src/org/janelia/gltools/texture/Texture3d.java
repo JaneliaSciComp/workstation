@@ -934,7 +934,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 byte[] bytes = new byte[(int)contentLength];
                 if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
 
-                log.debug("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+                log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
                 SeekableStream s = new ByteArraySeekableStream(bytes);
 
                 // Another way is to read the stream as necessary, but with this method we can't compare vs file reads.

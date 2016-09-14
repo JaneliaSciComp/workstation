@@ -19,6 +19,7 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,12 +81,6 @@ public class RESTClientManager {
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
         
-        serviceEndpoints.put("tmSampleRootPaths", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/sampleRootPaths"));
-        serviceEndpoints.put("tmSample", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/sample"));
-        serviceEndpoints.put("tmWorkspace", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace"));
-        serviceEndpoints.put("tmNeuron", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace/neuron"));
-        serviceEndpoints.put("tmNeuronTags", client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + "/workspace/neuron/tags"));
-        
     }
 
     public static RESTClientManager getInstance() {
@@ -95,6 +90,10 @@ public class RESTClientManager {
         return instance;
     }
 
+    public WebTarget getMouselightEndpoint(String suffix) {
+        return client.target(serverUrl  + REMOTE_MOUSELIGHT_DATA_PREFIX + suffix);
+    }
+    
     public WebTarget getWorkspaceEndpoint() {
         return serviceEndpoints.get("workspace");
     }
@@ -147,23 +146,4 @@ public class RESTClientManager {
         return serviceEndpoints.get("release");
     }
     
-    public WebTarget getTmSamplePathsEndpoint() {
-        return serviceEndpoints.get("tmSampleRootPaths");
-    }
-
-    public WebTarget getTmSampleEndpoint() {
-        return serviceEndpoints.get("tmSample");
-    }
-
-    public WebTarget getTmWorkspaceEndpoint() {
-        return serviceEndpoints.get("tmWorkspace");
-    }
-
-    public WebTarget getTmNeuronEndpoint() {
-        return serviceEndpoints.get("tmNeuron");
-    }
-    
-    public WebTarget getTmNeuronTagsEndpoint() {
-        return serviceEndpoints.get("tmNeuronTags");
-    }
 }

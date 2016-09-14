@@ -1,10 +1,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.api;
 
+import java.awt.Color;
+
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmChannelColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.shared.utils.ColorUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
@@ -81,4 +84,9 @@ public class ModelTranslation {
         tmNeuronMetadata.setColor(style.getColor());
         tmNeuronMetadata.setVisible(style.isVisible());
     }
+
+    public static String getColorHex(Color color) {
+        return color==null?null:ColorUtils.toHex(color);
+    }
+    
 }

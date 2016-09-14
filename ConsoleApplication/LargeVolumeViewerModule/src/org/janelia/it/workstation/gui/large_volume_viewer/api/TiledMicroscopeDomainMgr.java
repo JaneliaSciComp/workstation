@@ -3,17 +3,18 @@ package org.janelia.it.workstation.gui.large_volume_viewer.api;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.TiledMicroscopeFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,7 @@ public class TiledMicroscopeDomainMgr {
 
     // Singleton
     private static TiledMicroscopeDomainMgr instance;
-
+    
     public static TiledMicroscopeDomainMgr getDomainMgr() {
         if (instance==null) {
             instance = new TiledMicroscopeDomainMgr();
@@ -37,14 +38,20 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
+    private final TiledMicroscopeFacade tmFacade;
+    
+    private TiledMicroscopeDomainMgr() {
+        tmFacade = DomainMgr.getDomainMgr().getTmFacade();
+    }
+    
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
     public List<String> getTmSamplePaths() throws Exception {
-        return model.getTmSamplePaths();
+        return tmFacade.getTmSamplePaths();
     }
 
     public void setTmSamplePaths(List<String> paths) throws Exception {
-        model.setTmSamplePaths(paths);
+        tmFacade.updateSamplePaths(paths);
     }
     
     public TmSample getSample(Long sampleId) throws Exception {
@@ -61,11 +68,6 @@ public class TiledMicroscopeDomainMgr {
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
-    public Collection<TmSample> getTmSamples() throws Exception {
-        log.debug("getTmSamples()");
-        return model.getTmSamples();
-    }
-
     public TmSample createTiledMicroscopeSample(String name, String filepath) throws Exception {
         log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         TmSample sample = new TmSample();
@@ -78,26 +80,23 @@ public class TiledMicroscopeDomainMgr {
 
     public TmSample save(TmSample sample) throws Exception {
         log.debug("save({})",sample);
-        return model.save(sample);
+        TmSample canonicalObject;
+        synchronized (this) {
+            canonicalObject = model.putOrUpdate(sample.getId()==null ? tmFacade.create(sample) : tmFacade.update(sample));
+        }
+        if (sample.getId()==null) {
+            model.notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            model.notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
     }
 
     public void remove(TmSample sample) throws Exception {
         log.debug("remove({})",sample);
-        model.remove(sample);
-    }
-
-    public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
-        log.debug("getWorkspace(workspaceId={})",workspaceId);
-        TmWorkspace workspace = model.getDomainObject(TmWorkspace.class, workspaceId);
-        if (workspace==null) {
-            throw new Exception("Workspace with id="+workspaceId+" does not exist");
-        }
-        return workspace;
-    }
-
-    public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
-        log.debug("getTmWorkspaces()");
-        return model.getTmWorkspaces();
+        tmFacade.remove(sample);
+        model.notifyDomainObjectRemoved(sample);
     }
 
     public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {
@@ -116,22 +115,33 @@ public class TiledMicroscopeDomainMgr {
 
     public TmWorkspace save(TmWorkspace workspace) throws Exception {
         log.debug("save({})", workspace);
-        return model.save(workspace);
+        TmWorkspace canonicalObject;
+        synchronized (this) {
+            canonicalObject = model.putOrUpdate(workspace.getId()==null ? tmFacade.create(workspace) : tmFacade.update(workspace));
+        }
+        if (workspace.getId()==null) {
+            model.notifyDomainObjectCreated(canonicalObject);
+        }
+        else {
+            model.notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
     }
 
     public void remove(TmWorkspace workspace) throws Exception {
         log.debug("remove({})", workspace);
-        model.remove(workspace);
+        tmFacade.remove(workspace);
+        model.notifyDomainObjectRemoved(workspace);
     }
     
     public List<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId) throws Exception {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         List<TmNeuronMetadata> neurons = new ArrayList<>();
-        for(Pair<TmNeuronMetadata,InputStream> pair : model.getWorkspaceNeuronPairs(workspaceId)) {
+        for(Pair<TmNeuronMetadata,InputStream> pair : tmFacade.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
             exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
-            log.info("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
+            log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
             neurons.add(neuronMetadata);
         }
 
@@ -141,12 +151,16 @@ public class TiledMicroscopeDomainMgr {
 
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         log.debug("save({})", neuronMetadata);
+        TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            return model.createMetadata(neuronMetadata);
+            savedMetadata = tmFacade.createMetadata(neuronMetadata);
+            model.notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            return model.updateMetadata(neuronMetadata);
+            savedMetadata = tmFacade.updateMetadata(neuronMetadata);
+            model.notifyDomainObjectChanged(savedMetadata);
         }
+        return savedMetadata;
     }
 
     public List<TmNeuronMetadata> saveMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
@@ -156,7 +170,11 @@ public class TiledMicroscopeDomainMgr {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
             }
         }
-        return model.updateMetadata(neuronList);
+        List<TmNeuronMetadata> updatedMetadata = tmFacade.updateMetadata(neuronList);
+        for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
+            model.notifyDomainObjectChanged(tmNeuronMetadata);
+        }
+        return updatedMetadata;
     }
     
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
@@ -165,25 +183,31 @@ public class TiledMicroscopeDomainMgr {
         InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata metadata;
         if (neuronMetadata.getId()==null) {
-            metadata = model.create(neuronMetadata, protobufStream);
+            metadata = tmFacade.create(neuronMetadata, protobufStream);
         }
         else {
-            metadata = model.update(neuronMetadata, protobufStream);
+            metadata = tmFacade.update(neuronMetadata, protobufStream);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
         exchanger.copyNeuronData(neuronMetadata, metadata);
         return metadata;
     }
-
+    
+    public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
+        tmFacade.updateNeuronStyles(bulkNeuronStyleUpdate);
+    }
+    
     public void remove(TmNeuronMetadata tmNeuron) throws Exception {
         log.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
-        model.remove(neuronMetadata);
+        tmFacade.remove(neuronMetadata);
+        model.notifyDomainObjectRemoved(neuronMetadata);
     }
 
-    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception {
-        model.bulkEditTags(neurons, tags, addOrRemove);
+    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
+        log.debug("bulkEditTags({})", neurons);
+        tmFacade.changeTags(neurons, tags, tagState);
     }
 }

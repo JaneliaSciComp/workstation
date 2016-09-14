@@ -27,6 +27,7 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
@@ -147,7 +148,7 @@ public class DomainModel {
      * @param domainObject
      * @return canonical domain object instance
      */
-    private <T extends DomainObject> T putOrUpdate(T domainObject) {
+    public <T extends DomainObject> T putOrUpdate(T domainObject) {
         return putOrUpdate(domainObject, false);
     }
 
@@ -926,21 +927,21 @@ public class DomainModel {
         return subjectFacade.loginSubject(username, password);
     }
 
-    private void notifyDomainObjectCreated(DomainObject domainObject) {
+    public void notifyDomainObjectCreated(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectCreateEvent for {}", DomainUtils.identify(domainObject));
         }
         Events.getInstance().postOnEventBus(new DomainObjectCreateEvent(domainObject));
     }
 
-    private void notifyDomainObjectChanged(DomainObject domainObject) {
+    public void notifyDomainObjectChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectChangeEvent for {}", DomainUtils.identify(domainObject));
         }
         Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
     }
 
-    private void notifyAnnotationsChanged(DomainObject domainObject) {
+    public void notifyAnnotationsChanged(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectAnnotationChangeEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -956,7 +957,7 @@ public class DomainModel {
 //        Events.getInstance().postOnEventBus(new DomainObjectChangeEvent(domainObject));
 //    }
 
-    private void notifyDomainObjectRemoved(DomainObject domainObject) {
+    public void notifyDomainObjectRemoved(DomainObject domainObject) {
         if (log.isTraceEnabled()) {
             log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
         }
@@ -1002,51 +1003,7 @@ public class DomainModel {
         objects.add(domainObject);
     }
 
-    public List<String> getTmSamplePaths() throws Exception {
-    	return tmFacade.getTmSamplePaths();
-    }
-    
-    public void setTmSamplePaths(List<String> paths) throws Exception {
-    	tmFacade.updateSamplePaths(paths);
-    }
-    
-    public Collection<TmSample> getTmSamples() throws Exception {
-        StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        Collection<TmSample> samples = tmFacade.getTmSamples();
-        List<TmSample> canonicalObjects = putOrUpdate(samples, false);
-        Collections.sort(canonicalObjects, new DomainObjectComparator());
-        if (TIMER) w.stop("getTmSamples");
-        return canonicalObjects;
-    }
-
-    public TmSample save(TmSample object) throws Exception {
-        TmSample canonicalObject;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
-        }
-        if (object.getId()==null) {
-            notifyDomainObjectCreated(canonicalObject);
-        }
-        else {
-            notifyDomainObjectChanged(canonicalObject);
-        }
-        return canonicalObject;
-    }
-
-    public void remove(TmSample object) throws Exception {
-        tmFacade.remove(object);
-        notifyDomainObjectRemoved(object);
-    }
-
-    public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
-        StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspaces();
-        List<TmWorkspace> canonicalObjects = putOrUpdate(workspaces, false);
-        Collections.sort(canonicalObjects, new DomainObjectComparator());
-        if (TIMER) w.stop("getTmWorkspaces");
-        return canonicalObjects;
-    }
-
+    // TODO: this is a temporary hack. DomainModel should not know about TM objects or the TM facade
     public List<TmWorkspace> getTmWorkspaces(Long sampleId) throws Exception {
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspacesForSample(sampleId);
@@ -1056,67 +1013,4 @@ public class DomainModel {
         return canonicalObjects;
     }
 
-    public TmWorkspace save(TmWorkspace object) throws Exception {
-        TmWorkspace canonicalObject;
-        synchronized (this) {
-            canonicalObject = putOrUpdate(object.getId()==null ? tmFacade.create(object) : tmFacade.update(object));
-        }
-        if (object.getId()==null) {
-            notifyDomainObjectCreated(canonicalObject);
-        }
-        else {
-            notifyDomainObjectChanged(canonicalObject);
-        }
-        return canonicalObject;
-    }
-
-    public void remove(TmWorkspace object) throws Exception {
-        tmFacade.remove(object);
-        notifyDomainObjectRemoved(object);
-    }
-
-    public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
-        return tmFacade.getWorkspaceNeuronPairs(workspaceId);
-    }
-
-    public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
-        TmNeuronMetadata updatedMetadata = tmFacade.createMetadata(neuronMetadata);
-        notifyDomainObjectCreated(updatedMetadata);
-        return updatedMetadata;
-    }
-
-    public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
-        TmNeuronMetadata updatedMetadata = tmFacade.create(neuronMetadata, protobufStream);
-        notifyDomainObjectCreated(updatedMetadata);
-        return updatedMetadata;
-    }
-
-    public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
-        TmNeuronMetadata updatedMetadata = tmFacade.updateMetadata(neuronMetadata);
-        notifyDomainObjectChanged(updatedMetadata);
-        return updatedMetadata;
-    }
-
-    public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
-        List<TmNeuronMetadata> updatedMetadata = tmFacade.updateMetadata(neuronList);
-        for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
-            notifyDomainObjectChanged(tmNeuronMetadata);
-        }
-        return updatedMetadata;
-    }
-
-    public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
-        TmNeuronMetadata updatedMetadata = tmFacade.update(neuronMetadata, protobufStream);
-        notifyDomainObjectChanged(updatedMetadata);
-        return updatedMetadata;
-    }
-
-    public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
-        tmFacade.remove(neuronMetadata);
-        notifyDomainObjectRemoved(neuronMetadata);
-    }
-    
-    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean addOrRemove) throws Exception {
-        tmFacade.bulkEditTags(neurons, tags, addOrRemove);
-    }
 }

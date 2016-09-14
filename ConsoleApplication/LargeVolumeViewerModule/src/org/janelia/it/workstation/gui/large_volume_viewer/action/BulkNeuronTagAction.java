@@ -1,22 +1,28 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
-import javax.swing.*;
-
-import com.google.common.base.Stopwatch;
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.NeuronListProvider;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Stopwatch;
 
 /**
  * this action opens a dialog that allows the user to add or remove
@@ -31,8 +37,8 @@ public class BulkNeuronTagAction extends AbstractAction {
     private NeuronListProvider listProvider;
 
     private JPanel mainPanel;
-    private JComboBox existingTagMenu;
-    private JComboBox removeTagMenu;
+    private JComboBox<String> existingTagMenu;
+    private JComboBox<String> removeTagMenu;
     private JTextField newTagField;
 
 
@@ -79,15 +85,17 @@ public class BulkNeuronTagAction extends AbstractAction {
     }
 
     private void addTag(final String tag) {
+        if (tag==null) return;
         final List<TmNeuronMetadata> neuronList = listProvider.getNeuronList();
+        if (neuronList.isEmpty()) return;
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                // Stopwatch stopwatch = new Stopwatch();
-                // stopwatch.start();
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
                 annModel.addNeuronTag(tag, neuronList);
-                // System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
-                // stopwatch.stop();
+                System.out.println("added tag to " + neuronList.size() + " neurons in " + stopwatch);
+                stopwatch.stop();
             }
 
             @Override
@@ -118,16 +126,17 @@ public class BulkNeuronTagAction extends AbstractAction {
     }
 
     private void clearTag(final String tag) {
-        final List<TmNeuronMetadata> taggedNeurons = new ArrayList<>(annModel.getNeuronsForTag(tag));
-
+        if (tag==null) return;
+        final List<TmNeuronMetadata> neuronList = listProvider.getNeuronList();
+        if (neuronList.isEmpty()) return;
         SimpleWorker remover = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                // Stopwatch stopwatch = new Stopwatch();
-                // stopwatch.start();
-                annModel.removeNeuronTag(tag, taggedNeurons);
-                // System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
-                // stopwatch.stop();
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.start();
+                annModel.removeNeuronTag(tag, neuronList);
+                System.out.println("removed tag from " + neuronList.size() + " neurons in " + stopwatch);
+                stopwatch.stop();
             }
 
             @Override
@@ -172,7 +181,7 @@ public class BulkNeuronTagAction extends AbstractAction {
 
         String[] existingTags = annModel.getAvailableNeuronTags().toArray(new String[annModel.getAvailableNeuronTags().size()]);
         Arrays.sort(existingTags);
-        existingTagMenu = new JComboBox(existingTags);
+        existingTagMenu = new JComboBox<String>(existingTags);
         existingPanel.add(existingTagMenu);
         existingPanel.add(Box.createHorizontalGlue());
         mainPanel.add(existingPanel);
@@ -191,7 +200,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         });
         removePanel.add(removeButton);
         removePanel.add(new JLabel("existing tag "));
-        removeTagMenu = new JComboBox(existingTags);
+        removeTagMenu = new JComboBox<String>(existingTags);
         removePanel.add(removeTagMenu);
         removePanel.add(Box.createHorizontalGlue());
         mainPanel.add(removePanel);

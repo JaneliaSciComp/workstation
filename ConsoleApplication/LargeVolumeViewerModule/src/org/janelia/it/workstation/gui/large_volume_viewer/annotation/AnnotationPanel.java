@@ -8,7 +8,10 @@ import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
 
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
@@ -92,6 +95,23 @@ public class AnnotationPanel extends JPanel
         }
     };
 
+    private JButton createWorkspaceButtonPlus;
+    private ImportSWCAction importSWCAction;
+    private ImportSWCAction importSWCActionMulti;
+    private AbstractAction saveColorModelAction;
+    private AbstractAction chooseNeuronStyleAction;
+    private NeuronTagsAction neuronTagsAction;
+    private BulkNeuronTagAction bulkNeuronTagAction;
+    private BulkChangeNeuronStyleAction bulkChangeNeuronStyleAction;
+    private AbstractAction hideNeuronAction;
+    private AbstractAction hideOthersAction;
+    private AbstractAction showNeuronAction;
+    private AbstractAction showAllNeuronsAction;
+    private AbstractAction hideAllNeuronsAction;
+    private AbstractAction renameNeuronAction;
+
+    private JMenu sortSubmenu;
+
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
         this.annotationMgr = annotationMgr;
@@ -111,10 +131,33 @@ public class AnnotationPanel extends JPanel
     }
     
     public void loadWorkspace(TmWorkspace workspace) {
+        
         if (workspace != null) {
             automaticRefinementMenuItem.setSelected(workspace.isAutoPointRefinement());
             automaticTracingMenuItem.setSelected(workspace.isAutoTracing());
         }
+    
+        // Disable all change functionality if the user has no write access to the workspace
+        boolean enabled = workspace!=null && ClientDomainUtils.hasWriteAccess(workspace);
+        createWorkspaceButtonPlus.setEnabled(enabled);
+        automaticRefinementMenuItem.setEnabled(enabled);
+        automaticTracingMenuItem.setEnabled(enabled);
+        importSWCAction.setEnabled(enabled);
+        importSWCActionMulti.setEnabled(enabled);
+        saveColorModelAction.setEnabled(enabled);
+        chooseNeuronStyleAction.setEnabled(enabled);
+        neuronTagsAction.setEnabled(enabled);
+        bulkNeuronTagAction.setEnabled(enabled);
+        bulkChangeNeuronStyleAction.setEnabled(enabled);
+        showNeuronAction.setEnabled(enabled);
+        hideNeuronAction.setEnabled(enabled);
+        hideOthersAction.setEnabled(enabled);
+        showAllNeuronsAction.setEnabled(enabled);
+        hideAllNeuronsAction.setEnabled(enabled);
+        renameNeuronAction.setEnabled(enabled);
+        sortSubmenu.setEnabled(enabled);
+        createNeuronAction.setEnabled(enabled);
+        deleteNeuronAction.setEnabled(enabled);
     }
     
     @Override
@@ -165,7 +208,7 @@ public class AnnotationPanel extends JPanel
         // testing
         // showOutline(workspaceButtonsPanel, Color.green);
 
-        JButton createWorkspaceButtonPlus = new JButton("+");
+        createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);
         createWorkspaceAction.putValue(Action.NAME, "+");
         createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
@@ -200,24 +243,25 @@ public class AnnotationPanel extends JPanel
                 "Export all neurons to SWC file");
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
-        ImportSWCAction importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
+        importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
         importSWCAction.putValue(Action.NAME, "Import SWC file as one neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        ImportSWCAction importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
+        importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
         importSWCActionMulti.putValue(Action.NAME, "Import SWC file as separate neurons...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
 
-        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
+        saveColorModelAction = new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 annotationMgr.saveQuadViewColorModel();
             }
-        }));
+        };
+        workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
         workspaceToolMenu.add(new JMenuItem((new AbstractAction("Show workspace info...") {
             @Override
@@ -252,59 +296,80 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
-        neuronToolMenu.add(new NeuronTagsAction(annotationModel));
-        neuronToolMenu.add(new BulkNeuronTagAction(annotationModel, workspaceNeuronList));
-        neuronToolMenu.add(new AbstractAction("Choose neuron style...") {
+        
+        neuronTagsAction = new NeuronTagsAction(annotationModel);
+        neuronToolMenu.add(neuronTagsAction);
+        
+        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkNeuronTagAction);
+        
+        chooseNeuronStyleAction = new AbstractAction("Choose neuron style...") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.chooseNeuronStyle();
             }
-        });
-        neuronToolMenu.add(new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList));
-        neuronToolMenu.add(new AbstractAction("Show neuron") {
+        };
+        neuronToolMenu.add(chooseNeuronStyleAction);
+        
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkChangeNeuronStyleAction);
+        
+        showNeuronAction = new AbstractAction("Show neuron") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.setNeuronVisibility(true);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Hide neuron") {
+        };
+        neuronToolMenu.add(showNeuronAction);
+        
+        hideNeuronAction = new AbstractAction("Hide neuron") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.setNeuronVisibility(false);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Hide others") {
+        };
+        neuronToolMenu.add(hideNeuronAction);
+        
+        hideOthersAction = new AbstractAction("Hide others") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // hide others = hide all then show current; this is purely a convenience function
                 annotationMgr.setAllNeuronVisibility(false);
                 annotationMgr.setNeuronVisibility(true);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Show all neurons") {
+        };
+        neuronToolMenu.add(hideOthersAction);
+        
+        showAllNeuronsAction = new AbstractAction("Show all neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.setAllNeuronVisibility(true);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Hide all neurons") {
+        };
+        neuronToolMenu.add(showAllNeuronsAction);
+        
+        hideAllNeuronsAction = new AbstractAction("Hide all neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.setAllNeuronVisibility(false);
             }
-        });
+        };
+        neuronToolMenu.add(hideAllNeuronsAction);
+        
         ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
         exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
         exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Export selected neuron as an SWC file");
         neuronToolMenu.add(exportCurrentSWCAction);
-        neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
+        
+        renameNeuronAction = new AbstractAction("Rename") {
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.renameNeuron();
             }
-        }));
-        // neuron sort submenu
-        JMenu sortSubmenu = new JMenu("Sort");
+        };
+        neuronToolMenu.add(new JMenuItem(renameNeuronAction));
+        
+        sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {

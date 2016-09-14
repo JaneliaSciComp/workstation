@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.browser.api;
 
-import java.util.Set;
+import java.util.HashSet;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 
 
@@ -29,21 +29,7 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
-        // First check for literal, individual match.
-        final String currentUserSubjectKey = AccessManager.getSubjectKey();
-        if (domainObject.getReaders().contains(currentUserSubjectKey)) {
-            return true;
-        }
-        // Next check for group match.
-        Subject subject = AccessManager.getAccessManager().getSubject();
-        Set<String> currentUserGroups = subject.getGroups();        
-        for (String reader : domainObject.getReaders()) {            
-            if (currentUserGroups.contains(reader)) {
-                return true;
-            }
-        }
-        
-        return false;
+        return DomainUtils.hasReadAccess(domainObject, new HashSet<>(AccessManager.getSubjectKeys()));
     }
     
     /**
@@ -52,21 +38,7 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
-        // First check for literal, individual match.
-        final String currentUserSubjectKey = AccessManager.getSubjectKey();
-        if (domainObject.getWriters().contains(currentUserSubjectKey)) {
-            return true;
-        }
-        // Next check for group match.
-        Subject subject = AccessManager.getAccessManager().getSubject();
-        Set<String> currentUserGroups = subject.getGroups();        
-        for (String writer : domainObject.getWriters()) {            
-            if (currentUserGroups.contains(writer)) {
-                return true;
-            }
-        }
-        
-        return false;
+        return DomainUtils.hasWriteAccess(domainObject, new HashSet<>(AccessManager.getSubjectKeys()));
     }
 
 }

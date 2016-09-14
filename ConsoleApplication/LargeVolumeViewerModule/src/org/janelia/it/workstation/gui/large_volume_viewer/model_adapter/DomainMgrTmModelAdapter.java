@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
@@ -13,10 +12,9 @@ import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFacto
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Stopwatch;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
@@ -51,8 +49,8 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
 
         try {
-            progressHandle.start(TOTAL_WORKUNITS);
-            progressHandle.setInitialDelay(0);            
+            progressHandle.setInitialDelay(0);
+            progressHandle.start(TOTAL_WORKUNITS);            
             progressHandle.progress(0);
             progressHandle.setDisplayName("Loading neuron data...");
             List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
@@ -66,7 +64,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
             // check neuron consistency and repair (some) problems
             for (TmNeuronMetadata neuron: neuronList) {
-                log.info("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
                 List<String> results = neuron.checkRepairNeuron();
                 // List<String> results = neuron.checkNeuron();
                 if (results.size() > 0) {
@@ -111,14 +109,14 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
         public void run() {
             running.set(true);
             try {
-                Stopwatch w = new Stopwatch();
+                StopWatch w = new StopWatch();
                 if (metadataOnly) {
                     tmDomainMgr.saveMetadata(tmNeuronMetadata);
                 }
                 else {
                     tmDomainMgr.save(tmNeuronMetadata);
                 }
-                log.info("Neuron save/update time = " + w.elapsedMillis() + " ms");
+                log.trace("Neuron save/update time = {} ms", w.getElapsedTime());
             }
             catch (Exception ex) {
                 log.error("Error saving neuron",ex);

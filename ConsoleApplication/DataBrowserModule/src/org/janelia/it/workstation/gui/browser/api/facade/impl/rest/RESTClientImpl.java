@@ -18,7 +18,7 @@ public class RESTClientImpl {
         if (responseStatus<200 || responseStatus>=300) {
             log.error("Problem making request for {}", failureError);
             // TODO: we want to print the request URI here, but I don't have time to search through the JAX-RS APIs right now
-            log.error("Server responded with error code: {}",status);
+            log.error("Server responded with error code: {} {}",response.getStatus(), status);
             return true;
         }
         return false;
