@@ -47,7 +47,12 @@ import org.janelia.horta.actors.TetVolumeMaterial.TetVolumeShader;
 import org.janelia.horta.ktx.KtxData;
 
 /**
- *
+ * TetVolumeMeshActor represents one volume rendered block, 
+ * consisting of five tetrahedra.
+ * Multiple TetVolumeMeshActors may reside in a higher level TetVolumeActor.
+ * TetVolumeMeshActor is responsible for managing the material and geometry
+ *  for one volume rendered block.
+ * 
  * @author brunsc
  */
 public class TetVolumeMeshActor extends MeshActor

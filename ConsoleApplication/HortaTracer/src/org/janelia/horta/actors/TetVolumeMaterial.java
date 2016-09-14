@@ -51,6 +51,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Material for tetrahedral volume rendering.
+ * Unlike most materials, TetVolumeMaterial is NOT responsible for managing
+ * the shader. TetVolumeActor has responsibility for the shader.
+ * TetVolumeMaterial is responsible for managing the 3D texture for a volume
+ * rendered block.
  * @author Christopher Bruns
  */
 public class TetVolumeMaterial extends BasicMaterial
@@ -227,6 +231,8 @@ public class TetVolumeMaterial extends BasicMaterial
         return false;
     }
 
+    // The singleton instance of the TetVolumeShader class is actually managed
+    // by the TetVolumeActor class.
     public static class TetVolumeShader extends BasicShaderProgram
     {
         public TetVolumeShader()

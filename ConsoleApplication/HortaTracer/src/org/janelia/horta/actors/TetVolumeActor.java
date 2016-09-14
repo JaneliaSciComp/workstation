@@ -54,6 +54,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Volume rendering actor for blocks consisting of five tetrahedral components.
+ * One Singleton TetVolumeActor may contain multiple TetVolumeMeshActors,
+ * each of which represents one volume rendered block.
+ * TetVolumeActor is responsible for managing the volume rendering GLSL shader.
  *
  * @author Christopher Bruns
  */
@@ -69,8 +72,7 @@ implements DepthSlabClipper
         return singletonInstance;
     }
     
-    // private final MeshActor meshActor;
-    // protected final TetVolumeMaterial material;
+    // Use one global shader, rather than one shader per volume block.
     private final TetVolumeMaterial.TetVolumeShader shader;
     private ImageColorModel brightnessModel;
     private final Texture2d colorMapTexture = new Texture2d();
