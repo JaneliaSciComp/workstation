@@ -34,6 +34,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
+import javax.media.opengl.GL4;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
@@ -122,6 +123,32 @@ implements DepthSlabClipper
         ConstViewSlab slab = new BasicViewSlab(vp.getzNearRelative(), vp.getzFarRelative() + 100.0f);
         try {
             camera.pushInternalViewSlab(slab);
+            
+            final boolean doBlend = true;
+            if (doBlend) {
+                gl.glEnable(GL3.GL_BLEND);
+                final boolean occluding = false;
+                if (occluding) {
+                    // Occluding
+                    ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target
+                    ((GL4)gl).glBlendFunci(0, GL4.GL_SRC_ALPHA,  GL4.GL_ONE_MINUS_SRC_ALPHA);
+                }
+                else {
+                    // Max intensity
+                    ((GL4)gl).glBlendEquationi(0, GL4.GL_MAX); // RGBA color target
+                }
+                ((GL4)gl).glBlendEquationi(1, GL4.GL_MAX); // core intensity/depth target
+            }
+
+            final boolean doCull = true;
+            if (doCull) {
+                // Display Front faces only.
+                gl.glEnable(GL3.GL_CULL_FACE);
+                gl.glCullFace(GL3.GL_BACK);
+                // (secretly the actual initial mesh geometry is the back faces of the tetrahedra though...)
+                // (but semantically, we are showing front faces of the rendered volume)
+            }            
+            
             // Bind color map to texture unit 1, because 3D volume textures will use unit zero.
             colorMapTexture.bind(gl, 1);
             shader.load(gl);

@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.media.opengl.GL3;
-import javax.media.opengl.GL4;
 import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.MeshGeometry;
@@ -91,7 +90,7 @@ public class TetVolumeMeshActor extends MeshActor
         /** @TODO something */
     }
     
-    public void addOuterTetrahedron(int a, int b, int c, int apex) {
+    public final void addOuterTetrahedron(int a, int b, int c, int apex) {
         List<Integer> tet = new ArrayList<>();
         tet.add(a);
         tet.add(b);
@@ -100,7 +99,7 @@ public class TetVolumeMeshActor extends MeshActor
         outerTetrahedra.add(tet);
     }
     
-    public void setCentralTetrahedron(int a, int b, int c, int apex) {
+    public final void setCentralTetrahedron(int a, int b, int c, int apex) {
         List<Integer> tet = centralTetrahedron;
         tet.clear();
         tet.add(a);
@@ -112,31 +111,6 @@ public class TetVolumeMeshActor extends MeshActor
     @Override
     public void displayTriangleAdjacencies(GL3 gl) 
     {
-        final boolean doBlend = true;
-        if (doBlend) {
-            gl.glEnable(GL3.GL_BLEND);
-            final boolean occluding = false;
-            if (occluding) {
-                // Occluding
-                ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target
-                ((GL4)gl).glBlendFunci(0, GL4.GL_SRC_ALPHA,  GL4.GL_ONE_MINUS_SRC_ALPHA);
-            }
-            else {
-                // Max intensity
-                ((GL4)gl).glBlendEquationi(0, GL4.GL_MAX); // RGBA color target
-            }
-            ((GL4)gl).glBlendEquationi(1, GL4.GL_MAX); // core intensity/depth target
-        }
-        
-        final boolean doCull = true;
-        if (doCull) {
-            // Display Front faces only.
-            gl.glEnable(GL3.GL_CULL_FACE);
-            gl.glCullFace(GL3.GL_BACK);
-            // (secretly the actual initial mesh geometry is the back faces of the tetrahedra though...)
-            // (but semantically, we are showing front faces of the rendered volume)
-        }
-        
         vertexBufferObject.bind(gl, material.getShaderProgramHandle());
 
         if (vboTriangleAdjacencyIndices == 0)
