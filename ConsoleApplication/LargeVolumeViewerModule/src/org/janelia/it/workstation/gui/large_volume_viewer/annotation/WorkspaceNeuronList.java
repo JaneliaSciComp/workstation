@@ -1,6 +1,39 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultRowSorter;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -8,20 +41,11 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
-import java.awt.*;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.List;
-
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronData;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
@@ -39,8 +63,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private NeuronTableModel neuronTableModel;
     private DefaultRowSorter<TableModel, String> sorter;
     private JTextField filterField;
-    private JComboBox tagModeMenu;
-    private JComboBox tagMenu;
+    private JComboBox<String> tagModeMenu;
+    private JComboBox<String> tagMenu;
 
     private AnnotationManager annotationManager;
     private AnnotationModel annotationModel;
@@ -219,23 +243,23 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         tagFilterPanel.add(new JLabel("Tag filter:"));
 
         String [] modeStrings = {"(none)", "include", "exclude"};
-        tagModeMenu = new JComboBox(modeStrings);
+        tagModeMenu = new JComboBox<String>(modeStrings);
         tagModeMenu.setSelectedIndex(0);
         tagModeMenu.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JComboBox box = (JComboBox) e.getSource();
+                JComboBox<String> box = (JComboBox) e.getSource();
                 String mode = (String) box.getSelectedItem();
                 tagModeChanged(mode);
             }
         });
         tagFilterPanel.add(tagModeMenu);
-        tagMenu = new JComboBox();
+        tagMenu = new JComboBox<String>();
         // add items later (they aren't available now)
         tagMenu.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JComboBox box = (JComboBox) e.getSource();
+                JComboBox<String> box = (JComboBox) e.getSource();
                 String tag = (String) box.getSelectedItem();
                 tagFilterChanged(tag);
             }
@@ -334,11 +358,11 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
         // probably ought to have a constant map for this...
         NeuronTableModel.NeuronTagMode tagMode;
-        if (mode == "(none)") {
+        if ("(none)".equals(mode)) {
             tagMode = NeuronTableModel.NeuronTagMode.NONE;
-        } else if (mode == "include") {
+        } else if ("include".equals(mode)) {
             tagMode = NeuronTableModel.NeuronTagMode.INCLUDE;
-        } else if (mode == "exclude") {
+        } else if ("exclude".equals(mode)) {
             tagMode = NeuronTableModel.NeuronTagMode.EXCLUDE;
         } else {
             // should never happen
@@ -351,7 +375,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     public void tagFilterChanged(String tag) {
         // note: if you set the tag filter to empty string,
         //  we explicitly change the mode to NONE as well
-        if (tag == "") {
+        if (StringUtils.isEmpty(tag)) {
             tagModeMenu.setSelectedItem("(none)");
             neuronTableModel.setTagFilter(tag, NeuronTableModel.NeuronTagMode.NONE);
         } else {
@@ -456,7 +480,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         List<TmNeuronMetadata> neuronList = new ArrayList<>();
         for (int i=0; i<neuronTable.getRowCount(); i++) {
             int index = neuronTable.convertRowIndexToModel(i);
-            neuronList.add((TmNeuronMetadata) neuronTableModel.getValueAt(index, 0));
+            neuronList.add((TmNeuronMetadata) neuronTableModel.getNeuronAtRow(index));
         }
         return neuronList;
     }
@@ -490,16 +514,6 @@ class NeuronTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public void addNeuron(TmNeuronMetadata neuron) {
-        neurons.add(neuron);
-        if (hasFilter()) {
-            if (annotationModel.hasNeuronTag(neuron, tagFilter)) {
-                matchedNeurons.add(neuron);
-            }
-        }
-        fireTableDataChanged();
-    }
-
     public void addNeurons(List<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
         if (hasFilter()) {
@@ -515,15 +529,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public void updateNeuron(TmNeuronMetadata neuron) {
-        replaceNeuron(neuron, neurons);
-        if (hasFilter()) {
-            if (matchesTagFilter(neuron)) {
-                replaceNeuron(neuron, matchedNeurons);
-            } else {
-                replaceNeuron(neuron, unmatchedNeurons);
-            }
-        }
-        fireTableDataChanged();
+        updateNeurons(Arrays.asList(neuron));
     }
 
     public void updateNeurons(List<TmNeuronMetadata> neuronList) {
@@ -535,6 +541,11 @@ class NeuronTableModel extends AbstractTableModel {
                 } else {
                     replaceNeuron(neuron, unmatchedNeurons);
                 }
+            }
+        }
+        else {
+            for (TmNeuronMetadata neuron: neuronList) {
+                replaceNeuron(neuron, neurons);
             }
         }
         fireTableDataChanged();
@@ -554,7 +565,7 @@ class NeuronTableModel extends AbstractTableModel {
         // mode switch is cheap, but don't iterate over the
         //  neurons again if the tag didn't change
         tagMode = mode;
-        if (tag != tagFilter) {
+        if (!Objects.equals(tag,tagFilter)) {
             tagFilter = tag;
             matchedNeurons.clear();
             unmatchedNeurons.clear();
@@ -570,7 +581,7 @@ class NeuronTableModel extends AbstractTableModel {
     }
 
     public boolean hasFilter() {
-        return (tagMode != NeuronTagMode.NONE && tagFilter != "");
+        return (tagMode != NeuronTagMode.NONE && !StringUtils.isEmpty(tagFilter));
     }
 
     private boolean matchesTagFilter(TmNeuronMetadata neuron) {
@@ -586,32 +597,32 @@ class NeuronTableModel extends AbstractTableModel {
         return columnNames.length;
     }
 
-    public int getRowCount() {
+    public List<TmNeuronMetadata> getCurrentNeuronList() {
         if (hasFilter()) {
             if (tagMode == NeuronTagMode.INCLUDE) {
-                return matchedNeurons.size();
+                return matchedNeurons;
             } else {
-                return unmatchedNeurons.size();
+                return unmatchedNeurons;
             }
         } else {
-            return neurons.size();
+            return neurons;
         }
+    }
+    
+    public int getRowCount() {
+        return getCurrentNeuronList().size();
     }
 
     public int getTotalNeuronCount() {
         return neurons.size();
     }
 
+    public int getRowForNeuron(TmNeuronMetadata neuron) {
+        return getIndexForNeuron(neuron, getCurrentNeuronList());
+    }
+    
     public TmNeuronMetadata getNeuronAtRow(int row) {
-        if (hasFilter()) {
-            if (tagMode == NeuronTagMode.INCLUDE) {
-                return matchedNeurons.get(row);
-            } else {
-                return unmatchedNeurons.get(row);
-            }
-        } else {
-            return neurons.get(row);
-        }
+        return getCurrentNeuronList().get(row);
     }
 
     private void replaceNeuron(TmNeuronMetadata neuron, List<TmNeuronMetadata> neuronList) {
@@ -623,38 +634,19 @@ class NeuronTableModel extends AbstractTableModel {
         }
     }
 
-    public int getIndexForNeuron(TmNeuronMetadata neuron, List<TmNeuronMetadata> neuronList) {
-        TmNeuronMetadata foundNeuron = null;
+    private int getIndexForNeuron(TmNeuronMetadata neuron, List<TmNeuronMetadata> neuronList) {
+        int i=0;
         for (TmNeuronMetadata n: neuronList) {
             if (n.getId().equals(neuron.getId())) {
-                foundNeuron = n;
-                break;
+                return i;
             }
+            i++;
         }
-        if (foundNeuron != null) {
-            return neuronList.indexOf(foundNeuron);
-        } else {
-            return -1;
-        }
-    }
-
-    public int getRowForNeuron(TmNeuronMetadata neuron) {
-        List<TmNeuronMetadata> neuronList;
-        if (hasFilter()) {
-            if (tagMode == NeuronTagMode.INCLUDE) {
-                neuronList = matchedNeurons;
-            } else {
-                // EXCLUDE:
-                neuronList = unmatchedNeurons;
-            }
-        } else {
-            neuronList = neurons;
-        }
-        return getIndexForNeuron(neuron, neuronList);
+        return -1;
     }
 
     // needed to get color to work right; make sure classes match what getValueAt() returns!
-    public Class getColumnClass(int column) {
+    public Class<?> getColumnClass(int column) {
         switch (column) {
             case 0:
                 // neuron
@@ -666,34 +658,24 @@ class NeuronTableModel extends AbstractTableModel {
                 // creation date
                 return Date.class;
             default:
-                return Object.class;
+                throw new IllegalStateException("Table column is not configured: "+column);
         }
     }
-
+    
     public Object getValueAt(int row, int column) {
-        TmNeuronMetadata targetNeuron;
-        if (hasFilter()) {
-            if (tagMode == NeuronTagMode.INCLUDE) {
-                targetNeuron = matchedNeurons.get(row);
-            } else {
-                targetNeuron = unmatchedNeurons.get(row);
-            }
-        } else {
-            targetNeuron = neurons.get(row);
-        }
-
+        TmNeuronMetadata targetNeuron = getNeuronAtRow(row);
         switch (column) {
             case 0:
                 // neuron name
-                return neurons.get(row).getName();
+                return targetNeuron.getName();
             case 1:
-                // color, from style
+                // Note that is not the same as targetNeuron.getColor(). If the persisted color is null, it picks a default.
                 return annotationModel.getNeuronStyle(targetNeuron).getColor();
             case 2:
                 // creation date, hidden, but there for sorting
                 return targetNeuron.getCreationDate();
             default:
-                return null;
+                throw new IllegalStateException("Table column is not configured: "+column);
         }
     }
 
@@ -714,8 +696,7 @@ class ColorCellRenderer extends JLabel implements TableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object color,
             boolean isSelected, boolean hasFocus, int row, int column) {
         Color newColor = (Color) color;
-        setBackground(newColor);
-
+        
         if (isBordered) {
             if (isSelected) {
                 if (selectedBorder == null) {
@@ -732,9 +713,12 @@ class ColorCellRenderer extends JLabel implements TableCellRenderer {
             }
         }
 
-        setToolTipText("RGB value: " + newColor.getRed() + ", "
-                + newColor.getGreen() + ", "
-                + newColor.getBlue());
+        if (newColor!=null) {
+            setBackground(newColor);
+            setToolTipText("RGB value: " + newColor.getRed() + ", "
+                    + newColor.getGreen() + ", "
+                    + newColor.getBlue());
+        }
         return this;
     }
 
