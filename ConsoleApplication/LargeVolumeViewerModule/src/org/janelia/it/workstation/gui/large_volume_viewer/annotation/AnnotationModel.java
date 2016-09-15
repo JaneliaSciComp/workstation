@@ -1323,7 +1323,26 @@ called from a  SimpleWorker thread.
                 fireNeuronStylesChanged(updateMap);
             }
         });
-        
+    }
+
+    public void setNeuronVisibility(final List<TmNeuronMetadata> neuronList, final boolean visibility) throws Exception {
+
+        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
+        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
+        bulkNeuronStyleUpdate.setVisible(visibility);
+        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
+                for (TmNeuronMetadata neuron: neuronList) {
+                    neuron.setVisible(visibility);
+                    updateMap.put(neuron, getNeuronStyle(neuron));
+                }
+                fireNeuronStylesChanged(updateMap);
+            }
+        });
     }
     
     /**

@@ -46,7 +46,7 @@ public class BulkNeuronTagAction extends AbstractAction {
         this.annModel = annotationModel;
         this.listProvider = listProvider;
 
-        putValue(NAME, "Bulk edit neuron tags...");
+        putValue(NAME, "Edit neuron tags...");
         putValue(SHORT_DESCRIPTION, "Edit neuron tag for all visible neurons");
     }
 

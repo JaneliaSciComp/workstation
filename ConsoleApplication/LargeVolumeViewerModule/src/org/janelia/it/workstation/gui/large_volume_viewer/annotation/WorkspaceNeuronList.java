@@ -9,7 +9,6 @@ import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +26,7 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -50,6 +50,9 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this widget displays a list of neurons in a workspace
@@ -58,6 +61,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
  */
 public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
+    private final static Logger log = LoggerFactory.getLogger(WorkspaceNeuronList.class);
+    
     private JLabel neuronLabel;
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
@@ -151,34 +156,65 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         // custom renderer does color swatches for the neurons
         neuronTable.setDefaultRenderer(Color.class, new ColorCellRenderer(true));
 
-        neuronTable.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent me) {
+        neuronTable.addMouseListener(new MouseHandler() {
+            
+            @Override
+            protected void popupTriggered(MouseEvent me) {
+                if (me.isConsumed()) return;
                 JTable table = (JTable) me.getSource();
                 int viewRow = table.rowAtPoint(me.getPoint());
                 if (viewRow >= 0) {
                     int modelRow = neuronTable.convertRowIndexToModel(viewRow);
                     TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
-                    if (me.getClickCount() == 1) {
-                        // which column?
-                        int viewColumn = table.columnAtPoint(me.getPoint());
-                        int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
-                        if (modelColumn == 0) {
-                            // single click name, select neuron
-                            if (neuronSelectedListener != null)
-                                neuronSelectedListener.selectNeuron(selectedNeuron);
-                        } else if (modelColumn == 1) {
-                            // single click color, edit style
-                            annotationManager.chooseNeuronStyle(selectedNeuron);
-
-                            // what update?
-
-
+                    // select neuron
+                    if (neuronSelectedListener != null) {
+                        neuronSelectedListener.selectNeuron(selectedNeuron);
+                        // show popup menu for the selected neuron
+                        JPopupMenu popupMenu = createPopupMenu(me);
+                        if (popupMenu!=null) {
+                            popupMenu.show(me.getComponent(), me.getX(), me.getY());
                         }
-                    } else if (me.getClickCount() == 2) {
-                        // double click, go to neuron
-                        onNeuronDoubleClicked(selectedNeuron);
+                        me.consume();
                     }
                 }
+            }
+
+            @Override
+            protected void singleLeftClicked(MouseEvent me) {
+                if (me.isConsumed()) return;
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    // which column?
+                    int viewColumn = table.columnAtPoint(me.getPoint());
+                    int modelColumn = neuronTable.convertColumnIndexToModel(viewColumn);
+                    if (modelColumn == 0) {
+                        // single click name, select neuron
+                        if (neuronSelectedListener != null)
+                            neuronSelectedListener.selectNeuron(selectedNeuron);
+                    } 
+                    else if (modelColumn == 1) {
+                        // single click color, edit style
+                        annotationManager.chooseNeuronStyle(selectedNeuron);
+                    }
+                }
+                me.consume();
+            }
+            
+            @Override
+            protected void doubleLeftClicked(MouseEvent me) {
+                if (me.isConsumed()) return;
+                JTable table = (JTable) me.getSource();
+                int viewRow = table.rowAtPoint(me.getPoint());
+                if (viewRow >= 0) {
+                    int modelRow = neuronTable.convertRowIndexToModel(viewRow);
+                    TmNeuronMetadata selectedNeuron = neuronTableModel.getNeuronAtRow(modelRow);
+                    // double click, go to neuron
+                    onNeuronDoubleClicked(selectedNeuron);
+                }
+                me.consume();
             }
         });
 
@@ -271,6 +307,12 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         add(tagFilterPanel, c3);
 
         loadWorkspace(null);
+    }
+
+    protected JPopupMenu createPopupMenu(MouseEvent me) {
+        NeuronContextMenu menu = new NeuronContextMenu(annotationManager, annotationManager.getAnnotationModel().getCurrentNeuron());
+        menu.addMenuItems();
+        return menu;
     }
 
     /**

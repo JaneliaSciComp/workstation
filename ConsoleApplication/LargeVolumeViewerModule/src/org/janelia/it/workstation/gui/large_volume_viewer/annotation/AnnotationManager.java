@@ -1393,10 +1393,19 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     }
 
     public void setAllNeuronVisibility(final boolean visibility) {
+        setBulkNeuronVisibility(null, visibility);
+    }
+
+    public void setBulkNeuronVisibility(final List<TmNeuronMetadata> neuronList, final boolean visibility) {
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setAllNeuronVisibility(visibility);
+                if (neuronList==null) {
+                    annotationModel.setAllNeuronVisibility(visibility);
+                }
+                else {
+                    annotationModel.setNeuronVisibility(neuronList, visibility);
+                }
             }
 
             @Override
@@ -1412,6 +1421,44 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         updater.execute();
     }
 
+    // hide others = hide all then show current; this is purely a convenience function
+    public void hideUnselectedNeurons() {
+        SimpleWorker updater = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setAllNeuronVisibility(false);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // This hack is currently needed because the event model is so screwed up
+                SimpleWorker updater = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        setNeuronVisibility(true);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // nothing; listeners will update
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                updater.execute();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        updater.execute();
+    }
+    
     /**
      * as with chooseNeuronStyle, multiple versions allow for multiple entry points
      */
@@ -1776,4 +1823,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     public TmWorkspace getCurrentWorkspace() {
         return annotationModel.getCurrentWorkspace();
     }
+
+    public AnnotationModel getAnnotationModel() {
+        return annotationModel;
+    }
+    
+    
 }

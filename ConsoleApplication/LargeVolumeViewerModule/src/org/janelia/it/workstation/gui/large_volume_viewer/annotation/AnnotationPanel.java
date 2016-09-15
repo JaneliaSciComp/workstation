@@ -7,19 +7,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
 import java.awt.Insets;
-
-import org.janelia.it.jacs.model.domain.support.DomainUtils;
-import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
-import org.janelia.it.workstation.gui.util.Icons;
-
-import javax.swing.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -27,10 +14,35 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFileChooser;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
@@ -54,8 +66,6 @@ public class AnnotationPanel extends JPanel
     private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
-    private JCheckBoxMenuItem automaticTracingMenuItem;
-    private JCheckBoxMenuItem automaticRefinementMenuItem;
     private ViewStateListener viewStateListener;
     private LVVDevPanel lvvDevPanel;
 
@@ -94,21 +104,19 @@ public class AnnotationPanel extends JPanel
             viewStateListener.centerNextParent();
         }
     };
-
+    
     private JButton createWorkspaceButtonPlus;
+    private JCheckBoxMenuItem automaticTracingMenuItem;
+    private JCheckBoxMenuItem automaticRefinementMenuItem;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
     private AbstractAction saveColorModelAction;
-    private AbstractAction chooseNeuronStyleAction;
-    private NeuronTagsAction neuronTagsAction;
-    private BulkNeuronTagAction bulkNeuronTagAction;
-    private BulkChangeNeuronStyleAction bulkChangeNeuronStyleAction;
-    private AbstractAction hideNeuronAction;
-    private AbstractAction hideOthersAction;
-    private AbstractAction showNeuronAction;
+
     private AbstractAction showAllNeuronsAction;
     private AbstractAction hideAllNeuronsAction;
-    private AbstractAction renameNeuronAction;
+    private AbstractAction bulkChangeNeuronStyleAction;
+    private AbstractAction bulkNeuronTagAction;
+    
 
     private JMenu sortSubmenu;
 
@@ -138,23 +146,17 @@ public class AnnotationPanel extends JPanel
         }
     
         // Disable all change functionality if the user has no write access to the workspace
-        boolean enabled = workspace!=null && ClientDomainUtils.hasWriteAccess(workspace);
+        boolean enabled = annotationMgr.editsAllowed();
         createWorkspaceButtonPlus.setEnabled(enabled);
         automaticRefinementMenuItem.setEnabled(enabled);
         automaticTracingMenuItem.setEnabled(enabled);
         importSWCAction.setEnabled(enabled);
         importSWCActionMulti.setEnabled(enabled);
         saveColorModelAction.setEnabled(enabled);
-        chooseNeuronStyleAction.setEnabled(enabled);
-        neuronTagsAction.setEnabled(enabled);
         bulkNeuronTagAction.setEnabled(enabled);
         bulkChangeNeuronStyleAction.setEnabled(enabled);
-        showNeuronAction.setEnabled(enabled);
-        hideNeuronAction.setEnabled(enabled);
-        hideOthersAction.setEnabled(enabled);
         showAllNeuronsAction.setEnabled(enabled);
         hideAllNeuronsAction.setEnabled(enabled);
-        renameNeuronAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
         createNeuronAction.setEnabled(enabled);
         deleteNeuronAction.setEnabled(enabled);
@@ -216,7 +218,7 @@ public class AnnotationPanel extends JPanel
 
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
-
+        
         automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic point refinement");
         automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
         automaticRefinementMenuItem.addItemListener(new ItemListener() {
@@ -296,79 +298,41 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
-        
-        neuronTagsAction = new NeuronTagsAction(annotationModel);
-        neuronToolMenu.add(neuronTagsAction);
-        
-        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
-        neuronToolMenu.add(bulkNeuronTagAction);
-        
-        chooseNeuronStyleAction = new AbstractAction("Choose neuron style...") {
+
+        JMenuItem titleMenuItem = new JMenuItem("Change neurons showing above:");
+        titleMenuItem.setEnabled(false);
+        neuronToolMenu.add(titleMenuItem);
+
+        showAllNeuronsAction = new AbstractAction("Show neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                annotationMgr.chooseNeuronStyle();
-            }
-        };
-        neuronToolMenu.add(chooseNeuronStyleAction);
-        
-        bulkChangeNeuronStyleAction = new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList);
-        neuronToolMenu.add(bulkChangeNeuronStyleAction);
-        
-        showNeuronAction = new AbstractAction("Show neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(true);
-            }
-        };
-        neuronToolMenu.add(showNeuronAction);
-        
-        hideNeuronAction = new AbstractAction("Hide neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(false);
-            }
-        };
-        neuronToolMenu.add(hideNeuronAction);
-        
-        hideOthersAction = new AbstractAction("Hide others") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // hide others = hide all then show current; this is purely a convenience function
-                annotationMgr.setAllNeuronVisibility(false);
-                annotationMgr.setNeuronVisibility(true);
-            }
-        };
-        neuronToolMenu.add(hideOthersAction);
-        
-        showAllNeuronsAction = new AbstractAction("Show all neurons") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setAllNeuronVisibility(true);
+                annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), true);
             }
         };
         neuronToolMenu.add(showAllNeuronsAction);
         
-        hideAllNeuronsAction = new AbstractAction("Hide all neurons") {
+        hideAllNeuronsAction = new AbstractAction("Hide neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                annotationMgr.setAllNeuronVisibility(false);
+                annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), false);
             }
         };
         neuronToolMenu.add(hideAllNeuronsAction);
+        
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkChangeNeuronStyleAction);
+        
+        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkNeuronTagAction);
+                
+        neuronToolMenu.add(new JSeparator());
         
         ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
         exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
         exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Export selected neuron as an SWC file");
         neuronToolMenu.add(exportCurrentSWCAction);
-        
-        renameNeuronAction = new AbstractAction("Rename") {
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.renameNeuron();
-            }
-        };
-        neuronToolMenu.add(new JMenuItem(renameNeuronAction));
-        
+                
         sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override

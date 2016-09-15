@@ -31,7 +31,7 @@ public class BulkChangeNeuronStyleAction extends AbstractAction {
         this.annModel = annotationModel;
         this.listProvider = listProvider;
 
-        putValue(NAME, "Bulk change neuron style...");
+        putValue(NAME, "Choose neuron style...");
         putValue(SHORT_DESCRIPTION, "Change neuron style for all visible neurons");
     }
 

@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +42,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelec
 import org.janelia.it.workstation.gui.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.AnnotatedDomainObjectListViewer;
+import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerType;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
@@ -50,11 +50,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
