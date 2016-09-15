@@ -1267,10 +1267,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // Unmixing menu
                 if (TetVolumeActor.getInstance().getBlockCount() > 0) 
                 {
-                    JMenu unmixMenu = new JMenu("Unmix");
+                    JMenu unmixMenu = new JMenu("Tracing channel");
                     
                     unmixMenu.add(new JMenuItem(
-                            new AbstractAction("Channel 1 using current brightness") 
+                            new AbstractAction("Unmixed channel 1 using current brightness") 
                     {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -1281,7 +1281,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
                     
                     unmixMenu.add(new JMenuItem(
-                            new AbstractAction("Channel 2 using current brightness") 
+                            new AbstractAction("Unmixed channel 2 using current brightness") 
                     {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -1291,9 +1291,40 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     }));
                     
+                    unmixMenu.add(new JMenuItem(
+                            new AbstractAction("Average channels 1 and 2") 
+                    {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TetVolumeActor.getInstance().traceChannelOneTwoAverage();
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            redrawNow();
+                        }
+                    }));
+                    
+                    unmixMenu.add(new JMenuItem(
+                            new AbstractAction("Raw channel 1") 
+                    {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TetVolumeActor.getInstance().traceChannelOneRaw();
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            redrawNow();
+                        }
+                    }));
+                    
+                    unmixMenu.add(new JMenuItem(
+                            new AbstractAction("Raw channel 2") 
+                    {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TetVolumeActor.getInstance().traceChannelTwoRaw();
+                            neuronMPRenderer.setIntensityBufferDirty();
+                            redrawNow();
+                        }
+                    }));
                     menu.add(unmixMenu);
                 }
-
                 
                 menu.add(new AbstractAction("Save Screen Shot...") {
                     @Override

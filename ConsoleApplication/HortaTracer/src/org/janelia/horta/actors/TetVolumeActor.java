@@ -235,6 +235,30 @@ implements DepthSlabClipper
         unmixMinScale[3] = 1.0f;
     }
     
+    public void traceChannelOneTwoAverage() {
+        setChannelMins();
+        unmixMinScale[0] = 0.0f;
+        unmixMinScale[1] = 0.0f;
+        unmixMinScale[2] = 0.5f;
+        unmixMinScale[3] = 0.5f;
+    }
+    
+    public void traceChannelOneRaw() {
+        setChannelMins();
+        unmixMinScale[0] = 0.0f;
+        unmixMinScale[1] = 0.0f;
+        unmixMinScale[2] = 1.0f;
+        unmixMinScale[3] = 0.0f;
+    }
+    
+    public void traceChannelTwoRaw() {
+        setChannelMins();
+        unmixMinScale[0] = 0.0f;
+        unmixMinScale[1] = 0.0f;
+        unmixMinScale[2] = 0.0f;
+        unmixMinScale[3] = 1.0f;
+    }
+    
     private float setChannelMins() {
         // Populate first two params, the min intensities, with absolute channel values
         ChannelColorModel c1 = brightnessModel.getChannel(0);

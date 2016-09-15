@@ -89,13 +89,20 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
     return clamp((x - edge0)/(edge1 - edge0), 0.0, 1.0);
 }
 
+// Unmixes one voxel from two channels to create a third, synthetic channel voxel
 float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
     vec2 raw = raw_channels.xy;
-    // Avoid extreme differences at low intensity
-    if (raw.x < unmixMinScale.x) return 0; // below threshold -> no data
-    if (raw.y < unmixMinScale.y) return 0;
+    // Avoid extreme differences at low input intensity
+    if (raw.x < 0.90 * unmixMinScale.x) return 0; // below threshold -> no data
+    if (raw.y < 0.90 * unmixMinScale.y) return 0;
+    // scale the two channels and combine
     float result = dot(raw_channels.xy, unmixMinScale.zw);
-    result += min(unmixMinScale.x, unmixMinScale.y); // allow room to explore negative differences
+    // adjust the minimum to roughly match one of the input channels
+    float offset = -dot(unmixMinScale.xy, unmixMinScale.zw); // move average black level to zero
+    // restore black level to match one of the inputs
+    if (unmixMinScale.z >= unmixMinScale.w) offset += unmixMinScale.x; // use black level from channel 1
+    else offset += unmixMinScale.y; // use black level from channel 2
+    result += offset; // allow room to explore negative differences
     result = clamp(result, 0, 1);
     return result;
 }
