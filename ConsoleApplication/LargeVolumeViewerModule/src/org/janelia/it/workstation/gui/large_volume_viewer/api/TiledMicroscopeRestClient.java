@@ -32,18 +32,22 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMicroscopeFacade {
+/**
+ * A web client providing access to the Tiled Microscope REST Service.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class TiledMicroscopeRestClient extends RESTClientImpl {
 
-    private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeFacadeImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
 
     private RESTClientManager manager;
 
-    public TiledMicroscopeFacadeImpl() {
+    public TiledMicroscopeRestClient() {
         super(log);
         this.manager = RESTClientManager.getInstance();
     }
     
-    @Override
     public List<String> getTmSamplePaths() throws Exception {
         Response response = manager.getMouselightEndpoint("/sampleRootPaths")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -55,7 +59,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(new GenericType<List<String>>() {});
     }
 
-    @Override
     public void updateSamplePaths(List<String> paths) throws Exception {
         Response response = manager.getMouselightEndpoint("/sampleRootPaths")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -66,7 +69,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         }
     }
     
-    @Override
     public Collection<TmSample> getTmSamples() throws Exception {
         Response response = manager.getMouselightEndpoint("/sample")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -78,7 +80,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(new GenericType<List<TmSample>>() {});
     }
 
-    @Override
     public TmSample create(TmSample tmSample) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -92,7 +93,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmSample.class);
     }
 
-    @Override
     public TmSample update(TmSample tmSample) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSample);
@@ -106,7 +106,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmSample.class);
     }
 
-    @Override
     public void remove(TmSample tmSample) throws Exception {
         Response response = manager.getMouselightEndpoint("/sample")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -118,7 +117,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         }
     }
 
-    @Override
     public Collection<TmWorkspace> getTmWorkspaces() throws Exception {
         Response response = manager.getMouselightEndpoint("/workspace")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -142,7 +140,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(new GenericType<List<TmWorkspace>>() {});
     }
     
-    @Override
     public TmWorkspace create(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -156,7 +153,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmWorkspace.class);
     }
 
-    @Override
     public TmWorkspace update(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);
@@ -170,7 +166,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmWorkspace.class);
     }
 
-    @Override
     public void remove(TmWorkspace tmWorkspace) throws Exception {
         Response response = manager.getMouselightEndpoint("/workspace")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -182,7 +177,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         }
     }
 
-    @Override
     public Collection<Pair<TmNeuronMetadata,InputStream>> getWorkspaceNeuronPairs(Long workspaceId) throws Exception {
         Response response = manager.getMouselightEndpoint("/workspace/neuron")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -212,7 +206,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return neurons;
     }
 
-    @Override
     public TmNeuronMetadata createMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE);
@@ -226,7 +219,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    @Override
     public TmNeuronMetadata create(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
         FormDataMultiPart multiPart = new FormDataMultiPart()
                 .field("neuronMetadata", neuronMetadata, MediaType.APPLICATION_JSON_TYPE)
@@ -241,12 +233,10 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return response.readEntity(TmNeuronMetadata.class);
     }
 
-    @Override
     public TmNeuronMetadata updateMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         return update(neuronMetadata, null);
     }
 
-    @Override
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata, InputStream protobufStream) throws Exception {
        List<TmNeuronMetadata> list = update(Arrays.asList(Pair.of(neuronMetadata, protobufStream)));
        if (list.isEmpty()) return null;
@@ -254,7 +244,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
        return list.get(0);
     }
 
-    @Override
     public List<TmNeuronMetadata> updateMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
         List<Pair<TmNeuronMetadata,InputStream>> pairs = new ArrayList<>();
         for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
@@ -263,7 +252,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return update(pairs);
     }
 
-    @Override
     public List<TmNeuronMetadata> update(Collection<Pair<TmNeuronMetadata,InputStream>> neuronPairs) throws Exception {
         StopWatch w = new StopWatch();
         if (neuronPairs.isEmpty()) return Collections.emptyList();
@@ -292,7 +280,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         return list;
     }
 
-    @Override
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
         if (bulkNeuronStyleUpdate.getNeuronIds()==null || bulkNeuronStyleUpdate.getNeuronIds().isEmpty()) return;
         Response response = manager.getMouselightEndpoint("/workspace/neuronStyle")
@@ -304,7 +291,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         }
     }
     
-    @Override
     public void remove(TmNeuronMetadata neuronMetadata) throws Exception {
         Response response = manager.getMouselightEndpoint("/workspace/neuron")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
@@ -316,7 +302,6 @@ public class TiledMicroscopeFacadeImpl extends RESTClientImpl implements TiledMi
         }
     }
 
-    @Override
     public void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);

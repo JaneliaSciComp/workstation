@@ -19,8 +19,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeFacade;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeFacadeImpl;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,23 +29,29 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 
 /**
+ * Integration tests for the TiledMicroscopeRestClient.
+ * 
+ * Currently requires a running server and a configured client in the classpath. In the future these should be mocked.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TmWebClientTest {
+public class TmRestClientTest {
 
-    private static final Logger log = LoggerFactory.getLogger(TmWebClientTest.class);
+    private static final Logger log = LoggerFactory.getLogger(TmRestClientTest.class);
 
-    private static TiledMicroscopeFacade facade;
+    private static TiledMicroscopeRestClient client;
     private static TmProtobufExchanger exchanger;
 
     private static final String TEST_SAMPLE_CRUD_SAMPLE = "testSampleCRUD";
+    private static final String TEST_SAMPLE_PATH = "/dummy/sample/path";
     private static final String TEST_WORKSPACE_CRUD_WORKSPACE = "testWorkspaceCRUD";
     private static final String TEST_NEURON_CRUD_WORKSPACE = "testNeuronCRUD";
+    
 
     @BeforeClass
     public static void beforeClass() throws Exception {
         AccessManager.setSubjectKey("user:rokickik");
-        facade = new TiledMicroscopeFacadeImpl();
+        client = new TiledMicroscopeRestClient();
         exchanger = new TmProtobufExchanger();
         cleanup();
     }
@@ -65,23 +70,23 @@ public class TmWebClientTest {
         log.info("Cleaning up test data");
 
         Set<String> testSamples = Sets.newHashSet(TEST_SAMPLE_CRUD_SAMPLE);
-        for(TmSample sample : facade.getTmSamples()) {
+        for(TmSample sample : client.getTmSamples()) {
             if (testSamples.contains(sample.getName())) {
                 log.info("Removing sample "+sample.getId());
-                facade.remove(sample);
+                client.remove(sample);
             }
         }
 
         Set<String> testWorkspaces = Sets.newHashSet(TEST_WORKSPACE_CRUD_WORKSPACE, TEST_NEURON_CRUD_WORKSPACE);
-        for(TmWorkspace workspace : facade.getTmWorkspaces()) {
+        for(TmWorkspace workspace : client.getTmWorkspaces()) {
             if (testWorkspaces.contains(workspace.getName())) {
-                for(Pair<TmNeuronMetadata, InputStream> pair : facade.getWorkspaceNeuronPairs(workspace.getId())) {
+                for(Pair<TmNeuronMetadata, InputStream> pair : client.getWorkspaceNeuronPairs(workspace.getId())) {
                     TmNeuronMetadata tmNeuronMetadata = pair.getLeft();
                     log.info("Removing neuron "+tmNeuronMetadata.getId());
-                    facade.remove(tmNeuronMetadata);
+                    client.remove(tmNeuronMetadata);
                 }
                 log.info("Removing workspace "+workspace.getId());
-                facade.remove(workspace);
+                client.remove(workspace);
             }
         }
     }
@@ -89,79 +94,91 @@ public class TmWebClientTest {
     @Test
     public void testSampleCRUD() throws Exception {
 
-        String samplePath = "/dummy/sample/path";
         TmSample sample = new TmSample();
         sample.setName(TEST_SAMPLE_CRUD_SAMPLE);
-        sample.setFilepath(samplePath);
-        TmSample createdSample = facade.create(sample);
+        sample.setFilepath(TEST_SAMPLE_PATH);
+        TmSample createdSample = client.create(sample);
         assertNotNull(createdSample);
-        assertEquals(samplePath, createdSample.getFilepath());
+        assertEquals(TEST_SAMPLE_PATH, createdSample.getFilepath());
 
-        sample = DomainUtils.findObjectByPath(facade.getTmSamples(), samplePath);
+        sample = DomainUtils.findObjectByPath(client.getTmSamples(), TEST_SAMPLE_PATH);
         assertNotNull(sample);
 
         String samplepath2 = "/new/path";
         sample.setFilepath(samplepath2);
-        TmSample updatedSample = facade.update(sample);
+        TmSample updatedSample = client.update(sample);
         assertNotNull(updatedSample);
         assertEquals(samplepath2, updatedSample.getFilepath());
 
-        facade.remove(sample);
-        sample = DomainUtils.findObjectById(facade.getTmSamples(), updatedSample.getId());
+        client.remove(sample);
+        sample = DomainUtils.findObjectById(client.getTmSamples(), updatedSample.getId());
         assertNull(sample);
     }
 
     @Test
     public void testWorkspaceCRUD() throws Exception {
 
-        String workspaceName = TEST_WORKSPACE_CRUD_WORKSPACE;
-
-        TmWorkspace workspace = new TmWorkspace();
-        workspace.setName(workspaceName);
-        TmWorkspace createdWorkspace = facade.create(workspace);
+        // Must have a sample in order to create a workspace
+        TmSample sample = new TmSample();
+        sample.setName(TEST_SAMPLE_CRUD_SAMPLE);
+        sample.setFilepath(TEST_SAMPLE_PATH);
+        TmSample createdSample = client.create(sample);
+        
+        // Test workspace creation
+        TmWorkspace workspace = new TmWorkspace(TEST_WORKSPACE_CRUD_WORKSPACE, createdSample.getId());
+        TmWorkspace createdWorkspace = client.create(workspace);
         assertNotNull(createdWorkspace);
-        assertEquals(workspaceName, createdWorkspace.getName());
-
-        workspace = DomainUtils.findObjectByName(facade.getTmWorkspaces(), workspaceName);
+        assertEquals(TEST_WORKSPACE_CRUD_WORKSPACE, createdWorkspace.getName());
+        assertEquals(Reference.createFor(createdSample), createdWorkspace.getSampleRef());
+        assertEquals(false, createdWorkspace.isAutoPointRefinement());
+        assertEquals(false, createdWorkspace.isAutoTracing());
+        
+        // Make sure created workspace can be retrieved by name
+        workspace = DomainUtils.findObjectByName(client.getTmWorkspaces(), TEST_WORKSPACE_CRUD_WORKSPACE);
         assertNotNull(workspace);
 
-        workspace.setSampleRef(Reference.createFor(TmSample.class, 1L));
-        TmWorkspace updatedWorkspace = facade.update(workspace);
+        // Test workspace update
+        workspace.setAutoPointRefinement(true);
+        TmWorkspace updatedWorkspace = client.update(workspace);
         assertNotNull(updatedWorkspace);
-        assertEquals(workspaceName, updatedWorkspace.getName());
-        assertEquals(Reference.createFor(TmSample.class, 1L), updatedWorkspace.getSampleRef());
+        assertEquals(TEST_WORKSPACE_CRUD_WORKSPACE, updatedWorkspace.getName());
+        assertEquals(true, updatedWorkspace.isAutoPointRefinement());
 
-        facade.remove(workspace);
-        workspace = DomainUtils.findObjectById(facade.getTmWorkspaces(), workspace.getId());
+        // Test workspace deletion
+        client.remove(workspace);
+        workspace = DomainUtils.findObjectById(client.getTmWorkspaces(), workspace.getId());
         assertNull(workspace);
+        
+        // Clean up
+        client.remove(createdSample);
     }
 
     @Test
     public void testNeuronCRUD() throws Exception {
 
-        String neuronName = "new neuron";
-        String workspaceName = TEST_NEURON_CRUD_WORKSPACE;
-
+        // Must have a sample in order to create a workspace
+        TmSample sample = new TmSample();
+        sample.setName(TEST_SAMPLE_CRUD_SAMPLE);
+        sample.setFilepath(TEST_SAMPLE_PATH);
+        TmSample createdSample = client.create(sample);
+        
         // Create a workspace
-        TmWorkspace workspace = new TmWorkspace();
-        workspace.setName(workspaceName);
-        workspace = facade.create(workspace);
+        TmWorkspace workspace = new TmWorkspace(TEST_NEURON_CRUD_WORKSPACE, createdSample.getId());
+        workspace.setName(TEST_NEURON_CRUD_WORKSPACE);
+        workspace = client.create(workspace);
         assertNotNull(workspace);
-        assertEquals(workspaceName, workspace.getName());
+        assertEquals(TEST_NEURON_CRUD_WORKSPACE, workspace.getName());
 
         // Create a neuron
-        TmNeuronMetadata tmNeuronMetadata = new TmNeuronMetadata();
-//        tmNeuronMetadata.initNeuronData();
-        tmNeuronMetadata.setName(neuronName);
-        tmNeuronMetadata.setWorkspaceRef(Reference.createFor(workspace));
+        TmNeuronMetadata tmNeuronMetadata = new TmNeuronMetadata(workspace, "new neuron");
         tmNeuronMetadata.addRootAnnotation(1L);
         byte[] protobufBytes = exchanger.serializeNeuron(tmNeuronMetadata);
-        TmNeuronMetadata neuronMetadata = facade.create(tmNeuronMetadata, new ByteArrayInputStream(protobufBytes));
+        TmNeuronMetadata neuronMetadata = client.create(tmNeuronMetadata, new ByteArrayInputStream(protobufBytes));
         assertEquals(AccessManager.getSubjectKey(), neuronMetadata.getOwnerKey());
         assertEquals(Reference.createFor(TmWorkspace.class, workspace.getId()), neuronMetadata.getWorkspaceRef());
 
-        // Get neuron
-        Collection<Pair<TmNeuronMetadata, InputStream>> neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
+        // Retrieve the neuron
+        Collection<Pair<TmNeuronMetadata, InputStream>> neurons = client.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(1, neurons.size());
         TmNeuronMetadata savedNeuron = unpack(neurons.iterator().next());
         assertEquals(AccessManager.getSubjectKey(), savedNeuron.getOwnerKey());
@@ -171,21 +188,24 @@ public class TmWebClientTest {
 
         // Modify neuron
         savedNeuron.addRootAnnotation(2L);
-        facade.update(savedNeuron, new ByteArrayInputStream(exchanger.serializeNeuron(savedNeuron)));
-        neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
+        client.update(savedNeuron, new ByteArrayInputStream(exchanger.serializeNeuron(savedNeuron)));
+        neurons = client.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(1, neurons.size());
         savedNeuron = unpack(neurons.iterator().next());
         assertTrue(savedNeuron.containsRootAnnotation(2L));
 
         // Remove neuron
-        facade.remove(savedNeuron);
-        neurons = facade.getWorkspaceNeuronPairs(workspace.getId());
+        client.remove(savedNeuron);
+        neurons = client.getWorkspaceNeuronPairs(workspace.getId());
         assertEquals(0, neurons.size());
 
         // Remove workspace
-        facade.remove(workspace);
-        workspace = DomainUtils.findObjectById(facade.getTmWorkspaces(), workspace.getId());
+        client.remove(workspace);
+        workspace = DomainUtils.findObjectById(client.getTmWorkspaces(), workspace.getId());
         assertNull(workspace);
+        
+        // Clean up
+        client.remove(createdSample);
     }
 
     private TmNeuronMetadata unpack(Pair<TmNeuronMetadata, InputStream> pair) throws Exception {

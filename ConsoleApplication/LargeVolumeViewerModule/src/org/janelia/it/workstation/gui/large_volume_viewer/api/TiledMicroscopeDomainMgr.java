@@ -42,10 +42,10 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private final TiledMicroscopeFacade tmFacade;
+    private final TiledMicroscopeRestClient tmFacade;
     
     private TiledMicroscopeDomainMgr() {
-        tmFacade = new TiledMicroscopeFacadeImpl();
+        tmFacade = new TiledMicroscopeRestClient();
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
