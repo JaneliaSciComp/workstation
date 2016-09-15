@@ -35,11 +35,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import javax.media.opengl.GL3;
-import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.geometry3d.AbstractCamera;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
@@ -106,9 +103,7 @@ public class TetVolumeMaterial extends BasicMaterial
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
 
         gl.glPixelStorei(GL3.GL_UNPACK_ALIGNMENT, 1); // TODO: Verify that this fits data
-        
-        // TODO: Test and verify endian parity behavior
-        /* */
+
         if (ktxData.header.byteOrder == ByteOrder.nativeOrder()) {
             gl.glPixelStorei(GL3.GL_UNPACK_SWAP_BYTES, GL3.GL_FALSE);
         }
@@ -160,6 +155,8 @@ public class TetVolumeMaterial extends BasicMaterial
                     ktxData.header.pixelWidth,
                     ktxData.header.pixelHeight,
                     ktxData.header.pixelDepth);
+            t1 = System.nanoTime();
+            logger.info("Allocating texture storage took "+(t1-t0)/1.0e9+" seconds");
         }
 
         // Phase 2: Initiate loading of texture to GPU (in GL thread)
