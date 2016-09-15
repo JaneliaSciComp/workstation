@@ -317,6 +317,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     private String getWholeAADeletionWarning(StringBuilder subpartNames) {
         String format = IMAGE_DELETION_WARNING_FMT;
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(WHOLE_AA_IMPLICATIONS_PROP);
+        log.info("Whole AA Appended text file name=" + appendedTextFile);
         String extraText = readFromResource(appendedTextFile);
         return String.format(format, subpartNames.toString(), sample.getName(), extraText);
     }
@@ -324,6 +325,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     private String getStitchedFileDeletionWarning(StringBuilder subpartNames) {
         String format = IMAGE_DELETION_WARNING_FMT;
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(STITCHED_IMPLICATIONS_PROP);
+        log.info("StitchedImage Appended text file name=" + appendedTextFile);
         String extraText = readFromResource(appendedTextFile);
         return String.format(format, subpartNames.toString(), sample.getName(), extraText);
     }
