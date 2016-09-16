@@ -1458,6 +1458,19 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         updater.execute();
     }
+
+    public void toggleSelectedNeurons() {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+        if (annotationModel.getCurrentNeuron() == null) {
+            presentError("You must select a neuron to hide or show it.", "No neuron selected");
+        } 
+        else {
+            TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+            setNeuronVisibility(currentNeuron, !currentNeuron.isVisible());
+        }
+    }
     
     /**
      * as with chooseNeuronStyle, multiple versions allow for multiple entry points

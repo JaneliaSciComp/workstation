@@ -26,7 +26,7 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     public LargeVolumeViewerLocationProvider() {
         // Need to find the viewer.
         LargeVolumeViewerTopComponent lvv = 
-                LargeVolumeViewerTopComponent.findThisTopComponent();
+                LargeVolumeViewerTopComponent.getInstance();
         this.viewer = lvv.getLvvv();
     }
 
@@ -48,7 +48,7 @@ public class LargeVolumeViewerLocationProvider implements Tiled3dSampleLocationP
     @Override
     public void setSampleLocation(SampleLocation sampleLocation) {
         LargeVolumeViewerTopComponent lvv = 
-                LargeVolumeViewerTopComponent.findThisTopComponent();
+                LargeVolumeViewerTopComponent.getInstance();
         if (! lvv.isOpened()) {
             lvv.open();
         }

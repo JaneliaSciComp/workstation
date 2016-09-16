@@ -9,7 +9,11 @@ import javax.swing.JMenuItem;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronHideAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronHideOthersAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronShowAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
+import org.openide.awt.Actions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +55,19 @@ public class NeuronContextMenu extends PopupContextMenu {
         add(getEditTagsItem());
         
     }
+    
+//    public JPopupMenu getMenu() {
+//        List<Action> actions = new ArrayList<>();
+//        actions.add(new CopyToClipboardAction("Name", tmNeuronMetadata.getName()));
+//        actions.add(new CopyToClipboardAction("GUID", tmNeuronMetadata.getId()+""));
+//        actions.add(null);
+//        actions.add(new NeuronShowAction());
+//        actions.add(new NeuronHideAction());
+//        actions.add(new NeuronHideOthersAction());
+//        actions.add(null);
+//        Action[] actionArray = actions.toArray(new Action[actions.size()]);
+//        return Utilities.actionsToPopup(actionArray, Lookup.getDefault());
+//    }
 
     protected JMenuItem getTitleItem() {
         String name = multiple ? "(Multiple selected)" : tmNeuronMetadata.getName();
@@ -92,38 +109,21 @@ public class NeuronContextMenu extends PopupContextMenu {
     }
     
     protected JMenuItem getShowNeuronItem() {
-        if (tmNeuronMetadata.isVisible()) return null;
-        Action action = new AbstractAction("Show neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(true);
-            }
-        };
+        Action action = new NeuronShowAction();
         action.setEnabled(annotationMgr.editsAllowed());
-        return new JMenuItem(action);
+        return new Actions.MenuItem(action, true);
     }
 
-    protected JMenuItem getHideNeuronItem() {
-        if (!tmNeuronMetadata.isVisible()) return null;
-        Action action = new AbstractAction("Hide neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(false);
-            }
-        };
+    protected JMenuItem getHideNeuronItem() {        
+        Action action = new NeuronHideAction();
         action.setEnabled(annotationMgr.editsAllowed());
-        return new JMenuItem(action);
+        return new Actions.MenuItem(action, true);
     }
 
     protected JMenuItem getHideOthersItem() {
-        Action action = new AbstractAction("Hide others") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.hideUnselectedNeurons();
-            }
-        };
+        Action action = new NeuronHideOthersAction();
         action.setEnabled(annotationMgr.editsAllowed());
-        return new JMenuItem(action);
+        return new Actions.MenuItem(action, true);
     }
 
     protected JMenuItem getChooseStyleItem() {

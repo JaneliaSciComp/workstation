@@ -1557,6 +1557,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     		else
     			setIcon(emptyIcon);
     	}
-    };
+    }
 
+    public AnnotationManager getAnnotationMgr() {
+        return annotationMgr;
+    };
 }

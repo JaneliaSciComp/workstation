@@ -30,7 +30,7 @@ public class ComponentUtil {
         try {
             Runnable runnable = new Runnable() {
                 public void run() {
-                    mainLvvWindow = LargeVolumeViewerTopComponent.findThisComponent();
+                    mainLvvWindow = LargeVolumeViewerTopComponent.getInstance();
                 }
             };
             if (SwingUtilities.isEventDispatchThread()) {

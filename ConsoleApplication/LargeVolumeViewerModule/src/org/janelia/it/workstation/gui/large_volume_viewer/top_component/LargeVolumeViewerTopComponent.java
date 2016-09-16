@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.ACTION;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.HINT;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.WINDOW_NAMER;
+
 import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
@@ -10,6 +15,7 @@ import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -17,11 +23,6 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.ACTION;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.HINT;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.WINDOW_NAMER;
 
 /**
  * Top component which displays something.
@@ -56,15 +57,11 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     private final LargeVolumeViewerTopComponentDynamic state = new LargeVolumeViewerTopComponentDynamic();
     
-    public static final LargeVolumeViewerTopComponent findThisTopComponent() {
+    public static final LargeVolumeViewerTopComponent getInstance() {
         return (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LVV_PREFERRED_ID);
     }
     
-    public static JComponent findThisComponent() {
-        return findThisTopComponent();
-    }
-
-   public LargeVolumeViewerTopComponent() {
+    public LargeVolumeViewerTopComponent() {
         initComponents();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
@@ -117,6 +114,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     public LargeVolumeViewViewer getLvvv() {
         return state.getLvvv();
+    }
+    
+    public AnnotationManager getAnnotationMgr() {
+        return getLvvv().getQuadViewUi().getAnnotationMgr();
     }
     
     void writeProperties(java.util.Properties p) {
