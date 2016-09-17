@@ -59,7 +59,6 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     };
 
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
-    public static final String IMAGE_DELETION_WARNING_FMT = "<html>Are you sure you want to remove image(s) from %s of sample %s?<br>%s</html>";
 
     private JButton executeButton;
     private Sample sample;
@@ -315,19 +314,17 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
     }
 
     private String getWholeAADeletionWarning(StringBuilder subpartNames) {
-        String format = IMAGE_DELETION_WARNING_FMT;
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(WHOLE_AA_IMPLICATIONS_PROP);
         log.info("Whole AA Appended text file name=" + appendedTextFile);
-        String extraText = readFromResource(appendedTextFile);
-        return String.format(format, subpartNames.toString(), sample.getName(), extraText);
+        String format = readFromResource(appendedTextFile);
+        return String.format(format, subpartNames.toString(), sample.getName());
     }
 
     private String getStitchedFileDeletionWarning(StringBuilder subpartNames) {
-        String format = IMAGE_DELETION_WARNING_FMT;
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(STITCHED_IMPLICATIONS_PROP);
         log.info("StitchedImage Appended text file name=" + appendedTextFile);
-        String extraText = readFromResource(appendedTextFile);
-        return String.format(format, subpartNames.toString(), sample.getName(), extraText);
+        String format = readFromResource(appendedTextFile);
+        return String.format(format, subpartNames.toString(), sample.getName());
     }
 
     private String readFromResource(String resource) {
