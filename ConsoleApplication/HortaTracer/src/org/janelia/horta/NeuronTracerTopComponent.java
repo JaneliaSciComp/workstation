@@ -1270,7 +1270,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JMenu unmixMenu = new JMenu("Tracing channel");
                     
                     unmixMenu.add(new JMenuItem(
-                            new AbstractAction("Unmixed channel 1 using current brightness") 
+                            new AbstractAction("Unmix channel 1 using current brightness") 
                     {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -1281,7 +1281,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }));
                     
                     unmixMenu.add(new JMenuItem(
-                            new AbstractAction("Unmixed channel 2 using current brightness") 
+                            new AbstractAction("Unmix channel 2 using current brightness") 
                     {
                         @Override
                         public void actionPerformed(ActionEvent e) {

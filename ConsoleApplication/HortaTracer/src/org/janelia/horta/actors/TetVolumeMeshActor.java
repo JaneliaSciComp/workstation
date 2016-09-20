@@ -59,14 +59,14 @@ public class TetVolumeMeshActor extends MeshActor
 {
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
-
+    
     private TetVolumeMeshActor(MeshGeometry geometry, TetVolumeMaterial material, CompositeObject3d parent) {
         super(geometry, material, parent);
     }
     
     public TetVolumeMeshActor(KtxData ktxData, TetVolumeShader shader, CompositeObject3d parent) {
         super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, shader), parent);
-
+        
         /*
                 4___________5                  
                 /|         /|             These are texture coordinate axes,

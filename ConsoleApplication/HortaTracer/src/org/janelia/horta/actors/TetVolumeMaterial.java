@@ -33,7 +33,10 @@ package org.janelia.horta.actors;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -60,15 +63,43 @@ public class TetVolumeMaterial extends BasicMaterial
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private IntBuffer pbos;
+    
+    // Parameters for reconstructing original intensities
+    private final float[] channelIntensityGammas;
+    private final float[] channelIntensityScales;
+    private final float[] channelIntensityOffsets;
 
     public TetVolumeMaterial(KtxData ktxData, TetVolumeShader shader) {
         this.ktxData = ktxData;
         shaderProgram = shader;
+        
+        // Parse parameters for reconstructing the original 16-bit intensities
+        int channel_count = Integer.parseInt(ktxData.header.keyValueMetadata.get("number_of_channels").trim());
+        channelIntensityGammas = new float[channel_count];
+        channelIntensityScales = new float[channel_count];
+        channelIntensityOffsets = new float[channel_count];
+        for (int c = 0; c < channel_count; ++c) {
+            float gamma = 0.0f;
+            float scale = 1.0f;
+            float offset = 0.0f;
+            if (ktxData.header.keyValueMetadata.containsKey("channel_"+c+"_intensity_gamma")) {
+                gamma = Float.parseFloat(ktxData.header.keyValueMetadata.get("channel_"+c+"_intensity_gamma").trim());
+                scale = Float.parseFloat(ktxData.header.keyValueMetadata.get("channel_"+c+"_intensity_scale").trim());
+                offset = Float.parseFloat(ktxData.header.keyValueMetadata.get("channel_"+c+"_intensity_offset").trim());
+            }
+            channelIntensityGammas[c] = gamma;
+            channelIntensityScales[c] = scale;
+            channelIntensityOffsets[c] = offset;
+        }
+        
     }
 
     // Override displayMesh() to display something other than triangles
     @Override
     protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
+        gl.glUniform2fv(8, 1, channelIntensityGammas, 0);
+        gl.glUniform2fv(9, 1, channelIntensityScales, 0);
+        gl.glUniform2fv(10, 1, channelIntensityOffsets, 0);
         mesh.displayTriangleAdjacencies(gl);
     }
 

@@ -53,12 +53,16 @@ layout(location = 5) uniform OUTPUT_CHANNEL_VEC opacityFunctionGamma = OUTPUT_CH
 
 layout(location = 6) uniform OUTPUT_CHANNEL_VEC channelVisibilityMask = OUTPUT_CHANNEL_VEC(1);
 
-layout(location = 7) uniform vec4 unmixMinScale = vec4(0.0, 0.0, 0.5, 0.5);
-
 // use a linear combination of input color channels to create one channel used for neuron tracing
 // used for computing "core" depth and intensity
-// TODO: this should include an offset parameter
-// layout(location = 6) uniform CHANNEL_VEC tracingChannelMask = CHANNEL_VEC(0.5);
+// Parameters for channel unmixing
+layout(location = 7) uniform vec4 unmixMinScale = vec4(0.0, 0.0, 0.5, 0.5);
+
+// Parameters for reconstruction of original 16-bit channel intensities
+layout(location = 8) uniform CHANNEL_VEC channelIntensityGamma = CHANNEL_VEC(1);
+layout(location = 9) uniform CHANNEL_VEC channelIntensityScale = CHANNEL_VEC(1);
+layout(location = 10) uniform CHANNEL_VEC channelIntensityOffset = CHANNEL_VEC(0);
+
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
@@ -93,8 +97,8 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
 float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
     vec2 raw = raw_channels.xy;
     // Avoid extreme differences at low input intensity
-    if (raw.x < 0.90 * unmixMinScale.x) return 0; // below threshold -> no data
-    if (raw.y < 0.90 * unmixMinScale.y) return 0;
+    if (raw.x < 0.99 * unmixMinScale.x) return 0; // below threshold -> no data
+    if (raw.y < 0.99 * unmixMinScale.y) return 0;
     // scale the two channels and combine
     float result = dot(raw_channels.xy, unmixMinScale.zw);
     // adjust the minimum to roughly match one of the input channels
@@ -243,9 +247,22 @@ float advance_to_voxel_edge(
 IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
-    float tracing = tracing_channel_from_raw(intensity);
-    float opacity = opacity_for_intensities(OUTPUT_CHANNEL_VEC(intensity, tracing));
-    return IntegratedIntensity(intensity, tracing, opacity);
+
+    // Reconstruct original 16-bit intensity
+    CHANNEL_VEC intensity2 = pow(intensity, channelIntensityGamma);
+    intensity2 *= channelIntensityScale;
+    intensity2 += channelIntensityOffset;
+    // CHANNEL_VEC intensity2 = pow(intensity, CHANNEL_VEC(2.0));
+    // intensity2 *= CHANNEL_VEC(0.05);
+    // intensity2 += CHANNEL_VEC(0.2); // UNLESS original was zero
+    if (intensity.x <= 0) intensity2.x = 0; // TODO: there has to be a neater way...
+    if (intensity.y <= 0) intensity2.y = 0;
+    if (intensity.x >= 1) intensity2.x = mix(intensity2.x, 1.0, 0.5); // TODO: there has to be a neater way...
+    if (intensity.y >= 1) intensity2.y = mix(intensity2.x, 1.0, 0.5);
+
+    float tracing = tracing_channel_from_raw(intensity2);
+    float opacity = opacity_for_intensities(OUTPUT_CHANNEL_VEC(intensity2, tracing));
+    return IntegratedIntensity(intensity2, tracing, opacity);
 }
 
 // Maximum intensity projection

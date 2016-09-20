@@ -63,6 +63,9 @@ public class KtxData
             byte[] b = new byte[imageSize];
             int bytesRead = 0;
             bytesRead = stream.read(b, bytesRead, imageSize - bytesRead);
+            if (bytesRead < 1) {
+                throw new IOException("Error reading bytes for mipmap level " + (m+1));
+            }
             while (bytesRead < imageSize) {
                 int moreBytes = stream.read(b, bytesRead, imageSize - bytesRead);
                 if (moreBytes < 1) {
