@@ -63,6 +63,9 @@ layout(location = 8) uniform CHANNEL_VEC channelIntensityGamma = CHANNEL_VEC(1);
 layout(location = 9) uniform CHANNEL_VEC channelIntensityScale = CHANNEL_VEC(1);
 layout(location = 10) uniform CHANNEL_VEC channelIntensityOffset = CHANNEL_VEC(0);
 
+// Channel colors
+layout(location = 11) uniform OUTPUT_CHANNEL_VEC channelColorHue = OUTPUT_CHANNEL_VEC(120, 300, 210);
+layout(location = 12) uniform OUTPUT_CHANNEL_VEC channelColorSaturation = OUTPUT_CHANNEL_VEC(1);
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
@@ -143,23 +146,27 @@ float opacity_for_intensities(in OUTPUT_CHANNEL_VEC intensity)
     return blend_channel_opacities(rescaled);
 }
 
-vec3 hot_color_for_hue_intensity(in float hue, in float intensity) {
+vec3 hot_color_for_hue_intensity(in float hue, in float saturation, in float intensity) {
     // hue
     float h = fract(2.0 + hue / 360.0); // normalize 360 degrees to range 0.0-1.0
-    float s = (0.7500 * h + 0.1875); // restrict to rainbow region of color map
+    float s_sat = (0.7500 * h + 0.1875); // restrict to rainbow region of color map
+    const float s_gray = 0.0625; // location of grayscale stripe
     // intensity
     float i = pow(intensity, 2.2); // crude gamma correction of sRGB texture
     float r = (0.93750 * i + 0.03125); // dark to light, terminating at pixel centers
-    return texture(colorMapTexture, vec2(r, s)).rgb;
+    vec3 color_sat = texture(colorMapTexture, vec2(r, s_sat)).rgb;
+    vec3 color_gray = texture(colorMapTexture, vec2(r, s_gray)).rgb;
+    return mix(color_gray, color_sat, saturation);
 }
 
 vec4 rgba_for_scaled_intensities(in vec2 c, in float opacity) {
     // return vec4(c.grg, opacity); // green/magenta
 
     // hot color map
-    vec3 ch1 = hot_color_for_hue_intensity(120, c.r); // green
-    vec3 ch2 = hot_color_for_hue_intensity(300, c.g); // magenta
-    vec3 combined = ch1 + ch2 - ch1*ch2; // compromise between sum and max
+    vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, c.r); // green
+    vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, c.g); // magenta
+    const vec3 ones = vec3(1);
+    vec3 combined = ones - (ones - ch1)*(ones - ch2); // compromise between sum and max
     return vec4(combined, opacity);
 }
 
@@ -167,10 +174,11 @@ vec4 rgba_for_scaled_intensities(in vec3 c, in float opacity) {
     // return vec4(c.grg, opacity); // green/magenta
 
     // hot color map
-    vec3 ch1 = hot_color_for_hue_intensity(120, c.r); // green
-    vec3 ch2 = hot_color_for_hue_intensity(300, c.g); // magenta
-    vec3 ch3 = hot_color_for_hue_intensity(210, c.b); // aqua blue
-    vec3 combined = ch1 + ch2 + ch3 - ch1*ch2 - ch1*ch3 - ch2*ch3 + ch1*ch2*ch3; // compromise between sum and max
+    vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, c.r); // green
+    vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, c.g); // magenta
+    vec3 ch3 = hot_color_for_hue_intensity(channelColorHue.b, channelColorSaturation.b, c.b); // aqua blue
+    const vec3 ones = vec3(1);
+    vec3 combined = ones - (ones - ch1)*(ones - ch2)*(ones - ch3); // compromise between sum and max
     return vec4(combined, opacity);
 }
 

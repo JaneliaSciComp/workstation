@@ -30,6 +30,7 @@
 
 package org.janelia.horta.actors;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
@@ -168,6 +169,7 @@ implements DepthSlabClipper
                 ChannelColorModel c0 = brightnessModel.getChannel(0);
                 ChannelColorModel c1 = brightnessModel.getChannel(1);
                 ChannelColorModel c2 = brightnessModel.getChannel(2);
+                
                 float max0 = c0.getDataMax();
                 // min
                 gl.glUniform3fv(3, 1, new float[] {
@@ -193,6 +195,18 @@ implements DepthSlabClipper
                         c1.isVisible() ? 1.0f : 0.0f,
                         c2.isVisible() ? 1.0f : 0.0f
                     }, 0);
+                // color
+                float hsv0[] = new float[3];
+                float hsv1[] = new float[3];
+                float hsv2[] = new float[3];
+                Color.RGBtoHSB(c0.getColor().getRed(), c0.getColor().getGreen(), c0.getColor().getBlue(), hsv0);
+                Color.RGBtoHSB(c1.getColor().getRed(), c1.getColor().getGreen(), c1.getColor().getBlue(), hsv1);
+                Color.RGBtoHSB(c2.getColor().getRed(), c2.getColor().getGreen(), c2.getColor().getBlue(), hsv2);
+                float hues[] = new float[] {360.0f*hsv0[0], 360.0f*hsv1[0], 360.0f*hsv2[0]};
+                float saturations[] = new float[] {hsv0[1], hsv1[1], hsv2[1]};
+                
+                gl.glUniform3fv(11, 1, hues, 0);
+                gl.glUniform3fv(12, 1, saturations, 0);
                 
                 // unmixing parameters
                 gl.glUniform4fv(7, 1, unmixMinScale, 0);
