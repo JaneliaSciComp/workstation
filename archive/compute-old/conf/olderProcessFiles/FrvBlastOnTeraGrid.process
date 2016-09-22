@@ -37,7 +37,7 @@
         </operation>
         <sequence name="Blast Submission To TeraGrid" waitForAsync="true" startEvent="running">
             <operation name="Submit Job" processor="queue/gridSubmitAndWait">
-                <input name="iservice" value="org.janelia.it.jacs.compute.service.common.grid.submit.teragrid.BlastTeraGridSubmitJobService"/>
+                <input name="iservice" value="src.org.janelia.it.jacs.compute.service.common.grid.submit.teragrid.BlastTeraGridSubmitJobService"/>
                 <input name="RESULT_FILE_NODE_ID"/>
                 <input name="BLAST_QUERY_OUTPUT_FILE_MAP"/>
                 <input name="BLAST_DEST_OUTPUT_DIR"/>

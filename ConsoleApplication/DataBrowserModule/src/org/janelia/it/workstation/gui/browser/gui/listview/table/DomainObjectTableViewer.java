@@ -340,6 +340,10 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     }
 
+    public AnnotatedDomainObjectList getDomainObjectList() {
+        return domainObjectList;
+    }
+
     @Override
     public boolean matches(ResultPage resultPage, DomainObject domainObject, String text) {
         log.debug("Searching {} for {}",domainObject.getName(),text);
@@ -369,7 +373,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         return false;
     }
 
-    private Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
+    public Object getValue(AnnotatedDomainObjectList domainObjectList, DomainObject object, String columnName) {
         try {
             if (COLUMN_KEY_ANNOTATIONS.equals(columnName)) {
                 StringBuilder builder = new StringBuilder();
@@ -393,11 +397,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
             log.error("Cannot get attribute {} for {}",columnName,object.getType(),e);
             return null;
         }
-    }
-
-    @Override
-    public Object getValue(DomainObject object, String columnName) {
-        return getValue(domainObjectList, object, columnName);
     }
 
     @Override

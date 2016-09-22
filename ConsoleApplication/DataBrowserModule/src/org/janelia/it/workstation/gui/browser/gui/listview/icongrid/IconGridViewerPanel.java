@@ -33,11 +33,12 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.janelia.it.workstation.gui.options.OptionConstants;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -112,20 +113,20 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 if (key == "console.serverLogin") {
                     IconGridViewerPanel.this.clear();
                 }
-                else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
-                    refresh();
-                }
-                else if (ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
-                    int tableHeight = (Integer) newValue;
-                    if (currTableHeight == tableHeight) {
-                        return;
+                    else if (OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+                        refresh();
                     }
-                    currTableHeight = tableHeight;
-                    imagesPanel.resizeTables(tableHeight);
-                    imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
-                    imagesPanel.recalculateGrid();
-                    imagesPanel.scrollSelectedObjectsToCenter();
-                    imagesPanel.loadUnloadImages();
+                    else if (OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+                        int tableHeight = (Integer) newValue;
+                        if (currTableHeight == tableHeight) {
+                            return;
+                        }
+                        currTableHeight = tableHeight;
+                        imagesPanel.resizeTables(tableHeight);
+                        imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
+                        imagesPanel.recalculateGrid();
+                        imagesPanel.scrollSelectedObjectsToCenter();
+                        imagesPanel.loadUnloadImages();
                 }
             }
         };
@@ -502,6 +503,11 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
     public void showObjects(final List<T> objects, final Callable<Void> success) {
         
+        if (objects==null) {
+            log.debug("showObjects given null list of objects");
+            return;
+        }
+        
         log.debug("showObjects(objects.size={})",objects.size());
 
         // Cancel previous loads
@@ -518,7 +524,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
 
         // Update preferences for each button
         Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-                ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
+                OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
         if (tagTable == null) {
             tagTable = false;
         }
