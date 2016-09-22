@@ -113,8 +113,9 @@ implements DepthSlabClipper
         gl.glClearBufferfv(GL3.GL_COLOR, 1, clearColor4, 0); // core intensity/depth buffer
 
         // Blend intensity channel, but not pick channel
-        gl.glDisablei(GL3.GL_BLEND, 0); // TODO
-        gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
+        // gl.glEnable(GL3.GL_BLEND);
+        // gl.glDisablei(GL3.GL_BLEND, 0); // TODO
+        // gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
         super.renderScene(gl, camera);
 

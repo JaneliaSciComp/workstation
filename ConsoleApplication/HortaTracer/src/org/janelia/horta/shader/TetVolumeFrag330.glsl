@@ -67,6 +67,10 @@ layout(location = 10) uniform CHANNEL_VEC channelIntensityOffset = CHANNEL_VEC(0
 layout(location = 11) uniform OUTPUT_CHANNEL_VEC channelColorHue = OUTPUT_CHANNEL_VEC(120, 300, 210);
 layout(location = 12) uniform OUTPUT_CHANNEL_VEC channelColorSaturation = OUTPUT_CHANNEL_VEC(1);
 
+#define PROJECTION_MAXIMUM 0
+#define PROJECTION_OCCLUDING 1
+layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
+
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
 flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetrhedron
@@ -332,10 +336,10 @@ void main()
                 localColor.a;
         localColor.a = 1.0 - exp(-absorptivity * pathLength * concentration); // Longer path -> more opacity
 
-        integratedColor = 
-                // integrate_max_intensity(intensity, rearIntensity);
-                integrate_occluding(integratedColor, localColor);
-
+        if (projectionMode == PROJECTION_MAXIMUM)
+            integratedColor = integrate_max_intensity(integratedColor, localColor);
+        else
+            integratedColor = integrate_occluding(integratedColor, localColor);
 
         // Terminate early if we hit an opaque surface
         if (integratedColor.a >= 0.999) { // 0.99 is too small

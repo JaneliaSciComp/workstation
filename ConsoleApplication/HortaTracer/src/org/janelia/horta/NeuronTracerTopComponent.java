@@ -387,6 +387,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
         });
+        
+        TetVolumeActor.getInstance().setVolumeState(volumeState);
 
         neuronMPRenderer = setUpActors();
         

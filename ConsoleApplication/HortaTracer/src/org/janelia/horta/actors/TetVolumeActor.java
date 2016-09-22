@@ -47,6 +47,7 @@ import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.material.DepthSlabClipper;
+import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
@@ -83,6 +84,7 @@ implements DepthSlabClipper
     // Initialize tracing channel to average of the first two channels
     private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private VolumeState volumeState = new VolumeState();
     
     public TetVolumeActor() {
         super(null);
@@ -100,6 +102,10 @@ implements DepthSlabClipper
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
+    }
+
+    public void setVolumeState(VolumeState volumeState) {
+        this.volumeState = volumeState;
     }
 
     public void addKtxBlock(KtxData ktxData) 
@@ -132,11 +138,16 @@ implements DepthSlabClipper
             final boolean doBlend = true;
             if (doBlend) {
                 gl.glEnable(GL3.GL_BLEND);
-                final boolean occluding = true;
+                // gl.glDisable(GL3.GL_BLEND);
+                boolean occluding = volumeState.projectionMode == VolumeState.PROJECTION_OCCLUDING;
                 if (occluding) {
                     // Occluding
                     ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target
-                    ((GL4)gl).glBlendFunci(0, GL4.GL_SRC_ALPHA,  GL4.GL_ONE_MINUS_SRC_ALPHA);
+                    ((GL4)gl).glBlendFuncSeparatei(0, 
+                            GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA,
+                            // Unlike most systems, we actually care about the final blended alpha
+                            // component of the framebuffer:
+                            GL4.GL_ONE, GL4.GL_ONE_MINUS_SRC_ALPHA);
                 }
                 else {
                     // Max intensity
@@ -210,6 +221,8 @@ implements DepthSlabClipper
                 
                 // unmixing parameters
                 gl.glUniform4fv(7, 1, unmixMinScale, 0);
+                
+                gl.glUniform1i(13, volumeState.projectionMode);
             }
             else {
                 throw new UnsupportedOperationException("Unexpected number of color channels");
