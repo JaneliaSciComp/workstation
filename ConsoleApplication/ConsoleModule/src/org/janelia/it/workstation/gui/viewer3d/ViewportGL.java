@@ -13,7 +13,10 @@ implements Viewport
 {
     private int width = 1000; // in pixels
     private int height = 600; // in pixels
-    private int depth = 80; // in pixels
+	// this value is chosen so at high zoom, we have room to show
+    //  annotations ver greater depth than at low zoom (was
+    //  originally 80)
+    private int depth = 300; // in pixels
     private int originX = 0;
 	private int originY = 0;
 

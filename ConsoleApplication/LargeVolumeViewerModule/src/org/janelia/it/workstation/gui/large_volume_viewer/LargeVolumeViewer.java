@@ -156,7 +156,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
         renderer.addActor(skeletonActor);
         SkeletonActorStateUpdater sasUpdater = skeletonActor.getModel().getUpdater();
         sasUpdater.addListener(this);
-        skeletonActor.setZThicknessInPixels(viewport.getDepth());        
 		//
         // PopupMenu
         glCanvas.getInnerAwtComponent().addMouseListener(new MouseHandler() {
@@ -398,7 +397,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 
 	public void setSkeletonActor(SkeletonActor skeletonActor) {
 		this.skeletonActor = skeletonActor;
-		skeletonActor.setZThicknessInPixels(viewport.getDepth());
 	}
 
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
