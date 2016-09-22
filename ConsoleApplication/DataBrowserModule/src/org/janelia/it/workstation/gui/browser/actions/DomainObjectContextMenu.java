@@ -35,6 +35,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
+import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
@@ -76,6 +77,8 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectContextMenu extends PopupContextMenu {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
+    public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
+    public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
 
     // Current selection
     protected DomainObject contextObject;
@@ -149,7 +152,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getReportProblemItem());
         addRerunSamplesAction();
         // Removing feature to avoid premature release.
-        //addPartialSecondaryDataDeletiontItem();
+        addPartialSecondaryDataDeletiontItem();
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getMergeItem());
@@ -622,6 +625,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
+        if (secondaryDeletionMenu.getItemCount() > 0) {
+            add(secondaryDeletionMenu);
+        }
         return secondaryDeletionMenu;
     }
     
@@ -629,16 +635,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem rtnVal = null;
         if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
             final Sample sample = (Sample)domainObjectList.get(0);
-            rtnVal = new JMenuItem("  Remove/preclude anatomical area of sample");
+            rtnVal = new JMenuItem("  " + WHOLE_AA_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
-                            FrameworkImplProvider.getMainFrame(), sample
+                            FrameworkImplProvider.getMainFrame(),
+                            sample,
+                            WHOLE_AA_REMOVAL_MSG,
+                            Constants.TRIM_DEPTH_WHOLE_AREA_VALUE
+
                     );
                     dialog.setVisible(true);
                 }
             });
         }
+        log.info("Returning from getPartialSecondaryDataDeletionItem " + rtnVal);
         return rtnVal;
     }
 
@@ -646,14 +657,16 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         JMenuItem rtnVal = null;
         if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
             final Sample sample = (Sample)domainObjectList.get(0);
-            rtnVal = new JMenuItem("  Remove/preclude Stitched Image");
+            rtnVal = new JMenuItem("  " + STITCHED_IMG_REMOVAL_MSG);
             rtnVal.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
-                    String objectiveOfRemoval = SecondaryDataRemovalDialog.getStitchedImageRemovalTarget(sample);
-                    if (objectiveOfRemoval != null) {
-                        // Carry out removal/preclusion of creation, for the stitched image.
-
-                    }
+                    SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
+                            FrameworkImplProvider.getMainFrame(),
+                            sample,
+                            STITCHED_IMG_REMOVAL_MSG,
+                            Constants.TRIM_DEPTH_AREA_IMAGE_VALUE
+                    );
+                    dialog.setVisible(true);
                 }
             });
         }
