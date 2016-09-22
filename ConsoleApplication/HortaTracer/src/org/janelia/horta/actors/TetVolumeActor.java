@@ -132,7 +132,7 @@ implements DepthSlabClipper
             final boolean doBlend = true;
             if (doBlend) {
                 gl.glEnable(GL3.GL_BLEND);
-                final boolean occluding = false;
+                final boolean occluding = true;
                 if (occluding) {
                     // Occluding
                     ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target

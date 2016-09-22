@@ -76,13 +76,6 @@ flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 layout(location = 0) out vec4 fragColor; // store final output color in the usual way
 layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
 
-// We will be building up an intensity integrated along the view ray.
-struct IntegratedIntensity
-{
-    CHANNEL_VEC intensity;
-    float tracing_intensity; // integration of tracing intensity
-    float opacity;
-};
 
 float max_element(in vec2 v) {
     return max(v.r, v.g);
@@ -97,7 +90,7 @@ vec3 rampstep(vec3 edge0, vec3 edge1, vec3 x) {
 }
 
 // Unmixes one voxel from two channels to create a third, synthetic channel voxel
-float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
+float tracing_channel_from_measured(CHANNEL_VEC raw_channels) {
     vec2 raw = raw_channels.xy;
     // Avoid extreme differences at low input intensity
     if (raw.x < 0.99 * unmixMinScale.x) return 0; // below threshold -> no data
@@ -114,36 +107,21 @@ float tracing_channel_from_raw(CHANNEL_VEC raw_channels) {
     return result;
 }
 
-// For one-channel, blending is trivial
-float blend_channel_opacities(float opacity) {
-    return opacity;
-}
-
 // Opacity values must be between zero and one
-float blend_channel_opacities(vec2 opacities) {
-    float a = opacities.x;
-    float b = opacities.y;
-    // return a + b - a*b; // Good compromise between MAX and SUM
-    return max(a, b);
+float opacity_from_rescaled_channels(in vec3 intensities) {
+    const vec3 ones = vec3(1);
+    vec3 t = ones - intensities; // transparency
+    return 1.0 - t.r * t.g * t.b;
 }
 
-// Opacity values must be between zero and one
-float blend_channel_opacities(vec3 opacities) {
-    float a = opacities.x;
-    float b = opacities.y;
-    float c = opacities.z;
-    // return a + b + c - a*b - a*c - b*c + a*b*c; // Good compromise between MAX and SUM
-    return max(max(a, b), c);
-}
-
-float opacity_for_intensities(in OUTPUT_CHANNEL_VEC intensity) 
-{
-    // Use brightness model to modulate opacity
-    OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, intensity);
-    rescaled = pow(rescaled, opacityFunctionGamma);
-    rescaled *= channelVisibilityMask;
-    // TODO: Is max across channels OK here? Or should we use something intermediate between MAX and SUM?
-    return blend_channel_opacities(rescaled);
+OUTPUT_CHANNEL_VEC rescale_intensities(in OUTPUT_CHANNEL_VEC intensity) {
+    OUTPUT_CHANNEL_VEC result = OUTPUT_CHANNEL_VEC(intensity);
+    result -= opacityFunctionMin;
+    result /= (opacityFunctionMax - opacityFunctionMin);
+    result *= channelVisibilityMask;
+    result = clamp(result, 0, 1);
+    result = pow(result, opacityFunctionGamma);
+    return result;
 }
 
 vec3 hot_color_for_hue_intensity(in float hue, in float saturation, in float intensity) {
@@ -152,43 +130,28 @@ vec3 hot_color_for_hue_intensity(in float hue, in float saturation, in float int
     float s_sat = (0.7500 * h + 0.1875); // restrict to rainbow region of color map
     const float s_gray = 0.0625; // location of grayscale stripe
     // intensity
-    float i = pow(intensity, 2.2); // crude gamma correction of sRGB texture
+    float i = clamp(intensity, 0, 1);
+    // i = pow(i, 1.0); // crude gamma correction of sRGB texture
     float r = (0.93750 * i + 0.03125); // dark to light, terminating at pixel centers
     vec3 color_sat = texture(colorMapTexture, vec2(r, s_sat)).rgb;
     vec3 color_gray = texture(colorMapTexture, vec2(r, s_gray)).rgb;
     return mix(color_gray, color_sat, saturation);
 }
 
-vec4 rgba_for_scaled_intensities(in vec2 c, in float opacity) {
-    // return vec4(c.grg, opacity); // green/magenta
-
-    // hot color map
-    vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, c.r); // green
-    vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, c.g); // magenta
-    const vec3 ones = vec3(1);
-    vec3 combined = ones - (ones - ch1)*(ones - ch2); // compromise between sum and max
-    return vec4(combined, opacity);
+vec3 cold_color_for_hue_intensity(in float hue, in float saturation, in float intensity) {
+    return hot_color_for_hue_intensity(hue, saturation, 1.0 - intensity);
 }
 
-vec4 rgba_for_scaled_intensities(in vec3 c, in float opacity) {
-    // return vec4(c.grg, opacity); // green/magenta
-
+vec4 rgba_for_scaled_intensities(in vec3 rescaled) {
     // hot color map
-    vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, c.r); // green
-    vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, c.g); // magenta
-    vec3 ch3 = hot_color_for_hue_intensity(channelColorHue.b, channelColorSaturation.b, c.b); // aqua blue
+    vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, rescaled.r); // green
+    vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, rescaled.g); // magenta
+    vec3 ch3 = hot_color_for_hue_intensity(channelColorHue.b, channelColorSaturation.b, rescaled.b); // aqua blue
     const vec3 ones = vec3(1);
     vec3 combined = ones - (ones - ch1)*(ones - ch2)*(ones - ch3); // compromise between sum and max
+    combined = clamp(combined, 0, 1);
+    float opacity = opacity_from_rescaled_channels(rescaled);
     return vec4(combined, opacity);
-}
-
-vec4 rgba_for_intensities(IntegratedIntensity i) {
-    // Use brightness model to modulate opacity
-    OUTPUT_CHANNEL_VEC v = OUTPUT_CHANNEL_VEC(i.intensity, i.tracing_intensity);
-    OUTPUT_CHANNEL_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, v);
-    rescaled = pow(rescaled, opacityFunctionGamma);
-    rescaled *= channelVisibilityMask;
-    return rgba_for_scaled_intensities(rescaled, i.opacity);
 }
 
 float intersectRayAndPlane(
@@ -252,51 +215,42 @@ float advance_to_voxel_edge(
 }
 
 // Nearest-neighbor filtering
-IntegratedIntensity sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
+CHANNEL_VEC sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
 
-    // Reconstruct original 16-bit intensity
-    CHANNEL_VEC intensity2 = pow(intensity, channelIntensityGamma);
-    intensity2 *= channelIntensityScale;
-    intensity2 += channelIntensityOffset;
-    // CHANNEL_VEC intensity2 = pow(intensity, CHANNEL_VEC(2.0));
-    // intensity2 *= CHANNEL_VEC(0.05);
-    // intensity2 += CHANNEL_VEC(0.2); // UNLESS original was zero
-    if (intensity.x <= 0) intensity2.x = 0; // TODO: there has to be a neater way...
-    if (intensity.y <= 0) intensity2.y = 0;
-    if (intensity.x >= 1) intensity2.x = mix(intensity2.x, 1.0, 0.5); // TODO: there has to be a neater way...
-    if (intensity.y >= 1) intensity2.y = mix(intensity2.x, 1.0, 0.5);
+    const bool reconstruct_intensity = true;
+    if (reconstruct_intensity) {
+        // Reconstruct original 16-bit intensity
+        CHANNEL_VEC intensity2 = CHANNEL_VEC(intensity);
+        intensity2 = pow(intensity2, channelIntensityGamma);
+        intensity2 *= channelIntensityScale;
+        intensity2 += channelIntensityOffset;
+        if (intensity.x <= 0) intensity2.x = 0; // TODO: there has to be a neater way...
+        if (intensity.y <= 0) intensity2.y = 0;
+        if (intensity.x >= 1) intensity2.x = mix(intensity2.x, 1.0, 0.5); // TODO: there has to be a neater way...
+        if (intensity.y >= 1) intensity2.y = mix(intensity2.x, 1.0, 0.5);
+        intensity = intensity2;
+    }
 
-    float tracing = tracing_channel_from_raw(intensity2);
-    float opacity = opacity_for_intensities(OUTPUT_CHANNEL_VEC(intensity2, tracing));
-    return IntegratedIntensity(intensity2, tracing, opacity);
+    return intensity;
 }
 
 // Maximum intensity projection
-IntegratedIntensity integrate_max_intensity(
-        in IntegratedIntensity front, 
-        in IntegratedIntensity back)
+vec4 integrate_max_intensity(in vec4 front, in vec4 back) 
 {
-    CHANNEL_VEC intensity = max(front.intensity, back.intensity);
-    float tracing = max(front.tracing_intensity, back.tracing_intensity);
-    float opacity = max(front.opacity, back.opacity);
-    return IntegratedIntensity(intensity, tracing, opacity);
+    return max(front, back);
 }
 
 // Occluding projection
-IntegratedIntensity integrate_occluding(in IntegratedIntensity front, in IntegratedIntensity back) 
+vec4 integrate_occluding(in vec4 front, in vec4 back) 
 {
-    float opacity = 1.0 - (1.0 - front.opacity) * (1.0 - back.opacity);
-    float kf = front.opacity;
-    float kb = 1.0 - front.opacity;
-    CHANNEL_VEC bi = back.intensity * kb;
-    CHANNEL_VEC fi = front.intensity * kf;
-    // This is the visible VIEWER tracing channel, so apply occluding here too.
-    float tracing = clamp(front.tracing_intensity * kf + back.tracing_intensity * kb, 0, 1);
-    return IntegratedIntensity(clamp(bi + fi, 0, 1), tracing, opacity);
+    // Integrating front-to-back, so use the Under Operator
+    float opacity = 1.0 - (1.0 - front.a)*(1.0 - back.a);
+    float kFront = front.a / opacity;
+    vec3 color = front.rgb * kFront + back.rgb * (1.0 - kFront);
+    return clamp(vec4(color, opacity), 0, 1);
 }
-
 
 void main() 
 {
@@ -336,7 +290,7 @@ void main()
     vec3 rearTexel = rearTexCoord * texelsPerVolume;
 
     // Cast ray through volume
-    IntegratedIntensity intensity = IntegratedIntensity(CHANNEL_VEC(0), 0, 0);
+    vec4 integratedColor = vec4(0);
     bool rayIsFinished = false;
     float t0 = minRay;
     float coreParam = mix(minRay, maxRay, 0.5);
@@ -351,25 +305,40 @@ void main()
             t1 = maxRay;
             rayIsFinished = true;
         }
-        float t = mix(t0, t1, 0.5);
+        // float t = mix(t0, t1, 0.5);
+        float t = mix(t0, t1, 0.50);
         vec3 texel = rayOriginInTexels + t * rayDirectionInTexels;
         vec3 texCoord = texel / texelsPerVolume;
 
-        IntegratedIntensity rearIntensity = sample_nearest_neighbor(texCoord, levelOfDetail); // intentionally downsampled
-        intensity = 
-                integrate_max_intensity(intensity, rearIntensity);
-                // integrate_occluding(intensity, rearIntensity);
+        // Use levelOfDetail for intentional downsampling
+        CHANNEL_VEC localIntensity = sample_nearest_neighbor(texCoord, levelOfDetail);
 
-        float tracingIntensity = 
-                tracing_channel_from_raw(rearIntensity.intensity);
-                // dot(rearIntensity.intensity, tracingChannelMask);
-        if (tracingIntensity >= coreIntensity) { // MIP criterion
+        float tracingIntensity = tracing_channel_from_measured(localIntensity);
+        if (tracingIntensity >= coreIntensity) { // always use MIP criterion for secondary render target
             coreIntensity = tracingIntensity;
             coreParam = t;
         }
 
+        OUTPUT_CHANNEL_VEC localCombined = OUTPUT_CHANNEL_VEC(localIntensity, tracingIntensity);
+        OUTPUT_CHANNEL_VEC localRescaled = rescale_intensities(localCombined);
+        vec4 localColor = rgba_for_scaled_intensities(localRescaled);
+
+        // Use Beer-Lambert law to compute opacity
+        float pathLength = (t1 - t0) / maxRay; // TODO: Convert to scene units
+        const float absorptivity = 250.0; // Absorption per distance in ray parameter units
+        // const float maxConcentration = 2.0; // 0->0, 0.5->1, 1.0->maxConcentration
+        float concentration = 
+                // localColor.a / (1 - localColor.a / maxConcentration);
+                localColor.a;
+        localColor.a = 1.0 - exp(-absorptivity * pathLength * concentration); // Longer path -> more opacity
+
+        integratedColor = 
+                // integrate_max_intensity(intensity, rearIntensity);
+                integrate_occluding(integratedColor, localColor);
+
+
         // Terminate early if we hit an opaque surface
-        if (intensity.opacity > 0.99) {
+        if (integratedColor.a >= 0.999) { // 0.99 is too small
             rayIsFinished = true;
         }
 
@@ -378,7 +347,7 @@ void main()
         t0 = t1;
     }
 
-    if (intensity.opacity < 0.01) { 
+    if (integratedColor.a < 0.05) { 
         discard; // terminate early if there is nothing to show
     }
 
@@ -395,7 +364,7 @@ void main()
     //      opacity tie, the NEARER ray segment wins.
     // Use a floating point render target, because integer targets won't blend.
     // Pack the opacity into the first 7 bits of a 32-bit float mantissa
-    uint opacityInt = clamp(uint(0x7f * intensity.opacity), 0, 0x7f); // 7 bits of opacity, range 0-127
+    uint opacityInt = clamp(uint(0x7f * integratedColor.a), 0, 0x7f); // 7 bits of opacity, range 0-127
     relativeDepth = 1.0 - relativeDepth; // In case of equal opacity, we want NEAR depths to beat FAR depths in a GL_MAX comparison
     // Keep depth strictly fractional, for unambiguous packing with integer opacity
     relativeDepth = clamp(relativeDepth, 0.0, 0.999);
@@ -404,5 +373,5 @@ void main()
     coreDepth = vec2(coreIntensity, opacityDepth); // populates both channels of secondary render target
 
     // Primary render target stores final blended RGBA color
-    fragColor = rgba_for_intensities(intensity);
+    fragColor = integratedColor;
 }
