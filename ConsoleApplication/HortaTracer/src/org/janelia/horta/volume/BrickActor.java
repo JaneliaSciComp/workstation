@@ -31,7 +31,8 @@
 package org.janelia.horta.volume;
 
 import java.io.IOException;
-import org.janelia.geometry3d.ChannelBrightnessModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial;
@@ -52,7 +53,7 @@ implements DepthSlabClipper
     private final BrickMaterial brickMaterial;
     
     public BrickActor(BrainTileInfo brainTile, 
-            ChannelBrightnessModel brightnessModel, 
+            ImageColorModel brightnessModel, 
             VolumeState volumeState, 
             int colorChannel) throws IOException 
     {
@@ -68,7 +69,7 @@ implements DepthSlabClipper
     public BrickActor(
             BrainTileInfo brainTile, 
             Texture3d texture3d, 
-            ChannelBrightnessModel brightnessModel, 
+            ImageColorModel brightnessModel, 
             VolumeState volumeState) 
     {
         super(
@@ -95,7 +96,7 @@ implements DepthSlabClipper
 
         private BrickMaterial(
                 BrainTileInfo brainTile, 
-                ChannelBrightnessModel brightnessModel,
+                ImageColorModel brightnessModel,
                 VolumeState volumeState,
                 int colorChannel) throws IOException
         {
@@ -114,7 +115,7 @@ implements DepthSlabClipper
         private BrickMaterial(
                 BrainTileInfo brainTile, 
                 Texture3d texture3d, 
-                ChannelBrightnessModel brightnessModel, 
+                ImageColorModel brightnessModel, 
                 VolumeState volumeState) 
         {
             super(texture3d, brightnessModel);

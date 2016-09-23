@@ -181,18 +181,18 @@ implements DepthSlabClipper
                 ChannelColorModel c1 = brightnessModel.getChannel(1);
                 ChannelColorModel c2 = brightnessModel.getChannel(2);
                 
-                float max0 = c0.getDataMax();
+                // float max0 = c0.getDataMax();
                 // min
                 gl.glUniform3fv(3, 1, new float[] {
-                        c0.getBlackLevel()/max0, 
-                        c1.getBlackLevel()/max0,
-                        c2.getBlackLevel()/max0
+                        c0.getNormalizedMinimum(), 
+                        c1.getNormalizedMinimum(), 
+                        c2.getNormalizedMinimum(), 
                     }, 0);
                 // max
                 gl.glUniform3fv(4, 1, new float[] {
-                        c0.getWhiteLevel()/max0, 
-                        c1.getWhiteLevel()/max0,
-                        c2.getWhiteLevel()/max0
+                        c0.getNormalizedMaximum(), 
+                        c1.getNormalizedMaximum(), 
+                        c2.getNormalizedMaximum(), 
                     }, 0);
                 // gamma
                 gl.glUniform3fv(5, 1, new float[] {
@@ -290,8 +290,8 @@ implements DepthSlabClipper
         // Populate first two params, the min intensities, with absolute channel values
         ChannelColorModel c1 = brightnessModel.getChannel(0);
         ChannelColorModel c2 = brightnessModel.getChannel(1);
-        float minA = c1.getBlackLevel()/(float)c1.getDataMax();
-        float minB = c2.getBlackLevel()/(float)c2.getDataMax();
+        float minA = c1.getNormalizedMinimum();
+        float minB = c2.getNormalizedMinimum();
         unmixMinScale[0] = minA;
         unmixMinScale[1] = minB;
         float range1 = c1.getWhiteLevel() - c1.getBlackLevel();

@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.ChannelBrightnessModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
@@ -92,18 +92,18 @@ extends MultipassRenderer
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
     // TODO: obsolete brightness model for ImageColorModel
-    private final ChannelBrightnessModel brightnessModel;
+    // private final ChannelBrightnessModel brightnessModel;
     private final ImageColorModel imageColorModel;
     
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public NeuronMPRenderer(GLAutoDrawable drawable, 
-            final ChannelBrightnessModel brightnessModel, 
+            // final ChannelBrightnessModel brightnessModel, 
             HortaMetaWorkspace workspace, 
-            ImageColorModel imageColorModel) 
+            final ImageColorModel imageColorModel) 
     {
         this.drawable = drawable;
-        this.brightnessModel = brightnessModel;
+        // this.brightnessModel = brightnessModel;
         this.imageColorModel = imageColorModel;
         
         this.workspace = workspace;
@@ -144,7 +144,7 @@ extends MultipassRenderer
             private GL3Actor lightingActor = new LightingBlitActor(
                     volumeRenderPass.getRgbaTexture()); // for isosurface
             private final GL3Actor colorMapActor = new RemapColorActor(
-                    volumeRenderPass.getRgbaTexture(), brightnessModel); // for MIP, occluding
+                    volumeRenderPass.getRgbaTexture(), imageColorModel); // for MIP, occluding
             {
                 // addActor(lightingActor); // TODO - use for isosurface
                 addActor(colorMapActor); // Use for MIP and occluding

@@ -35,7 +35,7 @@ import org.janelia.horta.actors.CenterCrossHairActor;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 // import com.jogamp.opengl.util.awt.TextRenderer;
 // import com.jogamp.opengl.util.awt.Screenshot;
-import org.janelia.geometry3d.ChannelBrightnessModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -141,6 +141,7 @@ import org.janelia.horta.nodes.WorkspaceUtil;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.loader.HortaKtxLoader;
@@ -335,7 +336,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         };
         sceneWindow.getCamera().addObserver(cursorCacheDestroyer);
 
+        imageColorModel.addColorModelListener(new ColorModelListener() {
+            @Override
+            public void colorModelChanged() {
+                redrawNow();
+            }
+        });
         
+        /*
         // Repaint when color map changes
         brightnessModel.addObserver(new Observer() {
             @Override
@@ -344,11 +352,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                 redrawNow();
             }
         });
+         */
 
         // Load new volume data when the focus moves
         volumeCache = new HortaVolumeCache(
                 (PerspectiveCamera)sceneWindow.getCamera(),
-                brightnessModel,
+                imageColorModel,
+                // brightnessModel,
                 volumeState,
                 defaultColorChannel
         );
@@ -488,7 +498,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // TODO - refactor all stages to use multipass renderer, like this
         NeuronMPRenderer neuronMPRenderer0 = new NeuronMPRenderer(
                 sceneWindow.getGLAutoDrawable(), 
-                brightnessModel, 
+                // brightnessModel, 
                 metaWorkspace,
                 imageColorModel);
         List<MultipassRenderer> renderers = sceneWindow.getRenderer().getMultipassRenderers();
@@ -550,9 +560,19 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (max == Float.MIN_VALUE) {
             return; // no valid intensities found
         }
+        
+        /*
         brightnessModel.setMinimum(min / 65535f);
         brightnessModel.setMaximum(max / 65535f);
         brightnessModel.notifyObservers();
+         */
+        
+        for (int c = 0; c < imageColorModel.getChannelCount(); ++c) {
+            ChannelColorModel chan = imageColorModel.getChannel(c);
+            chan.setBlackLevel((int)(min));
+            chan.setWhiteLevel((int)(max));
+        }
+        imageColorModel.fireColorModelChanged();
     }
 
     public StaticVolumeBrickSource getVolumeSource()
@@ -742,16 +762,17 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     // TODO: Obsolete brightness model for ImageColorModel
-    private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
+    // private final ChannelBrightnessModel brightnessModel = new ChannelBrightnessModel();
     private final ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
     
     private void loadStartupPreferences() 
     {
         Preferences prefs = NbPreferences.forModule(getClass());
-        brightnessModel.setMinimum(
-                prefs.getFloat("startupMinIntensityChan0", brightnessModel.getMinimum()) );
-        brightnessModel.setMaximum(
-                prefs.getFloat("startupMaxIntensityChan0", brightnessModel.getMaximum()) );
+        ChannelColorModel c = imageColorModel.getChannel(0);
+        c.setBlackLevel((int)( prefs.getFloat("startupMinIntensityChan0", c.getNormalizedMinimum()) ));
+        c.setWhiteLevel((int)( prefs.getFloat("startupMaxIntensityChan0", c.getNormalizedMaximum()) ));
+        // brightnessModel.setMinimum(prefs.getFloat("startupMinIntensityChan0", brightnessModel.getMinimum()) );
+        // brightnessModel.setMaximum(prefs.getFloat("startupMaxIntensityChan0", brightnessModel.getMaximum()) );
         volumeState.projectionMode = 
                 prefs.getInt("startupProjectionMode", volumeState.projectionMode);
         volumeState.filteringOrder = 
@@ -763,8 +784,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private void saveStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
-        prefs.putFloat("startupMinIntensityChan0", brightnessModel.getMinimum());
-        prefs.putFloat("startupMaxIntensityChan0", brightnessModel.getMaximum());
+        ChannelColorModel c = imageColorModel.getChannel(0);
+        prefs.putFloat("startupMinIntensityChan0", c.getNormalizedMinimum());
+        prefs.putFloat("startupMaxIntensityChan0", c.getNormalizedMaximum());
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
@@ -788,19 +810,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuronMPRenderer.setOpaqueBufferDirty();
             }
         });
+        
+        imageColorModel.addColorModelListener(new ColorModelListener() {
+            @Override
+            public void colorModelChanged() {
+                if (neuronMPRenderer != null)
+                    neuronMPRenderer.setIntensityBufferDirty();
+            }
+        });
+        
+        /*
         brightnessModel.addObserver(new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 neuronMPRenderer.setIntensityBufferDirty();
-                // note opaque buffer is not affected by brightness model
-                /*
-                if (mprActor == null) {
-                    return;
-                }
-                neuronMPRenderer.setIntensityBufferDirty();
-                */
             }
         });
+        */
+
         // Set default colors to mouse light standard...
         imageColorModel.getChannel(0).setColor(Color.green);
         imageColorModel.getChannel(1).setColor(Color.magenta);
@@ -838,7 +865,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         associateLookup(Lookups.fixed(
                 vantage, 
-                brightnessModel, 
+                // brightnessModel, 
                 imageColorModel,
                 metaWorkspace, 
                 frameTracker,
@@ -1503,7 +1530,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     public GL3Actor createBrickActor(BrainTileInfo brainTile, int colorChannel) throws IOException 
     {
-        return new BrickActor(brainTile, brightnessModel, volumeState, colorChannel);
+        return new BrickActor(brainTile, imageColorModel, volumeState, colorChannel);
     }
     
     public double[] getStageLocation() {

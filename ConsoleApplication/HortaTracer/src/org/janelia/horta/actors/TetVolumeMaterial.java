@@ -71,7 +71,9 @@ public class TetVolumeMaterial extends BasicMaterial
         shaderProgram = shader;
         
         // Parse parameters for reconstructing the original 16-bit intensities
-        int channel_count = Integer.parseInt(ktxData.header.keyValueMetadata.get("number_of_channels").trim());
+        int channel_count = 2; // TODO: compute channel count from gl_format
+        if (ktxData.header.keyValueMetadata.containsKey("number_of_channels")) 
+            channel_count = Integer.parseInt(ktxData.header.keyValueMetadata.get("number_of_channels").trim());
         channelIntensityGammas = new float[channel_count];
         channelIntensityScales = new float[channel_count];
         channelIntensityOffsets = new float[channel_count];

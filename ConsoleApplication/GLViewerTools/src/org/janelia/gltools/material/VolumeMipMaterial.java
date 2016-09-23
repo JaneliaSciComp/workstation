@@ -33,8 +33,10 @@ import java.io.IOException;
 import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.apache.commons.io.IOUtils;
+import org.janelia.console.viewerapi.model.ChannelColorModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.ChannelBrightnessModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vector4;
@@ -73,7 +75,7 @@ implements DepthSlabClipper
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f}; // absolute clip in camera space
     
-    private final ChannelBrightnessModel colorMap;
+    private final ImageColorModel colorMap;
     
     private int filteringOrderIndex = -1;
     
@@ -95,7 +97,7 @@ implements DepthSlabClipper
     private float relativeZNear = 0.92f;
     private float relativeZFar = 1.08f;
     
-    public VolumeMipMaterial(Texture3d volumeTexture, ChannelBrightnessModel colorMap) 
+    public VolumeMipMaterial(Texture3d volumeTexture, ImageColorModel colorMap) 
     {
         this.colorMap = colorMap;
         this.volumeTexture = volumeTexture;
@@ -248,9 +250,10 @@ implements DepthSlabClipper
             float [] opMin = new float[] {0, 0};
             float [] opMax = new float[] {1, 1};
             if (colorMap != null) {
-                for (int i = 0; i < 2; ++i) {
-                    opMin[i] = colorMap.getMinimum();
-                    opMax[i] = colorMap.getMaximum();
+                for (int c = 0; c < 2; ++c) {
+                    ChannelColorModel chan = colorMap.getChannel(c);
+                    opMin[c] = chan.getNormalizedMinimum();
+                    opMax[c] = chan.getNormalizedMaximum();
                 }
             }
             gl.glUniform2fv(opacityFunctionMinIndex, 1, opMin, 0);
