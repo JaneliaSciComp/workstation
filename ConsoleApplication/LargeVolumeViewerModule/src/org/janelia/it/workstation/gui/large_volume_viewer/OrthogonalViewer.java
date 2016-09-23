@@ -387,7 +387,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.skeletonActor == skeletonActor)
 			return;
 		this.skeletonActor = skeletonActor;
-		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
 		skeletonActor.getModel().setCamera(camera);
         skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);

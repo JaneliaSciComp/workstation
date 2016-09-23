@@ -143,7 +143,7 @@ public class RerunSamplesAction implements NamedAction {
 
             @Override
             protected void hadError(Throwable error) {
-                throw new RuntimeException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
             
         };

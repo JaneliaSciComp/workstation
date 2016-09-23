@@ -38,6 +38,7 @@ import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
+import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -81,7 +82,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         resultsTable = new DynamicTable() {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
-                return TableViewerPanel.this.getValue((T)userObject, column.getName());
+                return TableViewerPanel.this.getValue(getDomainObjectList(), (T)userObject, column.getName());
             }
 
             @Override
@@ -217,7 +218,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         }
     };
 
-    protected abstract Object getValue(T object, String column);
+    protected abstract Object getValue(AnnotatedDomainObjectList annotatedDomainObjectList, T object, String column);
 
     protected void enterKeyPressed() {
         T selectedObject = getLastSelectedObject();
@@ -238,6 +239,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
     protected void updateHud(boolean toggle) {}
 
+    public abstract AnnotatedDomainObjectList getDomainObjectList();
+
     public void selectObjects(List<T> objects, boolean select, boolean clearAll, boolean isUserDriven) {
 
         log.trace("selectObjects(objects.size={},select={},clearAll={},isUserDriven={})", objects.size(),select,clearAll,isUserDriven);
@@ -245,9 +248,9 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         if (objects.isEmpty()) {
             return;
         }
-        
+
         ListSelectionModel model = getDynamicTable().getTable().getSelectionModel();
-        
+
         Set<T> domainObjectSet = new HashSet<>(objects);
         int i = 0;
         Integer start = null;
