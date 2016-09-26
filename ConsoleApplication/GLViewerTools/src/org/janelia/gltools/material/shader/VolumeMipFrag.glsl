@@ -668,11 +668,14 @@ void save_color(in IntegratedIntensity i, in ViewSlab slab)
 {
     // primary render target contains final color RGBA as of September 2016
     // hot color map, green only
+    COLOR_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, i.intensity);
     vec3 hotColor;
-    if (intensity <= 0.5)
-        hotColor = mix(vec3(0), vec3(0,1,0), intensity * 2);
+    const float knot = 0.5; // where to kink linear ramp between three colors
+    float intensity = rescaled.r; // First channel only at the moment
+    if (intensity <= knot)
+        hotColor = mix(vec3(0), vec3(0,1,0), intensity / knot);
     else
-        hotColor = mix(vec3(0,1,0), vec3(0.95,1,0.9), 2*(intensity - 0.5));
+        hotColor = mix(vec3(0,1,0), vec3(0.95,1,0.9), (intensity - knot)/(1.0 - knot));
     colorOut = vec4(hotColor, i.opacity);
     // colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
 
