@@ -78,6 +78,7 @@ flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
 flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetrhedron
 flat in vec4 zNearPlaneInTexCoord; // clip plane equation at near view slab plane
 flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
+flat in vec4 zFocusPlaneInTexCoord; // plane equation for far z-clip plane
 
 layout(location = 0) out vec4 fragColor; // store final output color in the usual way
 layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
@@ -277,6 +278,13 @@ void main()
     clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
     clipRayToPlane(x0, x1, zFarPlaneInTexCoord, minRay, maxRay);
 
+    float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
+    float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
+    float tFocus = intersectRayAndPlane(x0, x1, zFocusPlaneInTexCoord);
+    float standardPathLength = tFocus / 250.0;
+    // Brighten up very thin slabs
+    standardPathLength = min(standardPathLength, (slabMax - slabMin)/5.0);
+
     if (minRay > maxRay) discard; // draw nothing if ray is completely clipped away
 
     vec3 frontTexCoord = x0 + minRay * x1;
@@ -330,13 +338,12 @@ void main()
         vec4 localColor = rgba_for_scaled_intensities(localRescaled);
 
         // Use Beer-Lambert law to compute opacity
-        float pathLength = (t1 - t0) / maxRay; // TODO: Convert to scene units
-        const float absorptivity = 250.0; // Absorption per distance in ray parameter units
+        float pathLength = (t1 - t0) / standardPathLength;
         // const float maxConcentration = 2.0; // 0->0, 0.5->1, 1.0->maxConcentration
         float concentration = 
                 // localColor.a / (1 - localColor.a / maxConcentration);
                 localColor.a;
-        localColor.a = 1.0 - exp(-absorptivity * pathLength * concentration); // Longer path -> more opacity
+        localColor.a = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
 
         if (projectionMode == PROJECTION_MAXIMUM)
             integratedColor = integrate_max_intensity(integratedColor, localColor);
@@ -358,8 +365,6 @@ void main()
     }
 
     // Secondary render target stores 16-bit core intensity, plus relative depth
-    float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
-    float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
     // When rendering multiple blocks, we need to store a relative-depth value 
     // that could win a GL_MAX blend contest.

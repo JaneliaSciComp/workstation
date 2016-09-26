@@ -11,7 +11,7 @@ layout(location = 1) uniform mat4 projectionMatrix = mat4(1);
 
 // explicitly specify "official" near and far clip planes, which might be 
 // less generous than those used to render our bounding geometry.
-layout(location = 2) uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
+layout(location = 2) uniform vec3 opaqueZNearFarFocus = vec3(1e-2, 1e4, 1.0);
 
 /* Receive one tetrahedral mesh as a base triangle, plus three redundant side vertices
    The base of the tetrahedron is triangle 0-4-2, below.
@@ -47,6 +47,7 @@ flat out vec3 cameraPosInTexCoord; // location of observer view point, in units 
 flat out mat4 tetPlanesInTexCoord; // plane equations for each face of the tetrahedron, for use in ray bound clipping
 flat out vec4 zNearPlaneInTexCoord; // plane equation for near z-clip plane
 flat out vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
+flat out vec4 zFocusPlaneInTexCoord; // plane equation for focus z-plane
 
 // pass one face of this tetrahedron down to the fragment shader
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
@@ -156,8 +157,9 @@ void main()
         planeForTriangle(t2, t3, t4));
 
     // precompute plane equation for near/far clip planes
-    float zNear = opaqueZNearFar[0];
-    float zFar = opaqueZNearFar[1];
+    float zNear = opaqueZNearFarFocus[0];
+    float zFar = opaqueZNearFarFocus[1];
+    float zFocus = opaqueZNearFarFocus[2];
     // TODO: This plane convention seems to be opposite to VolumeMipMaterial
     vec4 zNearPlaneInCamera = vec4(0, 0, -1.0, -zNear);
     // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
@@ -165,6 +167,8 @@ void main()
     zNearPlaneInTexCoord = zNearPlaneInCamera * planeTransform; // look it up...
     vec4 zFarPlaneInCamera = vec4(0, 0, 1.0, zFar);
     zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; 
+    vec4 zFocusPlaneInCamera = vec4(0, 0, 1.0, zFocus);
+    zFocusPlaneInTexCoord = zFocusPlaneInCamera * planeTransform; 
 
     emit_triangle(projected, tc, 0, 1, 2); // base triangle of tetrahedron
     emit_triangle(projected, tc, 1, 0, 3);

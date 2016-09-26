@@ -80,7 +80,7 @@ implements DepthSlabClipper
     private final Texture2d colorMapTexture = new Texture2d();
     private float zNearRelative = 0.10f;
     private float zFarRelative = 100.0f; // relative z clip planes
-    private final float[] zNearFar = new float[] {0.1f, 100.0f}; // absolute clip for shader
+    private final float[] zNearFar = new float[] {0.1f, 100.0f, 1.0f}; // absolute clip for shader
     // Initialize tracing channel to average of the first two channels
     private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -172,8 +172,9 @@ implements DepthSlabClipper
             float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
             zNearFar[0] = zNearRelative * focusDistance;
             zNearFar[1] = zFarRelative * focusDistance;
+            zNearFar[2] = focusDistance;
             final int zNearFarUniformIndex = 2; // explicitly set in shader
-            gl.glUniform2fv(zNearFarUniformIndex, 1, zNearFar, 0);
+            gl.glUniform3fv(zNearFarUniformIndex, 1, zNearFar, 0);
             // Brightness correction
             if (brightnessModel.getChannelCount() == 3) {
                 // Use a multichannel model
