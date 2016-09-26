@@ -768,11 +768,35 @@ public final class NeuronTracerTopComponent extends TopComponent
     private void loadStartupPreferences() 
     {
         Preferences prefs = NbPreferences.forModule(getClass());
-        ChannelColorModel c = imageColorModel.getChannel(0);
-        c.setBlackLevel((int)( prefs.getFloat("startupMinIntensityChan0", c.getNormalizedMinimum()) ));
-        c.setWhiteLevel((int)( prefs.getFloat("startupMaxIntensityChan0", c.getNormalizedMaximum()) ));
-        // brightnessModel.setMinimum(prefs.getFloat("startupMinIntensityChan0", brightnessModel.getMinimum()) );
-        // brightnessModel.setMaximum(prefs.getFloat("startupMaxIntensityChan0", brightnessModel.getMaximum()) );
+        
+        // Load brightness and visibility settings for each channel
+        for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
+            ChannelColorModel c = imageColorModel.getChannel(cix);
+            c.setBlackLevel((int)( c.getDataMax() * prefs.getFloat("startupMinIntensityChan"+cix, c.getNormalizedMinimum()) ));
+            c.setWhiteLevel((int)( c.getDataMax() * prefs.getFloat("startupMaxIntensityChan"+cix, c.getNormalizedMaximum()) ));
+            c.setVisible(prefs.getBoolean("startupVisibilityChan"+cix, c.isVisible()));
+            int red = prefs.getInt("startupRedChan"+cix, c.getColor().getRed());
+            int green = prefs.getInt("startupGreenChan"+cix, c.getColor().getGreen());
+            int blue = prefs.getInt("startupBlueChan"+cix, c.getColor().getBlue());
+            c.setColor(new Color(red, green, blue));
+        }
+        // Load channel unmixing parameters
+        float [] unmix = TetVolumeActor.getInstance().getUnmixingParams();
+        for (int i = 0; i < unmix.length; ++i) {
+            unmix[i] = prefs.getFloat("startupUnmixingParameter"+i, unmix[i]);
+        }
+        // Load camera state
+        Vantage vantage = sceneWindow.getVantage();
+        vantage.setConstrainedToUpDirection(prefs.getBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection()));
+        vantage.setSceneUnitsPerViewportHeight(prefs.getFloat("zoom", vantage.getSceneUnitsPerViewportHeight()));
+        float focusX = prefs.getFloat("focusX", vantage.getFocus()[0]);
+        float focusY = prefs.getFloat("focusY", vantage.getFocus()[1]);
+        float focusZ = prefs.getFloat("focusZ", vantage.getFocus()[2]);
+        vantage.setFocus(focusX, focusY, focusZ);
+        Viewport viewport = sceneWindow.getCamera().getViewport();
+        viewport.setzNearRelative(prefs.getFloat("slabNear", viewport.getzNearRelative()));
+        viewport.setzFarRelative(prefs.getFloat("slabFar", viewport.getzFarRelative()));
+        // 
         volumeState.projectionMode = 
                 prefs.getInt("startupProjectionMode", volumeState.projectionMode);
         volumeState.filteringOrder = 
@@ -784,9 +808,33 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private void saveStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
-        ChannelColorModel c = imageColorModel.getChannel(0);
-        prefs.putFloat("startupMinIntensityChan0", c.getNormalizedMinimum());
-        prefs.putFloat("startupMaxIntensityChan0", c.getNormalizedMaximum());
+        
+        // Save brightness settings and visibility for each channel
+        for (int cix = 0; cix < imageColorModel.getChannelCount(); ++cix) {
+            ChannelColorModel c = imageColorModel.getChannel(cix);
+            prefs.putFloat("startupMinIntensityChan"+cix, c.getNormalizedMinimum());
+            prefs.putFloat("startupMaxIntensityChan"+cix, c.getNormalizedMaximum());
+            prefs.putBoolean("startupVisibilityChan"+cix, c.isVisible());
+            prefs.putInt("startupRedChan"+cix, c.getColor().getRed());
+            prefs.putInt("startupGreenChan"+cix, c.getColor().getGreen());
+            prefs.putInt("startupBlueChan"+cix, c.getColor().getBlue());
+        }
+        // Save channel unmixing parameters
+        float [] unmix = TetVolumeActor.getInstance().getUnmixingParams();
+        for (int i = 0; i < unmix.length; ++i) {
+            prefs.putFloat("startupUnmixingParameter"+i, unmix[i]);
+        }
+        // Save camera state
+        Vantage vantage = sceneWindow.getVantage();
+        prefs.putBoolean("dorsalIsUp", vantage.isConstrainedToUpDirection());
+        prefs.putFloat("zoom", vantage.getSceneUnitsPerViewportHeight());
+        prefs.putFloat("focusX", vantage.getFocus()[0]);
+        prefs.putFloat("focusY", vantage.getFocus()[1]);
+        prefs.putFloat("focusZ", vantage.getFocus()[2]);
+        Viewport viewport = sceneWindow.getCamera().getViewport();
+        prefs.putFloat("slabNear", viewport.getzNearRelative());
+        prefs.putFloat("slabFar", viewport.getzFarRelative());
+        // 
         prefs.putInt("startupProjectionMode", volumeState.projectionMode);
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);

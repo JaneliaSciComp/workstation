@@ -71,6 +71,8 @@ layout(location = 12) uniform OUTPUT_CHANNEL_VEC channelColorSaturation = OUTPUT
 #define PROJECTION_OCCLUDING 1
 layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
 
+// TODO: Focus distance
+
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
 flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetrhedron

@@ -29,13 +29,6 @@
  */
 package org.janelia.scenewindow;
 
-import java.awt.Image;
-import java.beans.BeanDescriptor;
-import java.beans.BeanInfo;
-import java.beans.EventSetDescriptor;
-import java.beans.MethodDescriptor;
-import java.beans.PropertyDescriptor;
-import java.beans.SimpleBeanInfo;
 import java.util.Collection;
 import java.util.Observable;
 import java.util.Observer;
@@ -58,8 +51,6 @@ import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
-import org.jdesktop.swingx.JXCollapsiblePane;
-import org.jdesktop.swingx.JXTaskPane;
 
 /**
  * Top component which displays something.

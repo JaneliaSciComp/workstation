@@ -666,9 +666,16 @@ void sample_intensity(
 // Write out the final color/data after volume ray casting
 void save_color(in IntegratedIntensity i, in ViewSlab slab) 
 {
-    // primary render target contains RGBA
-    // TODO: fire color map
-    colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
+    // primary render target contains final color RGBA as of September 2016
+    // hot color map, green only
+    vec3 hotColor;
+    if (intensity <= 0.5)
+        hotColor = mix(vec3(0), vec3(0,1,0), intensity * 2);
+    else
+        hotColor = mix(vec3(0,1,0), vec3(0.95,1,0.9), 2*(intensity - 0.5));
+    colorOut = vec4(hotColor, i.opacity);
+    // colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
+
     // secondary render target contains 1) core intensity and 2) packed combination of opacity and relative depth
     float relativeDepth = (i.coreRayParameter - slab.minRayParam) / (slab.maxRayParam - slab.minRayParam);
     relativeDepth = clamp(1.0 - relativeDepth, 0, 0.999); // invert and ensure fractionality

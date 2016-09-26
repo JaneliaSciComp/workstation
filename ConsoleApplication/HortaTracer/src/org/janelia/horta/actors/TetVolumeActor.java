@@ -286,6 +286,16 @@ implements DepthSlabClipper
         unmixMinScale[3] = 1.0f;
     }
     
+    public float[] getUnmixingParams() {
+        return unmixMinScale;
+    }
+    
+    public void setUnmixingParams(float[] minScale) {
+        for (int i = 0; i < 4; ++i) {
+            unmixMinScale[i] = minScale[i];
+        }
+    }
+    
     private float setChannelMins() {
         // Populate first two params, the min intensities, with absolute channel values
         ChannelColorModel c1 = brightnessModel.getChannel(0);
