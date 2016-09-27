@@ -118,7 +118,7 @@ float tracing_channel_from_measured(CHANNEL_VEC raw_channels) {
 float opacity_from_rescaled_channels(in vec3 intensities) {
     const vec3 ones = vec3(1);
     vec3 t = ones - intensities; // transparency
-    return 1.0 - t.r * t.g * t.b;
+    return clamp(1.0 - t.r * t.g * t.b, 0, 1);
 }
 
 OUTPUT_CHANNEL_VEC rescale_intensities(in OUTPUT_CHANNEL_VEC intensity) {
@@ -246,7 +246,7 @@ CHANNEL_VEC sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
 // Maximum intensity projection
 vec4 integrate_max_intensity(in vec4 front, in vec4 back) 
 {
-    return max(front, back);
+    return clamp(max(front, back), 0, 1);
 }
 
 // Occluding projection
@@ -337,18 +337,15 @@ void main()
         OUTPUT_CHANNEL_VEC localRescaled = rescale_intensities(localCombined);
         vec4 localColor = rgba_for_scaled_intensities(localRescaled);
 
-        // Use Beer-Lambert law to compute opacity
-        float pathLength = (t1 - t0) / standardPathLength;
-        // const float maxConcentration = 2.0; // 0->0, 0.5->1, 1.0->maxConcentration
-        float concentration = 
-                // localColor.a / (1 - localColor.a / maxConcentration);
-                localColor.a;
-        localColor.a = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
-
         if (projectionMode == PROJECTION_MAXIMUM)
             integratedColor = integrate_max_intensity(integratedColor, localColor);
-        else
+        else { // PROJECTION_OCCLUDING
+            // Use Beer-Lambert law to compute opacity
+            float pathLength = (t1 - t0) / standardPathLength;
+            float concentration = localColor.a;
+            localColor.a = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
             integratedColor = integrate_occluding(integratedColor, localColor);
+        }
 
         // Terminate early if we hit an opaque surface
         if (integratedColor.a >= 0.999) { // 0.99 is too small
@@ -360,7 +357,7 @@ void main()
         t0 = t1;
     }
 
-    if (integratedColor.a < 0.05) { 
+    if (integratedColor.a < 0.005) { // Smaller values work better for MIP mode
         discard; // terminate early if there is nothing to show
     }
 
