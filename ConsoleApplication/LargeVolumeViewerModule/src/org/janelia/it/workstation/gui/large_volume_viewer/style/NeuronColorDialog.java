@@ -11,24 +11,21 @@ import javax.swing.*;
  *
  * djo, 3/15
  */
-public class NeuronStyleDialog extends JDialog {
+public class NeuronColorDialog extends JDialog {
 
-    private NeuronStyle chosenStyle;
-
-
+    private Color chosenColor;
 
     // did the user choose a style or cancel?
     private boolean success = false;
 
 
-    public NeuronStyleDialog(Frame parent, NeuronStyle inputStyle) {
+    public NeuronColorDialog(Frame parent, NeuronStyle inputStyle) {
 
-        super(parent, "Choose style", true);
+        super(parent, "Choose neuron color", true);
 
         if (inputStyle == null) {
             inputStyle = new NeuronStyle();
         }
-
 
         // set up the UI
         setLayout(new GridBagLayout());
@@ -36,28 +33,18 @@ public class NeuronStyleDialog extends JDialog {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.HORIZONTAL;
 
-
         // color chooser
         final JColorChooser chooser = new JColorChooser(inputStyle.getColor());
         constraints.gridx = 0;
         constraints.gridy = 0;
         add(chooser, constraints);
 
-
-        // visibility
-        final JCheckBox visibility = new JCheckBox("Show");
-        visibility.setSelected(inputStyle.isVisible());
-        constraints.gridx = 0;
-        constraints.gridy = 1;
-        add(visibility, constraints);
-
-
         // accept/cancel buttons
         JButton acceptButton = new JButton("Accept");
         acceptButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                chosenStyle = new NeuronStyle(chooser.getColor(), visibility.isSelected());
+                chosenColor = chooser.getColor();
                 success = true;
                 dispose();
             }
@@ -85,8 +72,8 @@ public class NeuronStyleDialog extends JDialog {
 
     }
 
-    public NeuronStyle getChosenStyle() {
-        return chosenStyle;
+    public Color getChosenColor() {
+        return chosenColor;
     }
 
     public boolean styleChosen() {

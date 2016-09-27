@@ -1,9 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +15,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnn
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
  * This will have access to setters, etc. on the panels, to provide

@@ -119,6 +119,13 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public AnnotationManager getAnnotationMgr() {
         return getLvvv().getQuadViewUi().getAnnotationMgr();
     }
+
+    /**
+     * A safe way to ask if editing functions (such as Actions) should be enabled. Returns false if the quad view has not yet been initialized.
+     */
+    public boolean editsAllowed() {
+        return getLvvv().hasQuadViewUi() && getLvvv().getQuadViewUi().getAnnotationMgr().editsAllowed();
+    }
     
     void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at

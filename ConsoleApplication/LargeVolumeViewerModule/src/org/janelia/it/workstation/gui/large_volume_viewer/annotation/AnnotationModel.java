@@ -440,7 +440,6 @@ called from a  SimpleWorker thread.
         if (getCurrentNeuron() == null) {
             return;
         } else {
-            clearNeuronTags(getCurrentNeuron());
             deleteNeuron(getCurrentNeuron());
             setCurrentNeuron(null);
         }
@@ -1357,34 +1356,20 @@ called from a  SimpleWorker thread.
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());
     }
 
-    public synchronized void setNeuronStyles(List<TmNeuronMetadata> neuronList, NeuronStyle style) throws Exception {
+    public synchronized void setNeuronColors(List<TmNeuronMetadata> neuronList, Color color) throws Exception {
         
         BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
         bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
-        bulkNeuronStyleUpdate.setColorHex(ModelTranslation.getColorHex(style.getColor()));
-        bulkNeuronStyleUpdate.setVisible(style.isVisible());
+        bulkNeuronStyleUpdate.setColorHex(ModelTranslation.getColorHex(color));
         tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
 
         Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
         for (TmNeuronMetadata neuron : neuronList) {
-            ModelTranslation.updateNeuronStyle(style, neuron);
-            updateMap.put(neuron, style);
+            neuron.setColor(color);
+            updateMap.put(neuron, ModelTranslation.translateNeuronStyle(neuron));
         }
         
         fireNeuronStylesChanged(updateMap);
-    }
-
-    public synchronized void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) throws Exception {
-        List<TmNeuronMetadata> neuronList = new ArrayList<>();
-        for(TmNeuronMetadata tmNeuronMetadata : neuronStyleMap.keySet()) {
-            NeuronStyle style = neuronStyleMap.get(tmNeuronMetadata);
-            ModelTranslation.updateNeuronStyle(style, tmNeuronMetadata);
-            neuronList.add(tmNeuronMetadata);
-        }        
-        if (!neuronList.isEmpty()) {
-            tmDomainMgr.saveMetadata(neuronList);
-            fireNeuronStylesChanged(neuronStyleMap);
-        }
     }
 
     /**

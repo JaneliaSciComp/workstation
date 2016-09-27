@@ -20,7 +20,7 @@ import org.openide.awt.ActionRegistration;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "D-Semicolon")
+    @ActionReference(path = "Shortcuts", name = "OS-H")
 })
 public class NeuronHideAction extends AbstractAction {
 
@@ -36,9 +36,6 @@ public class NeuronHideAction extends AbstractAction {
 
     @Override
     public boolean isEnabled() {
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        return annotationMgr.editsAllowed();
+        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
-
-    
 }

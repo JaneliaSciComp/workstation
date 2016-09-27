@@ -1,16 +1,16 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronChooseColorAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronHideAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronHideOthersAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronRenameAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronShowAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.openide.awt.Actions;
@@ -87,59 +87,37 @@ public class NeuronContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getRenameNeuronItem() {
-        Action action = new AbstractAction("Rename") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.renameNeuron();
-            }
-        };
-        action.setEnabled(annotationMgr.editsAllowed());
+        Action action = new NeuronRenameAction();
         return new JMenuItem(action);
     }
 
     protected JMenuItem getDeleteNeuronItem() {
-        Action action = new AbstractAction("Delete") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.deleteCurrentNeuron();
-            }
-        };
-        action.setEnabled(annotationMgr.editsAllowed());
+        Action action = new NeuronDeleteAction();
         return new JMenuItem(action);
     }
     
     protected JMenuItem getShowNeuronItem() {
         Action action = new NeuronShowAction();
-        action.setEnabled(annotationMgr.editsAllowed());
         return new Actions.MenuItem(action, true);
     }
 
     protected JMenuItem getHideNeuronItem() {        
         Action action = new NeuronHideAction();
-        action.setEnabled(annotationMgr.editsAllowed());
         return new Actions.MenuItem(action, true);
     }
 
     protected JMenuItem getHideOthersItem() {
         Action action = new NeuronHideOthersAction();
-        action.setEnabled(annotationMgr.editsAllowed());
         return new Actions.MenuItem(action, true);
     }
 
     protected JMenuItem getChooseStyleItem() {
-        Action action = new AbstractAction("Choose neuron style...") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.chooseNeuronStyle();
-            }
-        };
-        action.setEnabled(annotationMgr.editsAllowed());
-        return new JMenuItem(action);
+        Action action = new NeuronChooseColorAction();
+        return new Actions.MenuItem(action, true);
     }
     
     protected JMenuItem getEditTagsItem() {
-        Action action = new NeuronTagsAction(annotationMgr.getAnnotationModel());
-        action.setEnabled(annotationMgr.editsAllowed());
+        Action action = new NeuronTagsAction();
         return new JMenuItem(action);
     }
     

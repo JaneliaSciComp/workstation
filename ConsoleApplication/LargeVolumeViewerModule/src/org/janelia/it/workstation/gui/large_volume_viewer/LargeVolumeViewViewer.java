@@ -185,8 +185,12 @@ public class LargeVolumeViewViewer extends JPanel {
         viewUI.setSampleLocation(sampleLocation);
     }
     
+    public boolean hasQuadViewUi() {
+        return viewUI != null;
+    }
+    
     public QuadViewUi getQuadViewUi() {
-        if (viewUI == null) {
+        if (!hasQuadViewUi()) {
             refresh();
         }
         return viewUI;

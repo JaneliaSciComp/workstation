@@ -14,6 +14,7 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -251,11 +252,13 @@ implements MouseMode, KeyListener
 			dragStart = null;
 		}
 		// Check for click because Swing mouseClicked() event is stupid.
+		System.out.println("pressPoint: "+pressPoint);
 		if (pressPoint != null) {
 			double clickDistance = event.getPoint().distance(pressPoint);
-			if (clickDistance < 3) {
+	        System.out.println("released at distance: "+clickDistance);
+			//if (clickDistance < 3) {
 				onMouseActuallyClicked(event);
-			}
+			//}
 		}
 	}
 	

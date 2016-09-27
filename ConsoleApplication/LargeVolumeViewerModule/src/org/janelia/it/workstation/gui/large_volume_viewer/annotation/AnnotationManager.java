@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import java.awt.Color;
 import java.awt.Frame;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
@@ -10,7 +11,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,8 +47,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAncho
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleDialog;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -57,6 +57,7 @@ import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -360,13 +361,13 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void doStuff() throws Exception {
                 Vec3 finalLocation;
                 if (annotationModel.automatedRefinementEnabled()) {
-                    Stopwatch stopwatch = new Stopwatch();
+                    StopWatch stopwatch = new StopWatch();
                     stopwatch.start();
                     PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
                     finalLocation = refiner.refine(xyz);
                     stopwatch.stop();
                     // System.out.println("refined annotation; elapsed time = " + stopwatch.toString());
-                    log.info("refined annotation; elapsed time = {} ms", stopwatch.elapsedMillis());
+                    log.info("refined annotation; elapsed time = {} ms", stopwatch.getElapsedTime());
 
                     // System.out.println("add annotation: input point " + xyz);
                     // System.out.println("add annotation: refined point " + finalLocation);
@@ -374,8 +375,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                     finalLocation = xyz;
                 }
 
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.start();
+                StopWatch stopwatch = new StopWatch();
                 final TmWorkspace currentWorkspace = AnnotationManager.this.annotationModel.getCurrentWorkspace();
                 activityLog.logAddAnchor(currentWorkspace.getSampleRef().getTargetId(), currentWorkspace.getId(), finalLocation);
                 if (parentID == null) {
@@ -387,7 +387,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 }
                 stopwatch.stop();
                 // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
-                log.info("added annotation; elapsed time = {} ms", stopwatch.elapsedMillis());
+                log.info("added annotation; elapsed time = {} ms", stopwatch.getElapsedTime());
             }
 
             @Override
@@ -969,7 +969,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         log.info("editNeuronTags({})",neuron);
         // reuse the action; note that the action doesn't actually
         //  use the event, so we can throw in an empty one
-        NeuronTagsAction action = new NeuronTagsAction(annotationModel);
+        NeuronTagsAction action = new NeuronTagsAction();
         action.setTargetNeuron(neuron);
         action.actionPerformed(new ActionEvent(this, -1, "dummy event"));
     }
@@ -1347,7 +1347,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * pop a dialog to choose neuron style; three variants work together to operate
      * from different input sources
      */
-    public void chooseNeuronStyle() {
+    public void chooseNeuronColor() {
         // called from annotation panel neuron gear menu "choose neuron style"
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
@@ -1374,19 +1374,20 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             return;
         }
 
-        NeuronStyle chosenStyle = askForNeuronStyle(getNeuronStyle(neuron));
-        if (chosenStyle != null) {
-            setNeuronStyle(neuron, chosenStyle);
+        Color color = askForNeuronColor(getNeuronStyle(neuron));
+        if (color != null) {
+            NeuronStyle style = new NeuronStyle(color, neuron.isVisible());
+            setNeuronStyle(neuron, style);
         }
     }
 
-    public static NeuronStyle askForNeuronStyle(NeuronStyle inputStyle) {
-        NeuronStyleDialog dialog = new NeuronStyleDialog(
+    public static Color askForNeuronColor(NeuronStyle inputStyle) {
+        NeuronColorDialog dialog = new NeuronColorDialog(
                 (Frame) SwingUtilities.windowForComponent(ComponentUtil.getLVVMainWindow()),
                 inputStyle);
         dialog.setVisible(true);
         if (dialog.styleChosen()) {
-            return dialog.getChosenStyle();
+            return dialog.getChosenColor();
         } else {
             return null;
         }
@@ -1541,26 +1542,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
     
-    public void updateNeuronStyles(final Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
-        SimpleWorker updater = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.updateNeuronStyles(neuronStyleMap);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        updater.execute();
-    }
-
     public void saveColorModel3d(ImageColorModel colorModel) {
         log.info("saveColorModel3d()");
         try {

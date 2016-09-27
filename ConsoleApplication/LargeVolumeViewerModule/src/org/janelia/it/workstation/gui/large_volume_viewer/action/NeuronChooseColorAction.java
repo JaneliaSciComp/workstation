@@ -13,25 +13,25 @@ import org.openide.awt.ActionRegistration;
 
 @ActionID(
         category = "Large Volume Viewer",
-        id = "NeuronToggleAction"
+        id = "NeuronChooseColorAction"
 )
 @ActionRegistration(
-        displayName = "Toggle selected neuron's visibility",
+        displayName = "Choose neuron color",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-V")
+    @ActionReference(path = "Shortcuts", name = "OS-C")
 })
-public class NeuronToggleAction extends AbstractAction {
-
-    public NeuronToggleAction() {
-        super("Toggle neuron visibility");
+public class NeuronChooseColorAction extends AbstractAction {
+    
+    public NeuronChooseColorAction() {
+        super("Choose neuron color..");
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annotationMgr.toggleSelectedNeurons();
+        annotationMgr.chooseNeuronColor();
     }
 
     @Override

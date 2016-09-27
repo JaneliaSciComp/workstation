@@ -316,6 +316,18 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         return menu;
     }
 
+    private int savedSelection;
+    
+    public void saveSelection() {
+        this.savedSelection = neuronTable.getSelectedRow();
+    }
+    
+    public void restoreSelection() {
+        if (savedSelection>0  && savedSelection<neuronTable.getRowCount()) {
+            neuronTable.setRowSelectionInterval(savedSelection, savedSelection);
+        }
+    }
+    
     /**
      * retrieve the current tags and update the drop-down menu
      */
@@ -498,24 +510,30 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
+        saveSelection();
         neuronTableModel.updateNeuron(neuron);
         updateNeuronLabel();
+        restoreSelection();
     }
 
     public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        saveSelection();
         List<TmNeuronMetadata> neuronList = new ArrayList<>();
         for (TmNeuronMetadata tmNeuronMetadata: neuronStyleMap.keySet()) {
             neuronList.add(annotationModel.getNeuronFromNeuronID(tmNeuronMetadata.getId()));
         }
         neuronTableModel.updateNeurons(neuronList);
         updateNeuronLabel();
+        restoreSelection();
     }
 
     public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
+        saveSelection();
         updateTagMenu();
         neuronTableModel.updateNeurons(neuronList);
+        restoreSelection();
     }
-
+    
     /**
      * return the list of currently visible neurons in the UI
      */
@@ -593,7 +611,7 @@ class NeuronTableModel extends AbstractTableModel {
         }
         fireTableDataChanged();
     }
-
+    
     // filter stuff
 
     public void setTagMode(NeuronTagMode mode) {

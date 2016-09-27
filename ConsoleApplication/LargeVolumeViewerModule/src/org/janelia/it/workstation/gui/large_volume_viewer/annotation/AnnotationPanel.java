@@ -38,8 +38,10 @@ import javax.swing.border.TitledBorder;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronStyleAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -76,19 +78,8 @@ public class AnnotationPanel extends JPanel
     private static final boolean defaultAutomaticRefinement = false;
 
     // ----- actions
-    private final Action createNeuronAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            annotationMgr.createNeuron();
-        }
-    };
-
-    private final Action deleteNeuronAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            annotationMgr.deleteCurrentNeuron();
-        }
-    };
+    private final Action createNeuronAction = new NeuronCreateAction();
+    private final Action deleteNeuronAction = new NeuronDeleteAction();
 
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
@@ -158,8 +149,6 @@ public class AnnotationPanel extends JPanel
         showAllNeuronsAction.setEnabled(enabled);
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
-        createNeuronAction.setEnabled(enabled);
-        deleteNeuronAction.setEnabled(enabled);
     }
     
     @Override
@@ -319,7 +308,7 @@ public class AnnotationPanel extends JPanel
         };
         neuronToolMenu.add(hideAllNeuronsAction);
         
-        bulkChangeNeuronStyleAction = new BulkChangeNeuronStyleAction(annotationModel, workspaceNeuronList);
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(annotationModel, workspaceNeuronList);
         neuronToolMenu.add(bulkChangeNeuronStyleAction);
         
         bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);

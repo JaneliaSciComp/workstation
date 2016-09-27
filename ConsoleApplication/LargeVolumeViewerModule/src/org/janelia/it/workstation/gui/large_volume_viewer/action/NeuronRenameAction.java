@@ -13,29 +13,31 @@ import org.openide.awt.ActionRegistration;
 
 @ActionID(
         category = "Large Volume Viewer",
-        id = "NeuronToggleAction"
+        id = "NeuronRenameAction"
 )
 @ActionRegistration(
-        displayName = "Toggle selected neuron's visibility",
+        displayName = "Rename neuron",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-V")
+    @ActionReference(path = "Shortcuts", name = "OS-R")
 })
-public class NeuronToggleAction extends AbstractAction {
+public class NeuronRenameAction extends AbstractAction {
 
-    public NeuronToggleAction() {
-        super("Toggle neuron visibility");
+    public NeuronRenameAction() {
+        super("Rename");
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annotationMgr.toggleSelectedNeurons();
+        annotationMgr.renameNeuron();
     }
 
     @Override
     public boolean isEnabled() {
         return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
+
+    
 }

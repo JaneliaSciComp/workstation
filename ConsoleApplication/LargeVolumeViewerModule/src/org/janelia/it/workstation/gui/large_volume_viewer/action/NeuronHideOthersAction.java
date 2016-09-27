@@ -13,14 +13,14 @@ import org.openide.awt.ActionRegistration;
 
 @ActionID(
         category = "Large Volume Viewer",
-        id = "NeuronHideOthersAction"
+        id = "NeuronHideOtherNeuronsAction"
 )
 @ActionRegistration(
         displayName = "Hide others (make only the selected neuron visible)",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "D-K")
+    @ActionReference(path = "Shortcuts", name = "OS-O")
 })
 public class NeuronHideOthersAction extends AbstractAction {
 
@@ -36,7 +36,6 @@ public class NeuronHideOthersAction extends AbstractAction {
 
     @Override
     public boolean isEnabled() {
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        return annotationMgr.editsAllowed();
+        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
 }

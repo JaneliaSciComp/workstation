@@ -13,29 +13,31 @@ import org.openide.awt.ActionRegistration;
 
 @ActionID(
         category = "Large Volume Viewer",
-        id = "NeuronToggleAction"
+        id = "NeuronDeleteAction"
 )
 @ActionRegistration(
-        displayName = "Toggle selected neuron's visibility",
+        displayName = "Delete neuron",
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "OS-V")
+    @ActionReference(path = "Shortcuts", name = "OS-Delete")
 })
-public class NeuronToggleAction extends AbstractAction {
+public class NeuronDeleteAction extends AbstractAction {
 
-    public NeuronToggleAction() {
-        super("Toggle neuron visibility");
+    public NeuronDeleteAction() {
+        super("Delete");
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annotationMgr.toggleSelectedNeurons();
+        annotationMgr.deleteCurrentNeuron();
     }
 
     @Override
     public boolean isEnabled() {
         return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
+
+    
 }

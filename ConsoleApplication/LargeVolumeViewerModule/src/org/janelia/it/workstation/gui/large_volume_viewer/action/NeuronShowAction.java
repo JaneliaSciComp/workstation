@@ -20,7 +20,7 @@ import org.openide.awt.ActionRegistration;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "D-L")
+    @ActionReference(path = "Shortcuts", name = "OS-S")
 })
 public class NeuronShowAction extends AbstractAction {
     
@@ -36,7 +36,6 @@ public class NeuronShowAction extends AbstractAction {
 
     @Override
     public boolean isEnabled() {
-        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        return annotationMgr.editsAllowed();
+        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
 }
