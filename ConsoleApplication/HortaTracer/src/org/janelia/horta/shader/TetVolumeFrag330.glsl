@@ -293,6 +293,12 @@ void main()
     // Brighten up very thin slabs
     standardPathLength = min(standardPathLength, (slabMax - slabMin)/5.0);
 
+    // Feather volume near z clip planes
+    float fadeSlab = tFocus / 25.0;
+    fadeSlab = min(fadeSlab, (slabMax-slabMin)/10.0);
+    float fadeNear = slabMin + fadeSlab;
+    float fadeFar = slabMax - fadeSlab;
+
     if (minRay > maxRay) discard; // draw nothing if ray is completely clipped away
 
     vec3 frontTexCoord = x0 + minRay * x1;
@@ -343,6 +349,13 @@ void main()
         OUTPUT_CHANNEL_VEC localCombined = OUTPUT_CHANNEL_VEC(localIntensity, tracingIntensity);
         OUTPUT_CHANNEL_VEC localRescaled = rescale_intensities(localCombined);
         vec4 localColor = rgba_for_scaled_intensities(localRescaled);
+
+        float fade = 1.0;
+        if (t < fadeNear)
+            fade = (t - slabMin) / (fadeNear - slabMin);
+        if (t > fadeFar)
+            fade = (slabMax - t) / (slabMax - fadeFar);
+        localColor.a *= fade;
 
         if (projectionMode == PROJECTION_MAXIMUM)
             integratedColor = integrate_max_intensity(integratedColor, localColor);
