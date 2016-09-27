@@ -75,7 +75,6 @@ layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
 #define FILTER_TRILINEAR 1
 layout(location = 14) uniform int voxelFilter = FILTER_TRILINEAR;
 
-// TODO: Focus distance
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
@@ -84,9 +83,18 @@ flat in vec4 zNearPlaneInTexCoord; // clip plane equation at near view slab plan
 flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 flat in vec4 zFocusPlaneInTexCoord; // plane equation for far z-clip plane
 
+
 layout(location = 0) out vec4 fragColor; // store final output color in the usual way
 layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
 
+
+// Data used for finding bright center of neurite for interactive tracing
+struct TracingCore {
+    bool inLocalBody; // TRUE if ray is currently in a bright body
+    float firstBodyRayParam; // Ray parameter where brightest intensity was first observed
+    float finalBodyRayParam; // Ray parameter where brightest intensity was last observed
+    float intensity;
+};
 
 float max_element(in vec2 v) {
     return max(v.r, v.g);
@@ -267,6 +275,36 @@ vec4 integrate_occluding(in vec4 front, in vec4 back)
     return clamp(vec4(color, opacity), 0, 1);
 }
 
+void save_color(in vec4 integratedColor, in TracingCore tracingCore, in float slabMin, in float slabMax) 
+{
+    if (integratedColor.a < 0.005) { // Smaller values work better for MIP mode
+        discard; // terminate early if there is nothing to show
+    }
+
+    // Secondary render target stores 16-bit core intensity, plus relative depth
+    float coreParam = mix(tracingCore.firstBodyRayParam, tracingCore.finalBodyRayParam, 0.5);
+    float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
+    // When rendering multiple blocks, we need to store a relative-depth value 
+    // that could win a GL_MAX blend contest.
+    //   1) pad the most significant bits with the opacity, so the most
+    //      opaque ray segment wins. Not perfect, but should work pretty
+    //      well in most sparse rendering contexts.
+    //   2) reverse the sense of the relative depth, so in case of an
+    //      opacity tie, the NEARER ray segment wins.
+    // Use a floating point render target, because integer targets won't blend.
+    // Pack the opacity into the first 7 bits of a 32-bit float mantissa
+    uint opacityInt = clamp(uint(0x7f * integratedColor.a), 0, 0x7f); // 7 bits of opacity, range 0-127
+    relativeDepth = 1.0 - relativeDepth; // In case of equal opacity, we want NEAR depths to beat FAR depths in a GL_MAX comparison
+    // Keep depth strictly fractional, for unambiguous packing with integer opacity
+    relativeDepth = clamp(relativeDepth, 0.0, 0.999);
+    float opacityDepth = opacityInt + relativeDepth;
+    float coreIntensity = clamp(tracingCore.intensity, 0, 1);
+    coreDepth = vec2(coreIntensity, opacityDepth); // populates both channels of secondary render target
+
+    // Primary render target stores final blended RGBA color
+    fragColor = integratedColor;
+};
+
 void main() 
 {
     // Ray parameters
@@ -318,20 +356,18 @@ void main()
 
     // Cast ray through volume
     vec4 integratedColor = vec4(0);
-    bool rayIsFinished = false;
     float t0 = minRay;
-    float coreParam = mix(minRay, maxRay, 0.5);
-    float coreIntensity = -1.0;
+    TracingCore tracingCore = TracingCore(false, tFocus, tFocus, -1.0);
+    // float coreParam = mix(minRay, maxRay, 0.5);
+    // float coreIntensity = -1.0;
     for (int s = 0; s < 1000; ++s) 
     {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
                 forwardMask, 
                 texelsPerRay);
-        if (t1 >= maxRay) {
-            t1 = maxRay;
-            rayIsFinished = true;
-        }
+        t1 = min(t1, maxRay);
+
         // float t = mix(t0, t1, 0.5);
         float t = mix(t0, t1, 0.50);
         vec3 texel = rayOriginInTexels + t * rayDirectionInTexels;
@@ -341,9 +377,19 @@ void main()
         CHANNEL_VEC localIntensity = sample_nearest_neighbor(texCoord, levelOfDetail);
 
         float tracingIntensity = tracing_channel_from_measured(localIntensity);
-        if (tracingIntensity >= coreIntensity) { // always use MIP criterion for secondary render target
-            coreIntensity = tracingIntensity;
-            coreParam = t;
+
+        if (tracingIntensity > tracingCore.intensity) { // always use MIP criterion for secondary render target
+            tracingCore.intensity = tracingIntensity;
+            tracingCore.inLocalBody = true;
+            tracingCore.firstBodyRayParam = tracingCore.finalBodyRayParam = t;
+        }
+        else if (tracingCore.inLocalBody) { // maybe continue core we saw earlier
+            if (tracingIntensity == tracingCore.intensity) { // cruise intensity plateau
+                tracingCore.finalBodyRayParam = t; // record extension of plateau
+            }
+            else { // dimmer intensity means we are past the core
+                tracingCore.inLocalBody = false;
+            } 
         }
 
         OUTPUT_CHANNEL_VEC localCombined = OUTPUT_CHANNEL_VEC(localIntensity, tracingIntensity);
@@ -367,8 +413,15 @@ void main()
             integratedColor = integrate_occluding(integratedColor, localColor);
         }
 
+        // Check for ray termination
+        bool rayIsFinished = false;
+        const float minRayStep = 0.020 / texelsPerRay;
+        if (t1 >= maxRay - minRayStep)
+            rayIsFinished = true; // We hit the rear of this block
+        else if (tracingCore.inLocalBody)
+            rayIsFinished = false; // Keep climbing for the bright neurite core
         // Terminate early if we hit an opaque surface
-        if (integratedColor.a >= 0.999) { // 0.99 is too small
+        else if (integratedColor.a >= 0.999) { // 0.99 is too small
             rayIsFinished = true;
         }
 
@@ -377,29 +430,5 @@ void main()
         t0 = t1;
     }
 
-    if (integratedColor.a < 0.005) { // Smaller values work better for MIP mode
-        discard; // terminate early if there is nothing to show
-    }
-
-    // Secondary render target stores 16-bit core intensity, plus relative depth
-    float relativeDepth = (coreParam - slabMin) / (slabMax - slabMin);
-    // When rendering multiple blocks, we need to store a relative-depth value 
-    // that could win a GL_MAX blend contest.
-    //   1) pad the most significant bits with the opacity, so the most
-    //      opaque ray segment wins. Not perfect, but should work pretty
-    //      well in most sparse rendering contexts.
-    //   2) reverse the sense of the relative depth, so in case of an
-    //      opacity tie, the NEARER ray segment wins.
-    // Use a floating point render target, because integer targets won't blend.
-    // Pack the opacity into the first 7 bits of a 32-bit float mantissa
-    uint opacityInt = clamp(uint(0x7f * integratedColor.a), 0, 0x7f); // 7 bits of opacity, range 0-127
-    relativeDepth = 1.0 - relativeDepth; // In case of equal opacity, we want NEAR depths to beat FAR depths in a GL_MAX comparison
-    // Keep depth strictly fractional, for unambiguous packing with integer opacity
-    relativeDepth = clamp(relativeDepth, 0.0, 0.999);
-    float opacityDepth = opacityInt + relativeDepth;
-    coreIntensity = clamp(coreIntensity, 0, 1);
-    coreDepth = vec2(coreIntensity, opacityDepth); // populates both channels of secondary render target
-
-    // Primary render target stores final blended RGBA color
-    fragColor = integratedColor;
+    save_color(integratedColor, tracingCore, slabMin, slabMax);
 }
