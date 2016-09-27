@@ -41,6 +41,7 @@ import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.ShaderStep;
 import org.janelia.gltools.material.BasicMaterial;
+import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -60,15 +61,17 @@ public class TetVolumeMaterial extends BasicMaterial
     private final KtxData ktxData;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private IntBuffer pbos;
+    private final TetVolumeActor parentActor;
     
     // Parameters for reconstructing original intensities
     private final float[] channelIntensityGammas;
     private final float[] channelIntensityScales;
     private final float[] channelIntensityOffsets;
 
-    public TetVolumeMaterial(KtxData ktxData, TetVolumeShader shader) {
+    public TetVolumeMaterial(KtxData ktxData, TetVolumeActor parentActor) {
         this.ktxData = ktxData;
-        shaderProgram = shader;
+        shaderProgram = parentActor.getShader();
+        this.parentActor = parentActor;
         
         // Parse parameters for reconstructing the original 16-bit intensities
         int channel_count = 2; // TODO: compute channel count from gl_format
@@ -251,6 +254,14 @@ public class TetVolumeMaterial extends BasicMaterial
         // 3D volume texture
         gl.glActiveTexture(GL3.GL_TEXTURE0);
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
+        if (parentActor.getVolumeState().filteringOrder == VolumeState.FILTER_NEAREST) {
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
+        }
+        else { // trilinear or tricubic
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR);            
+        }
     }
 
     @Override

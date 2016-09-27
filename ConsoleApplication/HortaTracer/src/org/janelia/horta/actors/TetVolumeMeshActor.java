@@ -43,6 +43,7 @@ import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.horta.actors.TetVolumeMaterial.TetVolumeShader;
 import org.janelia.horta.ktx.KtxData;
 
@@ -64,8 +65,8 @@ public class TetVolumeMeshActor extends MeshActor
         super(geometry, material, parent);
     }
     
-    public TetVolumeMeshActor(KtxData ktxData, TetVolumeShader shader, CompositeObject3d parent) {
-        super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, shader), parent);
+    public TetVolumeMeshActor(KtxData ktxData, TetVolumeActor parentActor) {
+        super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, parentActor), parentActor);
         
         /*
                 4___________5                  

@@ -46,6 +46,7 @@ import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
+import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
@@ -110,7 +111,15 @@ implements DepthSlabClipper
 
     public void addKtxBlock(KtxData ktxData) 
     {    
-        this.addChild(new TetVolumeMeshActor(ktxData, shader, this));
+        this.addChild(new TetVolumeMeshActor(ktxData, this));
+    }
+    
+    public ShaderProgram getShader() {
+        return shader;
+    }
+    
+    public VolumeState getVolumeState() {
+        return volumeState;
     }
     
     @Override
@@ -135,26 +144,22 @@ implements DepthSlabClipper
         try {
             camera.pushInternalViewSlab(slab);
             
-            final boolean doBlend = true;
-            if (doBlend) {
-                gl.glEnable(GL3.GL_BLEND);
-                // gl.glDisable(GL3.GL_BLEND);
-                boolean occluding = volumeState.projectionMode == VolumeState.PROJECTION_OCCLUDING;
-                if (occluding) {
-                    // Occluding
-                    ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target
-                    ((GL4)gl).glBlendFuncSeparatei(0, 
-                            GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA,
-                            // Unlike most systems, we actually care about the final blended alpha
-                            // component of the framebuffer:
-                            GL4.GL_ONE, GL4.GL_ONE_MINUS_SRC_ALPHA);
-                }
-                else {
-                    // Max intensity
-                    ((GL4)gl).glBlendEquationi(0, GL4.GL_MAX); // RGBA color target
-                }
-                ((GL4)gl).glBlendEquationi(1, GL4.GL_MAX); // core intensity/depth target
+            gl.glEnable(GL3.GL_BLEND);
+            if (volumeState.projectionMode == VolumeState.PROJECTION_OCCLUDING) {
+                // Occluding
+                ((GL4)gl).glBlendEquationi(0, GL4.GL_FUNC_ADD); // RGBA color target
+                ((GL4)gl).glBlendFuncSeparatei(0, 
+                        GL4.GL_SRC_ALPHA, GL4.GL_ONE_MINUS_SRC_ALPHA,
+                        // Unlike most systems, we actually care about the final blended alpha
+                        // component of the framebuffer:
+                        GL4.GL_ONE, GL4.GL_ONE_MINUS_SRC_ALPHA);
             }
+            else {
+                // Max intensity
+                ((GL4)gl).glBlendEquationi(0, GL4.GL_MAX); // RGBA color target
+            }
+            // Always use Maximum for blending secondary render target
+            ((GL4)gl).glBlendEquationi(1, GL4.GL_MAX); // core intensity/depth target
 
             final boolean doCull = true;
             if (doCull) {
@@ -224,6 +229,7 @@ implements DepthSlabClipper
                 gl.glUniform4fv(7, 1, unmixMinScale, 0);
                 
                 gl.glUniform1i(13, volumeState.projectionMode);
+                gl.glUniform1i(14, volumeState.filteringOrder);
             }
             else {
                 throw new UnsupportedOperationException("Unexpected number of color channels");

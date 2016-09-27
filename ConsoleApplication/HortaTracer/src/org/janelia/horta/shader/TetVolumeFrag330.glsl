@@ -71,6 +71,10 @@ layout(location = 12) uniform OUTPUT_CHANNEL_VEC channelColorSaturation = OUTPUT
 #define PROJECTION_OCCLUDING 1
 layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
 
+#define FILTER_NEAREST 0
+#define FILTER_TRILINEAR 1
+layout(location = 14) uniform int voxelFilter = FILTER_TRILINEAR;
+
 // TODO: Focus distance
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
@@ -190,7 +194,6 @@ float advance_to_voxel_edge(
         in float previousEdge,
         in vec3 rayOriginInTexels,
         in vec3 rayDirectionInTexels,
-        in vec3 rayBoxCorner,
         in vec3 forwardMask,
         in float texelsPerRay)
 {
@@ -206,8 +209,13 @@ float advance_to_voxel_edge(
     // Advance ray to next voxel edge.
     // For NEAREST filter, advance to midplanes between voxel centers.
     // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
-    vec3 currentTexel = floor(currentTexelPos + rayBoxCorner) 
-            - rayBoxCorner;
+    vec3 currentTexel;
+    if (voxelFilter == FILTER_NEAREST) {
+        currentTexel = floor(currentTexelPos);
+    } else {
+        const vec3 rayBoxCorner = vec3(0.5);
+        currentTexel = floor(currentTexelPos + rayBoxCorner) - rayBoxCorner;
+    }
 
     // Three out of six total voxel edges represent forward progress
     vec3 candidateEdges = currentTexel + forwardMask;
@@ -281,7 +289,7 @@ void main()
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float tFocus = intersectRayAndPlane(x0, x1, zFocusPlaneInTexCoord);
-    float standardPathLength = tFocus / 250.0;
+    float standardPathLength = tFocus / 400.0;
     // Brighten up very thin slabs
     standardPathLength = min(standardPathLength, (slabMax - slabMin)/5.0);
 
@@ -297,7 +305,6 @@ void main()
     vec3 rayOriginInTexels = x0 * texelsPerVolume;
     vec3 rayDirectionInTexels = x1 * texelsPerVolume;
     float texelsPerRay = length(rayDirectionInTexels);
-    const vec3 rayBoxCorner = vec3(0, 0, 0); // nearest neighbor
     vec3 forwardMask = ceil(normalize(rayDirectionInTexels) * 0.99); // each component is now 0 or 1
 
     vec3 frontTexel = frontTexCoord * texelsPerVolume;
@@ -313,7 +320,7 @@ void main()
     {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
-                rayBoxCorner, forwardMask, 
+                forwardMask, 
                 texelsPerRay);
         if (t1 >= maxRay) {
             t1 = maxRay;
