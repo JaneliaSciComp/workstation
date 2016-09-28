@@ -94,7 +94,6 @@ public class SpheresMaterial extends BasicMaterial
     {
         if (manageLightProbeTexture) {
             lightProbeTexture.bind(gl, 0);
-            shaderProgram.load(gl);
             gl.glUniform4fv(colorIndex, 1, color, 0);
             float micrometersPerPixel = 
                 camera.getVantage().getSceneUnitsPerViewportHeight()
