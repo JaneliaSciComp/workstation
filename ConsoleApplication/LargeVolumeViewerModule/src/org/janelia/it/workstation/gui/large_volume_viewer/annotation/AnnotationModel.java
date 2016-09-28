@@ -379,26 +379,6 @@ called from a  SimpleWorker thread.
         return closest;
     }
 
-    @Subscribe
-    public void handleNeuronCreation(DomainObjectCreateEvent event) {
-        DomainObject domainObject = event.getDomainObject();
-        if (domainObject instanceof TmNeuronMetadata) {
-            final TmNeuronMetadata neuron = (TmNeuronMetadata)domainObject;
-            log.info("Neuron was created: "+neuron);
-            getNeuronList().add(neuron);
-            setCurrentNeuron(neuron);
-            final TmWorkspace workspace = getCurrentWorkspace();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    fireWorkspaceLoaded(workspace);
-                    fireNeuronSelected(neuron);
-                    fireWorkspaceChanged();
-                    activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
-                }
-            });
-        }
-    }
     /**
      * create a neuron in the current workspace
      *
@@ -406,7 +386,25 @@ called from a  SimpleWorker thread.
      * @throws Exception
      */
     public synchronized TmNeuronMetadata createNeuron(String name) throws Exception {
-        return neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
+        final TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(currentWorkspace, name);
+
+        // Update local workspace
+        log.info("Neuron was created: "+neuron);
+        getNeuronList().add(neuron);
+        setCurrentNeuron(neuron);
+        
+        final TmWorkspace workspace = getCurrentWorkspace();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireWorkspaceLoaded(workspace);
+                fireNeuronSelected(neuron);
+                fireWorkspaceChanged();
+                activityLog.logCreateNeuron(workspace.getId(), neuron.getId());
+            }
+        });
+        
+        return neuron;
     }
 
     /**
@@ -1471,7 +1469,7 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void importBulkSWCData(final File swcFile, SimpleWorker worker, boolean selectOnCompletion) throws Exception {
+    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, SimpleWorker worker) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1539,31 +1537,22 @@ called from a  SimpleWorker thread.
         // Fire off the bulk update.  The "un-serialized" or
         // db-unknown annotations could be swapped for "blessed" versions.
         neuronManager.addLinkedGeometricAnnotationsInMemory(nodeParentLinkage, annotations, neuron);
+        
+        // Set neuron color
+        float[] colorArr = swcData.parseColorFloats();
+        if (colorArr != null) {
+            NeuronStyle style = new NeuronStyle(
+                    new Color(colorArr[0], colorArr[1], colorArr[2]), true
+            );
+            ModelTranslation.updateNeuronStyle(style, neuron);
+        }
+        
         neuronManager.saveNeuronData(neuron);
 
-        // need fresh copy, and add it to the workspace
-        // neuron = neuronManager.refreshFromData(neuron);
+        // add it to the workspace
         getNeuronList().add(neuron);
-
-        updateNeuronColor(swcData, neuron);
-
-        if (selectOnCompletion) {
-            // update workspace; update and select new neuron; this will draw points as well
-            final TmWorkspace workspace = getCurrentWorkspace();
-
-            setCurrentNeuron(neuron);
-            final TmNeuronMetadata updateNeuron = getCurrentNeuron();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    fireWorkspaceLoaded(workspace);
-                    fireWorkspaceChanged();
-                    fireNeuronSelected(updateNeuron);
-                    activityLog.logImportSWCFile(workspace.getId(), swcFile.getName());
-                }
-            });
-        }
-
+        
+        return neuron;
     }
 
     // and now we have all the NeuronTagMap methods...in each case, it's a simple
@@ -1649,25 +1638,12 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized void postWorkspaceUpdate() throws Exception {
+    public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(workspace);
-                fireWorkspaceChanged();
-            }
-        });
-    }
-
-    private void updateNeuronColor(SWCData swcData, final TmNeuronMetadata neuron) throws Exception {
-        float[] colorArr = swcData.parseColorFloats();
-        if (colorArr != null) {
-            NeuronStyle style = new NeuronStyle(
-                    new Color(colorArr[0], colorArr[1], colorArr[2]), true
-            );
-            setNeuronStyle(neuron, style);
-        }
+        // update workspace; update and select new neuron; this will draw points as well
+        fireWorkspaceLoaded(workspace);
+        fireWorkspaceChanged();
+        selectNeuron(neuron);
     }
 
     private boolean eitherIsNull(Object object1, Object object2) {
@@ -1747,13 +1723,5 @@ called from a  SimpleWorker thread.
     }
 
     private void fireWorkspaceChanged() {
-        // TODO: Not sure if this needs to be ported to NG.
-        // It doesn't look like anything in the LVV was listening to EntityChangeEvent. Maybe this was a way of updating the Explorer?
-//        try {
-//            modelMgr.postOnEventBus(new EntityChangeEvent(modelMgr.getEntityById(currentWorkspace.getId())));
-//        } catch (Exception ex) {
-//            log.warn("Failed to post workspace chang.");
-//        }
-
     }
 }

@@ -188,7 +188,7 @@ public class FilteredAnnotationList extends JPanel {
         model.clear();
         AnnotationFilter filter = getCurrentFilter();
         String note;
-        for (TmNeuronMetadata neuron: annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron: new ArrayList<>(annotationModel.getNeuronList())) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     note = annotationMgr.getNote(ann.getId(), neuron);

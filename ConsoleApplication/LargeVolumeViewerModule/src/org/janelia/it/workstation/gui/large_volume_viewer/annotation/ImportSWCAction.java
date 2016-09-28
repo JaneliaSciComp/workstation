@@ -9,7 +9,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -37,6 +40,11 @@ public class ImportSWCAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent e) {
 
+        if (annotationModel.getCurrentWorkspace() == null) {
+            JOptionPane.showMessageDialog(FrameworkImplProvider.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         // note: when it's time to add toggle and/or options, you can look into
         //  adding an accesory view to dialog; however, not clear that it will
         //  give enough flexibility compared to doing a custom dialog from the start
@@ -49,23 +57,7 @@ public class ImportSWCAction extends AbstractAction {
         int returnValue = chooser.showOpenDialog(annotationPanel);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             List<File> swcFiles = getFilesList(chooser.getSelectedFile());
-            if (swcFiles.size() > 1) {
-                AtomicInteger countDownSemaphor = new AtomicInteger(swcFiles.size());
-                // Unified notification across all the (possibly many) files.
-                CountdownBackgroundWorker progressNotificationWorker
-                        = new CountdownBackgroundWorker(
-                                "Import " + chooser.getSelectedFile(),
-                                countDownSemaphor
-                        );
-                progressNotificationWorker.setAnnotationModel(annotationModel);
-                progressNotificationWorker.executeWithEvents();
-                for (File swc : swcFiles) {
-                    // Import all the little neurons from the file.
-                    annotationManager.importSWCFile(swc, countDownSemaphor);
-                }
-            } else {
-                annotationManager.importSWCFile(swcFiles.get(0), null);
-            }
+            annotationManager.importSWCFile(swcFiles);
         }
     }
 

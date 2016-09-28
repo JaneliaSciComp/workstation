@@ -1686,94 +1686,51 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         saver.execute();
     }
 
-    public void importSWCFile(final File swcFile, final AtomicInteger countDownSemaphor) {
-        if (annotationModel.getCurrentWorkspace() == null) {
-            JOptionPane.showMessageDialog(quadViewUi, "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+    public void importSWCFile(final List<File> swcFiles) {
+       
+        // note for the future: at this point, we could pop another dialog with:
+        //  (a) info: file has xxx nodes; continue?
+        //  (b) option to downsample
+        //  (c) option to include/exclude automatically traced paths, if we can
+        //      store that info in the file
+        //  (d) option to shift position (add constant x, y, z offset)       
+        
+        BackgroundWorker importer = new BackgroundWorker() {
 
-        if (!swcFile.exists()) {
-            presentError(
-                    "SWC file " + swcFile.getName() + " does not exist!",
-                    "No SWC file!");
-        } else {
-            // note for the future: at this point, we could pop another dialog with:
-            //  (a) info: file has xxx nodes; continue?
-            //  (b) option to downsample
-            //  (c) option to include/exclude automatically traced paths, if we can
-            //      store that info in the file
-            //  (d) option to shift position (add constant x, y, z offset)
-            if (countDownSemaphor == null) {
-                BackgroundWorker importer = new BackgroundWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        annotationModel.importBulkSWCData(swcFile, null, true);
-                    }
-
-                    @Override
-                    public String getName() {
-                        return "import " + swcFile.getName();
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        postWorkspaceUpdate();
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                importer.executeWithEvents();
+            private TmNeuronMetadata neuron;
+            
+            @Override
+            public String getName() {
+                return "Importing SWC File";
             }
-            else {
-                SimpleWorker importer = new SimpleWorker() {
 
-                    @Override
-                    protected void doStuff() throws Exception {
-                        annotationModel.importBulkSWCData(swcFile, null, false);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        int latestValue = countDownSemaphor.decrementAndGet();
-                        if (latestValue == 0) {
-                            postWorkspaceUpdate();
-                        }
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-
-                };
-                importer.execute();
-            }
-        }
-    }
-
-    private void postWorkspaceUpdate() {
-        // last file is loaded, so trigger update; needs another
-        //  layer of threading, ugh:
-        SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.postWorkspaceUpdate();
+                int index = 0;
+                int total = swcFiles.size();
+                for (File swcFile : swcFiles) {
+                    setStatus(swcFile.getName());
+                    if (swcFile.exists()) {
+                        neuron = annotationModel.importBulkSWCData(swcFile, null);
+                        activityLog.logImportSWCFile(annotationModel.getCurrentWorkspace().getId(), swcFile.getName());
+                    }
+                    setProgress(index++, total);
+                }
             }
 
             @Override
             protected void hadSuccess() {
-                // nothing here
+                annotationModel.postWorkspaceUpdate(neuron);
+
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
             }
+
         };
-        updater.execute();
+        importer.executeWithEvents();
     }
 
     /**
