@@ -14,8 +14,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronRenameAct
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronShowAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.openide.awt.Actions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Popup context menu for neurons.
@@ -24,8 +22,6 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronContextMenu extends PopupContextMenu {
 
-    private final static Logger log = LoggerFactory.getLogger(NeuronContextMenu.class);
-    
     private final AnnotationManager annotationMgr;
     private final TmNeuronMetadata tmNeuronMetadata;
     protected boolean multiple = false; // Support multiple selection in the future?

@@ -51,8 +51,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanTo
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * this widget displays a list of neurons in a workspace
@@ -61,8 +59,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
-    private final static Logger log = LoggerFactory.getLogger(WorkspaceNeuronList.class);
-    
     private JLabel neuronLabel;
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;

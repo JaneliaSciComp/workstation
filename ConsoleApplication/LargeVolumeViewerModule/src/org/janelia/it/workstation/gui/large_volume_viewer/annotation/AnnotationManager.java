@@ -61,8 +61,6 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Stopwatch;
-
 public class AnnotationManager implements UpdateAnchorListener, PathTraceListener, VolumeLoadListener
 /**
  * this class is the middleman between the UI and the model. first, the UI makes

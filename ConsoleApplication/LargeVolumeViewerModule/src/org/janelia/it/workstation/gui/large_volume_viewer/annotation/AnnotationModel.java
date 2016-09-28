@@ -47,7 +47,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateLi
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
