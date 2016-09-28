@@ -114,7 +114,7 @@ public class TetVolumeMaterial extends BasicMaterial
                 Math.log(voxelResolution / screenResolution) 
                 / Math.log(2.0) );
         // Performance/Quality tradeoff: adjust to taste; 0.5f matches automatic lod
-        levelOfDetail += 0.5f; 
+        levelOfDetail += 2f;  // 0.5f; 
         levelOfDetail = Math.max(levelOfDetail, 0); // hard minimum
         levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
         int intLod = (int) levelOfDetail;
@@ -275,11 +275,11 @@ public class TetVolumeMaterial extends BasicMaterial
         gl.glBindTexture(GL3.GL_TEXTURE_3D, volumeTextureHandle);
         if (parentActor.getVolumeState().filteringOrder == VolumeState.FILTER_NEAREST) {
             gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_NEAREST);
-            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST);
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_NEAREST_MIPMAP_NEAREST);
         }
         else { // trilinear or tricubic
             gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MAG_FILTER, GL3.GL_LINEAR);
-            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR);            
+            gl.glTexParameteri(GL3.GL_TEXTURE_3D, GL3.GL_TEXTURE_MIN_FILTER, GL3.GL_LINEAR_MIPMAP_NEAREST);            
         }
     }
 
