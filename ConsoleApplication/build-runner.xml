@@ -104,6 +104,7 @@ of adapter.
         <echo message="Removing remote Installer files" />
         <exec executable="${ssh}" description="Removing Installer files">
             <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation.zip"/>
+            <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.zip"/>
             <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-macosx.tgz"/>
             <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-linux.tgz"/>
             <arg line="${ssh.common.params} rm -f /var/www/html/sites/default/files/JaneliaWorkstation-windows.exe"/>
@@ -228,13 +229,13 @@ of adapter.
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
             <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
             <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
-            <arg value="-Dsuite.nbi.product.uid=janeliawsng"/>
+            <arg value="-Dsuite.nbi.product.uid=janeliaws"/>
             <arg value="-Dsuite.location=${basedir}"/>
             <arg value="-Dpack200.enabled=false"/>
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
             <arg value="-Dnbi.engine.jar=${basedir}/harness/modules/ext/nbi-engine.jar"/>
             <arg value="-Dnbi.stub.common.location=${basedir}/harness/nbi/.common"/>
-            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.icns"/>
+            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.png"/>
             <arg value="-Dnbi.ant.tasks.jar=${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
             <arg value="-Dnbi.dock.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.registries.management.jar=${basedir}/harness/modules/ext/nbi-registries-management.jar" />
@@ -249,11 +250,19 @@ of adapter.
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
 
         <!-- Compress the Linux script to tgz -->
+        <echo message="Changing Linux perms and tarring..."/>
+        <chmod file="${basedir}/dist/JaneliaWorkstation-linux.sh" perm="ugo+rx"/>
         <tar tarfile="${basedir}/dist/JaneliaWorkstation-linux.tgz" compression="gzip">
             <tarfileset dir="${basedir}/dist/" mode="644">
                 <include name="JaneliaWorkstation-linux.sh"/>
             </tarfileset>
         </tar>
+
+        <echo message="Zipping the Windows build..."/>
+        <zip destfile="${basedir}/dist/JaneliaWorkstation-windows.zip" basedir="${basedir}/dist">
+            <include name="JaneliaWorkstation-windows.exe"/>
+        </zip>
+
 
     </target>
 

@@ -146,7 +146,7 @@ public class RerunSamplesAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                throw new RuntimeException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
             
         };

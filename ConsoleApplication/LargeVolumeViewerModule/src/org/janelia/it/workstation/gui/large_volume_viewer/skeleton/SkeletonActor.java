@@ -75,9 +75,14 @@ public class SkeletonActor
     private BufferedImage parentAnchorImage;
     private int discardNonParent = 0; //Emphasize default value.
     private int parentAnchorTextureId = -1;
-    //
 
-    private float zThicknessInPixels = 100;
+    // these values are chosen empirically; at low zoom,
+    //  we don't want annotations showing over too many planes;
+    //  at high zoom, too few
+    // note scene units = microns
+    private float zThicknessInPixels = 80;
+    private float minZThicknessSceneUnits = 10.0f;
+
     private String parentAnchorImageName = SMALL_PARENT_IMG;
     private boolean modulateParentImage = true;
 
@@ -143,7 +148,7 @@ public class SkeletonActor
 
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         lineShader.load(gl2);
-        lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        lineShader.setUniform(gl, "zThickness", getZoomedZThicknessInPixels());
         Camera3d camera=model.getCamera();
         float focus[] = {
                 (float) camera.getFocus().getX(),
@@ -337,8 +342,7 @@ public class SkeletonActor
 
         // used to set uniforms for hover index and parent index here, but
         //  that's now done in the appropriate update loops
-        // At high zoom, keep thickness to at least 5 pixels deep.
-        anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        anchorShader.setUniform(gl, "zThickness", getZoomedZThicknessInPixels());
         Camera3d camera=model.getCamera();
         float focus[] = {
             (float) camera.getFocus().getX(),
@@ -396,16 +400,15 @@ public class SkeletonActor
         GL gl = glDrawable.getGL();
         GL2 gl2 = gl.getGL2();
         GL2GL3 gl2gl3 = gl.getGL2GL3();
-        // log.info("Displaying "+tracedSegments.size()+" traced segments");
         lineShader.load(gl2);
-        float zt = zThicknessInPixels;
-        float zoomLimit = 5.0f;
+        lineShader.setUniform(gl2gl3, "zThickness", getZoomedZThicknessInPixels());
         Camera3d camera=model.getCamera();
-        if (camera.getPixelsPerSceneUnit() > zoomLimit) {
-            zt = zThicknessInPixels * (float) camera.getPixelsPerSceneUnit() / zoomLimit;
-        }
-        lineShader.setUniform(gl2gl3, "zThickness", zt);
-        // log.info("zThickness = "+zThickness);
+        // used to troubleshoot z-depth problems at high zoom:
+        // log.info("SkeletonActor.displayTracedSegments():");
+        // log.info("    getPixelsPerSceneUnit() = " + camera.getPixelsPerSceneUnit());
+        // log.info("    zThicknessInPixels = " + zThicknessInPixels);
+        // log.info("    using zt = " + getZoomedZThicknessInPixels());
+        // log.info("    focus = " + camera.getFocus());
         float focus[] = {
             (float) camera.getFocus().getX(),
             (float) camera.getFocus().getY(),
@@ -450,6 +453,22 @@ public class SkeletonActor
         return zThicknessInPixels;
     }
 
+    /**
+     * returns the z thickness over which we want annotations to be
+     * visible; this version increases that thickness so the
+     * thickness doesn't dip below a limit (expressed in scene
+     * units, which are microns for us)
+     */
+    public float getZoomedZThicknessInPixels() {
+        Camera3d camera=model.getCamera();
+        float zt;
+        if (zThicknessInPixels / camera.getPixelsPerSceneUnit() < minZThicknessSceneUnits) {
+            zt = minZThicknessSceneUnits * (float) camera.getPixelsPerSceneUnit();
+        } else {
+            zt = zThicknessInPixels;
+        }
+        return zt;
+    }
 
     public void setShowOnlyParentAnchors(boolean showOnlyParent) {
         this.discardNonParent = showOnlyParent ? 1 : 0;

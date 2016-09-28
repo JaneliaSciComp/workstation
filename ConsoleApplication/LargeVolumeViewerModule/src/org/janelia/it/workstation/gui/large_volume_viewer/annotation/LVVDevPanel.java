@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Box;
@@ -10,6 +12,8 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
@@ -56,6 +60,11 @@ public class LVVDevPanel extends JPanel {
 
         // remember, can't call modelMgr from GUI thread
 
+        JPanel buttons = new JPanel();
+        add(buttons);
+
+        buttons.setLayout(new BoxLayout(buttons, BoxLayout.LINE_AXIS));
+
         // for testing detection/repair of root ann not in ann map
         JButton testButton1 = new JButton("Test 1");
         testButton1.setAction(new AbstractAction("Lose a root") {
@@ -97,8 +106,66 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        add(testButton1);
+        buttons.add(testButton1);
 
+
+        // for testing how anchored paths are drawn; for the given
+        //  neuron, generate an anchored path between its first
+        //  two points, all in the same plane as the first point
+        JButton testButton2 = new JButton("Test 2");
+        testButton2.setAction(new AbstractAction("Add flat path") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        TmGeoAnnotation ann1 = currentNeuron.getFirstRoot();
+                        TmGeoAnnotation ann2 = annotationModel.getGeoAnnotationFromID(ann1.getChildIds().get(0));
+
+                        // I wonder if you can get away with not having any points except the endpoints?
+                        TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(ann1, ann2);
+                        List<List<Integer>> pointList = new ArrayList<>();
+                        int nsteps = 10;
+                        double dx = (ann2.getX() - ann1.getX()) / nsteps;
+                        double dy = (ann2.getY() - ann1.getY()) / nsteps;
+                        double x0 = ann1.getX();
+                        double y0 = ann1.getY();
+                        double z0 = ann1.getZ();
+                        for (int i=0; i<nsteps; i++) {
+                            List<Integer> point = new ArrayList<>();
+                            point.add((int) Math.floor(x0 + i * dx));
+                            point.add((int) Math.floor(y0 + i * dy));
+                            point.add((int) Math.floor(z0));
+                            pointList.add(point);
+                        }
+                        List<Integer> lastPoint = new ArrayList<>();
+                        // ugh, Java...
+                        lastPoint.add((int) (1.0 * ann2.getX()));
+                        lastPoint.add((int) (1.0 * ann2.getY()));
+                        lastPoint.add((int) (1.0 * ann2.getZ()));
+                        pointList.add(lastPoint);
+
+
+                        annotationModel.addAnchoredPath(endpoints, pointList);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        System.out.println("add flat path had no errors");
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        System.out.println("add flat path reported exception");
+                        error.printStackTrace();
+                    }
+                };
+                worker.execute();
+            }
+        });
+        buttons.add(testButton2);
 
 
         /*

@@ -154,10 +154,10 @@ public class EJBFactory {
         return (EntityBeanRemote) getRemoteInterface(REMOTE_ENTITY_JNDI_NAME);
     }
     
-    public static SearchBeanRemote getRemoteSearchBean() {
-        return (SearchBeanRemote) getRemoteInterface(REMOTE_SEARCH_JNDI_NAME);
-    }
-
+//    public static SearchBeanRemote getRemoteSearchBean() {
+//        return (SearchBeanRemote) getRemoteInterface(REMOTE_SEARCH_JNDI_NAME);
+//    }
+//
     public static SolrBeanRemote getRemoteSolrBean() {
         return (SolrBeanRemote) getRemoteInterface(REMOTE_SOLR_JNDI_NAME);
     }
