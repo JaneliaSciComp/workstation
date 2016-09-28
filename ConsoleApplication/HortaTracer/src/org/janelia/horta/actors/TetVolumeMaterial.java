@@ -67,11 +67,14 @@ public class TetVolumeMaterial extends BasicMaterial
     private final float[] channelIntensityGammas;
     private final float[] channelIntensityScales;
     private final float[] channelIntensityOffsets;
+    private final float voxelResolution;
 
     public TetVolumeMaterial(KtxData ktxData, TetVolumeActor parentActor) {
         this.ktxData = ktxData;
         shaderProgram = parentActor.getShader();
         this.parentActor = parentActor;
+        
+        this.voxelResolution = Float.parseFloat(ktxData.header.keyValueMetadata.get("nominal_resolution"));
         
         // Parse parameters for reconstructing the original 16-bit intensities
         int channel_count = 2; // TODO: compute channel count from gl_format
@@ -98,10 +101,26 @@ public class TetVolumeMaterial extends BasicMaterial
 
     // Override displayMesh() to display something other than triangles
     @Override
-    protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) {
+    protected void displayMesh(GL3 gl, MeshActor mesh, AbstractCamera camera, Matrix4 modelViewMatrix) 
+    {
         gl.glUniform2fv(8, 1, channelIntensityGammas, 0);
         gl.glUniform2fv(9, 1, channelIntensityScales, 0);
         gl.glUniform2fv(10, 1, channelIntensityOffsets, 0);
+        
+        float screenResolution = 
+                camera.getVantage().getSceneUnitsPerViewportHeight()
+                / camera.getViewport().getHeightPixels();
+        float levelOfDetail = -(float)( 
+                Math.log(voxelResolution / screenResolution) 
+                / Math.log(2.0) );
+        // Performance/Quality tradeoff: adjust to taste; 0.5f matches automatic lod
+        levelOfDetail += 0.5f; 
+        levelOfDetail = Math.max(levelOfDetail, 0); // hard minimum
+        levelOfDetail = (float)Math.floor(levelOfDetail); // convert to int
+        int intLod = (int) levelOfDetail;
+        // System.out.println("Computed level of detail = "+levelOfDetail);
+        gl.glUniform1i(15, intLod);
+        
         mesh.displayTriangleAdjacencies(gl);
     }
 

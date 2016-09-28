@@ -75,6 +75,8 @@ layout(location = 13) uniform int projectionMode = PROJECTION_MAXIMUM;
 #define FILTER_TRILINEAR 1
 layout(location = 14) uniform int voxelFilter = FILTER_TRILINEAR;
 
+layout(location = 15) uniform int levelOfDetail = 0; // TODO: adjust dynamically
+
 
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
@@ -343,7 +345,6 @@ void main()
     vec3 rearTexCoord = x0 + maxRay * x1;
 
     // Set up for texel-by-texel ray marching
-    const int levelOfDetail = 0; // TODO: adjust dynamically
     ivec3 texelsPerVolume = textureSize(volumeTexture, levelOfDetail);
 
     vec3 rayOriginInTexels = x0 * texelsPerVolume;

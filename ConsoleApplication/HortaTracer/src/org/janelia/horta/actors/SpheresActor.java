@@ -140,18 +140,18 @@ public class SpheresActor extends BasicGL3Actor
     
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
+        if (neuron == null)
+            return;
+        
         // Propagate any pending structure changes...
-        if (neuron != null) {
-            neuron.getVisibilityChangeObservable().notifyObservers();
-        }
-        if (! isVisible()) return;
-        if (neuron != null) {
-            neuron.getColorChangeObservable().notifyObservers();
-            neuron.getGeometryChangeObservable().notifyObservers();
-        }
-
-        // if (meshGeometry.size() < 1) return;
-        // gl.glDisable(GL3.GL_DEPTH_TEST);
+        neuron.getVisibilityChangeObservable().notifyObservers();
+        if (! isVisible()) 
+            return;        
+        
+        neuron.getColorChangeObservable().notifyObservers();
+        neuron.getGeometryChangeObservable().notifyObservers();
+        if (neuron.getVertexes().isEmpty())
+            return;
 
         super.display(gl, camera, parentModelViewMatrix);       
     }

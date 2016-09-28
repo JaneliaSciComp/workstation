@@ -57,14 +57,19 @@ public class SpheresMaterial extends BasicMaterial
     
     private final Texture2d lightProbeTexture;
     protected boolean manageLightProbeTexture;
+    private final boolean manageShader;
     private final float[] color = new float[] {1, 0, 0, 1};
     private float minPixelRadius = 0.0f;
 
     public SpheresMaterial(Texture2d lightProbeTexture, ShaderProgram spheresShader) {
-        if (spheresShader == null)
+        if (spheresShader == null) {
             shaderProgram = new SpheresShader();
-        else
+            manageShader = true;
+        }
+        else {
             shaderProgram = spheresShader;
+            manageShader = false;
+        }
         
         if (lightProbeTexture == null) {
             manageLightProbeTexture = true;
@@ -92,8 +97,8 @@ public class SpheresMaterial extends BasicMaterial
                 AbstractCamera camera,
                 Matrix4 modelViewMatrix) 
     {
-        if (manageLightProbeTexture) {
-            lightProbeTexture.bind(gl, 0);
+        if (manageShader) {
+            load(gl, camera);            
             gl.glUniform4fv(colorIndex, 1, color, 0);
             float micrometersPerPixel = 
                 camera.getVantage().getSceneUnitsPerViewportHeight()
@@ -101,7 +106,16 @@ public class SpheresMaterial extends BasicMaterial
             float radiusOffset = minPixelRadius * micrometersPerPixel;
             gl.glUniform1f(radiusOffsetIndex, radiusOffset);
         }
-        displayMesh(gl, mesh, camera, modelViewMatrix);
+        if (manageLightProbeTexture) {
+            lightProbeTexture.bind(gl, 0);
+        }
+        if (manageShader) {
+            displayWithMatrices(gl, mesh, camera, modelViewMatrix);     
+            unload(gl);
+        }
+        else {
+            displayMesh(gl, mesh, camera, modelViewMatrix);        
+        }
     }
     
     // Override displayMesh() to display something other than triangles
@@ -150,8 +164,9 @@ public class SpheresMaterial extends BasicMaterial
         if (colorIndex == -1) 
             init(gl);
         super.load(gl, camera);
-        if (manageLightProbeTexture)
+        if (manageLightProbeTexture) {
             lightProbeTexture.bind(gl, 0);
+        }
         gl.glUniform4fv(colorIndex, 1, color, 0);
         gl.glUniform1i(lightProbeIndex, 0); // use default texture unit, 0
         // radius offset depends on current zoom
