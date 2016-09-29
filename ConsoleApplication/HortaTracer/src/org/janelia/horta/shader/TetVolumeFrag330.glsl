@@ -397,7 +397,7 @@ void main()
     // Standard path length determines how transparent the transparent stuff is.
     float standardPathLength = tFocus / 400.0;
     // Brighten up very thin slabs
-    standardPathLength = min(standardPathLength, (slabMax - slabMin)/5.0);
+    standardPathLength = min(standardPathLength, (slabMax - slabMin)/10.0);
 
     // Feather volume near z clip planes, so new stuff "fades in" from the edges
     float fadeSlab = tFocus / 25.0;
