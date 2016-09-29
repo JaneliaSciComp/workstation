@@ -34,11 +34,21 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
+/*************************/
+/*** MACRO DEFINITIONS ***/
+/*************************/
+
 // Optimize for a certain maximum number of color channels
 // Input image channels
 #define CHANNEL_VEC vec2
 // Total output channels, including synthetic channels constructed here, in the fragment shader
 #define OUTPUT_CHANNEL_VEC vec3
+
+
+/*****************************************/
+/*** SHADER UNIFORM INPUT DECLARATIONS ***/
+/*****************************************/
 
 // three-dimensional raster volume of intensities through which we will cast view rays
 layout(binding = 0) uniform sampler3D volumeTexture;
@@ -78,6 +88,10 @@ layout(location = 14) uniform int voxelFilter = FILTER_TRILINEAR;
 layout(location = 15) uniform int levelOfDetail = 0; // TODO: adjust dynamically
 
 
+/************************************************************************/
+/*** SHADER INPUTS FROM THE PREVIOUS STAGE (from the geometry shader) ***/
+/************************************************************************/
+
 in vec3 fragTexCoord; // texture coordinate at back face of tetrahedron
 flat in vec3 cameraPosInTexCoord; // texture coordinate at view eye location
 flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetrhedron
@@ -86,9 +100,17 @@ flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 flat in vec4 zFocusPlaneInTexCoord; // plane equation for far z-clip plane
 
 
+/*************************************************************/
+/*** SHADER OUTPUTS (final color and other render targets) ***/
+/*************************************************************/
+
 layout(location = 0) out vec4 fragColor; // store final output color in the usual way
 layout(location = 1) out vec2 coreDepth; // also store intensity and relative depth of the most prominent point along the ray, in a secondary render target
 
+
+/***********************************/
+/*** DATA STRUCTURE DECLARATIONS ***/
+/***********************************/
 
 // Data used for finding bright center of neurite for interactive tracing
 struct TracingCore {
@@ -97,6 +119,11 @@ struct TracingCore {
     float finalBodyRayParam; // Ray parameter where brightest intensity was last observed
     float intensity;
 };
+
+
+/****************************/
+/*** FUNCTION DEFINITIONS ***/
+/****************************/
 
 float max_element(in vec2 v) {
     return max(v.r, v.g);
@@ -240,7 +267,7 @@ float advance_to_voxel_edge(
 }
 
 // Nearest-neighbor filtering
-CHANNEL_VEC sample_nearest_neighbor(in vec3 texCoord, in int levelOfDetail)
+CHANNEL_VEC fetch_texture_sample(in vec3 texCoord, in int levelOfDetail)
 {
     CHANNEL_VEC intensity = CHANNEL_VEC(textureLod(volumeTexture, texCoord, levelOfDetail));
 
@@ -307,6 +334,11 @@ void save_color(in vec4 integratedColor, in TracingCore tracingCore, in float sl
     fragColor = integratedColor;
 };
 
+
+/*********************/
+/*** MAIN FUNCTION ***/
+/*********************/
+
 void main() 
 {
     // Ray parameters
@@ -329,11 +361,13 @@ void main()
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);
     float tFocus = intersectRayAndPlane(x0, x1, zFocusPlaneInTexCoord);
+
+    // Standard path length determines how transparent the transparent stuff is.
     float standardPathLength = tFocus / 400.0;
     // Brighten up very thin slabs
     standardPathLength = min(standardPathLength, (slabMax - slabMin)/5.0);
 
-    // Feather volume near z clip planes
+    // Feather volume near z clip planes, so new stuff "fades in" from the edges
     float fadeSlab = tFocus / 25.0;
     fadeSlab = min(fadeSlab, (slabMax-slabMin)/10.0);
     float fadeNear = slabMin + fadeSlab;
@@ -359,9 +393,7 @@ void main()
     vec4 integratedColor = vec4(0);
     float t0 = minRay;
     TracingCore tracingCore = TracingCore(false, tFocus, tFocus, -1.0);
-    // float coreParam = mix(minRay, maxRay, 0.5);
-    // float coreIntensity = -1.0;
-    for (int s = 0; s < 1000; ++s) 
+    for (int s = 0; s < 1000; ++s) // Step through each texel in our path, one at at time
     {
         float t1 = advance_to_voxel_edge(t0, 
                 rayOriginInTexels, rayDirectionInTexels,
@@ -369,13 +401,12 @@ void main()
                 texelsPerRay);
         t1 = min(t1, maxRay);
 
-        // float t = mix(t0, t1, 0.5);
         float t = mix(t0, t1, 0.50);
         vec3 texel = rayOriginInTexels + t * rayDirectionInTexels;
         vec3 texCoord = texel / texelsPerVolume;
 
         // Use levelOfDetail for intentional downsampling
-        CHANNEL_VEC localIntensity = sample_nearest_neighbor(texCoord, levelOfDetail);
+        CHANNEL_VEC localIntensity = fetch_texture_sample(texCoord, levelOfDetail);
 
         float tracingIntensity = tracing_channel_from_measured(localIntensity);
 
@@ -393,7 +424,9 @@ void main()
             } 
         }
 
+        // Combine new synthetic tracing channel with the original data channels
         OUTPUT_CHANNEL_VEC localCombined = OUTPUT_CHANNEL_VEC(localIntensity, tracingIntensity);
+        // Apply brightness correction and compute final colors
         OUTPUT_CHANNEL_VEC localRescaled = rescale_intensities(localCombined);
         vec4 localColor = rgba_for_scaled_intensities(localRescaled);
 
@@ -420,7 +453,7 @@ void main()
         if (t1 >= maxRay - minRayStep)
             rayIsFinished = true; // We hit the rear of this block
         else if (tracingCore.inLocalBody)
-            rayIsFinished = false; // Keep climbing for the bright neurite core
+            rayIsFinished = false; // Keep climbing toward the bright neurite core
         // Terminate early if we hit an opaque surface
         else if (integratedColor.a >= 0.999) { // 0.99 is too small
             rayIsFinished = true;
