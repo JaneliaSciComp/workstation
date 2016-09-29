@@ -171,7 +171,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
                 }
                 dop.setRead(readCheckbox.isSelected());
                 dop.setWrite(writeCheckbox.isSelected());
-                model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions(), true);
+                model.changePermissions(domainObject, dop.getSubjectKey(), dop.getPermissions());
             }
 
             @Override

@@ -175,9 +175,10 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
-        final boolean read = readCheckbox.isSelected();
-        final boolean write = writeCheckbox.isSelected();
-        
+        boolean read = readCheckbox.isSelected();
+        boolean write = writeCheckbox.isSelected();
+        final String rights = (read?"r":"") + (write?"w":"");  
+                
         SimpleWorker worker = new SimpleWorker() {
 
             private int numAnnotationsModified;
@@ -191,8 +192,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
                     // Must be owner to grant access
                     if (!ClientDomainUtils.isOwner(annotation)) continue;
 
-                    model.changePermissions(annotation, subject.getKey(), "r", read);
-                    model.changePermissions(annotation, subject.getKey(), "w", write);
+                    model.changePermissions(annotation, subject.getKey(), rights);
                     
                     numAnnotationsModified++;
                 }

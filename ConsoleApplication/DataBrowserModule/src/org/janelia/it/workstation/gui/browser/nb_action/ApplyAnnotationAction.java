@@ -203,7 +203,7 @@ public class ApplyAnnotationAction extends NodeAction {
         
         PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();
         if (template!=null) {
-            model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions(), true);
+            model.changePermissions(savedAnnotation, template.getSubjectKey(), template.getPermissions());
             log.info("Auto-shared annotation with " + template.getSubjectKey());
         }
     }

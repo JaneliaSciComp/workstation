@@ -72,9 +72,8 @@ public class DomainFacadeImpl implements DomainFacade {
     }
 
     @Override
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
-        dao.changePermissions(AccessManager.getSubjectKey(), domainObject.getClass().getName(), Arrays.asList(domainObject.getId()), granteeKey, rights, grant);
-        return dao.getDomainObject(AccessManager.getSubjectKey(), domainObject);
+    public DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
+        throw new UnsupportedOperationException("Direct-to-mongo implementation is no longer supported");
     }
 
     private DomainObject updateIndex(DomainObject obj) throws Exception {

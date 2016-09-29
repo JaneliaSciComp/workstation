@@ -924,10 +924,10 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
         DomainObject canonicalObject;
         synchronized (this) {
-            canonicalObject = putOrUpdate(domainFacade.changePermissions(domainObject, granteeKey, rights, grant), true);
+            canonicalObject = putOrUpdate(domainFacade.setPermissions(domainObject, granteeKey, rights), true);
         }
         return canonicalObject;
     }

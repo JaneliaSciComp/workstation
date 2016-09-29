@@ -80,10 +80,9 @@ public interface DomainFacade {
      * @param domainObject the domain object for which to change permissions 
      * @param granteeKey the subject key being granted or revoked permission
      * @param rights list of access rights, e.g. "rw"
-     * @param grant grant or revoke?
      * @throws Exception something went wrong
      */
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception;
+    public DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception;
 
     /**
      * 

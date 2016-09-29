@@ -177,19 +177,18 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
 
 
     @Override
-    public DomainObject changePermissions(DomainObject domainObject, String granteeKey, String rights, boolean grant) throws Exception {
+    public DomainObject setPermissions(DomainObject domainObject, String granteeKey, String rights) throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put("subjectKey", AccessManager.getSubjectKey());
         params.put("targetClass", domainObject.getClass().getName());
         params.put("targetId", domainObject.getId());
         params.put("granteeKey", granteeKey);
         params.put("rights", rights);
-        params.put("grant", grant);
         Response response = manager.getUserEndpoint()
                 .path("permissions")
                 .request("application/json")
                 .put(Entity.json(params));
-        if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights + "," + grant)) {
+        if (checkBadResponse(response.getStatus(), "problem making request changePermissions to server: " + domainObject + "," + granteeKey + "," + rights)) {
             throw new WebApplicationException(response);
         }
         return getDomainObject(Reference.createFor(domainObject));

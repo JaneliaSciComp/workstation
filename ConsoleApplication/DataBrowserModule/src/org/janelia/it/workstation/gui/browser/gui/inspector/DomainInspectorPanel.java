@@ -231,7 +231,7 @@ public class DomainInspectorPanel extends JPanel {
                                     @Override
                                     protected void doStuff() throws Exception {
                                         DomainModel model = DomainMgr.getDomainMgr().getModel();
-                                        model.changePermissions(domainObject, dop.getSubjectKey(), "rw", false);
+                                        model.changePermissions(domainObject, dop.getSubjectKey(), "");
                                     }
 
                                     @Override
