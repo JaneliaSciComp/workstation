@@ -33,19 +33,26 @@ package org.janelia.horta.actors;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GL4;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
-// import org.janelia.geometry3d.ChannelBrightnessModel;
+import org.janelia.geometry3d.CentroidHaver;
 import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicGL3Actor;
+import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
@@ -86,6 +93,7 @@ implements DepthSlabClipper
     private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private VolumeState volumeState = new VolumeState();
+    private final BlockSorter blockSorter = new BlockSorter();
     
     public TetVolumeActor() {
         super(null);
@@ -133,6 +141,14 @@ implements DepthSlabClipper
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
+        if (! isVisible())
+            return;
+        if (! isInitialized) init(gl);
+        if (getChildren() == null)
+            return;
+        if (getChildren().size() < 1)
+            return;
+
         // Adjust actual Z-clip planes to allow imposter geometry to lie
         // outside the "official" Z-clip planes. Correct final clipping will 
         // happen in the fragement shader. This is necessary because the
@@ -235,7 +251,39 @@ implements DepthSlabClipper
                 throw new UnsupportedOperationException("Unexpected number of color channels");
             }
             
-            super.display(gl, camera, parentModelViewMatrix);
+            Matrix4 modelViewMatrix = parentModelViewMatrix;
+            if (modelViewMatrix == null)
+                modelViewMatrix = camera.getViewMatrix();
+            Matrix4 localMatrix = getTransformInParent();
+            if (localMatrix != null)
+                modelViewMatrix = new Matrix4(modelViewMatrix).multiply(localMatrix);
+
+            // Sort individual blocks by distance from camera, for 
+            // correct transparency blending
+            List<SortableBlockActor> blockList = new ArrayList<>();
+            List<GL3Actor> otherActorList = new ArrayList<>();
+            List<Object3d> otherList = new ArrayList<>();
+            for (Object3d child : getChildren()) {
+                if (child instanceof SortableBlockActor) {
+                    blockList.add((SortableBlockActor)child);
+                }
+                else if (child instanceof GL3Actor) {
+                    otherActorList.add((GL3Actor)child);
+                }
+                else {
+                    otherList.add(child);
+                }
+            }
+            assert otherActorList.isEmpty();
+            assert otherList.isEmpty();
+            // Order does not matter in MIP mode
+            if (volumeState.projectionMode != VolumeState.PROJECTION_MAXIMUM) {
+                blockSorter.setViewMatrix(modelViewMatrix);
+                Collections.sort(blockList, blockSorter);        
+            }
+            for (SortableBlockActor actor : blockList) {
+                actor.display(gl, camera, modelViewMatrix);
+            }
         }
         finally {
             camera.popInternalViewSlab();
@@ -334,6 +382,33 @@ implements DepthSlabClipper
 
     public int getBlockCount() {
         return getChildren().size();
+    }
+
+    private static class BlockSorter implements Comparator<CentroidHaver> 
+    {
+        private Matrix4 viewMatrix;
+
+        public BlockSorter() {
+        }
+
+        @Override
+        public int compare(CentroidHaver o1, CentroidHaver o2) {
+            if (viewMatrix == null)
+                throw new UnsupportedOperationException("View Matrix is Null");
+            Vector4 v1 = viewMatrix.multiply(o1.getHomogeneousCentroid());
+            Vector4 v2 = viewMatrix.multiply(o2.getHomogeneousCentroid());
+            float d1 = 0.0f; // squared distance from camera to centroid
+            float d2 = 0.0f; // squared distance from camera to centroid
+            for (int i = 0; i < 3; ++i) {
+                d1 += v1.get(i) * v1.get(i);
+                d2 += v2.get(i) * v2.get(i);
+            }
+            return d1 > d2 ? -1 : d1 == d2 ? 0 : 1;
+        }
+
+        public void setViewMatrix(Matrix4 viewMatrix) {
+            this.viewMatrix = viewMatrix;
+        }
     }
 
 }

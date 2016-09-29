@@ -361,7 +361,7 @@ implements LookupListener
 
         stayUpCheckBox.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(stayUpCheckBox, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.stayUpCheckBox.text")); // NOI18N
-        stayUpCheckBox.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.stayUpCheckBox.toolTipText")); // NOI18N
+        stayUpCheckBox.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.stayUpCheckBox.toolTipText_1")); // NOI18N
         stayUpCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 stayUpCheckBoxStateChanged(evt);
@@ -401,14 +401,9 @@ implements LookupListener
             .addGroup(rotationPanelLayout.createSequentialGroup()
                 .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(rotationPanelLayout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(rotationPanelLayout.createSequentialGroup()
-                                .addComponent(stayUpCheckBox)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, rotationPanelLayout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
-                                .addComponent(resetRotationButton))))
+                        .addComponent(stayUpCheckBox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(resetRotationButton))
                     .addGroup(rotationPanelLayout.createSequentialGroup()
                         .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(localRotYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -435,14 +430,12 @@ implements LookupListener
         rotationPanelLayout.setVerticalGroup(
             rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(rotationPanelLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(stayUpCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(0, 0, 0)
                 .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(rotXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(rotXLabel)
                     .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(localRotXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(localRotXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(rotXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(7, 7, 7)
                 .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(rotYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -455,8 +448,10 @@ implements LookupListener
                     .addComponent(rotZLabel)
                     .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(localRotZSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(resetRotationButton))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(resetRotationButton)
+                    .addComponent(stayUpCheckBox)))
         );
 
         zoomPanl.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.zoomPanl.border.title"))); // NOI18N
@@ -484,14 +479,12 @@ implements LookupListener
         zoomPanlLayout.setHorizontalGroup(
             zoomPanlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(zoomPanlLayout.createSequentialGroup()
-                .addGroup(zoomPanlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(zoomPanlLayout.createSequentialGroup()
-                        .addComponent(zoomSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabel7))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, zoomPanlLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(resetZoomButton)))
+                .addContainerGap()
+                .addComponent(zoomSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(resetZoomButton)
                 .addContainerGap())
         );
         zoomPanlLayout.setVerticalGroup(
@@ -499,9 +492,9 @@ implements LookupListener
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, zoomPanlLayout.createSequentialGroup()
                 .addGroup(zoomPanlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(zoomSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(resetZoomButton))
+                    .addComponent(jLabel7)
+                    .addComponent(resetZoomButton))
+                .addGap(0, 0, 0))
         );
 
         org.openide.awt.Mnemonics.setLocalizedText(resetAllButton, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.resetAllButton.text")); // NOI18N
@@ -564,14 +557,14 @@ implements LookupListener
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(nearSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                    .addComponent(nearSlabSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 254, Short.MAX_VALUE)
                     .addComponent(farSlabSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel8)
                     .addComponent(jLabel9)))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(21, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(zeroSlabButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(narrowSlabButton)
@@ -603,13 +596,16 @@ implements LookupListener
             .addComponent(focusPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(rotationPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(zoomPanl, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(resetAllButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jXCollapsiblePane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(49, 49, 49))
             .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jXCollapsiblePane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(101, 101, 101))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(resetAllButton)
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -621,14 +617,11 @@ implements LookupListener
                 .addComponent(zoomPanl, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(27, 27, 27)
-                        .addComponent(jXCollapsiblePane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(resetAllButton)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(27, 27, 27)
+                .addComponent(jXCollapsiblePane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(resetAllButton)
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -659,25 +652,6 @@ implements LookupListener
         updateVantageProperties();
     }//GEN-LAST:event_zoomSpinnerStateChanged
 
-    private void resetRotationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetRotationButtonActionPerformed
-        if (selectedVantage == null)
-            return;
-        selectedVantage.resetRotation();
-        selectedVantage.notifyObservers();
-    }//GEN-LAST:event_resetRotationButtonActionPerformed
-
-    private void rotZSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotZSpinnerStateChanged
-        updateVantageProperties();
-    }//GEN-LAST:event_rotZSpinnerStateChanged
-
-    private void rotYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotYSpinnerStateChanged
-        updateVantageProperties();
-    }//GEN-LAST:event_rotYSpinnerStateChanged
-
-    private void rotXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotXSpinnerStateChanged
-        updateVantageProperties();
-    }//GEN-LAST:event_rotXSpinnerStateChanged
-
     private void resetFocusButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetFocusButtonActionPerformed
         if (selectedVantage == null)
             return;
@@ -701,27 +675,6 @@ implements LookupListener
         nearSlabSlider.setValue(50);
         farSlabSlider.setValue(50);
     }//GEN-LAST:event_resetAllButtonActionPerformed
-
-    private void stayUpCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stayUpCheckBoxActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_stayUpCheckBoxActionPerformed
-
-    private void stayUpCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_stayUpCheckBoxStateChanged
-        if (selectedVantage == null) return;
-        selectedVantage.setConstrainedToUpDirection(stayUpCheckBox.isSelected());
-    }//GEN-LAST:event_stayUpCheckBoxStateChanged
-
-    private void localRotXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotXSpinnerStateChanged
-        incrementLocalRotation(localRotXSpinner, new Vector3(1, 0, 0));
-    }//GEN-LAST:event_localRotXSpinnerStateChanged
-
-    private void localRotYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotYSpinnerStateChanged
-        incrementLocalRotation(localRotYSpinner, new Vector3(0, -1, 0));
-    }//GEN-LAST:event_localRotYSpinnerStateChanged
-
-    private void localRotZSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotZSpinnerStateChanged
-        incrementLocalRotation(localRotZSpinner, new Vector3(0, 0, 1));
-    }//GEN-LAST:event_localRotZSpinnerStateChanged
 
     private void localTranslateXSpinnerStateChanged(javax.swing.event.ChangeEvent evt)//GEN-FIRST:event_localTranslateXSpinnerStateChanged
     {//GEN-HEADEREND:event_localTranslateXSpinnerStateChanged
@@ -788,6 +741,46 @@ implements LookupListener
         farSlabSlider.setValue(0); // 1.001
         nearSlabSlider.setValue(100); // 0.999
     }//GEN-LAST:event_zeroSlabButtonActionPerformed
+
+    private void localRotZSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotZSpinnerStateChanged
+        incrementLocalRotation(localRotZSpinner, new Vector3(0, 0, 1));
+    }//GEN-LAST:event_localRotZSpinnerStateChanged
+
+    private void localRotYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotYSpinnerStateChanged
+        incrementLocalRotation(localRotYSpinner, new Vector3(0, -1, 0));
+    }//GEN-LAST:event_localRotYSpinnerStateChanged
+
+    private void localRotXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_localRotXSpinnerStateChanged
+        incrementLocalRotation(localRotXSpinner, new Vector3(1, 0, 0));
+    }//GEN-LAST:event_localRotXSpinnerStateChanged
+
+    private void stayUpCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_stayUpCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_stayUpCheckBoxActionPerformed
+
+    private void stayUpCheckBoxStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_stayUpCheckBoxStateChanged
+        if (selectedVantage == null) return;
+        selectedVantage.setConstrainedToUpDirection(stayUpCheckBox.isSelected());
+    }//GEN-LAST:event_stayUpCheckBoxStateChanged
+
+    private void resetRotationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetRotationButtonActionPerformed
+        if (selectedVantage == null)
+        return;
+        selectedVantage.resetRotation();
+        selectedVantage.notifyObservers();
+    }//GEN-LAST:event_resetRotationButtonActionPerformed
+
+    private void rotZSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotZSpinnerStateChanged
+        updateVantageProperties();
+    }//GEN-LAST:event_rotZSpinnerStateChanged
+
+    private void rotYSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotYSpinnerStateChanged
+        updateVantageProperties();
+    }//GEN-LAST:event_rotYSpinnerStateChanged
+
+    private void rotXSpinnerStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_rotXSpinnerStateChanged
+        updateVantageProperties();
+    }//GEN-LAST:event_rotXSpinnerStateChanged
 
     private void incrementLocalRotation(JSpinner spinner, Vector3 axis)
     {

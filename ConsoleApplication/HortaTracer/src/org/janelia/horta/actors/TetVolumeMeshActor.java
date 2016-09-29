@@ -37,14 +37,13 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.media.opengl.GL3;
-import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.CentroidHaver;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshActor;
-import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
-import org.janelia.horta.actors.TetVolumeMaterial.TetVolumeShader;
 import org.janelia.horta.ktx.KtxData;
 
 /**
@@ -57,16 +56,16 @@ import org.janelia.horta.ktx.KtxData;
  * @author brunsc
  */
 public class TetVolumeMeshActor extends MeshActor
+implements SortableBlockActor
 {
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
-    
-    private TetVolumeMeshActor(MeshGeometry geometry, TetVolumeMaterial material, CompositeObject3d parent) {
-        super(geometry, material, parent);
-    }
+    private final KtxData ktxData;
+    private Vector4 centroid;
     
     public TetVolumeMeshActor(KtxData ktxData, TetVolumeActor parentActor) {
         super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, parentActor), parentActor);
+        this.ktxData = ktxData;
         
         /*
                 4___________5                  
@@ -219,6 +218,24 @@ public class TetVolumeMeshActor extends MeshActor
         }
     }
 
+    @Override
+    public Vector4 getHomogeneousCentroid() {
+        if (centroid == null) {
+            String s = ktxData.header.keyValueMetadata.get("bounding_sphere_center");
+            final String np = "([-+0-9.e]+)"; // regular expression for parsing and capturing one number from the matrix
+            final String rp = "\\[\\s*"+np+"\\s+"+np+"\\s+"+np+"\\s*\\]"; // regex for parsing one matrix row
+            Pattern p = Pattern.compile("^"+rp+".*$", Pattern.DOTALL);
+            Matcher m = p.matcher(s);
+            boolean b = m.matches();
+            centroid = new Vector4(
+                    Float.parseFloat(m.group(1)),
+                    Float.parseFloat(m.group(2)),
+                    Float.parseFloat(m.group(3)),
+                    1.0f);
+        }
+        return centroid;
+    }
+
     private static class TetVolumeMeshGeometry extends MeshGeometry {
 
         public TetVolumeMeshGeometry(KtxData ktxData)
@@ -226,9 +243,9 @@ public class TetVolumeMeshActor extends MeshActor
             // Parse spatial transformation matrix from block metadata
             String xformString = ktxData.header.keyValueMetadata.get("xyz_from_texcoord_xform");
             // [[  1.05224424e+04   0.00000000e+00   0.00000000e+00   7.27855312e+04]  [  0.00000000e+00   7.26326904e+03   0.00000000e+00   4.04875508e+04]  [  0.00000000e+00   0.00000000e+00   1.12891562e+04   1.78165703e+04]  [  0.00000000e+00   0.00000000e+00   0.00000000e+00   1.00000000e+00]]
-            String np = "([-+0-9.e]+)"; // regular expression for parsing and capturing one number from the matrix
-            String rp = "\\[\\s*"+np+"\\s+"+np+"\\s+"+np+"\\s+"+np+"\\s*\\]"; // regex for parsing one matrix row
-            String mp = "\\["+rp+"\\s*"+rp+"\\s*"+rp+"\\s*"+rp+"\\s*\\]"; // regex for entire matrix
+            final String np = "([-+0-9.e]+)"; // regular expression for parsing and capturing one number from the matrix
+            final String rp = "\\[\\s*"+np+"\\s+"+np+"\\s+"+np+"\\s+"+np+"\\s*\\]"; // regex for parsing one matrix row
+            final String mp = "\\["+rp+"\\s*"+rp+"\\s*"+rp+"\\s*"+rp+"\\s*\\]"; // regex for entire matrix
             Pattern p = Pattern.compile("^"+mp+".*$", Pattern.DOTALL);
             Matcher m = p.matcher(xformString);
             boolean b = m.matches();
