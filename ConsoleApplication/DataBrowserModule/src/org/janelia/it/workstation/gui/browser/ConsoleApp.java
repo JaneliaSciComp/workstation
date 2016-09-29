@@ -115,19 +115,6 @@ public class ConsoleApp {
             }
             
             sessionMgr.newBrowser();
-            log.debug("Displaying main frame");
-
-            Dimension currSize = SessionMgr.getMainFrame().getSize();
-            if (currSize.width==0 || currSize.height==0) {
-            	log.info("Frame is zero-sized, resetting to 80%");
-	            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-	            double width = screenSize.getWidth();
-	            double height = screenSize.getHeight();
-	            SessionMgr.getMainFrame().setLocation(new Point(0, 30));
-	            SessionMgr.getMainFrame().setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
-            }
-            
-            SessionMgr.getMainFrame().setVisible(true);
             
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
