@@ -229,6 +229,11 @@
                 <attr name="url" bundlevalue="org.janelia.it.workstation.nb_action.Bundle#org_janelia_it_workstation_nb_action_update_center"/>
             </file>
         </folder>
+    </folder>    
+    <folder name="Shortcuts">
+        <file name="DO-O.shadow">
+            <attr name="originalFile" stringvalue="Actions/Window/org-netbeans-core-windows-actions-ResetWindowsAction.instance"/>
+        </file>
     </folder>
     <folder name="Toolbars">
         <folder name="Navigation"></folder>

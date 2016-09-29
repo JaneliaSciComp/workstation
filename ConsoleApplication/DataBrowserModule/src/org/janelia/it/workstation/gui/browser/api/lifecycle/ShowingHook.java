@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
 import java.awt.AWTEvent;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Toolkit;
