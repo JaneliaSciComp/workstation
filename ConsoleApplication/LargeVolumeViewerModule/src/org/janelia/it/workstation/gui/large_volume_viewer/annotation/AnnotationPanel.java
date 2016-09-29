@@ -1,19 +1,14 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.File;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -24,17 +19,12 @@ import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -42,6 +32,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuro
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -228,10 +219,7 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
 
-        ExportAllSWCAction exportAllSWCAction = new ExportAllSWCAction();
-        exportAllSWCAction.putValue(Action.NAME, "Export SWC file...");
-        exportAllSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Export all neurons to SWC file");
+        NeuronExportAllAction exportAllSWCAction = new NeuronExportAllAction();
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
         importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
@@ -315,13 +303,7 @@ public class AnnotationPanel extends JPanel
         neuronToolMenu.add(bulkNeuronTagAction);
                 
         neuronToolMenu.add(new JSeparator());
-        
-        ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
-        exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
-        exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Export selected neuron as an SWC file");
-        neuronToolMenu.add(exportCurrentSWCAction);
-                
+                        
         sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override
@@ -429,98 +411,9 @@ public class AnnotationPanel extends JPanel
         showOutline(panel, Color.green);
 
     }
-
-    /** Somewhat complex interaction with file chooser. */
-    private ExportParameters getExportParameters( String seedName ) throws HeadlessException {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save swc file");
-        chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
-        JPanel layoutPanel = new JPanel();
-        layoutPanel.setLayout(new BorderLayout());
-        // Force-out to desired size.
-        JTextField downsampleModuloField = new JTextField("10");
-        final Dimension dimension = new Dimension(80, 40);
-        downsampleModuloField.setMinimumSize( dimension );
-        downsampleModuloField.setSize( dimension );
-        downsampleModuloField.setPreferredSize( dimension );
-        layoutPanel.add( downsampleModuloField, BorderLayout.SOUTH );
-
-        final TitledBorder titledBorder = new TitledBorder( 
-                new EmptyBorder(8, 2, 0, 0), "Density", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, getFont().deriveFont(8)
-        );
-        downsampleModuloField.setBorder(titledBorder);
-        downsampleModuloField.setToolTipText("Only every Nth autocomputed point will be exported.");
-        downsampleModuloField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent ke) {
-                if (!Character.isDigit(ke.getKeyChar())) {
-                    // Eliminate non-numeric characters, including signs.
-                    ke.consume();
-                }
-            }
-        });
-        chooser.setAccessory(layoutPanel);
-        int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
-        final String textInput = downsampleModuloField.getText().trim();
-        
-        ExportParameters rtnVal = null;
-        try {
-            int downsampleModulo = Integer.parseInt(textInput);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                rtnVal = new ExportParameters();
-                rtnVal.setDownsampleModulo(downsampleModulo);
-                rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
-            }
-        } catch (NumberFormatException nfe) {
-            annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");
-            JOptionPane.showMessageDialog(AnnotationPanel.this, nfe);
-        }
-        return rtnVal;
-    }
-
+    
     private void showOutline(JPanel panel, Color color) {
         panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
     }
-
-    class ExportParameters {
-        private File selectedFile;
-        private int downsampleModulo;
-
-        public File getSelectedFile() { return selectedFile; }
-        public void setSelectedFile(File selectedFile) {
-            this.selectedFile = selectedFile;
-        }
-
-        public int getDownsampleModulo() { return downsampleModulo; }
-        public void setDownsampleModulo(int downsampleModulo) {
-            this.downsampleModulo = downsampleModulo;
-        }
-    }
-
-    class ExportAllSWCAction extends AbstractAction {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            ExportParameters params = getExportParameters(annotationModel.getCurrentWorkspace().getName());
-            if ( params != null ) {
-                annotationMgr.exportAllNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
-            }
-        }
-    }
-
-    class ExportCurrentSWCAction extends AbstractAction {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (annotationModel.getCurrentNeuron() == null) {
-                annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
-            }
-            else {
-                ExportParameters params = getExportParameters(annotationModel.getCurrentNeuron().getName());
-                if ( params != null ) {
-                    annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
-                }
-            }
-        }
-    }
-
 }
 

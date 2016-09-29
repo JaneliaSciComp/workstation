@@ -306,8 +306,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     protected JPopupMenu createPopupMenu(MouseEvent me) {
-        NeuronContextMenu menu = new NeuronContextMenu(annotationManager, annotationManager.getAnnotationModel().getCurrentNeuron());
-//        return menu.getMenu();
+        NeuronContextMenu menu = new NeuronContextMenu(annotationManager.getAnnotationModel().getCurrentNeuron());
         menu.addMenuItems();
         return menu;
     }
