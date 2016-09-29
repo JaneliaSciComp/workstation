@@ -86,6 +86,7 @@ implements DepthSlabClipper
     private final TetVolumeMaterial.TetVolumeShader shader;
     private ImageColorModel brightnessModel;
     private final Texture2d colorMapTexture = new Texture2d();
+    private Texture2d opaqueDepthTexture = null;
     private float zNearRelative = 0.10f;
     private float zFarRelative = 100.0f; // relative z clip planes
     private final float[] zNearFar = new float[] {0.1f, 100.0f, 1.0f}; // absolute clip for shader
@@ -188,6 +189,11 @@ implements DepthSlabClipper
             
             // Bind color map to texture unit 1, because 3D volume textures will use unit zero.
             colorMapTexture.bind(gl, 1);
+            // 2D depth texture -- Z-buffer from opaque rendering pass
+            if (opaqueDepthTexture != null) {
+                final int depthTextureUnit = 2;
+                opaqueDepthTexture.bind(gl, depthTextureUnit);
+            }
             shader.load(gl);
             // Z-clip planes
             float focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
@@ -370,10 +376,11 @@ implements DepthSlabClipper
     }
 
     @Override
-    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture) {
-        // TODO: not yet used
+    public void setOpaqueDepthTexture(Texture2d opaqueDepthTexture)
+    {
+        this.opaqueDepthTexture = opaqueDepthTexture;
     }
-
+    
     @Override
     public void setRelativeSlabThickness(float zNear, float zFar) {
         zNearRelative = zNear;

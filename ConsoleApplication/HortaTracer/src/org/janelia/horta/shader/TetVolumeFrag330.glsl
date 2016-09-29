@@ -56,6 +56,13 @@ layout(binding = 0) uniform sampler3D volumeTexture;
 // palette used to compose "hot" color transfer functions from hue/saturation bases
 layout(binding = 1) uniform sampler2D colorMapTexture;
 
+// depth buffer from opaque render pass
+layout(binding = 2) uniform sampler2D opaqueDepthTexture;
+
+// explicitly specify "official" near and far clip planes, which might be 
+// less generous than those used to render our bounding geometry.
+layout(location = 2) uniform vec3 opaqueZNearFarFocus;
+
 // per-channel intensity transfer function
 layout(location = 3) uniform OUTPUT_CHANNEL_VEC opacityFunctionMin = OUTPUT_CHANNEL_VEC(0);
 layout(location = 4) uniform OUTPUT_CHANNEL_VEC opacityFunctionMax = OUTPUT_CHANNEL_VEC(1);
@@ -98,6 +105,7 @@ flat in mat4 tetPlanesInTexCoord; // clip plane equations at all 4 faces of tetr
 flat in vec4 zNearPlaneInTexCoord; // clip plane equation at near view slab plane
 flat in vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 flat in vec4 zFocusPlaneInTexCoord; // plane equation for far z-clip plane
+flat in mat4 planeTransform; // converts plane equations in camera space to texture coordinate space
 
 
 /*************************************************************/
@@ -334,6 +342,28 @@ void save_color(in vec4 integratedColor, in TracingCore tracingCore, in float sl
     fragColor = integratedColor;
 };
 
+void clipRayToOpaqueDepthBuffer(in vec3 x0, in vec3 x1, inout float maxRay) 
+{
+    // Clip by depth buffer from already-rendered opaque objects, such as neuron models
+    // http://web.archive.org/web/20130416194336/http://olivers.posterous.com/linear-depth-in-glsl-for-real
+    // next line assumes that opaqueDepthTexture is the same size as the current viewport
+    vec2 depthTc = gl_FragCoord.xy / textureSize(opaqueDepthTexture, 0); // compute texture coordinate for depth lookup
+    float z_buf = texture(opaqueDepthTexture, depthTc).x; // raw depth value from z-buffer
+    // z_buf tends to be zero when depth texture is uninitialized
+    // I hope valid zero values are uncommon...
+    // z_buf should be 1.0 where there was no opaque geometry, so skip those too.
+    if (z_buf == 0)
+        return;
+    if (z_buf >= 0.9999)
+        return;
+    float zNear = opaqueZNearFarFocus.x;
+    float zFar = opaqueZNearFarFocus.y;
+    float z_eye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*z_buf - 1));
+    vec4 depth_plane_eye = vec4(0, 0, 1, z_eye);
+    vec4 depth_plane_tc = depth_plane_eye * planeTransform;
+    float tDepth = intersectRayAndPlane(x0, x1, depth_plane_tc);
+    maxRay = min(tDepth, maxRay); // Don't cast ray past that opaque object
+}
 
 /*********************/
 /*** MAIN FUNCTION ***/
@@ -357,6 +387,8 @@ void main()
     
     clipRayToPlane(x0, x1, zNearPlaneInTexCoord, minRay, maxRay);
     clipRayToPlane(x0, x1, zFarPlaneInTexCoord, minRay, maxRay);
+
+    clipRayToOpaqueDepthBuffer(x0, x1, maxRay);
 
     float slabMin = intersectRayAndPlane(x0, x1, zNearPlaneInTexCoord);
     float slabMax = intersectRayAndPlane(x0, x1, zFarPlaneInTexCoord);

@@ -48,6 +48,8 @@ flat out mat4 tetPlanesInTexCoord; // plane equations for each face of the tetra
 flat out vec4 zNearPlaneInTexCoord; // plane equation for near z-clip plane
 flat out vec4 zFarPlaneInTexCoord; // plane equation for far z-clip plane
 flat out vec4 zFocusPlaneInTexCoord; // plane equation for focus z-plane
+flat out mat4 planeTransform; // converts plane equations in camera space to texture coordinate space
+
 
 // pass one face of this tetrahedron down to the fragment shader
 void emit_triangle(in vec4[4] v, in vec3[4] t, in int p1arg, in int p2arg, in int p3arg) 
@@ -163,7 +165,7 @@ void main()
     // TODO: This plane convention seems to be opposite to VolumeMipMaterial
     vec4 zNearPlaneInCamera = vec4(0, 0, -1.0, -zNear);
     // http://www.cs.brandeis.edu/~cs155/Lecture_07_6.pdf
-    mat4 planeTransform = inverse(texCoordFromCamera);
+    planeTransform = inverse(texCoordFromCamera);
     zNearPlaneInTexCoord = zNearPlaneInCamera * planeTransform; // look it up...
     vec4 zFarPlaneInCamera = vec4(0, 0, 1.0, zFar);
     zFarPlaneInTexCoord = zFarPlaneInCamera * planeTransform; 
