@@ -219,7 +219,7 @@ public class ModelManagerTmModelAdapter implements TmModelAdapter {
                 } else {
                     ex.printStackTrace();
                     log.info("SaveNeuronRunnable error message (info): " + ex.getMessage());
-                    log.error("SaveNeuronRunnable error message (error): " + ex.getMessage());
+                    log.error("SaveNeuronRunnable error message (error): " + ex.getMessage(), ex);
                     StackTraceElement[] stackTraceElements=ex.getStackTrace();
                     for (StackTraceElement stackTraceElement : stackTraceElements) {
                         log.info("SaveNeuronRunnable STACK TRACE ELEMENT="+stackTraceElement.toString());
