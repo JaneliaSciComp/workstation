@@ -55,6 +55,9 @@ public class ShowingHook implements Runnable {
         //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
         ReportRunner rptRunner = new ReportRunner(sources, discriminators);
 
+        log.info("Showing main window");
+        frame.setVisible(true);
+        
         if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
             // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
             log.info("Window is maximized. Resizing to make sure it doesn't cover Windows toolbar.");
@@ -65,8 +68,9 @@ public class ShowingHook implements Runnable {
         }
         else {
             Dimension currSize = frame.getSize();
-            if (currSize.width==0 || currSize.height==0) {
-                log.info("Window is zero-sized. Resetting to 80% of screen size.");
+            log.info("Not maximized. currSize="+currSize);
+            if (currSize.width<20 || currSize.height<20) {
+                log.info("Window is too small. Resetting to 80% of screen size.");
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 double width = screenSize.getWidth();
                 double height = screenSize.getHeight();
