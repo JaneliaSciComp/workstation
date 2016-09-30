@@ -122,15 +122,20 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
         }
         
+        Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
+        
         TmWorkspace workspace = new TmWorkspace();
         workspace.setOwnerKey(SessionMgr.getSubjectKey());
         workspace.setName(name);
-        workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
+        workspace.setSampleRef(sampleRef);
         workspace = save(workspace);
         
         // Server should have put the workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
         TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
         model.invalidate(folder);
+        
+        // Also invalidate the sample, so that the Explorer tree can be updated 
+        model.invalidate(sample);
         
         return workspace;
     }

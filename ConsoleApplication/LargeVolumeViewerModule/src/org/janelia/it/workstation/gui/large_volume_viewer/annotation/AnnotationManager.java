@@ -11,14 +11,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import org.janelia.console.viewerapi.model.ImageColorModel;
@@ -45,6 +41,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDom
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
@@ -261,53 +258,36 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void onVolumeLoaded() {
 
-        if (initialObject == null) {
-            // this is a request to clear the workspace
-            SimpleWorker closer = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
+        final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
+        SimpleWorker loader = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                if (initialObject == null) {
+                    // this is a request to clear the workspace
                     annotationModel.loadWorkspace(null);
                 }
-
-                @Override
-                protected void hadSuccess() {
-                    // sends its own signals
+                else if (initialObject instanceof TmSample) {
+                    activityLog.setTileFormat(getTileFormat(), initialObject.getId());
+                    annotationModel.loadSample((TmSample)initialObject);
                 }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            closer.execute();
-
-        }
-        else if (initialObject instanceof TmSample) {
-            // if it's a bare sample, we don't have anything to do
-            activityLog.setTileFormat(getTileFormat(), initialObject.getId());
-        }
-        else if (initialObject instanceof TmWorkspace) {
-            final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
-            SimpleWorker loader = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
+                else if (initialObject instanceof TmWorkspace) {
                     annotationModel.loadWorkspace((TmWorkspace)initialObject);
                     activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
                 }
+            }
 
-                @Override
-                protected void hadSuccess() {
-                    // no hadSuccess(); signals will be emitted in the loadWorkspace() call
-                }
+            @Override
+            protected void hadSuccess() {
+                // no hadSuccess(); signals will be emitted in the loadWorkspace() call
+            }
 
-                @Override
-                protected void hadError(Throwable error) {
-                    progress.finish();
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            loader.execute();
-        }
+            @Override
+            protected void hadError(Throwable error) {
+                progress.finish();
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        loader.execute();
 
         // (eventually) update state to saved state (selection, visibility, etc);
         //  actually, although it should happen at about the time this method is called,
@@ -1200,37 +1180,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
         }
 
-        // get a name for the new workspace and validate (are there any rules for entity names?)
-        String[] options = {"Set name"};
-        JPanel newWorkspaceRenamePanel = new JPanel();
-        JLabel newWorkspaceRenameLabel = new JLabel("Workspace name: ");
-        JTextField newWorkspaceRenameField = new JTextField("new workspace", 30);
-        newWorkspaceRenamePanel.add(newWorkspaceRenameLabel);
-        newWorkspaceRenamePanel.add(newWorkspaceRenameField);
-        int selectedOption = JOptionPane.showOptionDialog(null,
-                newWorkspaceRenamePanel,
-                "Rename new workspace",
-                JOptionPane.OK_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options ,
-                options[0]);
-        String workspaceName = newWorkspaceRenameField.getText();
-
-        // this is all the validation we have right now...
-        if ((workspaceName == null) || (workspaceName.length() == 0)) {
-            workspaceName = "new workspace";
+        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
+        final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        
+        if (workspaceName==null) {
+            log.info("Aborting workspace creation: no valid name was provided by the user");
+            return;
         }
 
         // create it in another thread
         // there is no doubt a better way to get these parameters in:
-        final String name = workspaceName;
         final Long ID = sampleID;
         SimpleWorker creator = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 // now we can create the workspace
-                annotationModel.createWorkspace(ID, name);
+                annotationModel.createWorkspace(ID, workspaceName);
 
                 // and if there was a previously existing workspace, we'll save the
                 //  existing color model (which isn't cleared by creating a new

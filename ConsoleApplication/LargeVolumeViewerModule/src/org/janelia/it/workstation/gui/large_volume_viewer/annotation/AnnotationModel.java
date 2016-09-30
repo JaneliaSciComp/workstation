@@ -198,6 +198,10 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public synchronized void loadSample(final TmSample sample) throws Exception {
+        currentSample = sample;
+    }
+    
     public synchronized void loadWorkspace(final TmWorkspace workspace) throws Exception {
         if (workspace != null) {
             currentWorkspace = workspace;
