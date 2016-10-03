@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -36,6 +38,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAll
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
@@ -45,6 +49,8 @@ import org.janelia.it.workstation.gui.util.Icons;
  */
 public class AnnotationPanel extends JPanel
 {
+    private static final Logger log = LoggerFactory.getLogger(AnnotationPanel.class);
+    
     public static final int SUBPANEL_STD_HEIGHT = 150;
     
     // things we get data from
@@ -69,8 +75,8 @@ public class AnnotationPanel extends JPanel
     private static final boolean defaultAutomaticRefinement = false;
 
     // ----- actions
-    private final Action createNeuronAction = new NeuronCreateAction();
-    private final Action deleteNeuronAction = new NeuronDeleteAction();
+    private final NeuronCreateAction createNeuronAction = new NeuronCreateAction();
+    private final NeuronDeleteAction deleteNeuronAction = new NeuronDeleteAction();
 
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
@@ -140,6 +146,12 @@ public class AnnotationPanel extends JPanel
         showAllNeuronsAction.setEnabled(enabled);
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
+        // These actions override isEnabled, but they still need to be set in order to fire the right updates
+        log.info("Set workspace edits enabled to "+enabled);
+        createNeuronAction.fireEnabledChangeEvent();
+        deleteNeuronAction.fireEnabledChangeEvent();
+        
+        updateUI();
     }
     
     @Override
@@ -337,6 +349,12 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.NAME, "+");
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
+        createNeuronAction.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                log.info("Property change: "+evt);
+            }
+        });
 
         JButton deleteNeuronButton = new JButton("-");
         neuronButtonsPanel.add(deleteNeuronButton);

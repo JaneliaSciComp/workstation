@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
-
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.openide.awt.ActionID;
@@ -22,7 +20,7 @@ import org.openide.awt.ActionRegistration;
 @ActionReferences({
     @ActionReference(path = "Shortcuts", name = "OS-Delete")
 })
-public class NeuronDeleteAction extends AbstractAction {
+public class NeuronDeleteAction extends EditAction {
 
     public NeuronDeleteAction() {
         super("Delete");
@@ -33,11 +31,4 @@ public class NeuronDeleteAction extends AbstractAction {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         annotationMgr.deleteCurrentNeuron();
     }
-
-    @Override
-    public boolean isEnabled() {
-        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
-    }
-
-    
 }

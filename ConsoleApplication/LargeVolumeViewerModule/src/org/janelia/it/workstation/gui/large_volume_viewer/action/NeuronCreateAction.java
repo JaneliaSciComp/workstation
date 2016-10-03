@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
-
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.openide.awt.ActionID;
@@ -22,8 +20,8 @@ import org.openide.awt.ActionRegistration;
 @ActionReferences({
     @ActionReference(path = "Shortcuts", name = "OS-Insert")
 })
-public class NeuronCreateAction extends AbstractAction {
-
+public class NeuronCreateAction extends EditAction {
+    
     public NeuronCreateAction() {
         super("Create neuron");
     }
@@ -32,10 +30,5 @@ public class NeuronCreateAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         annotationMgr.createNeuron();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
 }

@@ -23,7 +23,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -50,7 +49,7 @@ import org.slf4j.LoggerFactory;
 @ActionReferences({
     @ActionReference(path = "Shortcuts", name = "OS-T")
 })
-public class NeuronTagsAction extends AbstractAction {
+public class NeuronTagsAction extends EditAction {
 
     private static final Logger logger = LoggerFactory.getLogger(NeuronTagsAction.class);
 
@@ -63,11 +62,6 @@ public class NeuronTagsAction extends AbstractAction {
 
     public NeuronTagsAction() {
         super("Edit neuron tags...");
-    }
-    
-    @Override
-    public boolean isEnabled() {
-        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
 
     @Override

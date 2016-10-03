@@ -2,8 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
 
-import javax.swing.AbstractAction;
-
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.openide.awt.ActionID;
@@ -22,7 +20,7 @@ import org.openide.awt.ActionRegistration;
 @ActionReferences({
     @ActionReference(path = "Shortcuts", name = "OS-V")
 })
-public class NeuronToggleAction extends AbstractAction {
+public class NeuronToggleAction extends EditAction {
 
     public NeuronToggleAction() {
         super("Toggle neuron visibility");
@@ -32,10 +30,5 @@ public class NeuronToggleAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         annotationMgr.toggleSelectedNeurons();
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return LargeVolumeViewerTopComponent.getInstance().editsAllowed();
     }
 }
