@@ -49,7 +49,7 @@ public class WorkspaceInformationAction extends AbstractAction {
 
             JOptionPane.showConfirmDialog(null,
                 scrollPane,
-                "Info",
+                "Workspace information",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.INFORMATION_MESSAGE,
                 null);
@@ -61,7 +61,7 @@ class InfoTableModel extends AbstractTableModel {
 
     private  AnnotationModel annotationModel;
 
-    private String[] columnNames = {"Name", "# points", "# branches"};
+    private String[] columnNames = {"Neuron name", "# points", "# branches"};
 
     private ArrayList<TmNeuron> neurons = new ArrayList<>();
 
