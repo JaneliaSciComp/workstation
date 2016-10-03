@@ -251,15 +251,13 @@ implements MouseMode, KeyListener
 			dragAnchor = null;
 			dragStart = null;
 		}
-		// Check for click because Swing mouseClicked() event is stupid.
-		System.out.println("pressPoint: "+pressPoint);
-		if (pressPoint != null) {
-			double clickDistance = event.getPoint().distance(pressPoint);
-	        System.out.println("released at distance: "+clickDistance);
-			//if (clickDistance < 3) {
-				onMouseActuallyClicked(event);
-			//}
-		}
+        // Check for click because Swing mouseClicked() event is stupid.
+        if (pressPoint != null) {
+            double clickDistance = event.getPoint().distance(pressPoint);
+            if (clickDistance < 3) {
+                onMouseActuallyClicked(event);
+            }
+        }
 	}
 	
 	public void setActor(SkeletonActor actor) {
