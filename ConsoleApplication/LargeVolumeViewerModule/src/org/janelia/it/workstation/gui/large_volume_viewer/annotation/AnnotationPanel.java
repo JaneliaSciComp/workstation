@@ -147,7 +147,6 @@ public class AnnotationPanel extends JPanel
         hideAllNeuronsAction.setEnabled(enabled);
         sortSubmenu.setEnabled(enabled);
         // These actions override isEnabled, but they still need to be set in order to fire the right updates
-        log.info("Set workspace edits enabled to "+enabled);
         createNeuronAction.fireEnabledChangeEvent();
         deleteNeuronAction.fireEnabledChangeEvent();
         
@@ -349,12 +348,6 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.NAME, "+");
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
-        createNeuronAction.addPropertyChangeListener(new PropertyChangeListener() {
-            @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                log.info("Property change: "+evt);
-            }
-        });
 
         JButton deleteNeuronButton = new JButton("-");
         neuronButtonsPanel.add(deleteNeuronButton);
