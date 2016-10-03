@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.regex.Matcher;
@@ -12,6 +13,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -22,8 +24,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -99,7 +100,8 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         
         sampleDateField = new JTextField();
         attrPanel.add(sampleDateField,"width 50:100:1000, grow");
-        sampleDateField.setText(guessSampleDate(sample.getName()));
+        String sampleDate = guessSampleDate(sample.getName());
+        sampleDateField.setText(sampleDate);
 
         neuronCodeField = new JTextField();
         attrPanel.add(neuronCodeField,"width 100:200:1000, grow");
@@ -133,7 +135,17 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         attrPanel.add(nameField,"span 4, grow");
         
         ActivityLogHelper.logUserAction("EditWorkspaceNameDialog.showForSample");
-        packAndShow();
+        
+        pack();
+        setLocationRelativeTo(getParent());
+        
+        if (!StringUtils.isBlank(sampleDate)) {
+            // We already guessed the sample date, so move the focus to the neuron code
+            neuronCodeField.requestFocusInWindow();
+        }
+        
+        setVisible(true);
+        
         return save?name:null;
     }
     
@@ -170,18 +182,16 @@ public class EditWorkspaceNameDialog extends ModalDialog {
             String userInitials = userInitialsField.getText().trim();
             String suffix = suffixField.getText().trim();
             
-            AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        
             if (StringUtils.isEmpty(sampleDate)) {
-                annotationMgr.presentError("Sample date cannot be empty", "Missing input data");
+                presentError("Sample date cannot be empty", "Missing input data");
             }
             
             if (StringUtils.isEmpty(neuronCode)) {
-                annotationMgr.presentError("Neuron code cannot be empty", "Missing input data");
+                presentError("Neuron code cannot be empty", "Missing input data");
             }
             
             if (StringUtils.isEmpty(userInitials)) {
-                annotationMgr.presentError("User initials cannot be empty", "Missing input data");
+                presentError("User initials cannot be empty", "Missing input data");
             }
             
             StringBuilder sb = new StringBuilder();
@@ -198,5 +208,13 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         }
         
         setVisible(false);
+    }
+    
+    private void presentError(String message, String title) throws HeadlessException {
+        JOptionPane.showMessageDialog(
+                SessionMgr.getMainFrame(),
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE);
     }
 }

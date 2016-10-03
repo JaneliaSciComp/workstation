@@ -12,6 +12,7 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -26,6 +27,7 @@ import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
@@ -57,7 +59,15 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
             
             @Override
             protected void doStuff() throws Exception {
-                // Simple dialog: just enter the path.  Should be a server-known path.
+
+                EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
+                final String workspaceName = dialog.showForSample(sample);
+                
+                if (workspaceName==null) {
+                    log.info("Aborting workspace creation: no valid name was provided by the user");
+                    return;
+                }
+                                
                 final JDialog inputDialog = new JDialog(mainFrame, true);
                 final JTextField pathTextField = new JTextField();
                 final JLabel errorLabel = new JLabel("   ");
@@ -66,6 +76,9 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                 pathTextField.setToolTipText("Backslashes will be converted to /.");
                 final JLabel workspaceNameLabel = new JLabel("Workspace Name");
                 final JTextField workspaceNameTextField = new JTextField();
+                workspaceNameTextField.setText(workspaceName);
+                workspaceNameTextField.setEditable(false);
+                workspaceNameTextField.setFocusable(false);
                 inputDialog.setTitle("SWC Load-to-Workspace Parameters");
                 inputDialog.setLayout(new GridLayout(6, 1));
                 inputDialog.add(workspaceNameLabel);
