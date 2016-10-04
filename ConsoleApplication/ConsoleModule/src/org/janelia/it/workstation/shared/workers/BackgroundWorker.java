@@ -2,6 +2,7 @@ package org.janelia.it.workstation.shared.workers;
 
 import java.beans.PropertyChangeEvent;
 import java.util.concurrent.Callable;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent;
@@ -85,7 +86,12 @@ public abstract class BackgroundWorker extends SimpleWorker {
      */
     public void executeWithEvents() {
         execute();
-        ProgressTopComponent.ensureActive();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ProgressTopComponent.ensureActive();
+            }
+        });
         ModelMgr.getModelMgr().postOnEventBus(new WorkerStartedEvent(this));
     }
 }
