@@ -53,12 +53,14 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             progressHandle.start(TOTAL_WORKUNITS);            
             progressHandle.progress(0);
             progressHandle.setDisplayName("Loading neuron data...");
+            
+            StopWatch stopWatch = new StopWatch();
             List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
-
+            log.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
+            
             progressHandle.progress(1);
 
             // Await completion.
-            log.info("Neuron exchange complete.");
             progressHandle.setDisplayName("Populating viewer...");
             progressHandle.progress(3);
 

@@ -7,10 +7,10 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +46,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton.AnchorSeed;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronColorDialog;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.gui.util.DesktopApi;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
@@ -1596,21 +1597,30 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         }
     }
 
-    public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
-        final List<Long> neuronIDList = new ArrayList<>();
+    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final List<TmNeuronMetadata> neurons) {
         int nannotations = 0;
-        for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
+        for (TmNeuronMetadata neuron : neurons) {
             nannotations += neuron.getGeoAnnotationMap().size();
-            neuronIDList.add(neuron.getId());
         }
         if (nannotations == 0) {
-            presentError("No points in any neuron!", "Export error");
+            if (neurons.size()==1) {
+                presentError("Neuron has no points!", "Export error");
+            }
+            else {
+                presentError("No points in any neuron!", "Export error");
+            }
         }
 
-        SimpleWorker saver = new SimpleWorker() {
+        BackgroundWorker saver = new BackgroundWorker() {
+            
+            @Override
+            public String getName() {
+                return "Exporting SWC File";
+            }
+            
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, neuronIDList, downsampleModulo);
+                annotationModel.exportSWCData(swcFile, downsampleModulo, neurons, this);
             }
 
             @Override
@@ -1622,37 +1632,25 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
             }
-        };
-        saver.execute();
-    }
-
-    public void exportCurrentNeuronAsSWC(final File swcFile, final int downsampleModulo) {
-        if (annotationModel.getCurrentNeuron().getGeoAnnotationMap().size() == 0) {
-            presentError("Neuron has no points!", "Export error");
-        }
-
-        final Long neuronID = annotationModel.getCurrentNeuron().getId();
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, Arrays.asList(neuronID), downsampleModulo);
-            }
 
             @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+            public Callable<Void> getSuccessCallback() {
+                return new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        DesktopApi.browse(swcFile.getParentFile());
+                        return null;
+                    }
+                };
             }
         };
-        saver.execute();
+        saver.executeWithEvents();
     }
 
-    public void importSWCFile(final List<File> swcFiles) {
+    public void importSWCFiles(final List<File> swcFiles) {
        
+        if (swcFiles.isEmpty()) return;
+        
         // note for the future: at this point, we could pop another dialog with:
         //  (a) info: file has xxx nodes; continue?
         //  (b) option to downsample
@@ -1666,34 +1664,36 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             
             @Override
             public String getName() {
-                return "Importing SWC File";
+                return swcFiles.size()>1?"Importing SWC Files":"Importing SWC File";
             }
 
             @Override
             protected void doStuff() throws Exception {
+                int imported = 0;
                 int index = 0;
                 int total = swcFiles.size();
+                TmWorkspace workspace = annotationModel.getCurrentWorkspace();
                 for (File swcFile : swcFiles) {
                     setStatus(swcFile.getName());
                     if (swcFile.exists()) {
-                        neuron = annotationModel.importBulkSWCData(swcFile, null);
-                        activityLog.logImportSWCFile(annotationModel.getCurrentWorkspace().getId(), swcFile.getName());
+                        neuron = annotationModel.importBulkSWCData(swcFile, workspace, null);
+                        activityLog.logImportSWCFile(workspace.getId(), swcFile.getName());
+                        imported++;
                     }
                     setProgress(index++, total);
                 }
+                setStatus("Successfully imported "+imported+" files");
             }
 
             @Override
             protected void hadSuccess() {
                 annotationModel.postWorkspaceUpdate(neuron);
-
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
             }
-
         };
         importer.executeWithEvents();
     }

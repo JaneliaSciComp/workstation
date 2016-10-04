@@ -32,6 +32,7 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.support.NotCacheable;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.solr.SolrJsonResults;
@@ -119,8 +120,17 @@ public class DomainModel {
         }).build();
         this.workspaceCache = new LinkedHashMap<>();
         this.ontologyCache = new LinkedHashMap<>();
-   }
+    }
 
+    /**
+     * Check if the given object may be cached at all.
+     * @param domainObject
+     * @return
+     */
+    private boolean isCacheable(DomainObject domainObject) {
+        return domainObject.getClass().getAnnotation(NotCacheable.class)==null;
+    }
+    
     /**
      * Ensure the given object is in the cache, or generate appropriate warnings/exceptions.
      *
@@ -190,6 +200,10 @@ public class DomainModel {
         synchronized (this) {
             for(T domainObject : domainObjects) {
                 if (domainObject==null) continue;
+                if (!isCacheable(domainObject)) {
+                    log.warn("Cannot cache domain object annotated with @NotCacheable: {}", domainObject);
+                    continue;
+                }
                 Reference id = Reference.createFor(domainObject);
                 T canonicalObject = (T)objectCache.getIfPresent(id);
                 if (canonicalObject != null) {
@@ -360,6 +374,9 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
+        if (!isCacheable(domainObject)) {
+            return domainObject;
+        }
         return (T)getDomainObject(Reference.createFor(domainObject));
     }
 
@@ -533,15 +550,14 @@ public class DomainModel {
         return domainFacade.getDomainObjects(reverseReference);
     }
 
-    public List<Annotation> getAnnotations(Reference reference) throws Exception {
-        // TODO: cache these?
-        return ontologyFacade.getAnnotations(Arrays.asList(reference));
-    }
-
     public List<Annotation> getAnnotations(DomainObject domainObject) throws Exception {
         return getAnnotations(Reference.createFor(domainObject));
     }
     
+    public List<Annotation> getAnnotations(Reference reference) throws Exception {
+        return getAnnotations(Arrays.asList(reference));
+    }
+
     public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception {
         if (references==null) return new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
@@ -584,7 +600,7 @@ public class DomainModel {
         if (treeNode==null && createIfNecessary) {
             treeNode = new TreeNode();
             treeNode.setName(folderName);
-            create(treeNode);
+            treeNode = create(treeNode);
             addChild(workspace, treeNode);
         }
         return treeNode;

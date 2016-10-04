@@ -119,7 +119,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
         }
 
         if (event.isUserDriven()) {
-            log.info("domainObjectSelected({})", Reference.createFor(domainObject));
+            log.info("domainObjectSelected({})", domainObject);
             detailsPanel.loadDomainObject(domainObject);
         }
     }

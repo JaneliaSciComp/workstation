@@ -57,7 +57,7 @@ public class ImportSWCAction extends AbstractAction {
         int returnValue = chooser.showOpenDialog(annotationPanel);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             List<File> swcFiles = getFilesList(chooser.getSelectedFile());
-            annotationManager.importSWCFile(swcFiles);
+            annotationManager.importSWCFiles(swcFiles);
         }
     }
 

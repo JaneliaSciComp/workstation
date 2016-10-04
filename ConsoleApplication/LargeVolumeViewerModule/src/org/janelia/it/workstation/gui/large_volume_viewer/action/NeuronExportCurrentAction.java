@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.SwcExport;
@@ -35,14 +37,15 @@ public class NeuronExportCurrentAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
-        if (annotationModel.getCurrentNeuron() == null) {
+        TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
+        if (currentNeuron == null) {
             annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
         }
         else {
             SwcExport export = new SwcExport();
-            ExportParameters params = export.getExportParameters(annotationModel.getCurrentNeuron().getName());
+            ExportParameters params = export.getExportParameters(currentNeuron.getName());
             if ( params != null ) {
-                annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
+                annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(), Arrays.asList(currentNeuron));
             }
         }
     }

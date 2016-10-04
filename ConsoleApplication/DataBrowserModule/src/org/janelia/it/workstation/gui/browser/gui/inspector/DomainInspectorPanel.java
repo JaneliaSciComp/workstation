@@ -633,10 +633,12 @@ public class DomainInspectorPanel extends JPanel {
                 loadSubjects();
                 loadAttributes();
                 loadAnnotations();
-            } else {
+            }
+            else {
                 showNothing();
             }
-        } catch (Exception ex) {
+        } 
+        catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
     }

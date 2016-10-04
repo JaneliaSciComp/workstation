@@ -38,7 +38,7 @@ public class NeuronExportAllAction extends AbstractAction {
         SwcExport export = new SwcExport();
         ExportParameters params = export.getExportParameters(annotationModel.getCurrentWorkspace().getName());
         if ( params != null ) {
-            annotationMgr.exportAllNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
+            annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(), annotationModel.getNeuronList());
         }
     }
 }

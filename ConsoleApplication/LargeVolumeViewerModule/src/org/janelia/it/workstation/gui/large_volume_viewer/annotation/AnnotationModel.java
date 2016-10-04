@@ -15,7 +15,6 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -33,7 +32,8 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
-import org.janelia.it.workstation.gui.browser.events.model.DomainObjectCreateEvent;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
@@ -46,6 +46,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnota
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +55,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-import com.google.common.eventbus.Subscribe;
 
 import Jama.Matrix;
 
-public class AnnotationModel
+public class AnnotationModel implements DomainObjectSelectionSupport
 /*
 
 this class is responsible for handling requests from the AnnotationManager.  those
@@ -114,6 +114,8 @@ called from a  SimpleWorker thread.
     private final ActivityLogHelper activityLog = ActivityLogHelper.getInstance();
     private static final Logger log = LoggerFactory.getLogger(AnnotationModel.class);
 
+    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    
 
     // ----- constants
     // how far away to try to put split anchors (pixels)
@@ -135,6 +137,11 @@ called from a  SimpleWorker thread.
         });
     }
 
+    @Override
+    public DomainObjectSelectionModel getSelectionModel() {
+        return selectionModel;
+    }
+    
     public List<TmNeuronMetadata> getNeuronList() {
         return neuronManager.getNeurons();
     }
@@ -1415,43 +1422,35 @@ called from a  SimpleWorker thread.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, List<Long> neuronIDList, int downsampleModulo) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, List<TmNeuronMetadata> neurons, BackgroundWorker worker) throws Exception {
 
-        // get fresh neuron objects from ID list
+        log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
+        worker.setStatus("Creating headers");
+        
         Map<Long,List<String>> neuronHeaders = new HashMap<>();
-        ArrayList<TmNeuronMetadata> neuronList = new ArrayList<>();
-        for (Long ID: neuronIDList) {
-            if (ID != null) {
-                TmNeuronMetadata foundNeuron = null;
-                for (TmNeuronMetadata neuron: getNeuronList()) {
-                    if (neuron.getId().equals(ID)) {
-                        foundNeuron = neuron;
-                        List<String> headers = neuronHeaders.get(ID);
-                        if (headers == null) {
-                            headers = new ArrayList<>();
-                            neuronHeaders.put(ID, headers);
-                        }
-                        NeuronStyle style = getNeuronStyle(neuron);
-                        float[] color = style.getColorAsFloatArray();
-                        headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
-                        if (neuronIDList.size() > 1) {
-                            // Allow user to pick name as name of file, if saving individual neuron.
-                            // Do not save the internal name.
-                            headers.add(String.format(NAME_FORMAT, neuron.getName()));
-                        }
-                    }
-                }
-                if (foundNeuron != null) {
-                    neuronList.add(foundNeuron);
-                }
+        for (TmNeuronMetadata neuron: neurons) {
+            List<String> headers = neuronHeaders.get(neuron.getId());
+            if (headers == null) {
+                headers = new ArrayList<>();
+                neuronHeaders.put(neuron.getId(), headers);
+            }
+            NeuronStyle style = getNeuronStyle(neuron);
+            float[] color = style.getColorAsFloatArray();
+            headers.add(String.format(COLOR_FORMAT, color[0], color[1], color[2]));
+            if (neurons.size() > 1) {
+                // Allow user to pick name as name of file, if saving individual neuron.
+                // Do not save the internal name.
+                headers.add(String.format(NAME_FORMAT, neuron.getName()));
             }
         }
+        
+        worker.setStatus("Creating headers");
 
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
-        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neuronList, neuronHeaders, downsampleModulo);
-        if (swcDatas != null  &&  !swcDatas.isEmpty()) {
+        List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neurons, neuronHeaders, downsampleModulo);
+        if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
                 if (swcDatas.size() == 1) {
@@ -1465,7 +1464,7 @@ called from a  SimpleWorker thread.
         }
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
-            SWCData swcData = swcDataConverter.fromAllTmNeuron(neuronList, downsampleModulo);
+            SWCData swcData = swcDataConverter.fromAllTmNeuron(neurons, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);
                 activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
@@ -1473,8 +1472,12 @@ called from a  SimpleWorker thread.
         }
     }
 
-    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, SimpleWorker worker) throws Exception {
+    // TODO: This method seems to be almost exactly the same as the one on the server-side (TiledMicroscopeDAO), except this one
+    // updates the SimpleWorker. These code bases should be factored in a common class in the Shared modules.
+    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, SimpleWorker worker) throws Exception {
 
+        log.info("Importing neuron from SWC file {}",swcFile);
+        
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
         if (!swcData.isValid()) {
@@ -1495,7 +1498,9 @@ called from a  SimpleWorker thread.
         if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
-        TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(getCurrentWorkspace(), neuronName);
+
+        // Must create the neuron up front, because we need the id when adding the linked geometric annotations below.
+        TmNeuronMetadata neuron = neuronManager.createTiledMicroscopeNeuron(tmWorkspace, neuronName);
 
         // Bulk update in play.
         // and as long as we're doing brute force, we can update progress
@@ -1531,11 +1536,11 @@ called from a  SimpleWorker thread.
             );
             
             annotations.put(node.getIndex(), unserializedAnnotation);
+            nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
+            
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {
                 worker.setProgress(node.getIndex(), totalLength);
             }
-
-            nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
         }
 
         // Fire off the bulk update.  The "un-serialized" or
@@ -1545,10 +1550,8 @@ called from a  SimpleWorker thread.
         // Set neuron color
         float[] colorArr = swcData.parseColorFloats();
         if (colorArr != null) {
-            NeuronStyle style = new NeuronStyle(
-                    new Color(colorArr[0], colorArr[1], colorArr[2]), true
-            );
-            ModelTranslation.updateNeuronStyle(style, neuron);
+            Color color = new Color(colorArr[0], colorArr[1], colorArr[2]);
+            neuron.setColor(color);
         }
         
         neuronManager.saveNeuronData(neuron);
@@ -1699,6 +1702,9 @@ called from a  SimpleWorker thread.
     private void fireNeuronSelected(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronSelected(neuron);
+        }
+        if (neuron!=null) {
+            selectionModel.select(neuron, true, true);
         }
     }
 
