@@ -1444,24 +1444,30 @@ called from a  SimpleWorker thread.
             }
         }
         
-        worker.setStatus("Creating headers");
+        worker.setStatus("Exporting neuron files");
 
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
         // First write one file per neuron.
         List<SWCData> swcDatas = swcDataConverter.fromTmNeuron(neurons, neuronHeaders, downsampleModulo);
+        int total = swcDatas.size()+1;
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
+                worker.setStatus("Exporting neuron file "+(i+1));
                 if (swcDatas.size() == 1) {
                     swcData.write(swcFile, -1);
                 }
                 else {
                     swcData.write(swcFile, i);
                 }
+                worker.setProgress(i, total);
                 i++;
             }
         }
+
+        worker.setStatus("Exporting combined file");
+        
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
             SWCData swcData = swcDataConverter.fromAllTmNeuron(neurons, downsampleModulo);
@@ -1470,6 +1476,9 @@ called from a  SimpleWorker thread.
                 activityLog.logExportSWCFile(getCurrentWorkspace().getId(), swcFile.getName());
             }
         }
+
+        worker.setProgress(total, total);
+        worker.setStatus("Done");
     }
 
     // TODO: This method seems to be almost exactly the same as the one on the server-side (TiledMicroscopeDAO), except this one
