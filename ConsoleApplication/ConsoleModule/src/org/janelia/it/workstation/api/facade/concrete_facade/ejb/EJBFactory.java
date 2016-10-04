@@ -63,8 +63,8 @@ public class EJBFactory {
     		pipelineServer = interactiveServer;
     	}
     	
-    	String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
-    	String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
+    	String interactiveServerUrl = "remote://"+interactiveServer+":1199";
+    	String pipelineServerUrl = "remote://"+pipelineServer+":1199";
     	
     	log.info("Using interactive server: "+interactiveServerUrl);
     	log.info("Using pipeline server: "+pipelineServerUrl);
