@@ -90,7 +90,7 @@ public final class ProgressTopComponent extends TopComponent {
     public static void ensureActive() {
         TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
         if (tc==null) {
-            log.info("Progress panel not found, creating...");
+            log.debug("Progress panel not found, creating...");
             String modeName = "rightSlidingSide";
             tc = new ProgressTopComponent();
             Mode mode = WindowManager.getDefault().findMode(modeName);
@@ -103,12 +103,12 @@ public final class ProgressTopComponent extends TopComponent {
             tc.open();
         }
         else {
-            log.info("Found progress panel");
+            log.debug("Found progress panel");
             if (!tc.isOpened()) {
                 tc.open();
             }
             if (!tc.isVisible()) {
-                log.info("Progress panel is not visible, making active");
+                log.debug("Progress panel is not visible, making active");
                 tc.requestVisible();
             }
         }
