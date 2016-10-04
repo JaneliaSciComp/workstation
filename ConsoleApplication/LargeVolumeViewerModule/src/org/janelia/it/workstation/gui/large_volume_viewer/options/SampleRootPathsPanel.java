@@ -69,7 +69,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
 
     void load() {
         try {
-            List<String> paths = TiledMicroscopeDomainMgr.getDomainMgr().getTmSamplePaths();
+            List<String> paths = TiledMicroscopeDomainMgr.getDomainMgr().getSamplePaths();
             log.info("Loaded sample paths: {}",paths);
             pathPanel.initItemsInList(paths);
         } 
@@ -82,7 +82,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
         try {
             List<String> paths = pathPanel.getItemsInList();
             log.info("Saving sample paths: {}",paths);
-            TiledMicroscopeDomainMgr.getDomainMgr().setTmSamplePaths(paths);
+            TiledMicroscopeDomainMgr.getDomainMgr().setSamplePaths(paths);
         } 
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);

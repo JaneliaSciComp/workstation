@@ -1609,6 +1609,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             else {
                 presentError("No points in any neuron!", "Export error");
             }
+            return;
         }
 
         BackgroundWorker saver = new BackgroundWorker() {

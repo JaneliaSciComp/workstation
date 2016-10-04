@@ -7,22 +7,32 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 
 import java.awt.BorderLayout;
 
-import javax.swing.JComponent;
 import javax.swing.JPopupMenu;
 import javax.swing.ToolTipManager;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -49,6 +59,11 @@ import org.openide.windows.WindowManager;
     HINT
 })
 public final class LargeVolumeViewerTopComponent extends TopComponent {
+
+    private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewerTopComponent.class);
+    
+    public static final String TC_VERSION = "1.0";
+    
     static {
         // So popup menu shows over GLCanvas
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
@@ -126,19 +141,69 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public boolean editsAllowed() {
         return getLvvv().hasQuadViewUi() && getLvvv().getQuadViewUi().getAnnotationMgr().editsAllowed();
     }
-    
+
     void writeProperties(java.util.Properties p) {
-        // better to version settings since initial version as advocated at
-        // http://wiki.apidesign.org/wiki/PropertyFiles
-        p.setProperty("version", "1.0");
-        // TODO store your settings
+        p.setProperty("version", TC_VERSION);
+        AnnotationManager annotationMgr = getAnnotationMgr();
+        if (annotationMgr!=null) {
+            DomainObject current = annotationMgr.getInitialObject();
+            if (current!=null) {
+                String objectRef = Reference.createFor(current).toString();
+                log.info("Writing state: {}",objectRef);
+                p.setProperty("objectRef", objectRef);
+            }
+            else {
+                p.remove("objectRef");
+            }
+        }
     }
 
     void readProperties(java.util.Properties p) {
-        String version = p.getProperty("version");
-        // TODO read your settings according to their version
-    }
 
+        String loadLastStr = NbPreferences.forModule(ApplicationPanel.class).get(ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
+        if (!Boolean.parseBoolean(loadLastStr)) {
+            return;
+        }
+        
+        String version = p.getProperty("version");
+        final String objectStrRef = p.getProperty("objectRef");
+        log.info("Reading state: {}",objectStrRef);
+        if (TC_VERSION.equals(version) && !StringUtils.isEmpty(objectStrRef)) {
+
+            SimpleWorker worker = new SimpleWorker() {
+                DomainObject domainObject = null;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    Reference ref = Reference.createFor(objectStrRef);
+                    TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                    if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getSample(ref.getTargetId());
+                    }
+                    else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
+                        domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
+                    }
+                    else {
+                        log.error("State object is unsupported by the LVV: "+ref);
+                    }
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    if (domainObject!=null) {
+                        openLargeVolumeViewer(domainObject);
+                    }
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+        }
+    }
+    
     protected void establishLookups() {
         LargeVolumeViewViewer lvvv = state.getLvvv();
         // Use Lookup to communicate sample location and camera position

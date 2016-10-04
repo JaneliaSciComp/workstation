@@ -37,7 +37,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
-                newSample = TiledMicroscopeDomainMgr.getDomainMgr().createTiledMicroscopeSample(name, pathToRenderFolder);
+                newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, pathToRenderFolder);
             }
             
             @Override

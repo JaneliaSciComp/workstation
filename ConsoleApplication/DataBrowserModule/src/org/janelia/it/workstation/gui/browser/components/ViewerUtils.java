@@ -34,72 +34,73 @@ public class ViewerUtils {
 
         log.info("Creating viewer: {}",manager.getViewerName());
 
-        T viewer;
+        T tc;
         try {
-            viewer = manager.getViewerClass().newInstance();
+            tc = manager.getViewerClass().newInstance();
         }
         catch (Exception e) {
             throw new IllegalStateException("Viewer instantiation failed",e);
         }
         
-        log.debug("Docking new instance of {} into {}",viewer.getName(),modeName);
+        log.debug("Docking new instance of {} into {}",tc.getName(),modeName);
 
         Mode mode = WindowManager.getDefault().findMode(modeName);
         if (mode!=null) {
-            mode.dockInto(viewer);
+            mode.dockInto(tc);
         }
         else {
             log.warn("No such mode found: "+modeName);
         }
         // Against all reason, dockInto may cause the component to close after docking. 
         // So, unintuitively, this open() has to happen at the end. Thanks, NetBeans.
-        viewer.open();
+        tc.open();
         
-        return viewer;
+        return tc;
     }
 
     public static <T extends TopComponent> T getViewer(ViewerManager<T> manager, final String modeName) {
 
-        T targetViewer = manager.getActiveViewer();
-        if (targetViewer==null || !targetViewer.isVisible() || !targetViewer.isOpened()) {
+        T tc = manager.getActiveViewer();
+        if (tc==null || !tc.isVisible() || !tc.isOpened()) {
             return null;
         }
         else {
             // TODO: this should probably also check to make sure the viewer is in the correct mode
             log.info("Getting viewer: {}",manager.getViewerName());
-            return targetViewer;
+            return tc;
         }
     }
     
+    @SuppressWarnings("unchecked")
     public static <T extends TopComponent> T provisionViewer(ViewerManager<T> manager, final String modeName) {
 
         log.info("Provisioning viewer: {}",manager.getViewerName());
         
-        T targetViewer = manager.getActiveViewer();
-        if (targetViewer==null) {
+        T tc = manager.getActiveViewer();
+        if (tc==null) {
             log.info("No active viewer, looking up TC by name: {}",manager.getViewerClass().getSimpleName());
-            targetViewer = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
-            if (targetViewer!=null) {
+            tc = (T)WindowManager.getDefault().findTopComponent(manager.getViewerClass().getSimpleName());
+            if (tc!=null) {
                 log.info("Found TC, activating");
-                manager.activate(targetViewer);
+                manager.activate(tc);
             }
         }
 
-        if (targetViewer==null) {
+        if (tc==null) {
             log.info("Active viewer not found, creating...");
-            targetViewer = createNewViewer(manager, modeName);
+            tc = createNewViewer(manager, modeName);
         }
         else {
             log.info("Found active viewer");
-            if (!targetViewer.isOpened()) {
-                targetViewer.open();
+            if (!tc.isOpened()) {
+                tc.open();
             }
-            if (!targetViewer.isVisible()) {
+            if (!tc.isVisible()) {
                 log.info("Viewer is not visible, making active");
-                targetViewer.requestActive();
+                tc.requestActive();
             }
         }
 
-        return targetViewer;
+        return tc;
     }
 }

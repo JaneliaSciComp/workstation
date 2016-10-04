@@ -519,7 +519,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     private void navigateNode(Node node) {
         if (node instanceof DomainObjectNode) {
             log.info("Selected node@{} -> {}",System.identityHashCode(node),node.getDisplayName());
-            selectionModel.select((DomainObjectNode)node, true, true);
+            selectionModel.select((DomainObjectNode<?>)node, true, true);
         }
     }
 

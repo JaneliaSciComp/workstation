@@ -42,20 +42,20 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private final TiledMicroscopeRestClient tmFacade;
+    private final TiledMicroscopeRestClient client;
     
     private TiledMicroscopeDomainMgr() {
-        tmFacade = new TiledMicroscopeRestClient();
+        client = new TiledMicroscopeRestClient();
     }
     
     private final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
-    public List<String> getTmSamplePaths() throws Exception {
-        return tmFacade.getTmSamplePaths();
+    public List<String> getSamplePaths() throws Exception {
+        return client.getTmSamplePaths();
     }
 
-    public void setTmSamplePaths(List<String> paths) throws Exception {
-        tmFacade.updateSamplePaths(paths);
+    public void setSamplePaths(List<String> paths) throws Exception {
+        client.updateSamplePaths(paths);
     }
     
     public TmSample getSample(Long sampleId) throws Exception {
@@ -72,7 +72,7 @@ public class TiledMicroscopeDomainMgr {
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
-    public TmSample createTiledMicroscopeSample(String name, String filepath) throws Exception {
+    public TmSample createSample(String name, String filepath) throws Exception {
         log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         TmSample sample = new TmSample();
         sample.setOwnerKey(SessionMgr.getSubjectKey());
@@ -91,7 +91,7 @@ public class TiledMicroscopeDomainMgr {
         log.debug("save({})",sample);
         TmSample canonicalObject;
         synchronized (this) {
-            canonicalObject = model.putOrUpdate(sample.getId()==null ? tmFacade.create(sample) : tmFacade.update(sample));
+            canonicalObject = model.putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
         }
         if (sample.getId()==null) {
             model.notifyDomainObjectCreated(canonicalObject);
@@ -104,18 +104,27 @@ public class TiledMicroscopeDomainMgr {
 
     public void remove(TmSample sample) throws Exception {
         log.debug("remove({})",sample);
-        tmFacade.remove(sample);
+        client.remove(sample);
         model.notifyDomainObjectRemoved(sample);
     }
 
-    public List<TmWorkspace> getTmWorkspaces(Long sampleId) throws Exception {
-        Collection<TmWorkspace> workspaces = tmFacade.getTmWorkspacesForSample(sampleId);
+    public List<TmWorkspace> getWorkspaces(Long sampleId) throws Exception {
+        Collection<TmWorkspace> workspaces = client.getTmWorkspacesForSample(sampleId);
         List<TmWorkspace> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(workspaces, false);
         Collections.sort(canonicalObjects, new DomainObjectComparator());
         return canonicalObjects;
     }
 
-    public TmWorkspace createTiledMicroscopeWorkspace(Long sampleId, String name) throws Exception {
+    public TmWorkspace getWorkspace(Long workspaceId) throws Exception {
+        log.debug("getWorkspace(workspaceId={})",workspaceId);
+        TmWorkspace workspace = model.getDomainObject(TmWorkspace.class, workspaceId);
+        if (workspace==null) {
+            throw new Exception("Workspace with id="+workspaceId+" does not exist");
+        }
+        return workspace;
+    }
+    
+    public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         log.debug("createTiledMicroscopeWorkspace(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
         if (sample==null) {
@@ -144,7 +153,7 @@ public class TiledMicroscopeDomainMgr {
         log.debug("save({})", workspace);
         TmWorkspace canonicalObject;
         synchronized (this) {
-            canonicalObject = model.putOrUpdate(workspace.getId()==null ? tmFacade.create(workspace) : tmFacade.update(workspace));
+            canonicalObject = model.putOrUpdate(workspace.getId()==null ? client.create(workspace) : client.update(workspace));
         }
         if (workspace.getId()==null) {
             model.notifyDomainObjectCreated(canonicalObject);
@@ -157,7 +166,7 @@ public class TiledMicroscopeDomainMgr {
 
     public void remove(TmWorkspace workspace) throws Exception {
         log.debug("remove({})", workspace);
-        tmFacade.remove(workspace);
+        client.remove(workspace);
         model.notifyDomainObjectRemoved(workspace);
     }
     
@@ -165,7 +174,7 @@ public class TiledMicroscopeDomainMgr {
         log.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         TmProtobufExchanger exchanger = new TmProtobufExchanger();
         List<TmNeuronMetadata> neurons = new ArrayList<>();
-        for(Pair<TmNeuronMetadata,InputStream> pair : tmFacade.getWorkspaceNeuronPairs(workspaceId)) {
+        for(Pair<TmNeuronMetadata,InputStream> pair : client.getWorkspaceNeuronPairs(workspaceId)) {
             TmNeuronMetadata neuronMetadata = pair.getLeft();
             exchanger.deserializeNeuron(pair.getRight(), neuronMetadata);
             log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
@@ -180,11 +189,11 @@ public class TiledMicroscopeDomainMgr {
         log.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = tmFacade.createMetadata(neuronMetadata);
+            savedMetadata = client.createMetadata(neuronMetadata);
             model.notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = tmFacade.updateMetadata(neuronMetadata);
+            savedMetadata = client.updateMetadata(neuronMetadata);
             model.notifyDomainObjectChanged(savedMetadata);
         }
         return savedMetadata;
@@ -197,7 +206,7 @@ public class TiledMicroscopeDomainMgr {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
             }
         }
-        List<TmNeuronMetadata> updatedMetadata = tmFacade.updateMetadata(neuronList);
+        List<TmNeuronMetadata> updatedMetadata = client.updateMetadata(neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
             model.notifyDomainObjectChanged(tmNeuronMetadata);
         }
@@ -210,11 +219,11 @@ public class TiledMicroscopeDomainMgr {
         InputStream protobufStream = new ByteArrayInputStream(exchanger.serializeNeuron(neuronMetadata));
         TmNeuronMetadata savedMetadata;
         if (neuronMetadata.getId()==null) {
-            savedMetadata = tmFacade.create(neuronMetadata, protobufStream);
+            savedMetadata = client.create(neuronMetadata, protobufStream);
             model.notifyDomainObjectCreated(savedMetadata);
         }
         else {
-            savedMetadata = tmFacade.update(neuronMetadata, protobufStream);
+            savedMetadata = client.update(neuronMetadata, protobufStream);
             model.notifyDomainObjectChanged(savedMetadata);
         }
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
@@ -224,19 +233,19 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate) throws Exception {
-        tmFacade.updateNeuronStyles(bulkNeuronStyleUpdate);
+        client.updateNeuronStyles(bulkNeuronStyleUpdate);
     }
     
     public void remove(TmNeuronMetadata tmNeuron) throws Exception {
         log.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
-        tmFacade.remove(neuronMetadata);
+        client.remove(neuronMetadata);
         model.notifyDomainObjectRemoved(neuronMetadata);
     }
 
-    public void bulkEditTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
+    public void bulkEditNeuronTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         log.debug("bulkEditTags({})", neurons);
-        tmFacade.changeTags(neurons, tags, tagState);
+        client.changeTags(neurons, tags, tagState);
     }
 }

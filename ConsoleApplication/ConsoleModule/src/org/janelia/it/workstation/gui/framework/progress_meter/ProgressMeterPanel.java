@@ -21,7 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 /**
  * A progress meter for all background worker tasks.
@@ -179,21 +181,10 @@ public class ProgressMeterPanel extends JPanel {
         });
     }
         
-    private void updateMenuLabel(boolean showProgress) {
-        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
-        if (tc!=null) {
-            tc.open();
-            if (showProgress) {
-                tc.requestVisible();
-            }
-        }
-    }
-        
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
-        log.debug("Worker started: {}",e.getWorker().getName());
+        log.info("Worker started: {}",e.getWorker().getName());
         addWorker(e.getWorker());
-        updateMenuLabel(true);
     }
 
     @Subscribe
@@ -202,7 +193,6 @@ public class ProgressMeterPanel extends JPanel {
         if (workerPanel!=null) {
             log.debug("Worker changed: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
             workerPanel.update();
-            updateMenuLabel(false);
         }
     }
 
@@ -212,7 +202,6 @@ public class ProgressMeterPanel extends JPanel {
         if (workerPanel!=null) {
             log.debug("Worker ended: {}",e.getWorker().getName());
             workerPanel.update();
-            updateMenuLabel(false);
         }
     }
 

@@ -7,6 +7,7 @@ import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerStartedEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.progress_meter.ProgressTopComponent;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 
 /**
@@ -84,6 +85,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
      */
     public void executeWithEvents() {
         execute();
+        ProgressTopComponent.ensureActive();
         ModelMgr.getModelMgr().postOnEventBus(new WorkerStartedEvent(this));
     }
 }

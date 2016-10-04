@@ -503,7 +503,7 @@ called from a  SimpleWorker thread.
      * @throws Exception
      */
     public synchronized void createWorkspace(Long sampleId, String name) throws Exception {
-        TmWorkspace workspace = tmDomainMgr.createTiledMicroscopeWorkspace(sampleId, name);
+        TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
         activityLog.logCreateWorkspace(workspace.getId());
         loadWorkspace(workspace);
     }
@@ -1605,7 +1605,7 @@ called from a  SimpleWorker thread.
     }
 
     public void addNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
-        tmDomainMgr.bulkEditTags(neuronList, Arrays.asList(tag), true);
+        tmDomainMgr.bulkEditNeuronTags(neuronList, Arrays.asList(tag), true);
         for (TmNeuronMetadata neuron: neuronList) {
             currentTagMap.addTag(tag, neuron);
             neuron.getTags().add(tag);
@@ -1618,7 +1618,7 @@ called from a  SimpleWorker thread.
     }
 
     public void removeNeuronTag(String tag, List<TmNeuronMetadata> neuronList) throws Exception {
-        tmDomainMgr.bulkEditTags(neuronList, Arrays.asList(tag), false);
+        tmDomainMgr.bulkEditNeuronTags(neuronList, Arrays.asList(tag), false);
         for (TmNeuronMetadata neuron: neuronList) {
             currentTagMap.removeTag(tag, neuron);
             neuron.getTags().remove(tag);
@@ -1627,7 +1627,7 @@ called from a  SimpleWorker thread.
     }
 
     public void clearNeuronTags(TmNeuronMetadata neuron) throws Exception {
-        tmDomainMgr.bulkEditTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
+        tmDomainMgr.bulkEditNeuronTags(Arrays.asList(neuron), new ArrayList<>(neuron.getTags()), false);
         currentTagMap.clearTags(neuron);
         neuron.getTags().clear();
         fireNeuronTagsChanged(Arrays.asList(neuron));

@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.components;
 import java.awt.BorderLayout;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;

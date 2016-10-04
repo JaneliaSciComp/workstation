@@ -3,11 +3,16 @@ package org.janelia.it.workstation.gui.framework.progress_meter;
 import java.awt.BorderLayout;
 import java.util.Properties;
 
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which usually slides in from the right side when a background
@@ -37,6 +42,8 @@ import org.openide.windows.TopComponent;
 })
 public final class ProgressTopComponent extends TopComponent {
 
+    private static final Logger log = LoggerFactory.getLogger(ProgressTopComponent.class);
+    
     public static final String PREFERRED_ID = "ProgressTopComponent";
     
     public ProgressTopComponent() {
@@ -67,7 +74,7 @@ public final class ProgressTopComponent extends TopComponent {
     @Override
     public void componentClosed() {
     }
-
+    
     void writeProperties(Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
@@ -78,5 +85,33 @@ public final class ProgressTopComponent extends TopComponent {
     void readProperties(Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
+    }
+    
+    public static void ensureActive() {
+        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
+        if (tc==null) {
+            log.info("Progress panel not found, creating...");
+            String modeName = "rightSlidingSide";
+            tc = new ProgressTopComponent();
+            Mode mode = WindowManager.getDefault().findMode(modeName);
+            if (mode!=null) {
+                mode.dockInto(tc);
+            }
+            else {
+                log.warn("No such mode found: "+modeName);
+            }
+            tc.open();
+        }
+        else {
+            log.info("Found progress panel");
+            if (!tc.isOpened()) {
+                tc.open();
+            }
+            if (!tc.isVisible()) {
+                log.info("Progress panel is not visible, making active");
+                tc.requestVisible();
+            }
+        }
+        tc.requestActive();
     }
 }
