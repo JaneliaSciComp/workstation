@@ -97,7 +97,7 @@ public class UglyColorSlider extends JSlider
 		// first compute ratio between white and black
 		float grayLevel = (float)Math.pow(0.5, 1.0/ccm.getGamma());
 		grayLevel = getBlackLevel() + grayLevel*(getWhiteLevel() - getBlackLevel());
-		setGrayLevel((int)Math.round(grayLevel));
+		setGrayLevel(Math.round(grayLevel));
 		// Color
 		// setWhiteColor(ccm.getColor());
 		updatingFromModel = false;

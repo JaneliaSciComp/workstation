@@ -73,11 +73,15 @@ public class EJBFactory {
         icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
         icInteractiveServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
         icInteractiveServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
+//        icInteractiveServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
+//        icInteractiveServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
 
-    	icPipelineServerProperties.clear();
+        icPipelineServerProperties.clear();
         icPipelineServerProperties.put(Context.PROVIDER_URL, pipelineServerUrl);
         icPipelineServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
         icPipelineServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
+//        icPipelineServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
+//        icPipelineServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
     }
 
     public static String getAppServerName() {
@@ -102,12 +106,12 @@ public class EJBFactory {
         InitialContext ic=null;
         try {
             ic = createInitialContext(remotePipeline);
-            if (!lookupName.startsWith("compute/")) {
-                lookupName = "compute/" + lookupName;
-            }
-            if (!lookupName.endsWith("/remote")) {
-                lookupName += "/remote";
-            }
+//            if (!lookupName.startsWith("compute/")) {
+//                lookupName = "compute/" + lookupName;
+//            }
+//            if (!lookupName.endsWith("/remote")) {
+//                lookupName += "/remote";
+//            }
 
             return ic.lookup(lookupName);
         }
