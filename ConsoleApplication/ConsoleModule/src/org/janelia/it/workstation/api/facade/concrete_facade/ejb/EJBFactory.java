@@ -20,16 +20,16 @@ public class EJBFactory {
 	
 //    private static final String DEFAULT_INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("default.interactive.server.url");
 //    private static final String DEFAULT_PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("default.pipeline.server.url");
+//    private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
+//    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("interactive.server.url");
     private static final String PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("pipeline.server.url");
     private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
-    private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
     private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
     private static final String REMOTE_SOLR_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.solr.jndi.name");
     private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
     private static final String REMOTE_ENTITY_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.entity.jndi.name");
     private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
-//    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
     private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
     private static final String REMOTE_GEOMETRIC_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.geometric_search.jndi.name");
@@ -63,8 +63,8 @@ public class EJBFactory {
     		pipelineServer = interactiveServer;
     	}
     	
-    	String interactiveServerUrl = "remote://"+interactiveServer+":1199";
-    	String pipelineServerUrl = "remote://"+pipelineServer+":1199";
+    	String interactiveServerUrl = "http-remoting://"+interactiveServer+":8080";
+    	String pipelineServerUrl = "http-remoting://"+pipelineServer+":8080";
     	
     	log.info("Using interactive server: "+interactiveServerUrl);
     	log.info("Using pipeline server: "+pipelineServerUrl);
@@ -72,16 +72,16 @@ public class EJBFactory {
     	icInteractiveServerProperties.clear();
         icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
         icInteractiveServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        icInteractiveServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
-//        icInteractiveServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
-//        icInteractiveServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
+//        icInteractiveServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
+        icInteractiveServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
+        icInteractiveServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
 
         icPipelineServerProperties.clear();
         icPipelineServerProperties.put(Context.PROVIDER_URL, pipelineServerUrl);
         icPipelineServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        icPipelineServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
-//        icPipelineServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
-//        icPipelineServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
+//        icPipelineServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
+        icPipelineServerProperties.put(Context.SECURITY_PRINCIPAL, "jmsuser");
+        icPipelineServerProperties.put(Context.SECURITY_CREDENTIALS, "jmsuser");
     }
 
     public static String getAppServerName() {
