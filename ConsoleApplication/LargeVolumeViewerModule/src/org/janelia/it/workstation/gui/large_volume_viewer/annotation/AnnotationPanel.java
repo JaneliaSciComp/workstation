@@ -12,6 +12,7 @@ import java.awt.HeadlessException;
 import java.awt.Insets;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
 import org.janelia.it.workstation.gui.util.Icons;
 
 import javax.swing.*;
@@ -232,12 +233,7 @@ public class AnnotationPanel extends JPanel
             }
         }));
 
-        workspaceToolMenu.add(new JMenuItem((new AbstractAction("Show workspace info...") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.showWorkspaceInfoDialog();
-            }
-        })));
+        workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
 
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
