@@ -9,8 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -35,6 +33,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAc
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -253,12 +252,7 @@ public class AnnotationPanel extends JPanel
         };
         workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
-        workspaceToolMenu.add(new JMenuItem((new AbstractAction("Show workspace info...") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.showWorkspaceInfoDialog();
-            }
-        })));
+        workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
 
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
