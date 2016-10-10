@@ -8,9 +8,9 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/GL Viewer Tools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client Integration APIs"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client JAR Dependency Wrapper"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Geometry 3d"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Viewer API"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Scene Window"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Geometry 3d"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
