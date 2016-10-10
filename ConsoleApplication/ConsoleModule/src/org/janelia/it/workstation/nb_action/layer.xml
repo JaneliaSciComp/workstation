@@ -162,23 +162,21 @@
         <folder name="RunProject_hidden"/>
         <folder name="Source_hidden"/>
         <folder name="View">
+            <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow"/>
             <file name="Separator3.instance_hidden"/>
             <file name="org-netbeans-core-actions-HTMLViewAction.shadow_hidden"/>
             <file name="org-netbeans-core-multiview-EditorsAction.instance_hidden"/>
             <file name="org-netbeans-core-multiview-SplitAction.instance_hidden"/>
-            <file name="org-netbeans-core-windows-actions-ToolbarsListAction.shadow_hidden"/>
             <file name="org-netbeans-modules-editor-NbCodeFoldingAction.instance_hidden"/>
             <file name="org-netbeans-modules-project-ui-SyncEditorWithViewsAction.shadow_hidden"/>
             <file name="org-netbeans-modules-versioning-ShowTextAnnotationsAction.shadow_hidden"/>
             <file name="org-netbeans-modules-versioning-core-ShowTextAnnotationsAction.shadow_hidden"/>
             <file name="org-netbeans-modules-versioning-diff-ShowDiffSidebarAction.shadow_hidden"/>
             <file name="org-netbeans-modules-editor-MainMenuAction$ShowLineNumbersAction.instance_hidden"/>
-            <file name="org-netbeans-modules-editor-MainMenuAction$ShowToolBarAction.instance_hidden"/>
             <file name="org-netbeans-modules-versioning-ui-diff-ShowDiffSidebarAction.shadow_hidden"/>
             <file name="toggle-breadcrumbs-view.shadow_hidden"/>
             <file name="toggle-line-numbers.shadow_hidden"/>
             <file name="toggle-non-printable-characters.shadow_hidden"/>
-            <file name="toggle-toolbar.shadow_hidden"/>
         </folder>
         <folder name="Team_hidden"/>
         <folder name="Tools">
@@ -236,12 +234,13 @@
         </file>
     </folder>
     <folder name="Toolbars">
-        <folder name="Navigation"></folder>
-        <folder name="Tools"></folder>
+        <folder name="Navigation"/>
+        <folder name="Tools"/>
+        <file name="Build_hidden"/>
+        <file name="Debugging.xml_hidden"/>
         <file name="Clipboard_hidden"/>
         <file name="File_hidden"/>
         <file name="Memory_hidden"/>
-        <file name="Standard.xml_hidden"/>
         <file name="UndoRedo_hidden"/>
         <file name="QuickSearch_hidden"/>
         <file name="Debug_hidden"/>
