@@ -26,7 +26,8 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
-import org.openide.util.lookup.Lookups;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
 import org.openide.windows.TopComponent;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
@@ -34,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Top component which displays something.
+ * Top component which displays the Large Volume Viewer.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.large_volume_viewer.top_component//LargeVolumeViewer//EN",
@@ -65,13 +66,21 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public static final String TC_VERSION = "1.0";
     
     public static final ToolString LVV_LOGSTAMP_ID = new ToolString("LargeVolumeViewer");
+
+    private static boolean restoreStateOnOpen = true;
     
+    private final InstanceContent content = new InstanceContent();
     private final LargeVolumeViewViewer lvvv = new LargeVolumeViewViewer();
     
     static {
         // So popup menu shows over GLCanvas
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
+    }
+    
+    public static void setRestoreStateOnOpen(boolean value) {
+        // A hack to ensure that if the LVV is opened by the user after app launch it does not restore its previous state
+        restoreStateOnOpen = value;
     }
     
     public static final LargeVolumeViewerTopComponent getInstance() {
@@ -85,7 +94,25 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         establishLookups();
     }
 
+    public DomainObject getCurrent() {
+        return getLookup().lookup(DomainObject.class);
+    }
+
+    private boolean setCurrent(DomainObject domainObject) {
+        DomainObject curr = getCurrent();
+        if (domainObject.equals(curr)) {
+            return false;
+        }
+        if (curr!=null) {
+            content.remove(curr);
+        }
+        content.add(domainObject);
+        return true;
+    }
+    
     public void openLargeVolumeViewer(DomainObject domainObject) {
+        log.info("openLargeVolumeViewer({})",domainObject);
+        setCurrent(domainObject);
         Snapshot3DLauncher.removeStaleViewer();
         getLvvv().loadDomainObject(domainObject);
     }
@@ -119,15 +146,15 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        jPanel1.add( getLvvv(), BorderLayout.CENTER );
-        Events.getInstance().registerOnEventBus(getLvvv());
+        jPanel1.add(lvvv, BorderLayout.CENTER );
+        Events.getInstance().registerOnEventBus(lvvv);
     }
 
     @Override
     public void componentClosed() {
-        jPanel1.remove( getLvvv() );
+        jPanel1.remove(lvvv);
+        Events.getInstance().unregisterOnEventBus(lvvv);
         closeGroup();
-        Events.getInstance().unregisterOnEventBus(getLvvv());
     }
 
     protected void closeGroup() {
@@ -159,34 +186,33 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
     
     public AnnotationManager getAnnotationMgr() {
-        return getLvvv().getQuadViewUi().getAnnotationMgr();
+        return lvvv.hasQuadViewUi() ? lvvv.getQuadViewUi().getAnnotationMgr() : null;
     }
 
     /**
      * A safe way to ask if editing functions (such as Actions) should be enabled. Returns false if the quad view has not yet been initialized.
      */
     public boolean editsAllowed() {
-        return getLvvv().hasQuadViewUi() && getLvvv().getQuadViewUi().getAnnotationMgr().editsAllowed();
+        return lvvv.hasQuadViewUi() && lvvv.getQuadViewUi().getAnnotationMgr().editsAllowed();
     }
 
     void writeProperties(java.util.Properties p) {
         p.setProperty("version", TC_VERSION);
-        AnnotationManager annotationMgr = getAnnotationMgr();
-        if (annotationMgr!=null) {
-            DomainObject current = annotationMgr.getInitialObject();
-            if (current!=null) {
-                String objectRef = Reference.createFor(current).toString();
-                log.info("Writing state: {}",objectRef);
-                p.setProperty("objectRef", objectRef);
-            }
-            else {
-                p.remove("objectRef");
-            }
+        DomainObject current = getCurrent();
+        if (current!=null) {
+            String objectRef = Reference.createFor(current).toString();
+            log.info("Writing state: {}",objectRef);
+            p.setProperty("objectRef", objectRef);
+        }
+        else {
+            p.remove("objectRef");
         }
     }
 
     void readProperties(java.util.Properties p) {
 
+        if (!restoreStateOnOpen) return;
+        
         String loadLastStr = NbPreferences.forModule(ApplicationPanel.class).get(ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT, ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
         if (!Boolean.parseBoolean(loadLastStr)) {
             return;
@@ -232,7 +258,6 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
     
     protected void establishLookups() {
-        LargeVolumeViewViewer lvvv = getLvvv();
         // Use Lookup to communicate sample location and camera position
         // TODO: separate data source from current view details
         LargeVolumeViewerLocationProvider locProvider = 
@@ -240,10 +265,13 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
         // Use Lookup to communicate neuron reconstructions.
         // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
         NeuronSet neurons = lvvv.getNeuronSetAdapter();
+
+        // Using a dynamic lookup now, instead of this fixed one, but the effect should be the same.
+        //associateLookup(Lookups.fixed(locProvider, neurons));
         
-        associateLookup(Lookups.fixed(
-            locProvider, 
-            neurons));
+        content.add(locProvider);
+        content.add(neurons);
+        associateLookup(new AbstractLookup(content));
     }
     
 }

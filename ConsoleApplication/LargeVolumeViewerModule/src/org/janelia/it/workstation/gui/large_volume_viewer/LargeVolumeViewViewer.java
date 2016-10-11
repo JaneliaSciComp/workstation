@@ -1,35 +1,35 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
  import java.awt.BorderLayout;
- import java.util.concurrent.Callable;
 
- import javax.swing.JLabel;
- import javax.swing.JOptionPane;
- import javax.swing.JPanel;
- import javax.swing.SwingUtilities;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
- import com.google.common.eventbus.Subscribe;
- import org.janelia.console.viewerapi.SampleLocation;
- import org.janelia.console.viewerapi.model.NeuronSet;
- import org.janelia.it.jacs.model.domain.DomainObject;
- import org.janelia.it.jacs.model.domain.support.DomainUtils;
- import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
- import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
- import org.janelia.it.jacs.shared.lvv.HttpDataSource;
- import org.janelia.it.workstation.gui.browser.events.Events;
- import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
- import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
- import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
- import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
- import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
- import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
- import org.janelia.it.workstation.gui.util.Icons;
- import org.janelia.it.workstation.gui.util.WindowLocator;
- import org.janelia.it.workstation.shared.workers.SimpleWorker;
- import org.netbeans.api.progress.ProgressHandle;
- import org.netbeans.api.progress.ProgressHandleFactory;
- import org.slf4j.Logger;
- import org.slf4j.LoggerFactory;
+import org.janelia.console.viewerapi.SampleLocation;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Created with IntelliJ IDEA.
@@ -68,31 +68,26 @@ public class LargeVolumeViewViewer extends JPanel {
 
     	logger.info("loadDomainObject({})", domainObject);
     	
+        //  I have found that with very large numbers of
+        //  neurons in the neurons table, not reloading
+        //  causes GUI lockup.
+        deleteAll();
+    	
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                //  I have found that with very large numbers of
-                //  neurons in the neurons table, not reloading
-                //  causes GUI lockup.
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    public void run() {
-                        deleteAll();
-                    }
-                });
                 initialObject = domainObject;
 
                 // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
                 //  the initial entity, but we need the sample either way to be able to open it:
                 if (initialObject instanceof TmSample) {
                     sliceSample = (TmSample) initialObject;
-                    HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                 }
-                else if (initialObject instanceof org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace) {
+                else if (initialObject instanceof TmWorkspace) {
                     TmWorkspace workspace = (TmWorkspace) initialObject;
                     try {
                         sliceSample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
-                        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                     }
                     catch (Exception e) {
                         logger.error("Error getting sample for "+workspace, e);
@@ -110,6 +105,8 @@ public class LargeVolumeViewViewer extends JPanel {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+
+                HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
                 
                 // refresh is a UI action, has to happen here
                 refresh();

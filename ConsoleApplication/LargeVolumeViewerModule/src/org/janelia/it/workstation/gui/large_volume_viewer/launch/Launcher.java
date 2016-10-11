@@ -26,6 +26,9 @@ public class Launcher implements DomainObjectAcceptor  {
     }
 
     public void launch(final DomainObject domainObject) {
+        
+        LargeVolumeViewerTopComponent.setRestoreStateOnOpen(false);
+        
         TopComponentGroup group = 
                 WindowManager.getDefault().findTopComponentGroup(
                         "large_volume_viewer_plugin"
