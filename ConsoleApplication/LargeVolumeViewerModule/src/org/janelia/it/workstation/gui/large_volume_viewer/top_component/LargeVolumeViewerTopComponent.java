@@ -1,13 +1,9 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.ACTION;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.HINT;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.WINDOW_NAMER;
-
 import java.awt.BorderLayout;
 
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.ToolTipManager;
 
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -15,6 +11,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -22,6 +19,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.options.ApplicationPanel;
+import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -30,6 +28,7 @@ import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
+import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,7 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = LVV_PREFERRED_ID,
+        preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -51,26 +50,29 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window/Large Volume Viewer", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
-        preferredID = LVV_PREFERRED_ID
+        preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID
 )
 @Messages({
-    ACTION,
-    WINDOW_NAMER,
-    HINT
+    "CTL_LargeVolumeViewerAction=Large Volume Viewer",
+    "CTL_LargeVolumeViewerTopComponent=Large Volume Viewer",
+    "HINT_LargeVolumeViewerTopComponent=Examine multi-tile brains."
 })
 public final class LargeVolumeViewerTopComponent extends TopComponent {
 
     private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewerTopComponent.class);
-    
+
+    public static final String LVV_PREFERRED_ID = "LargeVolumeViewerTopComponent";
     public static final String TC_VERSION = "1.0";
+    
+    public static final ToolString LVV_LOGSTAMP_ID = new ToolString("LargeVolumeViewer");
+    
+    private final LargeVolumeViewViewer lvvv = new LargeVolumeViewViewer();
     
     static {
         // So popup menu shows over GLCanvas
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
     }
-    
-    private final LargeVolumeViewerTopComponentDynamic state = new LargeVolumeViewerTopComponentDynamic();
     
     public static final LargeVolumeViewerTopComponent getInstance() {
         return (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LVV_PREFERRED_ID);
@@ -84,7 +86,8 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
 
     public void openLargeVolumeViewer(DomainObject domainObject) {
-        state.load(domainObject);
+        Snapshot3DLauncher.removeStaleViewer();
+        getLvvv().loadDomainObject(domainObject);
     }
 
     /**
@@ -116,19 +119,43 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        jPanel1.add( state.getLvvv(), BorderLayout.CENTER );
-        Events.getInstance().registerOnEventBus(state.getLvvv());
+        jPanel1.add( getLvvv(), BorderLayout.CENTER );
+        Events.getInstance().registerOnEventBus(getLvvv());
     }
 
     @Override
     public void componentClosed() {
-        jPanel1.remove( state.getLvvv() );
-        state.close();
-        Events.getInstance().unregisterOnEventBus(state.getLvvv());
+        jPanel1.remove( getLvvv() );
+        closeGroup();
+        Events.getInstance().unregisterOnEventBus(getLvvv());
+    }
+
+    protected void closeGroup() {
+        Runnable runnable = new Runnable() {
+            public void run() {
+                lvvv.close();
+                TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
+                        "large_volume_viewer_plugin"
+                );
+                if (tcg != null) {
+                    tcg.close();
+                }
+            }
+        };
+        if ( SwingUtilities.isEventDispatchThread() ) {
+            runnable.run();
+        }
+        else {
+            try {
+                SwingUtilities.invokeAndWait( runnable );
+            } catch ( Exception ex ) {
+                log.error("Problem closing LVV component group",ex);
+            }
+        }
     }
     
     public LargeVolumeViewViewer getLvvv() {
-        return state.getLvvv();
+        return lvvv;
     }
     
     public AnnotationManager getAnnotationMgr() {
@@ -205,7 +232,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     }
     
     protected void establishLookups() {
-        LargeVolumeViewViewer lvvv = state.getLvvv();
+        LargeVolumeViewViewer lvvv = getLvvv();
         // Use Lookup to communicate sample location and camera position
         // TODO: separate data source from current view details
         LargeVolumeViewerLocationProvider locProvider = 

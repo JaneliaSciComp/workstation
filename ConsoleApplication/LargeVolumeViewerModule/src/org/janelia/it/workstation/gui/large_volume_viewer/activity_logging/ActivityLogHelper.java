@@ -14,7 +14,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID;
 
 /**
  * Keep all the logging code in one place, to declutter.

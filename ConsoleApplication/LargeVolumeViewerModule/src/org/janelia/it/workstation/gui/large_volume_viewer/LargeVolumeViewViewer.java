@@ -167,16 +167,6 @@ public class LargeVolumeViewViewer extends JPanel {
 
     }
 
-    public void loadDomainObject(DomainObject domainObject, Callable<Void> success) {
-        loadDomainObject(domainObject);
-        try {
-            if ( success != null )
-                success.call();
-        } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
-
     public SampleLocation getSampleLocation() {
         return viewUI.getSampleLocation();
     }
