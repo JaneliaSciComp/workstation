@@ -205,44 +205,51 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public synchronized void clear() {
+        currentWorkspace = null;
+        currentSample = null;
+        currentTagMap = null;
+        setCurrentNeuron(null);
+    }
+    
     public synchronized void loadSample(final TmSample sample) throws Exception {
+        if (sample == null) {
+            throw new IllegalArgumentException("Cannot load null sample");
+        }
+        currentWorkspace = null;
         currentSample = sample;
+        currentTagMap = null;
     }
     
     public synchronized void loadWorkspace(final TmWorkspace workspace) throws Exception {
-        if (workspace != null) {
-            currentWorkspace = workspace;
-            currentSample = tmDomainMgr.getSample(workspace);
-
-            // Neurons need to be loaded en masse from raw data from server.
-            neuronManager.loadWorkspaceNeurons(workspace);
-
-            // Create the local tag map for cached access to tags
-            currentTagMap = new TmNeuronTagMap();
-            for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
-                for(String tag : tmNeuronMetadata.getTags()) {
-                    currentTagMap.addTag(tag, tmNeuronMetadata);
-                }
-            }
-        }
-        else {
-            currentWorkspace = null;
-            currentTagMap = null;
+        if (workspace == null) {
+            throw new IllegalArgumentException("Cannot load null workspace");
         }
         
-        setCurrentNeuron(null);
+        currentWorkspace = workspace;
+        currentSample = tmDomainMgr.getSample(workspace);
 
-        final TmWorkspace updateWorkspace = getCurrentWorkspace();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireWorkspaceLoaded(updateWorkspace);
-                fireNeuronSelected(null);
-                if (workspace!=null) {
-                    activityLog.logLoadWorkspace(updateWorkspace.getId());
-                }
+        // Neurons need to be loaded en masse from raw data from server.
+        neuronManager.loadWorkspaceNeurons(workspace);
+
+        // Create the local tag map for cached access to tags
+        currentTagMap = new TmNeuronTagMap();
+        for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
+            for(String tag : tmNeuronMetadata.getTags()) {
+                currentTagMap.addTag(tag, tmNeuronMetadata);
             }
-        });
+        }
+        // Clear neuron selection
+        setCurrentNeuron(null);        
+    }
+    
+    public void loadComplete() { 
+        final TmWorkspace updateWorkspace = getCurrentWorkspace();
+        fireWorkspaceLoaded(updateWorkspace);
+        fireNeuronSelected(null);
+        if (updateWorkspace!=null) {
+            activityLog.logLoadWorkspace(updateWorkspace.getId());
+        }
     }
 
     public void setSWCDataConverter( SWCDataConverter converter ) {

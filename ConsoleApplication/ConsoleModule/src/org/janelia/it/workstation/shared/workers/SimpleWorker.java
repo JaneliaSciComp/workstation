@@ -22,6 +22,13 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
     protected Throwable error;
     protected boolean disregard;
     protected ProgressMonitor progressMonitor; 
+    protected SimpleListenableFuture future;
+
+    public SimpleListenableFuture executeWithFuture() {
+        this.future = SimpleListenableFuture.create();
+        execute();
+        return future;
+    }
     
     @Override
     protected Void doInBackground() throws Exception {
@@ -47,9 +54,15 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
         setProgress(100);
         if (error == null) {
             hadSuccess();
+            if (future!=null) {
+                future.setComplete();
+            }
         }
         else {
             hadError(error);
+            if (future!=null) {
+                future.setException(error);
+            }
         }
     }
 

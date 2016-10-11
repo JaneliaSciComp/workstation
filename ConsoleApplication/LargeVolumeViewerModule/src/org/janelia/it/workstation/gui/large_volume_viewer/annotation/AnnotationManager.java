@@ -234,7 +234,12 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //-------------------------------IMPLEMENTS VolumeLoadListener
     @Override
     public void volumeLoaded(URL url) {
-        onVolumeLoaded();
+        if (initialObject instanceof TmSample) {
+            activityLog.setTileFormat(getTileFormat(), initialObject.getId());
+        }
+        else if (initialObject instanceof TmWorkspace) {
+            activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
+        }
     }
 
     public TileFormat getTileFormat() {
@@ -251,48 +256,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      */
     public void setInitialObject(final DomainObject initialObject) {
         this.initialObject = initialObject;
-    }
-
-    /**
-     * called when volume is *finished* loading (so as to avoid race
-     * conditions); relies on initial entity being properly set already
-     */
-    public void onVolumeLoaded() {
-
-        final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace container...");
-        SimpleWorker loader = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                if (initialObject == null) {
-                    // this is a request to clear the workspace
-                    annotationModel.loadWorkspace(null);
-                }
-                else if (initialObject instanceof TmSample) {
-                    activityLog.setTileFormat(getTileFormat(), initialObject.getId());
-                    annotationModel.loadSample((TmSample)initialObject);
-                }
-                else if (initialObject instanceof TmWorkspace) {
-                    annotationModel.loadWorkspace((TmWorkspace)initialObject);
-                    activityLog.setTileFormat(tileServer.getLoadAdapter().getTileFormat(), getSampleID());
-                }
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // no hadSuccess(); signals will be emitted in the loadWorkspace() call
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                progress.finish();
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        loader.execute();
-
-        // (eventually) update state to saved state (selection, visibility, etc);
-        //  actually, although it should happen at about the time this method is called,
-        //  it may be better to make it a different method
     }
 
     // ----- methods called from UI
@@ -1208,7 +1171,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
             @Override
             protected void hadSuccess() {
-                // nothing here, signals emitted within annotationModel
+                annotationModel.loadComplete();
             }
 
             @Override

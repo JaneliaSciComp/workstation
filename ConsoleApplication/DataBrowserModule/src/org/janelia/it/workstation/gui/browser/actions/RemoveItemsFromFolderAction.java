@@ -61,6 +61,9 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             if (refList==null || refList.size()<=1) {
                 listToDelete.add(domainObject);
             }
+            else {
+                log.info("{} has multiple references: {}", domainObject, refList);
+            }
             removeFromFolders.put(treeNode,domainObject);
         }
 

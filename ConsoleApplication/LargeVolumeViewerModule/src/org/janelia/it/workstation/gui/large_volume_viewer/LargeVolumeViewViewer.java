@@ -1,6 +1,8 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
  import java.awt.BorderLayout;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -23,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDom
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -30,6 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created with IntelliJ IDEA.
@@ -114,12 +120,12 @@ public class LargeVolumeViewViewer extends JPanel {
             	logger.info("Found sample {}", sliceSample.getId());
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
-                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace...");
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading sample...");
                 progress.start();
-                progress.setDisplayName("Loading workspace");
+                progress.setDisplayName("Loading sample");
                 progress.switchToIndeterminate();
 
-                SimpleWorker opener = new SimpleWorker() {
+                SimpleWorker volumeLoader = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
                         // be sure we've successfully gotten the sample before loading it!
@@ -140,7 +146,6 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void hadSuccess() {
-                        // Listen for further changes, so can refresh again later.
                         progress.finish();
                     }
 
@@ -150,8 +155,63 @@ public class LargeVolumeViewViewer extends JPanel {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
-                opener.execute();
+                
+                SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
 
+                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading workspace...");
+                progress2.start();
+                progress2.setDisplayName("Loading workspace");
+                progress2.switchToIndeterminate();
+                
+                SimpleWorker workspaceLoader = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        if (initialObject == null) {
+                            // this is a request to clear the workspace
+                            annotationModel.clear();
+                        }
+                        else if (initialObject instanceof TmSample) {
+                            annotationModel.loadSample((TmSample)initialObject);
+                        }
+                        else if (initialObject instanceof TmWorkspace) {
+                            annotationModel.loadWorkspace((TmWorkspace)initialObject);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        progress2.finish();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        progress2.finish();
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                SimpleListenableFuture future2 = workspaceLoader.executeWithFuture();
+                
+                // Join the two futures
+                ListenableFuture<List<Boolean>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
+                Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
+                    public void onSuccess(List<Boolean> result) {
+                        // If both loads succeeded
+                        annotationModel.loadComplete();
+                    }
+                    public void onFailure(Throwable t) {
+                        // If either load failed
+                        logger.error("LVVV load failed", t);
+                        try {
+                            annotationModel.clear();
+                            annotationModel.loadComplete();
+                        }
+                        catch (Exception e) {
+                            logger.error("Error loading empty workspace",e);
+                        }
+                    }
+                });
+                
             }
 
             @Override
