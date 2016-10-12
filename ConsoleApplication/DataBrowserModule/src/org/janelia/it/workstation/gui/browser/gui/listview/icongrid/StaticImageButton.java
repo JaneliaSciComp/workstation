@@ -9,7 +9,7 @@ import javax.swing.JLabel;
 
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.gui.browser.util.Utils;
 
 /**
  * An AnnotatedImageButton with a static UNKNOWN_ICON or label.

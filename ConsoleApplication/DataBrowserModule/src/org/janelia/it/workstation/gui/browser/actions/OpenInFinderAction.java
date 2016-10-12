@@ -9,9 +9,9 @@ import javax.swing.JOptionPane;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DesktopApi;
-import org.janelia.it.workstation.shared.util.FileCallable;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.gui.browser.util.FileCallable;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.Utils;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.

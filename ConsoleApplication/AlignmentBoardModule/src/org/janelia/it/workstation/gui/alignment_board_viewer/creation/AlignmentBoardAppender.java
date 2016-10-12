@@ -13,8 +13,8 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;

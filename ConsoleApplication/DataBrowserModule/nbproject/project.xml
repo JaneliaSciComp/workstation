@@ -52,6 +52,15 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.netbeans.api.progress</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.35.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.modules.options.api</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -145,12 +154,16 @@
                 <package>org.janelia.it.workstation.gui.browser.api.facade.interfaces</package>
                 <package>org.janelia.it.workstation.gui.browser.api.lifecycle</package>
                 <package>org.janelia.it.workstation.gui.browser.api.navigation</package>
+                <package>org.janelia.it.workstation.gui.browser.api.services</package>
+                <package>org.janelia.it.workstation.gui.browser.api.state</package>
                 <package>org.janelia.it.workstation.gui.browser.components</package>
                 <package>org.janelia.it.workstation.gui.browser.events</package>
                 <package>org.janelia.it.workstation.gui.browser.events.lifecycle</package>
                 <package>org.janelia.it.workstation.gui.browser.events.model</package>
                 <package>org.janelia.it.workstation.gui.browser.events.selection</package>
+                <package>org.janelia.it.workstation.gui.browser.events.workers</package>
                 <package>org.janelia.it.workstation.gui.browser.exchange</package>
+                <package>org.janelia.it.workstation.gui.browser.filecache</package>
                 <package>org.janelia.it.workstation.gui.browser.flavors</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
@@ -163,16 +176,21 @@
                 <package>org.janelia.it.workstation.gui.browser.gui.listview.icongrid</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.listview.table</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.ontology</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.options</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.progress</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.support</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.table</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.tree</package>
+                <package>org.janelia.it.workstation.gui.browser.lifecycle</package>
                 <package>org.janelia.it.workstation.gui.browser.model</package>
                 <package>org.janelia.it.workstation.gui.browser.model.keybind</package>
                 <package>org.janelia.it.workstation.gui.browser.model.search</package>
                 <package>org.janelia.it.workstation.gui.browser.nb_action</package>
                 <package>org.janelia.it.workstation.gui.browser.nodes</package>
                 <package>org.janelia.it.workstation.gui.browser.sample_trimming</package>
+                <package>org.janelia.it.workstation.gui.browser.util</package>
                 <package>org.janelia.it.workstation.gui.browser.web</package>
+                <package>org.janelia.it.workstation.gui.browser.workers</package>
                 <package>org.janelia.it.workstation.gui.browser.ws</package>
             </public-packages>
         </data>

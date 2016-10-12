@@ -7,18 +7,21 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
-import loci.formats.FormatException;
-
+import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
+import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
+import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.janelia.it.workstation.gui.options.OptionConstants;
+import loci.formats.FormatException;
 
 /**
  * An image panel that supports dynamic loading/unloading of image data to conserve memory usage when the panel is not

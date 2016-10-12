@@ -15,8 +15,6 @@ import java.util.concurrent.Executor;
 
 import javax.swing.SwingUtilities;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -28,19 +26,12 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
-import org.janelia.it.jacs.model.tasks.utility.GenericTask;
-import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
@@ -50,9 +41,6 @@ import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
-import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade.EJBLookupException;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.NoDataException;
@@ -64,6 +52,9 @@ import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public final class ModelMgr {
 
@@ -133,38 +124,6 @@ public final class ModelMgr {
         List<Subject> subjects = getSubjects();
         for(Subject subject : subjects) {
             subjectByKey.put(subject.getKey(), subject);
-        }
-    }
-
-    /**
-     * This adds a session event.  It is best to use the method in the
-     * Session Manager instead, as that has more convenient 'finding' of various
-     * parts of the event.
-     *
-     * @param event to log.
-     */
-    public void addEventToSession(UserToolEvent event) {
-        try {
-            FacadeManager.getFacadeManager().getComputeFacade().addEventToSession(event);
-        } catch (Exception ex) {
-            log.warn("Failed to log userevent " + event);
-            ex.printStackTrace();
-        }
-    }
-    
-    /**
-     * This adds a session event. It is best to use the method in the Session
-     * Manager instead, as that has more convenient 'finding' of various parts
-     * of the event.
-     *
-     * @param event to log.
-     */
-    public void addEventsToSession(UserToolEvent[] events) {
-        try {
-            FacadeManager.getFacadeManager().getComputeFacade().addEventsToSession(events);
-        } catch (Exception ex) {
-            log.warn("Failed to log batch of " + events.length + " user events.");
-            ex.printStackTrace();
         }
     }
 
@@ -677,23 +636,6 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
 
-    public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
-        if (annotationSession != null && annotationSession.getId().equals(sessionId)) {
-            return annotationSession;
-        }
-
-        Task task = getTaskById(sessionId);
-        if (task == null) {
-            return null;
-        }
-        if (task instanceof AnnotationSessionTask) {
-            AnnotationSessionTask ast = (AnnotationSessionTask) task;
-            return new AnnotationSession(ast);
-        }
-
-        return null;
-    }
-
     public void reset() {
         entityModel.invalidateAll();
         this.currWorkspaceId = null;
@@ -919,62 +861,15 @@ public final class ModelMgr {
     }
 
     public Task saveOrUpdateTask(Task task) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
-    }
-
-    public void stopContinuousExecution(ContinuousExecutionTask task) throws Exception {
-        if (task == null) {
-            throw new IllegalArgumentException("Task may not be null");
-        }
-        FacadeManager.getFacadeManager().getComputeFacade().stopContinuousExecution(task.getObjectId());
+        throw new UnsupportedOperationException();
     }
 
     public Task getTaskById(Long taskId) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getTaskById(taskId);
-    }
-
-    public void deleteTaskById(Long taskId) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().deleteTaskById(taskId);
-    }
-
-    public void cancelTaskById(Long taskId) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().cancelTaskById(taskId);
-    }
-
-    public Task submitJob(String processDefName, String displayName) throws Exception {
-        HashSet<TaskParameter> taskParameters = new HashSet<>();
-        return submitJob(processDefName, displayName, taskParameters);
+        throw new UnsupportedOperationException();
     }
 
     public Task submitJob(String processDefName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
-        GenericTask task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(),
-                parameters, processDefName, displayName);
-        return submitJob(task);
-    }
-
-    private Task submitJob(GenericTask genericTask) throws Exception {
-        Task task = saveOrUpdateTask(genericTask);
-        submitJob(task.getTaskName(), task);
-        return task;
-    }
-
-    public TaskRequest submitJob(String processDefName, Task task) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
-        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
-    }
-
-    /**
-     * Like the submitJob method, but this one pushes the task to a dispatcher, for scheduled (balanced?)
-     * retrieval by waiting servers.
-     *
-     * @param processDefName name for labeling.
-     * @param task with all params
-     * @return the requiest created.
-     * @throws Exception
-     */
-    public TaskRequest dispatchJob(String processDefName, Task task) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().dispatchJob(processDefName, task.getObjectId());
-        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+        throw new UnsupportedOperationException();
     }
 
     public List<Task> getUserParentTasks() throws Exception {
@@ -987,10 +882,6 @@ public final class ModelMgr {
 
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName);
-    }
-
-    public Subject getSubject() throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
     }
 
     public Subject getSubjectByKey(String key) throws Exception {

@@ -42,7 +42,7 @@ import org.janelia.it.workstation.gui.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;

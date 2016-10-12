@@ -9,7 +9,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
 
 import java.util.List;
 import java.util.Vector;

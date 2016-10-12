@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;

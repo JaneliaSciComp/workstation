@@ -12,6 +12,7 @@ import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -24,9 +25,8 @@ import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.nb_action.SearchHereAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -84,7 +84,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                         }
                         @Override
                         protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
+                            ConsoleApp.handleException(error);
                         }
                     };
                     worker.execute();

@@ -5,9 +5,11 @@ import java.awt.event.ActionListener;
 import java.util.concurrent.Callable;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+
 import javax.swing.JButton;
 import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
+
+import org.janelia.it.workstation.gui.browser.util.UserNotificationExceptionHandler;
 
 /**
  * Override NetBeans' exception handling to tie into the workstation's error handler.

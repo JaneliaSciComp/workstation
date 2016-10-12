@@ -16,10 +16,10 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,7 @@ public class TiledMicroscopeDomainMgr {
     public TmSample createSample(String name, String filepath) throws Exception {
         log.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         TmSample sample = new TmSample();
-        sample.setOwnerKey(SessionMgr.getSubjectKey());
+        sample.setOwnerKey(AccessManager.getSubjectKey());
         sample.setName(name);
         sample.setFilepath(filepath);
         sample = save(sample);
@@ -134,7 +134,7 @@ public class TiledMicroscopeDomainMgr {
         Reference sampleRef = Reference.createFor(TmSample.class, sampleId);
         
         TmWorkspace workspace = new TmWorkspace();
-        workspace.setOwnerKey(SessionMgr.getSubjectKey());
+        workspace.setOwnerKey(AccessManager.getSubjectKey());
         workspace.setName(name);
         workspace.setSampleRef(sampleRef);
         workspace = save(workspace);

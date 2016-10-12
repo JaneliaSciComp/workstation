@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCard;
 import org.janelia.it.workstation.gui.browser.gui.baseball_card.BaseballCardPanel;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.model.domain.Sample;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

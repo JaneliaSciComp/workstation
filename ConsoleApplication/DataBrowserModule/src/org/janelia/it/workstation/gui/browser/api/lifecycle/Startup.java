@@ -7,8 +7,9 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationOpening;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateBack;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateForward;
+import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.modules.OnStart;
 import org.openide.util.actions.CallableSystemAction;
 
@@ -28,7 +29,12 @@ public class Startup implements Runnable {
         
         // Create the main console app frame
         ConsoleApp.getConsoleApp();
-        
+
+        // Register singleton components on the event bus
+        Events.getInstance().registerOnEventBus(ConsoleApp.getConsoleApp());
+        Events.getInstance().registerOnEventBus(StateMgr.getStateMgr());
+        Events.getInstance().registerOnEventBus(ToolMgr.getToolMgr());
+
         // Once the main frame is visible, we can do some things in the background
         SimpleWorker worker = new SimpleWorker() {
                 
@@ -53,9 +59,6 @@ public class Startup implements Runnable {
         // Disable the navigation actions until there is some history to navigate
         CallableSystemAction.get(NavigateBack.class).setEnabled(false);
         CallableSystemAction.get(NavigateForward.class).setEnabled(false);
-
-        // Register singleton components on the event bus
-        Events.getInstance().registerOnEventBus(StateMgr.getStateMgr());
 
         // Notify listeners that the application is opening
         Events.getInstance().postOnEventBus(new ApplicationOpening());

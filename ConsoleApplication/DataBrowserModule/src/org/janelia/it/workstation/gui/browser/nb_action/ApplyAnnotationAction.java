@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjec
 import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;

@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class ConcurrentUtils {
 
     public static void invokeAndHandleExceptions(Callable<?> callback) {

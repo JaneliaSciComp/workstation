@@ -4,9 +4,12 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+
 import javax.swing.JPanel;
+
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.Utils;
 
 /**
  * A panel that can be selected and displays a border when selected. The 
@@ -33,7 +36,7 @@ public class SelectablePanel extends JPanel {
         normalBackground = new Color(241, 241, 241);
         selectedBackground = new Color(203, 203, 203);
 
-        if (SessionMgr.getSessionMgr().isDarkLook()) {
+        if (StateMgr.getStateMgr().isDarkLook()) {
             normalBorder = "border_dark_normal.png";
             selectedBorder = "border_dark_selected.png";
             normalBackground = null;

@@ -18,7 +18,7 @@ import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.it.workstation.gui.browser.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

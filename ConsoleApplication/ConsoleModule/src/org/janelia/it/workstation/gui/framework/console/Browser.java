@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityRootComparator;
@@ -31,12 +31,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,6 @@ public class Browser implements Cloneable {
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
-    private MaskSearchDialog arbitraryMaskSearchDialog;
 
     private List<String> searchHistory;
 
@@ -108,8 +105,6 @@ public class Browser implements Cloneable {
 
         log.info("Initializing browser...");
 
-        // TODO: delete this eventually, when we have cleaned up everyone's preferences
-        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, null);
 
         this.browserModel = browserModel;
 
@@ -180,24 +175,6 @@ public class Browser implements Cloneable {
 
         log.debug("Workspaces loaded. Initializing dialogs...");
 
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-            }
-
-            @Override
-            protected void hadSuccess() {
-                arbitraryMaskSearchDialog = new MaskSearchDialog();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        worker.execute();
     }
 
     public JComponent getMainComponent() {
@@ -296,10 +273,6 @@ public class Browser implements Cloneable {
 
     private void useFreeMemoryViewer(boolean use) {
         statusBar.useFreeMemoryViewer(false);
-    }
-
-    public MaskSearchDialog getMaskSearchDialog() {
-        return arbitraryMaskSearchDialog;
     }
 
     public void supportMenuProcessing() {

@@ -32,8 +32,8 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.gui.listview.table.TableViewerConfiguration;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
  * A dialog for configuring a TableViewerPanel.

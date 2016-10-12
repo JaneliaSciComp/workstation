@@ -3,13 +3,19 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.net.URL;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
+import org.janelia.it.workstation.gui.browser.api.FileMgr;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +81,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         if (useCacheBehind) {
             // Async cache-behind
             log.trace("Async cache-behind loading: {}",imageFilename);
-            URL imageFileURL = SessionMgr.getURL(imageFilename);
+            URL imageFileURL = FileMgr.getURL(imageFilename);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (maxSizeImage != null && imageCache != null) {
                 imageCache.put(imageFilename, maxSizeImage);
@@ -84,7 +90,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         else {
             // Sync cache-ahead
             log.trace("Cache-ahead loading: {}",imageFilename);
-            File imageFile = SessionMgr.getCachedFile(imageFilename, false);
+            File imageFile = FileMgr.getCachedFile(imageFilename, false);
             maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
         }
 

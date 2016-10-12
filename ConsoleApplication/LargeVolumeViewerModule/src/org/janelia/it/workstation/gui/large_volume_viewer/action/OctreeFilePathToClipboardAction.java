@@ -12,7 +12,7 @@ import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 
 /**
  * Converts the text, as it is expected in the status label, into a tile

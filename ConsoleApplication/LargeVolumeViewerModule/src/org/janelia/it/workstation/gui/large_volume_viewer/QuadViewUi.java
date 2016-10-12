@@ -134,7 +134,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

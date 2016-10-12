@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

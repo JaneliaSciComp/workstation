@@ -15,7 +15,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

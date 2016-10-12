@@ -10,7 +10,7 @@ import javax.swing.Action;
 import javax.swing.JLabel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;

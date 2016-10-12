@@ -14,8 +14,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.util.WorkstationFile;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.util.WorkstationFile;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -15,7 +15,17 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -25,21 +35,21 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.FileMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.filecache.WebDavUploader;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.jdesktop.swingx.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -369,10 +379,8 @@ public class ImportDialog extends ModalDialog {
                     return new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
-                            final Browser browser = SessionMgr.getBrowser();
-                            final EntityOutline entityOutline = browser.getEntityOutline();
                             final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-                            entityOutline.totalRefresh(true, new Callable<Void>() {
+                            explorer.refresh(true, true, new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
 
@@ -442,9 +450,7 @@ public class ImportDialog extends ModalDialog {
                              String importTopLevelFolderName,
                              Long importTopLevelFolderId) throws Exception {
 
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        final ModelMgr modelMgr = ModelMgr.getModelMgr();
-        final WebDavUploader uploader = new WebDavUploader(sessionMgr.getWebDavClient());
+        final WebDavUploader uploader = new WebDavUploader(FileMgr.getFileMgr().getWebDavClient());
 
         String uploadPath;
         if (selectedChildren == null) {
@@ -453,11 +459,10 @@ public class ImportDialog extends ModalDialog {
             uploadPath = uploader.uploadFiles(selectedChildren, selectedFile);
         }
 
-        final String owner = SessionMgr.getSubjectKey();
         final String process = "FileTreeLoader";
         final boolean filesUploadedFlag = false;
         Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
-                                                   owner,
+                                                   AccessManager.getSubjectKey(),
                                                    new ArrayList<Event>(),
                                                    new HashSet<TaskParameter>(),
                                                    uploadPath,
@@ -465,10 +470,10 @@ public class ImportDialog extends ModalDialog {
                                                    filesUploadedFlag,
                                                    importTopLevelFolderId);
         task.setJobName("Import Files Task");
-        task = modelMgr.saveOrUpdateTask(task);
+        task = StateMgr.getStateMgr().saveOrUpdateTask(task);
 
         // Submit the job
-        modelMgr.submitJob(process, task);
+        StateMgr.getStateMgr().submitJob(process, task);
         
         return task.getObjectId();
     }

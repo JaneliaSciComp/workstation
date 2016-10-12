@@ -4,8 +4,8 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.openide.LifecycleManager;
 
 /**
@@ -25,7 +25,7 @@ public class WorkstationEnvironment {
         String username = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
         String password = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_PASSWORD);
         String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
-        String email = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+        String email = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL);
 
         if (username==null || email==null) {
             Object[] options = {"Enter Login", "Exit Program"};

@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +28,6 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -41,22 +39,10 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.APNGReader;
-import loci.formats.in.BMPReader;
-import loci.formats.in.GIFReader;
-import loci.formats.in.JPEGReader;
-import loci.formats.in.TiffReader;
-
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
@@ -72,6 +58,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class Utils {
 
     public static final String EXTENSION_LSM = "lsm";
@@ -196,89 +183,7 @@ public class Utils {
      * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
      */
     public static BufferedImage readImage(String path) throws Exception {
-        try {
-            String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
-
-            RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
-            BufferedImage image = null;
-
-            if (renderer == RendererType2D.IMAGE_IO) {
-
-                InputStream stream = null;
-                GetMethod get = null;
-                try {
-
-                    if (path.startsWith("http://")) {
-                        HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-                        get = new GetMethod(path);
-                        int responseCode = client.executeMethod(get);
-                        log.trace("readImage: GET " + responseCode + ", path=" + path);
-                        if (responseCode != 200) {
-                            throw new FileNotFoundException("Response code "+responseCode+" returned for call to "+path);
-                        }
-                        stream = get.getResponseBodyAsStream();
-                    }
-                    else {
-                        log.trace("readImage: FileInputStream path=" + path);
-                        stream = new FileInputStream(new File(path));
-                    }
-
-                    // Supports GIF, PNG, JPEG, BMP, and WBMP 
-                    image = ImageIO.read(stream);
-                }
-                finally {
-                    if (get != null) {
-                        get.releaseConnection();
-                    }
-                    if (stream != null) {
-                        try {
-                            stream.close();
-                        }
-                        catch (IOException e) {
-                            log.warn("readImage: failed to close {}", path, e);
-                        }
-                    }
-                }
-            }
-            else {
-                String format = path.substring(path.lastIndexOf(".") + 1);
-                IFormatReader reader;
-                switch (format) {
-                    case "tif":
-                    case "tiff":
-                        reader = new TiffReader();
-                        break;
-                    case "png":
-                        reader = new APNGReader();
-                        break;
-                    case "jpg":
-                    case "jpeg":
-                        reader = new JPEGReader();
-                        break;
-                    case "bmp":
-                        reader = new BMPReader();
-                        break;
-                    case "gif":
-                        reader = new GIFReader();
-                        break;
-                    default:
-                        throw new FormatException("File format is not supported: " + format);
-                }
-                BufferedImageReader in = new BufferedImageReader(reader);
-                in.setId(path);
-                image = in.openImage(0);
-                in.close();
-            }
-
-            return image;
-        }
-        catch (Exception e) {
-            if (e instanceof IOException) {
-                throw e;
-            } else {
-                throw new IOException("Error reading image: " + path, e);
-            }
-        }
+        throw new UnsupportedOperationException();
     }
 
     /**

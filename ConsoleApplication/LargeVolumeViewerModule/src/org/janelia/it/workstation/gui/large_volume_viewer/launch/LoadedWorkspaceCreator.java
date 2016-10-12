@@ -12,7 +12,6 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
@@ -22,15 +21,16 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,7 +145,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                 log.info("Processing " + userInput);
                                 
                 if (userInput != null) {
-                    String ownerKey = SessionMgr.getSubjectKey();
+                    String ownerKey = AccessManager.getSubjectKey();
                     // Expect the sample to be the 'main entity' of the LVV, since there is
                     // no workspace.  
                     Long sampleId = sample.getId();
@@ -157,7 +157,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
 
                     String taskName = new File(userInput).getName();
                     String displayName = taskName + " for 3D tiled microscope sample " + sampleId;
-                    final Task task = ModelMgr.getModelMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
+                    final Task task = StateMgr.getStateMgr().submitJob(SwcImportTask.PROCESS_NAME, displayName, taskParameters);
 
                     // Launch another thread/worker to monitor the 
                     // remote-running task.

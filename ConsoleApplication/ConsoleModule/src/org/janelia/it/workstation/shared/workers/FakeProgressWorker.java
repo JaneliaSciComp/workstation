@@ -10,6 +10,7 @@ import javax.swing.Timer;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public abstract class FakeProgressWorker extends SimpleWorker {
 
     private Timer timer;

@@ -9,7 +9,6 @@ import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.progress_meter.ProgressTopComponent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -20,6 +19,7 @@ import org.openide.windows.TopComponent;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class TaskMonitoringWorker extends BackgroundWorker {
 
     protected static final int REFRESH_DELAY_MS = 2000;
@@ -46,11 +46,11 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                 handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
-                        if (tc!=null) {
-                            tc.open();
-                            tc.requestVisible();
-                        }
+//                        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
+//                        if (tc!=null) {
+//                            tc.open();
+//                            tc.requestVisible();
+//                        }
                     }
                 });
                 handle.start();

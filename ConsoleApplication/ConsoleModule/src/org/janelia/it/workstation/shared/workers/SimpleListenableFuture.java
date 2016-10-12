@@ -15,6 +15,7 @@ import com.google.common.util.concurrent.AbstractFuture;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class SimpleListenableFuture extends AbstractFuture<Boolean> {
 
     public static SimpleListenableFuture create() {

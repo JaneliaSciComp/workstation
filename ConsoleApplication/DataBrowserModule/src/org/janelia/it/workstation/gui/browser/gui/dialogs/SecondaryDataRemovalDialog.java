@@ -14,7 +14,19 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableColumnModel;
@@ -29,12 +41,12 @@ import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.Constants;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +263,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
             taskParameters.add(new TaskParameter(Constants.SAMPLE_ID_DISPLAYABLE_PARM, sample.getId().toString(), null));
             taskParameters.add(new TaskParameter(Constants.SAMPLE_AREAS_DISPLAYABLE_PARM, stringifiedAreas, null));
             taskParameters.add(new TaskParameter(Constants.TRIM_DEPTH_DISPLAYABLE_PARAM, trimDepth, null));
-            task = ModelMgr.getModelMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
+            task = StateMgr.getStateMgr().submitJob("ConsoleTrimSample", "Remove Partial Secondary Data", taskParameters);
 
             log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
         } catch (Exception e) {

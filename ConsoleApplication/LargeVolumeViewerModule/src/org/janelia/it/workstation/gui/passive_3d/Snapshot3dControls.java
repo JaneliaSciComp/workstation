@@ -28,8 +28,8 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
  * Represents the group of controls.  Actions against controls are encapsulated

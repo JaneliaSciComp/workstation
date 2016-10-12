@@ -9,9 +9,9 @@ import javax.swing.JOptionPane;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.LargeVolumeDiscoveryTask;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
 	
@@ -35,7 +35,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
         	try {
 	            HashSet<TaskParameter> taskParameters = new HashSet<>();
 	            String displayName = "Update the set of known Large Volume Samples";
-	            final Task task = ModelMgr.getModelMgr().submitJob(LargeVolumeDiscoveryTask.PROCESS_NAME, displayName, taskParameters);
+	            final Task task = StateMgr.getStateMgr().submitJob(LargeVolumeDiscoveryTask.PROCESS_NAME, displayName, taskParameters);
 	            // Launch another thread/worker to monitor the remote-running task.
 	            TaskMonitoringWorker tmw = new TaskMonitoringWorker(task.getObjectId()) {
 	                @Override

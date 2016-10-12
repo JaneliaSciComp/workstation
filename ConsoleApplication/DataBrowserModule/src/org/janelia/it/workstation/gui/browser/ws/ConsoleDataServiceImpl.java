@@ -30,7 +30,7 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

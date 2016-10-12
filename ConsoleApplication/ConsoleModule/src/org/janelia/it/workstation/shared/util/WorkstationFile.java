@@ -5,12 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +15,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class WorkstationFile {
     
     private static final Logger log = LoggerFactory.getLogger(WorkstationFile.class);
@@ -41,53 +37,8 @@ public class WorkstationFile {
     }
     
     public void get(boolean headOnly) throws Exception {
-        
-        File standardFile = new File(standardPath);
-        if (!SessionMgr.getSessionMgr().isFileCacheAvailable() && standardFile.canRead()) {
-            // File is either local or mounted
-            this.effectiveURL = standardFile.toURI().toURL();
-            getFile(standardFile);
-            return;
-        }
-        
-        this.effectiveURL = SessionMgr.getURL(standardPath);
-        if (effectiveURL.getProtocol().equals("file")) {
-            getFile(new File(effectiveURL.getPath()));
-        }
-        else {
-            HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-        
-            if (headOnly) {
-                HeadMethod head = new HeadMethod(effectiveURL.toString());  
-                int responseCode = client.executeMethod(head);
-                log.trace("get: HEAD {} effectiveURL={}",responseCode,effectiveURL);
-                method = head;
-            }
-            else {
-                GetMethod get = new GetMethod(effectiveURL.toString());
-                int responseCode = client.executeMethod(get);
-                log.trace("get: GET {} effectiveURL={}",responseCode,effectiveURL);
-                method = get;
-                this.stream = get.getResponseBodyAsStream();
-            }
-            
-            this.statusCode = method.getStatusCode();
-            
-            Header contentTypeHeader = method.getResponseHeader("Content-Type");
-            if (contentTypeHeader!=null) {
-                this.contentType = contentTypeHeader.getValue();
-            }
-            
-            Header contentLengthHeader = method.getResponseHeader("Content-Length");
-            if (contentLengthHeader!=null) {
-                this.length = Long.parseLong(contentLengthHeader.getValue());
-            }
-            
-            log.debug("Opened remote file: "+effectiveURL);
-            log.debug("  Length: "+length);
-            log.debug("  Content-type: "+contentType);
-            log.debug("  Status code: "+statusCode);
-        }
+
+        throw new UnsupportedOperationException();
     }
     
     private void getFile(File file) throws Exception {

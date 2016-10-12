@@ -29,7 +29,7 @@ import org.janelia.it.workstation.gui.browser.gui.dialogs.DownloadDialog;
 import org.janelia.it.workstation.gui.browser.gui.hud.Hud;
 import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFactory;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 
 /**
  * Right-click context menu for sample results presented in the Sample Editor. 

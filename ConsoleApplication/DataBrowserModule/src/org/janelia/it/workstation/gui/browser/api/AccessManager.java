@@ -3,11 +3,18 @@ package org.janelia.it.workstation.gui.browser.api;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
+import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.stub.data.FatalCommError;
@@ -16,10 +23,10 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.LoginEvent;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
-import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.PropertyConfigurator;
+import org.janelia.it.workstation.gui.browser.util.SingleThreadedTaskQueue;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,17 +37,24 @@ public final class AccessManager {
     
     private static final Logger log = LoggerFactory.getLogger(AccessManager.class);
 
+    private static final int LOG_GRANULARITY = 100;
+
     public static String RUN_AS_USER = "RunAs";
-    public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
-    public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
+    public static String USER_EMAIL = "UserEmail";
+    public static String USER_NAME = "console.serverLogin";
+    public static String USER_PASSWORD = "console.serverPassword";
+    public static String REMEMBER_PASSWORD = "console.rememberPassword";
 
     private static AccessManager accessManager;
     private static String bypassSubjectKey;
 
     private boolean isLoggedIn;
+    private Long currentSessionId;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
 
+    private Map<CategoryString, Long> categoryInstanceCount = new HashMap<>();
+    
     private AccessManager() {
         log.info("Initializing Access Manager");
         String tempLogin = (String) SessionMgr.getSessionMgr().getModelProperty(USER_NAME);
@@ -98,7 +112,7 @@ public final class AccessManager {
                         return new PasswordAuthentication(username, password.toCharArray());
                     }
                 });
-                SessionMgr.getSessionMgr().getWebDavClient().setCredentialsUsingAuthenticator();
+                FileMgr.getFileMgr().getWebDavClient().setCredentialsUsingAuthenticator();
             }
             return authenticatedSubject;
         } 
@@ -109,23 +123,195 @@ public final class AccessManager {
     }
 
     private void beginSession() {
-        // TO DO: add to eventBus server logging
+        String userName = getSubject()==null?null:getSubject().getName();
         UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                SessionMgr.getSessionMgr().getSubject().getName(),
+                userName,
                 ConsoleProperties.getString("console.Title"),
                 ConsoleProperties.getString("console.versionNumber"));
         if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-            SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
+            this.currentSessionId = loginEvent.getSessionId();
         }
         ActivityLogHelper.logSessionBegin();
         ActivityLogHelper.logUserInfo(authenticatedSubject);
     }
 
     private void endSession() {
-        // TO DO: add to eventBus server logging
+        String userName = getSubject()==null?null:getSubject().getName();
+        EJBFactory.getRemoteComputeBean().endSession(
+                userName,
+            ConsoleProperties.getString("console.Title"),
+            currentSessionId);
+        this.currentSessionId = null;
         ActivityLogHelper.logSessionEnd();
     }
+    
+    private void addEventToSession(UserToolEvent event) {
+        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
+    }
 
+    private void addEventsToSession(UserToolEvent[] events) {
+        EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
+    }
+
+    /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 2. allow-to-log if the count of attempts for category==granularity.
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     */
+    public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    Long count = categoryInstanceCount.get(category);
+                    if (count == null) {
+                        count = new Long(0);
+                    }
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    } else if (count % LOG_GRANULARITY == 0) {
+                        shouldLog = true;
+                    }
+                    categoryInstanceCount.put(category, ++count);
+
+                    if (shouldLog) {
+                        addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    currentSessionId, userLogin, toolName, category, action, timestamp, ex);
+        }
+    }
+
+    /**
+     * Send an event described by the information given as parameters, to the
+     * logging apparatus. Apply the criteria of:
+     * 1. allow-to-log if more time was taken, than the lower threshold, or
+     * 
+     * @param toolName the stakeholder tool, in this event.
+     * @param category for namespacing.
+     * @param action what happened.
+     * @param timestamp when it happened.
+     * @param elapsedMs how much time passed to carry this out?
+     * @param thresholdMs beyond this time, force log issue.
+     * @todo see about reusing code between this and non-threshold.
+     */
+    public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
+        String userLogin = null;
+
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    boolean shouldLog = false;
+                    if (elapsedMs > thresholdMs) {
+                        shouldLog = true;
+                    }
+
+                    if (shouldLog) {
+                        addEventToSession(event);
+                    }
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to log tool event for session: {}, user: {}, tool: {}, category: {}, action: {}, timestamp: {}.",
+                    currentSessionId, userLogin, toolName, category, action, timestamp, ex);
+        }
+    }
+
+    /**
+     * Log a tool event, always.  No criteria will be checked. 
+     */
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action) {
+        // Force logging, by setting elapsed > threshold.
+        logToolEvent(toolName, category, action, new Date().getTime(), 1.0, 0.0);
+    }
+
+    /**
+     * Log a whole list of tool events, in one server-pump.
+     * 
+     * @param toolName tool, like LVV or Console
+     * @param category type of event
+     * @param batchPrefix distinguish action/optional, may be null.
+     * @param actions explicit action information.
+     */
+    public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
+        String userLogin = null;
+        try {
+            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+            final UserToolEvent[] events = new UserToolEvent[actions.size()];
+            int evtNum = 0;
+            for (String action: actions) {                
+                Date eventDate = null;
+                int pos = action.lastIndexOf(":");
+                if (pos > -1  &&  pos < action.length()) {
+                    eventDate = new Date(Long.parseLong(action.substring(pos + 1)));
+                    action = action.substring(0, pos); // Trim away redundant info.
+                }
+                else {
+                    eventDate = new Date();
+                }
+                if (batchPrefix != null)
+                    action = batchPrefix + ":" + action;
+                UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action, eventDate);
+                events[evtNum++] = event;
+            }
+            
+            Callable<Void> callable = new Callable<Void>() {
+                @Override
+                public Void call() {
+                    addEventsToSession(events);
+                    return null;
+                }
+            };
+            SingleThreadedTaskQueue.submit(callable);
+        } catch (Exception ex) {
+            log.warn(
+                    "Failed to batch-log tool events for session: {}, user: {}, tool: {}, category: {}, action-prefix: {}, timestamp: {}.",
+                    currentSessionId, userLogin, toolName, category, batchPrefix, new Date().getTime(), ex);
+        }
+    }
+
+    /**
+     * Log-tool-event override, which includes elapsed/threshold comparison
+     * values.  If the elapsed time (expected milliseconds) exceeds the
+     * threshold, definitely log.  Also, will check number-of-issues against
+     * a granularity map.  Only issue the message at a preset
+     * granularity.
+     * 
+     * @see #logToolEvent(org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString, org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString, org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString, long, double, double) 
+     * @param elapsedMs
+     * @param thresholdMs 
+     */
+    public void logToolEvent(ToolString toolName, CategoryString category, ActionString action, double elapsedMs, double thresholdMs) {
+        logToolEvent(toolName, category, action, new Date().getTime(), elapsedMs, thresholdMs);
+    }
+    
     public boolean setRunAsUser(String runAsUser) {
         
         if (!AccessManager.authenticatedSubjectIsInGroup(SubjectRole.Admin) && !StringUtils.isEmpty(runAsUser)) {
@@ -187,9 +373,9 @@ public final class AccessManager {
     private void setSubject(Subject subject) {
         this.loggedInSubject = subject;
         // TODO: This is a temporary hack to inject this information back into the old modules. It should go away eventually.
-        SessionMgr.getSessionMgr().setSubjectKey(
-                authenticatedSubject==null?null:authenticatedSubject.getKey(),
-                loggedInSubject==null?null:loggedInSubject.getKey());
+//        SessionMgr.getSessionMgr().setSubjectKey(
+//                authenticatedSubject==null?null:authenticatedSubject.getKey(),
+//                loggedInSubject==null?null:loggedInSubject.getKey());
     }
 
     public Subject getSubject() {

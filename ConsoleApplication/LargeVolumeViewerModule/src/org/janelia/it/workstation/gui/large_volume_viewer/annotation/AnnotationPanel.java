@@ -27,7 +27,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSeparator;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
@@ -393,7 +393,7 @@ public class AnnotationPanel extends JPanel
 
 
         // developer panel, only shown to me; used for various testing things
-        if (SessionMgr.getSessionMgr().getSubject().getName().equals("olbrisd")) {
+        if (AccessManager.getAccessManager().getSubject().getName().equals("olbrisd")) {
             lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
             add(lvvDevPanel, cVert);
         }

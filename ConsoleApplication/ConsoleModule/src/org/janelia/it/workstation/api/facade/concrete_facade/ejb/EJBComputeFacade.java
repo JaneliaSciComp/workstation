@@ -1,17 +1,11 @@
 package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 
-import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
+import java.util.List;
+
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
-
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,65 +103,7 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public Subject loginSubject(final String username, final String password) throws Exception {
-        final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
-        final Subject loggedInSubject = compute.login(username, password);
-
-        // set default authenticator for all http requests
-        if (null!=loggedInSubject) {
-            log.info("Setting default authenticator");
-            Authenticator.setDefault(new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(username,
-                                                      password.toCharArray());
-                }
-            });
-            WebDavClient webDavClient = SessionMgr.getSessionMgr().getWebDavClient();
-            webDavClient.setCredentialsUsingAuthenticator();
-        }
-
-        return loggedInSubject;
-    }
-
-    @Override
-    public void beginSession() {
-        UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                SessionMgr.getSessionMgr().getSubject().getName(),
-                ConsoleProperties.getString("console.Title"),
-                ConsoleProperties.getString("console.versionNumber"));
-        if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-            SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
-        }
-    }
-
-    @Override
-    public void addEventToSession(UserToolEvent event) {
-        EJBFactory.getRemoteComputeBean().addEventToSessionAsync(event);
-    }
-
-    @Override
-    public void addEventsToSession(UserToolEvent[] events) {
-        EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
-    }
-
-    @Override
-    public void endSession() {
-        try{
-            EJBFactory.getRemoteComputeBean().endSession(
-                SessionMgr.getSessionMgr().getSubject().getName(),
-                ConsoleProperties.getString("console.Title"),
-                SessionMgr.getSessionMgr().getCurrentSessionId());
-            SessionMgr.getSessionMgr().setCurrentSessionId(null);
-        } catch( NullPointerException npe){
-            // This is for bug FW-2512.  At time of writing, unable to duplicate
-            // this exception. This bug may have been fixed by unrelated commit.
-            // Therefore, leaving this trail to see which
-            // possible thing is null. LLF, 6/1/2014.
-            System.out.println("Remote compute bean: " + EJBFactory.getRemoteComputeBean());
-            System.out.println("SessionMgr: " + SessionMgr.getSessionMgr());
-            System.out.println("Subject: " + SessionMgr.getSessionMgr().getSubject());
-            throw npe;
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override

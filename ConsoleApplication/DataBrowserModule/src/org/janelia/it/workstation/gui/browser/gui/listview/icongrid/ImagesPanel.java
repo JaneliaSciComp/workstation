@@ -31,6 +31,7 @@ import javax.swing.Scrollable;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
@@ -117,7 +118,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
-        if (!SessionMgr.getSessionMgr().isDarkLook()) {
+        if (!StateMgr.getStateMgr().isDarkLook()) {
             getViewport().setBackground(Color.white);
         }
     }

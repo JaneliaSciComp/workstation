@@ -6,7 +6,7 @@ import org.janelia.it.workstation.gui.browser.web.EmbeddedWebServer;
 import org.janelia.it.workstation.gui.browser.ws.EmbeddedAxisServer;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +30,10 @@ public class ServiceMgr {
     
     private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
+
+    private int axisServerPort;
+
+    private int webServerPort;
     
     public int startAxisServer(int startingPort) {
         int port = startingPort;
@@ -107,16 +111,16 @@ public class ServiceMgr {
     }
     
     public void initServices() {
-        int axisServerPort = startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
-        // TODO: this is temporary. we need to inject the port number back into the ConsoleModule for the ToolMgr to use.
-        // We will remove this hack once the ToolMgr is ported over.
-        SessionMgr.getSessionMgr().setAxisServerPort(axisServerPort);
-        
-        int webServerPort = startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
-        // TODO: this is temporary. we need to inject the port number back into the ConsoleModule for the ToolMgr to use.
-        // We will remove this hack once the ToolMgr is ported over.
-        SessionMgr.getSessionMgr().setWebServerPort(webServerPort);   
+        this.axisServerPort = startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
+        this.webServerPort = startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
     }
-    
+
+    public int getAxisServerPort() {
+        return axisServerPort;
+    }
+
+    public int getWebServerPort() {
+        return webServerPort;
+    }
     
 }

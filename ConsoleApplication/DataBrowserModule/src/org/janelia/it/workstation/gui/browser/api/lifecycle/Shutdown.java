@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.browser.api.lifecycle;
 
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationClosing;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.OnStop;
 
 /**
@@ -15,6 +14,5 @@ import org.openide.modules.OnStop;
 public class Shutdown implements Runnable {
     public void run() {
         Events.getInstance().postOnEventBus(new ApplicationClosing());
-        SessionMgr.getSessionMgr().systemWillExit();
     }
 }

@@ -121,10 +121,10 @@ public class LoginDialog extends ModalDialog {
 
     public void showDialog() {
         
-        String email = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
+        String email = (String) getModelProperty(AccessManager.USER_EMAIL, "");
         String username = (String) getModelProperty(AccessManager.USER_NAME, "");
         String password = (String) getModelProperty(AccessManager.USER_PASSWORD, "");
-        Boolean remember = (Boolean) getModelProperty(SessionMgr.REMEMBER_PASSWORD, Boolean.TRUE);
+        Boolean remember = (Boolean) getModelProperty(AccessManager.REMEMBER_PASSWORD, Boolean.TRUE);
         
         emailField.setText(email);
         usernameField.setText(username);
@@ -142,10 +142,10 @@ public class LoginDialog extends ModalDialog {
         String password = new String(passwordField.getPassword());
         
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, email);
+        sessionMgr.setModelProperty(AccessManager.USER_EMAIL, email);
         sessionMgr.setModelProperty(AccessManager.USER_NAME, username);
         sessionMgr.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
-        sessionMgr.setModelProperty(SessionMgr.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
+        sessionMgr.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
         
         if (StringUtils.isEmpty(email)) {
             Object[] options = { "Fix Email", "Exit Program" };

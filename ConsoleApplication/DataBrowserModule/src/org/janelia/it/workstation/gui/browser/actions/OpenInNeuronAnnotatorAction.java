@@ -13,12 +13,11 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClient;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +30,8 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
     private final static Logger log = LoggerFactory.getLogger(OpenInNeuronAnnotatorAction.class);
 
+    public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
+    
     private NeuronFragment fragment;
     private NeuronSeparation separation;
 
@@ -91,7 +92,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
         try {
             // Check that there is a valid NA instance running
-            List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(StateMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+            List<ExternalClient> clients = ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME);
             // If no NA client then try to start one
             if (clients.isEmpty()) {
                 startNA();
@@ -115,7 +116,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
                 }
             }
 
-            if (ExternalClientMgr.getInstance().getExternalClientsByName(StateMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+            if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
                 JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                         "Could not get Neuron Annotator to launch and connect. "
                                 + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
@@ -132,13 +133,13 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
     private void startNA() throws Exception {
         log.debug("Client {} is not running. Starting a new instance.",
-                StateMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+                NEURON_ANNOTATOR_CLIENT_NAME);
         ToolMgr.runTool(ToolMgr.TOOL_NA);
         boolean notRunning = true;
         int killCount = 0;
         while (notRunning && killCount < 2) {
-            if (ExternalClientMgr.getInstance().getExternalClientsByName(StateMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", StateMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+            if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                log.debug("Waiting for {} to start.", NEURON_ANNOTATOR_CLIENT_NAME);
                 Thread.sleep(3000);
                 killCount++;
             }

@@ -39,8 +39,8 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.jacs.shared.utils.domain.DataReporter;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -61,12 +61,12 @@ import org.janelia.it.workstation.gui.browser.gui.listview.WrapperCreatorItemFac
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -358,7 +358,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                     annotationValue = annotation.getName();
                                 }
                             }
-                            DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                            DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
                             reporter.reportData(domainObject, annotationValue);
                         }
 
@@ -432,7 +432,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                         try {
                             HashSet<TaskParameter> taskParameters = new HashSet<>();
                             taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                            task = ModelMgr.getModelMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
+                            task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
                         }
                         catch (Exception e) {
                             SessionMgr.getSessionMgr().handleException(e);
@@ -566,7 +566,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
+                    task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -807,7 +807,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         HashSet<TaskParameter> taskParameters = new HashSet<>();
         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
-        Task mergeTask = ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
+        Task mergeTask = StateMgr.getStateMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
         return mergeTask.getObjectId();
     }
 
@@ -889,7 +889,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     private JMenuItem getSpecialAnnotationSession() {
         if (this.multiple) return null;
-        if (!SessionMgr.getSubjectKey().equals("user:simpsonj") && !SessionMgr.getSubjectKey().equals("group:simpsonlab")) {
+        if (!AccessManager.getSubjectKey().equals("user:simpsonj") && !AccessManager.getSubjectKey().equals("group:simpsonlab")) {
                 return null;
         }
         JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");

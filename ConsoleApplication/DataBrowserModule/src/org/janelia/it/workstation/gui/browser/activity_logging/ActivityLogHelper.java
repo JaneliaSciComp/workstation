@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.browser.activity_logging;
 
-import java.util.List;
-
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -12,7 +10,7 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.RESTClientManager;
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,7 +22,7 @@ import java.lang.reflect.Method;
 
 import javax.swing.KeyStroke;
 
-import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 
 /**
  * Adapted from IDEA code base.

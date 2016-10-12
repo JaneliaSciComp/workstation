@@ -18,13 +18,13 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,10 +130,11 @@ public class RerunSamplesAction extends AbstractAction {
                     Task task = new GenericTask(new HashSet<Node>(), AccessManager.getSubjectKey(), new ArrayList<Event>(),
                             taskParameters, TASK_LABEL, TASK_LABEL);
                     try {
-                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                        task = StateMgr.getStateMgr().saveOrUpdateTask(task);
                         DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
-                        ModelMgr.getModelMgr().dispatchJob(TASK_LABEL, task);
-                    } catch (Exception ex) {
+                        StateMgr.getStateMgr().dispatchJob(TASK_LABEL, task);
+                    } 
+                    catch (Exception ex) {
                         throw new RuntimeException(ex);
                     }
                 }

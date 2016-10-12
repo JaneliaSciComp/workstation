@@ -36,19 +36,19 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.DataSetComboBoxRenderer;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.ComboMembershipListPanel;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 
 import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;
@@ -450,8 +450,9 @@ public class LineReleaseDialog extends ModalDialog {
         try {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("release entity id", releaseEntity.getId().toString(), null));
-            task = ModelMgr.getModelMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
-        } catch (Exception e) {
+            task = StateMgr.getStateMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
+        } 
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
             return;
         }

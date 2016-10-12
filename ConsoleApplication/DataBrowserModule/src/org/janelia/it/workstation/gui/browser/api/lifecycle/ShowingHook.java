@@ -10,13 +10,13 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.gui.browser.lifecycle.InterceptingEventQueue;
+import org.janelia.it.workstation.gui.browser.lifecycle.LoggingEventListener;
+import org.janelia.it.workstation.gui.browser.lifecycle.MessageSource;
+import org.janelia.it.workstation.gui.browser.lifecycle.ReportRunner;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.lifecycle.InterceptingEventQueue;
-import org.janelia.it.workstation.lifecycle.LoggingEventListener;
-import org.janelia.it.workstation.lifecycle.MessageSource;
-import org.janelia.it.workstation.lifecycle.ReportRunner;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

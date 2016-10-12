@@ -22,9 +22,10 @@ import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.DesktopApi;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.util.Utils;
+import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,13 +150,13 @@ public class FileDownloadWorker {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
             taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-            task = ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
+            task = StateMgr.getStateMgr().submitJob("ConsoleSplitChannels", "Split Channels: "+objectName, taskParameters);
         }
         else {
             HashSet<TaskParameter> taskParameters = new HashSet<>();
             taskParameters.add(new TaskParameter("filepath", sourceFilePath, null));
             taskParameters.add(new TaskParameter("output extension", targetExtension, null));
-            task = ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
+            task = StateMgr.getStateMgr().submitJob("ConsoleConvertFile", "Convert: "+objectName, taskParameters);
         }
 
         TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {

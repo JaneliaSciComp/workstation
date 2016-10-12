@@ -10,8 +10,8 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
  * Create any "Tiled Microscope Sample" items (buttons, menu items, etc.) based upon this.
