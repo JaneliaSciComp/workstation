@@ -1,9 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package org.janelia.it.workstation.gui.framework.compression;
+package org.janelia.it.workstation.gui.browser.util.compression;
 
 import org.janelia.it.jacs.integration.framework.compression.CompressionException;
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;

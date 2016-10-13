@@ -1,22 +1,16 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+package org.janelia.it.workstation.gui.browser.util.compression;
 
-package org.janelia.it.workstation.gui.framework.compression;
-
-import org.janelia.it.jacs.integration.framework.compression.CompressionException;
-import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.Date;
+
 import org.apache.commons.io.FileUtils;
+import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
+import org.janelia.it.jacs.integration.framework.compression.CompressionException;
 import org.janelia.it.jacs.shared.utils.SystemCall;
-import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A compression algorithm compatible with MJ2 / JPEG2000 decompression,

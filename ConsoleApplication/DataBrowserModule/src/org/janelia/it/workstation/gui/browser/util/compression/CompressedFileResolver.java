@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.framework.compression;
+package org.janelia.it.workstation.gui.browser.util.compression;
 
 import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;

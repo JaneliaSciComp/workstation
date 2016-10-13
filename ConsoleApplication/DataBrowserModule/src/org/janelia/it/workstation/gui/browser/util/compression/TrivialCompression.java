@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package org.janelia.it.workstation.gui.framework.compression;
+package org.janelia.it.workstation.gui.browser.util.compression;
 
-import org.janelia.it.jacs.integration.framework.compression.CompressionException;
-import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
 import java.io.File;
+
+import org.janelia.it.jacs.integration.framework.compression.CompressionAlgorithm;
+import org.janelia.it.jacs.integration.framework.compression.CompressionException;
 
 /**
  * Simplistic '1:1' compression algorithm. It just reads data off the disk.
