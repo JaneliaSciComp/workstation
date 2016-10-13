@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public class EJBFactory {
 	
-	private static final Logger log = LoggerFactory.getLogger(EJBFactory.class);
+    private static final Logger log = LoggerFactory.getLogger(EJBFactory.class);
 	
     private static final String INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("interactive.server.url");
     private static final String PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("pipeline.server.url");
@@ -28,21 +28,16 @@ public class EJBFactory {
     private static final String REMOTE_ENTITY_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.entity.jndi.name");
     private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
 
-    private static Properties icInteractiveServerProperties = new Properties();
-    private static Properties icPipelineServerProperties = new Properties();
+    private static final Properties icInteractiveServerProperties = new Properties();
+    private static final Properties icPipelineServerProperties = new Properties();
     
-    private static String interactiveServer;
-    private static String pipelineServer;
+    private static final String interactiveServer;
+    private static final String pipelineServer;
 
     static {
-    	
     	interactiveServer = INTERACTIVE_SERVER;
-    	pipelineServer = PIPELINE_SERVER;
-    	
-    	if (StringUtils.isEmpty(pipelineServer)) {
-    		pipelineServer = interactiveServer;
-    	}
-    	
+    	pipelineServer = StringUtils.isEmpty(PIPELINE_SERVER) ? interactiveServer : PIPELINE_SERVER;
+    	    	
     	String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
     	String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
     	
@@ -92,7 +87,7 @@ public class EJBFactory {
             return ic.lookup(lookupName);
         }
         catch (NamingException e) {
-            e.printStackTrace();
+            log.error("Error getting remote interface: "+lookupName,e);
             return null;
         }
         finally {
@@ -101,7 +96,7 @@ public class EJBFactory {
                     ic.close();
                 }
                 catch (NamingException e) {
-                    e.printStackTrace();
+                    log.error("Error closing remote interface: "+lookupName,e);
                 }
             }
         }
