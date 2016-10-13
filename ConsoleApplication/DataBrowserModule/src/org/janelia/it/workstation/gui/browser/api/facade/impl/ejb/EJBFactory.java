@@ -21,12 +21,12 @@ public class EJBFactory {
 	
     private static final String INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("interactive.server.url");
     private static final String PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("pipeline.server.url");
-    private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
-    private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
-    private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
-    private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
-    private static final String REMOTE_ENTITY_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.entity.jndi.name");
-    private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
+    private static final String INITIAL_CONTEXT_FACTORY = "org.jnp.interfaces.NamingContextFactory";
+    private static final String URL_PKG_PREFIXES = "org.jboss.naming:org.jnp.interfaces";
+    private static final String REMOTE_ANNOTATION_JNDI_NAME = "compute/AnnotationEJB/remote";
+    private static final String REMOTE_COMPUTE_JNDI_NAME = "compute/ComputeEJB/remote";
+    private static final String REMOTE_ENTITY_JNDI_NAME = "compute/EntityEJB/remote";
+    private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = "compute/TiledMicroscopeEJB/remote";
 
     private static final Properties icInteractiveServerProperties = new Properties();
     private static final Properties icPipelineServerProperties = new Properties();
