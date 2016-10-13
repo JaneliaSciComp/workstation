@@ -30,7 +30,7 @@ public class ShowWorkspaceInfo implements DomainObjectAcceptor  {
     	
         TmSample sample = null;
         try {
-        	sample = DomainMgr.getDomainMgr().getModel().getDomainObjectAs(TmSample.class, workspace.getSampleRef());
+        	sample = DomainMgr.getDomainMgr().getModel().getDomainObject(workspace.getSampleRef());
         } catch (Exception e) {
             log.error("Error getting sample "+workspace.getSampleRef(),e);
         }

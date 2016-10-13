@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.gui.editor;
 
 import java.util.Collection;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.listview.ListViewerState;
@@ -12,23 +13,23 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectEditorState {
+public class DomainObjectEditorState<T extends DomainObject> {
 
-    private final DomainObjectNode domainObjectNode;
+    private final DomainObjectNode<T> domainObjectNode;
     private final Integer page;
     private final ListViewerState listViewerState;
     private final Collection<Reference> selectedIds;
 
     private DomainListViewTopComponent topComponent;
 
-    public DomainObjectEditorState(DomainObjectNode domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+    public DomainObjectEditorState(DomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
         this.domainObjectNode = domainObjectNode;
         this.page = page;
         this.listViewerState = listViewerState;
         this.selectedIds = selectedIds;
     }
 
-    public DomainObjectNode getDomainObjectNode() {
+    public DomainObjectNode<T> getDomainObjectNode() {
         return domainObjectNode;
     }
 

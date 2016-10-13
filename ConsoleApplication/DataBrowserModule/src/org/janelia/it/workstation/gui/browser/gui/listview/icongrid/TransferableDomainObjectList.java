@@ -8,18 +8,14 @@ import java.util.List;
 import java.util.Set;
 
 import javax.swing.JComponent;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * List of entities being transferred, supporting multiple output flavors.
  */
 public class TransferableDomainObjectList implements Transferable {
-
-    private static final Logger log = LoggerFactory.getLogger(TransferableDomainObjectList.class);
 
     private final Set<DataFlavor> flavors = new HashSet<>();
 

@@ -10,6 +10,6 @@ import java.io.File;
 public abstract class FileCallable extends ParameterizedCallable<File> {
     
     public File getFile() {
-        return (File)getParam();
+        return getParam();
     }
 }

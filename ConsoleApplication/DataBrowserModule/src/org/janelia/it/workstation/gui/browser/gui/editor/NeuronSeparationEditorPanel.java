@@ -174,6 +174,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         resultsPanel.getViewer().setEditSelectionModel(editSelectionModel);
     }
 
+    @SuppressWarnings("unchecked")
     private void performHideAction(boolean hideMode) {
         try {
             // find the list of visibilities for this separation Id
@@ -182,7 +183,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 Preference neuronSepVisibility = DomainMgr.getDomainMgr().getPreference(DomainConstants.PREFERENCE_CATEGORY_NEURON_SEPARATION_VISIBILITY,
                         Long.toString(separation.getId()));
                 if (neuronSepVisibility!=null) {
-                    Set<Long> fragmentVis = new HashSet((List)neuronSepVisibility.getValue());
+                    Set<Long> fragmentVis = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
                     for (int i=domainObjects.size()-1; i>=0; i--) {
                         NeuronFragment neuronFragment = (NeuronFragment) domainObjects.get(i);
 
@@ -201,9 +202,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
-
     }
     
+    @SuppressWarnings("unchecked")
     private void enterEditMode() {
         try {
             enableVisibilityCheckBox.setVisible(false);
@@ -221,7 +222,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                     Long.toString(separation.getId()));
             List<DomainObject> visibleNeuronFrags = new ArrayList<DomainObject>();
             if (neuronSepVisibility!=null) {
-                Set<Long> visibleFragSet = new HashSet((List)neuronSepVisibility.getValue());
+                Set<Long> visibleFragSet = new HashSet<>((List<Long>)neuronSepVisibility.getValue());
                 for (int i=0; i<neuronFrags.size(); i++) {
                     if (visibleFragSet.contains(neuronFrags.get(i).getId())) {
                         visibleNeuronFrags.add(neuronFrags.get(i));
@@ -235,7 +236,6 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             ConsoleApp.handleException(e);
         }
     }
-
 
     private void cancelEditMode() {
         // show checkboxes for all items

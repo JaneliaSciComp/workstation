@@ -94,7 +94,7 @@ public abstract class MembershipListPanel<T> extends JPanel {
             return null;
         }
 
-        JList target = (JList) e.getSource();
+        JList<?> target = (JList<?>) e.getSource();
         if (target.getSelectedValue() == null) {
             return null;
         }

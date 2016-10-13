@@ -102,7 +102,6 @@ public class DomainInspectorPanel extends JPanel {
     private List<Subject> subjects;
     private Map<String,Subject> subjectMap;
     private DomainObject domainObject;
-    private PipelineResult result;
     private Set<ImmutablePair<String, Object>> propertySet;
 
     private JLabel createLoadingLabel() {
@@ -134,8 +133,9 @@ public class DomainInspectorPanel extends JPanel {
         attributesPanel = new JPanel(new BorderLayout());
         attributesTable = new DynamicTable(true, false) {
             @Override
+            @SuppressWarnings("unchecked")
             public Object getValue(Object userObject, DynamicColumn column) {
-                ImmutablePair<String,Object> attrPair = (ImmutablePair) userObject;
+                ImmutablePair<String,Object> attrPair = (ImmutablePair<String, Object>) userObject;
                 if (null != attrPair) {
                     if (column.getName().equals(ATTRIBUTES_COLUMN_KEY)) {
                         return attrPair.getKey();
@@ -361,7 +361,6 @@ public class DomainInspectorPanel extends JPanel {
         log.debug("Loading properties for pipeline result {}", result.getId());
         showAttributesLoadingIndicator();
 
-        this.result = result;
         this.propertySet = new TreeSet<>();
 
         addProperty("Creation Date", result.getCreationDate());

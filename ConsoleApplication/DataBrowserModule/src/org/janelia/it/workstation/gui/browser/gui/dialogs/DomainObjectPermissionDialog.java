@@ -43,7 +43,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
     private final DomainInspectorPanel parent;
     private final JPanel attrPanel;
-    private final JComboBox subjectCombobox;
+    private final JComboBox<Subject> subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
@@ -61,7 +61,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox();
+        subjectCombobox = new JComboBox<>();
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a user or group");
 
@@ -129,7 +129,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     
     private void showDialog() {
 
-        DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
+        DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
         model.removeAllElements();
 
         String currSubjectKey = dop==null?null:dop.getSubjectKey();

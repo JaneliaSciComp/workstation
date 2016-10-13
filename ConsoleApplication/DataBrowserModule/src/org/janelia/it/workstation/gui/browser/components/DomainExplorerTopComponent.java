@@ -339,10 +339,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
-                Set<DomainObjectNode> nodes = DomainObjectNodeTracker.getInstance().getNodesById(domainObject.getId());
+                Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
                 if (!nodes.isEmpty()) {
                     log.info("Updating invalidated object: {}",domainObject.getName());
-                    for(DomainObjectNode node : nodes) {
+                    for(DomainObjectNode<DomainObject> node : nodes) {
                         try {
                             DomainObject refreshed = model.getDomainObject(domainObject.getClass(), domainObject.getId());
                             if (refreshed==null) {

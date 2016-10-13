@@ -205,6 +205,7 @@ public class DomainModel {
                     continue;
                 }
                 Reference id = Reference.createFor(domainObject);
+                @SuppressWarnings("unchecked")
                 T canonicalObject = (T)objectCache.getIfPresent(id);
                 if (canonicalObject != null) {
                     if (canonicalObject != domainObject) {
@@ -310,7 +311,7 @@ public class DomainModel {
      * @param ref
      * @return
      */
-    private DomainObject loadDomainObject(Reference ref) throws Exception {
+    private <T extends DomainObject> T loadDomainObject(Reference ref) throws Exception {
         log.debug("loadDomainObject({})", ref);
         return domainFacade.getDomainObject(ref);
     }
@@ -322,7 +323,7 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject reload(DomainObject domainObject) throws Exception {
+    public <T extends DomainObject> T reload(T domainObject) throws Exception {
         return reloadById(Reference.createFor(domainObject));
     }
 
@@ -333,9 +334,9 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject reloadById(Reference Reference) throws Exception {
+    public <T extends DomainObject> T reloadById(Reference Reference) throws Exception {
         synchronized (this) {
-            DomainObject domainobject = loadDomainObject(Reference);
+            T domainobject = loadDomainObject(Reference);
             return putOrUpdate(domainobject);
         }
     }
@@ -377,7 +378,7 @@ public class DomainModel {
         if (!isCacheable(domainObject)) {
             return domainObject;
         }
-        return (T)getDomainObject(Reference.createFor(domainObject));
+        return getDomainObject(Reference.createFor(domainObject));
     }
 
     /**
@@ -386,16 +387,17 @@ public class DomainModel {
      * @return canonical domain object instance
      * @throws Exception
      */
-    public DomainObject getDomainObject(Reference ref) throws Exception {
+    @SuppressWarnings("unchecked")
+    public <T extends DomainObject> T getDomainObject(Reference ref) throws Exception {
         log.debug("getDomainObject({})",ref);
         if (ref==null) return null;
         DomainObject domainObject = objectCache.getIfPresent(ref);
         if (domainObject != null) {
             log.debug("getEntityById: returning cached domain object {}", DomainUtils.identify(domainObject));
-            return domainObject;
+            return (T)domainObject;
         }
         synchronized (this) {
-            return putOrUpdate(loadDomainObject(ref));
+            return putOrUpdate((T)loadDomainObject(ref));
         }
     }
 
@@ -403,12 +405,7 @@ public class DomainModel {
         return getDomainObjectsAs(DomainObject.class, references);
     }
 
-    public <T extends DomainObject> T getDomainObjectAs(Class<T> domainClass, Reference reference) throws Exception {
-    	List<T> list = getDomainObjectsAs(domainClass, Arrays.asList(reference));
-    	if (list.isEmpty()) return null;
-    	return list.get(0);
-    }
-    
+    @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> domainClass, List<Reference> references) throws Exception {
 
         if (references==null) return new ArrayList<>();
@@ -421,9 +418,9 @@ public class DomainModel {
         List<Reference> unsatisfiedRefs = new ArrayList<>();
 
         for(Reference ref : references) {
-            DomainObject domainObject = ref==null?null:objectCache.getIfPresent(ref);
+            T domainObject = ref==null?null:(T)objectCache.getIfPresent(ref);
             if (domainObject!=null) {
-                map.put(ref, (T)domainObject);
+                map.put(ref, domainObject);
             }
             else {
                 unsatisfiedRefs.add(ref);
@@ -463,6 +460,7 @@ public class DomainModel {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> clazz, List<Long> ids) throws Exception {
         List<T> objects = new ArrayList<>();
         for(DomainObject domainObject : getDomainObjects(clazz.getSimpleName(), ids)) {
@@ -479,26 +477,27 @@ public class DomainModel {
     public <T extends DomainObject> List<T> getDomainObjects(Class<T> domainClass, String name) throws Exception {
         List<T> objects = new ArrayList<>();
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
-        for(DomainObject domainObject : domainFacade.getDomainObjects(domainClass, name)) {
-            objects.add((T)domainObject);
+        for(T domainObject : domainFacade.getDomainObjects(domainClass, name)) {
+            objects.add(domainObject);
         }
         if (TIMER) w.stop("getDomainObjects(Class,objectName)");
         return objects;
     }
     
-    public List<DomainObject> getDomainObjects(String className, List<Long> ids) throws Exception {
+    public <T extends DomainObject> List<T> getDomainObjects(String className, List<Long> ids) throws Exception {
 
         if (className==null || ids==null) return new ArrayList<>();
         log.debug("getDomainObjects(ids.size={})",ids.size());
 
         StopWatch w = TIMER ? new LoggingStopWatch() : null;
         
-        Map<Reference,DomainObject> map = new HashMap<>();
+        Map<Reference,T> map = new HashMap<>();
         List<Long> unsatisfiedIds = new ArrayList<>();
 
         for(Long id : ids) {
             Reference ref = Reference.createFor(className, id);
-            DomainObject domainObject = objectCache.getIfPresent(ref);
+            @SuppressWarnings("unchecked")
+            T domainObject = (T)objectCache.getIfPresent(ref);
             if (domainObject!=null) {
                 map.put(ref, domainObject);
             }
@@ -508,16 +507,16 @@ public class DomainModel {
         }
 
         if (!unsatisfiedIds.isEmpty()) {
-            List<DomainObject> objects = domainFacade.getDomainObjects(className, unsatisfiedIds);
+            List<T> objects = domainFacade.getDomainObjects(className, unsatisfiedIds);
             map.putAll(DomainUtils.getMapByReference(objects));
         }
 
         unsatisfiedIds.clear();
 
-        List<DomainObject> domainObjects = new ArrayList<>();
+        List<T> domainObjects = new ArrayList<>();
         for(Long id : ids) {
             Reference ref = Reference.createFor(className, id);
-            DomainObject domainObject = map.get(ref);
+            T domainObject = map.get(ref);
             if (domainObject!=null) {
                 domainObjects.add(domainObject);
             }
@@ -526,7 +525,7 @@ public class DomainModel {
             }
         }
 
-        List<DomainObject> canonicalObjects = putOrUpdate(domainObjects, false);
+        List<T> canonicalObjects = putOrUpdate(domainObjects, false);
         if (TIMER) w.stop("getDomainObjects(className,ids)");
         log.debug("getDomainObjects: returning {} objects ({} unsatisfied)",canonicalObjects.size(),unsatisfiedIds.size());
         return canonicalObjects;

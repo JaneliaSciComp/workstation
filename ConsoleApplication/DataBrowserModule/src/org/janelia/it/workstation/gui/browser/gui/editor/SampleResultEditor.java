@@ -14,5 +14,5 @@ public interface SampleResultEditor extends Editor {
     
     public void loadSampleResult(PipelineResult pipelineResult, boolean isUserDriven, Callable<Void> success);
 
-    public SelectionModel getSelectionModel();
+    public SelectionModel<?,?> getSelectionModel();
 }

@@ -27,7 +27,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private static final int MAX_POPUP_LINE_LENGTH = 120;
     private static final Object[] normalOptions = {"OK", SEND_EMAIL_BUTTON_LABEL};
     private static final Object defaultOption = normalOptions[0];
-    private static final String buildDate = "@@date@@";
+//    private static final String buildDate = "@@date@@";
 
     private static URL emailURL;
     static {
@@ -108,7 +108,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     }
 
     private void displayDialog(Throwable throwable) {
-        List messageList = new ArrayList();
+        List<String> messageList = new ArrayList<>();
         messageList.add("The system has had an internal error.");
         String orgMessage = throwable.getLocalizedMessage();
         if (orgMessage!=null) {

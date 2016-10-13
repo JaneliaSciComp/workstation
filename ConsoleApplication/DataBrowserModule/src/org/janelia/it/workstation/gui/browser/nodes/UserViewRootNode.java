@@ -29,6 +29,7 @@ public class UserViewRootNode extends AbstractNode {
     
     private final static Logger log = LoggerFactory.getLogger(UserViewRootNode.class);
     
+    @SuppressWarnings("unused")
     private final UserViewConfiguration config;
     private final UserViewRootNodeChildFactory childFactory;
     

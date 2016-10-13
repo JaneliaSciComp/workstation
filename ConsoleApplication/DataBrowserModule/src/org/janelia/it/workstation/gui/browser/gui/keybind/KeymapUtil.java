@@ -33,12 +33,12 @@ public class KeymapUtil {
     private static final String GET_KEY_MODIFIERS_TEXT_METHOD = "getKeyModifiersText";
     private static final String CANCEL_KEY_TEXT = "Cancel";
     private static final String BREAK_KEY_TEXT = "Break";
-    private static final String SHIFT = "shift";
-    private static final String CONTROL = "control";
-    private static final String CTRL = "ctrl";
-    private static final String META = "meta";
-    private static final String ALT = "alt";
-    private static final String ALT_GRAPH = "altGraph";
+//    private static final String SHIFT = "shift";
+//    private static final String CONTROL = "control";
+//    private static final String CTRL = "ctrl";
+//    private static final String META = "meta";
+//    private static final String ALT = "alt";
+//    private static final String ALT_GRAPH = "altGraph";
 
     private KeymapUtil() {
     }
@@ -83,7 +83,7 @@ public class KeymapUtil {
     private static String getModifiersText(int modifiers) {
         if (SystemInfo.isMac) {
             try {
-                Class appleLaf = Class.forName(APPLE_LAF_AQUA_LOOK_AND_FEEL_CLASS_NAME);
+                Class<?> appleLaf = Class.forName(APPLE_LAF_AQUA_LOOK_AND_FEEL_CLASS_NAME);
                 Method getModifiers = appleLaf.getMethod(GET_KEY_MODIFIERS_TEXT_METHOD, int.class, boolean.class);
                 return (String) getModifiers.invoke(appleLaf, modifiers, Boolean.FALSE);
             }

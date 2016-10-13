@@ -235,8 +235,8 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
         return cachedPercent;
     }
 
-    private void setCachedPercent(int cachedPercent) {
-        this.cachedPercent = cachedPercent;
+    private void setCachedPercent(int c) {
+        cachedPercent = c;
     }
 
     /**
@@ -461,19 +461,19 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
         return repaintInterval;
     }
 
-    /**
-     * Returns the number of milliseconds per animation cycle. This value is
-     * meaningful only if the progress bar is in indeterminate mode. The cycle
-     * time is used by the default indeterminate progress bar painting code when
-     * determining how far to move the bouncing box per frame. The cycle time is
-     * specified by the "ProgressBar.cycleTime" UI default and adjusted, if
-     * necessary, by the initIndeterminateDefaults method.
-     * 
-     * @return the cycle time, in milliseconds
-     */
-    private int getCycleTime() {
-        return cycleTime;
-    }
+//    /**
+//     * Returns the number of milliseconds per animation cycle. This value is
+//     * meaningful only if the progress bar is in indeterminate mode. The cycle
+//     * time is used by the default indeterminate progress bar painting code when
+//     * determining how far to move the bouncing box per frame. The cycle time is
+//     * specified by the "ProgressBar.cycleTime" UI default and adjusted, if
+//     * necessary, by the initIndeterminateDefaults method.
+//     * 
+//     * @return the cycle time, in milliseconds
+//     */
+//    private int getCycleTime() {
+//        return cycleTime;
+//    }
 
     private int initCycleTime() {
         cycleTime = DefaultLookup.getInt(progressBar, this, "ProgressBar.cycleTime", 3000);
@@ -552,7 +552,6 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
     private class Animator implements ActionListener {
         private Timer timer;
         private long previousDelay; // used to tune the repaint interval
-        private int interval; // the fixed repaint interval
         private long lastCall; // the last time actionPerformed was called
         private int MINIMUM_DELAY = 5;
 

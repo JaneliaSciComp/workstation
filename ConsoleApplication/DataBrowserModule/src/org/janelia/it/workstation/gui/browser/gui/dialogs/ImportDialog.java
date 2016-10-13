@@ -66,8 +66,6 @@ public class ImportDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(ImportDialog.class);
 
-    private static final String DEFAULT_FOLDER_NAME = "Imported Data";
-
     private static final String TOOLTIP_TOP_LEVEL_FOLDER =
             "Name of the folder in which data should be loaded with the data.";
     private static final String TOOLTIP_INPUT_DIR =
@@ -75,7 +73,6 @@ public class ImportDialog extends ModalDialog {
 
     private JTextField folderField;
     private TreeNode rootFolder;
-    private Long folderObjectId;
     private JTextField pathTextField;
     private FilenameFilter selectedChildrenFilter;
 
@@ -207,14 +204,12 @@ public class ImportDialog extends ModalDialog {
     public void showDialog() {
         String folderName = null;
         try {
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
-            rootFolder = model.getDefaultWorkspace();
-        } catch (Exception e) {
+            rootFolder = DomainMgr.getDomainMgr().getModel().getDefaultWorkspace();
+        } 
+        catch (Exception e) {
             log.error("Problem determining selected nodes",e);
             throw new RuntimeException("Problems determining selected nodes.", e);
         }
-        folderObjectId = null;
         folderField.setText(folderName);
 
         ActivityLogHelper.logUserAction("ImportDialog.showDialog");

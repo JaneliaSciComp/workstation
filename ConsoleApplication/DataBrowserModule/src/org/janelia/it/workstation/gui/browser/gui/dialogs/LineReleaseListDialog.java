@@ -30,14 +30,12 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.browser.gui.support.Icons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for viewing all the fly line releases that a user has access to.
@@ -46,8 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class LineReleaseListDialog extends ModalDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(LineReleaseListDialog.class);
-    
     private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
     private static final String COLUMN_NAME = "Name";

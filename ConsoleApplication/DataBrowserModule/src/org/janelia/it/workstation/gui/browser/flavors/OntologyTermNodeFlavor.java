@@ -46,6 +46,7 @@ public class OntologyTermNodeFlavor extends DataFlavor {
         return node;
     }
     
+    @SuppressWarnings("unchecked")
     public static List<OntologyTermNode> getOntologyTermNodeList(Transferable t) {
         List<OntologyTermNode> node = null;
         try {

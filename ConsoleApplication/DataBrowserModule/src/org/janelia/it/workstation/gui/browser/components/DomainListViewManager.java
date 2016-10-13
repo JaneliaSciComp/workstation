@@ -82,7 +82,7 @@ public class DomainListViewManager implements ViewerManager<DomainListViewTopCom
             return;
         }
 
-        DomainObjectNode node = event.getDomainObjectNode();
+        DomainObjectNode<?> node = event.getDomainObjectNode();
 
         if (node==null) {
             log.error("Explorer selection event contains no node: {}",event);

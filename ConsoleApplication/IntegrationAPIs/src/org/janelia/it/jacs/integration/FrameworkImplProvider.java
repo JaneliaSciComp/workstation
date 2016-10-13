@@ -96,9 +96,8 @@ public class FrameworkImplProvider {
         }
     }
     
-    private static <T> T get(String path, Class clazz) {
-        Collection<? extends T> candidates
-                = Lookups.forPath(path).lookupAll(clazz);
+    private static <T> T get(String path, Class<T> clazz) {
+        Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
         if (candidates.size() > 0) {
             return candidates.iterator().next();
         }

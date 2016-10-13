@@ -15,12 +15,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFileGroups;
 import org.janelia.it.jacs.model.domain.sample.LSMSummaryResult;
@@ -31,9 +25,13 @@ import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.browser.gui.support.Icons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.LinkedHashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
 
 /**
  * Drop-down button for selecting the result to use. Currently it only supports Samples,
@@ -42,8 +40,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ResultSelectionButton extends DropDownButton {
-
-    private static final Logger log = LoggerFactory.getLogger(ResultSelectionButton.class);
 
     private ResultDescriptor currResult;
     private boolean showTitle;

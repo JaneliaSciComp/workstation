@@ -27,11 +27,12 @@ import java.util.Map;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class UserViewTreeNodeNode extends DomainObjectNode {
+public class UserViewTreeNodeNode extends DomainObjectNode<TreeNode> {
         
     private final static Logger log = LoggerFactory.getLogger(UserViewTreeNodeNode.class);
     
     private final UserViewTreeNodeChildFactory childFactory;
+    @SuppressWarnings("unused")
     private final UserViewConfiguration config;
     
     public UserViewTreeNodeNode(TreeNode treeNode, UserViewConfiguration config) {
@@ -73,12 +74,6 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
         return false;
     }
     
-//    @Override
-//    public Action[] getActions(boolean context) {
-//        List<Action> actions = new ArrayList<>();
-//        return actions.toArray(new Action[0]);
-//    }
-
     public void refresh() {
         childFactory.refresh();
     }

@@ -10,13 +10,10 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.ontology.Text;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
-import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Editor for annotation values.
@@ -24,8 +21,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotationEditor {
-
-    private final static Logger log = LoggerFactory.getLogger(ApplyAnnotationAction.class);
 
     public static final String CANCEL_VALUE = "CANCEL";
 

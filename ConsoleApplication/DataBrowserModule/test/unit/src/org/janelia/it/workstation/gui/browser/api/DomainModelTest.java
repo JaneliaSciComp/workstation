@@ -1,12 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.browser.api;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.List;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.DomainFacadeImpl;
@@ -21,8 +19,6 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacad
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * NOTE: this always fails at time of writing.
@@ -43,10 +39,6 @@ public class DomainModelTest {
         SampleFacade sampleFacade = new SampleFacadeImpl();
         SubjectFacade subjectFacade = new SubjectFacadeImpl();
         WorkspaceFacade workspaceFacade = new WorkspaceFacadeImpl();
-        /*
-        DomainFacade domainFacade, OntologyFacade ontologyFacade, SampleFacade sampleFacade, 
-            SubjectFacade subjectFacade, WorkspaceFacade workspaceFacade
-         */
         domainModel = new DomainModel(domainFacade, ontologyFacade, sampleFacade, subjectFacade, workspaceFacade);
     }
     

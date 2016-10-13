@@ -50,7 +50,7 @@ public class ShowingHook implements Runnable {
         discriminators.add(ReportRunner.MOUSE_EVENT_DISCRIMINATOR);
         //sources.add(loggingEventListener);
         //discriminators.add(ReportRunner.BUTTON_EVENT_DISCRIMINATOR);
-        ReportRunner rptRunner = new ReportRunner(sources, discriminators);
+        new ReportRunner(sources, discriminators); // This starts a thread
 
         log.info("Showing main window");
         frame.setVisible(true);

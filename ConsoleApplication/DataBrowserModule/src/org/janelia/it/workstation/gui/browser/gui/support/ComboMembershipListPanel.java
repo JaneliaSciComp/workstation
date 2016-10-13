@@ -58,6 +58,7 @@ public class ComboMembershipListPanel<T> extends MembershipListPanel<T> {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int i = inputCombobox.getSelectedIndex();
+                @SuppressWarnings("unchecked")
                 T selected = (T) comboBoxModel.getSelectedItem();
                 if (selected != null) {
                     addItemToList(selected);

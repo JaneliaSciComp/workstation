@@ -38,7 +38,7 @@ public class AnnotationBuilderDialog extends JDialog {
         OntologyNode ontologyNode = OntologyExplorerTopComponent.getInstance().getOntologyNode();
         Ontology currOntology = ontologyNode == null ? null : ontologyNode.getOntology();
         TreeSet<String> terms = currOntology==null?new TreeSet<String>():DomainMgr.getDomainMgr().getModel().getOntologyTermSet(currOntology);
-        final JComboBox comboBox = new JComboBox(terms.toArray());
+        final JComboBox<String> comboBox = new JComboBox<String>(terms.toArray(new String[terms.size()]));
         comboBox.setEditable(true);
         comboBox.setSelectedItem(null);
         AutoCompleteDecorator.decorate(comboBox);

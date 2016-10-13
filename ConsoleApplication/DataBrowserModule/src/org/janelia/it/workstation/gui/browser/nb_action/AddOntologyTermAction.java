@@ -51,6 +51,7 @@ public class AddOntologyTermAction extends NodePresenterAction {
     private AddOntologyTermAction() {
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public synchronized JMenuItem getPopupPresenter() {
 

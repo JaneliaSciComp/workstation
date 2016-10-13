@@ -43,6 +43,7 @@ final class ToolsPanel extends javax.swing.JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(ToolsPanel.class);
 
+    @SuppressWarnings("unused")
     private final ToolsOptionsPanelController controller;
     private final GroupedKeyValuePanel mainPanel;
 

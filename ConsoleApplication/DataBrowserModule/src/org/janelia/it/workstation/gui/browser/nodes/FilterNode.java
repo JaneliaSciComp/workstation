@@ -19,7 +19,7 @@ import org.openide.nodes.Children;
 
 public class FilterNode extends DomainObjectNode<Filter> {
         
-    public FilterNode(ChildFactory parentChildFactory, Filter filter) throws Exception {
+    public FilterNode(ChildFactory<?> parentChildFactory, Filter filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
     }
     

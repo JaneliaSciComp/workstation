@@ -199,7 +199,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (!DomainViewerTopComponent.isSupported(domainObject)) return null;
 
         try {
-            final DomainObject objectToLoad = DomainViewerManager.getInstance().getObjectToLoad(domainObject);
+            final DomainObject objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
             JMenuItem openItem = new JMenuItem("  Open " + objectToLoad.getType() + " In New Viewer");
             openItem.addActionListener(new ActionListener() {
                 @Override
@@ -918,14 +918,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         
     private Collection<JComponent> getOpenObjectItems() {
         if (multiple) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return ServiceAcceptorActionHelper.getOpenForContextItems(domainObject);
     }
     
     private List<JMenuItem> getWrapObjectItems() {
         if (multiple) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return new WrapperCreatorItemFactory().makeWrapperCreatorItems(domainObject);
     }

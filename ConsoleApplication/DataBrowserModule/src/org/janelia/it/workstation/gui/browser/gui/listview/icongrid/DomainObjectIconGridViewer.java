@@ -73,6 +73,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
     private DomainObjectSelectionModel selectionModel;
     private DomainObjectSelectionModel editSelectionModel;
     private DomainObjectProviderHelper domainObjectProviderHelper = new DomainObjectProviderHelper();
+    @SuppressWarnings("unused")
     private SearchProvider searchProvider;
 
     private boolean editMode;

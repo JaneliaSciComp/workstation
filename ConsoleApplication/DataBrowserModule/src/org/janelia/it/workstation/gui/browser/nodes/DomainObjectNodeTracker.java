@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@SuppressWarnings({"rawtypes", "unchecked"}) // This class is a generic type disaster
 public class DomainObjectNodeTracker {
 
     private static final Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
@@ -62,16 +64,32 @@ public class DomainObjectNodeTracker {
      * Package private method for nodes to use to deregister themselves.
      * @param node
      */
-    void deregisterNode(final DomainObjectNode node) {
+    <T extends DomainObject> void deregisterNode(final DomainObjectNode<T> node) {
         Long id = node.getId();
         for(Iterator<WeakReference> iterator = nodesById.get(id).iterator(); iterator.hasNext(); ) {
-            WeakReference<DomainObjectNode> ref = iterator.next();
-            DomainObjectNode regNode = ref.get();
+            WeakReference<DomainObjectNode<T>> ref = iterator.next();
+            DomainObjectNode<T> regNode = ref.get();
             if (regNode==node) {
                 log.debug("unregistered node@{} - {}",System.identityHashCode(regNode),regNode.getDisplayName());
                 iterator.remove();
             }
         }    
+    }
+
+    public <T extends DomainObject> Set<DomainObjectNode<T>> getNodesByDomainObject(T domainObject) {
+        log.debug("getting nodes for {}",domainObject);
+        Set<DomainObjectNode<T>> nodes = new HashSet<>();
+        for(Iterator<WeakReference> iterator = nodesById.get(domainObject.getId()).iterator(); iterator.hasNext(); ) {
+            WeakReference<DomainObjectNode<T>> ref = iterator.next();
+            DomainObjectNode<T> node = ref.get();
+            if (node==null) {
+                iterator.remove();
+            }
+            else {
+                nodes.add(node);
+            }
+        }
+        return nodes;
     }
     
     /**

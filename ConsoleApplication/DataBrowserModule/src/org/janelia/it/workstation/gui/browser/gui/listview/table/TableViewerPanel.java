@@ -77,11 +77,13 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
         resultsTable = new DynamicTable() {
             @Override
+            @SuppressWarnings("unchecked")
             public Object getValue(Object userObject, DynamicColumn column) {
                 return TableViewerPanel.this.getValue(getDomainObjectList(), (T)userObject, column.getName());
             }
 
             @Override
+            @SuppressWarnings("unchecked")
             protected void rowDoubleClicked(int row) {
                 objectDoubleClicked((T)getRows().get(row).getUserObject());
             }
@@ -107,6 +109,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     Set<S> selectedIds = new HashSet<>();
                     // Everything selected in the table should be selected in the model
                     for (Object object : resultsTable.getSelectedObjects()) {
+                        @SuppressWarnings("unchecked")
                         T obj = (T) object;
                         S id = imageModel.getImageUniqueId(obj);
                         selectedIds.add(id);
@@ -240,6 +243,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         int i = 0;
         Integer start = null;
         for(DynamicRow row : resultsTable.getRows()) {
+            @SuppressWarnings("unchecked")
             T rowObject = (T)row.getUserObject();
             if (domainObjectSet.contains(rowObject)) {
                 if (select) {
@@ -366,6 +370,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         return resultsTable.getTableColumnIndex(getColumn(columnName));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void setSortColumn(String columnName, boolean ascending) {
         if (StringUtils.isEmpty(columnName)) {
             getTable().getRowSorter().setSortKeys(new ArrayList());

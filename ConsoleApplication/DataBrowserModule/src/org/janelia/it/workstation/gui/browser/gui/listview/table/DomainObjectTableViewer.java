@@ -485,7 +485,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public void setSortKeys(List<? extends SortKey> sortKeys) {
-            this.sortKeys = new ArrayList(sortKeys);
+            this.sortKeys = new ArrayList<>(sortKeys);
         }
 
         @Override

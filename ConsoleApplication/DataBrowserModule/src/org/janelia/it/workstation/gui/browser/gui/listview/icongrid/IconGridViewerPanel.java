@@ -461,6 +461,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         return objectMap.get(uniqueId);
     }
 
+    @SuppressWarnings("unchecked")
     private AnnotatedImageButton<T,S> getButtonAncestor(Component component) {
         Component c = component;
         while (!(c instanceof AnnotatedImageButton)) {

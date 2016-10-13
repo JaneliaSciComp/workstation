@@ -69,6 +69,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     /* Instance variables */
     
     private final InstanceContent content = new InstanceContent();
+    @SuppressWarnings("rawtypes")
     private DomainObjectNodeSelectionEditor editor;
     private FindContext findContext;
     private boolean active = false;
@@ -205,7 +206,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         return true;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor> editorClass) {
+    public void setEditorClass(Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass) {
         try {
             
             if (editor!=null) {
@@ -228,16 +229,17 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
     
-    public DomainObjectNodeSelectionEditor getEditor() {
+    public DomainObjectNodeSelectionEditor<?> getEditor() {
         return editor;
     }
 
-    public void loadDomainObjectNode(DomainObjectNode domainObjectNode, boolean isUserDriven) {
+    @SuppressWarnings({ "unchecked" })
+    public void loadDomainObjectNode(DomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
 
         DomainObject domainObject = domainObjectNode.getDomainObject();
 
         // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
+        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;
         }
@@ -254,7 +256,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         editor.loadDomainObjectNode(domainObjectNode, isUserDriven, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                DomainObjectEditorState state = editor.saveState();
+                DomainObjectEditorState<?> state = editor.saveState();
                 state.setTopComponent(DomainListViewTopComponent.this);
                 StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
                 return null;
@@ -263,10 +265,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
+    @SuppressWarnings({ "unchecked" })
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
 
         // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
+        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;
         }
@@ -284,13 +287,14 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
-    public void loadState(DomainObjectEditorState state) {
+    @SuppressWarnings("unchecked")
+    public void loadState(DomainObjectEditorState<?> state) {
 
-        DomainObjectNode domainObjectNode = state.getDomainObjectNode();
+        DomainObjectNode<?> domainObjectNode = state.getDomainObjectNode();
         DomainObject domainObject = domainObjectNode.getDomainObject();
 
         // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor> editorClass = getEditorClass(domainObject);
+        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
             return;
         }
@@ -308,7 +312,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         setName(editor.getName());
     }
 
-    private static Class<? extends DomainObjectNodeSelectionEditor> getEditorClass(DomainObject domainObject) {
+    private static Class<? extends DomainObjectNodeSelectionEditor<?>> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Filter) {
             return FilterEditorPanel.class;
         }

@@ -34,7 +34,7 @@ public final class DownloadAction extends NodePresenterAction {
         List<DomainObject> domainObjectList = new ArrayList<>();
         for(Node node : getSelectedNodes()) {
             if (node instanceof DomainObjectNode) {
-                DomainObjectNode domainObjectNode = (DomainObjectNode)node;
+                DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
                 domainObjectList.add(domainObjectNode.getDomainObject());
             }
             else {

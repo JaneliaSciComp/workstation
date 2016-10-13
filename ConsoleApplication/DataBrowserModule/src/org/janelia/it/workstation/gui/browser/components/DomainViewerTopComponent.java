@@ -4,22 +4,20 @@ import java.awt.BorderLayout;
 
 import javax.swing.JComponent;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -174,13 +172,14 @@ public final class DomainViewerTopComponent extends TopComponent {
         return true;
     }
     
-    public void setEditorClass(Class<? extends DomainObjectEditor> editorClass) {
+    @SuppressWarnings("unchecked")
+    public void setEditorClass(Class<? extends DomainObjectEditor<?>> editorClass) {
         try {
             if (editor!=null) {
                 remove((JComponent)editor);
                 Events.getInstance().unregisterOnEventBus(editor.getEventBusListener());
             }
-            editor = editorClass.newInstance();
+            editor = (DomainObjectEditor<DomainObject>) editorClass.newInstance();
             add((JComponent)editor, BorderLayout.CENTER);
             Events.getInstance().registerOnEventBus(editor.getEventBusListener());
             revalidate();
@@ -213,7 +212,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             domainObject = DomainViewerManager.getObjectToLoad(domainObject);
             if (domainObject==null) return;
             
-            final Class<? extends DomainObjectEditor> editorClass = getEditorClass(domainObject);
+            final Class<? extends DomainObjectEditor<?>> editorClass = getEditorClass(domainObject);
             if (editorClass == null) {
                 // TODO: comment this exception back in after initial development is complete
                 //throw new IllegalStateException("No viewer defined for domain object of type "+domainObject.getClass().getName());
@@ -237,7 +236,7 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
     }
 
-    private static Class<? extends DomainObjectEditor> getEditorClass(DomainObject domainObject) {
+    private static Class<? extends DomainObjectEditor<?>> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof Sample) {
             return SampleEditorPanel.class;
         }

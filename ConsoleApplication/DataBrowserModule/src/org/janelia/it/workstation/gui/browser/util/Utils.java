@@ -573,8 +573,7 @@ public class Utils {
             throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
         }
 
-        @SuppressWarnings("UnusedAssignment") InputStream input = null;
-
+        InputStream input = null;
         WorkstationFile wfile = new WorkstationFile(standardPath);
 
         try {
@@ -717,6 +716,7 @@ public class Utils {
         return false;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T getAncestorWithType(Component component, Class<T> clazz) {
         if (clazz==null) return null;
         Component c = component;

@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Dynamic properties loaded from console.properties.
  *
@@ -17,8 +14,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ConsoleProperties extends Properties {
 
-	private static final Logger log = LoggerFactory.getLogger(ConsoleProperties.class);
-	
     private static ConsoleProperties me;
     private static Set<String> fileNames = new HashSet<String>();
 
@@ -265,32 +260,22 @@ public class ConsoleProperties extends Properties {
      * @return the BaseProperties instance loaded with properties
      */
     protected static ConsoleProperties load(String propertiesFileName, ConsoleProperties properties) {
-        InputStream in;
         ClassLoader cl = ConsoleProperties.class.getClassLoader();
         if (cl == null) {
-            FileInputStream fis;
-            try {
-                fis = new FileInputStream(new File(propertiesFileName));
+            try (FileInputStream in = new FileInputStream(new File(propertiesFileName))) {
+                properties.load(in);
             }
             catch (Exception ex) {
-                throw new RuntimeException("ClassLoader returned null and could not find file=" + propertiesFileName);
+                throw new RuntimeException("Error reading properties file: " + propertiesFileName, ex);
             }
-            in = fis;
         }
         else {
-            in = cl.getResourceAsStream(propertiesFileName);
-        }
-        if (in == null) {
-             log.error("Could not read properties file: " + propertiesFileName);
-        }
-        try {
-            properties.load(in);
-            if (null != in) {
-                in.close();
+            try (InputStream in = cl.getResourceAsStream(propertiesFileName)) {
+                properties.load(in);
             }
-        }
-        catch (Exception e) {
-        	log.error("Could not read properties file: " + propertiesFileName);
+            catch (Exception ex) {
+                throw new RuntimeException("Error reading properties file in class path: " + propertiesFileName, ex);
+            }
         }
         return properties;
     }

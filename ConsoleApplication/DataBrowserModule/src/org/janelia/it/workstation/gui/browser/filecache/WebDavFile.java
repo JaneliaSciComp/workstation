@@ -62,8 +62,8 @@ public class WebDavFile {
         final DavPropertySet propertySet =
                 multiStatusResponse.getProperties(HttpStatus.SC_OK);
 
-        final DefaultDavProperty resourceTypeProperty =
-                (DefaultDavProperty) propertySet.get(DavPropertyName.RESOURCETYPE);
+        final DefaultDavProperty<?> resourceTypeProperty =
+                (DefaultDavProperty<?>) propertySet.get(DavPropertyName.RESOURCETYPE);
 
         if (resourceTypeProperty != null) {
             final String resourceTypeValue =
@@ -71,14 +71,14 @@ public class WebDavFile {
             this.isDirectory = (resourceTypeValue.contains(COLLECTION));
         }
 
-        final DavProperty contentLengthProperty =
+        final DavProperty<?> contentLengthProperty =
                 propertySet.get(DavPropertyName.GETCONTENTLENGTH);
         if (contentLengthProperty != null) {
             this.contentLength = Long.parseLong(
                     String.valueOf(contentLengthProperty.getValue()));
         }
 
-        final DavProperty etagProperty =
+        final DavProperty<?> etagProperty =
                 propertySet.get(DavPropertyName.GETETAG);
         if (etagProperty != null) {
             this.etag = String.valueOf(etagProperty.getValue());

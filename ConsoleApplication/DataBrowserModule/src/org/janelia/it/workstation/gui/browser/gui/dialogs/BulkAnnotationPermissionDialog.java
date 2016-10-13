@@ -23,6 +23,7 @@ import javax.swing.SwingConstants;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -31,12 +32,9 @@ import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -48,8 +46,6 @@ import net.miginfocom.swing.MigLayout;
  */
 public class BulkAnnotationPermissionDialog extends ModalDialog {
 
-    private static final Logger log = LoggerFactory.getLogger(BulkAnnotationPermissionDialog.class);
-    
     private static final String INFO_MESSAGE = "<html>"
             + "Will modify permissions for the selected user on all<br>"
             + "accessible annotations across all selected entities</html>";
@@ -57,7 +53,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
     private final JPanel attrPanel;
-    private final JComboBox subjectCombobox;
+    private final JComboBox<Subject> subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
@@ -74,7 +70,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox();
+        subjectCombobox = new JComboBox<Subject>();
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a user or group");
 
@@ -156,7 +152,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
             List<Subject> subjects = mgr.getSubjects();
-            DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
+            DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
             model.removeAllElements();
             for (Subject subject : subjects) {
                 model.addElement(subject);

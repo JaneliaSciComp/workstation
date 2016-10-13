@@ -47,7 +47,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     private final GroupedKeyValuePanel mainPanel;
     private MemorySettingPanel pnlMemorySetting;
     
-    private JComboBox lookAndFeelCombobox;
+    private JComboBox<LookAndFeel> lookAndFeelCombobox;
 
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
@@ -89,7 +89,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
 
         UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
 
-        lookAndFeelCombobox = new JComboBox();
+        lookAndFeelCombobox = new JComboBox<>();
         lookAndFeelCombobox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 controller.changed();
@@ -102,7 +102,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
         lafPanel.add(lookAndFeelCombobox);
         lafPanel.add(new JLabel(" (requires restart)"));
 
-        DefaultComboBoxModel model = (DefaultComboBoxModel)lookAndFeelCombobox.getModel();
+        DefaultComboBoxModel<LookAndFeel> model = (DefaultComboBoxModel<LookAndFeel>)lookAndFeelCombobox.getModel();
         String lafClassName = (String)ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         for (UIManager.LookAndFeelInfo info : infos) {
             String name = info.getName() + (info.getName().startsWith("Synthetica") ? "" : " (Unsupported)");
@@ -147,10 +147,6 @@ final class ApplicationPanel extends javax.swing.JPanel {
         
         public String getClassName() {
             return className;
-        }
-
-        public String getDisplayName() {
-            return displayName;
         }
 
         @Override

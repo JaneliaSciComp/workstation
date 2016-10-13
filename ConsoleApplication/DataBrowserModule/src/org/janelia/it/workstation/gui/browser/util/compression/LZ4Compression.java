@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
  * @deprecated compression algorithm not used, but code is decent setup example.
  * @author fosterl
  */
+@Deprecated
 public class LZ4Compression implements CompressionAlgorithm {
     public static final String TARGET_EXTENSION = ".lz4";
     private Logger log = LoggerFactory.getLogger(LZ4Compression.class);

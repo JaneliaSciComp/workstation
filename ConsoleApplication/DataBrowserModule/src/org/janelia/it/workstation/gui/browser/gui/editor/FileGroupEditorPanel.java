@@ -169,7 +169,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
     }
 
     @Override
-    public SelectionModel getSelectionModel() {
+    public SelectionModel<?,?> getSelectionModel() {
         return selectionModel;
     }
 

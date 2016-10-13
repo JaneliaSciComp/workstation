@@ -863,8 +863,8 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
-    public DomainObjectEditorState saveState() {
-        DomainObjectEditorState state = new DomainObjectEditorState(
+    public DomainObjectEditorState<Filter> saveState() {
+        DomainObjectEditorState<Filter> state = new DomainObjectEditorState<>(
                 filterNode,
                 resultsPanel.getCurrPage(),
                 resultsPanel.getViewer().saveState(),
@@ -873,7 +873,7 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
-    public void loadState(DomainObjectEditorState state) {
+    public void loadState(DomainObjectEditorState<Filter> state) {
         // TODO: do a better job of restoring the state
         resultsPanel.setViewerType(state.getListViewerState().getType());
         loadDomainObjectNode(state.getDomainObjectNode(), true, null);

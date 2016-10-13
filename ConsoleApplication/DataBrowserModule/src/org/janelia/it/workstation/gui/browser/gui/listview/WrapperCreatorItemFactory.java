@@ -40,9 +40,8 @@ public class WrapperCreatorItemFactory {
      */
     public List<JMenuItem> makeWrapperCreatorItems(final DomainObject domainObject) {
         List<JMenuItem> rtnVal = new ArrayList<>();
-        final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
         Collection<DomainObjectCreator> wrapperCreators
-                = helper.findHandler(domainObject, DomainObjectCreator.class, DomainObjectCreator.LOOKUP_PATH);
+                = ServiceAcceptorHelper.findHandler(domainObject, DomainObjectCreator.class, DomainObjectCreator.LOOKUP_PATH);
         for ( DomainObjectCreator wrapperCreator: wrapperCreators ) {
             JMenuItem wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
             wrapEntityItem.addActionListener(new WrapObjectActionListener(wrapperCreator, domainObject));
@@ -64,7 +63,7 @@ public class WrapperCreatorItemFactory {
         if (sample != null)
             return makeWrapperCreatorItems(sample);
         else
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
     }
 	
 	/**
@@ -77,9 +76,8 @@ public class WrapperCreatorItemFactory {
 	 */
 	public List<JMenuItem> makeObjectAppenderItems(final List<DomainObject> domainObjects) {
 		List<JMenuItem> rtnVal = new ArrayList<>();
-		final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
 		Collection<DomainObjectAppender> objectUsers
-				= helper.findHandler(domainObjects, DomainObjectAppender.class, DomainObjectAppender.LOOKUP_PATH);
+				= ServiceAcceptorHelper.findHandler(domainObjects, DomainObjectAppender.class, DomainObjectAppender.LOOKUP_PATH);
 		for ( DomainObjectAppender appender: objectUsers ) {
 			JMenuItem item = new JMenuItem(appender.getActionLabel());
 			item.addActionListener(new AppenderActionListener( appender, domainObjects));

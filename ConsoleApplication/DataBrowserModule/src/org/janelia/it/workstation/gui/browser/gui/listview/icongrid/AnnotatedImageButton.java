@@ -81,6 +81,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         }
     }
 
+    @SuppressWarnings("unchecked")
     protected AnnotatedImageButton(T imgObject, ImageModel<T,S> imageModel, SelectionModel<T,S> selectionModel, final ImagesPanel<T,S> imagesPanel, String filepath) {
         this.imageObject = imgObject;
         this.imageModel = imageModel;

@@ -38,7 +38,6 @@ public class MockWebDavClient extends WebDavClient {
         }
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     public void mapUrlToFileList(URL url,
                                  List<File> fileList) {
         if (fileList.size() > 0) {

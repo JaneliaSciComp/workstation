@@ -86,6 +86,7 @@ public class CustomTreeFind {
         try {
             // I couldn't find any other way of doing this. NetBeans should 
             // really expose a way to find out if the children have been loaded. 
+            @SuppressWarnings("unchecked")
             Set<Method> isInitMethods = getAllMethods(Children.class, 
                 Predicates.and(withModifier(Modifier.PROTECTED), withName("isInitialized")));
             Method isInit = isInitMethods.iterator().next();

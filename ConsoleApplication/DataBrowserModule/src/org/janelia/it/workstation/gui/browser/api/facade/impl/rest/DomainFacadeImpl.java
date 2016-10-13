@@ -35,9 +35,9 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
     public <T extends DomainObject> T getDomainObject(Class<T> domainClass, Long id) throws Exception {
         Collection<Long> ids = new ArrayList<>();
         ids.add(id);
-        List<DomainObject> objList = getDomainObjects(domainClass.getName(), ids);
+        List<T> objList = getDomainObjects(domainClass.getName(), ids);
         if (objList!=null && objList.size()>0) {
-            return (T)objList.get(0);
+            return objList.get(0);
         }
         return null;
     }
@@ -54,17 +54,18 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObject from server using name: " + name)) {
             throw new WebApplicationException(response);
         }
-        List<DomainObject> domainObjs = response.readEntity(new GenericType<List<DomainObject>>() {});
-        return (List<T>)domainObjs;
+        List<T> domainObjs = response.readEntity(new GenericType<List<T>>() {});
+        return domainObjs;
     }
     
+    @SuppressWarnings("unchecked")
     @Override
-    public DomainObject getDomainObject(Reference reference) throws Exception {
+    public <T extends DomainObject> T getDomainObject(Reference reference) throws Exception {
         List<Reference> refList = new ArrayList<>();
         refList.add(reference);
         List<DomainObject> domainObjList = getDomainObjects(refList);
         if (domainObjList!=null && domainObjList.size()>0) {
-            return domainObjList.get(0);
+            return (T)domainObjList.get(0);
         }
         return null;
     }
@@ -103,7 +104,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
 
 
     @Override
-    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) throws Exception {
+    public <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setObjectType(className);
@@ -116,7 +117,7 @@ public class DomainFacadeImpl extends RESTClientImpl implements DomainFacade {
         if (checkBadResponse(response.getStatus(), "problem making request getDomainObjects from server: " + ids)) {
             throw new WebApplicationException(response);
         }
-        return response.readEntity(new GenericType<List<DomainObject>>() {});
+        return response.readEntity(new GenericType<List<T>>() {});
     }
 
     @Override

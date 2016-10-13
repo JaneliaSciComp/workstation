@@ -143,7 +143,7 @@ public class DynamicImagePanel extends JPanel {
      *
      * @param wantViewable
      */
-    public synchronized void setViewable(final boolean wantViewable, final Callable success) {
+    public synchronized void setViewable(final boolean wantViewable, final Callable<?> success) {
         
         log.trace("setViewable({}->{},{})",viewable,wantViewable,imageFilename);
         

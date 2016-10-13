@@ -10,8 +10,8 @@ import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.editor.FileGroupEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.NeuronSeparationEditorPanel;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultEditor;
@@ -19,10 +19,8 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.AbstractLookup;
 import org.openide.util.lookup.InstanceContent;
@@ -212,10 +210,6 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         else {
             setName("Results for " + sampleName);
         }
-    }
-
-    public SelectionModel getSelectionModel() {
-        return editor==null?null:editor.getSelectionModel();
     }
 
     private static Class<? extends SampleResultEditor> getEditorClass(PipelineResult result) {

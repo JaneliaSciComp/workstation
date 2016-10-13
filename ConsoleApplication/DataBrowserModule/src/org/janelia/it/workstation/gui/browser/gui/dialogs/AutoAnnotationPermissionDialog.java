@@ -39,7 +39,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
     private final JPanel attrPanel;
-    private final JComboBox subjectCombobox;
+    private final JComboBox<Subject> subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
     
@@ -56,7 +56,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
 
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox();
+        subjectCombobox = new JComboBox<>();
         subjectCombobox.setEditable(false);
         subjectCombobox.setToolTipText("Choose a user or group");
 
@@ -121,7 +121,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
             DomainMgr mgr = DomainMgr.getDomainMgr();
             List<Subject> subjects = mgr.getSubjects();
             
-            DefaultComboBoxModel model = (DefaultComboBoxModel) subjectCombobox.getModel();
+            DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
             model.removeAllElements();
             
             Subject currSubject = null;

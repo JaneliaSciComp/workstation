@@ -31,7 +31,7 @@ public class IndeterminateNoteProgressMonitor extends IndeterminateProgressMonit
                                                         printableNote() ? noteLabel : null,
                                                         myBar});
             dialog = pane.createDialog(parentComponent, "Processing");
-            dialog.show();
+            dialog.setVisible(true);
         }
     }
 
@@ -40,7 +40,7 @@ public class IndeterminateNoteProgressMonitor extends IndeterminateProgressMonit
     }
 
     private static boolean printable( String st ) {
-        return st != null || st.trim().length() > 0;
+        return st != null && st.trim().length() > 0;
     }
 
 }

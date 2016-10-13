@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SmartSearchBox extends JComboBox {
+public class SmartSearchBox extends JComboBox<String> {
 
     private static final Logger log = LoggerFactory.getLogger(SmartSearchBox.class);
 
@@ -84,6 +84,7 @@ public class SmartSearchBox extends JComboBox {
      * @return Current search history. May be null or empty if there is no history.
      */
     protected List<String> getSearchHistory() {
+        @SuppressWarnings("unchecked")
         List<String> searchHistory = (List<String>) ConsoleApp.getConsoleApp().getModelProperty(modelPropertyName);
         log.trace("Returning current search history: {} ",searchHistory);
         return searchHistory;
@@ -105,7 +106,7 @@ public class SmartSearchBox extends JComboBox {
         String searchString = getSearchString();
         if (StringUtils.isEmpty(searchString)) return;
 
-        DefaultComboBoxModel model = (DefaultComboBoxModel) getModel();
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) getModel();
 
         // Trim history
         while (model.getSize() >= MAX_HISTORY_LENGTH) {
@@ -136,7 +137,7 @@ public class SmartSearchBox extends JComboBox {
 
         List<String> searchHistory = getSearchHistory();
 
-        DefaultComboBoxModel model = (DefaultComboBoxModel) getModel();
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) getModel();
         model.removeAllElements();
 
         if (searchHistory == null || searchHistory.isEmpty()) {

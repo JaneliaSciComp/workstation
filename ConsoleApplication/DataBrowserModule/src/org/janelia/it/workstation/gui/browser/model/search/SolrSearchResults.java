@@ -1,9 +1,8 @@
 package org.janelia.it.workstation.gui.browser.model.search;
 
 import java.util.List;
+
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Search results backed by a SOLR search.
@@ -12,8 +11,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SolrSearchResults extends SearchResults {
 
-    private static final Logger log = LoggerFactory.getLogger(SolrSearchResults.class);
-    
     private final SearchConfiguration searchConfig;
     
     public SolrSearchResults(SearchConfiguration searchConfig, ResultPage firstPage) {

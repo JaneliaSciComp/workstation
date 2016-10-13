@@ -184,6 +184,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
+                @SuppressWarnings("unchecked")
                 AnnotatedImageButton<T,S> button = (AnnotatedImageButton<T,S>) component;
                 buttonsPanel.remove(button);
             }

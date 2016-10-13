@@ -16,15 +16,15 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectNode,Reference> {
+public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectNode<?>,Reference> {
 
     private static final Logger log = LoggerFactory.getLogger(DomainObjectNodeSelectionModel.class);
     
     @Override
-    protected void selectionChanged(List<DomainObjectNode> domainObjectNodes, boolean select, boolean clearAll, boolean isUserDriven) {
+    protected void selectionChanged(List<DomainObjectNode<?>> domainObjectNodes, boolean select, boolean clearAll, boolean isUserDriven) {
         log.debug((select?"select":"deselect")+" {}, clearAll={}",domainObjectNodes,clearAll);
         if (domainObjectNodes.size()==1) {
-            DomainObjectNode domainObjectNode = domainObjectNodes.get(0);
+            DomainObjectNode<?> domainObjectNode = domainObjectNodes.get(0);
             if (domainObjectNode instanceof TreeNodeNode) {
                 TreeNodeNode treeNodeNode = (TreeNodeNode)domainObjectNode;
                 Events.getInstance().postOnEventBus(new TreeNodeSelectionEvent(getSource(), treeNodeNode, select, clearAll, isUserDriven));
@@ -41,7 +41,7 @@ public class DomainObjectNodeSelectionModel extends SelectionModel<DomainObjectN
     }
     
     @Override
-    public Reference getId(DomainObjectNode domainObjectNode) {
+    public Reference getId(DomainObjectNode<?> domainObjectNode) {
         DomainObject domainObject = domainObjectNode.getDomainObject();
         return Reference.createFor(domainObject);
     }

@@ -28,7 +28,7 @@ public class Mj2ExecutableCompressionAlgorithm implements CompressionAlgorithm {
     //public static final File RAMDISK_ROOT = new File("C:\\data\\for_mj2\\"); //new File("R:\\data\\");
     public static final File RAMDISK_ROOT = new File("R:\\data\\");
     public static final String TARGET_EXTENSION = ".mj2";
-    private static final String FILE_PROTOCOL = "file:/";
+//    private static final String FILE_PROTOCOL = "file:/";
     private static final String FILE_MID_STR = "_comp-";
     private final Logger log = LoggerFactory.getLogger(Mj2ExecutableCompressionAlgorithm.class);
     

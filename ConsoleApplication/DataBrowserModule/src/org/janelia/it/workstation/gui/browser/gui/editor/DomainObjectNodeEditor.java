@@ -16,7 +16,7 @@ public interface DomainObjectNodeEditor<T extends DomainObject> extends Editor {
 
     public void loadDomainObjectNode(DomainObjectNode<T> domainObjectNode, final boolean isUserDriven, final Callable<Void> success);
 
-    public DomainObjectEditorState saveState();
+    public DomainObjectEditorState<T> saveState();
 
-    public void loadState(DomainObjectEditorState state);
+    public void loadState(DomainObjectEditorState<T> state);
 }

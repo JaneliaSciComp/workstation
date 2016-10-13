@@ -79,7 +79,8 @@ public class AddToFolderAction extends NodePresenterAction {
         // Build list of things to add
         domainObjects.clear();
         for(Node node : selectedNodes) {
-            DomainObjectNode selectedNode = (DomainObjectNode)node;
+            @SuppressWarnings("unchecked")
+            DomainObjectNode<DomainObject> selectedNode = (DomainObjectNode<DomainObject>)node;
             domainObjects.add(selectedNode.getDomainObject());
         }
 
@@ -172,6 +173,7 @@ public class AddToFolderAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
+        @SuppressWarnings("unchecked")
         List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
         if (addHistory!=null && !addHistory.isEmpty()) {
 
@@ -265,6 +267,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
     private void updateAddToFolderHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
+        @SuppressWarnings("unchecked")
         List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
         if (addHistory==null) {
             addHistory = new ArrayList<>();

@@ -15,8 +15,6 @@ import javax.swing.JPopupMenu;
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Helps link up Domain Objects with services from providers.
@@ -24,9 +22,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class DomainObjectProviderHelper {
-    private Logger logger = LoggerFactory.getLogger(DomainObjectProviderHelper.class);
-    private ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-    
+
     /**
      * Is there some service / provider that can handle this domain object?
      * 
@@ -76,7 +72,7 @@ public class DomainObjectProviderHelper {
     }
     
     protected Collection<DomainObjectAcceptor> findHandlerCollection(DomainObject dObj) {
-        return helper.findHandler(dObj, DomainObjectAcceptor.class, DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH);
+        return ServiceAcceptorHelper.findHandler(dObj, DomainObjectAcceptor.class, DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH);
     }
 
     /**

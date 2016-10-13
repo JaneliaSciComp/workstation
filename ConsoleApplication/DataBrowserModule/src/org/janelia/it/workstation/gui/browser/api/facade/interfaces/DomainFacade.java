@@ -35,7 +35,7 @@ public interface DomainFacade {
      * @param reference to a domain object
      * @return the domain object
      */
-    public DomainObject getDomainObject(Reference reference) throws Exception;
+    public <T extends DomainObject> T getDomainObject(Reference reference) throws Exception;
 
     /**
      * Returns the domain objects specified by the given list of references. 
@@ -57,7 +57,7 @@ public interface DomainFacade {
      * @param ids collection of GUIDs
      * @return list of domain objects
      */
-    public List<DomainObject> getDomainObjects(String className, Collection<Long> ids) throws Exception;
+    public <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception;
 
     /**
      * Returns the domain objects of a particular type, for ANY ownership.

@@ -35,10 +35,10 @@ public class DomainObjectNodeFlavor extends DataFlavor {
         super(mt, prn);
     }
 
-    public static DomainObjectNode getDomainObjectNode(Transferable t) {
-        DomainObjectNode node = null;
+    public static DomainObjectNode<?> getDomainObjectNode(Transferable t) {
+        DomainObjectNode<?> node = null;
         try {
-            node = (DomainObjectNode)t.getTransferData(SINGLE_FLAVOR);
+            node = (DomainObjectNode<?>)t.getTransferData(SINGLE_FLAVOR);
         }
         catch (UnsupportedFlavorException | IOException e) {
             log.error("Error getting transfer data", e);
@@ -46,10 +46,11 @@ public class DomainObjectNodeFlavor extends DataFlavor {
         return node;
     }
     
-    public static List<DomainObjectNode> getDomainObjectNodeList(Transferable t) {
-        List<DomainObjectNode> node = null;
+    @SuppressWarnings("unchecked")
+    public static List<DomainObjectNode<?>> getDomainObjectNodeList(Transferable t) {
+        List<DomainObjectNode<?>> node = null;
         try {
-            node = (List<DomainObjectNode>)t.getTransferData(LIST_FLAVOR);
+            node = (List<DomainObjectNode<?>>)t.getTransferData(LIST_FLAVOR);
         }
         catch (UnsupportedFlavorException | IOException e) {
             log.error("Error getting transfer data", e);

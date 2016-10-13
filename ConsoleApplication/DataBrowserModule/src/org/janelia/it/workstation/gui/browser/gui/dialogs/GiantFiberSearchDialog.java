@@ -7,14 +7,28 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
@@ -25,12 +39,12 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.util.WorkstationFile;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -117,14 +131,13 @@ public class GiantFiberSearchDialog extends ModalDialog {
     final List<Boolean> currentListModified = new ArrayList<>();
     Set<Long> membershipSampleSet;
 
-    public class PercentileScore implements Comparable {
+    public class PercentileScore implements Comparable<PercentileScore> {
 
         public Long sampleId;
         public Double score;
 
         @Override
-        public int compareTo(Object o) {
-            PercentileScore other=(PercentileScore)o;
+        public int compareTo(PercentileScore other) {
             if (score > other.score) {
                 return 1;
             } else if (score < other.score) {
@@ -287,7 +300,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     public class TypeComboBoxEditor extends DefaultCellEditor {
         public TypeComboBoxEditor(String[] items) {
-            super(new JComboBox(items));
+            super(new JComboBox<String>(items));
         }
     }
 
@@ -435,7 +448,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     private void initializeCurrentListModified() {
-        for (String abbreviation : compartmentAbbreviationList) {
+        for (@SuppressWarnings("unused") String abbreviation : compartmentAbbreviationList) {
             currentListModified.add(false);
         }
     }
@@ -595,7 +608,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             }
 
             @Override
-            public Class getColumnClass(int c) {
+            public Class<?> getColumnClass(int c) {
                 return getValueAt(0,c).getClass();
             }
 
@@ -701,16 +714,17 @@ public class GiantFiberSearchDialog extends ModalDialog {
         filterTable.setDefaultRenderer(Boolean.class, modifyAwareRenderer);
     }
 
+    @SuppressWarnings("unchecked")
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
         if (!quantifierDataIsLoading && (sampleInfoMap==null || quantifierInfoMap==null)) {
             quantifierDataIsLoading=true;
             try {
-                Long startTime=new Date().getTime();
+//                Long startTime=new Date().getTime();
 //                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
                 Object[] sampleMaps = DomainMgr.getDomainMgr().getLegacyFacade().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
-                Long elapsedTime=new Date().getTime() - startTime;
+//                Long elapsedTime=new Date().getTime() - startTime;
 //                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
             } catch (Exception ex) {
                 log.error("Error loading pattern annotation quantifier maps from summary",ex);
@@ -787,7 +801,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             intensityScoreMap.put(sampleId, intensityMap);
             distributionScoreMap.put(sampleId, distributionMap);
         }
-//        System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
+        log.trace("Total calls to getCompartmentScoresByQuantifiers() = {}", totalComputeCount);
     }
 
     protected void computePercentiles() {

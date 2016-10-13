@@ -291,8 +291,8 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public DomainObjectEditorState saveState() {
-        DomainObjectEditorState state = new DomainObjectEditorState(
+    public DomainObjectEditorState<TreeNode> saveState() {
+        DomainObjectEditorState<TreeNode> state = new DomainObjectEditorState<>(
                 treeNodeNode,
                 resultsPanel.getCurrPage(),
                 resultsPanel.getViewer().saveState(),
@@ -301,7 +301,7 @@ public class TreeNodeEditorPanel extends JPanel
     }
 
     @Override
-    public void loadState(DomainObjectEditorState state) {
+    public void loadState(DomainObjectEditorState<TreeNode> state) {
         // TODO: do a better job of restoring the state
         resultsPanel.setViewerType(state.getListViewerState().getType());
         loadDomainObjectNode((TreeNodeNode)state.getDomainObjectNode(), true, null);

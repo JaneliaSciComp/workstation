@@ -64,7 +64,7 @@ public class NodeChooser extends AbstractChooser<Node> implements ExplorerManage
         
         for(Node selectedNode : selectedNodes) {
             if (selectedNode instanceof DomainObjectNode) {
-                selectedPaths.add(NodeUtils.createPathString((DomainObjectNode)selectedNode));
+                selectedPaths.add(NodeUtils.createPathString((DomainObjectNode<?>)selectedNode));
             }
         }
         

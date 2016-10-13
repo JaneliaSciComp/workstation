@@ -49,7 +49,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
     private static final JPanel annotationPanel = new JPanel();
     private List<OntologyTerm> OntologyTerms = new ArrayList<>();
     private DefaultTableModel model;
-    private JComboBox comboBox;
+    private JComboBox<OntologyTerm> comboBox;
     private TableModelListener tableModelListener=null;
     private Ontology ontology;
 
@@ -266,12 +266,12 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                     List<OntologyTerm> children = valueEnum.getTerms();
 
                     int i = 0;
-                    Object[] selectionValues = new Object[children.size()];
+                    OntologyTerm[] selectionValues = new OntologyTerm[children.size()];
                     for(OntologyTerm child : children) {
                         selectionValues[i++] = child;
                     }
 
-                    comboBox = new JComboBox(selectionValues);
+                    comboBox = new JComboBox<OntologyTerm>(selectionValues);
                     OntologyTerms.add(element);
 
                 }
@@ -282,7 +282,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
             }
 
             if (comboBox==null) {
-                comboBox = new JComboBox();
+                comboBox = new JComboBox<>();
             }
         }  catch (Exception e) {
             ConsoleApp.handleException(e);

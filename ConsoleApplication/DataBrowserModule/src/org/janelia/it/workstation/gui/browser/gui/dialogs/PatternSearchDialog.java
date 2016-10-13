@@ -259,7 +259,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     public class TypeComboBoxEditor extends DefaultCellEditor {
         public TypeComboBoxEditor(String[] items) {
-            super(new JComboBox(items));
+            super(new JComboBox<String>(items));
         }
     }
 
@@ -336,7 +336,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     private void initializeCurrentListModified() {
-        for (String abbreviation : compartmentAbbreviationList) {
+        for (@SuppressWarnings("unused") String abbreviation : compartmentAbbreviationList) {
             currentListModified.add(false);
         }
     }
@@ -503,7 +503,7 @@ public class PatternSearchDialog extends ModalDialog {
             }
 
             @Override
-            public Class getColumnClass(int c) {
+            public Class<?> getColumnClass(int c) {
                 return getValueAt(0,c).getClass();
             }
 

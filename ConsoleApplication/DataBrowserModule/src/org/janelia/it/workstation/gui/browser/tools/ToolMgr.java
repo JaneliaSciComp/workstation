@@ -131,11 +131,12 @@ public class ToolMgr extends PreferenceManager {
      * on to the build methods.  Remember this is for only one source,
      * Default or User, at a time.
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     protected void populateInfoObjects(Properties allProperties, Map targetMasterCollection,
                                        String sourceFile) {
         Properties allToolProperties=new Properties();
         //Separate all properties into the separate categories
-        for (Enumeration e=allProperties.propertyNames();e.hasMoreElements();) {
+        for (Enumeration<?> e=allProperties.propertyNames();e.hasMoreElements();) {
             String tempKey = (String) e.nextElement();
             StringTokenizer mainToken = new StringTokenizer(tempKey,".");
             if (tempKey!=null && !tempKey.equals("")) {
@@ -193,7 +194,7 @@ public class ToolMgr extends PreferenceManager {
      * Builds the ToolInfo objects for the given Master collection.
      */
     private void buildTools(Properties toolProperties, Map<String, ToolInfo> targetMasterCollection, String sourceFile) {
-        Set uniqueTools = getUniqueKeys(toolProperties);
+        Set<?> uniqueTools = getUniqueKeys(toolProperties);
         for (Object uniqueTool : uniqueTools) {
             String nameBase = (String) uniqueTool;
             ToolInfo tmpToolInfo = new ToolInfo(nameBase, toolProperties, sourceFile);

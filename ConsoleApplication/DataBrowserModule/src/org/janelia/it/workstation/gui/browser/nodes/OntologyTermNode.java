@@ -221,7 +221,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         List<Action> actions = new ArrayList<>();
         actions.add(PopupLabelAction.get());
         actions.add(null);
-        actions.add(new InternalNode.CopyNameAction());
+        actions.add(new CopyNameAction());
         actions.add(new CopyGUIDAction());
         actions.add(null);
         actions.add(OntologyImportAction.get());
@@ -232,7 +232,6 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         actions.add(new RemoveAction());
         actions.add(null);
         actions.add(ApplyAnnotationAction.get());
-        //actions.add(new RemoveAnnotationAction());
         return actions.toArray(new Action[actions.size()]);
     }
 

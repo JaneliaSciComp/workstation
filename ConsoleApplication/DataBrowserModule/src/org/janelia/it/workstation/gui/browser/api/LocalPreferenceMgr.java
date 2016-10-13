@@ -79,6 +79,7 @@ public class LocalPreferenceMgr {
         readSettingsFile();
     }
 
+    @SuppressWarnings("unchecked")
     private void readSettingsFile() {
         try {
             if (!settingsFile.canRead()) {
@@ -92,7 +93,7 @@ public class LocalPreferenceMgr {
             switch (istream.readInt()) {
                 case 1: {
                     try {
-                        this.modelProperties = (TreeMap) istream.readObject();
+                        this.modelProperties = (TreeMap<Object, Object>) istream.readObject();
                     }
                     catch (Exception ex) {
                         log.info("Error reading settings ",ex);

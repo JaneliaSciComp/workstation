@@ -22,7 +22,6 @@ public class LoggingEventListener implements AWTEventListener, MessageSource {
         MouseEvent me = (MouseEvent) event;
         if (MouseEvent.MOUSE_RELEASED == me.getID()) {
             if (me.getSource() instanceof AbstractButton) {
-                AbstractButton src = (AbstractButton) event.getSource();
                 String message = me.getX() + "," + me.getY() + ":" + me.getXOnScreen() + "," + me.getYOnScreen() + ":" + new Date().getTime();
                 synchronized(this) {
                     messages.add(message);

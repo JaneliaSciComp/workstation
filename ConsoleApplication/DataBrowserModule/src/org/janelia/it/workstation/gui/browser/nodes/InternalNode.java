@@ -28,14 +28,14 @@ public class InternalNode<T> extends AbstractNode {
         
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
-    private final ChildFactory parentChildFactory;
+    private final ChildFactory<?> parentChildFactory;
     private final InstanceContent lookupContents;
     
-    public InternalNode(ChildFactory parentChildFactory, Children children, T object) {
+    public InternalNode(ChildFactory<?> parentChildFactory, Children children, T object) {
         this(new InstanceContent(), parentChildFactory, children, object);
     }
 
-    public InternalNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, T object) {
+    public InternalNode(InstanceContent lookupContents, ChildFactory<?> parentChildFactory, Children children, T object) {
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
@@ -45,7 +45,12 @@ public class InternalNode<T> extends AbstractNode {
     protected InstanceContent getLookupContents() {
         return lookupContents;
     }
+
+    public ChildFactory<?> getParentChildFactory() {
+        return parentChildFactory;
+    }
     
+    @SuppressWarnings("unchecked")
     public T getObject() {
         return (T)getLookup().lookup(Object.class);
     }

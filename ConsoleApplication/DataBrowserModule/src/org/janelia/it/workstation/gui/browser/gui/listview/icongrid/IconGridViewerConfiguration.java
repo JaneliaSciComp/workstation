@@ -3,12 +3,10 @@ package org.janelia.it.workstation.gui.browser.gui.listview.icongrid;
 import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.clarkparsia.owlapi.modularity.locality.SemanticLocalityEvaluator.log;
 
 /**
  * UI configuration for a IconGridViewer.

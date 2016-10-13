@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.gui.table;
 import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -44,8 +43,8 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
-import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.slf4j.Logger;
@@ -154,7 +153,7 @@ public abstract class DynamicTable extends JPanel {
 
             @Override
             public Class<?> getColumnClass(int column) {
-                Class clazz = DynamicTable.this.getColumnClass(column);
+                Class<?> clazz = DynamicTable.this.getColumnClass(column);
                 return clazz==null ? super.getColumnClass(column) : clazz;
             }
         };

@@ -80,7 +80,7 @@ public final class RemoveAction extends NodeAction {
             }
             
             if (node instanceof DomainObjectNode) {
-                DomainObjectNode domainObjectNode = (DomainObjectNode)node;
+                DomainObjectNode<?> domainObjectNode = (DomainObjectNode<?>)node;
                 DomainObject domainObject = domainObjectNode.getDomainObject();
                 if (included) {
                     toRemove.add(domainObject);

@@ -343,10 +343,6 @@ public class ProgressMeterPanel extends JPanel {
             revalidate();
             repaint();
         }
-        
-        public JProgressBar getProgressBar() {
-            return progressBar;
-        }
     }
 
 }

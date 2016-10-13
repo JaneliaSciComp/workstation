@@ -39,7 +39,7 @@ public class MoveToFolderAction extends AddToFolderAction {
         menu.setText("Move To Folder");
 
         for(Node node : getSelectedNodes()) {
-            DomainObjectNode selectedNode = (DomainObjectNode)node;
+            DomainObjectNode<?> selectedNode = (DomainObjectNode<?>)node;
             DomainObject domainObject = selectedNode.getDomainObject();
             if (!ClientDomainUtils.isOwner(domainObject)) {
                 menu.setEnabled(false);

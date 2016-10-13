@@ -26,8 +26,8 @@ public class ServiceAcceptorHelper {
      * @param path tells the path identifier for searching compatible items.
      * @return a compatible handler for the criterion object.
      */
-    public static <S, T extends Compatible<S>> Collection<T> findHandler(S criterion, Class clazz, String path) {
-        Collection<T> candidates = Lookups.forPath(path).lookupAll(clazz);
+    public static <S, T extends Compatible<S>> Collection<T> findHandler(S criterion, Class<T> clazz, String path) {
+        Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
         Collection<T> rtnVal = new ArrayList<>();
         for (T nextAcceptor : candidates) {
             if (nextAcceptor.isCompatible(criterion)) {
@@ -37,7 +37,7 @@ public class ServiceAcceptorHelper {
         return rtnVal;
     }
     
-    public static <S, T extends Compatible<S>> T findFirstHandler(S criterion, Class clazz, String path) {
+    public static <S, T extends Compatible<S>> T findFirstHandler(S criterion, Class<T> clazz, String path) {
         Collection<T> rtnVal = findHandler(criterion, clazz, path);
         if (rtnVal.isEmpty()) return null;
         return rtnVal.iterator().next();

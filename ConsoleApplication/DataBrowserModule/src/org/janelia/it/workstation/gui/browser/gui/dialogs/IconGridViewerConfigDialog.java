@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.browser.gui.dialogs;
 
+import static org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.HeadlessException;
@@ -19,7 +21,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 
-import net.miginfocom.swing.MigLayout;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.ShorthandCompletion;
@@ -28,17 +29,15 @@ import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.TemplateEditorTextbox;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import static org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
+import net.miginfocom.swing.MigLayout;
 
 /**
  * A dialog for configuring a IconGridViewer.
@@ -46,8 +45,6 @@ import static org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPane
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconGridViewerConfigDialog extends ModalDialog {
-
-    private static final Logger log = LoggerFactory.getLogger(IconGridViewerConfigDialog.class);
 
     private static final String DEFAULT_TITLE_VALUE = "{Name}";
     private static final String DEFAULT_SUBTITLE_VALUE = "";

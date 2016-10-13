@@ -29,7 +29,7 @@ public final class SearchHereAction extends NodeAction {
         return singleton;
     }
 
-    private DomainObjectNode selected;
+    private DomainObjectNode<?> selected;
 
     private SearchHereAction() {
     }
@@ -55,7 +55,7 @@ public final class SearchHereAction extends NodeAction {
         if (activatedNodes.length!=1) return false;
         for(Node node : activatedNodes) {
             if (node instanceof TreeNodeNode || node instanceof FilterNode) {
-                this.selected = (DomainObjectNode)node;
+                this.selected = (DomainObjectNode<?>)node;
             }
         }
         return selected!=null;

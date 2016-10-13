@@ -190,7 +190,7 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
                                                         null,
                                                         myBar});
             dialog = pane.createDialog(parentComponent, "Processing");
-            dialog.show();
+            dialog.setVisible(true);
         }
     }
 
@@ -490,16 +490,6 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
 	public Accessible getAccessibleParent() {
 	    if (dialog != null) {
 		return (Accessible)dialog;
-	    }
-	    return null;
-	}
-
-	/*
-	 * Returns the parent AccessibleContext
-	 */
-	private AccessibleContext getParentAccessibleContext() {
-	    if (dialog != null) {
-		return dialog.getAccessibleContext();
 	    }
 	    return null;
 	}

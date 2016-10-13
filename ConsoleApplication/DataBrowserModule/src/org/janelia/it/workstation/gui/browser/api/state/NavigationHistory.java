@@ -21,7 +21,7 @@ public class NavigationHistory {
 
     private static final Logger log = LoggerFactory.getLogger(NavigationHistory.class);
 
-    private List<DomainObjectEditorState> history = new ArrayList<>();
+    private List<DomainObjectEditorState<?>> history = new ArrayList<>();
     private int historyPosition = -1;
 
     public NavigationHistory() {
@@ -35,11 +35,11 @@ public class NavigationHistory {
         return historyPosition < history.size() - 1;
     }
 
-    public synchronized DomainObjectEditorState goBack() {
+    public synchronized DomainObjectEditorState<?> goBack() {
         //pushHistory(state, false);
         if (historyPosition > 0) {
             historyPosition--;
-            DomainObjectEditorState state = history.get(historyPosition);
+            DomainObjectEditorState<?> state = history.get(historyPosition);
             loadState(state);
             updateButtons();
             logCurrHistory();
@@ -48,10 +48,10 @@ public class NavigationHistory {
         return null;
     }
 
-    public synchronized DomainObjectEditorState goForward() {
+    public synchronized DomainObjectEditorState<?> goForward() {
         if (historyPosition < history.size() - 1) {
             historyPosition++;
-            DomainObjectEditorState state = history.get(historyPosition);
+            DomainObjectEditorState<?> state = history.get(historyPosition);
             loadState(state);
             updateButtons();
             logCurrHistory();
@@ -60,11 +60,11 @@ public class NavigationHistory {
         return null;
     }
 
-    public synchronized void pushHistory(DomainObjectEditorState state) {
+    public synchronized void pushHistory(DomainObjectEditorState<?> state) {
         pushHistory(state, true);
     }
     
-    private void pushHistory(DomainObjectEditorState state, boolean clearForward) {
+    private void pushHistory(DomainObjectEditorState<?> state, boolean clearForward) {
         if (state.getDomainObjectNode()==null) {
             return;
         }
@@ -77,7 +77,7 @@ public class NavigationHistory {
         }
         
         if (!history.isEmpty()) {
-            DomainObjectEditorState currState = history.get(historyPosition);
+            DomainObjectEditorState<?> currState = history.get(historyPosition);
             if (state.getDomainObjectNode().getId().equals(currState.getDomainObjectNode().getId())) {
                 log.trace("Already got this state, updating selections");
                 // Already got this, let's update the selections
@@ -99,7 +99,7 @@ public class NavigationHistory {
         CallableSystemAction.get(NavigateForward.class).setEnabled(isForwardEnabled());
     }
 
-    private void loadState(DomainObjectEditorState state) {
+    private void loadState(DomainObjectEditorState<?> state) {
 
         DomainListViewTopComponent tc = state.getTopComponent();
         if (!tc.isOpened()) {
@@ -117,7 +117,7 @@ public class NavigationHistory {
         if (!log.isTraceEnabled()) return;
         log.trace("History: ");
         int i = 0 ;
-        for(DomainObjectEditorState state2 : history) {
+        for(DomainObjectEditorState<?> state2 : history) {
             log.trace("  "+i+" "+state2.getDomainObjectNode().getName()+" "+(historyPosition==i?"<-CURR":""));
             i++;
         }

@@ -90,7 +90,7 @@ public class PropertyConfigurator {
     }
 
     public static void add(ResourceBundle rbundle) {
-        for (Enumeration e = rbundle.getKeys(); e.hasMoreElements(); ) {
+        for (Enumeration<?> e = rbundle.getKeys(); e.hasMoreElements(); ) {
             String key = (String) e.nextElement();
             String val = rbundle.getString(key);
 

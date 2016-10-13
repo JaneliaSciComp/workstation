@@ -437,7 +437,7 @@ public class DownloadDialog extends ModalDialog {
         filePatternCombo = new JComboBox<>();
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
-        DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel) filePatternCombo.getModel();
+        DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel<String>) filePatternCombo.getModel();
         String userFilePattern = (String)ConsoleApp.getConsoleApp().getModelProperty(FILE_PATTERN_PROP_NAME);
         if (userFilePattern!=null) {
             fpmodel.addElement(userFilePattern);
@@ -481,7 +481,7 @@ public class DownloadDialog extends ModalDialog {
 
     private void populateExpandedObjectList(Callable<Void> success) {
 
-        DefaultListModel<String> eolm = (DefaultListModel)expandedObjectList.getModel();
+        DefaultListModel<String> eolm = (DefaultListModel<String>)expandedObjectList.getModel();
         eolm.removeAllElements();
         for(DomainObject domainObject : expandedObjects) {
             log.info("Adding expanded object to list: "+domainObject.getName());
@@ -523,7 +523,7 @@ public class DownloadDialog extends ModalDialog {
             protected void hadSuccess() {
 
                 int count = 0;
-                DefaultListModel<DownloadItem> dlm = (DefaultListModel) downloadItemList.getModel();
+                DefaultListModel<DownloadItem> dlm = (DefaultListModel<DownloadItem>) downloadItemList.getModel();
                 dlm.removeAllElements();
                 for (DownloadItem downloadItem : downloadItems) {
                     count += downloadItem.getSourceFile()!=null ? 1 : 0;
@@ -570,7 +570,7 @@ public class DownloadDialog extends ModalDialog {
             log.trace("Extension '{}' has {} instances", extension, countedExtensions.count(extension));
         }
 
-        DefaultComboBoxModel<String> model = (DefaultComboBoxModel) formatCombo.getModel();
+        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) formatCombo.getModel();
         String currValue = (String)model.getSelectedItem();
         
         model.removeAllElements();

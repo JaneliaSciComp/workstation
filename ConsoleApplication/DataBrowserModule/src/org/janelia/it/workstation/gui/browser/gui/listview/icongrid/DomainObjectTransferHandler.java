@@ -62,7 +62,7 @@ public class DomainObjectTransferHandler extends TransferHandler {
         return selectionModel;
     }
     
-    protected ImageModel getImageModel() {
+    protected ImageModel<DomainObject, Reference> getImageModel() {
         return imageModel;
     }
 }

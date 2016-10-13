@@ -59,14 +59,14 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
 
-    private final ChildFactory parentChildFactory;
+    private final ChildFactory<?> parentChildFactory;
     private final InstanceContent lookupContents;
 
-    public DomainObjectNode(ChildFactory parentChildFactory, Children children, T domainObject) {
+    public DomainObjectNode(ChildFactory<?> parentChildFactory, Children children, T domainObject) {
         this(new InstanceContent(), parentChildFactory, children, domainObject);
     }
 
-    public DomainObjectNode(InstanceContent lookupContents, ChildFactory parentChildFactory, Children children, T domainObject) {
+    public DomainObjectNode(InstanceContent lookupContents, ChildFactory<?> parentChildFactory, Children children, T domainObject) {
         super(children, new AbstractLookup(lookupContents));
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;
@@ -85,14 +85,18 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         log.debug("Display name changed {} -> {}",oldDisplayName, getDisplayName());
         fireDisplayNameChange(oldDisplayName, getDisplayName());
     }
+
+    public ChildFactory<?> getParentChildFactory() {
+        return parentChildFactory;
+    }
     
     protected InstanceContent getLookupContents() {
         return lookupContents;
     }
 
+    @SuppressWarnings("unchecked")
     public T getDomainObject() {
-        T obj = (T)getLookup().lookup(DomainObject.class);
-        return obj;
+        return (T) getLookup().lookup(DomainObject.class);
     }
     
     @Override
@@ -238,7 +242,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
                 Method getter = propertyDescriptor.getReadMethod();
                 if (getter==null) continue;
                 Method setter = propertyDescriptor.getWriteMethod();
-                PropertySupport.Reflection prop = new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
+                PropertySupport.Reflection<?> prop = new PropertySupport.Reflection<>(obj, getter.getReturnType(), getter, setter);
                 prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
                 set.put(prop);
             }
@@ -368,7 +372,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         });
         added.put(new ExTransferable.Single(DomainObjectNodeFlavor.SINGLE_FLAVOR) {
             @Override
-            protected DomainObjectNode getData() {
+            protected DomainObjectNode<?> getData() {
                 return DomainObjectNode.this;
             }
         });
@@ -383,4 +387,5 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         // Let subclasses define their paste types by overriding this method
         return null;
     }
+
 }

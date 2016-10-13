@@ -54,7 +54,7 @@ public class MailDialogueBox {
         panel.add(new JScrollPane(textArea));
         int ans;
         while (desc == null || desc.equals("")) {
-            ans = getOptionPane().showConfirmDialog(parentFrame, panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            ans = JOptionPane.showConfirmDialog(parentFrame, panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (ans == JOptionPane.CANCEL_OPTION) return;
             desc = messagePrefix + textArea.getText() +"\n";
         }
@@ -64,13 +64,13 @@ public class MailDialogueBox {
         helper.sendEmail(fromEmail, toEmail, subject, desc);
     }
 
-    private JOptionPane getOptionPane() {
-        JFrame mainFrame = new JFrame();
-        if (parentFrame != null) mainFrame.setIconImage(parentFrame.getIconImage());
-        JOptionPane optionPane = new JOptionPane();
-        mainFrame.getContentPane().add(optionPane);
-        return optionPane;
-    }
+//    private JOptionPane getOptionPane() {
+//        JFrame mainFrame = new JFrame();
+//        if (parentFrame != null) mainFrame.setIconImage(parentFrame.getIconImage());
+//        JOptionPane optionPane = new JOptionPane();
+//        mainFrame.getContentPane().add(optionPane);
+//        return optionPane;
+//    }
 
     /**
      * This method gives the caller a way to place text at the end of the message.

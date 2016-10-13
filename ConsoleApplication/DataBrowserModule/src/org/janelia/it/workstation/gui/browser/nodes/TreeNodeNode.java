@@ -50,11 +50,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     
     private final TreeNodeChildFactory childFactory;
     
-    public TreeNodeNode(ChildFactory parentChildFactory, TreeNode treeNode) {
+    public TreeNodeNode(ChildFactory<?> parentChildFactory, TreeNode treeNode) {
         this(parentChildFactory, new TreeNodeChildFactory(treeNode), treeNode);
     }
     
-    private TreeNodeNode(ChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
+    private TreeNodeNode(ChildFactory<?> parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) {
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, treeNode);
             
         log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());
@@ -184,21 +184,22 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     }
     
     @Override
+    @SuppressWarnings("unchecked")
     public PasteType getDropType(final Transferable t, int action, final int index) {
 
         if (!ClientDomainUtils.hasWriteAccess(getTreeNode())) {
             return null;
         }
 
-        List<DomainObjectNode> nodes = new ArrayList<>();
+        List<DomainObjectNode<?>> nodes = new ArrayList<>();
         
         if (t.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-            DomainObjectNode node = DomainObjectNodeFlavor.getDomainObjectNode(t);
+            DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(t);
             if (node==null || !(node instanceof DomainObjectNode)) { 
                 return null;
             }
             log.trace("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
-            nodes = Arrays.asList(node);
+            nodes.add(node);
         }
         else if (t.isDataFlavorSupported(DomainObjectFlavor.LIST_FLAVOR)) {
             final List<DomainObject> objects;
@@ -245,7 +246,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             for(int i=0; i<multi.getCount(); i++) {
                 Transferable st = multi.getTransferableAt(i);
                 if (st.isDataFlavorSupported(DomainObjectNodeFlavor.SINGLE_FLAVOR)) {
-                    DomainObjectNode node = DomainObjectNodeFlavor.getDomainObjectNode(st);
+                    DomainObjectNode<?> node = DomainObjectNodeFlavor.getDomainObjectNode(st);
                     if (node==null || !(node instanceof DomainObjectNode)) {
                         continue;
                     }   
@@ -271,11 +272,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
 
     private class TreeNodePasteType extends PasteType {
         
-        private final List<DomainObjectNode> nodes;
+        private final List<DomainObjectNode<?>> nodes;
         private final TreeNodeNode targetNode;
         private final int startingIndex;
         
-        TreeNodePasteType(List<DomainObjectNode> nodes, TreeNodeNode targetNode, int startingIndex) {
+        TreeNodePasteType(List<DomainObjectNode<?>> nodes, TreeNodeNode targetNode, int startingIndex) {
             log.trace("TreeNodePasteType with {} nodes and target {}",nodes.size(),targetNode.getName());
             this.nodes = nodes;
             this.targetNode = targetNode;
@@ -295,17 +296,17 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 // Have to keep track of the original parents before we do anything, 
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
-                for(DomainObjectNode node : nodes) {
+                for(DomainObjectNode<?> node : nodes) {
                     TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
                     TreeNode originalParent = originalParentNode.getTreeNode();
                     originalParents.add(originalParent);
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();
-                List<DomainObjectNode> toDestroy = new ArrayList<>();
+                List<DomainObjectNode<?>> toDestroy = new ArrayList<>();
                 
                 int i = 0;
-                for(DomainObjectNode node : nodes) {
+                for(DomainObjectNode<?> node : nodes) {
 
                     DomainObject domainObject = node.getDomainObject();
                     
@@ -341,7 +342,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 }
                 
                 // Remove the originals
-                for(DomainObjectNode node : toDestroy) {
+                for(DomainObjectNode<?> node : toDestroy) {
                     node.destroy();
                 }
                 

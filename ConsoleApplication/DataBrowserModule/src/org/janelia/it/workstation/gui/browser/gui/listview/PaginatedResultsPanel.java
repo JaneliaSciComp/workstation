@@ -549,7 +549,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     @Override
     public void findMatch(String text, Position.Bias bias, boolean skipStartingNode, Callable<Void> success) {
 
-        Map<String,Object> params = new HashMap();
+        Map<String,Object> params = new HashMap<>();
         params.put("text", text);
         params.put("bias", bias);
         params.put("skipStartingNode", skipStartingNode);
@@ -567,14 +567,13 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
         return new SimpleWorker() {
 
-            private long start;
             private ResultIteratorFind searcher;
             private DomainObject match;
             private Integer matchPage;
 
             @Override
             protected void doStuff() throws Exception {
-                start = System.currentTimeMillis();
+                System.currentTimeMillis();
                 DomainObject startObject;
                 Reference lastSelectedId = selectionModel.getLastSelectedId();
                 if (lastSelectedId!=null) {

@@ -89,6 +89,7 @@ public class OntologyImportAction extends NodePresenterAction   {
         try {
             InputStream input = new FileInputStream(file);
             Yaml yaml = new Yaml();
+            @SuppressWarnings("unchecked")
             final Map<String,Object> root = (Map<String,Object>)yaml.load(input);
 
             SimpleWorker worker = new SimpleWorker() {
@@ -155,7 +156,8 @@ public class OntologyImportAction extends NodePresenterAction   {
                 newTerm = childTerm;
             }
         }
-        List<Map<String,Object>> childList = (List)newNode.get("children");
+        @SuppressWarnings("unchecked")
+        List<Map<String,Object>> childList = (List<Map<String, Object>>)newNode.get("children");
         if (childList!=null && !childList.isEmpty()) {
             for(Map<String,Object> child : childList) {
                 createOntologyTerms(ontology,newTerm, child);
