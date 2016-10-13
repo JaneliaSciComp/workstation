@@ -186,12 +186,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
     protected JMenuItem getCopyNameToClipboardItem() {
         if (multiple) return null;
-        return new JMenuItem(new CopyToClipboardAction("Name",domainObject.getName()));
+        return getNamedActionItem(new CopyToClipboardAction("Name",domainObject.getName()));
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
         if (multiple) return null;
-        return new JMenuItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
+        return getNamedActionItem(new CopyToClipboardAction("GUID",domainObject.getId().toString()));
     }
 
     protected JMenuItem getOpenInNewEditorItem() {
