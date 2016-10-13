@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -157,21 +158,21 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
         add(getMergeItem());
-//
+        
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
 
-        for (JComponent item : ServiceAcceptorActionHelper.getOpenForContextItems(domainObject)) {
-            add(item);
+        if (domainObject!=null) {
+            for (JComponent item : this.getOpenObjectItems()) {
+                add(item);
+            }
+            for (JMenuItem item : this.getWrapObjectItems()) {
+                add(item);
+            }
+            for (JMenuItem item : this.getAppendObjectItems()) {
+                add(item);
+            }
         }
-
-        for (JMenuItem item: this.getWrapObjectItems()) {
-			add(item);
-		}
-
-		for (JMenuItem item: this.getAppendObjectItems()) {
-			add(item);
-		}
 
         add(getSpecialAnnotationSession());
     }
@@ -651,7 +652,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                 }
             });
         }
-        log.info("Returning from getPartialSecondaryDataDeletionItem " + rtnVal);
+        log.trace("Returning from getPartialSecondaryDataDeletionItem " + rtnVal);
         return rtnVal;
     }
 
@@ -914,17 +915,24 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         return specialAnnotationSession;
     }
+        
+    private Collection<JComponent> getOpenObjectItems() {
+        if (multiple) {
+            return Collections.EMPTY_LIST;
+        }
+        return ServiceAcceptorActionHelper.getOpenForContextItems(domainObject);
+    }
+    
+    private List<JMenuItem> getWrapObjectItems() {
+        if (multiple) {
+            return Collections.EMPTY_LIST;
+        }
+        return new WrapperCreatorItemFactory().makeWrapperCreatorItems(domainObject);
+    }
 
-	private List<JMenuItem> getWrapObjectItems() {
-		if (multiple) {
-			return Collections.EMPTY_LIST;
-		}
-		return new WrapperCreatorItemFactory().makeWrapperCreatorItems(domainObject);
-	}
-
-	private List<JMenuItem> getAppendObjectItems() {
-		return new WrapperCreatorItemFactory().makeObjectAppenderItems(domainObjectList);
-	}
+    private List<JMenuItem> getAppendObjectItems() {
+        return new WrapperCreatorItemFactory().makeObjectAppenderItems(domainObjectList);
+    }
 
     private HasFiles getSingleResult() {
         HasFiles result = null;
