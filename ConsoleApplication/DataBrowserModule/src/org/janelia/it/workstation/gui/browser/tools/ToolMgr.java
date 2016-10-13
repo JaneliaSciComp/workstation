@@ -274,11 +274,11 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static ToolInfo getTool(String toolName) {
+    public ToolInfo getTool(String toolName) {
         return toolTreeMap.get(toolName);
     }
 
-    public static TreeMap<String, ToolInfo> getTools() {
+    public TreeMap<String, ToolInfo> getTools() {
         return toolTreeMap;
     }
 
@@ -319,7 +319,7 @@ public class ToolMgr extends PreferenceManager {
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
-                    ToolInfo tmpTool = getTool(tool);
+                    ToolInfo tmpTool = getToolMgr().getTool(tool);
                     // remove leading or trailing spaces to ensure checks work properly
                     String toolPath = tmpTool.getPath().trim();
 

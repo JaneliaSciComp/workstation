@@ -36,8 +36,8 @@ import org.slf4j.LoggerFactory;
 /**
  * Tool configuration option panel ported over from the original ToolConfigurationDialog.
  *
- * @author safford
- * @author rokickik
+ * @author Todd Safford
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 final class ToolsPanel extends javax.swing.JPanel {
 
@@ -81,51 +81,15 @@ final class ToolsPanel extends javax.swing.JPanel {
 
         JButton addButton = new JButton("Add");
         addButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                int returnVal = toolFileChooser.showOpenDialog(ToolsPanel.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = toolFileChooser.getSelectedFile();
-                    log.info("Opening: " + file.getName() + ".");
-                }
-                else {
-                    log.info("Open command cancelled by user.");
-                }
-
-                if (toolFileChooser.getSelectedFile().exists()) {
-                    ToolInfo toolTest = ToolMgr.getTool(ToolInfo.TOOL_PREFIX + ToolInfo.USER + "." + toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
-                    if (null == toolTest) {
-                        try {
-                            ToolMgr.getToolMgr().addTool(new ToolInfo(toolFileChooser.getSelectedFile().getName(), toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
-                        }
-                        catch (Exception e) {
-                            ConsoleApp.handleException(e);
-                        }
-                        refreshTable();
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(ToolsPanel.this, "The tool has already been added.", "ToolInfo Already Added", JOptionPane.WARNING_MESSAGE);
-                    }
-                }
+            public void actionPerformed(ActionEvent e) {
+                addTool();
             }
         });
 
         JButton editButton = new JButton("Edit");
         editButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    String name = model.getValueAt(selectedRow, 0).toString();
-                    String path = model.getValueAt(selectedRow, 1).toString();
-                    ToolInfo tool = ToolMgr.getTool(name);
-                    EditDialog editDialog = new EditDialog(name, path);
-                    model.setValueAt(editDialog.getNameText(), selectedRow, 0);
-                    model.setValueAt(editDialog.getPathText(), selectedRow, 1);
-                    tool.setName(editDialog.getNameText());
-                    tool.setPath(editDialog.getPathText());
-                    ToolMgr.getToolMgr().fireToolsChanged();
-                }
-                catch (BackingStoreException e) {
-                    ConsoleApp.handleException(e);
-                }
+            public void actionPerformed(ActionEvent e) {
+                editTool();
             }
         });
 
@@ -143,11 +107,59 @@ final class ToolsPanel extends javax.swing.JPanel {
         buttonPanel.add(clearTool);
         mainPanel.addItem(buttonPanel);
         mainPanel.addItem(scrollPane, "width 100:400:2000, height 100:300:1000, grow");
+        
+        load();
+    }
+    
+    private void addTool() {
+        int returnVal = toolFileChooser.showOpenDialog(ToolsPanel.this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            File file = toolFileChooser.getSelectedFile();
+            log.info("Opening: " + file.getName() + ".");
+        }
+        else {
+            log.info("Open command cancelled by user.");
+        }
+
+        File selectedFile = toolFileChooser.getSelectedFile();
+
+        if (selectedFile!=null & selectedFile.exists()) {
+            ToolInfo toolTest = ToolMgr.getToolMgr().getTool(ToolInfo.TOOL_PREFIX + ToolInfo.USER + "." + toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
+            if (null == toolTest) {
+                try {
+                    ToolMgr.getToolMgr().addTool(new ToolInfo(toolFileChooser.getSelectedFile().getName(), toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
+                }
+                catch (Exception e) {
+                    ConsoleApp.handleException(e);
+                }
+                refreshTable();
+            }
+            else {
+                JOptionPane.showMessageDialog(ToolsPanel.this, "The tool has already been added.", "ToolInfo Already Added", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
+    
+    private void editTool() {
+        try {
+            String name = model.getValueAt(selectedRow, 0).toString();
+            String path = model.getValueAt(selectedRow, 1).toString();
+            ToolInfo tool = ToolMgr.getToolMgr().getTool(name);
+            EditDialog editDialog = new EditDialog(name, path);
+            model.setValueAt(editDialog.getNameText(), selectedRow, 0);
+            model.setValueAt(editDialog.getPathText(), selectedRow, 1);
+            tool.setName(editDialog.getNameText());
+            tool.setPath(editDialog.getPathText());
+            ToolMgr.getToolMgr().fireToolsChanged();
+        }
+        catch (BackingStoreException e) {
+            ConsoleApp.handleException(e);
+        }
     }
 
     private void removeTool() {
         String key = model.getValueAt(selectedRow, 0).toString();
-        ToolInfo tmpTool = ToolMgr.getTool(key);
+        ToolInfo tmpTool = ToolMgr.getToolMgr().getTool(key);
         if (!ToolInfo.SYSTEM.equals(tmpTool.getSourceFile())) {
             try {
                 ToolMgr.getToolMgr().removeTool(tmpTool);
@@ -160,6 +172,7 @@ final class ToolsPanel extends javax.swing.JPanel {
     }
 
     void refreshTable() {
+        log.trace("Refreshing tool table");
         int tmp = model.getRowCount();
         if (0 != tmp){
             for (int i = tmp; i > 0; i--){
@@ -167,10 +180,11 @@ final class ToolsPanel extends javax.swing.JPanel {
             }
         }
 
-        for (int i = 0; i < ToolMgr.getTools().keySet().size(); i++) {
-            String tmpKey = ToolMgr.getTools().keySet().toArray()[i].toString();
-            ToolInfo tmpTool = ToolMgr.getTools().get(tmpKey);
+        for (int i = 0; i < ToolMgr.getToolMgr().getTools().keySet().size(); i++) {
+            String tmpKey = ToolMgr.getToolMgr().getTools().keySet().toArray()[i].toString();
+            ToolInfo tmpTool = ToolMgr.getToolMgr().getTools().get(tmpKey);
             model.addRow(new Object[]{tmpTool.getName(), tmpTool.getPath()});
+            log.trace("Adding {} to tool table",tmpTool.getName());
         }
     }
 
