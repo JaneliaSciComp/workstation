@@ -507,7 +507,7 @@ implements MouseMode, KeyListener
                         
                         result.add(null); // separator
                         
-                        AbstractAction changeNeuronStyleAction = new AbstractAction("Change neuron style...") {
+                        AbstractAction changeNeuronStyleAction = new AbstractAction("Change neuron color...") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 if (getHoverAnchor() != null) {

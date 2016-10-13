@@ -141,10 +141,15 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     int colIndex = columnAtPoint(p);
                     int realColumnIndex = convertColumnIndexToModel(colIndex);
                     int realRowIndex = convertRowIndexToModel(rowIndex);
+                    TmNeuronMetadata neuronMetadata = neuronTableModel.getNeuronAtRow(realRowIndex);
                     if (realColumnIndex == 0) {
-                        tip = neuronTableModel.getNeuronAtRow(realRowIndex).getName();
+                        tip = neuronMetadata.getName();
                     } else if (realColumnIndex == 1) {
-                        Color color = neuronTableModel.getNeuronAtRow(realRowIndex).getColor();
+                        Color color = neuronMetadata.getColor();
+                        if (color == null) {
+                            // get the default if there isn't a stored user-chosen color
+                            color = annotationModel.getNeuronStyle(neuronMetadata).getColor();
+                        }
                         tip = "RGB value: " + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue();
                     }
                     return tip;
