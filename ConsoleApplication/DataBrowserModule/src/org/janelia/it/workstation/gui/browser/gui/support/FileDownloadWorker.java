@@ -49,7 +49,7 @@ public class FileDownloadWorker {
         this.copyFileLock = copyFileLock;
         this.objectName = downloadItem.getDomainObject().getName();
         this.targetExtension = downloadItem.getTargetExtension();
-        this.sourceFilePath = downloadItem.getSourceFile().getAbsolutePath();
+        this.sourceFilePath = downloadItem.getSourceFile();
         this.targetDir = downloadItem.getTargetFile().getParentFile();
     }
     
@@ -126,14 +126,14 @@ public class FileDownloadWorker {
         return continueWithDownload;
     }
 
-    private void copyFile(File remoteFile,
+    private void copyFile(String remoteFile,
                           File localFile,
                           BackgroundWorker worker) throws Exception {
         worker.setStatus("Waiting to download...");
         copyFileLock.lock();
         try {
-            worker.setStatus("Downloading " + remoteFile.getName());
-            Utils.copyURLToFile(remoteFile.getPath(), localFile, worker);
+            worker.setStatus("Downloading " + new File(remoteFile).getName());
+            Utils.copyURLToFile(remoteFile, localFile, worker);
         } 
         finally {
             copyFileLock.unlock();
@@ -142,7 +142,7 @@ public class FileDownloadWorker {
 
     private void convertOnServer() throws Exception {
 
-        log.info("Converting {} to {} (splitChannels={})",downloadItem.getSourceExtension(),targetExtension,downloadItem.isSplitChannels());
+        log.info("Converting {} to {} (splitChannels={})",sourceFilePath,targetExtension,downloadItem.isSplitChannels());
         
         Task task;
         if (downloadItem.isSplitChannels()) {
@@ -203,8 +203,7 @@ public class FileDownloadWorker {
                 String path = pathAndFiles[0];
                 String[] filePaths = pathAndFiles[1].split(",");
                 for(String filePath : filePaths) {
-                    File remoteFile = new File(path + "/" + filePath);
-                    
+                    String remoteFile = path + "/" + filePath;
                     String targetFile = downloadItem.getTargetFile().getAbsolutePath();
                     
                     String channelSuffix = getChannelSuffix(filePath);
@@ -240,7 +239,7 @@ public class FileDownloadWorker {
     
     private void transferAndConvertLocallyAsNeeded() {
 
-        final File remoteFile = downloadItem.getSourceFile();
+        final String remoteFile = downloadItem.getSourceFile();
         final File localFile = downloadItem.getTargetFile();
 
         log.info("Transferring {} to {}",remoteFile,localFile);
@@ -249,7 +248,7 @@ public class FileDownloadWorker {
 
             @Override
             public String getName() {
-                return "Downloading " + remoteFile.getName();
+                return "Downloading " + new File(remoteFile).getName();
             }
 
             @Override

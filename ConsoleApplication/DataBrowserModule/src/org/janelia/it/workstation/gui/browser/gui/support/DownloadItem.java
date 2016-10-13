@@ -45,7 +45,7 @@ public class DownloadItem {
     // Derived state
     private String errorMessage;
     private String resultName;
-    private File sourceFile;
+    private String sourceFile;
     private File targetFile;
     private String sourceExtension;
     private String targetExtension;
@@ -99,7 +99,7 @@ public class DownloadItem {
             return;
         }
             
-        sourceFile = new File(sourceFilePath);
+        sourceFile = sourceFilePath;
         sourceExtension = FileUtil.getExtension(sourceFilePath);
 
         log.debug("Source path: {}",sourceFilePath);
@@ -139,7 +139,7 @@ public class DownloadItem {
     private String constructFilePath(String filePattern) throws Exception {
         Map<String, DomainObjectAttribute> attributeMap = new HashMap<>();
         for (DomainObjectAttribute attr : DomainUtils.getSearchAttributes(domainObject.getClass())) {
-            log.debug("Adding attribute: " + attr.getLabel());
+            log.trace("Adding attribute: " + attr.getLabel());
             attributeMap.put(attr.getLabel(), attr);
         }
 
@@ -158,7 +158,7 @@ public class DownloadItem {
                     replacement = resultName == null ? null : resultName;
                 }
                 else if (ATTR_LABEL_FILE_NAME.equals(attrLabel)) {
-                    replacement = sourceFile.getName();
+                    replacement = new File(sourceFile).getName();
                 }
                 else if (ATTR_LABEL_SAMPLE_NAME.equals(attrLabel)) {
                     if (domainObject instanceof Sample) {
@@ -241,7 +241,7 @@ public class DownloadItem {
         return domainObject.getName();
     }
     
-    public File getSourceFile() {
+    public String getSourceFile() {
         return sourceFile;
     }
 
