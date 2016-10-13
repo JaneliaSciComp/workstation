@@ -60,8 +60,8 @@ import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.FilterNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -151,7 +151,7 @@ public class FilterEditorPanel extends JPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 worker.execute();
@@ -167,7 +167,7 @@ public class FilterEditorPanel extends JPanel
                 String name = filter.getName().equals(DEFAULT_FILTER_NAME)?null:filter.getName();
                 String newName = null;
                 while (StringUtils.isEmpty(newName)) {
-                    newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
+                    newName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
                             "Filter Name:\n", "Save Filter", JOptionPane.PLAIN_MESSAGE, null, null, name);
                     log.info("newName:" + newName);
                     if (newName == null) {
@@ -175,7 +175,7 @@ public class FilterEditorPanel extends JPanel
                         return;
                     }
                     if ("".equals(newName)) {
-                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Filter name cannot be blank");
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Filter name cannot be blank");
                     }
                 }
 
@@ -213,7 +213,7 @@ public class FilterEditorPanel extends JPanel
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
@@ -237,7 +237,7 @@ public class FilterEditorPanel extends JPanel
                     Desktop.getDesktop().browse(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
                 }
                 catch (Exception ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
+                    ConsoleApp.handleException(ex);
                 }
             }
         });
@@ -325,7 +325,7 @@ public class FilterEditorPanel extends JPanel
             search();
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
 
         ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
@@ -393,7 +393,7 @@ public class FilterEditorPanel extends JPanel
             protected void hadError(Throwable error) {
                 resultsPanel.showNothing();
                 ConcurrentUtils.invokeAndHandleExceptions(failure);
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -762,7 +762,7 @@ public class FilterEditorPanel extends JPanel
                             loadDomainObjectNode(filterNode, false, null);
                         }
                     } catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
+                        ConsoleApp.handleException(e);
                     }
                     break;
                 }
@@ -854,11 +854,11 @@ public class FilterEditorPanel extends JPanel
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
         worker.execute();
     }
 

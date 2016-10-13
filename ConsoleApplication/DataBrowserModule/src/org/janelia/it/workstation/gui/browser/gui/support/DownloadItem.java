@@ -18,8 +18,8 @@ import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +131,7 @@ public class DownloadItem {
             log.debug("Target extension: {}", targetExtension);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

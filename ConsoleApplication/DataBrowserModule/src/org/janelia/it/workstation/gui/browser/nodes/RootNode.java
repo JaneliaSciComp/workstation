@@ -10,7 +10,7 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectComparator;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -70,7 +70,7 @@ public class RootNode extends AbstractNode {
                 Collections.sort(workspaces, new DomainObjectComparator());
                 list.addAll(workspaces);
             } catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
                 return false;
             }
             return true;

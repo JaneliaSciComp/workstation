@@ -17,7 +17,6 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriter
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 
 import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;

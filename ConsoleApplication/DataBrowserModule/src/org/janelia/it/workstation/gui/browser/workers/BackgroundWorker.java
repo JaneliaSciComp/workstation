@@ -83,7 +83,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
     }
     
     /**
-     * Same as execute(), except throws events on the ModelMgr's EventBus.
+     * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
         execute();

@@ -11,7 +11,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.LoadImageWorker;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

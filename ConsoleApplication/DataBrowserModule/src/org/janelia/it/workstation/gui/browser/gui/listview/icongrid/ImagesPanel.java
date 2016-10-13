@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTagCloudPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -260,7 +260,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 button.setImageSize(maxImageWidth, maxImageHeight);
             }
             catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
         }
 
@@ -278,7 +278,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                 button.resizeTable(tableHeight);
             }
             catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
         }
     }
@@ -654,7 +654,7 @@ public abstract class ImagesPanel<T,S> extends JScrollPane {
                         button.setViewable(wantViewable);
                     }
                     catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
+                        ConsoleApp.handleException(e);
                     }
                 }
             }

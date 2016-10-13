@@ -26,8 +26,7 @@ import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewConfiguration;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewRootNode;
 import org.janelia.it.workstation.gui.browser.nodes.UserViewTreeNodeNode;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Node;
@@ -43,9 +42,10 @@ public class AddToFolderAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
 
+    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
     private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
 
-    protected final Component mainFrame = SessionMgr.getMainFrame();
+    protected final Component mainFrame = ConsoleApp.getMainFrame();
 
     private final static AddToFolderAction singleton = new AddToFolderAction();
     public static AddToFolderAction get() {
@@ -139,7 +139,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 
@@ -172,7 +172,7 @@ public class AddToFolderAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
+        List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
@@ -229,7 +229,7 @@ public class AddToFolderAction extends NodePresenterAction {
             else {
                 message = existing + " items are already in the target folder. "+(domainObjects.size()-existing)+" item(s) will be added.";
             }
-            JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
+            JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), message, "Items already present", JOptionPane.OK_OPTION);
         }
 
         final int numAdded = domainObjects.size()-existing;
@@ -247,7 +247,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         worker.execute();
@@ -265,7 +265,7 @@ public class AddToFolderAction extends NodePresenterAction {
 
     private void updateAddToFolderHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
-        List<String> addHistory = (List<String>)SessionMgr.getSessionMgr().getModelProperty(Browser.ADD_TO_FOLDER_HISTORY);
+        List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
         if (addHistory==null) {
             addHistory = new ArrayList<>();
         }
@@ -276,6 +276,6 @@ public class AddToFolderAction extends NodePresenterAction {
             addHistory.remove(addHistory.size()-1);
         }
         addHistory.add(0, pathString);
-        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_FOLDER_HISTORY, addHistory);
+        ConsoleApp.getConsoleApp().setModelProperty(ADD_TO_FOLDER_HISTORY, addHistory);
     }
 }

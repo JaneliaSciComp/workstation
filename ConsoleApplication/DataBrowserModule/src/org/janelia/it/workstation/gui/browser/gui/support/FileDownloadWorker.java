@@ -19,13 +19,12 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.DesktopApi;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.gui.browser.gui.support.DesktopApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +81,7 @@ public class FileDownloadWorker {
             }
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -106,7 +105,7 @@ public class FileDownloadWorker {
             String titlePrefix = "File";
                 
             final String[] options = { "Open Folder", "Run Download", "Cancel" };
-            final Component mainFrame = SessionMgr.getMainFrame();
+            final Component mainFrame = ConsoleApp.getMainFrame();
             final int chosenOptionIndex = JOptionPane.showOptionDialog(
                     mainFrame,
                     msg + " previously downloaded.\nOpen the existing download folder or re-run the download anyway?",

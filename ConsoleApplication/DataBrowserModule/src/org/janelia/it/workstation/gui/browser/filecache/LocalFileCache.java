@@ -151,7 +151,7 @@ public class LocalFileCache {
 
         this.buildCacheAndScheduleLoad();
 
-        LOG.info("<init>: exit");
+        LOG.debug("<init>: exit");
     }
 
     /**

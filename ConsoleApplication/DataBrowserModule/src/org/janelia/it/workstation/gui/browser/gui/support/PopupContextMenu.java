@@ -7,8 +7,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * Common base class for pop-up context menus.
@@ -17,8 +16,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
  */
 public abstract class PopupContextMenu extends JPopupMenu {
 
-    protected static final Browser browser = SessionMgr.getBrowser();
-    protected static final Component mainFrame = SessionMgr.getMainFrame();
+    protected static final Component mainFrame = ConsoleApp.getMainFrame();
     
     // Internal state
     protected boolean nextAddRequiresSeparator = false;

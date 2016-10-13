@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.ServiceMgr;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.gui.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.gui.browser.tools.preferences.InfoObject;
@@ -38,7 +39,17 @@ import com.google.common.eventbus.Subscribe;
 public class ToolMgr extends PreferenceManager {
 	
 	private static final Logger log = LoggerFactory.getLogger(ToolMgr.class);
-	
+
+    // Singleton
+    private static ToolMgr toolMgr;
+    public static synchronized ToolMgr getToolMgr() {
+        if (toolMgr==null) {
+            toolMgr = new ToolMgr();
+            Events.getInstance().registerOnEventBus(toolMgr);
+        }
+        return toolMgr;
+    }
+    
 	private static final String CONSOLE_PORT_VAR_NAME = "WORKSTATION_SERVICE_PORT";
 	
     public static final String TOOL_FIJI    = "Fiji.app";
@@ -49,10 +60,11 @@ public class ToolMgr extends PreferenceManager {
     public static String rootExecutablePath = ToolMgr.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
     private static TreeMap<String, ToolInfo> toolTreeMap = new TreeMap<String, ToolInfo>();
-    private static ToolMgr toolMgr;
 
-    private ToolMgr(){
-        super();
+    private ToolMgr() {
+        
+        log.info("Initializing Tool Manager");
+        
         DEBUG = false;
         userFileDescription = "Workstation Tools";
         // Set up the necessary attributes.
@@ -67,11 +79,6 @@ public class ToolMgr extends PreferenceManager {
         if (null!=tmpTool && !tmpTool.getPath().endsWith(" -na")) {
             tmpTool.setPath(tmpTool.getPath()+" -na");
         }
-    }
-
-    public static ToolMgr getToolMgr() {
-        if (toolMgr==null) toolMgr=new ToolMgr();
-        return toolMgr;
     }
 
     /**

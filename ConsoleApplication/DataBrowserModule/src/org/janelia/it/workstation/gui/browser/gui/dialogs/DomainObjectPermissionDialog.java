@@ -25,7 +25,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.browser.model.DomainObjectPermission;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -182,7 +182,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(parent);
             }
         };

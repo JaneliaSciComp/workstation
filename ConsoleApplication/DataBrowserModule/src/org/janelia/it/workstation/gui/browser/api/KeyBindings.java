@@ -5,12 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.actions.Action;
 import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public class KeyBindings {
         }
         catch (Exception e) {
             log.error("Could not load user's key binding preferences", e);
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -147,7 +147,7 @@ public class KeyBindings {
         }
         catch (Exception e) {
             log.error("Could not save user's key binding preferences", e);
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 }

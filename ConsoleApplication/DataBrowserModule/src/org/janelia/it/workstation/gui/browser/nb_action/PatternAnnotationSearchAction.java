@@ -25,6 +25,6 @@ public final class PatternAnnotationSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        ConsoleApp.getPatternSearchDialog().showDialog();
+        ConsoleApp.getConsoleApp().getPatternSearchDialog().showDialog();
     }
 }

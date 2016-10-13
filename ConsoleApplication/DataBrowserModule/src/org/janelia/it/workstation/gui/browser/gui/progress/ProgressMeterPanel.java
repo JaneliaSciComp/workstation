@@ -25,7 +25,7 @@ import org.janelia.it.workstation.gui.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.gui.browser.events.workers.WorkerEndedEvent;
 import org.janelia.it.workstation.gui.browser.events.workers.WorkerStartedEvent;
 import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

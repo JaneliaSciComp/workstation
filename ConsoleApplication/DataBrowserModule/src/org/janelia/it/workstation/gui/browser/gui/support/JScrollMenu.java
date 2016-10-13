@@ -13,7 +13,7 @@ import javax.swing.UIManager;
 import javax.swing.plaf.MenuItemUI;
 import javax.swing.plaf.PopupMenuUI;
 
-import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
+import org.janelia.it.workstation.gui.browser.gui.support.JScrollPopupMenu;
 
 /**
  * Taken from https://stackoverflow.com/questions/9288350/adding-vertical-scroll-to-a-jpopupmenu

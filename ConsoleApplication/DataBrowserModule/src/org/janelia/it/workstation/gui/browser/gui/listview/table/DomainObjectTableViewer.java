@@ -50,8 +50,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -160,7 +160,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             this.config = IconGridViewerConfiguration.loadConfig();
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
 
         this.domainObjectList = domainObjectList;
@@ -225,7 +225,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
             return popupMenu;
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
             return null;
         }
     }
@@ -246,7 +246,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                     updateTableModel();
                 }
                 catch (Exception ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
+                    ConsoleApp.handleException(ex);
                 }
             }
         });
@@ -259,7 +259,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         try {
             getContextualPopupMenu().runDefaultAction();
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 
@@ -289,7 +289,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 }
             }
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 
@@ -422,7 +422,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                 hud.setObject(domainObject, null, null, false);
             }
         } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
     

@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 import java.awt.Image;
 import java.awt.Toolkit;

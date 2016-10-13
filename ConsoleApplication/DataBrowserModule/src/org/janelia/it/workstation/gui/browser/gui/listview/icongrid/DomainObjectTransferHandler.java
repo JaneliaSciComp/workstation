@@ -10,7 +10,7 @@ import javax.swing.TransferHandler;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +48,7 @@ public class DomainObjectTransferHandler extends TransferHandler {
                 return null;
             }
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

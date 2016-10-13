@@ -7,7 +7,7 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 import com.jogamp.newt.event.KeyEvent;
 

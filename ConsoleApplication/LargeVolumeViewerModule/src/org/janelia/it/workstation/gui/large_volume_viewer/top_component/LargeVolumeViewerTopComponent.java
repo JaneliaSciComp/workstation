@@ -14,7 +14,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
@@ -250,7 +250,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             worker.execute();

@@ -11,9 +11,14 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.ModalDialog;
 
 /**
  * A chooser for arbitrary objects. This class follows the pattern set by

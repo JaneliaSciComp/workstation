@@ -4,7 +4,6 @@ import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import java.awt.EventQueue;
 import java.util.concurrent.Executor;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,11 +15,14 @@ import org.slf4j.LoggerFactory;
 public class Events {
 
     private static final Logger log = LoggerFactory.getLogger(Events.class);
-    
-    private static final Events singleton = new Events();
-    
-    public static Events getInstance() {
-        return singleton;
+
+    // Singleton
+    private static Events instance;
+    public static synchronized Events getInstance() {
+        if (instance==null) {
+            instance = new Events();
+        }
+        return instance;
     }
     
     private final EventBus eventBus;
@@ -74,7 +76,7 @@ public class Events {
                         Thread.currentThread().getContextClassLoader() + " in thread " + 
                         Thread.currentThread());
             }
-            synchronized (ModelMgr.class) {
+            synchronized (Events.class) {
                 eventBus.post(object);
             }
         }

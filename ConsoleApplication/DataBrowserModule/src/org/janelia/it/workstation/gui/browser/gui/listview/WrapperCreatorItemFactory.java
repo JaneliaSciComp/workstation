@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectAppender;
@@ -16,8 +17,7 @@ import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,7 +134,7 @@ public class WrapperCreatorItemFactory {
                     wrapperCreator.useDomainObject(domainObject);
                 }
             } catch (Exception ex) {
-                ModelMgr.getModelMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
 
         }
@@ -158,7 +158,7 @@ public class WrapperCreatorItemFactory {
 					appender.useDomainObjects(domainObjects);
 				}
 			} catch (Exception ex) {
-				ModelMgr.getModelMgr().handleException(ex);
+				ConsoleApp.handleException(ex);
 			}
 		}
 	}

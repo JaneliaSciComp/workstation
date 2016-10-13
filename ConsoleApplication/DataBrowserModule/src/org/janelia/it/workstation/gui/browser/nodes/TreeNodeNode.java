@@ -26,7 +26,7 @@ import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.gui.browser.nb_action.SearchHereAction;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;

@@ -14,7 +14,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 public final class NewFolderActionListener implements ActionListener {
@@ -41,7 +41,7 @@ public final class NewFolderActionListener implements ActionListener {
             parentNode = explorer.getWorkspaceNode();
         }
 
-        final String name = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
+        final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Folder Name:\n",
                 "Create new folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
@@ -74,7 +74,7 @@ public final class NewFolderActionListener implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 

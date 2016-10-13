@@ -20,7 +20,7 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * Context pop up menu for annotations.
@@ -61,7 +61,7 @@ public class AnnotationContextMenu extends PopupContextMenu {
             add(getRemoveAnnotationItem());
             add(getEditAnnotationItem(keyTerm));
         }  catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 

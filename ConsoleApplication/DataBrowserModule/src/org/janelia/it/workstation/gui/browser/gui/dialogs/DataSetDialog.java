@@ -35,7 +35,7 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
@@ -287,7 +287,7 @@ public class DataSetDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(DataSetDialog.this);
                 setVisible(false);
             }

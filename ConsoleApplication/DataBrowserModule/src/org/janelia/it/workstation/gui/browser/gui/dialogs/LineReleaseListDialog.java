@@ -27,16 +27,15 @@ import javax.swing.SwingConstants;
 
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicRow;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
+import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class LineReleaseListDialog extends ModalDialog implements Refreshable {
+public class LineReleaseListDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(LineReleaseListDialog.class);
     
@@ -156,7 +155,7 @@ public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    SessionMgr.getSessionMgr().handleException(error);
+                                    ConsoleApp.handleException(error);
                                     Utils.setDefaultCursor(LineReleaseListDialog.this);
                                     loadReleases();
                                 }
@@ -205,7 +204,7 @@ public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
+                            ConsoleApp.handleException(error);
                         }
                     };
                     worker.execute();
@@ -250,7 +249,7 @@ public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
         loadReleases();
 
-        Component mainFrame = SessionMgr.getMainFrame();
+        Component mainFrame = ConsoleApp.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("LineReleaseListDialog.showDialog");
@@ -292,7 +291,7 @@ public class LineReleaseListDialog extends ModalDialog implements Refreshable {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

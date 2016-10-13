@@ -21,14 +21,14 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.SwcImportTask;
-import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.components.PathCorrectionKeyListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.dialogs.EditWorkspaceNameDialog;
 import org.openide.util.lookup.ServiceProvider;
@@ -50,7 +50,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
     @Override
     public void acceptDomainObject(DomainObject domainObject) {
 
-        final JFrame mainFrame = SessionMgr.getMainFrame();
+        final JFrame mainFrame = ConsoleApp.getMainFrame();
         final TmSample sample = (TmSample)domainObject;
 
         SimpleWorker worker = new SimpleWorker() {
@@ -98,7 +98,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
                 buttonPanel.add(cancelButton, SystemInfo.isMac ? BorderLayout.LINE_START : BorderLayout.LINE_END);
                 inputDialog.add(buttonPanel);
                 inputDialog.add(errorLabel);
-                final ComputeFacade cf = FacadeManager.getFacadeManager().getComputeFacade();
+                final LegacyFacade cf = DomainMgr.getDomainMgr().getLegacyFacade();
 
                 JButton okButton = new JButton("OK");
                 okButton.setToolTipText("Send path to linux.");
@@ -187,7 +187,7 @@ public class LoadedWorkspaceCreator implements DomainObjectAcceptor {
             
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         worker.execute();

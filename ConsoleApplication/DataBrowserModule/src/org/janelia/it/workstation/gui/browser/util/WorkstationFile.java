@@ -11,7 +11,7 @@ import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.janelia.it.workstation.gui.browser.api.FileMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

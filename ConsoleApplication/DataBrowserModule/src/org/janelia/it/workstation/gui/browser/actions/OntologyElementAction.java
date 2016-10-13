@@ -1,9 +1,6 @@
 package org.janelia.it.workstation.gui.browser.actions;
 
-import java.util.Arrays;
-
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.framework.actions.Action;
 
 /**
  * An abstract base class for actions dealing with ontology elements.

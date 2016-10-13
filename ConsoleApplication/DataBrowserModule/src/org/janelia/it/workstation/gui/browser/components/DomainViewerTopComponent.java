@@ -15,7 +15,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.gui.editor.DomainObjectEditor;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleEditorPanel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -150,7 +150,7 @@ public final class DomainViewerTopComponent extends TopComponent {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             worker.execute();
@@ -187,7 +187,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             repaint();
         }
         catch (InstantiationException | IllegalAccessException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
         setName(editor.getName());
     }
@@ -203,7 +203,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             return DomainUtils.equals(getCurrent(), domainObject);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return false;
         }
     }
@@ -233,7 +233,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             setName(editor.getName());
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

@@ -10,7 +10,7 @@ import java.io.PrintWriter;
 import java.util.Properties;
 
 import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,11 +127,11 @@ public class SystemInfo {
     }
 
     public static void setDownloadsDir(String downloadsDir) {
-        SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
+        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DOWNLOADS_DIR, downloadsDir);
     }
 
     public static File getDownloadsDir() {
-        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DOWNLOADS_DIR);
+        String downloadsDir = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DOWNLOADS_DIR);
         File downloadsDirFile;
         // Check for existence and clear out references to tmp
         if (null==downloadsDir || downloadsDir.startsWith("/tmp")) {

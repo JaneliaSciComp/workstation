@@ -16,8 +16,8 @@ import javax.swing.SwingConstants;
 import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.util.Utils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -227,7 +227,7 @@ public class DynamicImagePanel extends JPanel {
                     }
                 }
                 catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    ConsoleApp.handleException(e);
                 }
             }
         }
@@ -235,7 +235,7 @@ public class DynamicImagePanel extends JPanel {
     }
 
     private boolean isUnloadImages() {
-        Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
+        Boolean unloadImagesBool = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY);
         return unloadImagesBool != null && unloadImagesBool;
     }
 

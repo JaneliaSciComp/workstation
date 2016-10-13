@@ -13,16 +13,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.ActionMap;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
@@ -53,13 +63,11 @@ import org.janelia.it.workstation.gui.browser.nodes.EmptyNode;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.JScrollPopupMenu;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -71,6 +79,8 @@ import org.openide.windows.TopComponent;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Top component for the Ontology Editor, which lets users create ontologies
@@ -180,7 +190,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                         if (currNode instanceof OntologyTermNode) {
                             
                             log.debug("Rebinding current node: {}",currNode.getDisplayName());
-                            Action action = ontologyNode.getActionForNode((OntologyTermNode)currNode);
+                            org.janelia.it.workstation.gui.browser.actions.Action action = ontologyNode.getActionForNode((OntologyTermNode)currNode);
     
                             if (action == null) {
                                 throw new IllegalStateException("No action for current node");
@@ -244,7 +254,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         
@@ -499,7 +509,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         
@@ -534,7 +544,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
     
     private JToolBar getBottomToolbar() {
 
-        final Component mainFrame = SessionMgr.getMainFrame();
+        final Component mainFrame = ConsoleApp.getMainFrame();
     
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);

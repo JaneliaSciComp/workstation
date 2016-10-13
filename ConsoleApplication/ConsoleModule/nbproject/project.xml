@@ -303,7 +303,6 @@
                 <package>org.janelia.it.workstation.gui.framework.outline</package>
                 <package>org.janelia.it.workstation.gui.framework.outline.ontology</package>
                 <package>org.janelia.it.workstation.gui.framework.pref_controller</package>
-                <package>org.janelia.it.workstation.gui.framework.progress_meter</package>
                 <package>org.janelia.it.workstation.gui.framework.roles</package>
                 <package>org.janelia.it.workstation.gui.framework.search</package>
                 <package>org.janelia.it.workstation.gui.framework.session_mgr</package>
@@ -344,7 +343,6 @@
                 <package>org.janelia.it.workstation.gui.viewer3d.text</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.texture</package>
                 <package>org.janelia.it.workstation.gui.viewer3d.volume_builder</package>
-                <package>org.janelia.it.workstation.lifecycle</package>
                 <package>org.janelia.it.workstation.model.domain</package>
                 <package>org.janelia.it.workstation.model.entity</package>
                 <package>org.janelia.it.workstation.model.utils</package>
@@ -358,7 +356,6 @@
                 <package>org.janelia.it.workstation.shared.preferences</package>
                 <package>org.janelia.it.workstation.shared.swing.table</package>
                 <package>org.janelia.it.workstation.shared.util</package>
-                <package>org.janelia.it.workstation.shared.util.filecache</package>
                 <package>org.janelia.it.workstation.shared.util.text_component</package>
                 <package>org.janelia.it.workstation.shared.workers</package>
                 <package>org.janelia.it.workstation.signal</package>

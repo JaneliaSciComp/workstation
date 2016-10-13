@@ -14,7 +14,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager.FocusBehavior;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -210,7 +210,7 @@ public class DirectionalReferenceAxesActor implements GLActor {
 
                 bIsInitialized = true;
             } catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
         }
 

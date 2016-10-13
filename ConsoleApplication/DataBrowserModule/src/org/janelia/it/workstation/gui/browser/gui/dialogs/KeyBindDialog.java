@@ -17,13 +17,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.workstation.gui.browser.actions.Action;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.KeyBindings;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.browser.gui.keybind.ShortcutTextField;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
-import org.janelia.it.workstation.gui.framework.actions.Action;
 
 /**
  * A dialog for setting a key binding to an action. THe dialog should be shown with showForAction.

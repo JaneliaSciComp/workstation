@@ -47,8 +47,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.perf4j.LoggingStopWatch;
@@ -198,7 +198,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             @Override
             protected void hadError(Throwable error) {
                 Utils.setMainFrameCursorWaitStatus(false);
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -316,7 +316,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -430,7 +430,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -454,7 +454,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
             }
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -484,7 +484,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         try {
             return DomainMgr.getDomainMgr().getModel().getDomainObjects(selectionModel.getSelectedIds());
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

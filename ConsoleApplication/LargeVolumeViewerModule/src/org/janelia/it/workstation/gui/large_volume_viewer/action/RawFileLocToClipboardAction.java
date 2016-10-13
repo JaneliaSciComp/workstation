@@ -9,12 +9,13 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JLabel;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MicronCoordsFormatter;
 import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
 import org.slf4j.Logger;
@@ -77,7 +78,7 @@ public class RawFileLocToClipboardAction extends AbstractAction {
 
         StringSelection selection;
         try {
-            RawFileInfo rfi = ModelMgr.getModelMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), voxelCoordArr);
+            RawFileInfo rfi = TiledMicroscopeDomainMgr.getDomainMgr().getNearestChannelFiles(volumeImage.getRemoteBasePath(), voxelCoordArr);
             File c0File = rfi.getChannel0();
             String filePathStr = c0File.toString().replace(FILE_SEP, LINUX_FILE_SEP);
             // Not truly looking for the file path; just the legs of the path.

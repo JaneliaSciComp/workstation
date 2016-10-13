@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.it.jacs.model.domain.DomainConstants;
@@ -16,6 +17,8 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
@@ -247,5 +250,20 @@ public class TiledMicroscopeDomainMgr {
     public void bulkEditNeuronTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         log.debug("bulkEditTags({})", neurons);
         client.changeTags(neurons, tags, tagState);
+    }
+
+    public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
+        log.debug("getCoordToRawTransform({})", basePath);
+        return DomainMgr.getDomainMgr().getLegacyFacade().getLvvCoordToRawTransform(basePath);
+    }
+
+    public Map<Integer, byte[]> getTextureBytes(String basePath, int[] viewerCoord, int[] dimensions) throws Exception {
+        log.debug("getTextureBytes({}, viewerCoord={}, dimensions={})", basePath, viewerCoord, dimensions);
+        return DomainMgr.getDomainMgr().getLegacyFacade().getTextureBytes(basePath, viewerCoord, dimensions);
+    }
+
+    public RawFileInfo getNearestChannelFiles(String basePath, int[] viewerCoord) throws Exception {
+        log.debug("getNearestChannelFiles({}, viewerCoord={})", basePath, viewerCoord);
+        return DomainMgr.getDomainMgr().getLegacyFacade().getNearestChannelFiles(basePath, viewerCoord);
     }
 }

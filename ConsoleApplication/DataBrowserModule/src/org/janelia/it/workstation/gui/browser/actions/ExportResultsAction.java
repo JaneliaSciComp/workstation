@@ -17,7 +17,7 @@ import org.janelia.it.workstation.gui.browser.gui.listview.table.DomainObjectTab
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
@@ -75,7 +75,7 @@ public class ExportResultsAction<T> extends AbstractAction {
             }
         });
 
-        if (chooser.showDialog(SessionMgr.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(ConsoleApp.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -139,7 +139,7 @@ public class ExportResultsAction<T> extends AbstractAction {
 
             @Override
             protected void hadSuccess() {
-                int rv = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
+                int rv = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Data was successfully exported to " + destFile + ". Open file in default viewer?",
                         "Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (rv == JOptionPane.YES_OPTION) {
                     OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
@@ -149,11 +149,11 @@ public class ExportResultsAction<T> extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Exporting data", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Exporting data", "", 0, 100));
         worker.execute();
     }
 }

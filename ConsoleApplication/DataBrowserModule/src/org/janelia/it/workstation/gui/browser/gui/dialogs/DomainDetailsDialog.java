@@ -13,12 +13,11 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import com.google.common.eventbus.Subscribe;
 
@@ -60,7 +59,7 @@ public class DomainDetailsDialog extends ModalDialog {
     }
     
     public void showForDomainObject(DomainObject domainObject) {
-    	showForDomainObject(domainObject, EntityDetailsPanel.TAB_NAME_ATTRIBUTES);
+    	showForDomainObject(domainObject, DomainInspectorPanel.TAB_NAME_ATTRIBUTES);
     }
     
     public void showForDomainObject(DomainObject domainObject, String defaultTab) {
@@ -72,7 +71,7 @@ public class DomainDetailsDialog extends ModalDialog {
 
         detailsPanel.loadDomainObject(domainObject, defaultTab);
         setTitle("Details: "+domainObject.getName());
-        Component mainFrame = SessionMgr.getMainFrame();
+        Component mainFrame = ConsoleApp.getMainFrame();
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.6)));
 
         ActivityLogHelper.logUserAction("DomainDetailsDialog.showForDomainObject", domainObject);

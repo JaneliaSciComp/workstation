@@ -9,8 +9,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.gui.framework.viewer.Load3dSwingWorker;
-
 /**
  * Created by IntelliJ IDEA.
  * User: fosterl
@@ -19,7 +17,7 @@ import org.janelia.it.workstation.gui.framework.viewer.Load3dSwingWorker;
  *
  * A kind of controller class. We use this for setting up HUD's 3D with new info.
  */
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

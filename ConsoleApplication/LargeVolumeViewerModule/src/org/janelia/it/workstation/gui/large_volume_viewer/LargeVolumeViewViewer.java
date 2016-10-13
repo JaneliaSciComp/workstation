@@ -18,13 +18,13 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectInvalidationEvent;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.gui.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.netbeans.api.progress.ProgressHandle;
@@ -152,7 +152,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     @Override
                     protected void hadError(Throwable error) {
                         progress.finish();
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 
@@ -186,7 +186,7 @@ public class LargeVolumeViewViewer extends JPanel {
                     @Override
                     protected void hadError(Throwable error) {
                         progress2.finish();
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 
@@ -216,7 +216,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
 
         };
@@ -257,7 +257,7 @@ public class LargeVolumeViewViewer extends JPanel {
             if ( viewUI == null ) {
                 annotationModel = new AnnotationModel();
                 Events.getInstance().registerOnEventBus(annotationModel);
-                viewUI = new QuadViewUi(SessionMgr.getMainFrame(), initialObject, false, annotationModel);
+                viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
                 neuronSetAdapter.observe(annotationModel);
             }
             removeAll();

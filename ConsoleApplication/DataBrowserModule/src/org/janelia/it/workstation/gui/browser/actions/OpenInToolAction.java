@@ -7,7 +7,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.editor.SampleResultContextMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +56,7 @@ public class OpenInToolAction extends AbstractAction {
         } 
         catch (Exception e) {
             log.error("Error launching tool", e);
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Could not launch this tool. "
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not launch this tool. "
                     + "Please choose the appropriate file path from the Tools->Configure Tools area",
                     "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
         }

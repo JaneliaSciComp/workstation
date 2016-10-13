@@ -22,9 +22,11 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.KeyBindings;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.SessionEvent;
+import org.janelia.it.workstation.gui.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
@@ -32,12 +34,11 @@ import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -67,9 +68,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
     private Integer selectionAnchorIndex;
     private Integer selectionCurrIndex;
-
-    // Listeners
-    private final SessionModelListener sessionModelListener;
 
     public IconGridViewerPanel() {
 
@@ -103,34 +101,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
                 imagesPanel.recalculateGrid();
             }
         });
-        
-        sessionModelListener = new SessionModelAdapter() {
-
-            @Override
-            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-
-                if (key == "console.serverLogin") {
-                    IconGridViewerPanel.this.clear();
-                }
-                    else if (OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
-                        refresh();
-                    }
-                    else if (OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
-                        int tableHeight = (Integer) newValue;
-                        if (currTableHeight == tableHeight) {
-                            return;
-                        }
-                        currTableHeight = tableHeight;
-                        imagesPanel.resizeTables(tableHeight);
-                        imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
-                        imagesPanel.recalculateGrid();
-                        imagesPanel.scrollSelectedObjectsToCenter();
-                        imagesPanel.loadUnloadImages();
-                }
-            }
-        };
-        
-        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
     }
 
     private IconGridViewerToolbar createToolbar() {
@@ -522,7 +492,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         imagesPanel.setImageObjects(objects);
 
         // Update preferences for each button
-        Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
+        Boolean tagTable = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(
                 OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY);
         if (tagTable == null) {
             tagTable = false;
@@ -588,12 +558,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
         repaint();
     }
 
-    public void close() {
-        // TODO: this should be invoked somehow if the panel is closed
-        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
-    }
-
     public synchronized void showAll() {
         removeAll();
         add(toolbar, BorderLayout.NORTH);
@@ -628,4 +592,31 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     public void scrollSelectedObjectsToCenter() {
         imagesPanel.scrollSelectedObjectsToCenter();
     }
+    
+    @Subscribe
+    public void prefChange(LocalPreferenceChanged event) {
+
+        Object key = event.getKey();
+        if (OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+            refresh();
+        }
+        else if (OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+            int tableHeight = (Integer) event.getNewValue();
+            if (currTableHeight == tableHeight) {
+                return;
+            }
+            currTableHeight = tableHeight;
+            imagesPanel.resizeTables(tableHeight);
+            imagesPanel.setMaxImageWidth(toolbar.getCurrImageSize());
+            imagesPanel.recalculateGrid();
+            imagesPanel.scrollSelectedObjectsToCenter();
+            imagesPanel.loadUnloadImages();
+        }  
+    }
+    
+    @Subscribe
+    public void sessionChanged(SessionEvent event) {
+        IconGridViewerPanel.this.clear();
+    }
+        
 }

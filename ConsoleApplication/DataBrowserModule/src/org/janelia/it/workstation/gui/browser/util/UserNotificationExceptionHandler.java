@@ -1,36 +1,20 @@
 package org.janelia.it.workstation.gui.browser.util;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.naming.AuthenticationException;
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.workstation.api.facade.concrete_facade.xml.InvalidXmlException;
-import org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatusException;
-import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
-import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.MailDialogueBox;
-import org.janelia.it.workstation.shared.util.text_component.StandardTextArea;
+import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.api.exceptions.ConnectionStatusException;
+import org.janelia.it.workstation.gui.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.ejb.EJBFactory;
+import org.janelia.it.workstation.gui.browser.gui.support.MailDialogueBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,10 +54,6 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         }
         if (throwable instanceof ConnectionStatusException) {
             displayConnectionStatus(throwable);
-            return;
-        }
-        if (throwable instanceof InvalidXmlException) {
-            presentOutputFrame((InvalidXmlException) throwable);
             return;
         }
         displayDialog(throwable);
@@ -159,8 +139,8 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
 
     public static void sendEmail(Throwable exception) {
         try {
-            MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getMainFrame(),
-                    (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
+            MailDialogueBox mailDialogueBox = new MailDialogueBox(ConsoleApp.getMainFrame(),
+                    (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL),
                     "Workstation Exception Report",
                     "Problem Description: ");
             try {
@@ -203,51 +183,8 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         JOptionPane.showMessageDialog(getParentFrame(), "Your message was NOT able to be sent "+"to our support staff.  Please contact your support representative.");
     }
     
-    /**
-     * Creates a display frame for parse output if one does not already exist.
-     * Then display contents of the output buffer.
-     */
-    private void presentOutputFrame(InvalidXmlException throwable) {
-        
-        StringBuffer outputBuffer = throwable.getParseData();
-        final JDialog validationOutputDialog = new JDialog(getParentFrame());
-        validationOutputDialog.setTitle(throwable.getTitle()+" "+throwable.getFileName());
-        validationOutputDialog.setModal(true);
-        int width = 600;
-        int height = 400;
-        validationOutputDialog.setSize(width, height);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int xLoc = ((int) screenSize.getWidth()-width)/2;
-        int yLoc = ((int) screenSize.getHeight()-height)/2;
-        validationOutputDialog.setLocation(xLoc, yLoc);
-        validationOutputDialog.getContentPane().setLayout(new BorderLayout());
-        JTextArea validationTA = new StandardTextArea();
-        JScrollPane scrollPane = new JScrollPane(validationTA);
-        validationOutputDialog.getContentPane().add(scrollPane, BorderLayout.CENTER);
-        JButton dismissButton = new JButton("Dismiss");
-        dismissButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent event) {
-                validationOutputDialog.setVisible(false);
-                validationOutputDialog.dispose();
-            }
-        });
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new FlowLayout());
-        buttonPanel.add(dismissButton);
-        validationOutputDialog.getContentPane().add(buttonPanel, BorderLayout.SOUTH);
-        validationOutputDialog.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                validationOutputDialog.setVisible(false);
-                validationOutputDialog.dispose();
-            }
-        });
-
-        validationTA.setText(outputBuffer.toString());
-        validationOutputDialog.setVisible(true);
-    }
-
     private static JFrame getParentFrame() {
-        return SessionMgr.getMainFrame();
+        return ConsoleApp.getMainFrame();
     }
 
     private URL getEmailURL() {

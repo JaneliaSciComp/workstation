@@ -12,8 +12,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
-import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.util.WrapLayout;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.WrapLayout;
 
 /**
  * A panel that shows a bunch of tags in a loose wrapping fashion.

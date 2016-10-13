@@ -911,33 +911,7 @@ public final class ModelMgr {
     public void removePreferenceCategory(String category) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().removePreferenceCategory(category);
     }
-
-    public SolrResults searchSolr(SolrQuery query) throws Exception {
-        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
-        return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
-    }
-
-    public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
-        log.info("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
-        return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
-    }
-
-    public void updateIndex(DomainObject domainObj) throws Exception {
-        FacadeManager.getFacadeManager().getSolrFacade().updateIndex(domainObj);
-    }
-
-    public void removeFromIndex(Long domainObjId) throws Exception {
-         FacadeManager.getFacadeManager().getSolrFacade().removeFromIndex(domainObjId);
-    }
-
-    public void addAncestorToIndex(Long domainObjId, Long ancestorId) throws Exception {
-        FacadeManager.getFacadeManager().getSolrFacade().addAncestorToIndex(domainObjId, ancestorId);
-    }
     
-    public Map<String, SageTerm> getImageVocabulary() throws Exception {
-        return FacadeManager.getFacadeManager().getSolrFacade().getImageVocabulary();
-    }
-
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
         entityModel.addChildren(parentId, childrenIds, attributeName);
         notifyEntityChildrenChanged(parentId);
@@ -968,34 +942,6 @@ public final class ModelMgr {
 
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
-    }
-
-    public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntityIdsInAlignmentSpace(opticalRes, pixelRes, guids);
-    }
-
-    public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationQuantifierMapsFromSummary();
-    }
-
-    public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getMaskQuantifierMapsFromSummary(maskFolderName);
-    }
-
-    public List<DataDescriptor> patternSearchGetDataDescriptors(String type) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetDataDescriptors(type);
-    }
-
-    public int patternSearchGetState() throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetState();
-    }
-
-    public List<String> patternSearchGetCompartmentList(String type) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetCompartmentList(type);
-    }
-
-    public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
     }
 
     public void registerOnEventBus(Object object) {
@@ -1034,10 +980,6 @@ public final class ModelMgr {
         }
     }
 
-    public Color getUserAnnotationColor(String username) {
-        return userColorMapping.getColor(username);
-    }
-
     public ThreadQueue getLoaderThreadQueue() {
         if (threadQueue == null) {
             threadQueue = new ThreadQueue(6, "LoaderGroup", Thread.MIN_PRIORITY, true);
@@ -1061,23 +1003,6 @@ public final class ModelMgr {
 //        String mt = modelMgrResourceBundle.getString("MultiThreadedServerCalls");
 //        return mt != null && mt.equalsIgnoreCase("TRUE");
         return true;
-    }
-
-    // Methods associated with the 3D Tiled Microscope viewer
-    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
-    	throw new UnsupportedOperationException();
-    }
-
-    public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getLvvCoordToRawTransform(basePath);
-    }
-
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
-    }
-    
-    public RawFileInfo getNearestChannelFiles( String basePath, int[] viewerCoord ) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getNearestChannelFiles( basePath, viewerCoord );
     }
 
 	public List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {

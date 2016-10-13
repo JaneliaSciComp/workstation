@@ -42,13 +42,12 @@ import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 import org.janelia.it.jacs.shared.annotation.RelativePatternAnnotationDataManager;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -445,7 +444,7 @@ public class PatternSearchDialog extends ModalDialog {
 			return results;
 		}
 		catch (Exception e) {
-			SessionMgr.getSessionMgr().handleException(e);
+			ConsoleApp.handleException(e);
 			return new ArrayList<>();
 		}
 	}
@@ -606,10 +605,10 @@ public class PatternSearchDialog extends ModalDialog {
         }
         try {
             Long startTime = new Date().getTime();
-            int loadingState = ModelMgr.getModelMgr().patternSearchGetState();
+            int loadingState = DomainMgr.getDomainMgr().getLegacyFacade().patternSearchGetState();
             while (loadingState == PatternAnnotationDataManager.STATE_LOADING && (new Date().getTime() - startTime) < MAX_LOADING_WAIT_MS) {
                 Thread.sleep(1000);
-                loadingState = ModelMgr.getModelMgr().patternSearchGetState();
+                loadingState = DomainMgr.getDomainMgr().getLegacyFacade().patternSearchGetState();
             }
             if (loadingState != PatternAnnotationDataManager.STATE_READY) {
                 throw new Exception(("Pattern Annotation loading timeout"));
@@ -617,8 +616,8 @@ public class PatternSearchDialog extends ModalDialog {
             Long endTime = new Date().getTime();
             Long loadingTime = endTime - startTime;
             log.info("PatterSearchDialog : Pattern Annotation loading time=" + loadingTime + " ms");
-            compartmentAbbreviationList = ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
-            List<DataDescriptor> relativeDescriptorList = ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            compartmentAbbreviationList = DomainMgr.getDomainMgr().getLegacyFacade().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            List<DataDescriptor> relativeDescriptorList = DomainMgr.getDomainMgr().getLegacyFacade().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
             managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
             initializeCurrentListModified();
             initFilters();
@@ -649,7 +648,7 @@ public class PatternSearchDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 //Utils.setDefaultCursor(PatternSearchDialog.this);
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 setStatusMessage("Error during quantifier load", Color.RED);
             }
         };
@@ -719,7 +718,7 @@ public class PatternSearchDialog extends ModalDialog {
             filterMap.put(dataDescriptor.getName(), filterSet);
         }
 
-        FilterResult filterResult= ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
+        FilterResult filterResult= DomainMgr.getDomainMgr().getLegacyFacade().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
         setStatusMessage("Result has " + filterResult.getSampleList().size() + " members", Color.GREEN);
 
         return filterResult;
@@ -788,7 +787,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(PatternSearchDialog.this);
                 resetSearchState();
             }

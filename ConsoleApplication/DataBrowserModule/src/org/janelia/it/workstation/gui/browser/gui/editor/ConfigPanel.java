@@ -18,9 +18,9 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.gui.util.WrapLayout;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.WrapLayout;
 
 /**
  * Top panel for viewers/editors which provides some common features:

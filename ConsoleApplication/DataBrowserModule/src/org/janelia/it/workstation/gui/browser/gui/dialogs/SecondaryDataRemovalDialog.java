@@ -42,11 +42,12 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.shared.utils.Constants;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,7 +165,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(SecondaryDataRemovalDialog.this);
                 setVisible(false);
             }
@@ -267,7 +268,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
             log.info("Submitting task {}, {} \n( {}\n{} ).",  task.getJobName(), task.getObjectId(), trimDepth, stringifiedAreas);
         } catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return;
         }
 
@@ -289,7 +290,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
+                        DomainExplorerTopComponent.getInstance().refresh(true, true, null);
                         return null;
                     }
                 };

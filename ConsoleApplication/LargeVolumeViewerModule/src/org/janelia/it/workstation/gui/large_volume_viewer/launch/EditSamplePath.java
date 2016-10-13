@@ -6,7 +6,7 @@ import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.util.lookup.ServiceProvider;
@@ -28,7 +28,7 @@ public class EditSamplePath implements DomainObjectAcceptor  {
         final TmSample sample = (TmSample)domainObject;
         
         final String editedPath = (String) JOptionPane.showInputDialog(
-                SessionMgr.getMainFrame(),
+                ConsoleApp.getMainFrame(),
                 "New Linux path to sample:",
                 "Edit sample path",
                 JOptionPane.PLAIN_MESSAGE,
@@ -53,7 +53,7 @@ public class EditSamplePath implements DomainObjectAcceptor  {
                 }
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             saver.execute();

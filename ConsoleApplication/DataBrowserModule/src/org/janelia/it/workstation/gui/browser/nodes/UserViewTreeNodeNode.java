@@ -7,8 +7,8 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -142,7 +142,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode {
                 list.addAll(temp);
                 return true;
             } catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
                 return false;
             }
         }

@@ -35,8 +35,8 @@ import org.janelia.it.workstation.gui.browser.gui.inspector.DomainInspectorPanel
 import org.janelia.it.workstation.gui.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.gui.browser.nb_action.RemoveAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -244,7 +244,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
             }
         }
         catch (IntrospectionException ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
 
         sheet.put(set);
@@ -263,7 +263,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
             if (domainObject==null) {
                 return;
             }
-            String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Name:\n", "Rename "
+            String newName = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Name:\n", "Rename "
                     + domainObject.getName(), JOptionPane.PLAIN_MESSAGE, null, null, domainObject.getName());
             if ((newName == null) || (newName.length() <= 0)) {
                 return;
@@ -275,7 +275,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
                 fireDisplayNameChange(oldName, newName); 
             } 
             catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
         }
 

@@ -19,7 +19,7 @@ import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.components.OntologyExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 /**
@@ -34,7 +34,7 @@ public class AnnotationBuilderDialog extends JDialog {
     private boolean cancelled = false;
 
     public AnnotationBuilderDialog() {
-        super(SessionMgr.getMainFrame(), "Edit Value", true);
+        super(ConsoleApp.getMainFrame(), "Edit Value", true);
         OntologyNode ontologyNode = OntologyExplorerTopComponent.getInstance().getOntologyNode();
         Ontology currOntology = ontologyNode == null ? null : ontologyNode.getOntology();
         TreeSet<String> terms = currOntology==null?new TreeSet<String>():DomainMgr.getDomainMgr().getModel().getOntologyTermSet(currOntology);
@@ -128,8 +128,7 @@ public class AnnotationBuilderDialog extends JDialog {
         // Create and set up the window.
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setResizable(false);
-        this.setIconImage(SessionMgr.getBrowser().getIconImage());
-        this.setLocationRelativeTo(SessionMgr.getMainFrame());
+        this.setLocationRelativeTo(ConsoleApp.getMainFrame());
         annotationPanel.setOpaque(true); // content panes must be opaque
         this.setContentPane(annotationPanel);
 

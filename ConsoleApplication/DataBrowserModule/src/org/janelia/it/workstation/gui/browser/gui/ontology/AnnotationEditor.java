@@ -14,7 +14,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +58,7 @@ public class AnnotationEditor {
                     currValue = annotation.getValue();
                 }
 
-                value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Value:\n", currValue);
+                value = JOptionPane.showInputDialog(ConsoleApp.getMainFrame(), "Value:\n", currValue);
 
                 Interval interval = (Interval) keyTerm;
                 if (StringUtils.isEmpty(value)) return null;
@@ -69,7 +69,7 @@ public class AnnotationEditor {
                     }
                 }
                 catch (NumberFormatException e) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                             "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                     return CANCEL_VALUE;
                 }
@@ -82,7 +82,7 @@ public class AnnotationEditor {
 
                 if (valueEnum == null) {
                     Exception error = new Exception(keyTerm.getName() + " has no supporting enumeration.");
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                     return CANCEL_VALUE;
                 }
 
@@ -95,7 +95,7 @@ public class AnnotationEditor {
                     }
                 }
 
-                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
+                OntologyTerm enumTerm = (OntologyTerm) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
                         "Value:\n", keyTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, valueEnum.getTerms().toArray(), currValue);
                 if (enumTerm != null) {
                     value = enumTerm.getName();
@@ -118,7 +118,7 @@ public class AnnotationEditor {
             return value;
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

@@ -13,7 +13,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.
@@ -63,7 +63,7 @@ public class ImportSWCAction extends AbstractAction {
             }
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 

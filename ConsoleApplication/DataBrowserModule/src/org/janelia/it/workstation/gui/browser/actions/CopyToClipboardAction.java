@@ -8,7 +8,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * Action to copy a named string to the clipboard. 
@@ -32,7 +32,7 @@ public class CopyToClipboardAction extends AbstractAction {
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 }

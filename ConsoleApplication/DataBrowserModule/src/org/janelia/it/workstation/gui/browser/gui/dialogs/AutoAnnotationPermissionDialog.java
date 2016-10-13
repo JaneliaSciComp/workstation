@@ -26,7 +26,7 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * A dialog for selecting permissions to auto-add for any annotations
@@ -148,7 +148,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
             packAndShow();
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
             
         return pressedOk;

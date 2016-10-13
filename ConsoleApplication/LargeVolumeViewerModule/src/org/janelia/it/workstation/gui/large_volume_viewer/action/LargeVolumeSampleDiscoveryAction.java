@@ -11,7 +11,7 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.tiledMicroscope.LargeVolumeDiscoveryTask;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
 	
@@ -23,7 +23,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
     	
         // Let user decide if it's a go.
         int optionSelected = JOptionPane.showConfirmDialog(
-                SessionMgr.getMainFrame(),
+                ConsoleApp.getMainFrame(),
                 "Launch Discovery Process Now?",
                 "Launch Large Volume Sample Discovery",
                 JOptionPane.OK_CANCEL_OPTION,
@@ -51,7 +51,7 @@ public class LargeVolumeSampleDiscoveryAction extends AbstractAction {
 	            tmw.executeWithEvents();
         	}
         	catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
         	}
         }
 	}

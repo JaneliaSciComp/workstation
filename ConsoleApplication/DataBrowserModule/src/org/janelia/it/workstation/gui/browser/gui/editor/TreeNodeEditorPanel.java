@@ -30,7 +30,7 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -149,7 +149,7 @@ public class TreeNodeEditorPanel extends JPanel
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -200,7 +200,7 @@ public class TreeNodeEditorPanel extends JPanel
                 }
             }
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -247,7 +247,7 @@ public class TreeNodeEditorPanel extends JPanel
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 

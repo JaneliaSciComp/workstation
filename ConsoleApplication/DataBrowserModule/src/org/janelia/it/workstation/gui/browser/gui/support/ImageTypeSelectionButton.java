@@ -20,7 +20,7 @@ import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

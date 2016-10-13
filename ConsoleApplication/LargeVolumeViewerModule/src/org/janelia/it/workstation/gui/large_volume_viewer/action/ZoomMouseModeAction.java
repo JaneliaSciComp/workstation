@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;

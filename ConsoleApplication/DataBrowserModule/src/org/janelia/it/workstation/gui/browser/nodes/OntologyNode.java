@@ -16,8 +16,8 @@ import org.janelia.it.workstation.gui.browser.actions.OntologyElementAction;
 import org.janelia.it.workstation.gui.browser.actions.RunNodeDefaultAction;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -34,7 +34,7 @@ public class OntologyNode extends OntologyTermNode {
     private final static Logger log = LoggerFactory.getLogger(OntologyNode.class);
     
     private final ConcurrentMap<Long, OntologyTermNode> nodeById = new MapMaker().weakValues().makeMap();
-    private final Map<String, org.janelia.it.workstation.gui.framework.actions.Action> ontologyActionMap = new HashMap<>();
+    private final Map<String, org.janelia.it.workstation.gui.browser.actions.Action> ontologyActionMap = new HashMap<>();
     
     public OntologyNode(Ontology ontology) {
         super(null, ontology, ontology);
@@ -70,7 +70,7 @@ public class OntologyNode extends OntologyTermNode {
         ontologyActionMap.put(pathStr, action);
     }
     
-    public org.janelia.it.workstation.gui.framework.actions.Action getActionForNode(OntologyTermNode node) {
+    public org.janelia.it.workstation.gui.browser.actions.Action getActionForNode(OntologyTermNode node) {
         return ontologyActionMap.get(NodeUtils.createPathString(node));
     }
     
@@ -121,13 +121,13 @@ public class OntologyNode extends OntologyTermNode {
             }
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         worker.execute();
     }
 
-    public Map<String, org.janelia.it.workstation.gui.framework.actions.Action> getOntologyActionMap() {
+    public Map<String, org.janelia.it.workstation.gui.browser.actions.Action> getOntologyActionMap() {
         return ontologyActionMap;
     }
 }

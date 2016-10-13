@@ -37,8 +37,8 @@ import org.janelia.it.jacs.shared.lvv.SimpleFileCache;
 import org.janelia.it.jacs.shared.lvv.TextureData2d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.lvv.TileIndex;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,7 +132,7 @@ public class TileStackCacheController {
         final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat, new CoordinateToRawTransformFileSource() {
             @Override
             public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
-                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+                return TiledMicroscopeDomainMgr.getDomainMgr().getCoordToRawTransform(filePath);
             }
         });
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);

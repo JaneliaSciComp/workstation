@@ -13,8 +13,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageList
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;

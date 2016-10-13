@@ -13,7 +13,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 
 /**
  * Facilitates launching the annotation skeleton viewer.

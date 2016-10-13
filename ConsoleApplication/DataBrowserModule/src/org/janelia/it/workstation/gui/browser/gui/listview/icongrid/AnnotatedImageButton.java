@@ -36,8 +36,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.AnnotationTablePanel;
 import org.janelia.it.workstation.gui.browser.gui.support.AnnotationView;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 /**
  * A SelectablePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an
@@ -87,7 +87,7 @@ public abstract class AnnotatedImageButton<T,S> extends SelectablePanel implemen
         this.selectionModel = selectionModel;
         this.imagesPanel = imagesPanel;
 
-        Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
+        Boolean disableImageDrag = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             if (selectionModel instanceof DomainObjectSelectionModel) {
                 this.source = new DragSource();

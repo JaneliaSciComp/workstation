@@ -65,7 +65,7 @@ import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -244,10 +244,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void hadSuccess() {
                         if (sample==null) {
-                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else if (result==null) {
-                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                         }
                         else {
                             viewer.requestActive();
@@ -263,7 +263,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 worker.execute();
@@ -358,7 +358,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                                     annotationValue = annotation.getName();
                                 }
                             }
-                            DataReporter reporter = new DataReporter((String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
+                            DataReporter reporter = new DataReporter((String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"));
                             reporter.reportData(domainObject, annotationValue);
                         }
 
@@ -368,7 +368,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
+                            ConsoleApp.handleException(error);
                         }
                     };
 
@@ -435,7 +435,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             task = StateMgr.getStateMgr().submitJob("ConsoleSampleCompression", "Console Sample Compression", taskParameters);
                         }
                         catch (Exception e) {
-                            SessionMgr.getSessionMgr().handleException(e);
+                            ConsoleApp.handleException(e);
                             return;
                         }
 
@@ -470,7 +470,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
@@ -510,7 +510,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
@@ -549,7 +549,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
                 ActivityLogHelper.logUserAction("DomainObjectContentMenu.purgeAndBlock", domainObject);
 
-                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
+                int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
                         "Are you sure you want to purge " + samples.size() + " sample(s) " +
                                 "by deleting all large files associated with them, and block all future processing?",
                         "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
@@ -569,7 +569,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     task = StateMgr.getStateMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    ConsoleApp.handleException(e);
                     return;
                 }
 
@@ -875,14 +875,14 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                         executeWorker.executeWithEvents();
                     }
                     catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
+                        ConsoleApp.handleException(e);
                     }
                 }
             });
             mergeItem.setEnabled(multiple);
             return mergeItem;
         } catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

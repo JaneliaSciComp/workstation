@@ -14,9 +14,8 @@ import org.janelia.it.workstation.gui.browser.lifecycle.InterceptingEventQueue;
 import org.janelia.it.workstation.gui.browser.lifecycle.LoggingEventListener;
 import org.janelia.it.workstation.gui.browser.lifecycle.MessageSource;
 import org.janelia.it.workstation.gui.browser.lifecycle.ReportRunner;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +35,6 @@ public class ShowingHook implements Runnable {
         JFrame frame = WindowLocator.getMainFrame();
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle(title);
-        SessionMgr.getBrowser().supportMenuProcessing();
         
         // Log events.
         final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
@@ -67,7 +65,6 @@ public class ShowingHook implements Runnable {
         }
         else {
             Dimension currSize = frame.getSize();
-            log.info("Not maximized. currSize="+currSize);
             if (currSize.width<20 || currSize.height<20) {
                 log.info("Window is too small. Resetting to 80% of screen size.");
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

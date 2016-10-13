@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * UI configuration for a TableViewerPanel. 
@@ -74,7 +74,7 @@ public class TableViewerConfiguration {
 
             return config;
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

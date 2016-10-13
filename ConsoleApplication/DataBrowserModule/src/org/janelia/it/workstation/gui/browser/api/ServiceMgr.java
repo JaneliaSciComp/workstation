@@ -5,7 +5,7 @@ import java.net.BindException;
 import org.janelia.it.workstation.gui.browser.web.EmbeddedWebServer;
 import org.janelia.it.workstation.gui.browser.ws.EmbeddedAxisServer;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +17,16 @@ import org.slf4j.LoggerFactory;
  */
 public class ServiceMgr {
 
+    private static final Logger log = LoggerFactory.getLogger(ServiceMgr.class);
+    
     // Singleton
-    private static final ServiceMgr instance = new ServiceMgr();
-    public static ServiceMgr getServiceMgr() {
+    private static ServiceMgr instance;
+    public static synchronized ServiceMgr getServiceMgr() {
+        if (instance==null) {
+            instance = new ServiceMgr();
+        }
         return instance;
     }
-
-    private static final Logger log = LoggerFactory.getLogger(StateMgr.class);
 
     private static final int MAX_PORT_TRIES = 20;
     private static final int PORT_INCREMENT = 1000;
@@ -35,6 +38,9 @@ public class ServiceMgr {
 
     private int webServerPort;
     
+    private ServiceMgr() {
+    }
+    
     public int startAxisServer(int startingPort) {
         int port = startingPort;
         try {
@@ -45,7 +51,7 @@ public class ServiceMgr {
             while (true) {
                 try {
                     axisServer.start(port);
-                    log.info("Started web services on port " + port);
+                    log.info("Started external client web services on port " + port);
                     ExternalClientMgr.getInstance().setPortOffset(port);
                     break;
                 } 
@@ -68,7 +74,7 @@ public class ServiceMgr {
             return port;
         } 
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return -1;
         }
     }
@@ -83,7 +89,7 @@ public class ServiceMgr {
             while (true) {
                 try {
                     webServer.start(port);
-                    log.info("Started web server on port " + port);
+                    log.info("Started embedded web server on port " + port);
                     break;
                 } 
                 catch (Exception e) {
@@ -105,12 +111,13 @@ public class ServiceMgr {
             return port;
         } 
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return -1;
         }
     }
     
     public void initServices() {
+        log.info("Initializing Services");
         this.axisServerPort = startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
         this.webServerPort = startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
     }

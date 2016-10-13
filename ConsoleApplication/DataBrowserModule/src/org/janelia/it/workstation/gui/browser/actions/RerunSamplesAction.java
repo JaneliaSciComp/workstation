@@ -23,7 +23,7 @@ import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public class RerunSamplesAction extends AbstractAction {
             sampleText.append(samples.size());
             sampleText.append(" samples");
         }
-        int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want the "+sampleText+" to be reprocessed?",
+        int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Are you sure you want the "+sampleText+" to be reprocessed?",
                 "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
 
         if (result != 0) return;
@@ -147,7 +147,7 @@ public class RerunSamplesAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
             
         };

@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraListenerAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;

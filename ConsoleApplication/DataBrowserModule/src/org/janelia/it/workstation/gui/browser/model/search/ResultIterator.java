@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public class ResultIterator implements Iterator<DomainObject> {
             return object;
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

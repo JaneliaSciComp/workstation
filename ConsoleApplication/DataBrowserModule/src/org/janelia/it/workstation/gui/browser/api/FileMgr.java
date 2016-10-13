@@ -4,13 +4,12 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.filecache.LocalFileCache;
 import org.janelia.it.workstation.gui.browser.filecache.WebDavClient;
 import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.browser.util.PropertyConfigurator;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,42 +20,48 @@ import org.slf4j.LoggerFactory;
  */
 public class FileMgr {
 
+    private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
+    
     // Singleton
-    private static final FileMgr instance = new FileMgr();
-    public static FileMgr getFileMgr() {
+    private static FileMgr instance;
+    public static synchronized FileMgr getFileMgr() {
+        if (instance==null) {
+            instance = new FileMgr();
+        }
         return instance;
     }
     
-    private static final Logger log = LoggerFactory.getLogger(FileMgr.class);
-
-    private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+    private final String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
     public static final int DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
     
-    private WebDavClient webDavClient;
+    private final WebDavClient webDavClient;
     private LocalFileCache localFileCache; 
 
     private FileMgr() {
+        
+        log.info("Initializing File Manager");
 
+        // TODO: most of this initialization should be done in a background thread, to improve start-up time for the Workstation
+        
+        this.webDavClient = new WebDavClient(
+                ConsoleProperties.getString("console.webDavClient.baseUrl",
+                        WebDavClient.JACS_WEBDAV_BASE_URL),
+                ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
+                ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
+        
         setFileCacheGigabyteCapacity((Integer) 
-                SessionMgr.getSessionMgr().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
-                SessionMgr.getSessionMgr().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
+                ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY))));        
         
         Integer tmpCache = (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null != tmpCache) {
             PropertyConfigurator.getProperties().setProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
-        
-        webDavClient = new WebDavClient(
-                ConsoleProperties.getString("console.webDavClient.baseUrl",
-                        WebDavClient.JACS_WEBDAV_BASE_URL),
-                ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
-                ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
     }
-
 
     /**
      * @return the session client for issuing WebDAV requests.
@@ -79,9 +84,9 @@ public class FileMgr {
      * @param isDisabled if true, cache will be disabled;
      * otherwise cache will be enabled.
      */
-    public void setFileCacheDisabled(boolean isDisabled) {
+    public final void setFileCacheDisabled(boolean isDisabled) {
 
-        SessionMgr.getSessionMgr().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
+        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY, isDisabled);
 
         if (isDisabled) {
             log.warn("disabling local cache");
@@ -99,7 +104,7 @@ public class FileMgr {
                         webDavClient,
                         null);
             }
-            catch (Exception e) {
+            catch (IllegalStateException e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);
             }
@@ -117,7 +122,7 @@ public class FileMgr {
      * @return the maximum number of gigabytes to store in the local file cache.
      */
     public int getFileCacheGigabyteCapacity() {
-        return (Integer) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        return (Integer) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
 
     /**
@@ -125,7 +130,7 @@ public class FileMgr {
      *
      * @param gigabyteCapacity cache capacity in gigabytes.
      */
-    public void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
+    public final void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
 
         if (gigabyteCapacity == null) {
             gigabyteCapacity = DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
@@ -137,7 +142,7 @@ public class FileMgr {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
-        SessionMgr.getSessionMgr().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+        ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                 gigabyteCapacity);
 
         if (isFileCacheAvailable()) {
@@ -224,7 +229,7 @@ public class FileMgr {
             return mgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;
         }
         catch (MalformedURLException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return null;
         }
     }

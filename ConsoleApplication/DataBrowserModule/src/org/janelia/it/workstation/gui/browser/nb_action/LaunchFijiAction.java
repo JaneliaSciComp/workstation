@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.nb_action;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -49,7 +49,7 @@ public final class LaunchFijiAction extends CallableSystemAction {
             ToolMgr.runTool(ToolMgr.TOOL_FIJI);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 }

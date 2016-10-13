@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.awt.Color;
 import java.awt.IllegalComponentStateException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -24,10 +25,8 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
-import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.workstation.gui.browser.api.navigation.NavigationHistory;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.api.state.NavigationHistory;
 import org.janelia.it.workstation.gui.browser.api.state.UserColorMapping;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationClosing;
@@ -36,8 +35,7 @@ import org.janelia.it.workstation.gui.browser.events.selection.OntologySelection
 import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBind;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.RendererType2D;
+import org.janelia.it.workstation.gui.browser.util.RendererType2D;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +55,12 @@ public class StateMgr {
     private static final Logger log = LoggerFactory.getLogger(StateMgr.class);
     
     // Singleton
-    private static final StateMgr instance = new StateMgr();
-    public static StateMgr getStateMgr() {
+    private static StateMgr instance;
+    public static synchronized StateMgr getStateMgr() {
+        if (instance==null) {
+            instance = new StateMgr();
+            Events.getInstance().registerOnEventBus(instance);
+        }
         return instance;
     }
     
@@ -73,29 +75,24 @@ public class StateMgr {
 
     public static boolean isDarkLook = false;
     
-    private StateMgr() {
-        if (log==null) {
-            System.out.println("WTF1: "+LoggerFactory.getLogger(Object.class));
-            System.out.println("WTF2: "+LoggerFactory.getLogger(StateMgr.class));
-            throw new IllegalStateException("WTF");
-        }
+    private StateMgr() {     
         
-        this.autoShareTemplate = (PermissionTemplate)SessionMgr.getSessionMgr().getModelProperty(AUTO_SHARE_TEMPLATE);
+        log.info("Initializing State Manager");
         
-        if (SessionMgr.getSessionMgr().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-            SessionMgr.getSessionMgr().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+        this.autoShareTemplate = (PermissionTemplate)ConsoleApp.getConsoleApp().getModelProperty(AUTO_SHARE_TEMPLATE);
+        
+        if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
         }
 
-        if (SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
-            SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+        if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
         }
         
-        log.info("Using 2d renderer: {}", SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
-        
-        initLAF();
+        log.debug("Using 2d renderer: {}", ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
     }
 
-    private void initLAF() {
+    public void initLAF() {
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
         UIManager.put("Synthetica.license.info", li);
         UIManager.put("Synthetica.license.key", "9A519ECE-5BB55629-B2E1233E-9E3E72DB-19992C5D");
@@ -123,7 +120,7 @@ public class StateMgr {
         UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
         LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
 
-        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+        String lafName = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
         LookAndFeelInfo currentLafInfo = null;
         if (lafName==null) lafName = "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel";
@@ -142,14 +139,14 @@ public class StateMgr {
             }
             else if (currentLafInfo != null) {
                 setLookAndFeel(currentLafInfo.getName());
-                SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
             }
             else {
                 log.error("Could not set Look and Feel: {}",lafName);
             }
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 
@@ -166,18 +163,18 @@ public class StateMgr {
                     });
                 }
                 catch (IllegalComponentStateException ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
+                    ConsoleApp.handleException(ex);
                 }
             }
             else {
                 UIManager.setLookAndFeel(lookAndFeelClassName);
             }
 
-            SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
+            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
             log.info("Configured Look and Feel: {}", lookAndFeelClassName);
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
     
@@ -188,7 +185,7 @@ public class StateMgr {
     @Subscribe
     public void cleanup(ApplicationClosing e) {
         log.info("Saving auto-share template");
-        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
     public NavigationHistory getNavigationHistory() {
@@ -198,9 +195,13 @@ public class StateMgr {
     public UserColorMapping getUserColorMapping() {
         return userColorMapping;
     }
+
+    public Color getUserAnnotationColor(String username) {
+        return userColorMapping.getColor(username);
+    }
     
     public Long getCurrentOntologyId() {
-        String lastSelectedOntology = (String) SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
+        String lastSelectedOntology = (String) ConsoleApp.getConsoleApp().getModelProperty("lastSelectedOntology");
         if (StringUtils.isEmpty(lastSelectedOntology)) {
             return null;
         }
@@ -211,7 +212,7 @@ public class StateMgr {
     public void setCurrentOntologyId(Long ontologyId) {
         log.info("Setting current ontology to {}", ontologyId);
         String idStr = ontologyId==null?null:ontologyId.toString();
-        SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", idStr);
+        ConsoleApp.getConsoleApp().setModelProperty("lastSelectedOntology", idStr);
         Events.getInstance().postOnEventBus(new OntologySelectionEvent(ontologyId));
     }
 
@@ -239,7 +240,7 @@ public class StateMgr {
                     }
                 }
             } catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
             
         }
@@ -297,11 +298,11 @@ public class StateMgr {
 
     public void setAutoShareTemplate(PermissionTemplate autoShareTemplate) {
         this.autoShareTemplate = autoShareTemplate;
-        SessionMgr.getSessionMgr().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
+        ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
 
     public Task getTaskById(Long taskId) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getTaskById(taskId);
+        return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
     }
     
     public Task submitJob(String processDefName, String displayName) throws Exception {
@@ -316,7 +317,7 @@ public class StateMgr {
     }
 
     public Task saveOrUpdateTask(Task task) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
+        return DomainMgr.getDomainMgr().getLegacyFacade().saveOrUpdateTask(task);
     }
     
     private Task submitJob(GenericTask genericTask) throws Exception {
@@ -325,9 +326,8 @@ public class StateMgr {
         return task;
     }
 
-    public TaskRequest submitJob(String processDefName, Task task) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
-        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+    public void submitJob(String processDefName, Task task) throws Exception {
+        DomainMgr.getDomainMgr().getLegacyFacade().submitJob(processDefName, task.getObjectId());
     }
 
     /**
@@ -339,8 +339,7 @@ public class StateMgr {
      * @return the request created.
      * @throws Exception
      */
-    public TaskRequest dispatchJob(String processDefName, Task task) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().dispatchJob(processDefName, task.getObjectId());
-        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+    public void dispatchJob(String processDefName, Task task) throws Exception {
+        DomainMgr.getDomainMgr().getLegacyFacade().dispatchJob(processDefName, task.getObjectId());
     }
 }

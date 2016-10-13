@@ -2,10 +2,8 @@ package org.janelia.it.workstation.gui.browser.api;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.LifecycleManager;
 
 /**
@@ -18,14 +16,11 @@ public class WorkstationEnvironment {
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
 
-        // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
-        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
-
         // Assuming that the user has entered the login/password information, now validate
-        String username = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
-        String password = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_PASSWORD);
-        String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
-        String email = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL);
+        String username = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_NAME);
+        String password = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_PASSWORD);
+        String runAsUser = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.RUN_AS_USER);
+        String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
 
         if (username==null || email==null) {
             Object[] options = {"Enter Login", "Exit Program"};
@@ -41,7 +36,6 @@ public class WorkstationEnvironment {
 
         AccessManager.getAccessManager().loginSubject(username, password);
         AccessManager.getAccessManager().setRunAsUser(runAsUser);
-        SessionMgr.getSessionMgr().newBrowser();
     }
 }
 

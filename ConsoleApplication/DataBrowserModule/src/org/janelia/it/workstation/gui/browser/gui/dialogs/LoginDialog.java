@@ -20,7 +20,7 @@ import javax.swing.JTextField;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.LifecycleManager;
 
 import net.miginfocom.swing.MigLayout;
@@ -141,11 +141,11 @@ public class LoginDialog extends ModalDialog {
         String username = usernameField.getText().trim();
         String password = new String(passwordField.getPassword());
         
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        sessionMgr.setModelProperty(AccessManager.USER_EMAIL, email);
-        sessionMgr.setModelProperty(AccessManager.USER_NAME, username);
-        sessionMgr.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
-        sessionMgr.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
+        final ConsoleApp app = ConsoleApp.getConsoleApp();
+        app.setModelProperty(AccessManager.USER_EMAIL, email);
+        app.setModelProperty(AccessManager.USER_NAME, username);
+        app.setModelProperty(AccessManager.USER_PASSWORD, rememberCheckbox.isSelected()?password:null);
+        app.setModelProperty(AccessManager.REMEMBER_PASSWORD, rememberCheckbox.isSelected());
         
         if (StringUtils.isEmpty(email)) {
             Object[] options = { "Fix Email", "Exit Program" };
@@ -179,8 +179,8 @@ public class LoginDialog extends ModalDialog {
                 AccessManager.getAccessManager().setRunAsUser(runAsUser);
             }
             catch (Exception e) {
-                sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
-                SessionMgr.getSessionMgr().handleException(e);
+                app.setModelProperty(AccessManager.RUN_AS_USER, "");
+                ConsoleApp.handleException(e);
             }
             
             setVisible(false);
@@ -188,8 +188,7 @@ public class LoginDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        Object value = sessionMgr.getModelProperty(key);
+        Object value = ConsoleApp.getConsoleApp().getModelProperty(key);
         if (value == null) {
             value = defaultValue;
         }

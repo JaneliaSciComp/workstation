@@ -16,7 +16,7 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
@@ -56,7 +56,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
 
         if (selectedObjects.size() > 1) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete this annotation from all selected items?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Are you sure you want to delete this annotation from all selected items?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -99,11 +99,11 @@ public class RemoveAnnotationsAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Deleting Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Deleting Annotations", "", 0, 100));
         worker.execute();
     }
 }

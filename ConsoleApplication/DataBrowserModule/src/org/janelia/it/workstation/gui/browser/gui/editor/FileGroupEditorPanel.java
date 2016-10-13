@@ -34,8 +34,8 @@ import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.browser.gui.support.Debouncer;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
@@ -144,7 +144,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             resultsPanel.showObjects(sortedGroups, success);
             showResults(isUserDriven);
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
     
@@ -223,7 +223,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             }
         }  
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -326,7 +326,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             @Override
             protected void hadError(Throwable error) {
                 Utils.setMainFrameCursorWaitStatus(false);
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 

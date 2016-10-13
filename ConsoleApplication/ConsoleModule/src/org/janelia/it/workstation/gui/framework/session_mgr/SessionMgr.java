@@ -49,12 +49,6 @@ public final class SessionMgr {
     private Browser activeBrowser;
 
     private SessionMgr() {
-        log.info("Initializing Session Manager");
-
-        EJBFactory.initFromModelProperties(sessionModel);
-        PathTranslator.initFromModelProperties(sessionModel);
-
-
 
     } //Singleton enforcement
 

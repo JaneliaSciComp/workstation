@@ -30,8 +30,8 @@ import com.google.common.collect.Ordering;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.table.TableViewerConfiguration;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.panels.ScrollablePanel;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
@@ -196,7 +196,7 @@ public class TableViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(TableViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);

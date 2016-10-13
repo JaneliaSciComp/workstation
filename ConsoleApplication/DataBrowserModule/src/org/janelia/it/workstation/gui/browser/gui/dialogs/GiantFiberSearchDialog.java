@@ -25,14 +25,12 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.util.WorkstationFile;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -54,8 +52,6 @@ public class GiantFiberSearchDialog extends ModalDialog {
     private static final String GLOBAL = "Global";
 
     private static final String GIANT_FIBER_FOLDER_NAME="GiantFiber";
-
-    private RootedEntity outputFolder;
 
     DefaultTableModel tableModel;
 
@@ -364,7 +360,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
                     compartmentAbbreviationList = maskManager.getCompartmentListInstance();
                 } 
                 catch ( Exception ex ) {
-                    JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to load Giant Fiber Compartments");
+                    JOptionPane.showMessageDialog( ConsoleApp.getMainFrame(), "Failed to load Giant Fiber Compartments");
                     log.error("Error loading Giant Fiber Compartments",ex);
                 }
             }
@@ -399,7 +395,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                 resetSearchState();
             }
@@ -563,11 +559,6 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     public void showDialog() {
-        showDialog(null);
-    }
-
-    public void showDialog(RootedEntity outputFolder) {
-        this.outputFolder = outputFolder;
         ActivityLogHelper.logUserAction("GiantFiberSearchDialog.showDialog");
         init();
     }
@@ -716,7 +707,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             try {
                 Long startTime=new Date().getTime();
 //                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
-                Object[] sampleMaps = ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
+                Object[] sampleMaps = DomainMgr.getDomainMgr().getLegacyFacade().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
                 Long elapsedTime=new Date().getTime() - startTime;
@@ -754,7 +745,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 //Utils.setDefaultCursor(GiantFiberSearchDialog.this);
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 setStatusMessage("Error during quantifier load");
             }
         };
@@ -1018,7 +1009,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                 resetSearchState();
             }

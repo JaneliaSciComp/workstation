@@ -1,19 +1,23 @@
 package org.janelia.it.workstation.gui.browser.gui.options;
 
-import static org.janelia.it.workstation.gui.browser.gui.options.OptionConstants.*;
+import static org.janelia.it.workstation.gui.browser.gui.options.OptionConstants.ANNOTATION_TABLES_HEIGHT_PROPERTY;
+import static org.janelia.it.workstation.gui.browser.gui.options.OptionConstants.DISABLE_IMAGE_DRAG_PROPERTY;
+import static org.janelia.it.workstation.gui.browser.gui.options.OptionConstants.SHOW_ANNOTATION_TABLES_PROPERTY;
+import static org.janelia.it.workstation.gui.browser.gui.options.OptionConstants.UNLOAD_IMAGES_PROPERTY;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.JCheckBox;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.ImagesPanel;
-import org.janelia.it.workstation.gui.util.GroupedKeyValuePanel;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImagesPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +58,7 @@ final class BrowserPanel extends javax.swing.JPanel {
 
     void load() {
 
-        SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        ConsoleApp app = ConsoleApp.getConsoleApp();
 
         log.info("Loading browser settings...");
         mainPanel.removeAll();
@@ -100,11 +104,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (sessionMgr.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
-            sessionMgr.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
+        if (app.getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
+            app.setModelProperty(UNLOAD_IMAGES_PROPERTY, Boolean.FALSE);
         }
         else {
-            unloadImagesCheckbox.setSelected((Boolean) sessionMgr.getModelProperty(UNLOAD_IMAGES_PROPERTY));
+            unloadImagesCheckbox.setSelected((Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY));
         }
 
         mainPanel.addItem(unloadImagesCheckbox);
@@ -119,11 +123,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
-            sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
+        if (app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
+            app.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
         }
         else {
-            disableImageDrag.setSelected((Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+            disableImageDrag.setSelected((Boolean) app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
         }
 
         mainPanel.addItem(disableImageDrag);
@@ -139,11 +143,11 @@ final class BrowserPanel extends javax.swing.JPanel {
                 controller.changed();
             }
         });
-        if (sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
-            sessionMgr.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
+        if (app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
+            app.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
         }
         else {
-            showAnnotationTables.setSelected((Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
+            showAnnotationTables.setSelected((Boolean) app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
         }
 
         mainPanel.addItem(showAnnotationTables);
@@ -158,11 +162,11 @@ final class BrowserPanel extends javax.swing.JPanel {
             }
         });
 
-        if (sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-            sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        if (app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
+            app.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
         else {
-            annotationTableHeight.setValue((Integer) sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
+            annotationTableHeight.setValue((Integer) app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
         }
 
         mainPanel.addItem("Annotation table height", annotationTableHeight);
@@ -171,7 +175,7 @@ final class BrowserPanel extends javax.swing.JPanel {
 
     void store() {
 
-        SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        ConsoleApp app = ConsoleApp.getConsoleApp();
 
 //        String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
 //        if (!newRenderer.equals(sessionMgr.getModelProperty(OptionConstants.DISPLAY_RENDERER_2D))) {
@@ -179,24 +183,24 @@ final class BrowserPanel extends javax.swing.JPanel {
 //            sessionMgr.setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, newRenderer);
 //        }
         
-        if (unloadImagesCheckbox.isSelected() != (Boolean) sessionMgr.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
+        if (unloadImagesCheckbox.isSelected() != (Boolean) app.getModelProperty(UNLOAD_IMAGES_PROPERTY)) {
             log.info("Saving unload images setting: "+unloadImagesCheckbox.isSelected());
-            sessionMgr.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
+            app.setModelProperty(UNLOAD_IMAGES_PROPERTY, unloadImagesCheckbox.isSelected());
         }
 
-        if (disableImageDrag.isSelected() != (Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
+        if (disableImageDrag.isSelected() != (Boolean) app.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
             log.info("Saving disable image drag: "+disableImageDrag.isSelected());
-            sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
+            app.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
 
-        if (showAnnotationTables.isSelected() != (Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
+        if (showAnnotationTables.isSelected() != (Boolean) app.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
             log.info("Saving show annotation tables: "+showAnnotationTables.isSelected());
-            sessionMgr.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
+            app.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
         }
 
-        if (annotationTableHeight.getValue() != (Integer) sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
+        if (annotationTableHeight.getValue() != (Integer) app.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
             log.info("Saving annotation table height: "+annotationTableHeight.getValue());
-            sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
+            app.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
         }
     }
 

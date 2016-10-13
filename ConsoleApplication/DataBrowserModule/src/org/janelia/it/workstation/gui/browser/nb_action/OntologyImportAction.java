@@ -22,8 +22,8 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.YamlFileFilter;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.YamlFileFilter;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -79,7 +79,7 @@ public class OntologyImportAction extends NodePresenterAction   {
         fc.addChoosableFileFilter(ff);
         fc.setFileFilter(ff);
 
-        int returnVal = fc.showOpenDialog(SessionMgr.getMainFrame());
+        int returnVal = fc.showOpenDialog(ConsoleApp.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return;
         }
@@ -105,7 +105,7 @@ public class OntologyImportAction extends NodePresenterAction   {
                 @Override
                 protected void hadError(Throwable error) {
                     log.error("Error creating ontology terms", error);
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             };
 
@@ -113,7 +113,7 @@ public class OntologyImportAction extends NodePresenterAction   {
 
         }
         catch (FileNotFoundException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

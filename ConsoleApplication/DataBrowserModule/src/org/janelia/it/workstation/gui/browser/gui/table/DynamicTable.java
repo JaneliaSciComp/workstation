@@ -45,8 +45,8 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

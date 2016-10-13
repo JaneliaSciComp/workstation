@@ -31,8 +31,8 @@ import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewConstants;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
@@ -123,7 +123,7 @@ public class DataSetListDialog extends ModalDialog {
                         @Override
                         public void actionPerformed(ActionEvent e) {
 
-                            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete data set '" + dataSet.getName()
+                            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), "Are you sure you want to delete data set '" + dataSet.getName()
                                             + "'? This will not delete the images associated with the data set.",
                                     "Delete Data Set", JOptionPane.OK_CANCEL_OPTION);
                             if (result != 0) {
@@ -148,7 +148,7 @@ public class DataSetListDialog extends ModalDialog {
 
                                 @Override
                                 protected void hadError(Throwable error) {
-                                    SessionMgr.getSessionMgr().handleException(error);
+                                    ConsoleApp.handleException(error);
                                     Utils.setDefaultCursor(DataSetListDialog.this);
                                     loadDataSets();
                                 }
@@ -197,7 +197,7 @@ public class DataSetListDialog extends ModalDialog {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
+                            ConsoleApp.handleException(error);
                         }
                     };
                     worker.execute();
@@ -241,7 +241,7 @@ public class DataSetListDialog extends ModalDialog {
     public void showDialog() {
         loadDataSets();
 
-        Component mainFrame = SessionMgr.getMainFrame();
+        Component mainFrame = ConsoleApp.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");
@@ -283,7 +283,7 @@ public class DataSetListDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 mainPanel.removeAll();
                 mainPanel.add(dynamicTable, BorderLayout.CENTER);
                 mainPanel.revalidate();

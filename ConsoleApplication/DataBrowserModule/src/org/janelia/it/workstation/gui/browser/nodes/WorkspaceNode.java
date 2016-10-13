@@ -11,7 +11,7 @@ import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 

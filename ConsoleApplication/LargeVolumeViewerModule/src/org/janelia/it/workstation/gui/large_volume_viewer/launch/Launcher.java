@@ -6,7 +6,7 @@ import org.janelia.it.jacs.integration.framework.domain.DomainObjectAcceptor;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.openide.util.lookup.ServiceProvider;
@@ -57,7 +57,7 @@ public class Launcher implements DomainObjectAcceptor  {
                 try {
                     win.openLargeVolumeViewer(domainObject);
                 } catch ( Exception ex ) {
-                    SessionMgr.getSessionMgr().handleException( ex );
+                    ConsoleApp.handleException( ex );
                 }
             }
         }

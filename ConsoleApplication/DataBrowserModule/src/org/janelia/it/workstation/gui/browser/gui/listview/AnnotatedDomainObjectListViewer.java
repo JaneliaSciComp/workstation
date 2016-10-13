@@ -23,7 +23,7 @@ public interface AnnotatedDomainObjectListViewer {
      * @return a JPanel that can be added to a container for displaying the list
      */
     public JPanel getPanel();
-
+    
     /**
      * Configure the search provider for re-sorting, etc. 
      */

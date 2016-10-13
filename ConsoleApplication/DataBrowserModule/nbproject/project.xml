@@ -103,6 +103,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.filesystems</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>8.8.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.modules</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -149,23 +157,22 @@
                 <package>org.janelia.it.workstation.gui.browser.actions</package>
                 <package>org.janelia.it.workstation.gui.browser.activity_logging</package>
                 <package>org.janelia.it.workstation.gui.browser.api</package>
-                <package>org.janelia.it.workstation.gui.browser.api.facade.impl.mongo</package>
+                <package>org.janelia.it.workstation.gui.browser.api.exceptions</package>
+                <package>org.janelia.it.workstation.gui.browser.api.facade.impl.ejb</package>
                 <package>org.janelia.it.workstation.gui.browser.api.facade.impl.rest</package>
                 <package>org.janelia.it.workstation.gui.browser.api.facade.interfaces</package>
                 <package>org.janelia.it.workstation.gui.browser.api.lifecycle</package>
-                <package>org.janelia.it.workstation.gui.browser.api.navigation</package>
                 <package>org.janelia.it.workstation.gui.browser.api.services</package>
                 <package>org.janelia.it.workstation.gui.browser.api.state</package>
                 <package>org.janelia.it.workstation.gui.browser.components</package>
                 <package>org.janelia.it.workstation.gui.browser.events</package>
                 <package>org.janelia.it.workstation.gui.browser.events.lifecycle</package>
                 <package>org.janelia.it.workstation.gui.browser.events.model</package>
+                <package>org.janelia.it.workstation.gui.browser.events.prefs</package>
                 <package>org.janelia.it.workstation.gui.browser.events.selection</package>
                 <package>org.janelia.it.workstation.gui.browser.events.workers</package>
-                <package>org.janelia.it.workstation.gui.browser.exchange</package>
                 <package>org.janelia.it.workstation.gui.browser.filecache</package>
                 <package>org.janelia.it.workstation.gui.browser.flavors</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.editor</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.find</package>
@@ -179,6 +186,8 @@
                 <package>org.janelia.it.workstation.gui.browser.gui.options</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.progress</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.support</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.support.panels</package>
+                <package>org.janelia.it.workstation.gui.browser.gui.support.server_status</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.table</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.tree</package>
                 <package>org.janelia.it.workstation.gui.browser.lifecycle</package>
@@ -188,6 +197,8 @@
                 <package>org.janelia.it.workstation.gui.browser.nb_action</package>
                 <package>org.janelia.it.workstation.gui.browser.nodes</package>
                 <package>org.janelia.it.workstation.gui.browser.sample_trimming</package>
+                <package>org.janelia.it.workstation.gui.browser.tools</package>
+                <package>org.janelia.it.workstation.gui.browser.tools.preferences</package>
                 <package>org.janelia.it.workstation.gui.browser.util</package>
                 <package>org.janelia.it.workstation.gui.browser.web</package>
                 <package>org.janelia.it.workstation.gui.browser.workers</package>

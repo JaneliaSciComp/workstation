@@ -78,8 +78,8 @@ UI elements that select, and its events are connected with a variety of UI
 elements that need to respond to changing data.  this sometimes makes it hard
 to know whether methods are called in the Java EDT (event thread) or not, and
 that's important for knowing how you have to call the UI updates.  the answer
-is that all the calls that hit the db go through modelMgr and could throw
-exceptions.  so any call that calls modelMgr must catch Exceptions, and
+is that all the calls that hit the db go through TiledMicroscopeDomainMgr and could throw
+exceptions.  so any call that calls TiledMicroscopeDomainMgr must catch Exceptions, and
 therefore it should do its updates on the EDT, because it's probably being
 called from a  SimpleWorker thread.
 */

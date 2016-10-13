@@ -33,7 +33,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
@@ -73,7 +73,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
         try {
             this.ontology = DomainMgr.getDomainMgr().getModel().getDomainObject(Ontology.class, ontologyId);
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
 
         iterateAndAddRows(ontology.getTerms(), 0);
@@ -180,11 +180,11 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Adding annotations", "", 0, 100));
                 worker.execute();
             }
         });
@@ -229,7 +229,6 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
         this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         this.setResizable(false);
-        this.setIconImage(SessionMgr.getBrowser().getIconImage());
         this.setAlwaysOnTop(true);
         //Create and set up the content pane.
 
@@ -260,7 +259,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
 
                     if (valueEnum==null) {
                         Exception error = new Exception(element.getName()+" has no supporting enumeration.");
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                         return;
                     }
 
@@ -286,7 +285,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                 comboBox = new JComboBox();
             }
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

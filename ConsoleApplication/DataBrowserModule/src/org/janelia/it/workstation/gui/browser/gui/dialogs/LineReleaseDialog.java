@@ -42,13 +42,14 @@ import org.janelia.it.workstation.gui.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.gui.support.DataSetComboBoxRenderer;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.ComboMembershipListPanel;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.ComboMembershipListPanel;
 
 import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;
@@ -327,7 +328,7 @@ public class LineReleaseDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -435,7 +436,7 @@ public class LineReleaseDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(LineReleaseDialog.this);
                 setVisible(false);
             }
@@ -453,7 +454,7 @@ public class LineReleaseDialog extends ModalDialog {
             task = StateMgr.getStateMgr().submitJob("ConsoleSyncReleaseFolders", "Sync Release Folders", taskParameters);
         } 
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return;
         }
 
@@ -475,7 +476,7 @@ public class LineReleaseDialog extends ModalDialog {
                 return new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
+                        DomainExplorerTopComponent.getInstance().refresh(true, true, null);
                         return null;
                     }
                 };

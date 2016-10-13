@@ -5,13 +5,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.ReflectionsHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.ejb.LegacyFacadeImpl;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.gui.browser.api.facade.interfaces.LegacyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
 import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
@@ -19,11 +21,12 @@ import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFac
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.gui.browser.events.model.PreferenceChangeEvent;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Singleton for managing the Domain Model and related data access. 
@@ -40,7 +43,6 @@ public class DomainMgr {
     
     // Singleton
     private static DomainMgr instance;
-    
     public static DomainMgr getDomainMgr() {
         if (instance==null) {            
             instance = new DomainMgr();
@@ -54,11 +56,13 @@ public class DomainMgr {
     private SampleFacade sampleFacade;
     private SubjectFacade subjectFacade;
     private WorkspaceFacade workspaceFacade;
+    private LegacyFacade legacyFacade;
     
     private DomainModel model;
     private Map<String,Preference> preferenceMap;
     
     private DomainMgr() {
+        log.info("Initializing Domain Manager");
         try {
             final Reflections reflections = ReflectionsHelper.getReflections(DOMAIN_FACADE_PACKAGE_NAME, getClass());
             domainFacade = getNewInstance(reflections, DomainFacade.class);
@@ -66,9 +70,11 @@ public class DomainMgr {
             sampleFacade = getNewInstance(reflections, SampleFacade.class);
             subjectFacade = getNewInstance(reflections, SubjectFacade.class);
             workspaceFacade = getNewInstance(reflections, WorkspaceFacade.class);
+            legacyFacade = new LegacyFacadeImpl();
+            
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
     
@@ -102,6 +108,10 @@ public class DomainMgr {
 
     public WorkspaceFacade getWorkspaceFacade() {
         return workspaceFacade;
+    }
+    
+    public LegacyFacade getLegacyFacade() {
+        return legacyFacade;
     }
 
     @Subscribe

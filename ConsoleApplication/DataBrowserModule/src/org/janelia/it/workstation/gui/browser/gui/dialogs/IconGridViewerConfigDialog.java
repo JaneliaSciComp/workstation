@@ -32,7 +32,7 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.IconGridViewerConfiguration;
 import org.janelia.it.workstation.gui.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.gui.browser.gui.support.TemplateEditorTextbox;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -227,7 +227,7 @@ public class IconGridViewerConfigDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 Utils.setDefaultCursor(IconGridViewerConfigDialog.this);
                 returnValue = ERROR_OPTION;
                 setVisible(false);

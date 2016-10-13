@@ -13,7 +13,7 @@ import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 /**
@@ -60,11 +60,11 @@ public class PasteAnnotationTermAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Pasting Annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Pasting Annotations", "", 0, 100));
         worker.execute();
     }
 }

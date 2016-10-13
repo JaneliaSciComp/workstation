@@ -1,9 +1,3 @@
-/**
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/17/11
- * Time: 12:47 PM
- */
 package org.janelia.it.workstation.gui.browser.util;
 
 import java.io.File;

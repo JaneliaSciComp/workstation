@@ -30,11 +30,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.FileMgr;
+import org.janelia.it.workstation.gui.browser.gui.support.GroupedKeyValuePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.panels.MemorySettingPanel;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.GroupedKeyValuePanel;
-import org.janelia.it.workstation.gui.util.panels.MemorySettingPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
         lafPanel.add(new JLabel(" (requires restart)"));
 
         DefaultComboBoxModel model = (DefaultComboBoxModel)lookAndFeelCombobox.getModel();
-        String lafClassName = (String)SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+        String lafClassName = (String)ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
         for (UIManager.LookAndFeelInfo info : infos) {
             String name = info.getName() + (info.getName().startsWith("Synthetica") ? "" : " (Unsupported)");
             LookAndFeel laf = new LookAndFeel(info.getClassName(), name);
@@ -307,7 +307,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             worker.execute();
@@ -336,12 +336,12 @@ final class ApplicationPanel extends javax.swing.JPanel {
         try {
             LookAndFeel lookAndFeel = (LookAndFeel)lookAndFeelCombobox.getSelectedItem();
             String newLaf = lookAndFeel.getClassName();
-            if (!newLaf.equals(SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL))) {
+            if (!newLaf.equals(ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL))) {
                 log.info("Saving L&F setting: "+newLaf);
-                SessionMgr.getSessionMgr().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, newLaf);
+                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL, newLaf);
             }
         } catch (HeadlessException ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
         
         // Cache
@@ -349,10 +349,8 @@ final class ApplicationPanel extends javax.swing.JPanel {
         Boolean cacheDisabled = fileCacheDisabledRadioButton.isSelected();
         Integer cacheCapacity = (Integer) fileCacheSpinner.getValue();
         
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-
         final boolean cacheDisabledChanged =
-                ! cacheDisabled.equals(sessionMgr.getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
+                ! cacheDisabled.equals(ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.FILE_CACHE_DISABLED_PROPERTY));
         if (cacheDisabledChanged) {
             log.info("Saving file cache disabled setting: "+cacheDisabled);
             FileMgr.getFileMgr().setFileCacheDisabled(cacheDisabled);

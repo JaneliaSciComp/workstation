@@ -50,7 +50,7 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.CameraPanToListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.NeuronSelectedListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 
 /**
  * this widget displays a list of neurons in a workspace

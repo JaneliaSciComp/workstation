@@ -17,7 +17,7 @@ import javax.swing.JTextField;
 
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.browser.util.Utils;
-import org.janelia.it.workstation.gui.util.GroupedKeyValuePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

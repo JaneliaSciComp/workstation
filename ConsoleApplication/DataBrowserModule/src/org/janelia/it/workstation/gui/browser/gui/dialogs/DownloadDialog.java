@@ -42,8 +42,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.browser.model.search.SolrSearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -134,7 +134,7 @@ public class DownloadDialog extends ModalDialog {
     };
 
     public DownloadDialog() {
-    	super(SessionMgr.getMainFrame());
+    	super(ConsoleApp.getMainFrame());
         setTitle("File Download");
         
         loadingLabel = new JLabel(Icons.getLoadingIcon());
@@ -205,7 +205,7 @@ public class DownloadDialog extends ModalDialog {
                 return null;
             }
         });
-        Component mainFrame = SessionMgr.getMainFrame();
+        Component mainFrame = ConsoleApp.getMainFrame();
         setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.8), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("DownloadDialog.showDialog");
@@ -250,7 +250,7 @@ public class DownloadDialog extends ModalDialog {
             protected void hadError(Throwable error) {
             	Utils.setDefaultCursor(DownloadDialog.this);
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -298,7 +298,7 @@ public class DownloadDialog extends ModalDialog {
                     }
                 }
                 catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    ConsoleApp.handleException(e);
                 }
             }
             else {
@@ -321,7 +321,7 @@ public class DownloadDialog extends ModalDialog {
             }
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
     
@@ -438,7 +438,7 @@ public class DownloadDialog extends ModalDialog {
         filePatternCombo.setEditable(true);
         filePatternCombo.setToolTipText("Select a standard file naming pattern, or enter your own.");
         DefaultComboBoxModel<String> fpmodel = (DefaultComboBoxModel) filePatternCombo.getModel();
-        String userFilePattern = (String)SessionMgr.getSessionMgr().getModelProperty(FILE_PATTERN_PROP_NAME);
+        String userFilePattern = (String)ConsoleApp.getConsoleApp().getModelProperty(FILE_PATTERN_PROP_NAME);
         if (userFilePattern!=null) {
             fpmodel.addElement(userFilePattern);
         }
@@ -536,7 +536,7 @@ public class DownloadDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
                 populateExtensions();
             }
         };
@@ -604,7 +604,7 @@ public class DownloadDialog extends ModalDialog {
             }
         }
         if (!found) {
-            SessionMgr.getSessionMgr().setModelProperty(FILE_PATTERN_PROP_NAME, filePattern);
+            ConsoleApp.getConsoleApp().setModelProperty(FILE_PATTERN_PROP_NAME, filePattern);
         }
 
         boolean started = false;

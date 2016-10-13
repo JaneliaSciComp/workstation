@@ -10,7 +10,7 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -29,7 +29,7 @@ public abstract class AnnotationTagCloudPanel extends TagCloudPanel<Annotation> 
             }
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
     

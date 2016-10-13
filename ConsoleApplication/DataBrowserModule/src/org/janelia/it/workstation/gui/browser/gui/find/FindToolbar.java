@@ -14,7 +14,7 @@ import javax.swing.text.Position;
 
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 /**
  * A contextual find toolbar that can be added to any panel that supports being a FindContext. 

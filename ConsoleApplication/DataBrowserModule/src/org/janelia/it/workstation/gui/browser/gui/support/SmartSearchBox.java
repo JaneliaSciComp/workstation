@@ -10,7 +10,7 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,7 +84,7 @@ public class SmartSearchBox extends JComboBox {
      * @return Current search history. May be null or empty if there is no history.
      */
     protected List<String> getSearchHistory() {
-        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(modelPropertyName);
+        List<String> searchHistory = (List<String>) ConsoleApp.getConsoleApp().getModelProperty(modelPropertyName);
         log.trace("Returning current search history: {} ",searchHistory);
         return searchHistory;
     }
@@ -97,7 +97,7 @@ public class SmartSearchBox extends JComboBox {
      */
     protected void setSearchHistory(List<String> searchHistory) {
         log.trace("Saving search history: {} ",searchHistory);
-        SessionMgr.getSessionMgr().setModelProperty(modelPropertyName, searchHistory);
+        ConsoleApp.getConsoleApp().setModelProperty(modelPropertyName, searchHistory);
     }
 
     public void addCurrentSearchTermToHistory() {

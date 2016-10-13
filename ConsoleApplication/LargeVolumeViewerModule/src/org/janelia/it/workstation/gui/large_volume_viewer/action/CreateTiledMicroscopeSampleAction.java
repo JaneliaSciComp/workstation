@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -29,7 +29,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent event) {
         
-        final Component mainFrame = SessionMgr.getMainFrame();
+        final Component mainFrame = ConsoleApp.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -55,7 +55,7 @@ public class CreateTiledMicroscopeSampleAction extends AbstractAction {
             
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Creating sample...", ""));

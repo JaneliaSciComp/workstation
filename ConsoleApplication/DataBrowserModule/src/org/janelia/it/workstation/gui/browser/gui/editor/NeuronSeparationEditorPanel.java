@@ -45,8 +45,8 @@ import org.janelia.it.workstation.gui.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -199,7 +199,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             showResults(true);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
 
     }
@@ -232,7 +232,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             showResults(true);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -381,7 +381,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -436,7 +436,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -548,7 +548,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 }
             }
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 }

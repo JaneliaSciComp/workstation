@@ -6,25 +6,20 @@ import java.security.ProtectionDomain;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
-import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.FileMgr;
-import org.janelia.it.workstation.gui.browser.api.StateMgr;
+import org.janelia.it.workstation.gui.browser.api.LocalPreferenceMgr;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.LoginDialog;
-import org.janelia.it.workstation.gui.browser.gui.dialogs.MaskSearchDialog;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.PatternSearchDialog;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.gui.browser.util.LocalPreferences;
+import org.janelia.it.workstation.gui.browser.util.ImageCache;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.gui.util.server_status.ServerStatusReportManager;
+import org.janelia.it.workstation.gui.browser.util.UserNotificationExceptionHandler;
 import org.openide.LifecycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,29 +37,28 @@ public class ConsoleApp {
     private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
     
     // Singleton
-    private static final ConsoleApp consoleApp = new ConsoleApp();
+    private static ConsoleApp instance;
     public static synchronized ConsoleApp getConsoleApp() {
-        return consoleApp;
+        if (instance==null) {
+            instance = new ConsoleApp();
+            Events.getInstance().registerOnEventBus(instance);
+        }
+        return instance;
     }
-    
-    private UserNotificationExceptionHandler exceptionHandler = new UserNotificationExceptionHandler();
 
-    private LocalPreferences prefs;
+    private final String appName;
+    private final String appVersion;
+    private final ImageCache imageCache;
+    private final UserNotificationExceptionHandler exceptionHandler;
     
-    private static PatternSearchDialog patternSearchDialog;
-    private static GiantFiberSearchDialog fiberSearchDialog;
-    private static MaskSearchDialog maskSearchDialog;
-
-    private String appName;
-    private String appVersion;
+    // Lazily initialized
+    private PatternSearchDialog patternSearchDialog;
+    private GiantFiberSearchDialog fiberSearchDialog;
     
     public ConsoleApp() {
 
-        // Minor hack
-        findAndRemoveWindowsSplashFile();
+        log.info("Initializing Console Application");
         
-        // Load properties
-        ConsoleProperties.load();
         this.appName = ConsoleProperties.getString("console.Title");
         this.appVersion = ConsoleProperties.getString("console.versionNumber");
 
@@ -77,62 +71,71 @@ public class ConsoleApp {
         System.setProperty("winsys.stretching_view_tabs", "true");
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
+                
+        // Init in-memory image cache
+        this.imageCache = new ImageCache();
         
-        // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
-        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+        // Create a global exception handler
+        this.exceptionHandler = new UserNotificationExceptionHandler();
+        
+        // Minor hack for running NetBeans on Windows 
+        findAndRemoveWindowsSplashFile();
+    }
+    
+    public void initSession() {
 
-        // Load local preferences
-        this.prefs = new LocalPreferences();
+        log.info("Initializing Session");
         
-        // Init singletons
-        FileMgr fileMgr = FileMgr.getFileMgr();
-        StateMgr stateMgr = StateMgr.getStateMgr();
-        ToolMgr toolMgr = ToolMgr.getToolMgr();
+        // Read local user preferences
+        LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
+
+        // Must init file services BEFORE calling AccessManager.loginSubject
+        FileMgr.getFileMgr();
         
         try {
-            ServerStatusReportManager.getReportManager().startCheckingForReport();
+            // Try saved credentials
+            String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
+            String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
+            String runAsUser = (String)prefs.getModelProperty(AccessManager.RUN_AS_USER);
+            String email = (String)prefs.getModelProperty(AccessManager.USER_EMAIL);
 
-            // Assuming that the user has entered the login/password information, now validate
-            String username = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_NAME);
-            String password = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_PASSWORD);
-            String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(AccessManager.RUN_AS_USER);
-            String email = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL);
-
-            if (username!=null) {
+            if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
                 AccessManager.getAccessManager().loginSubject(username, password);
             }
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
+                // If it didn't work for any reason, show the login dialog
                 LoginDialog loginDialog = new LoginDialog();
                 loginDialog.showDialog();
             }
 
-            email = (String)SessionMgr.getSessionMgr().getModelProperty(AccessManager.USER_EMAIL);
+            email = (String)prefs.getModelProperty(AccessManager.USER_EMAIL);
             
             if (!AccessManager.getAccessManager().isLoggedIn() || email==null) {
                 log.warn("User closed login window without successfully logging in, exiting program.");
                 LifecycleManager.getDefault().exit(0);
             }
 
+            // Set run-as user if any
             try {
                 AccessManager.getAccessManager().setRunAsUser(runAsUser);
             }
             catch (Exception e) {
-                setModelProperty(AccessManager.RUN_AS_USER, "");
-                SessionMgr.getSessionMgr().handleException(e);
+                prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
+                ConsoleApp.handleException(e);
             }
                         
+            // Things that can be lazily initialized 
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
                     patternSearchDialog = new PatternSearchDialog();
                     fiberSearchDialog = new GiantFiberSearchDialog();
-                    maskSearchDialog = new MaskSearchDialog();
                 }
             });
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
             LifecycleManager.getDefault().exit(0);
         }
     }
@@ -173,7 +176,7 @@ public class ConsoleApp {
                 mainFrame = WindowLocator.getMainFrame();
             }
             catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
         }
         return mainFrame;
@@ -196,33 +199,32 @@ public class ConsoleApp {
     }
 
     public String getApplicationOutputDirectory() {
-        return prefs.getApplicationOutputDirectory();
+        return LocalPreferenceMgr.getInstance().getApplicationOutputDirectory();
     }
     
     public Object setModelProperty(Object key, Object value) {
-        return prefs.setModelProperty(key, value);
+        return LocalPreferenceMgr.getInstance().setModelProperty(key, value);
     }
 
     public Object getModelProperty(Object key) {
-        return prefs.getModelProperty(key);
+        return LocalPreferenceMgr.getInstance().getModelProperty(key);
     }
 
+    public ImageCache getImageCache() {
+        return imageCache;
+    }
+
+    public PatternSearchDialog getPatternSearchDialog() {
+        return patternSearchDialog;
+    }
+
+    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
+        return fiberSearchDialog;
+    }
+    
     @Subscribe
     public void systemWillExit(ApplicationClosing closingEvent) {
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         findAndRemoveWindowsSplashFile();
-        prefs.writeSettings();
-    }
-
-    public static PatternSearchDialog getPatternSearchDialog() {
-        return patternSearchDialog;
-    }
-
-    public static GiantFiberSearchDialog getGiantFiberSearchDialog() {
-        return fiberSearchDialog;
-    }
-    
-    public static MaskSearchDialog getMaskSearchDialog() {
-        return maskSearchDialog;
     }
 }

@@ -16,17 +16,17 @@ import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.workstation.api.stub.data.FatalCommError;
-import org.janelia.it.workstation.api.stub.data.SystemError;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.browser.api.exceptions.FatalCommError;
+import org.janelia.it.workstation.gui.browser.api.exceptions.SystemError;
+import org.janelia.it.workstation.gui.browser.api.facade.impl.ejb.EJBFactory;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.LoginEvent;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.RunAsEvent;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.gui.browser.util.PropertyConfigurator;
 import org.janelia.it.workstation.gui.browser.util.SingleThreadedTaskQueue;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,8 @@ public final class AccessManager {
     
     private AccessManager() {
         log.info("Initializing Access Manager");
-        String tempLogin = (String) SessionMgr.getSessionMgr().getModelProperty(USER_NAME);
-        String tempPassword = (String) SessionMgr.getSessionMgr().getModelProperty(USER_PASSWORD);
+        String tempLogin = (String) LocalPreferenceMgr.getInstance().getModelProperty(USER_NAME);
+        String tempPassword = (String) LocalPreferenceMgr.getInstance().getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
             PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
@@ -346,7 +346,7 @@ public final class AccessManager {
         }
         catch (Exception e) {
             setSubject(authenticatedSubject);
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
             return false;
         }
     }

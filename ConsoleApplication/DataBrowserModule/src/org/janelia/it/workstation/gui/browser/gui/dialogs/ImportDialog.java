@@ -35,6 +35,7 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
 import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
@@ -48,8 +49,6 @@ import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.workers.TaskMonitoringWorker;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.jdesktop.swingx.VerticalLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,9 +101,8 @@ public class ImportDialog extends ModalDialog {
 
         pathTextField = new JTextField(40);
 
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         final String importSourceFolderName = (String)
-                sessionMgr.getModelProperty(IMPORT_SOURCE_FOLDER);
+                ConsoleApp.getConsoleApp().getModelProperty(IMPORT_SOURCE_FOLDER);
         if (! isEmpty(importSourceFolderName)) {
             final File importSourceFolder = new File(importSourceFolderName.trim());
             if (importSourceFolder.exists()) {
@@ -170,7 +168,7 @@ public class ImportDialog extends ModalDialog {
                     handleOkPress();
                 } catch (Exception e1) {
                     log.error("import dialog failure", e1);
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                                                   e1.getMessage(),
                                                   "Error",
                                                   JOptionPane.ERROR_MESSAGE);
@@ -236,10 +234,8 @@ public class ImportDialog extends ModalDialog {
                     "Please specify a folder into which the files should be imported.");
         }
 
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-
         // save the user preferences for later
-        sessionMgr.setModelProperty(IMPORT_TARGET_FOLDER, folderName);
+        ConsoleApp.getConsoleApp().setModelProperty(IMPORT_TARGET_FOLDER, folderName);
 
         int fileCount = 1;
         double transferMegabytes = 0;
@@ -249,7 +245,7 @@ public class ImportDialog extends ModalDialog {
         if (selectedFile.exists()) {
 
             // save the user preferences for later
-            sessionMgr.setModelProperty(IMPORT_SOURCE_FOLDER, selectedFile.getAbsolutePath());
+            ConsoleApp.getConsoleApp().setModelProperty(IMPORT_SOURCE_FOLDER, selectedFile.getAbsolutePath());
 
             if (selectedFile.isDirectory()) {
 
@@ -415,13 +411,13 @@ public class ImportDialog extends ModalDialog {
                                                         }
                                                     });
                                                 }  catch (Exception e) {
-                                                    SessionMgr.getSessionMgr().handleException(e);
+                                                    ConsoleApp.handleException(e);
                                                 }
                                             }
 
                                             @Override
                                             protected void hadError(Throwable error) {
-                                                SessionMgr.getSessionMgr().handleException(error);
+                                                ConsoleApp.handleException(error);
                                             }
                                         };
 
@@ -440,7 +436,7 @@ public class ImportDialog extends ModalDialog {
             executeWorker.executeWithEvents();
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
         
     }

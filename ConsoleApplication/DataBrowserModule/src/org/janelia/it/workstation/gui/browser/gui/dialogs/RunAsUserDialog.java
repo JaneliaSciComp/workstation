@@ -17,7 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -95,8 +95,7 @@ public class RunAsUserDialog extends ModalDialog {
 
         String runAsUser = usernameField.getText().trim();
         
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
+        ConsoleApp.getConsoleApp().setModelProperty(AccessManager.RUN_AS_USER, runAsUser);
         
         boolean runAsSuccess = AccessManager.getAccessManager().setRunAsUser(runAsUser);
         
@@ -106,7 +105,7 @@ public class RunAsUserDialog extends ModalDialog {
                     "User does not exist.", "Username Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer != 0) {
-                sessionMgr.setModelProperty(AccessManager.RUN_AS_USER, "");
+                ConsoleApp.getConsoleApp().setModelProperty(AccessManager.RUN_AS_USER, "");
                 setVisible(false);
             }
         }
@@ -116,8 +115,7 @@ public class RunAsUserDialog extends ModalDialog {
     }
     
     private Object getModelProperty(String key, Object defaultValue) {
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        Object value = sessionMgr.getModelProperty(key);
+        Object value = ConsoleApp.getConsoleApp().getModelProperty(key);
         if (value == null) {
             value = defaultValue;
         }

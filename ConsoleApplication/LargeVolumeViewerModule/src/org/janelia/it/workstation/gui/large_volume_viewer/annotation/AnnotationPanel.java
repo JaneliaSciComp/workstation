@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAll
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

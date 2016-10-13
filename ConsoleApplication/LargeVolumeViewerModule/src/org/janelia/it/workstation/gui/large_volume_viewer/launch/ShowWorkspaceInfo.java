@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public class ShowWorkspaceInfo implements DomainObjectAcceptor  {
         // need to use text area so you can copy the info to clipboard
         JTextArea textarea= new JTextArea(message);
         textarea.setEditable(false);
-        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                 textarea, title, JOptionPane.PLAIN_MESSAGE);
     }
 

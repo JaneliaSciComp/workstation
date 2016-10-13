@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContext;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -176,7 +176,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
             
         }
         catch (InstantiationException | IllegalAccessException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
         setName(editor.getName());
     }

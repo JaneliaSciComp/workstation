@@ -40,8 +40,8 @@ import org.janelia.it.workstation.gui.browser.nb_action.ApplyAnnotationAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyExportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.OntologyImportAction;
 import org.janelia.it.workstation.gui.browser.nb_action.PopupLabelAction;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -102,7 +102,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                     }
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
                 worker.execute();
@@ -156,7 +156,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     @Override
     public String getExtraLabel() {
         OntologyNode ontologyNode = getOntologyNode();
-        org.janelia.it.workstation.gui.framework.actions.Action action = ontologyNode.getActionForNode(this);
+        org.janelia.it.workstation.gui.browser.actions.Action action = ontologyNode.getActionForNode(this);
         if (action != null) {
             KeyboardShortcut bind = KeyBindings.getKeyBindings().getBinding(action);
             if (bind != null) {
@@ -267,7 +267,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
         @Override
         public void actionPerformed(ActionEvent e) {
             OntologyNode ontologyNode = getOntologyNode();
-            org.janelia.it.workstation.gui.framework.actions.Action action = ontologyNode.getActionForNode(OntologyTermNode.this);
+            org.janelia.it.workstation.gui.browser.actions.Action action = ontologyNode.getActionForNode(OntologyTermNode.this);
             OntologyExplorerTopComponent explorer = OntologyExplorerTopComponent.getInstance();
             explorer.getKeyBindDialog().showForAction(action);            
         }
@@ -293,7 +293,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 msg = "Are you sure you want to delete the item '"+getOntologyTerm().getName()+"' and all of its descendants?";   
             }
             
-            int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
+            int result = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
                     msg, title, JOptionPane.OK_CANCEL_OPTION);
 
             if (result != 0) return;
@@ -308,7 +308,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 }
             }
             catch (Exception ex) {
-                SessionMgr.getSessionMgr().handleException(ex);
+                ConsoleApp.handleException(ex);
             }
         }
     }

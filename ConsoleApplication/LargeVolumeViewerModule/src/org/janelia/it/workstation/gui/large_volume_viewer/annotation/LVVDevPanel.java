@@ -57,9 +57,6 @@ public class LVVDevPanel extends JPanel {
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(new JLabel("Debug functions", JLabel.CENTER));
 
-
-        // remember, can't call modelMgr from GUI thread
-
         JPanel buttons = new JPanel();
         add(buttons);
 
@@ -195,7 +192,6 @@ public class LVVDevPanel extends JPanel {
                 console.setVariable("annMgr", annotationMgr);
                 console.setVariable("annModel", annotationModel);
                 console.setVariable("lvvTrans", largeVolumeViewerTranslator);
-                console.setVariable("modelMgr", ModelMgr.getModelMgr());
                 console.run();
             }
         });

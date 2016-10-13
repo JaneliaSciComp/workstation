@@ -26,10 +26,10 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.workstation.gui.browser.util.Utils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.tools.ToolInfo;
 import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
-import org.janelia.it.workstation.gui.util.GroupedKeyValuePanel;
+import org.janelia.it.workstation.gui.browser.gui.support.GroupedKeyValuePanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +98,7 @@ final class ToolsPanel extends javax.swing.JPanel {
                             ToolMgr.getToolMgr().addTool(new ToolInfo(toolFileChooser.getSelectedFile().getName(), toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
                         }
                         catch (Exception e) {
-                            SessionMgr.getSessionMgr().handleException(e);
+                            ConsoleApp.handleException(e);
                         }
                         refreshTable();
                     }
@@ -124,7 +124,7 @@ final class ToolsPanel extends javax.swing.JPanel {
                     ToolMgr.getToolMgr().fireToolsChanged();
                 }
                 catch (BackingStoreException e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+                    ConsoleApp.handleException(e);
                 }
             }
         });
@@ -153,7 +153,7 @@ final class ToolsPanel extends javax.swing.JPanel {
                 ToolMgr.getToolMgr().removeTool(tmpTool);
             }
             catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
             model.removeRow(selectedRow);
         }

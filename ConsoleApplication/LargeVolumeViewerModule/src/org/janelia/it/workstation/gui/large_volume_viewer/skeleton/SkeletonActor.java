@@ -23,7 +23,7 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.tracing.SegmentIndex;

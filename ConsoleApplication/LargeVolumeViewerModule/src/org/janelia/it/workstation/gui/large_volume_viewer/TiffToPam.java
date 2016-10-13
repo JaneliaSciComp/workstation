@@ -12,15 +12,15 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.jacs.shared.lvv.CoordinateToRawTransformFileSource;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 
 import com.sun.media.jai.codec.ImageDecoder;
-import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 /**
  * Convert block tiff octree render artifacts to slice pam/lz4 artifacts.
@@ -47,7 +47,7 @@ public class TiffToPam {
 		try {
 			tiffToPam.loadAdapter.setTopFolderAndCoordinateSource(inputTiffFolder, new CoordinateToRawTransformFileSource() {
 				public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
-					return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+					return TiledMicroscopeDomainMgr.getDomainMgr().getCoordToRawTransform(filePath);
 				}
 			});
 			tiffToPam.convertFolder(inputTiffFolder, outputPamFolder);

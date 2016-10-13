@@ -22,6 +22,6 @@ public final class GiantFiberPatternSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        ConsoleApp.getGiantFiberSearchDialog().showDialog();
+        ConsoleApp.getConsoleApp().getGiantFiberSearchDialog().showDialog();
     }
 }

@@ -7,9 +7,7 @@ import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.lifecycle.ApplicationOpening;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateBack;
 import org.janelia.it.workstation.gui.browser.nb_action.NavigateForward;
-import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.OnStart;
 import org.openide.util.actions.CallableSystemAction;
 
@@ -28,14 +26,15 @@ public class Startup implements Runnable {
         java.util.logging.Logger.getLogger("").addHandler(new NBExceptionHandler());
         
         // Create the main console app frame
-        ConsoleApp.getConsoleApp();
-
-        // Register singleton components on the event bus
-        Events.getInstance().registerOnEventBus(ConsoleApp.getConsoleApp());
-        Events.getInstance().registerOnEventBus(StateMgr.getStateMgr());
-        Events.getInstance().registerOnEventBus(ToolMgr.getToolMgr());
-
-        // Once the main frame is visible, we can do some things in the background
+        ConsoleApp app = ConsoleApp.getConsoleApp();
+        
+        // Set the Look and Feel
+        StateMgr.getStateMgr().initLAF();
+        
+        // Begin the user's session
+        app.initSession();
+                
+        // Do some things in the background
         SimpleWorker worker = new SimpleWorker() {
                 
             @Override
@@ -50,7 +49,7 @@ public class Startup implements Runnable {
 
             @Override
             protected void hadError(Throwable e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
         };
 

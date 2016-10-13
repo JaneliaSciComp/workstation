@@ -7,8 +7,8 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.DesktopApi;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.gui.browser.util.FileCallable;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.browser.util.Utils;
@@ -47,12 +47,12 @@ public class OpenWithDefaultAppAction extends AbstractAction {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
                         if (!DesktopApi.open(file)) {
-                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                                     "Error opening file path", "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -60,7 +60,7 @@ public class OpenWithDefaultAppAction extends AbstractAction {
             });
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

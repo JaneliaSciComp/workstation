@@ -1,21 +1,16 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-/**
- * Created with IntelliJ IDEA.
- * User: fosterl
- * Date: 1/4/13
- * Time: 9:19 AM
- *
- * A swing worker to load the volume from the filename, in background.
- */
-import org.apache.xml.resolver.apps.resolver;
+import javax.swing.SwingWorker;
+
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
-import org.janelia.it.workstation.gui.viewer3d.*;
+import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-
-import javax.swing.*;
 
 public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     private Mip3d mip3d;

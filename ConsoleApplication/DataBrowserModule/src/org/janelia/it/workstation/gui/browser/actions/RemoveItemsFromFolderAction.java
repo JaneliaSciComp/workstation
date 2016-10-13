@@ -15,7 +15,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
         }
 
         if (!listToDelete.isEmpty()) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(),
+            int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
                     "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
                     "Are you sure?", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
@@ -103,11 +103,11 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Removing items", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Removing items", "", 0, 100));
         worker.execute();
     }
 }

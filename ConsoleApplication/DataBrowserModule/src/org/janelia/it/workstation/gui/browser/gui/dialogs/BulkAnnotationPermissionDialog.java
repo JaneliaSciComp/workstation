@@ -31,7 +31,7 @@ import org.janelia.it.workstation.gui.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.gui.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.support.SubjectComboBoxRenderer;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
@@ -129,7 +129,7 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
     }
 
     private void showSelectionMessage() {
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                     "Select some items to bulk-edit permissions", "Error", JOptionPane.ERROR_MESSAGE);
     }
     public void showForSelectedDomainObjects() {
@@ -166,13 +166,13 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
             packAndShow();
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
     private void saveAndClose() {
         
-        Utils.setWaitingCursor(SessionMgr.getMainFrame());
+        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
 
         final Subject subject = (Subject) subjectCombobox.getSelectedItem();
         boolean read = readCheckbox.isSelected();
@@ -200,18 +200,18 @@ public class BulkAnnotationPermissionDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getMainFrame());
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                         "Modified permissions for "+numAnnotationsModified+" annotations on "+selected.size()+" items", "Shared", JOptionPane.INFORMATION_MESSAGE);
             }
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                ConsoleApp.handleException(error);
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Changing permissions...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Changing permissions...", ""));
         worker.execute();
 
         setVisible(false);

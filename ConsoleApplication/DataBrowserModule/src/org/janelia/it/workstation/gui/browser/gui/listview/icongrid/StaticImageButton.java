@@ -8,7 +8,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 
 /**

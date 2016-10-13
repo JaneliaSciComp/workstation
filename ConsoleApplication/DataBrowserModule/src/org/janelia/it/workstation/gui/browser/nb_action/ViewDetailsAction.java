@@ -9,7 +9,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.dialogs.DomainDetailsDialog;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -45,7 +45,7 @@ public final class ViewDetailsAction implements ActionListener {
             }
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            ConsoleApp.handleException(ex);
         }
     }
 }

@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.browser.gui.hud;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog.ModalityType;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
@@ -35,15 +36,15 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.support.ResultDescriptor;
 import org.janelia.it.jacs.model.domain.support.SampleUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.FileMgr;
+import org.janelia.it.workstation.gui.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.it.workstation.gui.browser.gui.support.ResultSelectionButton;
+import org.janelia.it.workstation.gui.browser.util.ImageCache;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.gui.util.MissingIcon;
+import org.janelia.it.workstation.gui.browser.gui.support.MissingIcon;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -251,7 +252,7 @@ public class Hud extends ModalDialog {
                 @Override
                 protected void doStuff() throws Exception {
                     
-                    ImageCache ic = SessionMgr.getBrowser().getImageCache();
+                    ImageCache ic = ConsoleApp.getConsoleApp().getImageCache();
                     if (ic != null) {
                         image = ic.get(imagePath);
                     }
@@ -305,7 +306,7 @@ public class Hud extends ModalDialog {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
                     

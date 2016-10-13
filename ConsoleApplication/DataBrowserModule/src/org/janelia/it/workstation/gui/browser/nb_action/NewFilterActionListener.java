@@ -19,7 +19,7 @@ import org.janelia.it.workstation.gui.browser.components.ViewerUtils;
 import org.janelia.it.workstation.gui.browser.gui.editor.FilterEditorPanel;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 
 public final class NewFilterActionListener implements ActionListener {
@@ -51,7 +51,7 @@ public final class NewFilterActionListener implements ActionListener {
         }
 
         // Since we're putting the filter under a parent, we need the name up front
-        final String name = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
+        final String name = (String) JOptionPane.showInputDialog(ConsoleApp.getMainFrame(),
                 "Filter Name:\n", "Create new filter", JOptionPane.PLAIN_MESSAGE, null, null, null);
         if (StringUtils.isEmpty(name)) {
             return;
@@ -86,7 +86,7 @@ public final class NewFilterActionListener implements ActionListener {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 

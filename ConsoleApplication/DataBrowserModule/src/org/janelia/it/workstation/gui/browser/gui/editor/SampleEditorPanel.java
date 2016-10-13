@@ -65,9 +65,9 @@ import org.janelia.it.workstation.gui.browser.gui.support.SelectablePanel;
 import org.janelia.it.workstation.gui.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
@@ -370,7 +370,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -514,7 +514,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             protected void hadError(Throwable error) {
                 showNothing();
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         worker.execute();
@@ -1003,7 +1003,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
             }
         }  catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

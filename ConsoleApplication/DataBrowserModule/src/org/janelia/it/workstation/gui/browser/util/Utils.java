@@ -39,13 +39,12 @@ import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.io.IOUtils;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.FileMgr;
 import org.janelia.it.workstation.gui.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.openide.windows.WindowManager;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
@@ -118,7 +117,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
+            String selectedRenderer = (String) ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D);
 
             RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;
@@ -522,10 +521,10 @@ public class Utils {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
 
@@ -541,7 +540,7 @@ public class Utils {
                 callback.call(file);
             }
             catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
         }
         else {
@@ -549,7 +548,7 @@ public class Utils {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {

@@ -18,7 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.CreateTiledMicroscopeSampleAction;
 import org.jdesktop.swingx.VerticalLayout;
 
@@ -37,7 +37,7 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 		setUpValues();
 		SwingUtilities.updateComponentTreeUI(this);
 		pack();
-		setLocationRelativeTo(SessionMgr.getMainFrame());
+		setLocationRelativeTo(ConsoleApp.getMainFrame());
 		setVisible(true);
 	}
 

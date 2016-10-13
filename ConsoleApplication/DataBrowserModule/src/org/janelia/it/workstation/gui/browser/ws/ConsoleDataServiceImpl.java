@@ -22,15 +22,13 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
-import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.gui.browser.model.keybind.OntologyKeyBindings;
-import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.gui.browser.util.PathTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,7 +246,7 @@ public class ConsoleDataServiceImpl {
 
     public String getUserAnnotationColor(String username) throws Exception {
         log.info("Get annotation color for user {}", username);
-        Color color = ModelMgr.getModelMgr().getUserAnnotationColor(username);
+        Color color = StateMgr.getStateMgr().getUserAnnotationColor(username);
         String rgb = Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
         return rgb;
     }

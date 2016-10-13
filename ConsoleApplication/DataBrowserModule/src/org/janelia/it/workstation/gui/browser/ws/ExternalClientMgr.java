@@ -47,7 +47,6 @@ public class ExternalClientMgr {
     }
     
     public void setPortOffset(int portOffset) {
-        log.info("Setting external client port offset to: {}",portOffset);
     	this.portOffset = portOffset;
     }
 

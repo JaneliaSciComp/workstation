@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.util;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 import java.util.concurrent.Callable;
 
@@ -17,7 +17,7 @@ public class ConcurrentUtils {
                 callback.call();
             }
             catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
+                ConsoleApp.handleException(e);
             }
         }
     }

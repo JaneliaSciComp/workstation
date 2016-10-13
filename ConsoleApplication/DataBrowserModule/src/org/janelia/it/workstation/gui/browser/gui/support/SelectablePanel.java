@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 
 import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.util.Utils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 
 /**
  * A panel that can be selected and displays a border when selected. The 
@@ -48,7 +48,7 @@ public class SelectablePanel extends JPanel {
             selectedBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(selectedBorder).getImage());
         }
         catch (FileNotFoundException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
     

@@ -39,9 +39,9 @@ import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNodeTracker;
 import org.janelia.it.workstation.gui.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.gui.browser.nodes.RootNode;
 import org.janelia.it.workstation.gui.browser.nodes.WorkspaceNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -196,7 +196,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 // Init the list viewer manager
                 DomainListViewManager.getInstance();
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         
@@ -355,7 +355,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             }
                         }  
                         catch (Exception ex) {
-                            SessionMgr.getSessionMgr().handleException(ex);
+                            ConsoleApp.handleException(ex);
                         }
                     }
                 }
@@ -429,7 +429,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadError(Throwable error) {
                 debouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         

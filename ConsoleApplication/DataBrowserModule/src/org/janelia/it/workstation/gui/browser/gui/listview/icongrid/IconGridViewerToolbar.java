@@ -14,7 +14,7 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.gui.listview.ViewerToolbar;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 
 /**
  * Tool bar for icon panels.

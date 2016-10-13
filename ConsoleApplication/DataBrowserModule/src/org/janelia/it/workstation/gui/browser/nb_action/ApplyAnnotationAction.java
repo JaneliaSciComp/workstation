@@ -21,7 +21,7 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.ontology.AnnotationEditor;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.nodes.Node;
 import org.openide.util.HelpCtx;
@@ -144,16 +144,16 @@ public class ApplyAnnotationAction extends NodeAction {
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
 
             };
 
-            worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.setProgressMonitor(new ProgressMonitor(ConsoleApp.getMainFrame(), "Adding annotations", "", 0, 100));
             worker.execute();
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
     

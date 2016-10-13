@@ -21,6 +21,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.DomainModel;
+import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.model.DomainObjectAnnotationChangeEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
@@ -35,8 +36,8 @@ import org.janelia.it.workstation.gui.browser.model.search.ResultIterator;
 import org.janelia.it.workstation.gui.browser.model.search.ResultIteratorFind;
 import org.janelia.it.workstation.gui.browser.model.search.ResultPage;
 import org.janelia.it.workstation.gui.browser.model.search.SearchResults;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.util.Utils;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
@@ -203,7 +204,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                                 selectedDomainObjects.add(domainObject);
                             }
                         }  catch (Exception e) {
-                            SessionMgr.getSessionMgr().handleException(e);
+                            ConsoleApp.handleException(e);
                         }
                     }
 
@@ -254,7 +255,11 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     }
     
     private void setViewer(AnnotatedDomainObjectListViewer viewer) {
+        if (resultsView!=null) {
+            Events.getInstance().unregisterOnEventBus(resultsView);
+        }
         this.resultsView = viewer;
+        Events.getInstance().registerOnEventBus(resultsView);
         resultsView.setSelectionModel(selectionModel);
         resultsView.setSearchProvider(searchProvider);
     }
@@ -296,7 +301,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
@@ -309,7 +314,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
     private void loadAndSelectAll() {
         
         if (!searchResults.isAllLoaded()) {
-            int rv = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), 
+            int rv = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(), 
                     "Load all "+searchResults.getNumTotalResults()+" results?",
                     "Load all?", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
             if (rv == JOptionPane.YES_OPTION) {
@@ -326,19 +331,19 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
                     @Override
                     protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Loading...", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Loading...", ""));
                 worker.execute();
                 return;
             }
         }
         else {
-            Utils.setWaitingCursor(SessionMgr.getMainFrame());
+            Utils.setWaitingCursor(ConsoleApp.getMainFrame());
             selectAll();
-            Utils.setDefaultCursor(SessionMgr.getMainFrame());
+            Utils.setDefaultCursor(ConsoleApp.getMainFrame());
         }
     }
     
@@ -503,7 +508,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             @Override
             protected void hadError(Throwable error) {
                 showNothing();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
         
@@ -549,7 +554,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         params.put("bias", bias);
         params.put("skipStartingNode", skipStartingNode);
 
-        Utils.setWaitingCursor(SessionMgr.getMainFrame());
+        Utils.setWaitingCursor(ConsoleApp.getMainFrame());
         if (!matchDebouncer.queueWithParameters(success, params)) {
             return;
         }
@@ -602,7 +607,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
                 if (match != null) {
                     log.info("Found match for '{}': {}",text,match.getId());
                     if (matchPage!=null && matchPage!=currPage) {
@@ -631,9 +636,9 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                Utils.setDefaultCursor(ConsoleApp.getMainFrame());
                 matchDebouncer.failure();
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
     }

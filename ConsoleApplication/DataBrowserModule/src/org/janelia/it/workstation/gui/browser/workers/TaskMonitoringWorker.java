@@ -11,7 +11,7 @@ import org.janelia.it.workstation.gui.browser.api.StateMgr;
 import org.janelia.it.workstation.gui.browser.components.ProgressTopComponent;
 import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.gui.browser.events.workers.WorkerChangedEvent;
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.browser.gui.support.WindowLocator;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.windows.TopComponent;

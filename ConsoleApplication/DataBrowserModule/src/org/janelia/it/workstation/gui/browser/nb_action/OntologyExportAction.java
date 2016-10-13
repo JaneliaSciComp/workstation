@@ -19,8 +19,8 @@ import org.janelia.it.jacs.model.domain.ontology.Interval;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.YamlFileFilter;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.browser.gui.support.YamlFileFilter;
 import org.openide.nodes.Node;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -75,7 +75,7 @@ public class OntologyExportAction extends NodePresenterAction   {
         fc.setFileFilter(ff);
         fc.setSelectedFile(new File(defaultSaveFilename));
         
-        int returnVal = fc.showSaveDialog(SessionMgr.getMainFrame());
+        int returnVal = fc.showSaveDialog(ConsoleApp.getMainFrame());
         if (returnVal != JFileChooser.APPROVE_OPTION) {
             return;
         }
@@ -89,7 +89,7 @@ public class OntologyExportAction extends NodePresenterAction   {
             yaml.dump(object, writer);
         }
         catch (IOException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

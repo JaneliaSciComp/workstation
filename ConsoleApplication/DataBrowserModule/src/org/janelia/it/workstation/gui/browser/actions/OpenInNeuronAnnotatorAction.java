@@ -16,7 +16,7 @@ import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClient;
 import org.janelia.it.workstation.gui.browser.ws.ExternalClientMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.tools.ToolMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +69,10 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             @Override
             protected void hadSuccess() {
                 if (sample==null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its sample cannot be loaded.", "Sample data missing", JOptionPane.ERROR_MESSAGE);
                 }
                 else if (separation==null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "This neuron fragment is orphaned and its separation cannot be loaded.", "Neuron separation data missing", JOptionPane.ERROR_MESSAGE);
                 }
                 else {
                     open();
@@ -81,7 +81,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
         };
 
@@ -117,7 +117,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             }
 
             if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                         "Could not get Neuron Annotator to launch and connect. "
                                 + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -127,7 +127,7 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
             ExternalClientMgr.getInstance().sendNeuronSeparationRequested(separation);
         }
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 

@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultRowSorter;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -27,9 +26,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.browser.api.KeyBindings;
+import org.janelia.it.workstation.gui.browser.events.lifecycle.SessionEvent;
 import org.janelia.it.workstation.gui.browser.events.selection.SelectionModel;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.browser.gui.keybind.KeymapUtil;
@@ -39,13 +39,12 @@ import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.gui.browser.model.AnnotatedDomainObjectList;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A generic table viewer supporting a data model and object selection.
@@ -66,10 +65,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
     private Map<S,T> objectMap;
     private ImageModel<T,S> imageModel;
     private SelectionModel<T,S> selectionModel;
-    
-    // Listeners
-    private final SessionModelListener sessionModelListener;
-    
+        
     public TableViewerPanel() {
 
         setBorder(BorderFactory.createEmptyBorder());
@@ -129,7 +125,7 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
                     }
                     updateHud(false);
                 } catch (Exception ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
+                    ConsoleApp.handleException(ex);
                 }
             }
         });
@@ -141,17 +137,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
 
         resultsPane = new JPanel(new BorderLayout());
         resultsPane.add(resultsTable, BorderLayout.CENTER);
-
-        sessionModelListener = new SessionModelAdapter() {
-            @Override
-            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                if (key == "console.serverLogin") {
-                    TableViewerPanel.this.clear();
-                }
-            }
-        };
-        
-        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
     }
     
     private TableViewerToolbar createToolbar() {
@@ -357,12 +342,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         repaint();
     }
 
-    public void close() {
-        // TODO: this should be invoked somehow if the panel is closed
-        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
-    }
-
     public synchronized void showAll() {
         removeAll();
         add(toolbar, BorderLayout.NORTH);
@@ -435,4 +414,10 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         int row = objectList.indexOf(object);
         getDynamicTable().scrollCellToCenter(row, 0);
     }
+    
+    @Subscribe
+    public void sessionChanged(SessionEvent event) {
+        TableViewerPanel.this.clear();
+    }
+        
 }

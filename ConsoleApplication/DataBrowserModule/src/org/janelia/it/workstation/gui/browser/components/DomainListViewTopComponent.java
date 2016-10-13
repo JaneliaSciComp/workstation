@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.gui.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.gui.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -172,7 +172,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             worker.execute();
@@ -223,7 +223,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
             add(editorComponent, BorderLayout.CENTER);
         }
         catch (InstantiationException | IllegalAccessException e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
         setName(editor.getName());
     }

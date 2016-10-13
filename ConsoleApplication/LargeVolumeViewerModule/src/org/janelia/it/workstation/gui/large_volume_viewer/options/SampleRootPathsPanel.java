@@ -11,10 +11,10 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.LargeVolumeSampleDiscoveryAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
-import org.janelia.it.workstation.gui.util.StringMemberListPanel;
+import org.janelia.it.workstation.gui.browser.gui.support.StringMemberListPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +74,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
             pathPanel.initItemsInList(paths);
         } 
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
@@ -85,7 +85,7 @@ final class SampleRootPathsPanel extends javax.swing.JPanel {
             TiledMicroscopeDomainMgr.getDomainMgr().setSamplePaths(paths);
         } 
         catch (Exception e) {
-            SessionMgr.getSessionMgr().handleException(e);
+            ConsoleApp.handleException(e);
         }
     }
 
