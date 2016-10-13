@@ -80,7 +80,7 @@ public class AnnotationPanel extends JPanel
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            annotationMgr.createWorkspace();
+                annotationMgr.createWorkspace();
             }
         };
 
@@ -134,7 +134,6 @@ public class AnnotationPanel extends JPanel
     
         // Disable all change functionality if the user has no write access to the workspace
         boolean enabled = annotationMgr.editsAllowed();
-        createWorkspaceButtonPlus.setEnabled(enabled);
         automaticRefinementMenuItem.setEnabled(enabled);
         automaticTracingMenuItem.setEnabled(enabled);
         importSWCAction.setEnabled(enabled);
