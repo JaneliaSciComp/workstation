@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.browser.activity_logging;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
+import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;

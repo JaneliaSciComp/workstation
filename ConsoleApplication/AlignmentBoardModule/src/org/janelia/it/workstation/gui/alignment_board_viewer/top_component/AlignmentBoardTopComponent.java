@@ -129,12 +129,14 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         Events.getInstance().registerOnEventBus(this);
+        Events.getInstance().registerOnEventBus(alignmentBoardPanel);
         initMyComponents();
     }
 
     @Override
     public void componentClosed() {
-        Events.getInstance().unregisterOnEventBus(this);        
+        Events.getInstance().unregisterOnEventBus(this);  
+        Events.getInstance().unregisterOnEventBus(alignmentBoardPanel);        
         alignmentBoardPanel.close();
         Runnable runnable = new Runnable() {
             public void run() {

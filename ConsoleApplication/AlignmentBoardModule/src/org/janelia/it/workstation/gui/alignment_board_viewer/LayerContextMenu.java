@@ -23,9 +23,9 @@ import org.janelia.it.workstation.gui.alignment_board.swing.AlignmentBoardItemDe
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.browser.actions.Action;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

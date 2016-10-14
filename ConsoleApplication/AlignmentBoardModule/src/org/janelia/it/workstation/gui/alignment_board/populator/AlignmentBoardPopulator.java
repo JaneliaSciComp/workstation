@@ -4,9 +4,9 @@ import java.util.List;
 
 import javax.swing.JComponent;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.integration.framework.domain.DropAcceptor;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
@@ -37,7 +37,7 @@ public class AlignmentBoardPopulator implements DropAcceptor {
                     = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
             addToAlignmentBoard(ctx, domainObjects, objective);
         } catch ( Exception ex ) {
-            ModelMgr.getModelMgr().handleException( ex );
+            FrameworkImplProvider.handleException(ex);
         }
     }
 

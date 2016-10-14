@@ -10,12 +10,12 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Guava"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client Integration APIs"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Legacy Console"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Model"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JOGL 2.1.3"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client JAR Dependency Wrapper"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/NetBeans Platform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Data Browser"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Viewer 3D"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

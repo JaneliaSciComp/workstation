@@ -4,7 +4,7 @@ package org.janelia.horta.activity_logging;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
+import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;

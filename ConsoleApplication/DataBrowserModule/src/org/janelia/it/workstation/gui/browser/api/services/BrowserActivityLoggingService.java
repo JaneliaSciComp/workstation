@@ -1,10 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api.services;
 
-/**
- * Wrap-around support for activity logging, via session manager.
- * @author fosterl
- */
-import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
+import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;

@@ -1,25 +1,27 @@
 package org.janelia.it.workstation.gui.viewer3d.axes;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel;
-import org.janelia.it.workstation.gui.viewer3d.text.FontInfo;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel.AxisOfParallel;
+import org.janelia.it.workstation.gui.viewer3d.text.FontInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Draws three conventional axes, with tick marks for scale.
@@ -148,7 +150,7 @@ public class AxesActor implements GLActor
                     bBuffersNeedUpload = false;
                 }
             } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
+                FrameworkImplProvider.handleException(ex);
             }
         }
 

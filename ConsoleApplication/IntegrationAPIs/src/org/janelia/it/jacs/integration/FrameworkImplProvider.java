@@ -2,21 +2,24 @@ package org.janelia.it.jacs.integration;
 
 import java.util.Collection;
 import javax.swing.JFrame;
+
 import org.janelia.it.jacs.integration.framework.compression.CompressedFileResolverI;
 import org.janelia.it.jacs.integration.framework.domain.PreferenceHandler;
-import org.janelia.it.jacs.integration.framework.session_mgr.ActivityLogging;
-import org.janelia.it.jacs.integration.framework.session_mgr.ErrorHandler;
-import org.janelia.it.jacs.integration.framework.session_mgr.ParentFrame;
-import org.janelia.it.jacs.integration.framework.session_mgr.SettingsModel;
+import org.janelia.it.jacs.integration.framework.exceptions.UnprovidedServiceException;
+import org.janelia.it.jacs.integration.framework.system.ActivityLogging;
+import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
+import org.janelia.it.jacs.integration.framework.system.FileAccess;
+import org.janelia.it.jacs.integration.framework.system.ParentFrame;
+import org.janelia.it.jacs.integration.framework.system.SettingsModel;
 import org.openide.util.lookup.Lookups;
 
 /**
  * The factory to return implementations from the framework.
  *
  * @author fosterl
- * @todo once the generic approach is proven, invert the commenting below.
  */
 public class FrameworkImplProvider {
+    
     public static ActivityLogging getSessionSupport() {
         Collection<? extends ActivityLogging> candidates
                 = Lookups.forPath(ActivityLogging.LOOKUP_PATH).lookupAll(ActivityLogging.class);
@@ -47,6 +50,14 @@ public class FrameworkImplProvider {
         return get(SettingsModel.LOOKUP_PATH, SettingsModel.class);
     }
 
+    public static ParentFrame getAppHandler() {
+        return get(ParentFrame.LOOKUP_PATH, ParentFrame.class);
+    }
+
+    public static FileAccess getFileAccess() {
+        return get(SettingsModel.LOOKUP_PATH, FileAccess.class);
+    }
+    
     public static PreferenceHandler getPreferenceHandler() {
         return get(PreferenceHandler.LOOKUP_PATH, PreferenceHandler.class);
     }
@@ -98,11 +109,9 @@ public class FrameworkImplProvider {
     
     private static <T> T get(String path, Class<T> clazz) {
         Collection<? extends T> candidates = Lookups.forPath(path).lookupAll(clazz);
-        if (candidates.size() > 0) {
-            return candidates.iterator().next();
+        for(T handler : candidates) {
+            return handler;
         }
-        else {
-            return null;
-        }
+        throw new UnprovidedServiceException("No service provider found for "+path);
     }
 }

@@ -1,19 +1,20 @@
 package org.janelia.it.workstation.gui.viewer3d.texture;
 
 import java.awt.Color;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
-import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
-
-import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+
+import javax.media.opengl.GL2;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 
 /**
  * Created with IntelliJ IDEA.
@@ -108,7 +109,7 @@ public class RenderMapTextureBean implements TextureDataI {
             Collection<float[]> acceptedCoordinates = volumeModel.getCropCoords().getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
                 acceptedCoordinates.clear();
-                SessionMgr.getSessionMgr().handleException(
+                FrameworkImplProvider.handleException(
                         new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS + ". Rejecting all saved coords.")
                 );
             }

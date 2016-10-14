@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.browser.api.services;
 
 import javax.swing.JFrame;
 
-import org.janelia.it.jacs.integration.framework.session_mgr.ParentFrame;
+import org.janelia.it.jacs.integration.framework.system.ParentFrame;
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.util.lookup.ServiceProvider;
 

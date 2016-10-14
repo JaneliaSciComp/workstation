@@ -1,14 +1,20 @@
 package org.janelia.it.workstation.gui.viewer3d.buffering;
 
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
-import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
+
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.media.opengl.GL2;
-import java.nio.*;
+
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.utils.NotThreadSafe;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntellrowJ IDEA.

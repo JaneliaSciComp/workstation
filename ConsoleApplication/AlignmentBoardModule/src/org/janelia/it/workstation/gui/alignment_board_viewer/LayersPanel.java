@@ -8,11 +8,15 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -26,36 +30,34 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
 
-import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
-import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import static org.janelia.it.workstation.gui.alignment_board.util.RenderUtils.*;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
-import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.compartments.Compartment;
-import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardCloseEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.workstation.gui.alignment_board.util.ABCompartment;
+import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
-import org.janelia.it.workstation.gui.util.ColorSwatch;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.workstation.gui.browser.api.DomainMgr;
+import org.janelia.it.workstation.gui.browser.events.Events;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.util.ColorSwatch;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.Outline;
@@ -66,11 +68,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import javax.swing.Icon;
-
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
  events that the Alignment Board can listen to in order to know when the user adds multiSelectionItems to the alignment board,
@@ -78,7 +75,7 @@ import javax.swing.Icon;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class LayersPanel extends JPanel implements Refreshable {
+public class LayersPanel extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(LayersPanel.class);
 
@@ -548,13 +545,11 @@ public class LayersPanel extends JPanel implements Refreshable {
         }
     }
     
-    @Override
     public void refresh() {
         log.debug("refresh");
         refresh(true, false, null);
     }
 
-    @Override
     public void totalRefresh() {
         log.debug("totalRefresh");
         refresh(true, true, null);

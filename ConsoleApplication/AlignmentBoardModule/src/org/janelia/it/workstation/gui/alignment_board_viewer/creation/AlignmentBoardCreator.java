@@ -18,7 +18,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
-import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.openide.util.lookup.ServiceProvider;

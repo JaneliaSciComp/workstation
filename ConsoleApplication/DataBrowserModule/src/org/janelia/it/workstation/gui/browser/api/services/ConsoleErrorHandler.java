@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api.services;
 
-import org.janelia.it.jacs.integration.framework.session_mgr.ErrorHandler;
+import org.janelia.it.jacs.integration.framework.system.ErrorHandler;
 import org.janelia.it.workstation.gui.browser.ConsoleApp;
 import org.openide.util.lookup.ServiceProvider;
 

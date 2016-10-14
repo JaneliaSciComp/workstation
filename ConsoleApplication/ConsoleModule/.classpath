@@ -14,5 +14,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Shared"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SharedModelWrapper"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JOGL 2.1.3"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/Viewer 3D"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

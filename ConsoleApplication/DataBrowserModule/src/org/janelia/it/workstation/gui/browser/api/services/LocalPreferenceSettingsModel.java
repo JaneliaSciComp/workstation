@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api.services;
 
-import org.janelia.it.jacs.integration.framework.session_mgr.SettingsModel;
+import org.janelia.it.jacs.integration.framework.system.SettingsModel;
 import org.janelia.it.workstation.gui.browser.api.LocalPreferenceMgr;
 import org.openide.util.lookup.ServiceProvider;
 

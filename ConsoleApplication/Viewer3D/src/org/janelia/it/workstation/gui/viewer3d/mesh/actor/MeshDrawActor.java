@@ -1,22 +1,26 @@
 package org.janelia.it.workstation.gui.viewer3d.mesh.actor;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
-import org.janelia.it.workstation.gui.viewer3d.mesh.shader.MeshDrawShader;
 import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.*;
 import java.nio.IntBuffer;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
+import javax.media.opengl.GLAutoDrawable;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
+import org.janelia.it.workstation.gui.viewer3d.mesh.shader.MeshDrawShader;
 import org.janelia.it.workstation.gui.viewer3d.picking.RenderedIdPicker;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a gl-actor to draw pre-collected buffers, which have been laid out for
@@ -241,7 +245,7 @@ public class MeshDrawActor implements GLActor {
                 // Failure at this level.  Need to do this again.
                 bBuffersNeedUpload = true;
             } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
+                FrameworkImplProvider.handleException(ex);
             }
         }
         

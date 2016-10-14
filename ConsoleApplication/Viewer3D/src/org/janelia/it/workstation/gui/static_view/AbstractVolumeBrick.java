@@ -1,26 +1,28 @@
 package org.janelia.it.workstation.gui.static_view;
 
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
-import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.DirectionalAxis;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
@@ -140,7 +142,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
                 bBuffersNeedUpload = false;
             } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
+                FrameworkImplProvider.handleException(ex);
             }
         }
 		// tidy up
