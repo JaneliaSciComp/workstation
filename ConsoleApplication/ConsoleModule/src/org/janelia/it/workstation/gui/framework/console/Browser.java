@@ -297,13 +297,13 @@ public class Browser implements Cloneable {
         public void browserClosing() {
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
 
-            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+//            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+//
+//            if (position == null) {
+//                position = new BrowserPosition();
+//            }
 
-            if (position == null) {
-                position = new BrowserPosition();
-            }
-
-            SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
+//            SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
             SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
 
         }
@@ -347,29 +347,29 @@ public class Browser implements Cloneable {
         entityDetailsOutline.showNothing();
     }
 
-    public BrowserPosition resetBrowserPosition() {
-
-        BrowserPosition position = new BrowserPosition();
-        position.setHorizontalLeftDividerLocation(400);
-        position.setHorizontalRightDividerLocation(1100);
-        position.setVerticalDividerLocation(800);
-
-        int offsetY = 0;
-        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
-        if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
-            offsetY = 20;
-        }
-
-        position.setBrowserLocation(new Point(0, offsetY));
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        position.setScreenSize(screenSize);
-        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height - offsetY));
-
-        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-
-        return position;
-    }
+//    public BrowserPosition resetBrowserPosition() {
+//
+//        BrowserPosition position = new BrowserPosition();
+//        position.setHorizontalLeftDividerLocation(400);
+//        position.setHorizontalRightDividerLocation(1100);
+//        position.setVerticalDividerLocation(800);
+//
+//        int offsetY = 0;
+//        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+//        if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
+//            offsetY = 20;
+//        }
+//
+//        position.setBrowserLocation(new Point(0, offsetY));
+//
+//        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//        position.setScreenSize(screenSize);
+//        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height - offsetY));
+//
+//        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
+//
+//        return position;
+//    }
 
     public boolean isViewersLinked() {
         return viewerManager.isViewersLinked();

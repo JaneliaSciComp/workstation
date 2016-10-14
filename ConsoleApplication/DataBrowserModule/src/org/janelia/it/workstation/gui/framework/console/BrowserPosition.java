@@ -4,12 +4,9 @@ import java.awt.*;
 import java.io.Serializable;
 
 /**
- * Created by IntelliJ IDEA.
- * User: saffordt
- * Date: 2/8/11
- * Time: 12:40 PM
- * Class to keep track of Console real-estate
+ * This is a legacy class which is not longer used, but needs to stay in this package because it has been serialized into users' settings. 
  */
+@Deprecated
 public class BrowserPosition implements Serializable {
     private Dimension consoleSize;
     private Dimension screenSize;
