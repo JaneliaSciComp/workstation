@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -12,7 +11,6 @@ import java.awt.event.ItemListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -28,6 +26,7 @@ import javax.swing.JSeparator;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
@@ -36,9 +35,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAll
 import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-import org.janelia.it.workstation.gui.browser.gui.support.Icons;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
@@ -48,8 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class AnnotationPanel extends JPanel
 {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationPanel.class);
-    
     public static final int SUBPANEL_STD_HEIGHT = 150;
     
     // things we get data from
@@ -408,16 +402,16 @@ public class AnnotationPanel extends JPanel
         add(Box.createVerticalGlue(), cBottom);
     }
 
-    /**
-     * add a visible border (default green) to a panel to help debug alignment/packing problems
-     */
-    private void showOutline(JPanel panel) {
-        showOutline(panel, Color.green);
-
-    }
-    
-    private void showOutline(JPanel panel, Color color) {
-        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
-    }
+//    /**
+//     * add a visible border (default green) to a panel to help debug alignment/packing problems
+//     */
+//    private void showOutline(JPanel panel) {
+//        showOutline(panel, Color.green);
+//
+//    }
+//    
+//    private void showOutline(JPanel panel, Color color) {
+//        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
+//    }
 }
 

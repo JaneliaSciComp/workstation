@@ -28,6 +28,7 @@ import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
  *
  * djo, 11/14
  */
+@SuppressWarnings("unused")
 public class LVVDevPanel extends JPanel {
     // these are useful to have around when testing:
     private AnnotationManager annotationMgr;

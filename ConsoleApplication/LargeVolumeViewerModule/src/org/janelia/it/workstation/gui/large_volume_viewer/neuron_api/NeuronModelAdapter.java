@@ -31,7 +31,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,7 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import Jama.Matrix;
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
@@ -62,6 +60,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import Jama.Matrix;
 
 /**
  *

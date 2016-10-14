@@ -17,11 +17,11 @@ public class TmSampleNode extends DomainObjectNode<TmSample> {
 
     private final TmSampleChildFactory childFactory;
     
-    public TmSampleNode(ChildFactory parentChildFactory, TmSample sample) throws Exception {
+    public TmSampleNode(ChildFactory<?> parentChildFactory, TmSample sample) throws Exception {
         this(parentChildFactory, new TmSampleChildFactory(sample), sample);
     }
 
-    private TmSampleNode(ChildFactory parentChildFactory, final TmSampleChildFactory childFactory, TmSample sample) {
+    private TmSampleNode(ChildFactory<?> parentChildFactory, final TmSampleChildFactory childFactory, TmSample sample) {
         super(parentChildFactory, childFactory.hasNodeChildren()?Children.create(childFactory, false):Children.LEAF, sample);
             
         log.trace("Creating node@{} -> {}",System.identityHashCode(this),getDisplayName());

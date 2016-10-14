@@ -102,10 +102,6 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             this.tmNeuronMetadata = tmNeuronMetadata;
             this.metadataOnly = metadataOnly;
         }
-        
-        public boolean isRunning() {
-            return running.get();
-        }
 
         @Override
         public void run() {

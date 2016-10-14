@@ -307,8 +307,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         tagModeMenu.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JComboBox<String> box = (JComboBox) e.getSource();
-                String mode = (String) box.getSelectedItem();
+                String mode = (String) tagModeMenu.getSelectedItem();
                 tagModeChanged(mode);
             }
         });
@@ -318,8 +317,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         tagMenu.addActionListener(new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JComboBox<String> box = (JComboBox) e.getSource();
-                String tag = (String) box.getSelectedItem();
+                String tag = (String) tagMenu.getSelectedItem();
                 tagFilterChanged(tag);
             }
         });

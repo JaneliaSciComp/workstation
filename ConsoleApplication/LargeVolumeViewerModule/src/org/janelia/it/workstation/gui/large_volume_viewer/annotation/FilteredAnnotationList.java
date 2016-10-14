@@ -332,11 +332,12 @@ public class FilteredAnnotationList extends JPanel {
         filterMenuPanel.add(new JLabel("Filter:"), BorderLayout.LINE_START);
         String[] filterNames = {"default", "ends", "branches", "roots", "notes",
             "geometry", "interesting", "review"};
-        final JComboBox filterMenu = new JComboBox(filterNames);
+        final JComboBox<String> filterMenu = new JComboBox<>(filterNames);
         filterMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JComboBox cb = (JComboBox) e.getSource();
+                @SuppressWarnings("unchecked")
+                JComboBox<String> cb = (JComboBox<String>) e.getSource();
                 String name = (String) cb.getSelectedItem();
                 setCurrentFilter(filters.get(name));
                 updateData();

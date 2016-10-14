@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

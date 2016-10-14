@@ -56,8 +56,8 @@ public class NeuronTagsAction extends EditAction {
     private TmNeuronMetadata targetNeuron;
 
     private JPanel mainPanel;
-    private JList appliedTagsList;
-    private JList availableTagsList;
+    private JList<String> appliedTagsList;
+    private JList<String> availableTagsList;
     private JTextField newTagField;
 
     public NeuronTagsAction() {
@@ -252,7 +252,7 @@ public class NeuronTagsAction extends EditAction {
         cGrowLeft.fill = GridBagConstraints.HORIZONTAL;
         cGrowLeft.weighty = 1.0;
         cGrowLeft.insets = insets;
-        appliedTagsList = new JList();
+        appliedTagsList = new JList<>();
         JScrollPane appliedScroller = new JScrollPane(appliedTagsList);
         appliedScroller.setPreferredSize(new Dimension(160, 160));
         mainPanel.add(appliedScroller, cGrowLeft);
@@ -293,7 +293,7 @@ public class NeuronTagsAction extends EditAction {
         cGrowRight.fill = GridBagConstraints.HORIZONTAL;
         cGrowRight.weighty = 1.0;
         cGrowRight.insets = insets;
-        availableTagsList = new JList();
+        availableTagsList = new JList<>();
         JScrollPane availableScroller = new JScrollPane(availableTagsList);
         availableScroller.setPreferredSize(new Dimension(160, 160));
         mainPanel.add(availableScroller, cGrowRight);
