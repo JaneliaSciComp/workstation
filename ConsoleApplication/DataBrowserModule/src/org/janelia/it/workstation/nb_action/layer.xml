@@ -246,12 +246,19 @@
         <file name="Debug_hidden"/>
     </folder>
     <folder name="Windows2">
+        <file name="WindowManager.wswmgr" url="WindowManager.wswmgr"/> 
         <folder name="Modes">
             <file name="explorer.wsmode" url="Modes/explorer.wsmode"/>
+            <folder name="explorer"/>
             <file name="appExplorerBtm.wsmode" url="Modes/appExplorerBtm.wsmode"/>
+            <folder name="appExplorerBtm"/>
             <file name="editor.wsmode" url="Modes/editor.wsmode"/>
             <file name="editor2.wsmode" url="Modes/editor2.wsmode"/>
             <file name="editor3.wsmode" url="Modes/editor3.wsmode"/>
+            <file name="properties.wsmode" url="Modes/properties.wsmode"/>
+            <folder name="properties"/>
+            <file name="rightSlidingSide.wsmode" url="Modes/rightSlidingSide.wsmode"/>
+            <folder name="rightSlidingSide"/>
         </folder>
     </folder>
 </filesystem>
