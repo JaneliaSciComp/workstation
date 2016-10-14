@@ -33,8 +33,8 @@ public final class CallDeveloperMenuAction extends AbstractAction implements Pre
         subMenu.add(new JMenuItem("Call Les    - x4680"));
         subMenu.add(new JMenuItem("Call Rob    - x4613"));
         subMenu.add(new JMenuItem("Call Sean   - x4324"));
-        subMenu.add(new JMenuItem("Call Todd   - x4696"));
         subMenu.add(new JMenuItem("Call Yang   - x4626"));
+        subMenu.add(new JMenuItem("Call Jody   - x4374"));
     }
     
     @Override
