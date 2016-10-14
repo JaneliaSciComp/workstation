@@ -5,7 +5,6 @@ import java.awt.BorderLayout;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.geometric_search.admin.GeometricSearchAdminPanel;
 import org.janelia.it.workstation.gui.geometric_search.search.GeometricSearchMainPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -124,7 +123,6 @@ public final class GeometricSearchTopComponent extends TopComponent {
     @Override
     public void componentOpened() {
         logger.info("componentOpened()");
-        ModelMgr.getModelMgr().registerOnEventBus(this);
         initMyComponents();
     }
 

@@ -9,6 +9,7 @@ import javax.naming.NamingException;
 import org.janelia.it.jacs.compute.api.AnnotationBeanRemote;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.compute.api.EntityBeanRemote;
+import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
@@ -27,6 +28,7 @@ public class EJBFactory {
     private static final String REMOTE_COMPUTE_JNDI_NAME = "compute/ComputeEJB/remote";
     private static final String REMOTE_ENTITY_JNDI_NAME = "compute/EntityEJB/remote";
     private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = "compute/TiledMicroscopeEJB/remote";
+    private static final String REMOTE_GEOMETRIC_SEARCH_JNDI_NAME = "compute/GeometricSearchEJB/remote";
 
     private static final Properties icInteractiveServerProperties = new Properties();
     private static final Properties icPipelineServerProperties = new Properties();
@@ -128,6 +130,10 @@ public class EJBFactory {
     
     public static TiledMicroscopeBeanRemote getRemoteTiledMicroscopeBean() {
         return (TiledMicroscopeBeanRemote) getRemoteInterface(REMOTE_TILED_MICROSCOPE_JNDI_NAME);
+    }
+    
+    public static GeometricSearchBeanRemote getRemoteGeometricSearchBean() {
+        return (GeometricSearchBeanRemote) getRemoteInterface(REMOTE_GEOMETRIC_SEARCH_JNDI_NAME);
     }
 
 }
