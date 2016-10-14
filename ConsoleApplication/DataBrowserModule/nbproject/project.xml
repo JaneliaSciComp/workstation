@@ -151,6 +151,20 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
+            <test-dependencies>
+                <test-type>
+                    <name>unit</name>
+                    <test-dependency>
+                        <code-name-base>org.netbeans.libs.junit4</code-name-base>
+                        <compile-dependency/>
+                    </test-dependency>
+                    <test-dependency>
+                        <code-name-base>org.netbeans.modules.nbjunit</code-name-base>
+                        <recursive/>
+                        <compile-dependency/>
+                    </test-dependency>
+                </test-type>
+            </test-dependencies>
             <public-packages>
                 <package>org.janelia.it.FlyWorkstation.ws</package>
                 <package>org.janelia.it.workstation.gui.browser</package>
@@ -187,7 +201,6 @@
                 <package>org.janelia.it.workstation.gui.browser.gui.progress</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.support</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.support.panels</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.support.server_status</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.table</package>
                 <package>org.janelia.it.workstation.gui.browser.gui.tree</package>
                 <package>org.janelia.it.workstation.gui.browser.lifecycle</package>
@@ -204,6 +217,10 @@
                 <package>org.janelia.it.workstation.gui.browser.workers</package>
                 <package>org.janelia.it.workstation.gui.browser.ws</package>
             </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jbossall-client.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jbossall-client.jar</binary-origin>
+            </class-path-extension>
         </data>
     </configuration>
 </project>
