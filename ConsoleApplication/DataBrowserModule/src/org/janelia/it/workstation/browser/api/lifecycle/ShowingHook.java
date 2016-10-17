@@ -35,7 +35,7 @@ public class ShowingHook implements Runnable {
         JFrame frame = WindowLocator.getMainFrame();
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle(title);
-        
+
         // Log events.
         final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(

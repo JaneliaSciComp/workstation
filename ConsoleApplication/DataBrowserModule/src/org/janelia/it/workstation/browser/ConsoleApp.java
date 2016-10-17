@@ -124,7 +124,7 @@ public class ConsoleApp {
                 prefs.setModelProperty(AccessManager.RUN_AS_USER, "");
                 ConsoleApp.handleException(e);
             }
-                        
+            
             // Things that can be lazily initialized 
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
