@@ -28,11 +28,7 @@
     <logger name="org.janelia.it.workstation.gui.browser.model" level="INFO"/>
     <logger name="org.janelia.it.workstation.gui.browser.api.navigation" level="INFO"/>
     <logger name="org.janelia.it.jacs.model.domain.support" level="INFO"/>
-
-    <!--  perf4j loggers must be set to DEBUG to log performance benchmarks-->
-    <logger name="org.janelia.it.workstation.shared.util.Utils" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.framework.viewer.LoadImageWorker" level="INFO"/>
-
+    
     <!-- Squelch the LOCI library -->
     <logger name="loci" level="WARN"/>
 
