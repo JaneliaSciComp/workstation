@@ -14,10 +14,10 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/Client JAR Dependency Wrapper"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Data Browser"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Geometry 3d"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Viewer API"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GL Viewer Tools"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Viewer 3D"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
