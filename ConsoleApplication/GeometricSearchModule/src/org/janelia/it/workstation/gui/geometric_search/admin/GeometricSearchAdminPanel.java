@@ -18,10 +18,10 @@ import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
 import org.janelia.it.jacs.shared.geometric_search.GeometricIndexManagerModel;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.ejb.EJBFactory;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicColumn;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicRow;
-import org.janelia.it.workstation.gui.browser.gui.table.DynamicTable;
+import org.janelia.it.workstation.browser.api.facade.impl.ejb.EJBFactory;
+import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.browser.gui.table.DynamicRow;
+import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -17,7 +17,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import org.janelia.it.workstation.gui.browser.gui.support.MouseHandler;
+import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

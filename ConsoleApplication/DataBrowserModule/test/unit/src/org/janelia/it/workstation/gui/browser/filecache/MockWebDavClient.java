@@ -1,9 +1,9 @@
-package org.janelia.it.workstation.gui.browser.filecache;
+package org.janelia.it.workstation.browser.filecache;
 
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavClient;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavException;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavFile;
+import org.janelia.it.workstation.browser.filecache.WebDavClient;
+import org.janelia.it.workstation.browser.filecache.WebDavException;
+import org.janelia.it.workstation.browser.filecache.WebDavFile;
 
 import java.io.File;
 import java.net.URL;

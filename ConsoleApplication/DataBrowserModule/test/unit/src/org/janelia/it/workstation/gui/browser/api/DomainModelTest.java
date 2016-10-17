@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.api;
+package org.janelia.it.workstation.browser.api;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -7,16 +7,17 @@ import java.util.List;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.DomainFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.OntologyFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SampleFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.SubjectFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.impl.rest.WorkspaceFacadeImpl;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.DomainFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.OntologyFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SampleFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.SubjectFacade;
-import org.janelia.it.workstation.gui.browser.api.facade.interfaces.WorkspaceFacade;
+import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.api.facade.impl.rest.DomainFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.impl.rest.OntologyFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.impl.rest.SampleFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.impl.rest.SubjectFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.impl.rest.WorkspaceFacadeImpl;
+import org.janelia.it.workstation.browser.api.facade.interfaces.DomainFacade;
+import org.janelia.it.workstation.browser.api.facade.interfaces.OntologyFacade;
+import org.janelia.it.workstation.browser.api.facade.interfaces.SampleFacade;
+import org.janelia.it.workstation.browser.api.facade.interfaces.SubjectFacade;
+import org.janelia.it.workstation.browser.api.facade.interfaces.WorkspaceFacade;
 import org.junit.After;
 import org.junit.Before;
 

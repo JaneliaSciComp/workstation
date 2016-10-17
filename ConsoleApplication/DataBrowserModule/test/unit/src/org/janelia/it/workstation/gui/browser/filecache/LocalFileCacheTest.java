@@ -1,9 +1,9 @@
-package org.janelia.it.workstation.gui.browser.filecache;
+package org.janelia.it.workstation.browser.filecache;
 
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.gui.browser.filecache.CachedFile;
-import org.janelia.it.workstation.gui.browser.filecache.FileNotCacheableException;
-import org.janelia.it.workstation.gui.browser.filecache.LocalFileCache;
+import org.janelia.it.workstation.browser.filecache.CachedFile;
+import org.janelia.it.workstation.browser.filecache.FileNotCacheableException;
+import org.janelia.it.workstation.browser.filecache.LocalFileCache;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

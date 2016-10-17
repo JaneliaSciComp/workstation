@@ -39,11 +39,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataListener;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
-import org.janelia.it.workstation.gui.browser.gui.support.Icons;
-import org.janelia.it.workstation.gui.browser.gui.support.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;

@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.ConsoleApp;
 
 /**
  * Drag the SWCs into the workspace, and make neurons.

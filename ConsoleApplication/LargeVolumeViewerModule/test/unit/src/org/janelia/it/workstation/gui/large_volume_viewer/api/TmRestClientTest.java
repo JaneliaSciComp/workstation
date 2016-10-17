@@ -18,7 +18,7 @@ import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmProtobufExchanger;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeRestClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

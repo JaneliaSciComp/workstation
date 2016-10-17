@@ -1,9 +1,9 @@
-package org.janelia.it.workstation.gui.browser.filecache;
+package org.janelia.it.workstation.browser.filecache;
 
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavClient;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavFile;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavUploader;
+import org.janelia.it.workstation.browser.filecache.WebDavClient;
+import org.janelia.it.workstation.browser.filecache.WebDavFile;
+import org.janelia.it.workstation.browser.filecache.WebDavUploader;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

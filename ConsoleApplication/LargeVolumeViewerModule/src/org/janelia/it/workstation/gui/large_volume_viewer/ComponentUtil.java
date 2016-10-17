@@ -8,7 +8,8 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
+
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**

@@ -2,8 +2,9 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.browser.api.WorkstationEnvironment;
+import org.janelia.it.workstation.browser.api.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.workstation.gui.opengl.GLActor;
@@ -15,7 +16,6 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.gui.browser.util.SystemInfo;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

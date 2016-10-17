@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

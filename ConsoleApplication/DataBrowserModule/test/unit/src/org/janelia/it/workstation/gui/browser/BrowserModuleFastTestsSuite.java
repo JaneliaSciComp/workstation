@@ -1,11 +1,11 @@
 
-package org.janelia.it.workstation.gui.browser;
+package org.janelia.it.workstation.browser;
 
 
-import org.janelia.it.workstation.gui.browser.filecache.CachedFileTest;
-import org.janelia.it.workstation.gui.browser.filecache.LocalFileCacheTest;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavClientTest;
-import org.janelia.it.workstation.gui.browser.filecache.WebDavUploaderTest;
+import org.janelia.it.workstation.browser.filecache.CachedFileTest;
+import org.janelia.it.workstation.browser.filecache.LocalFileCacheTest;
+import org.janelia.it.workstation.browser.filecache.WebDavClientTest;
+import org.janelia.it.workstation.browser.filecache.WebDavUploaderTest;
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;

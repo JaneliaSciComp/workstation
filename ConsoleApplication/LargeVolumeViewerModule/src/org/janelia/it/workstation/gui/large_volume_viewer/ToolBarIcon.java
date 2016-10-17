@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.workstation.gui.browser.gui.support.Icons;
-
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.image.FilteredImageSource;
@@ -9,6 +7,8 @@ import java.awt.image.ImageFilter;
 import java.awt.image.RGBImageFilter;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+
+import org.janelia.it.workstation.browser.gui.support.Icons;
 
 // Non-interactive icon for tool bar; e.g. mouse and wheel mode header icons
 public class ToolBarIcon extends JLabel 

@@ -4,8 +4,8 @@ import javax.swing.Action;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.it.workstation.gui.browser.actions.CopyToClipboardAction;
-import org.janelia.it.workstation.gui.browser.gui.support.PopupContextMenu;
+import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
+import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronChooseColorAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportCurrentAction;

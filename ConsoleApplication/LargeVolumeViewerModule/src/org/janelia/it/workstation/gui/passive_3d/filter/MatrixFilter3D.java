@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.swing.ProgressMonitor;
 import org.janelia.it.jacs.model.util.ThreadUtils;
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.loader.FragmentSizeSetterAndFilter;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanMultiFileLoader;
@@ -17,7 +18,6 @@ import org.janelia.it.workstation.gui.alignment_board.loader.MaskSingleFileLoade
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

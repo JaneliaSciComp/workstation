@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import org.janelia.it.workstation.gui.browser.workers.BackgroundWorker;
+
+import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

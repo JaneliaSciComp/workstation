@@ -19,14 +19,14 @@
     </appender>
 
     <logger name="org.janelia.it.workstation" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.api.DomainModel" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.events.selection" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.components" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.gui.listview" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.gui.support" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.nodes" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.model" level="INFO"/>
-    <logger name="org.janelia.it.workstation.gui.browser.api.navigation" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.api.DomainModel" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.events.selection" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.components" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.gui.listview" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.gui.support" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.nodes" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.model" level="INFO"/>
+    <logger name="org.janelia.it.workstation.browser.api.navigation" level="INFO"/>
     <logger name="org.janelia.it.jacs.model.domain.support" level="INFO"/>
     
     <!-- Squelch the LOCI library -->

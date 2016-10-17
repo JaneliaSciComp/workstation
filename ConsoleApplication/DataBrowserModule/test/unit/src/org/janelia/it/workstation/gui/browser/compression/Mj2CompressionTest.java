@@ -4,11 +4,11 @@
  * and open the template in the editor.
  */
 
-package org.janelia.it.workstation.gui.browser.compression;
+package org.janelia.it.workstation.browser.compression;
 
 import java.io.File;
 
-import org.janelia.it.workstation.gui.browser.util.compression.Mj2ExecutableCompressionAlgorithm;
+import org.janelia.it.workstation.browser.util.compression.Mj2ExecutableCompressionAlgorithm;
 import org.junit.Assert;
 import org.junit.Test;
 

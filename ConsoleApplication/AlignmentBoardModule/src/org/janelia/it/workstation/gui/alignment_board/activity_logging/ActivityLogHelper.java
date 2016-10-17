@@ -15,12 +15,12 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardRefere
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
-import org.janelia.it.workstation.gui.browser.events.Events;
 
 /**
  * Helps capture events generated at the Alignment Board.

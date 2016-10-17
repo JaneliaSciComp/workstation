@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.geometric_search.search;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.DomainObjectTransferHandler;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

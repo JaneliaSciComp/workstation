@@ -1,9 +1,10 @@
-package org.janelia.it.workstation.gui.browser.api;
+package org.janelia.it.workstation.browser.api;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.gui.browser.ConsoleApp;
-import org.janelia.it.workstation.gui.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.LifecycleManager;
 
 /**
