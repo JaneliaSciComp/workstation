@@ -5,7 +5,6 @@ import java.util.Properties;
 
 import org.janelia.it.workstation.browser.gui.progress.ProgressMeterPanel;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
-import org.janelia.it.workstation.browser.components.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

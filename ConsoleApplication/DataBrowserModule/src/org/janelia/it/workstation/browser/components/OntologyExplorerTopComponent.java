@@ -68,7 +68,6 @@ import org.janelia.it.workstation.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.components.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

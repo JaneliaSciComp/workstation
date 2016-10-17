@@ -44,7 +44,6 @@ import org.janelia.it.workstation.browser.nodes.RootNode;
 import org.janelia.it.workstation.browser.nodes.WorkspaceNode;
 import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.janelia.it.workstation.browser.components.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -80,7 +79,7 @@ import org.slf4j.LoggerFactory;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = true, position = 500)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.DomainExplorerTopComponent")
+@ActionID(category = "Window", id = "org.janelia.it.workstation.browser.components.DomainExplorerTopComponent")
 @ActionReference(path = "Menu/Window/Core", position = 1)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_DomainExplorerAction",

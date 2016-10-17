@@ -8,7 +8,6 @@ import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionEvent;
 import org.janelia.it.workstation.browser.events.selection.PipelineResultSelectionEvent;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.it.workstation.browser.components.Bundle;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
