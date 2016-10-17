@@ -26,7 +26,7 @@ import org.openide.windows.TopComponent;
 )
 @TopComponent.Registration(mode = "explorer", openAtStartup = false, position = 500)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.DomainExplorerTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 1)
+@ActionReference(path = "Menu/Window/Legacy", position = 1)
 @TopComponent.OpenActionRegistration(   
         displayName = "#CTL_LegacyDomainExplorerAction",
         preferredID = DomainExplorerTopComponent.TC_NAME
