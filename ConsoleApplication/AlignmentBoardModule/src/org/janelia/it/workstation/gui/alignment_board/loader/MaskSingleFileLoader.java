@@ -1,17 +1,18 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
-import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
-import org.janelia.it.jacs.shared.img_3d_loader.ByteFrequencyDumper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import org.janelia.it.jacs.shared.img_3d_loader.ByteFrequencyDumper;
+import org.janelia.it.jacs.shared.utils.NotThreadSafe;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.

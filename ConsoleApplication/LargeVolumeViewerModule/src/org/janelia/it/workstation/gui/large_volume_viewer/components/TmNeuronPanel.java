@@ -8,11 +8,11 @@ import java.awt.Font;
 import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
- * Panel to show contents of a TmNeuron, by data only.  There are far better
+ * Panel to show contents of a TmNeuronMetadata, by data only.  There are far better
  * visualizations based on spatial interpretation of points.  This is only
  * to give a sanity check.
  * 
@@ -20,9 +20,9 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
  */
 public class TmNeuronPanel extends JPanel {
     private static final String LINE_SEP = System.getProperty("line.separator");
-    private TmNeuron neuron;
+    private TmNeuronMetadata neuron;
     private JTextArea textArea;
-    public TmNeuronPanel(TmNeuron neuron) {
+    public TmNeuronPanel(TmNeuronMetadata neuron) {
         this.neuron = neuron;
         initGUI();
     }
@@ -32,7 +32,7 @@ public class TmNeuronPanel extends JPanel {
         JLabel nameLabel = new JLabel(neuron.getName());
         StringBuilder bldr = new StringBuilder();
         bldr.append("ID: ").append(neuron.getId()).append(LINE_SEP);
-        bldr.append("Workspace ID: ").append(neuron.getWorkspaceId()).append(LINE_SEP);
+        bldr.append("Workspace ID: ").append(neuron.getWorkspaceRef().getTargetId()).append(LINE_SEP);
         bldr.append("Created: ").append(neuron.getCreationDate()).append(LINE_SEP);
         bldr.append("Owner: ").append(neuron.getOwnerKey()).append(LINE_SEP);
         bldr.append("Geo Annotations").append(LINE_SEP);

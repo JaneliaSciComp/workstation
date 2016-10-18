@@ -2,7 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
@@ -316,12 +316,20 @@ public class SkeletonActorModel {
         return -1;
     }
 
-    public void changeNeuronStyle(TmNeuron neuron, NeuronStyle style) {
+    public void changeNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) {
         if (neuron != null) {
             neuronStyles.put(neuron.getId(), style);
             mostRecentAnchorVersion--; // trick to trigger update
             updateAnchors();
         }
+    }
+
+    public void updateNeuronStyles(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        for (TmNeuronMetadata neuron: neuronStyleMap.keySet()) {
+            neuronStyles.put(neuron.getId(), neuronStyleMap.get(neuron));
+        }
+        mostRecentAnchorVersion--;
+        updateAnchors();
     }
 
     /**

@@ -9,21 +9,21 @@ import javax.swing.JOptionPane;
 import javax.swing.TransferHandler;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.integration.framework.domain.DropAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.DomainObjectTransferHandler;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.DomainObjectTransferHandler;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.nb_action.DropAcceptor;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class AlignmentBoardDomainObjectTransferHandler extends DomainObjectTrans
             
             // Find drop acceptors, and figure out which are compatible.
             ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();            
-            Collection<DropAcceptor> targets = saHelper.findHandler(support.getComponent(), DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+            Collection<DropAcceptor> targets = saHelper.findHandler((JComponent)support.getComponent(), DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
             final AlignmentBoardMgr alignmentBoardMgr = AlignmentBoardMgr.getInstance();                
             AlignmentBoardContext abContext = alignmentBoardMgr.getLayersPanel().getAlignmentBoardContext();
             //AlignmentBoard alignmentBoard = abContext.getAlignmentBoard();

@@ -1,21 +1,19 @@
 package org.janelia.it.workstation.gui.geometric_search.search;
 
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import java.awt.BorderLayout;
 
-import javax.swing.*;
+import javax.swing.JPanel;
 
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerController;
 import org.janelia.it.workstation.gui.geometric_search.viewer.VoxelViewerMainPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-
 
 /**
  * Created by murphys on 3/9/15.
  */
-public class GeometricSearchMainPanel extends JPanel implements Refreshable {
+public class GeometricSearchMainPanel extends JPanel {
 
     private final Logger logger = LoggerFactory.getLogger(GeometricSearchMainPanel.class);
 
@@ -32,14 +30,12 @@ public class GeometricSearchMainPanel extends JPanel implements Refreshable {
         add(menuPanel, BorderLayout.NORTH);
     }
 
-    @Override
     public void refresh() {
         if (viewerMain != null) {
             viewerMain.refresh();
         }
     }
 
-    @Override
     public void totalRefresh() {
         refresh();
     }
