@@ -99,22 +99,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public static final String TC_VERSION = "1.0";
     
     public static DomainExplorerTopComponent getInstance() {
-        TopComponent tc = WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-        if (DomainExplorerTopComponent.class.isAssignableFrom(tc.getClass())) {
-            return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
-        }
-        log.warn("Cannot cast class for existing DomainExplorerTopComponent: "+tc.getClass());
-        tc = new DomainExplorerTopComponent();
-        String modeName = "explorer";
-        Mode mode = WindowManager.getDefault().findMode(modeName);
-        if (mode!=null) {
-            mode.dockInto(tc);
-        }
-        else {
-            log.warn("No such mode found: "+modeName);
-        }
-        tc.open();
-        return (DomainExplorerTopComponent)tc;
+        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
     }
 
     private final CustomTreeToolbar toolbar;
