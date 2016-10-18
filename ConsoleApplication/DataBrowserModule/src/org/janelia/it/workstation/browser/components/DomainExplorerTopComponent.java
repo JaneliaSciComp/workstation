@@ -57,7 +57,9 @@ import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
+import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +99,22 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public static final String TC_VERSION = "1.0";
     
     public static DomainExplorerTopComponent getInstance() {
-        return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        TopComponent tc = WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        if (DomainExplorerTopComponent.class.isAssignableFrom(tc.getClass())) {
+            return (DomainExplorerTopComponent)WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        }
+        log.warn("Cannot cast class for existing DomainExplorerTopComponent: "+tc.getClass());
+        tc = new DomainExplorerTopComponent();
+        String modeName = "explorer";
+        Mode mode = WindowManager.getDefault().findMode(modeName);
+        if (mode!=null) {
+            mode.dockInto(tc);
+        }
+        else {
+            log.warn("No such mode found: "+modeName);
+        }
+        tc.open();
+        return (DomainExplorerTopComponent)tc;
     }
 
     private final CustomTreeToolbar toolbar;
