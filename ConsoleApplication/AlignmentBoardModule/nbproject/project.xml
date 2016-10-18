@@ -34,7 +34,7 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.workstation.browser</code-name-base>
+                    <code-name-base>org.janelia.it.workstation.gui.browser</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
