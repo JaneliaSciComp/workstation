@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.nb_action;
 
+import org.janelia.it.jacs.integration.framework.domain.Compatible;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**

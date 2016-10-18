@@ -16,6 +16,8 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
 import com.google.common.collect.Multiset;
+
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyleModel;
@@ -23,7 +25,6 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.workstation.gui.large_volume_viewer.shader.PathShader;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.tracing.SegmentIndex;

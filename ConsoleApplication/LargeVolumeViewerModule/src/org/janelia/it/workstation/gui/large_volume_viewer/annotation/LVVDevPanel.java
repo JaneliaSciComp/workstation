@@ -1,21 +1,23 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import groovy.ui.Console;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.ModelManagerTmModelAdapter;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-
-import javax.swing.*;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelManipulator;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.large_volume_viewer.model_adapter.DomainMgrTmModelAdapter;
 
 /**
  * this panel is only shown to me; I use it when I need to insert
@@ -26,6 +28,7 @@ import java.util.List;
  *
  * djo, 11/14
  */
+@SuppressWarnings("unused")
 public class LVVDevPanel extends JPanel {
     // these are useful to have around when testing:
     private AnnotationManager annotationMgr;
@@ -33,7 +36,7 @@ public class LVVDevPanel extends JPanel {
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator;
 
     // 2016: new neuron persistance
-    private ModelManagerTmModelAdapter modelAdapter;
+    private DomainMgrTmModelAdapter modelAdapter;
     private TmModelManipulator neuronManager;
 
     public LVVDevPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
@@ -42,7 +45,7 @@ public class LVVDevPanel extends JPanel {
         this.annotationModel = annotationModel;
         this.largeVolumeViewerTranslator = largeVolumeViewerTranslator;
 
-        modelAdapter = new ModelManagerTmModelAdapter();
+        modelAdapter = new DomainMgrTmModelAdapter();
         neuronManager = new TmModelManipulator(modelAdapter);
 
         setupUI();
@@ -54,9 +57,6 @@ public class LVVDevPanel extends JPanel {
 
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(new JLabel("Debug functions", JLabel.CENTER));
-
-
-        // remember, can't call modelMgr from GUI thread
 
         JPanel buttons = new JPanel();
         add(buttons);
@@ -73,20 +73,20 @@ public class LVVDevPanel extends JPanel {
                     @Override
                     protected void doStuff() throws Exception {
                         // remove the first root of the selected neurite from the annotation map
-                        TmNeuron neuron = annotationModel.getCurrentNeuron();
-                        if (neuron == null) {
+                        TmNeuronMetadata tmNeuronMetadata = annotationModel.getCurrentNeuron();
+                        if (tmNeuronMetadata == null) {
                             System.out.println("no selected neuron");
                             return;
                         }
-                        if (neuron.getRootAnnotationCount() == 0) {
+                        if (tmNeuronMetadata.getRootAnnotationCount() == 0) {
                             System.out.printf("neuron has no roots");
                             return;
                         }
 
-                        neuron.getGeoAnnotationMap().remove(neuron.getRootAnnotations().get(0).getId());
+                        tmNeuronMetadata.getGeoAnnotationMap().remove(tmNeuronMetadata.getRootAnnotations().get(0).getId());
                         // at this point, the data should be internally INconsistent,
                         //  which is what we want
-                        neuronManager.saveNeuronData(neuron);
+                        neuronManager.saveNeuronData(tmNeuronMetadata);
                     }
 
                     @Override
@@ -114,7 +114,7 @@ public class LVVDevPanel extends JPanel {
         testButton2.setAction(new AbstractAction("Add flat path") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+                final TmNeuronMetadata currentNeuron = annotationModel.getCurrentNeuron();
 
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
@@ -193,7 +193,6 @@ public class LVVDevPanel extends JPanel {
                 console.setVariable("annMgr", annotationMgr);
                 console.setVariable("annModel", annotationModel);
                 console.setVariable("lvvTrans", largeVolumeViewerTranslator);
-                console.setVariable("modelMgr", ModelMgr.getModelMgr());
                 console.run();
             }
         });

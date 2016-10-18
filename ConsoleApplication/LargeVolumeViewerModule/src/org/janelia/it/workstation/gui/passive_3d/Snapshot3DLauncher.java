@@ -14,11 +14,16 @@ import java.util.List;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JSeparator;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.ObservableCamera3d;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
@@ -27,8 +32,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.annotation.Annotations
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +199,7 @@ public class Snapshot3DLauncher {
             }
             final String labelText = labelTextForRaw3d( dimensions );
             final String frameTitle = "Fetching raw data";
-            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialObject().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
@@ -225,7 +228,7 @@ public class Snapshot3DLauncher {
                     dataUrl
             );            
 
-            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialEntity().getId());
+            activityLog.logSnapshotLaunch(labelText, annotationManager.getInitialObject().getId());
             makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
@@ -252,7 +255,7 @@ public class Snapshot3DLauncher {
     private void makeAndLaunch(final String frameTitle, MonitoredVolumeSource collector, final String labelText) {
         Snapshot3d snapshotViewer = Snapshot3d.getInstance();
         IndeterminateNoteProgressMonitor monitor =
-                new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), frameTitle, collector.getInfo());
+                new IndeterminateNoteProgressMonitor(ConsoleApp.getMainFrame(), frameTitle, collector.getInfo());
         snapshotViewer.setLoadProgressMonitor( monitor );
         establishColorControls( snapshotViewer );
         snapshotViewer.setLabelText( labelText );
@@ -285,18 +288,15 @@ public class Snapshot3DLauncher {
         String colorModelSerializeString = independentCM.asString();
         if ( annotationManager != null && colorModelSerializeString != null ) {
             logger.debug("Saving color model {}.", colorModelSerializeString);
-            annotationManager.savePreference(
-                    AnnotationsConstants.PREF_3D_COLOR_MODEL,
-                    colorModelSerializeString
-            );
+            annotationManager.saveColorModel3d(independentCM);
         }
     }
 
     private void setIndependentColorFromPrefs() {
-        if (annotationManager != null) {
-            String colorModelString = annotationManager.retrievePreference(AnnotationsConstants.PREF_3D_COLOR_MODEL);
-            if (colorModelString != null) {
-                independentCM.fromString(colorModelString);
+        if (getAnnotationManager() != null && getAnnotationManager().getCurrentWorkspace()!=null) {
+            TmColorModel colorModel = getAnnotationManager().getCurrentWorkspace().getColorModel3d();
+            if (colorModel!=null) {
+                ModelTranslation.updateColorModel(colorModel, independentCM);
             }
         }
     }

@@ -1,26 +1,53 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
-import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
-import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
-import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
-import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
-import org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
-import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
-import javax.swing.*;
+import javax.swing.AbstractButton;
+import javax.swing.ComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataListener;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
+
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.StateDrivenIconToggleButton;
+import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
+import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -110,8 +137,6 @@ public class AlignmentBoardControls {
     private RangeSlider xSlider;
     private RangeSlider ySlider;
     private RangeSlider zSlider;
-
-    private ABTargetedSearchDialog searchDialog;
 
     private ChangeListener selectionSliderListener;
 

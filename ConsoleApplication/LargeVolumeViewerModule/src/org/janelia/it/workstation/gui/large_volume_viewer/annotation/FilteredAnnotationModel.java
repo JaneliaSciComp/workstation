@@ -55,7 +55,7 @@ public class FilteredAnnotationModel extends AbstractTableModel {
     }
 
     // this needs to be done to get Date column to sort right
-    public Class getColumnClass(int column) {
+    public Class<?> getColumnClass(int column) {
         switch (column) {
             case 0:
                 // date

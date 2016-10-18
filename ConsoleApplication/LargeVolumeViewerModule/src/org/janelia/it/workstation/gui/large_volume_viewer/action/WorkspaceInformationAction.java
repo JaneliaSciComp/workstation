@@ -12,12 +12,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationGeometry;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.InterestingAnnotation;
 
 /**
  * this action opens a dialog in which information on the neurons
@@ -45,7 +42,7 @@ public class WorkspaceInformationAction extends AbstractAction {
             JScrollPane scrollPane = new JScrollPane(table);
 
             table.setFillsViewportHeight(true);
-            tableModel.addNeurons(annotationModel.getCurrentWorkspace().getNeuronList());
+            tableModel.addNeurons(annotationModel.getNeuronList());
 
             JOptionPane.showConfirmDialog(null,
                 scrollPane,
@@ -63,7 +60,7 @@ class InfoTableModel extends AbstractTableModel {
 
     private String[] columnNames = {"Neuron name", "# points", "# branches"};
 
-    private ArrayList<TmNeuron> neurons = new ArrayList<>();
+    private ArrayList<TmNeuronMetadata> neurons = new ArrayList<>();
 
     private int npoints;
     private int nbranches;
@@ -73,14 +70,14 @@ class InfoTableModel extends AbstractTableModel {
         this.annotationModel = annotationModel;
     }
 
-    public void addNeurons(List<TmNeuron> neuronList) {
+    public void addNeurons(List<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
 
         // do pre-calcs
         npoints = 0;
         nbranches = 0;
         branchMap.clear();
-        for (TmNeuron neuron: neurons) {
+        for (TmNeuronMetadata neuron: neurons) {
             Long neuronID = neuron.getId();
             npoints += neuron.getGeoAnnotationMap().size();
             branchMap.put(neuron.getId(), 0);

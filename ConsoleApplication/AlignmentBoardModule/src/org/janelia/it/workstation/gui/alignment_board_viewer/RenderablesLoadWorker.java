@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
@@ -25,7 +26,6 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

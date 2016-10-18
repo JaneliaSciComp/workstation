@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.shared.util;
 
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.options.OptionConstants;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +14,7 @@ import java.util.Properties;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@Deprecated
 public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);

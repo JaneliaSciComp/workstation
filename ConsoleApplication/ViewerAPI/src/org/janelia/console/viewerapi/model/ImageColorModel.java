@@ -127,7 +127,7 @@ public class ImageColorModel
         // System.out.println("color model string as set: " + asString());
 
     }
-    
+
     public void fireColorModelChanged() {
         for (ColorModelListener colorModelListener: colorModelListeners) {
             colorModelListener.colorModelChanged();

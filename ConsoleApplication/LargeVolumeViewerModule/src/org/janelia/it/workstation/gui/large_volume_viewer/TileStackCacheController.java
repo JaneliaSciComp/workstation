@@ -1,25 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-/**
- * Created by murphys on 11/6/2015.
- */
-import com.sun.media.jai.codec.ImageDecoder;
-import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
-import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
-import org.janelia.it.jacs.shared.lvv.*;
-import org.janelia.it.jacs.shared.geom.CoordinateAxis;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
@@ -27,12 +9,44 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.Map;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.media.jai.JAI;
+import javax.media.jai.ParameterBlockJAI;
+
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.ffmpeg.H5JLoader;
+import org.janelia.it.jacs.shared.ffmpeg.ImageStack;
+import org.janelia.it.jacs.shared.geom.CoordinateAxis;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.CoordinateToRawTransformFileSource;
+import org.janelia.it.jacs.shared.lvv.OctreeMetadataSniffer;
+import org.janelia.it.jacs.shared.lvv.SimpleFileCache;
+import org.janelia.it.jacs.shared.lvv.TextureData2d;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Created by murphys on 11/6/2015.
+ */
+import com.sun.media.jai.codec.ImageDecoder;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -118,7 +132,7 @@ public class TileStackCacheController {
         final OctreeMetadataSniffer octreeMetadataSniffer = new OctreeMetadataSniffer(topFolder, tileFormat, new CoordinateToRawTransformFileSource() {
             @Override
             public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
-                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+                return TiledMicroscopeDomainMgr.getDomainMgr().getCoordToRawTransform(filePath);
             }
         });
         octreeMetadataSniffer.setRemoteBasePath(remoteBasePath);
@@ -126,8 +140,8 @@ public class TileStackCacheController {
         sliceSize = octreeMetadataSniffer.getSliceSize(); // maybe 16-bit
         log.info("initFilesystemMetadata()");
         folderOpenTimestamp = new Date().getTime();
-        SessionMgr.getSessionMgr().logToolEvent(
-                LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
+        AccessManager.getAccessManager().logToolEvent(
+                LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID,
                 LTT_SESSION_CATEGORY_STRING,
                 new ActionString(remoteBasePath + ":" + folderOpenTimestamp)
         );
@@ -752,8 +766,8 @@ public class TileStackCacheController {
                 // slice loads.
                 File topFolder = tileStackCacheController.getTopFolder();
                 String specificPart = file.toString().substring(topFolder.toString().length());
-                SessionMgr.getSessionMgr().logToolEvent(
-                    LargeVolumeViewerTopComponentDynamic.LVV_LOGSTAMP_ID,
+                AccessManager.getAccessManager().logToolEvent(
+                    LargeVolumeViewerTopComponent.LVV_LOGSTAMP_ID,
                     LTT_CATEGORY_STRING,
                     new ActionString(
                             tileStackCacheController.getFolderOpenTimestamp() + ":" + specificPart + ":elapsed_ms="+elapsedMs

@@ -1,18 +1,22 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import java.io.File;
+
 /**
  * Created by murphys on 11/6/2015.
  */
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
-import org.janelia.it.jacs.shared.lvv.*;
 import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.CoordinateToRawTransformFileSource;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.jacs.shared.lvv.TextureData2d;
+import org.janelia.it.jacs.shared.lvv.TileIndex;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.util.Date;
 
 /**
  * Created by murphys on 10/22/2015.
@@ -51,7 +55,7 @@ public class TileStackOctreeLoadAdapter extends AbstractTextureLoadAdapter {
         blockTiffOctreeLoadAdapter.setTopFolderAndCoordinateSource(topFolder, new CoordinateToRawTransformFileSource() {
             @Override
             public CoordinateToRawTransform getCoordToRawTransform(String filePath) throws Exception {
-                return ModelMgr.getModelMgr().getCoordToRawTransform(filePath);
+                return TiledMicroscopeDomainMgr.getDomainMgr().getCoordToRawTransform(filePath);
             }
         });
         tileStackCacheController.setTileFormat(tileFormat);

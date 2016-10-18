@@ -1,5 +1,3 @@
-build
-**/build
-bin
-target
-class
+!/
+*.class
+

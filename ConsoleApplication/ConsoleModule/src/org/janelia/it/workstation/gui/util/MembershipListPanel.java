@@ -8,101 +8,42 @@ import java.awt.event.MouseEvent;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.ListCellRenderer;
 import javax.swing.ListSelectionModel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
- * A simple panel for adding/removing members from a list. 
+ * A simple panel for adding/removing members from a list.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MembershipListPanel<T> extends JPanel {
-
-    private static final Logger log = LoggerFactory.getLogger(MembershipListPanel.class);
+public abstract class MembershipListPanel<T> extends JPanel {
 
     private DefaultListModel<T> model;
     private JList<T> itemList;
-    private DefaultComboBoxModel<T> comboBoxModel;
-    private JPanel addPane;
-    private JComboBox<T> subjectCombobox;
+
     private boolean editable = true;
 
-    public MembershipListPanel(final String title, Class<? extends ListCellRenderer<T>> cellRendererClass) {
+    public MembershipListPanel(final String title) {
 
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(200, 200));
 
         this.model = new DefaultListModel<>();
         this.itemList = new JList<>(model);
+        itemList.setToolTipText("Right-click to remove");
         itemList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         itemList.setLayoutOrientation(JList.VERTICAL);
-
-        try {
-            itemList.setCellRenderer(cellRendererClass.newInstance());
-        }
-        catch (Exception e) {
-            log.error("Error setting cell renderer to new instance of " + cellRendererClass.getName(), e);
-        }
 
         itemList.setVisibleRowCount(-1);
         JScrollPane scrollPane = new JScrollPane(itemList);
         add(new JLabel(title), BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
-
-        this.comboBoxModel = new DefaultComboBoxModel<>();
-        this.subjectCombobox = new JComboBox<>(comboBoxModel);
-        subjectCombobox.setEditable(false);
-        subjectCombobox.setToolTipText("Choose a user or group");
-
-        try {
-            subjectCombobox.setRenderer(cellRendererClass.newInstance());
-        }
-        catch (Exception e) {
-            log.error("Error setting cell renderer to new instance of " + cellRendererClass.getName(), e);
-        }
-
-        subjectCombobox.setMaximumRowCount(20);
-        subjectCombobox.setPreferredSize(new Dimension(150, 20));
-
-        JButton addButton = new JButton("Add");
-        addButton.setToolTipText("Add the selected user or group");
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int i = subjectCombobox.getSelectedIndex();
-                T selected = (T) comboBoxModel.getSelectedItem();
-                if (selected != null) {
-                    addItemToList(selected);
-                    if (i<comboBoxModel.getSize()) {
-                        subjectCombobox.setSelectedIndex(i);
-                    }
-                    revalidate();
-                    repaint();
-                }
-            }
-        });
-
-        this.addPane = new JPanel();
-        addPane.setLayout(new BoxLayout(addPane, BoxLayout.LINE_AXIS));
-        addPane.add(subjectCombobox);
-        addPane.add(addButton);
-        addPane.add(Box.createHorizontalGlue());
-        add(addPane, BorderLayout.SOUTH);
 
         itemList.addMouseListener(new MouseHandler() {
             @Override
@@ -128,13 +69,16 @@ public class MembershipListPanel<T> extends JPanel {
         });
     }
 
+    public JList<T> getItemList() {
+        return itemList;
+    }
+
     public boolean isEditable() {
         return editable;
     }
 
     public void setEditable(boolean editable) {
         this.editable = editable;
-        addPane.setVisible(editable);
     }
 
     protected void showPopupMenu(MouseEvent e) {
@@ -149,7 +93,7 @@ public class MembershipListPanel<T> extends JPanel {
         if (!editable) {
             return null;
         }
-        
+
         JList target = (JList) e.getSource();
         if (target.getSelectedValue() == null) {
             return null;
@@ -182,9 +126,10 @@ public class MembershipListPanel<T> extends JPanel {
         }
     }
 
-    public void init(List<T> subjects) {
-        for (T subject : subjects) {
-            comboBoxModel.addElement(subject);
+    public void initItemsInList(List<T> items) {
+        model.removeAllElements();
+        for (T item : items) {
+            model.addElement(item);
         }
     }
 
@@ -194,16 +139,19 @@ public class MembershipListPanel<T> extends JPanel {
 
     public void addItemToList(T object) {
         model.addElement(object);
-        comboBoxModel.removeElement(object);
+        membershipChanged();
     }
 
     public void removeItemFromList(T object) {
         model.removeElement(object);
-        // TODO: resort the combo box
-        comboBoxModel.addElement(object);
+        membershipChanged();
     }
 
     public List<T> getItemsInList() {
         return Collections.list(model.elements());
     }
+
+    public void membershipChanged() {
+    }
+
 }

@@ -12,83 +12,84 @@ import javax.swing.JButton;
 // Tool bar button used to invoke an Action
 // Automatically repeats if button is held down.
 public class ToolButton extends JButton
-implements MouseListener, ActionListener
-{
-	private static final long serialVersionUID = 1L;
-	private int autoRepeatInitialDelay = 300; // milliseconds
-	private int autoRepeatDelay = 30; // milliseconds
-	private Timer autoRepeatTimer = new Timer(autoRepeatDelay, this);
+        implements MouseListener, ActionListener {
 
-	public ToolButton(Action action)
-	{
-		super(action);
-		init();
-	}
-	
-	public int getAutoRepeatInitialDelay() {
-		return autoRepeatInitialDelay;
-	}
+    private static final long serialVersionUID = 1L;
+    private int autoRepeatInitialDelay = 300; // milliseconds
+    private int autoRepeatDelay = 30; // milliseconds
+    private Timer autoRepeatTimer = new Timer(autoRepeatDelay, this);
 
-	public int getAutoRepeatDelay() {
-		return autoRepeatDelay;
-	}
+    public ToolButton(Action action) {
+        super(action);
+        init();
+    }
 
-	public void setAutoRepeatInitialDelay(int autoRepeatInitialDelay) {
-		this.autoRepeatInitialDelay = autoRepeatInitialDelay;
-		autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
-	}
+    public int getAutoRepeatInitialDelay() {
+        return autoRepeatInitialDelay;
+    }
 
-	public void setAutoRepeatDelay(int autoRepeatDelay) {
-		this.autoRepeatDelay = autoRepeatDelay;
-		autoRepeatTimer.setDelay(autoRepeatDelay);
-	}
+    public int getAutoRepeatDelay() {
+        return autoRepeatDelay;
+    }
 
-	protected void init()
-	{
-		addMouseListener(this);
-		if (autoRepeatTimer != null) {
-			autoRepeatTimer.setRepeats(true);
-			autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
-		}
-		setHideActionText(true); // Want icon only; no text
-		setRolloverEnabled(true); // No effect on Mac?
-		setFocusable(false);
-		setAlignmentX(CENTER_ALIGNMENT); // so it lines up with (centered) zoom slider
-		setAlignmentY(CENTER_ALIGNMENT);
-		setMargin(new Insets(0,0,0,0)); // keep the button small
-		setMaximumSize(getPreferredSize()); // does this help?
-	}
-	
-	@Override
-	public void updateUI()
-	{
-		super.updateUI();
-		init();
-	}
+    public void setAutoRepeatInitialDelay(int autoRepeatInitialDelay) {
+        this.autoRepeatInitialDelay = autoRepeatInitialDelay;
+        autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
+    }
 
-	@Override
-	public void mouseClicked(MouseEvent arg0) {}
+    public void setAutoRepeatDelay(int autoRepeatDelay) {
+        this.autoRepeatDelay = autoRepeatDelay;
+        autoRepeatTimer.setDelay(autoRepeatDelay);
+    }
 
-	@Override
-	public void mouseEntered(MouseEvent arg0) {}
+    protected void init() {
+        addMouseListener(this);
+        if (autoRepeatTimer != null) {
+            autoRepeatTimer.setRepeats(true);
+            autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
+        }
+        setHideActionText(true); // Want icon only; no text
+        setRolloverEnabled(true); // No effect on Mac?
+        setFocusable(false);
+        setAlignmentX(CENTER_ALIGNMENT); // so it lines up with (centered) zoom slider
+        setAlignmentY(CENTER_ALIGNMENT);
+        setMargin(new Insets(0, 0, 0, 0)); // keep the button small
+        setMaximumSize(getPreferredSize()); // does this help?
+    }
 
-	@Override
-	public void mouseExited(MouseEvent arg0) {}
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        init();
+    }
 
-	@Override
-	public void mousePressed(MouseEvent event) {
-		if (autoRepeatDelay > 0)
-			autoRepeatTimer.restart();
-	}
-	
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		autoRepeatTimer.stop();
-	}
+    @Override
+    public void mouseClicked(MouseEvent arg0) {
+    }
 
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		// Repeat action while button is held down
-		getAction().actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
-	}
+    @Override
+    public void mouseEntered(MouseEvent arg0) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent arg0) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent event) {
+        if (autoRepeatDelay > 0) {
+            autoRepeatTimer.restart();
+        }
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent arg0) {
+        autoRepeatTimer.stop();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent arg0) {
+        // Repeat action while button is held down
+        getAction().actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+    }
 }

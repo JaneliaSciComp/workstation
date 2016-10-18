@@ -1,22 +1,25 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.geometric_search.viewer.dataset.Dataset;
+import java.awt.BorderLayout;
+import java.awt.Color;
+
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.TransferHandler;
+
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.BackgroundColorChangeEvent;
-import org.janelia.it.workstation.gui.geometric_search.viewer.event.BlendMethodChangeEvent;
 import org.janelia.it.workstation.gui.geometric_search.viewer.event.EventManager;
-import org.janelia.it.workstation.gui.geometric_search.viewer.gui.*;
-import org.janelia.it.workstation.gui.geometric_search.viewer.renderable.Renderable;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ActorPanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.DatasetPanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.RenderablePanel;
+import org.janelia.it.workstation.gui.geometric_search.viewer.gui.ViewerControlPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
 
 /**
  * Created by murphys on 7/29/2015.
  */
-public class VoxelViewerMainPanel extends JPanel implements Refreshable {
+public class VoxelViewerMainPanel extends JPanel {
 
     private final Logger logger = LoggerFactory.getLogger(VoxelViewerMainPanel.class);
 
@@ -49,7 +52,6 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         controller = new VoxelViewerBasicController();
     }
 
-    @Override
     public void refresh() {
 
         if ( viewer == null ) {
@@ -59,7 +61,6 @@ public class VoxelViewerMainPanel extends JPanel implements Refreshable {
         viewer.refresh();
     }
 
-    @Override
     public void totalRefresh() {
         refresh();
     }

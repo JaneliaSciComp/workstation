@@ -1,8 +1,7 @@
 package org.janelia.it.workstation.model.domain;
 
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Wraps Entity objects in domain-specific EntityWrapper objects.
@@ -23,7 +22,7 @@ public class EntityWrapperFactory {
             return new Neuron(rootedEntity);
         }
         else if (EntityConstants.TYPE_ALIGNED_ITEM.equals(type)) {
-            return new AlignedItem(rootedEntity);
+//            return new AlignedItem(rootedEntity);
         }
         else if (EntityConstants.TYPE_COMPARTMENT_SET.equals(type)) {
             return new CompartmentSet(rootedEntity);

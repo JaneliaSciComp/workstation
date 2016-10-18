@@ -28,6 +28,7 @@ import javax.swing.JSeparator;
 import javax.swing.KeyStroke;
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
@@ -46,12 +47,10 @@ import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
-import org.janelia.it.workstation.gui.framework.actions.EditLVVSamplePathActionListener;
 import org.janelia.it.workstation.gui.framework.actions.GoToRelatedEntityAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
-import org.janelia.it.workstation.gui.framework.actions.ShowLVVWorkspaceInfoActionListener;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
@@ -61,7 +60,6 @@ import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
@@ -161,8 +159,8 @@ public class EntityContextMenu extends JPopupMenu {
         for ( JComponent item: getOpenForContextItems() ) {
             add(item);
         }
-        add(getEditLVVSamplePath());
-        add(getShowLVVWorkspaceInfo());
+//        add(getEditLVVSamplePath());
+//        add(getShowLVVWorkspaceInfo());
         if (getWrapEntityItem() != null) {
             for (JMenuItem wrapItem: getWrapEntityItem()) {
                 add(wrapItem);
@@ -1281,45 +1279,45 @@ public class EntityContextMenu extends JPopupMenu {
         return actionMenuItem;
     }
 
-    protected JMenuItem getEditLVVSamplePath() {
-        if (multiple)
-            return null;
-        final String entityType = rootedEntity.getEntity().getEntityTypeName();
-        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            JMenuItem menuItem = new JMenuItem("  Edit sample path");
-            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
-            return menuItem;
-        } else {
-            return null;
-        }
-    }
+//    protected JMenuItem getEditLVVSamplePath() {
+//        if (multiple)
+//            return null;
+//        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+//        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+//            JMenuItem menuItem = new JMenuItem("  Edit sample path");
+//            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+//            return menuItem;
+//        } else {
+//            return null;
+//        }
+//    }
 
-    protected JMenuItem getShowLVVWorkspaceInfo() {
-        if (multiple)
-            return null;
-        final String entityType = rootedEntity.getEntity().getEntityTypeName();
-        if (entityType.equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            JMenuItem menuItem = new JMenuItem("  Show sample info");
-            menuItem.addActionListener(new ShowLVVWorkspaceInfoActionListener(rootedEntity));
-            return menuItem;
-        } else {
-            return null;
-        }
-    }
+//    protected JMenuItem getShowLVVWorkspaceInfo() {
+//        if (multiple)
+//            return null;
+//        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+//        if (entityType.equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+//            JMenuItem menuItem = new JMenuItem("  Show sample info");
+//            menuItem.addActionListener(new ShowLVVWorkspaceInfoActionListener(rootedEntity));
+//            return menuItem;
+//        } else {
+//            return null;
+//        }
+//    }
 
-    protected JMenuItem getRemoteSWCLoad() {
-        if (multiple) {
-            return null;
-        }
-        final String entityType = rootedEntity.getEntity().getEntityTypeName();
-        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            JMenuItem menuItem = new JMenuItem("  ????");
-            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
-            return menuItem;
-        } else {
-            return null;
-        }
-    }
+//    protected JMenuItem getRemoteSWCLoad() {
+//        if (multiple) {
+//            return null;
+//        }
+//        final String entityType = rootedEntity.getEntity().getEntityTypeName();
+//        if (entityType.equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+//            JMenuItem menuItem = new JMenuItem("  ????");
+//            menuItem.addActionListener(new EditLVVSamplePathActionListener(rootedEntity));
+//            return menuItem;
+//        } else {
+//            return null;
+//        }
+//    }
 
     @Override
     public JMenuItem add(JMenuItem menuItem) {

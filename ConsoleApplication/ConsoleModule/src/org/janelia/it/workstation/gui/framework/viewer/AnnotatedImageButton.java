@@ -1,8 +1,18 @@
 
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import java.awt.*;
-import java.awt.dnd.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.MouseDragGestureRecognizer;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -10,8 +20,17 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.TransferHandler;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -21,11 +40,6 @@ import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an

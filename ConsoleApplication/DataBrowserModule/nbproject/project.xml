@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>org.janelia.it.workstation.gui.browser</code-name-base>
+            <code-name-base>org.janelia.it.workstation.browser</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
@@ -34,12 +34,12 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.workstation.nb_action</code-name-base>
+                    <code-name-base>org.janelia.it.workstation.gui.viewer3d</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>5.2</specification-version>
+                        <specification-version>1.45</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -49,6 +49,15 @@
                     <run-dependency>
                         <release-version>1</release-version>
                         <specification-version>1.46</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.api.progress</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <release-version>1</release-version>
+                        <specification-version>1.35.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -94,6 +103,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.filesystems</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>8.8.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.modules</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -134,19 +151,76 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
+            <test-dependencies>
+                <test-type>
+                    <name>unit</name>
+                    <test-dependency>
+                        <code-name-base>org.netbeans.libs.junit4</code-name-base>
+                        <compile-dependency/>
+                    </test-dependency>
+                    <test-dependency>
+                        <code-name-base>org.netbeans.modules.nbjunit</code-name-base>
+                        <recursive/>
+                        <compile-dependency/>
+                    </test-dependency>
+                </test-type>
+            </test-dependencies>
             <public-packages>
-                <package>org.janelia.it.workstation.gui.browser.api</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.baseball_card</package>
-                <package>org.janelia.it.workstation.gui.browser.events</package>
-                <package>org.janelia.it.workstation.gui.browser.events.selection</package>
-                <package>org.janelia.it.workstation.gui.browser.exchange</package>
-                <package>org.janelia.it.workstation.gui.browser.flavors</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.dialogs</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.listview.icongrid</package>
-                <package>org.janelia.it.workstation.gui.browser.gui.support</package>
-                <package>org.janelia.it.workstation.gui.browser.nb_action</package>
-                <package>org.janelia.it.workstation.gui.browser.nodes</package>
+                <package>org.janelia.it.FlyWorkstation.ws</package>
+                <package>org.janelia.it.workstation.browser</package>
+                <package>org.janelia.it.workstation.browser.actions</package>
+                <package>org.janelia.it.workstation.browser.activity_logging</package>
+                <package>org.janelia.it.workstation.browser.api</package>
+                <package>org.janelia.it.workstation.browser.api.exceptions</package>
+                <package>org.janelia.it.workstation.browser.api.facade.impl.ejb</package>
+                <package>org.janelia.it.workstation.browser.api.facade.impl.rest</package>
+                <package>org.janelia.it.workstation.browser.api.facade.interfaces</package>
+                <package>org.janelia.it.workstation.browser.api.lifecycle</package>
+                <package>org.janelia.it.workstation.browser.api.services</package>
+                <package>org.janelia.it.workstation.browser.api.state</package>
+                <package>org.janelia.it.workstation.browser.components</package>
+                <package>org.janelia.it.workstation.browser.events</package>
+                <package>org.janelia.it.workstation.browser.events.lifecycle</package>
+                <package>org.janelia.it.workstation.browser.events.model</package>
+                <package>org.janelia.it.workstation.browser.events.prefs</package>
+                <package>org.janelia.it.workstation.browser.events.selection</package>
+                <package>org.janelia.it.workstation.browser.events.workers</package>
+                <package>org.janelia.it.workstation.browser.filecache</package>
+                <package>org.janelia.it.workstation.browser.flavors</package>
+                <package>org.janelia.it.workstation.browser.gui.dialogs</package>
+                <package>org.janelia.it.workstation.browser.gui.editor</package>
+                <package>org.janelia.it.workstation.browser.gui.find</package>
+                <package>org.janelia.it.workstation.browser.gui.hud</package>
+                <package>org.janelia.it.workstation.browser.gui.inspector</package>
+                <package>org.janelia.it.workstation.browser.gui.keybind</package>
+                <package>org.janelia.it.workstation.browser.gui.listview</package>
+                <package>org.janelia.it.workstation.browser.gui.listview.icongrid</package>
+                <package>org.janelia.it.workstation.browser.gui.listview.table</package>
+                <package>org.janelia.it.workstation.browser.gui.ontology</package>
+                <package>org.janelia.it.workstation.browser.gui.options</package>
+                <package>org.janelia.it.workstation.browser.gui.progress</package>
+                <package>org.janelia.it.workstation.browser.gui.support</package>
+                <package>org.janelia.it.workstation.browser.gui.support.panels</package>
+                <package>org.janelia.it.workstation.browser.gui.table</package>
+                <package>org.janelia.it.workstation.browser.gui.tree</package>
+                <package>org.janelia.it.workstation.browser.lifecycle</package>
+                <package>org.janelia.it.workstation.browser.model</package>
+                <package>org.janelia.it.workstation.browser.model.keybind</package>
+                <package>org.janelia.it.workstation.browser.model.search</package>
+                <package>org.janelia.it.workstation.browser.nb_action</package>
+                <package>org.janelia.it.workstation.browser.nodes</package>
+                <package>org.janelia.it.workstation.browser.sample_trimming</package>
+                <package>org.janelia.it.workstation.browser.tools</package>
+                <package>org.janelia.it.workstation.browser.tools.preferences</package>
+                <package>org.janelia.it.workstation.browser.util</package>
+                <package>org.janelia.it.workstation.browser.web</package>
+                <package>org.janelia.it.workstation.browser.workers</package>
+                <package>org.janelia.it.workstation.browser.ws</package>
             </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/jbossall-client.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jbossall-client.jar</binary-origin>
+            </class-path-extension>
         </data>
     </configuration>
 </project>

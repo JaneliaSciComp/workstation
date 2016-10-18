@@ -3,15 +3,13 @@ package org.janelia.it.workstation.model.domain;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.TreeSet;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.model.viewer.MaskedVolume;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,10 +47,10 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         return null;
     }
 
-    @Override
-    public MaskedVolume getMaskedVolume() {
-        return null;
-    }
+//    @Override
+//    public MaskedVolume getMaskedVolume() {
+//        return null;
+//    }
 
     @Override
     public void loadContextualizedChildren(AlignmentContext targetSpace) throws Exception {

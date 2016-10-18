@@ -34,7 +34,7 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.workstation.gui.browser</code-name-base>
+                    <code-name-base>org.janelia.it.workstation.browser</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -43,12 +43,12 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.workstation.nb_action</code-name-base>
+                    <code-name-base>org.janelia.it.workstation.gui.viewer3d</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>5.2</specification-version>
+                        <specification-version>1.45</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>

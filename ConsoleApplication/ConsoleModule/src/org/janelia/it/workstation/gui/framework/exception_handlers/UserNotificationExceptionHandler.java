@@ -155,7 +155,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
                     "Problem Description: ");
             try {
                 StringBuilder sb = new StringBuilder();
-                sb.append("\nApplication: ").append(SessionMgr.getSessionMgr().getApplicationName()).append(" v").append(SessionMgr.getSessionMgr().getApplicationVersion());
+//                sb.append("\nApplication: ").append(SessionMgr.getSessionMgr().getApplicationName()).append(" v").append(SessionMgr.getSessionMgr().getApplicationVersion());
                 sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
                 sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
                 sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());

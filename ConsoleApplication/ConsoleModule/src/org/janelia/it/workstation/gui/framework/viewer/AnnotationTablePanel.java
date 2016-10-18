@@ -1,12 +1,12 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.Utils;

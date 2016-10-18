@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
+import org.janelia.it.jacs.shared.utils.NotThreadSafe;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
 
 /**
  * Created with IntelliJ IDEA.

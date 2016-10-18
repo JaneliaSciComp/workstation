@@ -19,7 +19,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
+import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntityRootComparator;
@@ -31,12 +31,10 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.gui.options.OptionConstants;
 import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,6 @@ public class Browser implements Cloneable {
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
-    private MaskSearchDialog arbitraryMaskSearchDialog;
 
     private List<String> searchHistory;
 
@@ -108,8 +105,6 @@ public class Browser implements Cloneable {
 
         log.info("Initializing browser...");
 
-        // TODO: delete this eventually, when we have cleaned up everyone's preferences
-        SessionMgr.getSessionMgr().setModelProperty(Browser.ADD_TO_ROOT_HISTORY, null);
 
         this.browserModel = browserModel;
 
@@ -180,24 +175,6 @@ public class Browser implements Cloneable {
 
         log.debug("Workspaces loaded. Initializing dialogs...");
 
-        SimpleWorker worker = new SimpleWorker() {
-
-            @Override
-            protected void doStuff() throws Exception {
-            }
-
-            @Override
-            protected void hadSuccess() {
-                arbitraryMaskSearchDialog = new MaskSearchDialog();
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-
-        worker.execute();
     }
 
     public JComponent getMainComponent() {
@@ -298,10 +275,6 @@ public class Browser implements Cloneable {
         statusBar.useFreeMemoryViewer(false);
     }
 
-    public MaskSearchDialog getMaskSearchDialog() {
-        return arbitraryMaskSearchDialog;
-    }
-
     public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
         toolsMenuModifier.rebuildMenu();
@@ -324,13 +297,13 @@ public class Browser implements Cloneable {
         public void browserClosing() {
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
 
-            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+//            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+//
+//            if (position == null) {
+//                position = new BrowserPosition();
+//            }
 
-            if (position == null) {
-                position = new BrowserPosition();
-            }
-
-            SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
+//            SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
             SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchHistory);
 
         }
@@ -374,29 +347,29 @@ public class Browser implements Cloneable {
         entityDetailsOutline.showNothing();
     }
 
-    public BrowserPosition resetBrowserPosition() {
-
-        BrowserPosition position = new BrowserPosition();
-        position.setHorizontalLeftDividerLocation(400);
-        position.setHorizontalRightDividerLocation(1100);
-        position.setVerticalDividerLocation(800);
-
-        int offsetY = 0;
-        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
-        if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
-            offsetY = 20;
-        }
-
-        position.setBrowserLocation(new Point(0, offsetY));
-
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        position.setScreenSize(screenSize);
-        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height - offsetY));
-
-        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-
-        return position;
-    }
+//    public BrowserPosition resetBrowserPosition() {
+//
+//        BrowserPosition position = new BrowserPosition();
+//        position.setHorizontalLeftDividerLocation(400);
+//        position.setHorizontalRightDividerLocation(1100);
+//        position.setVerticalDividerLocation(800);
+//
+//        int offsetY = 0;
+//        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(OptionConstants.DISPLAY_LOOK_AND_FEEL);
+//        if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
+//            offsetY = 20;
+//        }
+//
+//        position.setBrowserLocation(new Point(0, offsetY));
+//
+//        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+//        position.setScreenSize(screenSize);
+//        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height - offsetY));
+//
+//        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
+//
+//        return position;
+//    }
 
     public boolean isViewersLinked() {
         return viewerManager.isViewersLinked();

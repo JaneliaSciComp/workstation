@@ -1,25 +1,26 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
+import java.nio.ByteOrder;
+import java.util.Collection;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
+
+import org.janelia.it.jacs.shared.utils.NotThreadSafe;
+import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
+import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI;
-import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import java.nio.ByteOrder;
-import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.

@@ -1,17 +1,15 @@
 package org.janelia.it.workstation.gui.top_component;
 
-import java.awt.BorderLayout;
 import java.util.Properties;
 
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import javax.swing.JTextArea;
+
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,21 +58,12 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
      */
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        jPanel1 = new javax.swing.JPanel();
-
-        jPanel1.setLayout(new java.awt.BorderLayout());
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        setLayout(new java.awt.BorderLayout());
+        JTextArea area = new JTextArea("The Legacy Data Explorer is no longer available. Please use Window->Core->Data Inspector instead.");
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        add(area);
+        
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -83,19 +72,6 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
     
     @Override
     public void componentOpened() {
-        final Browser browser = SessionMgr.getBrowser();
-        if (browser == null) {
-            throw new IllegalStateException("Failed to obtain browser object for component.");
-        }
-        final EntityOutline entityOutline = browser.getEntityOutline();
-        if (entityOutline == null) {
-            throw new IllegalStateException("No entity outline located.");
-        }
-        else {
-            log.debug("Activating entity outline");
-            entityOutline.activate();
-            jPanel1.add(entityOutline, BorderLayout.CENTER);
-        }
     }
 
     @Override

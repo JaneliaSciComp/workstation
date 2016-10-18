@@ -1,5 +1,18 @@
 package org.janelia.it.workstation.shared.workers;
 
+import java.awt.Component;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.locks.Lock;
+
+import javax.swing.JOptionPane;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -14,20 +27,12 @@ import org.janelia.it.workstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.locks.Lock;
-
 /**
  * Worker for downloading a sample image (or set of split channel images) in a specific format.
  * The specified extension is used to determine whether conversion is necessary and when necessary,
  * if conversion can be managed locally or remotely (via task submission).
  */
+@Deprecated
 public class SampleDownloadWorker extends SimpleWorker {
 
     private static final Logger log = LoggerFactory.getLogger(SampleDownloadWorker.class);

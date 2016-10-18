@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.awt.*;
 
+import org.janelia.it.jacs.shared.utils.ColorUtils;
+
 /**
  * This class encapsulates the visual draw style for a particular neuron;
  * we'll start with color and visibility, and perhaps later add other
@@ -50,6 +52,10 @@ public class NeuronStyle {
         return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], true);
     }
 
+    public static NeuronStyle getStyleForNeuron(Long neuronID, boolean visible) {
+        return new NeuronStyle(neuronColors[(int) (neuronID % neuronColors.length)], visible);
+    }
+
     /**
      * given a json object, return a NeuronStyle; expected to
      * be in form {"color", [R, G, B in 0-255], "visibility": true/false}
@@ -74,6 +80,11 @@ public class NeuronStyle {
         boolean visibility = visibilityNode.asBoolean();
 
         return new NeuronStyle(color, visibility);
+    }
+
+    public NeuronStyle() {
+        setColor(NeuronStyle.neuronColors[2]);
+        this.visible = true;
     }
 
     public NeuronStyle(Color color, boolean visible) {

@@ -8,6 +8,7 @@ import java.util.*;
  * At startup, read from a default file, then add overrides files,
  * command line params, etc.
  */
+@Deprecated
 public class PropertyConfigurator {
     private static Properties props = new Properties();
     private static final String DEFAULT_PROPS_FILE = "resource.server.shared.ServerConfig";

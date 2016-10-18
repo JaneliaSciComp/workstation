@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh;
 
 import java.io.File;
@@ -16,7 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.mesh_loader.BufferPackager;
 import org.janelia.it.jacs.shared.mesh_loader.NormalCompositor;
 import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;

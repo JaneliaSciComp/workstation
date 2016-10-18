@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
+import org.janelia.it.jacs.integration.framework.domain.DropAcceptor;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -11,8 +13,6 @@ import org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.workstation.gui.framework.viewer.Viewer;
 import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.nb_action.DropAcceptor;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
