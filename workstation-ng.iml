@@ -2839,18 +2839,18 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Gradle: lz4-1.1.1-sources">
+      <library name="Gradle: lz4-1.3.0-sources">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/common/LZ4/lz4-1.1.1-sources.jar!/" />
+          <root url="jar://$MODULE_DIR$/common/LZ4/lz4-1.3.0-sources.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="Gradle: lz4-1.1.1">
+      <library name="Gradle: lz4-1.3.0">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/common/LZ4/lz4-1.1.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/common/LZ4/lz4-1.3.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
