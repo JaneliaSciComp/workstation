@@ -126,11 +126,13 @@ public class TetVolumeMaterial extends BasicMaterial
 
     @Override
     public void dispose(GL3 gl) {
-        super.dispose(gl);
         gl.glDeleteTextures(1, new int[] {volumeTextureHandle}, 0);
         volumeTextureHandle = 0;
-        gl.glDeleteBuffers(pbos.capacity(), pbos);
-        pbos = IntBuffer.allocate(0);
+        if ((pbos != null) && (pbos.capacity() > 0)) {
+            gl.glDeleteBuffers(pbos.capacity(), pbos);
+            pbos = IntBuffer.allocate(0);
+        }
+        super.dispose(gl);
     }
     
     @Override

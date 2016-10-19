@@ -301,6 +301,7 @@ implements DepthSlabClipper
     public void dispose(GL3 gl) {
         colorMapTexture.dispose(gl);
         shader.dispose(gl);
+        super.dispose(gl);
     }
 
     public ImageColorModel getBrightnessModel() {
