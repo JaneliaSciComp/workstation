@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>org.janelia.it.workstation.browser</code-name-base>
+            <code-name-base>org.janelia.it.workstation.gui.browser</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
@@ -61,6 +61,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.netbeans.modules.autoupdate.services</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.42.2</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.modules.options.api</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -76,6 +84,14 @@
                     <run-dependency>
                         <release-version>1</release-version>
                         <specification-version>1.42.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.swing.plaf</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.34.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
