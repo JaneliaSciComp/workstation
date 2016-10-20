@@ -11,14 +11,13 @@ import javax.media.opengl.GL2;
 
 import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,7 +89,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         };        
         
         progressMonitor.setNote("Reading volume data.");
-        Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions);
+        Map<Integer,byte[]> byteBuffers = TiledMicroscopeDomainMgr.getDomainMgr().getTextureBytes(baseDirectoryPath, voxelizedCoords, dimensions);
         
         progressMonitor.setNote("Loading volume data.");        
         TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();

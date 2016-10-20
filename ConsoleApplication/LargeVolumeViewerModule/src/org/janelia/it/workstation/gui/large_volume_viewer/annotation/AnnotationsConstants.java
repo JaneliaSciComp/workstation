@@ -33,6 +33,10 @@ public class AnnotationsConstants {
     // refine placed points automatically?
     public static final String PREF_AUTOMATIC_POINT_REFINEMENT = "point-refinement-automatic-enabled";
 
+    // stores neuron tag map
+    public static final String PREF_NEURON_TAG_MAP = "neuron-tag-map";
+
+
     // ---------- annotation appearance ----------
     // this color is pale yellow-green (Christopher's original color)
     public static final Color DEFAULT_ANNOTATION_COLOR_GLOBAL = new Color(0.8f, 1.0f, 0.3f);

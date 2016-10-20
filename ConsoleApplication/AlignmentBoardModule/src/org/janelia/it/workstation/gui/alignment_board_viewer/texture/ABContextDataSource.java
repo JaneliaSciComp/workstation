@@ -7,6 +7,7 @@ import org.janelia.it.workstation.gui.alignment_board.util.ABNeuronFragment;
 import org.janelia.it.workstation.gui.alignment_board.util.ABSample;
 import org.janelia.it.workstation.gui.alignment_board.util.RenderUtils;
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
+import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
@@ -18,8 +19,6 @@ import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

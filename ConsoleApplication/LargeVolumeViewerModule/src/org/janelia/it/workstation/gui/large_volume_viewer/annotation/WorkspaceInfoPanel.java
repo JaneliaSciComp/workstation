@@ -1,21 +1,27 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import javax.swing.*;
+import java.awt.Dimension;
 
-import java.awt.*;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
+
 
 /**
  * this panel shows info on the selected workspace
  *
  * djo, 6/13
  */
-public class WorkspaceInfoPanel extends JPanel 
-{
+public class WorkspaceInfoPanel extends JPanel {
+
+    private JLabel titleLabel;
     private JLabel workspaceNameLabel;
     private JLabel sampleNameLabel;
 
@@ -26,8 +32,10 @@ public class WorkspaceInfoPanel extends JPanel
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
+        titleLabel = new JLabel("Workspace", JLabel.LEADING);
+        
         // workspace information; show name, whatever attributes
-        add(new JLabel("Workspace", JLabel.LEADING));
+        add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
 
         workspaceNameLabel = new JLabel("", JLabel.LEADING);
@@ -38,8 +46,6 @@ public class WorkspaceInfoPanel extends JPanel
 
         loadWorkspace(null);
     }
-
-
 
     /**
      * populate the UI with info from the input workspace
@@ -54,9 +60,9 @@ public class WorkspaceInfoPanel extends JPanel
     private void updateMetaData(final TmWorkspace workspace) {
         if (workspace == null) {
             setWorkspaceName("(no workspace)");
-            // sampleNameLabel.setText("Sample:");
             setSampleName("");
-        } else {
+        } 
+        else {
             setWorkspaceName(workspace.getName());
 
             SimpleWorker labelFiller = new SimpleWorker() {
@@ -64,24 +70,34 @@ public class WorkspaceInfoPanel extends JPanel
 
                 @Override
                 protected void doStuff() throws Exception {
-                    sampleName = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID()).getName();
+                    sampleName = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace).getName();
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    // sampleNameLabel.setText("Sample: " + sampleName);
+                    if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                        setTitle("Workspace");
+                    }
+                    else {
+                        setTitle("Workspace (read-only)");
+                    }
+                    
                     setSampleName(sampleName);
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
             };
             labelFiller.execute();
         }
     }
 
+    private void setTitle(String title) {
+        titleLabel.setText(title);
+    }
+    
     private void setSampleName(String name) {
         // if name is too wide, it messes up our panel width; tooltip has full name
         sampleNameLabel.setToolTipText(name);

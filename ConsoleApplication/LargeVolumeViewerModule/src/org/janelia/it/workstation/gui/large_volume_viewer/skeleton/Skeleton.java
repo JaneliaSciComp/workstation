@@ -7,7 +7,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
@@ -141,10 +141,14 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
 		anchorHistory.push(anchor);
-        controller.annotationSelected(guid);
-
 		return anchor;
 	}
+
+    public void addAnchors(List<Anchor> anchorList) {
+        for (Anchor anchor: anchorList) {
+            addAnchor(anchor);
+        }
+    }
 
     /**
      * @param tileFormat the tileFormat to set
@@ -156,18 +160,6 @@ public class Skeleton {
     public TileFormat getTileFormat() {
         return tileFormat;
     }
-	
-	public void addAnchors(List<Anchor> anchorList) {
-        for (Anchor anchor: anchorList) {
-            if (anchors.contains(anchor))
-                continue;
-            anchors.add(anchor);
-            Long guid = anchor.getGuid();
-            if (guid != null)
-                anchorsByGuid.put(guid, anchor);
-            anchorHistory.push(anchor);
-        }
-	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
@@ -248,6 +240,10 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
+    public void editNeuronTagRequest(Anchor anchor) {
+        controller.editNeuronTagRequested(anchor);
+    }
+
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }
@@ -294,6 +290,7 @@ public class Skeleton {
         Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
         anchor.setGuid(tga.getId());
         addAnchor(anchor);
+        controller.annotationSelected(anchor.getGuid());
         return anchor;
     }
     

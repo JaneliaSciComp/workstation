@@ -18,18 +18,19 @@ import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.ProgressMonitor;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.StateDrivenIconToggleButton;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.console.viewerapi.color_slider.SliderPanel;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * Represents the group of controls.  Actions against controls are encapsulated
@@ -244,7 +245,7 @@ public class Snapshot3dControls {
                 @Override
                 protected void hadError(Throwable error) {
                     view.setHasBeenFiltered( false );
-                    SessionMgr.getSessionMgr().handleException(error);
+                    ConsoleApp.handleException(error);
                 }
                 
             };

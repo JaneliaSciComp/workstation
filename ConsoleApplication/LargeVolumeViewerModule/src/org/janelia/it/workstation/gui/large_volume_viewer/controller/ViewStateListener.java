@@ -1,11 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmColorModel;
 import org.janelia.it.jacs.shared.geom.Vec3;
 
 /**
@@ -16,6 +11,6 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 public interface ViewStateListener {
     void setCameraFocus(Vec3 focus);
     void centerNextParent();
-    void loadColorModel(String colorModelString);
+    void loadColorModel(TmColorModel colorModel);
     void pathTraceRequested(Long id);
 }
