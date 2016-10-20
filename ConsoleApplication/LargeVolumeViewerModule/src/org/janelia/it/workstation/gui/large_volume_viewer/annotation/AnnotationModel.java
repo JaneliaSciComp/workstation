@@ -283,7 +283,9 @@ called from a  SimpleWorker thread.
         }
         setCurrentNeuron(neuron); // synchronized on this AnnotationModel here
         fireNeuronSelected(neuron);
-        activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
+        if (getCurrentWorkspace()!=null && neuron!=null) {
+            activityLog.logSelectNeuron(getCurrentWorkspace().getId(), neuron.getId());
+        }
     }
 
     // convenience methods
