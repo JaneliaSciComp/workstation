@@ -32,8 +32,12 @@ package org.janelia.horta.loader;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Observable;
+import java.util.Observer;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.actors.TetVolumeMeshActor;
+import org.janelia.horta.blocks.KtxBlockLoadRunner;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.slf4j.Logger;
@@ -65,18 +69,23 @@ public class HortaKtxLoader implements FileTypeLoader
     public boolean load(final DataSource source, FileHandler handler) throws IOException
     {
         InputStream stream = source.getInputStream();
-        long start = System.nanoTime();
-        KtxData data = new KtxData().loadStream(stream);
-        long end = System.nanoTime();
-        double elapsed = (end - start)/1.0e9;
-        logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
-        TetVolumeActor actor = TetVolumeActor.getInstance();
-        actor.addKtxBlock(data);
-        if ( ! renderer.containsVolumeActor(actor) ) { // just add singleton actor once...
-            actor.setBrightnessModel(renderer.getBrightnessModel());
-            renderer.addVolumeActor(actor);
-        }
-        return true;
+        
+        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(stream);
+        loader.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                    return;
+                TetVolumeActor parentActor = TetVolumeActor.getInstance();
+                parentActor.addChild(loader.blockActor);
+                if ( ! renderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                    parentActor.setBrightnessModel(renderer.getBrightnessModel());
+                    renderer.addVolumeActor(parentActor);
+                }
+            }
+        });
+        loader.run();
+        return loader.state == KtxBlockLoadRunner.State.LOADED;
     }
 
 }
