@@ -645,9 +645,11 @@ public class DomainModel {
         for(DomainObject domainObject : domainObjects) {
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
             if (provider!=null) {
+                log.debug("Found DomainObjectHelper provider: "+provider);
                 provider.remove(domainObject);
             }
             else {
+                log.debug("No DomainObjectHelper found for {}, using default remove function",domainObject);
                 domainFacade.remove(Arrays.asList(Reference.createFor(domainObject)));
             }
         }
