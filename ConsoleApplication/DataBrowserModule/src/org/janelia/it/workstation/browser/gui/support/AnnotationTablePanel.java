@@ -23,10 +23,12 @@ import javax.swing.table.TableCellEditor;
 
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.it.workstation.browser.gui.listview.icongrid.ImagesPanel;
 import org.janelia.it.workstation.browser.gui.options.OptionConstants;
 import org.janelia.it.workstation.browser.gui.support.MouseHandler;
@@ -156,16 +158,6 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                 return null;
             }
         };
-
-        // This was probably in here for some reason, but I can't think of it. I'm disabling it now, 
-        // because it's annoying to have the mouse wheel disabled on long lists of annotations.
-//        dynamicTable.getScrollPane().setWheelScrollingEnabled(false);
-//        dynamicTable.getScrollPane().addMouseWheelListener(new MouseWheelListener() {
-//            @Override
-//            public void mouseWheelMoved(MouseWheelEvent e) {
-//                getParent().dispatchEvent(e);
-//            }
-//        });
 
         dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
 
@@ -303,7 +295,6 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                             model.save(annotation);
                         }
                         catch (Exception e1) {
-                            log.error("Error editing annotation",e1);
                             ConsoleApp.handleException(e1);
                         }
                     }
@@ -316,8 +307,8 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             detailsItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    // TODO: port this
-                    //OntologyOutline.viewAnnotationDetails(annotation);
+                    ActivityLogHelper.logUserAction("AnnotationTablePanel.viewDetails", annotation);
+                    new DomainDetailsDialog().showForDomainObject(annotation);
                 }
             });
             popupMenu.add(detailsItem);

@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * Top component for the Data Inspector, which shows details about a single
- * domain object. 
+ * Top component for the Data Inspector, which shows details about a single domain object, 
+ * and allows users to change its permissions. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -78,7 +78,6 @@ public final class DomainInspectorTopComponent extends TopComponent {
     
     @Override
     protected void componentActivated() {
-        log.info("Activating domain inspector");
     }
     
     @Override
@@ -96,6 +95,8 @@ public final class DomainInspectorTopComponent extends TopComponent {
     }
     
     void writeProperties(java.util.Properties p) {
+        // This component does not need to save its state, because other components (such as the Data Explorer) 
+        // will load into it when they read their properties on startup.
     }
 
     void readProperties(java.util.Properties p) {
