@@ -34,6 +34,6 @@ package org.janelia.horta.blocks;
  *
  * @author brunsc
  */
-public class BlockTileData {
+public interface BlockTileData {
     
 }

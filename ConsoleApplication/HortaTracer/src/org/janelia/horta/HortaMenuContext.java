@@ -28,13 +28,40 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta.blocks;
+package org.janelia.horta;
+
+import java.awt.Point;
+import javax.swing.JPopupMenu;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.render.NeuronMPRenderer;
 
 /**
  *
  * @author brunsc
  */
-public interface BlockTileResolution 
-extends Comparable<BlockTileResolution>
-{
+class HortaMenuContext {
+    public final JPopupMenu topMenu;
+    public final Point popupScreenPoint;
+    public final Vector3 mouseXyz; // coordinate at mouse location
+    public final Vector3 focusXyz; // coordinate at center of screen
+    public final BlockTileSource ktxBlockTileSource;
+    public final NeuronMPRenderer renderer;
+
+    HortaMenuContext(
+            JPopupMenu menu, 
+            Point popupScreenPoint,
+            Vector3 mouseXyz, 
+            Vector3 focusXyz,
+            BlockTileSource ktxBlockSource,
+            NeuronMPRenderer renderer
+    ) {
+        this.topMenu = menu;
+        this.popupScreenPoint = popupScreenPoint;
+        this.mouseXyz = mouseXyz;
+        this.focusXyz = focusXyz;
+        this.ktxBlockTileSource = ktxBlockSource;
+        this.renderer = renderer;
+    }
+    
 }

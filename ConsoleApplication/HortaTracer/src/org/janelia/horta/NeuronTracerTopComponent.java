@@ -241,6 +241,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final HortaVolumeCache volumeCache;
     private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
+    private final KtxBlockMenus ktxBlockMenus = new KtxBlockMenus();
+    
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
         initComponents();
@@ -1054,8 +1056,20 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Context menu for window - at first just to see if it works with OpenGL
         // (A: YES, if applied to the inner component)
         innerComponent.addMouseListener(new MouseUtils.PopupMouseAdapter() {
-            private JPopupMenu createMenu() {
-                JPopupMenu menu = new JPopupMenu();                
+            private JPopupMenu createMenu(Point popupMenuScreenPoint) 
+            {
+                JPopupMenu menu = new JPopupMenu();
+                
+                Vector3 mouseXyz = worldXyzForScreenXy(popupMenuScreenPoint);
+                Vector3 focusXyz = sceneWindow.getVantage().getFocusPosition();
+                HortaMenuContext menuContext = new HortaMenuContext(
+                        menu,
+                        popupMenuScreenPoint,
+                        mouseXyz,
+                        focusXyz,
+                        null, // TODO: Ktx block tile source
+                        neuronMPRenderer
+                );
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
@@ -1094,6 +1108,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
+                ktxBlockMenus.populateMenus(menuContext);
+                
                 if (currentSource != null) 
                 {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
@@ -1574,7 +1590,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     return;
                 }
                 // logger.info("showPopup");
-                createMenu().show(NeuronTracerTopComponent.this, event.getPoint().x, event.getPoint().y);
+                createMenu(event.getPoint()).show(NeuronTracerTopComponent.this, event.getPoint().x, event.getPoint().y);
             }
         });
     }
