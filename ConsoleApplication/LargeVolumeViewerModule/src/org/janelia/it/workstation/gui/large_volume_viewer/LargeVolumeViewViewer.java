@@ -1,30 +1,41 @@
  package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.lvv.HttpDataSource;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.netbeans.api.progress.ProgressHandle;
-import org.netbeans.api.progress.ProgressHandleFactory;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+ import java.awt.BorderLayout;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.concurrent.Callable;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.lvv.HttpDataSource;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.full_skeleton_view.top_component.AnnotationSkeletalViewTopComponent;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronSetAdapter;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Created with IntelliJ IDEA.
@@ -35,23 +46,18 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  * Shows Confocal Blocks data.
  */
 public class LargeVolumeViewViewer extends JPanel {
-    private Entity sliceSample;
-    private Entity initialEntity;
 
-    private RootedEntity slcRootedEntity;
-
-    private QuadViewUi viewUI;
-    private ModelMgrObserver modelMgrObserver;
-    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
     private final Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
+
+    private TmSample sliceSample;
+    private DomainObject initialObject;
+    private AnnotationModel annotationModel;
+    private QuadViewUi viewUI;
+    private final NeuronSetAdapter neuronSetAdapter = new NeuronSetAdapter(); // For communicating annotations to Horta
 
     public LargeVolumeViewViewer() {
         super();
         setLayout(new BorderLayout());
-    }
-
-    public void clear() {
-        clearObserver();
     }
 
     public void showLoadingIndicator() {
@@ -60,93 +66,71 @@ public class LargeVolumeViewViewer extends JPanel {
         revalidate();
         repaint();
     }
-
-    public void loadEntity(final RootedEntity rootedEntity) {
+    
+    public void loadDomainObject(final DomainObject domainObject) {
         // NOTE: there must be a better way to handle the tasks in and out of
         //  the UI thread; this version is the result of fixing what
         //  we had w/o serious rewriting
 
+    	logger.info("loadDomainObject({})", domainObject);
+    	
+        //  I have found that with very large numbers of
+        //  neurons in the neurons table, not reloading
+        //  causes GUI lockup.
+        deleteAll();
+    	
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                //  I have found that with very large numbers of
-                //  neurons in the neurons table, not reloading
-                //  causes GUI lockup.
-                //                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    public void run() {
-                        deleteAll();
-                    }
-                });
-                //                }
-                initialEntity = rootedEntity.getEntity();
+                initialObject = domainObject;
 
-                // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
-                //  the intial entity, but we need the sample either way to be able to open it:
-                if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-                    sliceSample = initialEntity;
-                    HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
-                } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-                    // Which version of workspace?  Can it be handled, here?
-                    boolean usableVersion = false;
-                    TmWorkspace.Version version = AnnotationManager.getWorkspaceVersion(initialEntity);
-                    if (version == TmWorkspace.Version.PB_1) {
-                        usableVersion = true;
-                    }
-                    
-                    if (! usableVersion) {
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(
-                                    LargeVolumeViewViewer.this,
-                                    "The workspace version is being converted for this version of Large Volume Viewer.  Several minutes' delay may ensue.",
-                                    "Must Convert Workspace",
-                                    JOptionPane.INFORMATION_MESSAGE
-                                );
-                            }
-                        });
-                    }
-                    
-                    String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+                // initial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
+                //  the initial entity, but we need the sample either way to be able to open it:
+                if (initialObject instanceof TmSample) {
+                    sliceSample = (TmSample) initialObject;
+                }
+                else if (initialObject instanceof TmWorkspace) {
+                    TmWorkspace workspace = (TmWorkspace) initialObject;
                     try {
-                        sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
-                        HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                        sliceSample = TiledMicroscopeDomainMgr.getDomainMgr().getSample(workspace);
                     }
-                    if (sliceSample == null) {
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                        "Could not find sample entity for this workspace!",
-                                        "Could not open workspace",
-                                        JOptionPane.ERROR_MESSAGE);
-                            }
-                        });
+                    catch (Exception e) {
+                        logger.error("Error getting sample for "+workspace, e);
                     }
                 }
             }
 
             @Override
             protected void hadSuccess() {
+            	
+                if (sliceSample == null) {
+                    JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                            "Could not find sample entity for this workspace!",
+                            "Could not open workspace",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                HttpDataSource.setMouseLightCurrentSampleId(sliceSample.getId());
+                
                 // refresh is a UI action, has to happen here
                 refresh();
+                
+            	logger.info("Found sample {}", sliceSample.getId());
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
-                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading workspace...");
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading sample...");
                 progress.start();
-                progress.setDisplayName("Loading workspace");
+                progress.setDisplayName("Loading sample");
                 progress.switchToIndeterminate();
 
-                SimpleWorker opener = new SimpleWorker() {
+                SimpleWorker volumeLoader = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
                         // be sure we've successfully gotten the sample before loading it!
-                        if (sliceSample != null && sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-                            if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
+                        if (sliceSample != null) {
+                            if (!viewUI.loadFile(sliceSample.getFilepath())) {
                                 SwingUtilities.invokeLater(new Runnable() {
                                     @Override
                                     public void run() {
@@ -162,24 +146,77 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void hadSuccess() {
-                        // Listen for further changes, so can refresh again later.
-                        establishObserver();
                         progress.finish();
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
                         progress.finish();
-                        SessionMgr.getSessionMgr().handleException(error);
+                        ConsoleApp.handleException(error);
                     }
                 };
-                opener.execute();
+                
+                SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
 
+                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading workspace...");
+                progress2.start();
+                progress2.setDisplayName("Loading workspace");
+                progress2.switchToIndeterminate();
+                
+                SimpleWorker workspaceLoader = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        if (initialObject == null) {
+                            // this is a request to clear the workspace
+                            annotationModel.clear();
+                        }
+                        else if (initialObject instanceof TmSample) {
+                            annotationModel.loadSample((TmSample)initialObject);
+                        }
+                        else if (initialObject instanceof TmWorkspace) {
+                            annotationModel.loadWorkspace((TmWorkspace)initialObject);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        progress2.finish();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        progress2.finish();
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                
+                SimpleListenableFuture future2 = workspaceLoader.executeWithFuture();
+                
+                // Join the two futures
+                ListenableFuture<List<Boolean>> combinedFuture = Futures.allAsList(Arrays.asList(future1, future2));
+                Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
+                    public void onSuccess(List<Boolean> result) {
+                        // If both loads succeeded
+                        annotationModel.loadComplete();
+                    }
+                    public void onFailure(Throwable t) {
+                        // If either load failed
+                        logger.error("LVVV load failed", t);
+                        try {
+                            annotationModel.clear();
+                            annotationModel.loadComplete();
+                        }
+                        catch (Exception e) {
+                            logger.error("Error loading empty workspace",e);
+                        }
+                    }
+                });
+                
             }
 
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
+                ConsoleApp.handleException(error);
             }
 
         };
@@ -187,20 +224,6 @@ public class LargeVolumeViewViewer extends JPanel {
 
     }
 
-    public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {
-        loadEntity(rootedEntity);
-        try {
-            if ( success != null )
-                success.call();
-        } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
-
-	public RootedEntity getContextRootedEntity() {
-		return slcRootedEntity;
-	}
-    
     public SampleLocation getSampleLocation() {
         return viewUI.getSampleLocation();
     }
@@ -209,8 +232,12 @@ public class LargeVolumeViewViewer extends JPanel {
         viewUI.setSampleLocation(sampleLocation);
     }
     
+    public boolean hasQuadViewUi() {
+        return viewUI != null;
+    }
+    
     public QuadViewUi getQuadViewUi() {
-        if (viewUI == null) {
+        if (!hasQuadViewUi()) {
             refresh();
         }
         return viewUI;
@@ -218,19 +245,20 @@ public class LargeVolumeViewViewer extends JPanel {
     
     public void close() {
         logger.info("Closing");
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
         deleteAll();
     }
 
     public void refresh() {
-        // logger.info("Refresh called.");
+        logger.info("Refreshing");
 
         if (sliceSample != null) {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
-                viewUI = new QuadViewUi(SessionMgr.getMainFrame(), initialEntity, false);
-                neuronSetAdapter.observe(viewUI.getAnnotationModel());
+                annotationModel = new AnnotationModel();
+                Events.getInstance().registerOnEventBus(annotationModel);
+                viewUI = new QuadViewUi(ConsoleApp.getMainFrame(), initialObject, false, annotationModel);
+                neuronSetAdapter.observe(annotationModel);
             }
             removeAll();
             viewUI.setVisible(true);
@@ -255,51 +283,36 @@ public class LargeVolumeViewViewer extends JPanel {
     }
     
     //------------------------------Private Methods
-    private void establishObserver() {
-        modelMgrObserver = new ModelMgrListener( this, sliceSample);
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-    }
 
     private void deleteAll() {
-        clearObserver();
         sliceSample = null;
-        initialEntity = null;
-        slcRootedEntity = null;
+        initialObject = null;
         removeAll();
         if (viewUI != null)
         	viewUI.clearCache();
         viewUI = null;
-    }
-
-    private void clearObserver() {
-        if ( modelMgrObserver != null ) {
-            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        if (annotationModel!=null) {
+            Events.getInstance().unregisterOnEventBus(annotationModel);
+            annotationModel = null;
         }
     }
 
-    public NeuronSet getNeuronSetAdapter()
-    {
+    public NeuronSet getNeuronSetAdapter() {
         return neuronSetAdapter;
     }
 
-    //------------------------------Inner Classes
-    /** Listens for changes to the child-set of the heard-entity. */
-    public static class ModelMgrListener extends ModelMgrAdapter {
-        private Entity heardEntity;
-        private LargeVolumeViewViewer viewer;
-        ModelMgrListener( LargeVolumeViewViewer viewer, Entity e ) {
-            heardEntity = e;
-            this.viewer = viewer;
+    @Subscribe
+    public void objectsInvalidated(DomainObjectInvalidationEvent event) {
+    	// Tm objects do not currently respect the domain object cache invalidation scheme, but we can at least reload the UI
+        if (event.isTotalInvalidation()) {
+            refresh();
         }
-
-        @Override
-        public void entityChildrenChanged(long entityId) {
-            if (heardEntity.getId() == entityId) {
-                viewer.refresh();
+        else {
+            for(DomainObject domainObject : event.getDomainObjects()) {
+                if (DomainUtils.equals(domainObject, sliceSample)) {
+                    refresh();
+                }
             }
         }
     }
-
-    public Entity getSliceSample() { return sliceSample; }
-    
 }

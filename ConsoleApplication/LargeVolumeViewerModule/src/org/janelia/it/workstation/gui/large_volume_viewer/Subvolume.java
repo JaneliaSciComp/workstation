@@ -5,8 +5,8 @@ import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.raster.VoxelIndex;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;

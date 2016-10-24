@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<windowmanager version="2.1">
+    <editor-area state="joined" frame-state="0">
+      <constraints>
+          <path orientation="horizontal" number="60" weight="0.7" />
+          <path orientation="vertical" number="40" weight="0.7" />
+          <path orientation="horizontal" number="40" weight="0.7" />
+          <path orientation="vertical" number="40" weight="0.5" />
+      </constraints>
+    </editor-area>
+    <active-mode name="explorer"/>
+    <tc-list>
+      <tc-id id="DomainListViewTopComponent"/>
+      <tc-id id="DomainExplorerTopComponent"/>
+      <tc-id id="OntologyExplorerTopComponent"/>
+      <tc-id id="ProgressTopComponent"/>
+      <tc-id id="DomainInspectorTopComponent"/>
+    </tc-list>
+</windowmanager>

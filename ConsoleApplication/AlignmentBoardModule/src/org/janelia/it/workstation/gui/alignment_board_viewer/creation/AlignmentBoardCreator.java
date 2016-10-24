@@ -2,25 +2,25 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.awt.Component;
 import java.util.List;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectCreator;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
-import org.janelia.it.workstation.gui.alignment_board.Launcher;
-import org.janelia.it.workstation.gui.util.Icons;
-
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
+import org.janelia.it.workstation.gui.alignment_board.Launcher;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
-import org.janelia.it.workstation.nb_action.DomainObjectCreator;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

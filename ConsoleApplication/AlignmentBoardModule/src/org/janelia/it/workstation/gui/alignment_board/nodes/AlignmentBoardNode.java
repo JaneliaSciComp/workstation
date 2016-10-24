@@ -8,7 +8,7 @@ package org.janelia.it.workstation.gui.alignment_board.nodes;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
-import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 

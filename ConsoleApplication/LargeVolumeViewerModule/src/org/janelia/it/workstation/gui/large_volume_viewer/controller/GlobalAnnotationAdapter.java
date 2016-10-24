@@ -1,13 +1,10 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import java.util.List;
+import java.util.Map;
+
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
@@ -22,9 +19,15 @@ public abstract class GlobalAnnotationAdapter implements GlobalAnnotationListene
     public void workspaceLoaded(TmWorkspace workspace) {}
 
     @Override
-    public void neuronSelected(TmNeuron neuron) {}
+    public void neuronSelected(TmNeuronMetadata neuron) {}
 
     @Override
-    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {}
+    public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {}
+
+    @Override
+    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {}
+
+    @Override
+    public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {}
     
 }

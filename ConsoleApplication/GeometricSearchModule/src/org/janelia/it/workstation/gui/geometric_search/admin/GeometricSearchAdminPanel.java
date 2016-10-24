@@ -2,27 +2,30 @@ package org.janelia.it.workstation.gui.geometric_search.admin;
 
 import java.awt.BorderLayout;
 import java.awt.Font;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.swing.*;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
 import org.janelia.it.jacs.shared.geometric_search.GeometricIndexManagerModel;
-
-import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.workstation.gui.framework.outline.Refreshable;
-import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.workstation.gui.framework.table.DynamicRow;
-import org.janelia.it.workstation.gui.framework.table.DynamicTable;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.browser.api.facade.impl.ejb.EJBFactory;
+import org.janelia.it.workstation.browser.gui.table.DynamicColumn;
+import org.janelia.it.workstation.browser.gui.table.DynamicRow;
+import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
+public class GeometricSearchAdminPanel extends JPanel {
 
     private static final Logger logger = LoggerFactory.getLogger(GeometricSearchAdminPanel.class);
 
@@ -101,7 +104,7 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
         }
 
         @Override
-        protected void rowClicked(int row) {
+        protected void cellClicked(int row, int col) {
             if (row<0) return;
             DynamicRow drow = getRows().get(row);
         }
@@ -162,10 +165,6 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
         }
     }
 
-    public void entitySelected(Entity entity) {
-    }
-
-    @Override
     public void refresh() {
         if (adminThreadFuture!=null) {
             adminThreadFuture.cancel(true);
@@ -173,7 +172,6 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
         adminThreadFuture = adminThreadPool.scheduleWithFixedDelay(new GeometricSearchAdminThread(scanResultTable), 0, 1000, TimeUnit.MILLISECONDS);
     }
 
-    @Override
     public void totalRefresh() {
         refresh();
     }
