@@ -15,6 +15,7 @@ import java.util.Set;
 
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmAnchoredPath;
@@ -32,9 +33,11 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
@@ -479,28 +482,46 @@ called from a  SimpleWorker thread.
             @Override
             public void run() {
 
-                SkeletonController skeletonController=SkeletonController.getInstance();
+                final SkeletonController skeletonController=SkeletonController.getInstance();
                 skeletonController.setSkipSkeletonChange(true);
 
-                FilteredAnnotationList filteredAnnotationList=FilteredAnnotationList.getInstance();
+                final FilteredAnnotationList filteredAnnotationList=FilteredAnnotationList.getInstance();
                 filteredAnnotationList.setSkipUpdate(true);
 
                 fireNeuronSelected(null);
-                if (hadAnnotations) {
-                    fireAnnotationsDeleted(tempAnnotationList);
-                    fireAnchoredPathsRemoved(tempPathList);
-                }
-                fireWorkspaceLoaded(workspace);
-                fireWorkspaceChanged();
 
-                skeletonController.setSkipSkeletonChange(false);
-                skeletonController.skeletonChanged();
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        // This takes a long time, and doesn't need to be run on the EDT because updates are disabled
+                        if (hadAnnotations) {
+                            fireAnnotationsDeleted(tempAnnotationList);
+                            fireAnchoredPathsRemoved(tempPathList);
+                        }
+                    }
 
-                filteredAnnotationList.setSkipUpdate(false);
-                if (hadAnnotations) {
-                    filteredAnnotationList.updateData();
-                }
-                activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
+                    @Override
+                    protected void hadSuccess() {
+                        fireWorkspaceLoaded(workspace);
+                        fireWorkspaceChanged();
+
+                        skeletonController.setSkipSkeletonChange(false);
+                        skeletonController.skeletonChanged();
+
+                        filteredAnnotationList.setSkipUpdate(false);
+                        if (hadAnnotations) {
+                            filteredAnnotationList.updateData();
+                        }
+                        activityLog.logDeleteNeuron(workspace.getId(), deletedNeuron.getId());
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        ConsoleApp.handleException(error);
+                    }
+                };
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkImplProvider.getMainFrame(), "Deleting neuron...", "", false));
+                worker.execute();
             }
         });
     }
