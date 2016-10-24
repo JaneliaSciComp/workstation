@@ -646,6 +646,7 @@ public class DomainInspectorPanel extends JPanel {
 
     public void refresh() {
         try {
+            if (domainObject==null) return;
             this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
             if (domainObject == null) {
                 showNothing();

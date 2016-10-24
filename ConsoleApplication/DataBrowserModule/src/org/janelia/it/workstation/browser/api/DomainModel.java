@@ -375,6 +375,7 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
+        if (domainObject==null) throw new IllegalArgumentException("Domain object may not be null");
         if (!isCacheable(domainObject)) {
             return domainObject;
         }
