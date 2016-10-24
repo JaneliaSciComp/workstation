@@ -7,6 +7,7 @@ import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -60,6 +61,9 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
+                if (fragment==null) {
+                    throw new IllegalStateException("Both fragment and separation were null");
+                }
                 sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
                 if (sample != null) {
                     separation = SampleUtils.getNeuronSeparation(sample, fragment);
