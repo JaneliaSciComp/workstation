@@ -209,7 +209,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             (float)sampleLocation.getFocusZUm());
         
         if (!v.setFocusPosition(focusVector3)) {
-            logger.warn("Did not change focus as directed.");
+            logger.info("New focus is the same as previous focus");
         }        
         v.setDefaultFocus(focusVector3);
 
