@@ -44,6 +44,8 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshActor;
+import org.janelia.horta.blocks.BlockTileResolution;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource.KtxOctreeResolution;
 import org.janelia.horta.ktx.KtxData;
 
 /**
@@ -61,7 +63,8 @@ implements SortableBlockActor, SortableBlockActorSource
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
     private final KtxData ktxData;
-    private Vector4 centroid;
+    private Vector4 cachedCentroid;
+    private BlockTileResolution cachedResolution;
     private final List<SortableBlockActor> listOfThis;
     
     public TetVolumeMeshActor(KtxData ktxData, TetVolumeActor parentActor) {
@@ -224,25 +227,34 @@ implements SortableBlockActor, SortableBlockActorSource
 
     @Override
     public Vector4 getHomogeneousCentroid() {
-        if (centroid == null) {
+        if (cachedCentroid == null) {
             String s = ktxData.header.keyValueMetadata.get("bounding_sphere_center");
             final String np = "([-+0-9.e]+)"; // regular expression for parsing and capturing one number from the matrix
             final String rp = "\\[\\s*"+np+"\\s+"+np+"\\s+"+np+"\\s*\\]"; // regex for parsing one matrix row
             Pattern p = Pattern.compile("^"+rp+".*$", Pattern.DOTALL);
             Matcher m = p.matcher(s);
             boolean b = m.matches();
-            centroid = new Vector4(
+            cachedCentroid = new Vector4(
                     Float.parseFloat(m.group(1)),
                     Float.parseFloat(m.group(2)),
                     Float.parseFloat(m.group(3)),
                     1.0f);
         }
-        return centroid;
+        return cachedCentroid;
     }
 
     @Override
     public Collection<SortableBlockActor> getSortableBlockActors() {
         return listOfThis;
+    }
+
+    @Override
+    public BlockTileResolution getResolution() {
+        if (cachedResolution == null) {
+            int res = Integer.parseInt(ktxData.header.keyValueMetadata.get("multiscale_level_id").trim()) - 1;
+            cachedResolution = new KtxOctreeResolution(res);
+        }
+        return cachedResolution;
     }
 
     private static class TetVolumeMeshGeometry extends MeshGeometry {

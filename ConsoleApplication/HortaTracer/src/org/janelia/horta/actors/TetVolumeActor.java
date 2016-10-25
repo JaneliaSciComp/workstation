@@ -57,6 +57,7 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -402,7 +403,7 @@ implements DepthSlabClipper
         return getChildren().size();
     }
 
-    private static class BlockSorter implements Comparator<CentroidHaver> 
+    private static class BlockSorter implements Comparator<SortableBlockActor> 
     {
         private Matrix4 viewMatrix;
 
@@ -410,7 +411,14 @@ implements DepthSlabClipper
         }
 
         @Override
-        public int compare(CentroidHaver o1, CentroidHaver o2) {
+        public int compare(SortableBlockActor o1, SortableBlockActor o2) {
+            // 1) If blocks are not the same resolution, sort on resolution
+            BlockTileResolution res1 = o1.getResolution();
+            BlockTileResolution res2 = o2.getResolution();
+            if (! res1.equals(res2)) {
+                return res1.compareTo(res2);
+            }
+            // 2) sort based on distance from centroid to camera
             if (viewMatrix == null)
                 throw new UnsupportedOperationException("View Matrix is Null");
             Vector4 v1 = viewMatrix.multiply(o1.getHomogeneousCentroid());

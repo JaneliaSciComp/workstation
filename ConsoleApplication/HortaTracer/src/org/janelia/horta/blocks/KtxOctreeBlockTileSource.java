@@ -264,7 +264,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     {
         final int octreeLevel; // zero-based level; zero means tip of pyramid
 
-        private KtxOctreeResolution(int octreeLevel) {
+        public KtxOctreeResolution(int octreeLevel) {
             this.octreeLevel = octreeLevel;
         }
 
