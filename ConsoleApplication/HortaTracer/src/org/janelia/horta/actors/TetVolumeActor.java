@@ -142,14 +142,17 @@ implements DepthSlabClipper
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
+        // 1) Initial fail-fast checks
         if (! isVisible())
             return;
         if (! isInitialized) init(gl);
+
         if (getChildren() == null)
             return;
         if (getChildren().size() < 1)
             return;
 
+        // 2) Set up shader exactly once, for all volume blocks
         // Adjust actual Z-clip planes to allow imposter geometry to lie
         // outside the "official" Z-clip planes. Correct final clipping will 
         // happen in the fragement shader. This is necessary because the
@@ -264,14 +267,17 @@ implements DepthSlabClipper
             if (localMatrix != null)
                 modelViewMatrix = new Matrix4(modelViewMatrix).multiply(localMatrix);
 
-            // Sort individual blocks by distance from camera, for 
-            // correct transparency blending
+            // 3) Sort individual blocks by distance from camera, for 
+            //    correct transparency blending
             List<SortableBlockActor> blockList = new ArrayList<>();
             List<GL3Actor> otherActorList = new ArrayList<>();
             List<Object3d> otherList = new ArrayList<>();
             for (Object3d child : getChildren()) {
-                if (child instanceof SortableBlockActor) {
-                    blockList.add((SortableBlockActor)child);
+                if (child instanceof SortableBlockActorSource) {
+                    SortableBlockActorSource source = (SortableBlockActorSource)child;
+                    for (SortableBlockActor block : source.getSortableBlockActors()) {
+                        blockList.add(block);
+                    }
                 }
                 else if (child instanceof GL3Actor) {
                     otherActorList.add((GL3Actor)child);
@@ -282,16 +288,20 @@ implements DepthSlabClipper
             }
             assert otherActorList.isEmpty();
             assert otherList.isEmpty();
+            
             // Order does not matter in MIP mode
             if (volumeState.projectionMode != VolumeState.PROJECTION_MAXIMUM) {
                 blockSorter.setViewMatrix(modelViewMatrix);
                 Collections.sort(blockList, blockSorter);        
             }
+
+            // 4) Display blocks
             for (SortableBlockActor actor : blockList) {
                 actor.display(gl, camera, modelViewMatrix);
             }
         }
         finally {
+            // 5) Clean up shader
             camera.popInternalViewSlab();
             shader.unload(gl);
         }

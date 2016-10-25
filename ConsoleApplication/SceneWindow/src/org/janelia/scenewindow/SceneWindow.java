@@ -116,7 +116,9 @@ public class SceneWindow implements GLJComponent, Scene {
         if (glad == null) return false;
         GLContext context = glad.getContext();
         if (context == null) return false;
-        context.makeCurrent();
+        int result = context.makeCurrent();
+        if (result == GLContext.CONTEXT_NOT_CURRENT)
+            return false;
         try {
             glad.display();
         }
@@ -124,7 +126,8 @@ public class SceneWindow implements GLJComponent, Scene {
             logger.error(exc.getMessage());
         }
         finally {
-            context.release();
+            if (result == GLContext.CONTEXT_CURRENT_NEW)
+                context.release();
         }
         return true;
     }

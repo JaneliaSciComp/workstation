@@ -33,6 +33,7 @@ package org.janelia.horta.actors;
 import com.jogamp.common.nio.Buffers;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,12 +56,13 @@ import org.janelia.horta.ktx.KtxData;
  * @author brunsc
  */
 public class TetVolumeMeshActor extends MeshActor
-implements SortableBlockActor
+implements SortableBlockActor, SortableBlockActorSource
 {
     private final List<List<Integer>> outerTetrahedra = new ArrayList<>();
     private final List<Integer> centralTetrahedron = new ArrayList<>();
     private final KtxData ktxData;
     private Vector4 centroid;
+    private final List<SortableBlockActor> listOfThis;
     
     public TetVolumeMeshActor(KtxData ktxData, TetVolumeActor parentActor) {
         super(new TetVolumeMeshGeometry(ktxData), new TetVolumeMaterial(ktxData, parentActor), parentActor);
@@ -92,6 +94,9 @@ implements SortableBlockActor
 
         // TODO: alternate tetrahedralization - used for alternating subblocks in raw tiles.
         /** @TODO something */
+        
+        listOfThis = new ArrayList<>();
+        listOfThis.add(this);
     }
     
     public final void addOuterTetrahedron(int a, int b, int c, int apex) {
@@ -233,6 +238,11 @@ implements SortableBlockActor
                     1.0f);
         }
         return centroid;
+    }
+
+    @Override
+    public Collection<SortableBlockActor> getSortableBlockActors() {
+        return listOfThis;
     }
 
     private static class TetVolumeMeshGeometry extends MeshGeometry {
