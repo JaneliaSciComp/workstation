@@ -471,6 +471,7 @@ called from a  SimpleWorker thread.
 
         // delete
         neuronManager.deleteNeuron(currentWorkspace, deletedNeuron);
+        log.info("Neuron was deleted: "+deletedNeuron);
 
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
