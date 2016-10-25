@@ -83,16 +83,14 @@ public class ConsoleApp {
     }
     
     public void initSession() {
-
         log.info("Initializing Session");
-        
-        // Read local user preferences
-        LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
-
-        // Must init file services BEFORE calling AccessManager.loginSubject
-        FileMgr.getFileMgr();
-        
         try {
+            // Read local user preferences
+            LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
+
+            // Must init file services BEFORE calling AccessManager.loginSubject
+            FileMgr.getFileMgr();
+            
             // Try saved credentials
             String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
             String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
@@ -134,8 +132,8 @@ public class ConsoleApp {
                 }
             });
         }
-        catch (Exception ex) {
-            ConsoleApp.handleException(ex);
+        catch (Throwable e) {
+            ConsoleApp.handleException(e);
             LifecycleManager.getDefault().exit(0);
         }
     }

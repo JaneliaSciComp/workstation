@@ -26,8 +26,10 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
+import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
@@ -329,6 +331,34 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         mgr.setRootContext(root);
         showTree();
     }
+
+    @Subscribe
+    public void objectsInvalidated(DomainObjectRemoveEvent event) {
+
+        final List<Long[]> expanded = beanTreeView.getExpandedPaths();
+        DomainObject domainObject = event.getDomainObject();
+        
+        Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
+        if (!nodes.isEmpty()) {
+            log.info("Updating removed object: {}",domainObject.getName());
+            for(DomainObjectNode<DomainObject> node : nodes) {
+                try {
+                    log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
+                    node.destroy();
+                }  
+                catch (Exception ex) {
+                    log.error("Error destroying node", ex);
+                }
+            }
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                beanTreeView.expand(expanded);
+            }
+        });
+    }
     
     @Subscribe
     public void objectsInvalidated(DomainObjectInvalidationEvent event) {
@@ -338,7 +368,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
         else {
             final List<Long[]> expanded = beanTreeView.getExpandedPaths();
-
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for(DomainObject domainObject : event.getDomainObjects()) {
                 Set<DomainObjectNode<DomainObject>> nodes = DomainObjectNodeTracker.getInstance().getNodesByDomainObject(domainObject);
@@ -357,7 +386,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                             }
                         }  
                         catch (Exception ex) {
-                            ConsoleApp.handleException(ex);
+                            log.error("Error destroying node", ex);
                         }
                     }
                 }

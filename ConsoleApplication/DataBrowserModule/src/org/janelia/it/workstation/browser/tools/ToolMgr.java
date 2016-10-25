@@ -285,8 +285,9 @@ public class ToolMgr extends PreferenceManager {
 
     public static void runTool(String toolName) throws Exception {
         ToolInfo tmpTool = toolTreeMap.get(toolName);
-        if (null == tmpTool.getPath() || "".equals(tmpTool.getPath())) {
-            throw new Exception("Cannot run the tool.  A path to the program is not defined.");
+        if (tmpTool==null || null == tmpTool.getPath() || "".equals(tmpTool.getPath())) {
+            log.error("Cannot find tool "+toolName+" in map: "+toolTreeMap.keySet());
+            throw new Exception("Cannot run the tool '"+toolName+"'. A path to the program is not defined.");
         }
         if (tmpTool.getPath().endsWith(".app")) {
             Desktop.getDesktop().open(new File(tmpTool.getPath()));

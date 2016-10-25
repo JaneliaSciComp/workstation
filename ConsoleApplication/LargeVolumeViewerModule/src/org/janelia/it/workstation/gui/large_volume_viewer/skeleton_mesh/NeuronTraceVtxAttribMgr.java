@@ -704,10 +704,13 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI, IdCoderP
     
     private Collection<Anchor> getAnchorsSafe() {
         if (dataSource.getSkeleton() == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         else {
-            return new ArrayList<Anchor>(dataSource.getSkeleton().getAnchors());
+            Set<Anchor> anchors = dataSource.getSkeleton().getAnchors();
+            synchronized (anchors) {
+                return new ArrayList<Anchor>(anchors);
+            }
         }
     }
 

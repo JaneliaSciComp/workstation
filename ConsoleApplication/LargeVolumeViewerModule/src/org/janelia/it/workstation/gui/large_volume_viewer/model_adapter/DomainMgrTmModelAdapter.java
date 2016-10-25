@@ -117,7 +117,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
                 log.trace("Neuron save/update time = {} ms", w.getElapsedTime());
             }
             catch (Exception ex) {
-                log.error("Error saving neuron",ex);
+                log.error("Error saving neuron "+tmNeuronMetadata,ex);
                 saveQueueErrorFlag=true;
             }
             running.set(false); // For completeness.

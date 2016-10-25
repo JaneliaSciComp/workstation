@@ -184,14 +184,17 @@ public class EditWorkspaceNameDialog extends ModalDialog {
             
             if (StringUtils.isEmpty(sampleDate)) {
                 presentError("Sample date cannot be empty", "Missing input data");
+                return;
             }
             
             if (StringUtils.isEmpty(neuronCode)) {
                 presentError("Neuron code cannot be empty", "Missing input data");
+                return;
             }
             
             if (StringUtils.isEmpty(userInitials)) {
                 presentError("User initials cannot be empty", "Missing input data");
+                return;
             }
             
             StringBuilder sb = new StringBuilder();

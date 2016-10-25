@@ -15,11 +15,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -53,6 +64,11 @@ import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+
+import net.miginfocom.swing.MigLayout;
 
 
 /**
@@ -305,19 +321,18 @@ public class DomainInspectorPanel extends JPanel {
         annotationsView = new AnnotationTablePanel();
 
         tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "Annotations on the selected item");
+        
+        tabbedPane.addChangeListener(new ChangeListener() {
+            public void stateChanged(ChangeEvent e) {
+                refresh();   
+            }
+        });
     }
 
     public void showNothing() {
         attributesPanel.removeAll();
         permissionsPanel.removeAll();
         annotationsPanel.removeAll();
-        this.updateUI();
-    }
-
-    public void showLoadingIndicator() {
-        showAttributesLoadingIndicator();
-        showPermissionsLoadingIndicator();
-        showAnnotationsLoadingIndicator();
         this.updateUI();
     }
 
@@ -346,16 +361,17 @@ public class DomainInspectorPanel extends JPanel {
 
         log.debug("Loading domain object: "+domainObject.getId());
         
-        refresh();
-                
         // Select the default tab
         if (defaultTab != null) {
             tabbedPane.setSelectedIndex(tabNames.indexOf(defaultTab));
         }
         tabbedPane.setEnabledAt(1, true);
         tabbedPane.setEnabledAt(2, true);
+        
+        refresh();
     }
 
+    // TODO: factor this out into a separate module
     public void loadPipelineResult(PipelineResult result) {
 
         log.debug("Loading properties for pipeline result {}", result.getId());
@@ -428,6 +444,8 @@ public class DomainInspectorPanel extends JPanel {
 
         if (domainObject instanceof Sample) {
 
+            // TODO: factor this out into a separate confocal module 
+            
             Sample sample = (Sample)domainObject;
             Map<AlignmentScoreType, String> scores = SampleUtils.getLatestAlignmentScores(sample);
 
@@ -442,6 +460,7 @@ public class DomainInspectorPanel extends JPanel {
         addPropertiesToTable();
         attributesPanel.removeAll();
         attributesPanel.add(attributesTable, BorderLayout.CENTER);
+        attributesPanel.updateUI();
     }
 
     private void addProperty(String key, Object value) {
@@ -532,6 +551,7 @@ public class DomainInspectorPanel extends JPanel {
         else if (domainObject instanceof TreeNode) {
             permissionsNoteLabel.setText("Note: sharing this Folder also shares all of its current and future contents.");
         }
+        // Factor these out into a separate module
         else if (domainObject instanceof Sample) {
             permissionsNoteLabel.setText("Note: sharing this Sample will also share its LSMs and Neuron Fragments.");
         }
@@ -551,8 +571,7 @@ public class DomainInspectorPanel extends JPanel {
         permissionsPanel.add(permissionsTable, "width 10:300:3000");
         permissionsPanel.add(permissionsNoteLabel, "width 10:300:3000");
         permissionsPanel.add(permissionsButtonPane, "width 10:300:3000");
-        permissionsPanel.revalidate();
-        permissionsPanel.repaint();
+        permissionsPanel.updateUI();
 
         log.trace("Setting permission button state to {}", addPermissionButton.isEnabled());
         addPermissionButton.setEnabled(ClientDomainUtils.isOwner(domainObject));
@@ -581,7 +600,7 @@ public class DomainInspectorPanel extends JPanel {
                 annotationsView.setAnnotations(annotations);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);
-                annotationsPanel.revalidate();
+                annotationsPanel.updateUI();
             }
 
             @Override
@@ -589,7 +608,7 @@ public class DomainInspectorPanel extends JPanel {
                 ConsoleApp.handleException(error);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);
-                annotationsPanel.revalidate();
+                annotationsPanel.updateUI();
             }
         };
         annotationLoadingWorker.execute();
@@ -627,14 +646,25 @@ public class DomainInspectorPanel extends JPanel {
 
     public void refresh() {
         try {
+            if (domainObject==null) return;
             this.domainObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-            if (domainObject != null) {
-                loadSubjects();
+            if (domainObject == null) {
+                showNothing();
+                return;
+            }
+            
+            int selectedTab = tabbedPane.getSelectedIndex();
+            if (selectedTab==0) {
                 loadAttributes();
+            }
+            else if (selectedTab==1) {
+                loadSubjects();
+            }
+            else if (selectedTab==2) {
                 loadAnnotations();
             }
             else {
-                showNothing();
+                throw new IllegalStateException("Unknown tab index: "+selectedTab);
             }
         } 
         catch (Exception ex) {

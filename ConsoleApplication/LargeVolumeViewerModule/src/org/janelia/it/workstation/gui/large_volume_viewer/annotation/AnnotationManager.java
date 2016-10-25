@@ -640,7 +640,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Error while moving neurite!",
-                            "Error",
                             error);
                 }
             };
@@ -663,7 +662,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Error while moving neurite!",
-                            "Error",
                             error);
                 }
             };
@@ -711,7 +709,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split anchor!",
-                        "Error",
                         error);
             }
         };
@@ -739,7 +736,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not reroot neurite!",
-                        "Error",
                         error);
             }
         };
@@ -776,7 +772,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split neurite!",
-                        "Error",
                         error);
             }
         };
@@ -809,7 +804,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not add anchored path!",
-                        "Error",
                         error);
             }
         };
@@ -861,7 +855,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not remove note!",
-                            "Error",
                             error);
                 }
             };
@@ -898,7 +891,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not set note!",
-                        "Error",
                         error);
             }
         };
@@ -943,7 +935,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not create neuron!",
-                            "Error",
                             error);
                 }
             };
@@ -979,7 +970,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not delete current neuron!",
-                            "Error",
                             error);
                 }
             };
@@ -1020,7 +1010,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not rename neuron!",
-                        "Error",
                         error);
             }
         };
@@ -1652,9 +1641,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * usual error dialog is hiding too much info when it pops within
      * a SimpleWorker's error clause; log those errors!
      */
-    public void presentError(String message, String title, Throwable error) throws HeadlessException {
-        log.error(message, error);
-        presentError(message, title);
+    public void presentError(String message, Throwable error) throws HeadlessException {
+        FrameworkImplProvider.handleException(new Exception(message,error));
     }
 
     private Long getSampleID() {

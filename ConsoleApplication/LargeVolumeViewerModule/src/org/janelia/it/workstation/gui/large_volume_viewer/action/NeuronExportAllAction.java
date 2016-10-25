@@ -35,10 +35,28 @@ public class NeuronExportAllAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
         AnnotationModel annotationModel = annotationMgr.getAnnotationModel();
+        if (annotationModel.getCurrentWorkspace()==null) return;
         SwcExport export = new SwcExport();
         ExportParameters params = export.getExportParameters(annotationModel.getCurrentWorkspace().getName());
         if ( params != null ) {
             annotationMgr.exportNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo(), annotationModel.getNeuronList());
         }
+    }
+    
+    @Override
+    public void setEnabled(boolean newValue) {
+        throw new IllegalStateException("Calling setEnabled directly is not supported");
+    }
+    
+    @Override
+    public boolean isEnabled() {
+        AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
+        if (annotationMgr==null) return false;
+        return annotationMgr.getCurrentWorkspace()!=null;
+    }
+    
+    public void fireEnabledChangeEvent() {
+        boolean enabled = isEnabled();
+        firePropertyChange("enabled", Boolean.valueOf(!enabled), Boolean.valueOf(enabled));
     }
 }
