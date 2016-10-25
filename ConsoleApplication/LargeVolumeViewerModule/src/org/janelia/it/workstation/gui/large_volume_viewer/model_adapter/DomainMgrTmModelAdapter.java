@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
@@ -38,7 +39,6 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
     public static final int TOTAL_WORKUNITS = 3;
 
     private static ScheduledThreadPoolExecutor saveQueue = new ScheduledThreadPoolExecutor(1, new CustomNamedThreadFactory("Tm-Save-Queue"));
-    private static boolean saveQueueErrorFlag = false;
 
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
 
@@ -117,36 +117,14 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
                 log.trace("Neuron save/update time = {} ms", w.getElapsedTime());
             }
             catch (Exception ex) {
-                log.error("Error saving neuron "+tmNeuronMetadata,ex);
-                saveQueueErrorFlag=true;
+                FrameworkImplProvider.handleException(new Exception("Error saving neuron",ex));
             }
             running.set(false); // For completeness.
         }
     }
 
     private static void saveNeuronToQueue(TmNeuronMetadata neuron, boolean metadataOnly) throws Exception {
-        if (saveQueueErrorFlag) {
-            throw new Exception("Neuron save queue in error state - workstation should be restarted");
-        } else {
-            // Save-queue tasks are identical to one another.  So let us
-            // not accumulate redundant tasks.  If one is waiting to save
-            // this neuron, no need to schedule another, which will just
-            // save it again after--and possibly after other operations.
-
-
-            // this doesn't work right now; keeping it in because I hope to fix it
-            /*
-            for (Runnable runnable: saveQueue.getQueue()) {
-                SaveNeuronRunnable snr = (SaveNeuronRunnable)runnable;
-                if (snr.sameNeuron(neuron)  &&  ! snr.isRunning()) {
-                    // There is a yet-to-run task focused on saving this neuron.
-                    return;
-                }
-            }
-            */
-            SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(neuron, metadataOnly);
-            saveQueue.submit(saveNeuronRunnable);
-        }
+        saveQueue.submit(new SaveNeuronRunnable(neuron, metadataOnly));
     }
 
     public TmNeuronMetadata createNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
