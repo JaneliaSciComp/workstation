@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
@@ -59,9 +60,14 @@ public class LocalPreferenceMgr {
             boolean success = settingsFile.createNewFile();  //only creates if does not exist
             if (success) {
                 log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
+                writeSettings();
+            }
+            else {
+                log.error("Could not create settings file in "+settingsFile.getAbsolutePath());
             }
         }
         catch (IOException ioEx) {
+            log.warn("Caught exception while creating settings file. Will recover...",ioEx);
             if (!new File(prefsDir).mkdirs()) {
                 log.error("Could not create prefs dir at " + prefsDir);
             }
@@ -69,6 +75,10 @@ public class LocalPreferenceMgr {
                 boolean success = settingsFile.createNewFile();  //only creates if does not exist
                 if (success) {
                     log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
+                    writeSettings();
+                }
+                else {
+                    log.error("Could not create settings file in "+settingsFile.getAbsolutePath());
                 }
             }
             catch (IOException e) {
@@ -118,12 +128,12 @@ public class LocalPreferenceMgr {
             }
         }
         catch (EOFException eof) {
-            log.info("No settings file",eof);
+            log.info("No settings file found",eof);
             // Do nothing, there are no preferences
         }
         catch (Exception ioEx) {
-            log.info("Error reading settings file", ioEx);
-        } //new settingsFile
+            log.warn("Error reading settings file", ioEx);
+        }
     }
     
     public void writeSettings() {
@@ -137,7 +147,7 @@ public class LocalPreferenceMgr {
             ostream.writeObject(modelProperties);
             ostream.flush();
             ostream.close();
-            log.info("Saving user settings to " + settingsFile.getAbsolutePath());
+            log.debug("Saving user settings to " + settingsFile.getAbsolutePath());
         }
         catch (IOException ioEx) {
             ConsoleApp.handleException(ioEx);
@@ -151,7 +161,7 @@ public class LocalPreferenceMgr {
     public Object setModelProperty(Object key, Object newValue) {
         if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
         Object oldValue = modelProperties.put(key, newValue);
-        if (!oldValue.equals(newValue)) {
+        if (!StringUtils.areEqual(oldValue, newValue)) {
             log.info("Setting local preference {} = {} (was {})",key,newValue,oldValue);
             writeSettings();
             Events.getInstance().postOnEventBus(new LocalPreferenceChanged(key, oldValue, newValue));
