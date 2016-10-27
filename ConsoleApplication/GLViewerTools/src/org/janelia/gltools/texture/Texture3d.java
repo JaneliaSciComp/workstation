@@ -258,12 +258,15 @@ public class Texture3d extends BasicTexture implements GL3Resource
             
             System.out.println("... debug ... set getMethod ...");
             
-            getMethod.setURI(dvidURI); // hard coded here by yuy for DVID Testing
+            getMethod = new GetMethod("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100"); // hard coded here by yuy for DVID Testing
 
             System.out.println("... debug ... getMethod.getURI(): " + getMethod.getURI());
 
             // We can now write the stream directly to a buffer, because we know the content length up front.
             long contentLength = getMethod.getResponseContentLength();
+            
+            System.out.println("... debug ... contentLength: " + contentLength);
+            
             byte[] bytes = new byte[(int)contentLength];
             if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
 
