@@ -35,6 +35,7 @@ import org.janelia.console.viewerapi.OsFilePathRemapper;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
@@ -106,7 +107,7 @@ class KtxBlockMenus {
                     }
                     logger.info("Ktx source folder = " + folderSelection);
                     try {
-                        cachedBlockTileSource = new KtxOctreeBlockTileSource(folder);
+                        cachedBlockTileSource = new KtxOctreeBlockTileSource(folder.toURI().toURL());
                         BlockChooser chooser = new OneFineDisplayBlockChooser();
                         GpuTileCache gpuCache = new GpuTileCache(chooser);
                     } catch (IOException ex) {
@@ -118,6 +119,8 @@ class KtxBlockMenus {
                                 JOptionPane.ERROR_MESSAGE);                    
                     }
                     tileSource = cachedBlockTileSource;
+                    if (tileSource == null)
+                        return;
                 }
                 Vector3 xyz = context.mouseXyz; // Use mouse location, as opposed to center focus location
                 BlockTileResolution resolution = tileSource.getMaximumResolution();
@@ -136,12 +139,19 @@ class KtxBlockMenus {
                         context.renderer.setIntensityBufferDirty();
                         context.sceneWindow.getInnerComponent().repaint();
                     }
+                    else {
+                        JOptionPane.showMessageDialog(
+                                context.topMenu,
+                                "No tile found at this location " + key,
+                                "No tile found at this location " + key,
+                                JOptionPane.WARNING_MESSAGE);                        
+                    }
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                     JOptionPane.showMessageDialog(
                             context.topMenu,
                             "ERROR: Error loading ktx block " + key,
-                            "ERROR: Error loading ktx block" + key,
+                            "ERROR: Error loading ktx block " + key,
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }

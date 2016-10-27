@@ -144,6 +144,7 @@ import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
@@ -214,7 +215,12 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final Observer cursorCacheDestroyer;
 
     private TracingInteractor tracingInteractor;
+
+    // Old way for loading raw tiles
     private StaticVolumeBrickSource volumeSource;
+    // New way for loading ktx tiles
+    private BlockTileSource ktxSource;
+    
     private CenterCrossHairActor crossHairActor;
     private ScaleBar scaleBar = new ScaleBar();
     private ActivityLogHelper activityLogger = ActivityLogHelper.getInstance();
@@ -1855,6 +1861,14 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void addMeshActor(GL3Actor meshActor) {
         neuronMPRenderer.addMeshActor(meshActor);
+    }
+
+    public BlockTileSource getKtxSource() {
+        return ktxSource;
+    }
+
+    public void setKtxSource(BlockTileSource ktxSource) {
+        this.ktxSource = ktxSource;
     }
 
 }

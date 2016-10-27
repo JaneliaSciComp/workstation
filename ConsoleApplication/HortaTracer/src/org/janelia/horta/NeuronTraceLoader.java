@@ -37,11 +37,18 @@ import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.actors.TetVolumeMeshActor;
+import org.janelia.horta.blocks.BlockTileData;
+import org.janelia.horta.blocks.BlockTileKey;
+import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
 import org.openide.awt.StatusDisplayer;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,5 +203,28 @@ public class NeuronTraceLoader {
         }
         
         return brickInfo;
+    }
+
+    public void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
+            throws IOException
+    {
+        BlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
+        BlockTileData ktxBlock = ktxSource.loadBlock(centerKey);
+        TetVolumeActor parentActor = TetVolumeActor.getInstance();
+        TetVolumeMeshActor blockActor = new TetVolumeMeshActor((KtxData) ktxBlock, parentActor);
+        parentActor.addChild(blockActor);
+        if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+            parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+            neuronMPRenderer.addVolumeActor(parentActor);
+        }
+        neuronMPRenderer.setIntensityBufferDirty();
+    }
+    
+    public void loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+            throws IOException
+    {
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        loadKtxTileAtLocation(ktxSource, focus);
     }
 }

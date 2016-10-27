@@ -31,13 +31,12 @@
 package org.janelia.horta.blocks;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -45,6 +44,7 @@ import java.util.regex.Pattern;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.ktx.KtxHeader;
+import org.openide.util.Exceptions;
 import org.python.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,8 +55,10 @@ import org.slf4j.LoggerFactory;
  */
 public class KtxOctreeBlockTileSource implements BlockTileSource 
 {
+    private final URL rootUrl;
+    
     private final KtxHeader rootHeader;
-    private final File rootFolder;
+    // private final File rootFolder;
     private final KtxOctreeResolution maximumResolution;
     
     private final Vector3 origin;
@@ -65,41 +67,50 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private File folderForKey(BlockTileKey key0) {
-        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) key0;
-        List<String> steps = new ArrayList<>();
-        for (Integer s : key.path) {
-            steps.add(s.toString());
-        }
-        Path path = Paths.get(rootFolder.getAbsolutePath(), Joiner.on("/").join(steps));
-        return path.toFile();
+    // Like "1/2/3/3"
+    private String subfolderForKey(KtxOctreeBlockTileKey key) {
+        String result = key.toString();
+        if (result.length() > 0)
+            result = result + "/"; // Add trailing (but not initial) slash
+        return result;
     }
     
-    private File fileForKey(BlockTileKey key) throws IOException {
-        File folder = folderForKey(key);
-
-        // Expect only one ktx file in the folder
-        FilenameFilter filter = new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.endsWith(".ktx");
-            }
-        };
-        File[] ktxFiles = folder.listFiles(filter);
-        if (ktxFiles.length != 1) {
-            throw new IOException("Wrong number of ktx files found");
+    private URL folderForKey(BlockTileKey key0) 
+    {
+        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey) key0;
+        String subfolderStr = subfolderForKey(key);
+        URL folderUrl = null;
+        try {
+            folderUrl = new URL(rootUrl, subfolderStr);
+        } catch (MalformedURLException ex) {
+            Exceptions.printStackTrace(ex);
         }
-        logger.info(ktxFiles[0].getAbsolutePath());
-        return ktxFiles[0];
+        return folderUrl;
+    }
+    
+    private URL blockUrlForKey(KtxOctreeBlockTileKey key) throws IOException {
+        URL folder = folderForKey(key);
+
+        // TODO: Main defect of URL vs. File is searchability of actual file name.
+        // block_2016-07-18b_8_xy_.ktx
+        String[] pathParts = rootUrl.getPath().split("/");
+        String specimenName = pathParts[pathParts.length - 1];
+        String subfolderStr = subfolderForKey(key);
+        subfolderStr = subfolderStr.replaceAll("/", "");
+        String fileName = "block_" + specimenName + "_8_xy_" + subfolderStr + ".ktx";
+        
+        URL blockUrl = new URL(folder, fileName);
+        return blockUrl;
     }
     
     private InputStream streamForKey(BlockTileKey key) throws IOException {
-        return new BufferedInputStream(new FileInputStream(fileForKey(key)));
+        URL url = blockUrlForKey((KtxOctreeBlockTileKey)key);
+        return new BufferedInputStream(url.openStream());
     }
     
-    public KtxOctreeBlockTileSource(File ktxFolder) throws IOException 
+    public KtxOctreeBlockTileSource(URL rootUrl) throws IOException 
     {
-        rootFolder = ktxFolder;
+        this.rootUrl = rootUrl;
         rootKey = new KtxOctreeBlockTileKey(new ArrayList<Integer>(), this);
         
         try (InputStream stream = streamForKey(rootKey)) {
@@ -153,6 +164,8 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     @Override
     public BlockTileKey getBlockKeyAt(Vector3 location, BlockTileResolution resolution0) 
     {
+        if (resolution0 == null)
+            resolution0 = getMaximumResolution();
         KtxOctreeResolution resolution = (KtxOctreeResolution)resolution0;
         if (resolution.compareTo(getMaximumResolution()) > 0) 
             return null; // no resolution that high
@@ -214,17 +227,39 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public boolean blockExists(BlockTileKey key) throws IOException {
-        return folderForKey(key).exists();
+    public boolean blockExists(BlockTileKey key) throws IOException
+    {
+        URL blockUrl = blockUrlForKey((KtxOctreeBlockTileKey)key);
+        try (InputStream stream = blockUrl.openStream()) { // throws IOException
+            return true;
+        } catch (FileNotFoundException ex) {
+            return false;
+            // Exceptions.printStackTrace(ex);
+        } catch (IOException ex) {
+            return false;
+            // Exceptions.printStackTrace(ex);
+        }
     }
 
     @Override
-    public BlockTileData loadBlock(BlockTileKey key) throws IOException {
+    public BlockTileData loadBlock(BlockTileKey key) throws IOException 
+    {
+        long t0 = System.nanoTime();
         try (InputStream stream = streamForKey(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
             data.loadStream(stream);
+            long t1 = System.nanoTime();
+            float elapsed = (t1 - t0) / 1e9f;
+            logger.info("Ktx tile '" + key + "' stream load took " 
+                    + new DecimalFormat("#0.000").format(elapsed) 
+                    + "seconds");
             return data;
         }
+    }
+
+    @Override
+    public URL getRootUrl() {
+        return rootUrl;
     }
     
     static public class KtxOctreeBlockTileData
@@ -256,6 +291,15 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
             return source;
         }
         
+        @Override
+        public String toString() {
+            List<String> steps = new ArrayList<>();
+            for (Integer s : path) {
+                steps.add(s.toString());
+            }
+            String subfolderStr = Joiner.on("/").join(steps);
+            return subfolderStr;  
+        }
     }
     
     

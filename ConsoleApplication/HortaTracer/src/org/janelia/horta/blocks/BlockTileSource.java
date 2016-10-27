@@ -31,6 +31,7 @@
 package org.janelia.horta.blocks;
 
 import java.io.IOException;
+import java.net.URL;
 import org.janelia.geometry3d.Vector3;
 
 /**
@@ -55,4 +56,6 @@ public interface BlockTileSource {
     public boolean blockExists(BlockTileKey key) throws IOException;
     
     public BlockTileData loadBlock(BlockTileKey key) throws IOException;
+    
+    public URL getRootUrl();
 }
