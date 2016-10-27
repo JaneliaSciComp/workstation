@@ -23,7 +23,7 @@ public class CacheFileResolver implements FileResolver {
         try {
             cachedFile = FrameworkImplProvider.getFileAccess().getCachedFile( fileName, false );
         } catch ( Throwable ex ) {
-            logger.warn( "Failed to use session manager to resolve file " + fileName + ", returning as-is." );
+            logger.warn( "Failed to use session manager to resolve file " + fileName + ", returning as-is.",ex);
         }
 
         if ( cachedFile != null )
