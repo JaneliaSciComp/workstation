@@ -76,20 +76,24 @@ public class StateMgr {
     public static boolean isDarkLook = false;
     
     private StateMgr() {     
-        
         log.info("Initializing State Manager");
-        
-        this.autoShareTemplate = (PermissionTemplate)ConsoleApp.getConsoleApp().getModelProperty(AUTO_SHARE_TEMPLATE);
-        
-        if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
-            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+        try {
+            this.autoShareTemplate = (PermissionTemplate)ConsoleApp.getConsoleApp().getModelProperty(AUTO_SHARE_TEMPLATE);
+            
+            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY) == null) {
+                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.UNLOAD_IMAGES_PROPERTY, false);
+            }
+    
+            if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
+                ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+            }
+            
+            log.debug("Using 2d renderer: {}", ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
         }
-
-        if (ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D) == null) {
-            ConsoleApp.getConsoleApp().setModelProperty(OptionConstants.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+        catch (Throwable e) {
+            // Catch all exceptions, because anything failing to init here cannot be allowed to prevent the Workstation from starting
+            ConsoleApp.handleException(e);
         }
-        
-        log.debug("Using 2d renderer: {}", ConsoleApp.getConsoleApp().getModelProperty(OptionConstants.DISPLAY_RENDERER_2D));
     }
 
     public void initLAF() {

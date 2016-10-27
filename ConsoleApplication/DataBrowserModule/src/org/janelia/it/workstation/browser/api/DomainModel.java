@@ -375,6 +375,7 @@ public class DomainModel {
      * @return canonical domain object instance
      */
     public <T extends DomainObject> T getDomainObject(T domainObject) throws Exception {
+        if (domainObject==null) throw new IllegalArgumentException("Domain object may not be null");
         if (!isCacheable(domainObject)) {
             return domainObject;
         }
@@ -645,9 +646,11 @@ public class DomainModel {
         for(DomainObject domainObject : domainObjects) {
             DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
             if (provider!=null) {
+                log.debug("Found DomainObjectHelper provider: "+provider);
                 provider.remove(domainObject);
             }
             else {
+                log.debug("No DomainObjectHelper found for {}, using default remove function",domainObject);
                 domainFacade.remove(Arrays.asList(Reference.createFor(domainObject)));
             }
         }

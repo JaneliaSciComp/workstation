@@ -120,6 +120,7 @@ public class FilterEditorPanel extends JPanel
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (filter==null) throw new IllegalStateException("Cannot save null filter");
                 SimpleWorker worker = new SimpleWorker() {
                         
                     private Filter savedFilter;

@@ -23,9 +23,9 @@ public class Skeleton {
     private class VersionedLinkedHashSet<E> extends LinkedHashSet<E> {
         private int version=0;
 
-        public int getVersion() { return version; }
+        public synchronized int getVersion() { return version; }
 
-        public void incrementVersion() { version++; }
+        public synchronized void incrementVersion() { version++; }
 
         @Override
         public boolean add(E e) {
@@ -116,22 +116,22 @@ public class Skeleton {
     private SkeletonController controller;
     private TileFormat tileFormat;
 
-	private VersionedLinkedHashSet<Anchor> anchors = new VersionedLinkedHashSet<>();
+	private final VersionedLinkedHashSet<Anchor> _anchors = new VersionedLinkedHashSet<>();
+    private final Set<Anchor> anchors = Collections.synchronizedSet(_anchors);
     private Anchor nextParent;
     private Anchor hoverAnchor;
 	
-	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
-			new ConcurrentHashMap<>();
+	private final Map<SegmentIndex, AnchoredVoxelPath> tracedSegments = new ConcurrentHashMap<>();
 	
-	private Map<Long, Anchor> anchorsByGuid = new HashMap<>();
+	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
+	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
     }
 
-    public void incrementAnchorVersion() { anchors.incrementVersion(); }
+    public void incrementAnchorVersion() { _anchors.incrementVersion(); }
     
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
@@ -187,7 +187,7 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
-        anchors.incrementVersion();
+        _anchors.incrementVersion();
         controller.skeletonChanged();
 		return true;
 	}
@@ -395,9 +395,13 @@ public class Skeleton {
             anchor.getNeighbors().remove(removeAnchor);
             removeAnchor.getNeighbors().remove(anchor);
         }
-        anchors.incrementVersion();
+        _anchors.incrementVersion();
     }
 
+    /**
+     * Returns a synchronized set of anchors. To safely iterate over this 
+     * set, synchronize on it first.
+     */
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
@@ -450,7 +454,7 @@ public class Skeleton {
 	}
 
     public int getAnchorSetVersion() {
-        return anchors.getVersion();
+        return _anchors.getVersion();
     }
 
 }

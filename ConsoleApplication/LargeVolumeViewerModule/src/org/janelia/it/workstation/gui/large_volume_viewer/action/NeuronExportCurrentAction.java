@@ -49,4 +49,19 @@ public class NeuronExportCurrentAction extends AbstractAction {
             }
         }
     }
+
+    @Override
+    public void setEnabled(boolean newValue) {
+        throw new IllegalStateException("Calling setEnabled directly is not supported");
+    }
+    
+    @Override
+    public boolean isEnabled() {
+        return LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr().getCurrentWorkspace()!=null;
+    }
+    
+    public void fireEnabledChangeEvent() {
+        boolean enabled = isEnabled();
+        firePropertyChange("enabled", Boolean.valueOf(!enabled), Boolean.valueOf(enabled));
+    }
 }

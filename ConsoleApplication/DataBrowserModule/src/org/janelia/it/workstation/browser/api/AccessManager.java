@@ -153,6 +153,12 @@ public final class AccessManager {
         EJBFactory.getRemoteComputeBean().addEventsToSessionAsync(events);
     }
 
+    private String getLogEventUserLogin() {
+        String username = PropertyConfigurator.getProperties().getProperty(USER_NAME);
+        if (username!=null) return username;
+        return UserToolEvent.DEFAULT_USER_LOGIN;
+    }
+    
     /**
      * Send an event described by the information given as parameters, to the
      * logging apparatus. Apply the criteria of:
@@ -167,11 +173,9 @@ public final class AccessManager {
      * @param thresholdMs beyond this time, force log issue.
      */
     public void logToolEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
-        String userLogin = null;
-
+        String userLogin = getLogEventUserLogin();
         try {
-            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
-            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin.toString(), toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
+            final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
             Callable<Void> callable = new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -216,10 +220,8 @@ public final class AccessManager {
      * @todo see about reusing code between this and non-threshold.
      */
     public void logToolThresholdEvent(final ToolString toolName, final CategoryString category, final ActionString action, final long timestamp, final double elapsedMs, final double thresholdMs) {
-        String userLogin = null;
-
+        String userLogin = getLogEventUserLogin();
         try {
-            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
             final UserToolEvent event = new UserToolEvent(currentSessionId, userLogin, toolName.toString(), category.toString(), action.toString(), new Date(timestamp));
             Callable<Void> callable = new Callable<Void>() {
                 @Override
@@ -261,9 +263,8 @@ public final class AccessManager {
      * @param actions explicit action information.
      */
     public void logBatchToolEvent(ToolString toolName, CategoryString category, String batchPrefix, List<String> actions) {
-        String userLogin = null;
+        String userLogin = getLogEventUserLogin();
         try {
-            userLogin = PropertyConfigurator.getProperties().getProperty(USER_NAME);
             final UserToolEvent[] events = new UserToolEvent[actions.size()];
             int evtNum = 0;
             for (String action: actions) {                
@@ -372,10 +373,6 @@ public final class AccessManager {
 
     private void setSubject(Subject subject) {
         this.loggedInSubject = subject;
-        // TODO: This is a temporary hack to inject this information back into the old modules. It should go away eventually.
-//        SessionMgr.getSessionMgr().setSubjectKey(
-//                authenticatedSubject==null?null:authenticatedSubject.getKey(),
-//                loggedInSubject==null?null:loggedInSubject.getKey());
     }
 
     public Subject getSubject() {
@@ -398,11 +395,13 @@ public final class AccessManager {
 
     public static boolean authenticatedSubjectIsInGroup(SubjectRole role) {
         Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
+        if (subject==null) return false;
         return subject.getGroups().contains(role.getRole());
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
         Subject subject = AccessManager.getAccessManager().getSubject();
+        if (subject==null) return false;
         return subject.getGroups().contains(groupName);
     }
 
