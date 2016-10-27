@@ -606,13 +606,13 @@ public final class NeuronTracerTopComponent extends TopComponent
             public void mouseEntered(MouseEvent event) {
                 super.mouseEntered(event);
                 crossHairActor.setVisible(true);
-                sceneWindow.redrawNow();
+                redrawNow();
             }
             @Override
             public void mouseExited(MouseEvent event) {
                 super.mouseExited(event);
                 crossHairActor.setVisible(false);
-                sceneWindow.redrawNow();
+                redrawNow();
             }
 
             // Click to center on position
@@ -691,7 +691,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (vantage.setRotationInGround(new Rotation().setFromQuaternion(mid))) {
                 didMove = true;
                 vantage.notifyObservers();
-                sceneWindow.redrawNow();
+                sceneWindow.redrawImmediately();
             }
         }
         // never skip the final frame
@@ -700,7 +700,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         if (didMove) {
             vantage.notifyObservers();
-            sceneWindow.redrawNow();
+            redrawNow();
         }
     }
 
@@ -1067,8 +1067,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                         popupMenuScreenPoint,
                         mouseXyz,
                         focusXyz,
-                        null, // TODO: Ktx block tile source
-                        neuronMPRenderer
+                        null, // TOreDO: Ktx block tile source
+                        neuronMPRenderer,
+                        sceneWindow
                 );
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
@@ -1151,7 +1152,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         {
                             volumeState.projectionMode = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                 
@@ -1168,10 +1169,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                     
+                    /*
                     projectionMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Isosurface") 
                     {
@@ -1184,9 +1186,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.projectionMode = 2;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
+                    */
                                         
                     JMenu filterMenu = new JMenu("Rendering Filter");
                     menu.add(filterMenu);
@@ -1203,7 +1206,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 0;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
 
@@ -1219,7 +1222,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 1;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
 
@@ -1234,7 +1237,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         public void actionPerformed(ActionEvent e) {
                             volumeState.filteringOrder = 3;
                             neuronMPRenderer.setIntensityBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                 }
@@ -1258,7 +1261,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     SceneRenderer.Stereo3dMode.MONO);
                             neuronMPRenderer.setIntensityBufferDirty();
                             neuronMPRenderer.setOpaqueBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                     
@@ -1277,7 +1280,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     SceneRenderer.Stereo3dMode.LEFT);
                             neuronMPRenderer.setIntensityBufferDirty();
                             neuronMPRenderer.setOpaqueBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                     
@@ -1296,7 +1299,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     SceneRenderer.Stereo3dMode.RIGHT);
                             neuronMPRenderer.setIntensityBufferDirty();
                             neuronMPRenderer.setOpaqueBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                     
@@ -1315,7 +1318,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     SceneRenderer.Stereo3dMode.RED_CYAN);
                             neuronMPRenderer.setIntensityBufferDirty();
                             neuronMPRenderer.setOpaqueBufferDirty();
-                            sceneWindow.redrawNow();
+                           redrawNow();
                         }
                     }));
                     
@@ -1334,7 +1337,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     SceneRenderer.Stereo3dMode.GREEN_MAGENTA);
                             neuronMPRenderer.setIntensityBufferDirty();
                             neuronMPRenderer.setOpaqueBufferDirty();
-                            sceneWindow.redrawNow();
+                            redrawNow();
                         }
                     }));
                     
@@ -1417,17 +1420,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     }));
                     menu.add(unmixMenu);
-                    
-                    menu.add(new JMenuItem(
-                            new AbstractAction("Clear all Volume Blocks")
-                    {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            TetVolumeActor.getInstance().getChildren().clear();
-                            redrawNow();
-                        }
-                    }
-                    ));
+
                 }
                 
                 menu.add(new AbstractAction("Save Screen Shot...") {
@@ -1699,7 +1692,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             // logger.info("undistort");
         }
         v.notifyObservers();
-        sceneWindow.redrawNow();
+        redrawNow();
         
         return true;
     }

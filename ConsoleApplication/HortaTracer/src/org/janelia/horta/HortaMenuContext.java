@@ -35,6 +35,7 @@ import javax.swing.JPopupMenu;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.render.NeuronMPRenderer;
+import org.janelia.scenewindow.SceneWindow;
 
 /**
  *
@@ -47,6 +48,7 @@ class HortaMenuContext {
     public final Vector3 focusXyz; // coordinate at center of screen
     public final BlockTileSource ktxBlockTileSource;
     public final NeuronMPRenderer renderer;
+    public final SceneWindow sceneWindow;
 
     HortaMenuContext(
             JPopupMenu menu, 
@@ -54,7 +56,8 @@ class HortaMenuContext {
             Vector3 mouseXyz, 
             Vector3 focusXyz,
             BlockTileSource ktxBlockSource,
-            NeuronMPRenderer renderer
+            NeuronMPRenderer renderer,
+            SceneWindow sceneWindow
     ) {
         this.topMenu = menu;
         this.popupScreenPoint = popupScreenPoint;
@@ -62,6 +65,7 @@ class HortaMenuContext {
         this.focusXyz = focusXyz;
         this.ktxBlockTileSource = ktxBlockSource;
         this.renderer = renderer;
+        this.sceneWindow = sceneWindow;
     }
     
 }

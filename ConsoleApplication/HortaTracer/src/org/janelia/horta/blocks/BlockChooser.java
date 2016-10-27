@@ -37,6 +37,6 @@ import org.janelia.geometry3d.Vector3;
  * Create a list of volume tiles, in order of decreasing importance
  * @author brunsc
  */
-interface BlockChooser {
+public interface BlockChooser {
     List<BlockTileKey> chooseBlocks(BlockTileSource source, Vector3 focus, Vector3 previousFocus);
 }

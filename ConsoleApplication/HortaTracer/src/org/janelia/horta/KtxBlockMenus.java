@@ -36,15 +36,21 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import javax.swing.AbstractAction;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
+import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockTileData;
 import org.janelia.horta.blocks.BlockTileKey;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.GpuTileCache;
+import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.openide.util.Exceptions;
@@ -58,15 +64,16 @@ import org.slf4j.LoggerFactory;
 class KtxBlockMenus {
     
     private BlockTileSource cachedBlockTileSource;
+    private boolean preferKtx = true;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     void populateMenus(final HortaMenuContext context) 
     {
-        JMenu ktxMenu = new JMenu("Tiles");
-        context.topMenu.add(ktxMenu);
+        JMenu tilesMenu = new JMenu("Tiles");
+        context.topMenu.add(tilesMenu);
         
-        ktxMenu.add(new AbstractAction("Load Ktx Tile Here") {
+        tilesMenu.add(new AbstractAction("Load Ktx Tile Here") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 BlockTileSource tileSource = context.ktxBlockTileSource;
@@ -100,13 +107,16 @@ class KtxBlockMenus {
                     logger.info("Ktx source folder = " + folderSelection);
                     try {
                         cachedBlockTileSource = new KtxOctreeBlockTileSource(folder);
+                        BlockChooser chooser = new OneFineDisplayBlockChooser();
+                        GpuTileCache gpuCache = new GpuTileCache(chooser);
                     } catch (IOException ex) {
                         Exceptions.printStackTrace(ex);
                         JOptionPane.showMessageDialog(
                                 context.topMenu,
                                 "ERROR: Error reading ktx folder " + folder,
                                 "ERROR: Error reading ktx folder " + folder,
-                                JOptionPane.ERROR_MESSAGE);                    }
+                                JOptionPane.ERROR_MESSAGE);                    
+                    }
                     tileSource = cachedBlockTileSource;
                 }
                 Vector3 xyz = context.mouseXyz; // Use mouse location, as opposed to center focus location
@@ -123,6 +133,8 @@ class KtxBlockMenus {
                             parentActor.setBrightnessModel(renderer.getBrightnessModel());
                             renderer.addVolumeActor(parentActor);
                         }
+                        context.renderer.setIntensityBufferDirty();
+                        context.sceneWindow.getInnerComponent().repaint();
                     }
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
@@ -134,7 +146,35 @@ class KtxBlockMenus {
                     return;
                 }
             }
-        });            
+        });       
+        
+        tilesMenu.add(new JPopupMenu.Separator());
+        
+        JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
+                "Prefer rendered Ktx tiles", preferKtx);
+        tilesMenu.add(enableVolumeCacheMenu);
+        enableVolumeCacheMenu.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
+                preferKtx = item.isSelected();
+                item.setSelected(preferKtx);
+                throw new UnsupportedOperationException();
+            }
+        });
+        
+        tilesMenu.add(new JMenuItem(
+                new AbstractAction("Clear all Volume Blocks")
+        {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TetVolumeActor.getInstance().getChildren().clear();
+                context.renderer.setIntensityBufferDirty();
+                context.sceneWindow.getInnerComponent().repaint();
+            }
+        }));
+
     }
     
 }

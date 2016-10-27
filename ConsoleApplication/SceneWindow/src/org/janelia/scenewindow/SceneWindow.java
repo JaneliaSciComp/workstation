@@ -111,7 +111,7 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     // immediate blocking repainting
-    public boolean redrawNow() {
+    public boolean redrawImmediately() {
         GLAutoDrawable glad = getGLAutoDrawable();
         if (glad == null) return false;
         GLContext context = glad.getContext();
@@ -126,11 +126,6 @@ public class SceneWindow implements GLJComponent, Scene {
             logger.error(exc.getMessage());
         }
         finally {
-            // This "if" statement sounds reasonable, but for some reason,
-            // including it results in GLExceptions when tabbing from LVV
-            // to Horta.
-            // if (result == GLContext.CONTEXT_CURRENT_NEW)
-
             context.release();
         }
         return true;
