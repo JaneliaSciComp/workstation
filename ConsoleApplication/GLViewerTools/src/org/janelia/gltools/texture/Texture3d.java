@@ -33,6 +33,8 @@ import java.awt.image.ColorModel;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
@@ -50,6 +52,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 
 import com.sun.media.jai.codec.ByteArraySeekableStream;
@@ -60,6 +63,7 @@ import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.MemoryCacheSeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry.util.PerformanceTimer;
@@ -237,6 +241,112 @@ public class Texture3d extends BasicTexture implements GL3Resource
         else // if (bytesPerIntensity == 2)
             return new Integer(shortPixels.get(offset));
         // TODO - 32 bit integers...
+    }
+    
+    public Texture3d loadStack(String dvidServer, int offsetX, int offsetY, int offsetZ) {
+                
+
+        
+        PerformanceTimer timer = new PerformanceTimer();
+
+        // hard coded here for testing
+         try {
+             
+            System.out.println("... debug ... hard coded uri ...");
+             
+            URI dvidURI = new URI("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100");
+            
+            System.out.println("... debug ... set getMethod ...");
+            
+            getMethod.setURI(dvidURI); // hard coded here by yuy for DVID Testing
+
+            System.out.println("... debug ... getMethod.getURI(): " + getMethod.getURI());
+
+            // We can now write the stream directly to a buffer, because we know the content length up front.
+            long contentLength = getMethod.getResponseContentLength();
+            byte[] bytes = new byte[(int)contentLength];
+            if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
+
+            log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+
+            //
+            depth = 251;
+            width = 512;
+            height = 1536;
+
+            bytesPerIntensity = 2;
+
+            //
+            bytesPerIntensity = Math.max(1, bytesPerIntensity);
+            // NOTE - we might want to support more data types than byte and short eventually.
+            if (bytesPerIntensity < 2) type = GL3.GL_UNSIGNED_BYTE;
+            else type = GL3.GL_UNSIGNED_SHORT;
+            numberOfComponents = 2;
+            switch (numberOfComponents) {
+                case 1:
+                    format = internalFormat = GL3.GL_RED;
+                    if (bytesPerIntensity > 1)  internalFormat = GL3.GL_R16;
+                    break;
+                case 2:
+                    format = internalFormat = GL3.GL_RG;
+                    if (bytesPerIntensity > 1)  internalFormat = GL3.GL_RG16;
+                    break;
+                case 3:
+                    format = internalFormat = GL3.GL_RGB;
+                    if (bytesPerIntensity > 1)  internalFormat = GL3.GL_RGB16;
+                    break;
+                case 4:
+                    format = internalFormat = GL3.GL_RGBA;
+                    if (bytesPerIntensity > 1)  internalFormat = GL3.GL_RGBA16;
+                    break;
+            }
+
+            allocatePixels();
+
+            log.debug("Initializing texture buffer took {} ms", timer.reportMsAndRestart());
+
+            if (getMethod!=null) {
+                getMethod.releaseConnection();
+            }
+
+            if (bytesPerIntensity<2) { // 8-bit
+                // todo
+            } else { // 16-bit
+                shortPixels=pixels.asShortBuffer();
+                shortPixels.rewind();
+
+                ByteBuffer buffer = ByteBuffer.wrap(bytes);
+                ShortBuffer shorts = buffer.asShortBuffer();
+
+                int size = width * height * depth * numberOfComponents;
+
+                for(int i=0; i<size; i++)
+                {
+                    shortPixels.put(i, shorts.array()[i]);
+                }
+
+                shortPixels.flip();
+            }
+            pixels.rewind();
+
+            log.debug("Getting Raster data and populating texture buffer took {} ms", timer.reportMsAndRestart());
+
+            computeMipmaps();
+
+            log.debug("Computing mipmaps took {} ms", timer.reportMsAndRestart());
+
+            needsUpload = true;
+
+        }
+        catch (Exception ex) {
+            log.error("Error reading HTTP stream", ex);
+            if (getMethod!=null) {
+                getMethod.releaseConnection();
+                getMethod = null;
+            }
+        }
+        
+         return this;
     }
 
     public Pair<Raster[], ColorModel> loadStack(RenderedImage[] stack) {
@@ -905,7 +1015,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
     private RenderedImage[] renderedImagesFromTiffStack(File tiffFile) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
         // FileSeekableStream is the fastest load method I tested, by far
-
+        
         ImageDecoder decoder=null;
 
         // Performance results for various load strategies below. NOTE: ALL STEPS INCLUDING:

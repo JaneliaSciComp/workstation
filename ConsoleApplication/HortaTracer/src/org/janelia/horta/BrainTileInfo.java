@@ -363,7 +363,13 @@ implements BrickInfo
 
         }
 
-        if (!texture.loadTiffStack(tileFile)) {
+//        if (!texture.loadTiffStack(tileFile)) {
+//            return null;
+//        }
+        
+        System.out.println("... debug ... calling loadStack ...");
+        
+        if (texture.loadStack("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2", 53760, 17664, 5100)==null){
             return null;
         }
 
