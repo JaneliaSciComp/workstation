@@ -176,8 +176,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             int ans = JOptionPane.showOptionDialog(
                     ComponentUtil.getLVVMainWindow(),
                     String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()),
-                            annotationModel.getNeuronFromAnnotationID(closest.getId())),
+                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()).getName(),
+                            annotationModel.getNeuronFromAnnotationID(closest.getId()).getName()),
                     "Merge neurites?",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
