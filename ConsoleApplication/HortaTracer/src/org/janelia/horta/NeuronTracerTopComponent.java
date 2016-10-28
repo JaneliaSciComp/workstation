@@ -92,6 +92,7 @@ import javax.swing.event.MouseInputListener;
 import javax.swing.text.Keymap;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.GenericObservable;
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.console.viewerapi.RelocationMenuBuilder;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.horta.volume.MouseLightYamlBrickSource;
@@ -144,7 +145,11 @@ import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.GpuTileCache;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
@@ -153,6 +158,8 @@ import org.openide.actions.RedoAction;
 import org.openide.actions.UndoAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.awt.ActionReferences;
+import org.openide.awt.ActionRegistration;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
@@ -166,6 +173,7 @@ import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * Top component which displays something.
@@ -196,7 +204,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 {
     public static final String PREFERRED_ID = "NeuronTracerTopComponent";
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
-
+    
     private SceneWindow sceneWindow;
     private OrbitPanZoomInteractor interactor;
     private HortaMetaWorkspace metaWorkspace;
@@ -248,6 +256,10 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
     private final KtxBlockMenus ktxBlockMenus = new KtxBlockMenus();
+
+    public static final NeuronTracerTopComponent getInstance() {
+        return findThisComponent();
+    }
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -1869,6 +1881,62 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void setKtxSource(BlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
+    }
+    
+    public boolean loadTileAtFocus() throws IOException 
+    {
+        Vector3 focus = getVantage().getFocusPosition();
+        return loadTileAtLocation(focus);
+    }
+    
+    public boolean loadTileAtLocation(Vector3 location) throws IOException 
+    {
+        if (ktxSource == null) {
+            BlockTileSource source = promptUserForKtxFolder();
+            if (source == null)
+                return false;
+            setKtxSource(source);
+        }
+        boolean result = loader.loadKtxTileAtLocation(ktxSource, location);
+        if (result)
+            redrawNow();
+        return result;
+    }
+    
+    private BlockTileSource promptUserForKtxFolder() {
+        String folderSelection = JOptionPane.showInputDialog(
+                this,
+                "Where is the ktx brain image folder?",
+                "/nobackup2/mouselight/brunsc/ktxtest/2016-07-18b"
+        );
+        if (folderSelection == null) {
+            return null; // User cancelled
+        }
+        File folder = new File(folderSelection);
+        if (!folder.exists()) {
+            // Maybe that was a linux path
+            folder = new File(OsFilePathRemapper.remapLinuxPath(folderSelection));
+        }
+        if (!folder.exists()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "ERROR: No such file or folder " + folderSelection,
+                    "Ktx Folder Not Found",
+                    JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
+        logger.info("Ktx source folder = " + folderSelection);
+        try {
+            return new KtxOctreeBlockTileSource(folder.toURI().toURL());
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            JOptionPane.showMessageDialog(
+                    this,
+                    "ERROR: Error reading ktx folder " + folder,
+                    "ERROR: Error reading ktx folder " + folder,
+                    JOptionPane.ERROR_MESSAGE);                    
+            return null;
+        }
     }
 
 }

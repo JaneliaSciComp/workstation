@@ -205,10 +205,14 @@ public class NeuronTraceLoader {
         return brickInfo;
     }
 
-    public void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
+    public boolean loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
             throws IOException
     {
+        if (ktxSource == null)
+            return false;
         BlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
+        if (centerKey == null)
+            return false;
         BlockTileData ktxBlock = ktxSource.loadBlock(centerKey);
         TetVolumeActor parentActor = TetVolumeActor.getInstance();
         TetVolumeMeshActor blockActor = new TetVolumeMeshActor((KtxData) ktxBlock, parentActor);
@@ -218,13 +222,14 @@ public class NeuronTraceLoader {
             neuronMPRenderer.addVolumeActor(parentActor);
         }
         neuronMPRenderer.setIntensityBufferDirty();
+        return true;
     }
     
-    public void loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+    public boolean loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
             throws IOException
     {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
-        loadKtxTileAtLocation(ktxSource, focus);
+        return loadKtxTileAtLocation(ktxSource, focus);
     }
 }

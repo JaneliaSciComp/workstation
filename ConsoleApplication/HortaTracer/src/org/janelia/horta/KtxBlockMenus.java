@@ -30,31 +30,15 @@
 
 package org.janelia.horta;
 
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.console.viewerapi.OsFilePathRemapper;
 import java.awt.event.ActionEvent;
-import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
 import org.janelia.horta.actors.TetVolumeActor;
-import org.janelia.horta.actors.TetVolumeMeshActor;
-import org.janelia.horta.blocks.BlockChooser;
-import org.janelia.horta.blocks.BlockTileData;
-import org.janelia.horta.blocks.BlockTileKey;
-import org.janelia.horta.blocks.BlockTileResolution;
-import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.GpuTileCache;
-import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
-import org.janelia.horta.ktx.KtxData;
-import org.janelia.horta.render.NeuronMPRenderer;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,8 +47,7 @@ import org.slf4j.LoggerFactory;
  * @author brunsc
  */
 class KtxBlockMenus {
-    
-    private BlockTileSource cachedBlockTileSource;
+
     private boolean preferKtx = true;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -74,89 +57,28 @@ class KtxBlockMenus {
         JMenu tilesMenu = new JMenu("Tiles");
         context.topMenu.add(tilesMenu);
         
-        tilesMenu.add(new AbstractAction("Load Ktx Tile Here") {
+         tilesMenu.add(new AbstractAction("Load Horta Tile At Cursor") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                BlockTileSource tileSource = context.ktxBlockTileSource;
-                if (tileSource == null) {
-                    tileSource = cachedBlockTileSource;
-                } else {
-                    cachedBlockTileSource = tileSource;
-                }
-                if (tileSource == null) {
-                    String folderSelection = JOptionPane.showInputDialog(
-                            context.topMenu,
-                            "Where is the ktx brain image folder?",
-                            "/nobackup2/mouselight/brunsc/ktxtest/2016-07-18b"
-                    );
-                    if (folderSelection == null) {
-                        return; // User cancelled
-                    }
-                    File folder = new File(folderSelection);
-                    if (!folder.exists()) {
-                        // Maybe that was a linux path
-                        folder = new File(OsFilePathRemapper.remapLinuxPath(folderSelection));
-                    }
-                    if (!folder.exists()) {
-                        JOptionPane.showMessageDialog(
-                                context.topMenu,
-                                "ERROR: No such file or folder " + folderSelection,
-                                "Ktx Folder Not Found",
-                                JOptionPane.WARNING_MESSAGE);
-                        return;
-                    }
-                    logger.info("Ktx source folder = " + folderSelection);
-                    try {
-                        cachedBlockTileSource = new KtxOctreeBlockTileSource(folder.toURI().toURL());
-                        BlockChooser chooser = new OneFineDisplayBlockChooser();
-                        GpuTileCache gpuCache = new GpuTileCache(chooser);
-                    } catch (IOException ex) {
-                        Exceptions.printStackTrace(ex);
-                        JOptionPane.showMessageDialog(
-                                context.topMenu,
-                                "ERROR: Error reading ktx folder " + folder,
-                                "ERROR: Error reading ktx folder " + folder,
-                                JOptionPane.ERROR_MESSAGE);                    
-                    }
-                    tileSource = cachedBlockTileSource;
-                    if (tileSource == null)
-                        return;
-                }
-                Vector3 xyz = context.mouseXyz; // Use mouse location, as opposed to center focus location
-                BlockTileResolution resolution = tileSource.getMaximumResolution();
-                BlockTileKey key = tileSource.getBlockKeyAt(xyz, resolution);
-                try {
-                    if (tileSource.blockExists(key)) {
-                        BlockTileData block = tileSource.loadBlock(key);
-                        TetVolumeActor parentActor = TetVolumeActor.getInstance();
-                        TetVolumeMeshActor blockActor = new TetVolumeMeshActor((KtxData) block, parentActor);
-                        parentActor.addChild(blockActor);
-                        NeuronMPRenderer renderer = context.renderer;
-                        if ( ! renderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
-                            parentActor.setBrightnessModel(renderer.getBrightnessModel());
-                            renderer.addVolumeActor(parentActor);
-                        }
-                        context.renderer.setIntensityBufferDirty();
-                        context.sceneWindow.getInnerComponent().repaint();
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(
-                                context.topMenu,
-                                "No tile found at this location " + key,
-                                "No tile found at this location " + key,
-                                JOptionPane.WARNING_MESSAGE);                        
-                    }
-                } catch (IOException ex) {
-                    Exceptions.printStackTrace(ex);
-                    JOptionPane.showMessageDialog(
-                            context.topMenu,
-                            "ERROR: Error loading ktx block " + key,
-                            "ERROR: Error loading ktx block " + key,
-                            JOptionPane.ERROR_MESSAGE);
+                logger.info("Load Horta Cursor Tile Action invoked");
+                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                if (nttc == null)
                     return;
+                try {
+                    nttc.loadTileAtLocation(context.mouseXyz);
+                } catch (IOException ex) {
+                    // Exceptions.printStackTrace(ex);
+                    logger.info("Tile load failed");
                 }
             }
         });       
+        
+       tilesMenu.add(new AbstractAction("Load Horta Tile At Focus") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new LoadHortaTileAtFocusAction().actionPerformed(e);
+            }
+        });
         
         tilesMenu.add(new JPopupMenu.Separator());
         
