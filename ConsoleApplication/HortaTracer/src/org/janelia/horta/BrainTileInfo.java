@@ -352,6 +352,10 @@ implements BrickInfo
                 public GetMethod getStreamForFile(String filepath) throws Exception {
                     return HttpDataSource.getMouseLightTiffStream(filepath);
                 }
+                @Override
+                public GetMethod getDataStream(String dataPath) throws Exception {
+                    return HttpDataSource.getMouseLightDataStream(dataPath);
+                }
             });
 
 //            texture.setOptionalFileByteSource(new FileByteSource() {

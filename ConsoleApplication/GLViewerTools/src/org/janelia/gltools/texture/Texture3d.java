@@ -62,6 +62,7 @@ import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.MemoryCacheSeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.IOUtils;
@@ -74,6 +75,8 @@ import org.janelia.it.jacs.shared.img_3d_loader.FileStreamSource;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
 
 /**
  *
@@ -258,19 +261,32 @@ public class Texture3d extends BasicTexture implements GL3Resource
             
             System.out.println("... debug ... set getMethod ...");
             
-            getMethod = new GetMethod("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100"); // hard coded here by yuy for DVID Testing
-
-            System.out.println("... debug ... getMethod.getURI(): " + getMethod.getURI());
-
-            // We can now write the stream directly to a buffer, because we know the content length up front.
-            long contentLength = getMethod.getResponseContentLength();
+            //getMethod = new GetMethod("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100"); // hard coded here by yuy for DVID Testing
             
-            System.out.println("... debug ... contentLength: " + contentLength);
+            byte[] bytes = null;
             
-            byte[] bytes = new byte[(int)contentLength];
-            if (!readFully(getMethod.getResponseBodyAsStream(), bytes)) return null;
+            if (optionalFileStreamSource!=null) {
+                try {
+                    String httpPath = dvidURI.toString();
+                    getMethod = optionalFileStreamSource.getDataStream(httpPath);
+                    
+                    System.out.println("... debug ... getMethod.getURI(): " + getMethod.getURI());
+                    
+                    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                        IOUtils.copy(getMethod.getResponseBodyAsStream(), os);
+                        bytes = os.toByteArray();
+                    }
 
-            log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+                    log.info("Streaming {} bytes took {} ms", bytes.length, timer.reportMsAndRestart());
+                }
+                catch (Exception ex) {
+                    log.error("Error reading HTTP stream from DVID", ex);
+                    if (getMethod!=null) {
+                        getMethod.releaseConnection();
+                        getMethod = null;
+                    }
+                }
+            }
 
             //
             depth = 251;
@@ -284,7 +300,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
             // NOTE - we might want to support more data types than byte and short eventually.
             if (bytesPerIntensity < 2) type = GL3.GL_UNSIGNED_BYTE;
             else type = GL3.GL_UNSIGNED_SHORT;
-            numberOfComponents = 2;
+            numberOfComponents = 1;
             switch (numberOfComponents) {
                 case 1:
                     format = internalFormat = GL3.GL_RED;
@@ -321,11 +337,11 @@ public class Texture3d extends BasicTexture implements GL3Resource
                 ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 ShortBuffer shorts = buffer.asShortBuffer();
 
-                int size = width * height * depth * numberOfComponents;
+                int size = width * height * depth;
 
-                for(int i=0; i<size; i++)
+                for(int i=0; i<size; i+=2)
                 {
-                    shortPixels.put(i, shorts.array()[i]);
+                    shortPixels.put(i/2, shorts.get(i));
                 }
 
                 shortPixels.flip();
@@ -342,7 +358,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
 
         }
         catch (Exception ex) {
-            log.error("Error reading HTTP stream", ex);
+            log.error("Error reading HTTP stream for testing dvid", ex);
             if (getMethod!=null) {
                 getMethod.releaseConnection();
                 getMethod = null;
