@@ -32,7 +32,7 @@ package org.janelia.horta.blocks;
 
 import java.io.IOException;
 import java.net.URL;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.ConstVector3;
 
 /**
  *
@@ -43,19 +43,19 @@ public interface BlockTileSource {
     public BlockTileResolution getMaximumResolution();
 
     // TODO: does this check for actual tile existence?
-    public BlockTileKey getBlockKeyAt(Vector3 focus, BlockTileResolution resolution);
+    public BlockTileKey getBlockKeyAt(ConstVector3 focus, BlockTileResolution resolution);
 
     // TODO: does this check for actual tile existence?
-    public BlockTileKey getClosestTileKey(Vector3 focus, BlockTileResolution resolution);
+    public BlockTileKey getClosestTileKey(ConstVector3 focus, BlockTileResolution resolution);
 
     // TODO: does this check for actual tile existence?
     public BlockTileKey getBlockKeyAdjacent(BlockTileKey centerBlock, int dx, int dy, int dz);
 
-    public Vector3 getBlockCentroid(BlockTileKey centerBlock);
+    public ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
 
     public boolean blockExists(BlockTileKey key) throws IOException;
     
-    public BlockTileData loadBlock(BlockTileKey key) throws IOException;
+    public BlockTileData loadBlock(BlockTileKey key) throws IOException, InterruptedException;
     
     public URL getRootUrl();
 }

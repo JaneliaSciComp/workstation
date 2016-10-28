@@ -52,6 +52,12 @@ public class BasicVector implements ConstVector
         data = cloned.data.clone();
     }
     
+    public BasicVector(ConstVector cloned) {
+        data = new float[cloned.size()];
+        for (int i = 0; i < data.length; ++i)
+            data[i] += cloned.get(i);
+    }
+    
     public float[] toArray() {
         return data;
     }

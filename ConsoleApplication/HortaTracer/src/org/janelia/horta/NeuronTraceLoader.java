@@ -31,6 +31,8 @@ package org.janelia.horta;
 
 import org.janelia.horta.render.NeuronMPRenderer;
 import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -42,6 +44,7 @@ import org.janelia.horta.actors.TetVolumeMeshActor;
 import org.janelia.horta.blocks.BlockTileData;
 import org.janelia.horta.blocks.BlockTileKey;
 import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.KtxBlockLoadRunner;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
@@ -205,31 +208,39 @@ public class NeuronTraceLoader {
         return brickInfo;
     }
 
-    public boolean loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
+    public void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
             throws IOException
     {
         if (ktxSource == null)
-            return false;
+            return;
         BlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
         if (centerKey == null)
-            return false;
-        BlockTileData ktxBlock = ktxSource.loadBlock(centerKey);
-        TetVolumeActor parentActor = TetVolumeActor.getInstance();
-        TetVolumeMeshActor blockActor = new TetVolumeMeshActor((KtxData) ktxBlock, parentActor);
-        parentActor.addChild(blockActor);
-        if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
-            parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
-            neuronMPRenderer.addVolumeActor(parentActor);
-        }
-        neuronMPRenderer.setIntensityBufferDirty();
-        return true;
+            return;
+        
+        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(ktxSource, centerKey);
+        loader.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                    return;
+                TetVolumeActor parentActor = TetVolumeActor.getInstance();
+                parentActor.addChild(loader.blockActor);
+                if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                    parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                    neuronMPRenderer.addVolumeActor(parentActor);
+                }
+                neuronMPRenderer.setIntensityBufferDirty();
+                nttc.redrawNow();
+            }
+        });
+        loader.run();
     }
     
-    public boolean loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+    public void loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
             throws IOException
     {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
-        return loadKtxTileAtLocation(ktxSource, focus);
+        loadKtxTileAtLocation(ktxSource, focus);
     }
 }

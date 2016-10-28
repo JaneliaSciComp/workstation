@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.ktx.KtxHeader;
@@ -61,7 +62,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     // private final File rootFolder;
     private final KtxOctreeResolution maximumResolution;
     
-    private final Vector3 origin;
+    private final ConstVector3 origin;
     private final Vector3 outerCorner;
     private final KtxOctreeBlockTileKey rootKey;
 
@@ -103,7 +104,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         return blockUrl;
     }
     
-    private InputStream streamForKey(BlockTileKey key) throws IOException {
+    public InputStream streamForKey(BlockTileKey key) throws IOException {
         URL url = blockUrlForKey((KtxOctreeBlockTileKey)key);
         return new BufferedInputStream(url.openStream());
     }
@@ -162,7 +163,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public BlockTileKey getBlockKeyAt(Vector3 location, BlockTileResolution resolution0) 
+    public BlockTileKey getBlockKeyAt(ConstVector3 location, BlockTileResolution resolution0) 
     {
         if (resolution0 == null)
             resolution0 = getMaximumResolution();
@@ -212,7 +213,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public BlockTileKey getClosestTileKey(Vector3 focus, BlockTileResolution resolution) {
+    public BlockTileKey getClosestTileKey(ConstVector3 focus, BlockTileResolution resolution) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -222,7 +223,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public Vector3 getBlockCentroid(BlockTileKey centerBlock) {
+    public ConstVector3 getBlockCentroid(BlockTileKey centerBlock) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -242,12 +243,13 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public BlockTileData loadBlock(BlockTileKey key) throws IOException 
+    public BlockTileData loadBlock(BlockTileKey key) 
+            throws IOException, InterruptedException
     {
         long t0 = System.nanoTime();
         try (InputStream stream = streamForKey(key)) {
             KtxOctreeBlockTileData data = new KtxOctreeBlockTileData();
-            data.loadStream(stream);
+            data.loadStreamInterruptably(stream);
             long t1 = System.nanoTime();
             float elapsed = (t1 - t0) / 1e9f;
             logger.info("Ktx tile '" + key + "' stream load took " 
@@ -282,7 +284,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
         }
 
         @Override
-        public Vector3 getCentroid() {
+        public ConstVector3 getCentroid() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
 

@@ -30,7 +30,7 @@
 
 package org.janelia.horta.blocks;
 
-import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.ConstVector3;
 
 /**
  *
@@ -38,7 +38,7 @@ import org.janelia.geometry3d.Vector3;
  */
 public interface BlockTileKey {
 
-    public Vector3 getCentroid();
+    public ConstVector3 getCentroid();
     
     public BlockTileSource getSource();
 }

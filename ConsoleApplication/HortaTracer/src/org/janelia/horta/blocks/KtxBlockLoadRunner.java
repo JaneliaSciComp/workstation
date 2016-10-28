@@ -57,30 +57,43 @@ implements Runnable
         LOADED,
         FAILED,
     }
-    
-    private URL url;
+
     private InputStream inputStream;
+    private BlockTileSource blockTileSource;
+    private BlockTileKey blockTileKey;
     
     public State state = State.INITIAL;
     public TetVolumeMeshActor blockActor;
     
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
-    public KtxBlockLoadRunner(URL url) {
-        this.url = url;
-    }
-    
     public KtxBlockLoadRunner(InputStream stream) {
         this.inputStream = stream;
+    }
+
+    public KtxBlockLoadRunner(BlockTileSource source, BlockTileKey key) {
+        this.blockTileSource = source;
+        this.blockTileKey = key;
+    }
+
+    private void loadFromBlockSource() {
+        KtxOctreeBlockTileSource s = (KtxOctreeBlockTileSource) blockTileSource;
+        try (InputStream is = s.streamForKey(blockTileKey)) {
+            loadStream(is);
+        } catch (IOException ex) {
+            state = State.FAILED;
+        }
     }
     
     @Override
     public void run() 
     {
-        if (inputStream != null)
+        if (inputStream == null) {
+            loadFromBlockSource();
+        }
+        else {
             loadStream(inputStream);
-        else
-            loadUrl();
+        }
     }
     
     private void loadStream(InputStream stream) {
@@ -108,17 +121,6 @@ implements Runnable
         logger.info(String.format("Ktx tile load took %.3f seconds", elapsed));
         // notify listeners
         notifyObservers();
-    }
-    
-    private void loadUrl() {
-        // Thank you Java 7 for try-with-resources
-        try (InputStream stream = new BufferedInputStream(url.openStream())) 
-        {
-            loadStream(stream);
-        } catch (IOException ex) {
-            state = State.FAILED;
-            Exceptions.printStackTrace(ex);
-        }
     }
     
 }

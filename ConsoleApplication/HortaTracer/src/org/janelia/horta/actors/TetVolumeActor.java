@@ -43,10 +43,10 @@ import javax.media.opengl.GL4;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.CentroidHaver;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector4;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.geometry3d.camera.BasicViewSlab;
@@ -58,6 +58,9 @@ import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
 import org.janelia.horta.blocks.BlockTileResolution;
+import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.GpuTileCache;
+import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -75,6 +78,10 @@ public class TetVolumeActor extends BasicGL3Actor
 implements DepthSlabClipper
 {
     private static TetVolumeActor singletonInstance;
+    
+    private GpuTileCache dynamicTiles = 
+            new GpuTileCache(
+                    new OneFineDisplayBlockChooser());
 
     // Singleton access
     static public TetVolumeActor getInstance() {
@@ -97,7 +104,8 @@ implements DepthSlabClipper
     private VolumeState volumeState = new VolumeState();
     private final BlockSorter blockSorter = new BlockSorter();
     
-    public TetVolumeActor() {
+    // Singleton actor has private constructor
+    private TetVolumeActor() {
         super(null);
         shader = new TetVolumeMaterial.TetVolumeShader();
         BufferedImage colorMapImage = null;
@@ -119,9 +127,12 @@ implements DepthSlabClipper
         this.volumeState = volumeState;
     }
 
-    public void addKtxBlock(KtxData ktxData) 
-    {    
-        this.addChild(new TetVolumeMeshActor(ktxData, this));
+    public void setHortaVantage(Vantage vantage) {
+        dynamicTiles.setVantage(vantage);
+    }
+    
+    public void setKtxTileSource(BlockTileSource source) {
+        dynamicTiles.setKtxSource(source);
     }
     
     public ShaderProgram getShader() {
@@ -148,10 +159,12 @@ implements DepthSlabClipper
             return;
         if (! isInitialized) init(gl);
 
-        if (getChildren() == null)
-            return;
-        if (getChildren().size() < 1)
-            return;
+        if (! dynamicTiles.canDisplay()) {
+            if (getChildren() == null)
+                return;
+            if (getChildren().size() < 1)
+                return;
+        }
 
         // 2) Set up shader exactly once, for all volume blocks
         // Adjust actual Z-clip planes to allow imposter geometry to lie
@@ -273,6 +286,9 @@ implements DepthSlabClipper
             List<SortableBlockActor> blockList = new ArrayList<>();
             List<GL3Actor> otherActorList = new ArrayList<>();
             List<Object3d> otherList = new ArrayList<>();
+            for (SortableBlockActor actor : dynamicTiles.getDisplayedActors()) {
+                blockList.add(actor);
+            }
             for (Object3d child : getChildren()) {
                 if (child instanceof SortableBlockActorSource) {
                     SortableBlockActorSource source = (SortableBlockActorSource)child;
@@ -312,6 +328,7 @@ implements DepthSlabClipper
     public void dispose(GL3 gl) {
         colorMapTexture.dispose(gl);
         shader.dispose(gl);
+        dynamicTiles.disposeGL(gl);
         super.dispose(gl);
     }
 

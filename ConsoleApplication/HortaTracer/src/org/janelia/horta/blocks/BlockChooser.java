@@ -31,12 +31,12 @@
 package org.janelia.horta.blocks;
 
 import java.util.List;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.ConstVector3;
 
 /**
  * Create a list of volume tiles, in order of decreasing importance
  * @author brunsc
  */
 public interface BlockChooser {
-    List<BlockTileKey> chooseBlocks(BlockTileSource source, Vector3 focus, Vector3 previousFocus);
+    List<BlockTileKey> chooseBlocks(BlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus);
 }

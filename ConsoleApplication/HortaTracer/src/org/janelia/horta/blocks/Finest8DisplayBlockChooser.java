@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.ConstVector3;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -48,7 +48,7 @@ implements BlockChooser
      Choose the eight closest maximum resolution blocks to the current focus point.
     */
     @Override
-    public List<BlockTileKey> chooseBlocks(BlockTileSource source, Vector3 focus, Vector3 previousFocus) 
+    public List<BlockTileKey> chooseBlocks(BlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) 
     {
         // Find up to eight closest blocks adjacent to focus
         BlockTileResolution resolution = source.getMaximumResolution();
@@ -60,7 +60,7 @@ implements BlockChooser
         int dx = 1;
         int dy = 1;
         int dz = 1;
-        Vector3 centroid = source.getBlockCentroid(centerBlock);
+        ConstVector3 centroid = source.getBlockCentroid(centerBlock);
         // maybe look for close blocks at lower left rear instead
         if (centroid.getX() > focus.getX())
             dx = -1;
@@ -86,16 +86,16 @@ implements BlockChooser
     
     // Sort blocks by distance from focus to block centroid
     private static class BlockComparator implements Comparator<BlockTileKey> {
-        private final Vector3 focus;
+        private final ConstVector3 focus;
         
-        BlockComparator(Vector3 focus) {
+        BlockComparator(ConstVector3 focus) {
             this.focus = focus;
         }
         
         @Override
         public int compare(BlockTileKey block1, BlockTileKey block2) {
-            Vector3 c1 = block1.getCentroid().minus(focus);
-            Vector3 c2 = block2.getCentroid().minus(focus);
+            ConstVector3 c1 = block1.getCentroid().minus(focus);
+            ConstVector3 c2 = block2.getCentroid().minus(focus);
             float d1 = c1.dot(c1); // distance squared
             float d2 = c2.dot(c2);
             return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;

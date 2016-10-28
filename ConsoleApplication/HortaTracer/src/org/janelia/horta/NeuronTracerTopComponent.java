@@ -879,6 +879,8 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         });
         
+        TetVolumeActor.getInstance().setHortaVantage(vantage);
+        
         imageColorModel.addColorModelListener(new ColorModelListener() {
             @Override
             public void colorModelChanged() {
@@ -1881,26 +1883,24 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void setKtxSource(BlockTileSource ktxSource) {
         this.ktxSource = ktxSource;
+        TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
     }
     
-    public boolean loadTileAtFocus() throws IOException 
+    public void loadTileAtFocus() throws IOException
     {
         Vector3 focus = getVantage().getFocusPosition();
-        return loadTileAtLocation(focus);
+        loadTileAtLocation(focus);
     }
     
-    public boolean loadTileAtLocation(Vector3 location) throws IOException 
+    public void loadTileAtLocation(Vector3 location) throws IOException
     {
         if (ktxSource == null) {
             BlockTileSource source = promptUserForKtxFolder();
             if (source == null)
-                return false;
+                return;
             setKtxSource(source);
         }
-        boolean result = loader.loadKtxTileAtLocation(ktxSource, location);
-        if (result)
-            redrawNow();
-        return result;
+        loader.loadKtxTileAtLocation(ktxSource, location);
     }
     
     private BlockTileSource promptUserForKtxFolder() {

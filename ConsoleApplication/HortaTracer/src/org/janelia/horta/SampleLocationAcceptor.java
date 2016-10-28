@@ -98,6 +98,8 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     
                     // First check to see if ktx tiles are available
                     BlockTileSource ktxSource = loadKtxSource(url, progress);
+                    if (ktxSource != null)
+                        nttc.setKtxSource(ktxSource);
                     // TODO: is ktx loading enabled?
                     
                     progress.setDisplayName("Centering on location...");
@@ -137,7 +139,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                                     JOptionPane.ERROR_MESSAGE);
                         }
                     });                   
-                }
+                } 
                 finally {
                     progress.finish();
                 }

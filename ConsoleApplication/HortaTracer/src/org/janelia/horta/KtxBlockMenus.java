@@ -39,6 +39,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
 import org.janelia.horta.actors.TetVolumeActor;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

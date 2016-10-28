@@ -32,7 +32,7 @@ package org.janelia.horta.blocks;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.ConstVector3;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -45,11 +45,11 @@ implements BlockChooser
      Choose the eight closest maximum resolution blocks to the current focus point.
     */
     @Override
-    public List<BlockTileKey> chooseBlocks(BlockTileSource source, Vector3 focus, Vector3 previousFocus) 
+    public List<BlockTileKey> chooseBlocks(BlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus) 
     {
         // Find up to eight closest blocks adjacent to focus
         BlockTileResolution resolution = source.getMaximumResolution();
-        BlockTileKey centerBlock = source.getClosestTileKey(focus, resolution);
+        BlockTileKey centerBlock = source.getBlockKeyAt(focus, resolution);
         List<BlockTileKey> result = new ArrayList<>();
         result.add(centerBlock);
         return result;
