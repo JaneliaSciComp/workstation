@@ -33,6 +33,8 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,8 +99,12 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
     
     abstract LoadRunner<TILE_KEY, TILE_DATA> getLoadRunner();
 
-    public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) {
+    public synchronized void updateDesiredTiles(List<TILE_KEY> desiredTiles) 
+    {
+        List<TILE_KEY> newTiles = new ArrayList<>();
+        Set<TILE_KEY> desiredSet = new HashSet<>();
         for (TILE_KEY key : desiredTiles) {
+            desiredSet.add(key);
             if (! nearVolumeMetadata.contains(key))
                 nearVolumeMetadata.add(key);
 
@@ -108,7 +114,56 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
                 continue; // already loading
             if (nearVolumeInRam.containsKey(key))
                 continue; // already loaded
+            newTiles.add(key);
+        }
+        
+        // Remove obsolete tiles from loading and loaded
+        Iterator<TILE_KEY> iter = nearVolumeMetadata.iterator();
+        while(iter.hasNext()) {
+            TILE_KEY key = iter.next();
+            if (! desiredSet.contains(key))
+                iter.remove();
+        }
+        Iterator<Map.Entry<TILE_KEY, RequestProcessor.Task>> mapIter = queuedTiles.entrySet().iterator();
+        while(mapIter.hasNext()) {
+            Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
+            TILE_KEY key = entry.getKey();
+            if (! desiredSet.contains(key)) {
+                RequestProcessor.Task task = queuedTiles.get(key);
+                if (task != null)
+                    task.cancel();
+                mapIter.remove();
+            }
+        }
+        mapIter = loadingTiles.entrySet().iterator();
+        while(mapIter.hasNext()) {
+            Map.Entry<TILE_KEY, RequestProcessor.Task> entry = mapIter.next();
+            TILE_KEY key = entry.getKey();
+            if (! desiredSet.contains(key)) {
+                RequestProcessor.Task task = loadingTiles.get(key);
+                if (task != null)
+                    task.cancel();
+                mapIter.remove();
+            }
+        }
+        boolean displayChanged = false;
+        iter = nearVolumeInRam.keySet().iterator();
+        while(iter.hasNext()) {
+            TILE_KEY key = iter.next();
+            if (! desiredSet.contains(key)) {
+                iter.remove();
+                displayChanged = true;
+            }
+        }
+        
+        for (TILE_KEY key : newTiles) {
             queueLoad(key, getLoadRunner());
+        }
+        
+        if (displayChanged) {
+            // No, don't update when blocks are removed, only when they are added.
+            // displayChangeObservable.setChanged();
+            // displayChangeObservable.notifyObservers();
         }
     }
 
