@@ -56,11 +56,11 @@ import org.openide.util.RequestProcessor;
 public class GpuTileCache
 implements SortableBlockActorSource
 {
+    private final Map<BlockTileKey, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap();
     private final Map<BlockTileKey, SortableBlockActor> cachedBlocks = new ConcurrentHashMap<>();
     private final Map<BlockTileKey, SortableBlockActor> displayedBlocks = new ConcurrentHashMap<>();
     private final Map<BlockTileKey, SortableBlockActor> obsoleteBlocks = new ConcurrentHashMap<>();
 
-    private final Map<BlockTileKey, RequestProcessor.Task> queuedTiles = new ConcurrentHashMap();
     
     private List<BlockTileKey> cachedDesiredBlocks;
     private final BlockChooser blockChooser;

@@ -145,11 +145,8 @@ import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.horta.actors.TetVolumeActor;
-import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.GpuTileCache;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.netbeans.api.progress.ProgressHandle;
@@ -158,8 +155,6 @@ import org.openide.actions.RedoAction;
 import org.openide.actions.UndoAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
-import org.openide.awt.ActionRegistration;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
@@ -419,6 +414,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
         
         TetVolumeActor.getInstance().setVolumeState(volumeState);
+        TetVolumeActor.getInstance().getDynamicTileUpdateObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                neuronMPRenderer.setIntensityBufferDirty();
+                redrawNow();
+            }
+        });
 
         neuronMPRenderer = setUpActors();
         

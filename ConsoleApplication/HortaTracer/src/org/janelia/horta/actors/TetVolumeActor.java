@@ -37,9 +37,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GL4;
+import org.janelia.console.viewerapi.ObservableInterface;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;
@@ -57,11 +60,12 @@ import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
+import org.janelia.horta.blocks.BlockChooser;
+import org.janelia.horta.blocks.BlockDisplayUpdater;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
-import org.janelia.horta.blocks.GpuTileCache;
+import org.janelia.horta.blocks.KtxTileCache;
 import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
-import org.janelia.horta.ktx.KtxData;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,10 +83,6 @@ implements DepthSlabClipper
 {
     private static TetVolumeActor singletonInstance;
     
-    private GpuTileCache dynamicTiles = 
-            new GpuTileCache(
-                    new OneFineDisplayBlockChooser());
-
     // Singleton access
     static public TetVolumeActor getInstance() {
         if (singletonInstance == null)
@@ -102,8 +102,12 @@ implements DepthSlabClipper
     private final float[] unmixMinScale = new float[] {0.0f, 0.0f, 0.5f, 0.5f};
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private VolumeState volumeState = new VolumeState();
-    private final BlockSorter blockSorter = new BlockSorter();
-    
+
+    private final BlockSorter blockSorter = new BlockSorter();    
+    private final KtxTileCache dynamicTiles = new KtxTileCache(null);
+    private final BlockChooser chooser = new OneFineDisplayBlockChooser();
+    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser);
+
     // Singleton actor has private constructor
     private TetVolumeActor() {
         super(null);
@@ -121,6 +125,13 @@ implements DepthSlabClipper
         colorMapTexture.setGenerateMipmaps(false);
         colorMapTexture.setMinFilter(GL3.GL_LINEAR);
         colorMapTexture.setMagFilter(GL3.GL_LINEAR);
+        
+        blockDisplayUpdater.getDisplayChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                dynamicTiles.updateDesiredTiles(blockDisplayUpdater.getDesiredBlocks());
+            }
+        });
     }
 
     public void setVolumeState(VolumeState volumeState) {
@@ -128,11 +139,16 @@ implements DepthSlabClipper
     }
 
     public void setHortaVantage(Vantage vantage) {
-        dynamicTiles.setVantage(vantage);
+        blockDisplayUpdater.setVantage(vantage);
     }
     
     public void setKtxTileSource(BlockTileSource source) {
-        dynamicTiles.setKtxSource(source);
+        dynamicTiles.setSource(source);
+        blockDisplayUpdater.setKtxSource(source);
+    }
+    
+    public ObservableInterface getDynamicTileUpdateObservable() {
+        return dynamicTiles.getDisplayChangeObservable();
     }
     
     public ShaderProgram getShader() {

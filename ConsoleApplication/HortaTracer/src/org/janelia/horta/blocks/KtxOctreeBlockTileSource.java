@@ -39,6 +39,7 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.geometry3d.ConstVector3;
@@ -263,6 +264,28 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     public URL getRootUrl() {
         return rootUrl;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 53 * hash + Objects.hashCode(this.rootUrl.getFile());
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final KtxOctreeBlockTileSource other = (KtxOctreeBlockTileSource) obj;
+        if (!Objects.equals(this.rootUrl.getFile(), other.rootUrl.getFile())) {
+            return false;
+        }
+        return true;
+    }
     
     static public class KtxOctreeBlockTileData
     extends KtxData
@@ -301,6 +324,32 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
             }
             String subfolderStr = Joiner.on("/").join(steps);
             return subfolderStr;  
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 53 * hash + Objects.hashCode(this.source);
+            hash = 53 * hash + Objects.hashCode(this.path);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final KtxOctreeBlockTileKey other = (KtxOctreeBlockTileKey) obj;
+            if (!Objects.equals(this.source, other.source)) {
+                return false;
+            }
+            if (!Objects.equals(this.path, other.path)) {
+                return false;
+            }
+            return true;
         }
     }
     
