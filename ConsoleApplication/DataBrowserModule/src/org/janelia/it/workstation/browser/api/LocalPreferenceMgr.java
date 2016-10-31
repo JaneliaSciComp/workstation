@@ -162,7 +162,9 @@ public class LocalPreferenceMgr {
         if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
         Object oldValue = modelProperties.put(key, newValue);
         if (!StringUtils.areEqual(oldValue, newValue)) {
-            log.info("Setting local preference {} = {} (was {})",key,newValue,oldValue);
+            if (!key.toString().toLowerCase().contains("password")) {
+                log.info("Setting local preference {} = {} (was {})",key,newValue,oldValue);
+            }
             writeSettings();
             Events.getInstance().postOnEventBus(new LocalPreferenceChanged(key, oldValue, newValue));
         }
