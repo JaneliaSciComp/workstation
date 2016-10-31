@@ -81,6 +81,7 @@ implements Runnable
         try (InputStream is = s.streamForKey(blockTileKey)) {
             loadStream(is);
         } catch (IOException ex) {
+            logger.warn("IOException loading tile {} from block source", blockTileKey);
             state = State.FAILED;
         }
     }
@@ -106,9 +107,11 @@ implements Runnable
             ktxData.loadStreamInterruptably(stream);
         } catch (IOException ex) {
             state = State.FAILED;
+            logger.warn("IOException loading tile {} from stream", blockTileKey);
             Exceptions.printStackTrace(ex);
             return;
         } catch (InterruptedException ex) {
+            logger.info("loading tile {} was interrupted", blockTileKey);
             state = State.INTERRUPTED;
             return;
         }

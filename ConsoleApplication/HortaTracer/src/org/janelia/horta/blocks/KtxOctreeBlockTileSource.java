@@ -162,6 +162,32 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     public BlockTileResolution getMaximumResolution() {
         return maximumResolution;
     }
+    
+    public ConstVector3 getBlockSize(BlockTileResolution resolution) {
+        Vector3 rootBlockSize = outerCorner.minus(origin);
+        float scale = (float)Math.pow(2.0, ((KtxOctreeResolution)resolution).octreeLevel);
+        Vector3 result = rootBlockSize.multiplyScalar(1.0f / scale);
+        return result;
+    }
+    
+    public ConstVector3 getBlockOrigin(BlockTileKey key0) {
+        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey)key0;
+        Vector3 blockOrigin = new Vector3(origin);
+        Vector3 subBlockExtent = outerCorner.minus(origin);
+        for (int p : key.path) {
+            subBlockExtent.setX(subBlockExtent.getX()/2.0f);
+            subBlockExtent.setY(subBlockExtent.getY()/2.0f);
+            subBlockExtent.setZ(subBlockExtent.getZ()/2.0f);
+
+            if (p % 2 == 0) // large X (2,4,6,8)
+                blockOrigin.setX(blockOrigin.getX() + subBlockExtent.getX());
+            if (p > 4) // large Z (5,6,7,8)
+                blockOrigin.setZ(blockOrigin.getZ() + subBlockExtent.getZ());
+            if ( (p == 3) || (p == 4) || (p == 7) || (p == 8) ) // large Y (3,4,7,8)
+                blockOrigin.setY(blockOrigin.getY() + subBlockExtent.getY());
+        }
+        return blockOrigin;
+    }
 
     @Override
     public BlockTileKey getBlockKeyAt(ConstVector3 location, BlockTileResolution resolution0) 
@@ -214,18 +240,15 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
     }
 
     @Override
-    public BlockTileKey getClosestTileKey(ConstVector3 focus, BlockTileResolution resolution) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public BlockTileKey getBlockKeyAdjacent(BlockTileKey centerBlock, int dx, int dy, int dz) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public ConstVector3 getBlockCentroid(BlockTileKey centerBlock) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ConstVector3 blockOrigin = getBlockOrigin(centerBlock);
+        KtxOctreeBlockTileKey key = (KtxOctreeBlockTileKey)centerBlock;
+        KtxOctreeResolution resolution = new KtxOctreeResolution(key.path.size());
+        ConstVector3 blockExtent = getBlockSize(resolution);
+        Vector3 centroid = new Vector3(blockExtent);
+        centroid.multiplyScalar(0.5f);
+        centroid = centroid.plus(blockOrigin);
+        return centroid;
     }
 
     @Override
@@ -308,7 +331,7 @@ public class KtxOctreeBlockTileSource implements BlockTileSource
 
         @Override
         public ConstVector3 getCentroid() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            return source.getBlockCentroid(this);
         }
 
         @Override

@@ -64,6 +64,7 @@ import org.janelia.horta.blocks.BlockChooser;
 import org.janelia.horta.blocks.BlockDisplayUpdater;
 import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.Finest8DisplayBlockChooser;
 import org.janelia.horta.blocks.KtxTileCache;
 import org.janelia.horta.blocks.OneFineDisplayBlockChooser;
 import org.openide.util.Exceptions;
@@ -105,8 +106,9 @@ implements DepthSlabClipper
 
     private final BlockSorter blockSorter = new BlockSorter();    
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
-    private final BlockChooser chooser = new OneFineDisplayBlockChooser();
-    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser);
+    private final BlockChooser chooser1 = new OneFineDisplayBlockChooser(); // for proof-of-concept and debugging
+    private final BlockChooser chooser8 = new Finest8DisplayBlockChooser();
+    private final BlockDisplayUpdater blockDisplayUpdater = new BlockDisplayUpdater(chooser8);
 
     // Singleton actor has private constructor
     private TetVolumeActor() {

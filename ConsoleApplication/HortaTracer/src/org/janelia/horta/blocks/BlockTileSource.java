@@ -45,12 +45,6 @@ public interface BlockTileSource {
     // TODO: does this check for actual tile existence?
     public BlockTileKey getBlockKeyAt(ConstVector3 focus, BlockTileResolution resolution);
 
-    // TODO: does this check for actual tile existence?
-    public BlockTileKey getClosestTileKey(ConstVector3 focus, BlockTileResolution resolution);
-
-    // TODO: does this check for actual tile existence?
-    public BlockTileKey getBlockKeyAdjacent(BlockTileKey centerBlock, int dx, int dy, int dz);
-
     public ConstVector3 getBlockCentroid(BlockTileKey centerBlock);
 
     public boolean blockExists(BlockTileKey key) throws IOException;

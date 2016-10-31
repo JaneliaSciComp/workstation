@@ -35,6 +35,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import org.janelia.geometry3d.ConstVector3;
+import org.janelia.geometry3d.Vector3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generate sorted list of up to eight max resolution blocks near current focus
@@ -43,6 +46,7 @@ import org.janelia.geometry3d.ConstVector3;
 public class Finest8DisplayBlockChooser 
 implements BlockChooser
 {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     /*
      Choose the eight closest maximum resolution blocks to the current focus point.
@@ -52,35 +56,48 @@ implements BlockChooser
     {
         // Find up to eight closest blocks adjacent to focus
         BlockTileResolution resolution = source.getMaximumResolution();
-        BlockTileKey centerBlock = source.getClosestTileKey(focus, resolution);
-        List<BlockTileKey> result = new ArrayList<>();
-        if (centerBlock == null)
-            return result;
-        // initially assume close blocks are at upper right front
-        int dx = 1;
-        int dy = 1;
-        int dz = 1;
-        ConstVector3 centroid = source.getBlockCentroid(centerBlock);
-        // maybe look for close blocks at lower left rear instead
-        if (centroid.getX() > focus.getX())
-            dx = -1;
-        if (centroid.getY() > focus.getY())
-            dy = -1;
-        if (centroid.getZ() > focus.getZ())
-            dz = -1;
-        // Loop over the 8 closest blocks
-        for (int x : new int[] {0, dx}) {
-            for (int y : new int[] {0, dy}) {
-                for (int z : new int[] {0, dz}) {
-                    BlockTileKey blockKey = source.getBlockKeyAdjacent(centerBlock, x, y, z);
-                    if (blockKey != null) {
-                        result.add(blockKey);
-                    }
+        
+        ConstVector3 blockSize = ((KtxOctreeBlockTileSource)source).getBlockSize(resolution);
+        float dxa[] = new float[] {
+            0f,
+            -blockSize.getX(),
+            +blockSize.getX()};
+        float dya[] = new float[] {
+            0f,
+            -blockSize.getY(),
+            +blockSize.getY()};
+        float dza[] = new float[] {
+            0f,
+            -blockSize.getZ(),
+            +blockSize.getZ()};
+        
+        List<BlockTileKey> result0 = new ArrayList<>();
+        
+        // Enumerate all 27 nearby blocks
+        for (float dx : dxa) {
+            for (float dy : dya) {
+                for (float dz : dza) {
+                    ConstVector3 location = focus.plus(new Vector3(dx, dy, dz));
+                    BlockTileKey tileKey = source.getBlockKeyAt(location, resolution);
+                    if (tileKey == null)
+                        continue;
+                    ConstVector3 centroid = tileKey.getCentroid();
+                    logger.info("tile location = " + location);
+                    logger.info("tile centroid = " + centroid);
+                    result0.add(tileKey);
                 }
             }
         }
         // Sort the blocks strictly by distance to focus
-        Collections.sort(result, new BlockComparator(focus));
+        Collections.sort(result0, new BlockComparator(focus));
+        
+        // Return only the closest 8 blocks
+        List<BlockTileKey> result = new ArrayList<>();
+        int listLen = Math.min(8, result0.size());
+        for (int i = 0; i < listLen; ++i) {
+            result.add(result0.get(i));
+        }
+        
         return result;
     }
     
