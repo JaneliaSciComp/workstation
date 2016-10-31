@@ -71,7 +71,8 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
 
     private final Set<TILE_KEY> nearVolumeMetadata = new ConcurrentHashSet<>();
     
-    protected final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new LinkedHashMap<>();
+    protected final Map<TILE_KEY, TILE_DATA> nearVolumeInRam = new ConcurrentHashMap<>();
+    protected final Map<TILE_KEY, TILE_DATA> obsoleteTiles = new ConcurrentHashMap<>();
 
     // To enable/disable loading
     private RequestProcessor loadProcessor;
@@ -147,11 +148,15 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
             }
         }
         boolean displayChanged = false;
-        iter = nearVolumeInRam.keySet().iterator();
-        while(iter.hasNext()) {
-            TILE_KEY key = iter.next();
+        Iterator<Map.Entry<TILE_KEY, TILE_DATA>> mapIter2 = nearVolumeInRam.entrySet().iterator();
+        while(mapIter2.hasNext()) {
+            Map.Entry<TILE_KEY, TILE_DATA> entry = mapIter2.next();
+            TILE_KEY key = entry.getKey();
             if (! desiredSet.contains(key)) {
-                iter.remove();
+                TILE_DATA data = entry.getValue();
+                log.info("Preparing to dispose of tile {}", key.toString());
+                obsoleteTiles.put(key, data);
+                mapIter2.remove();
                 displayChanged = true;
             }
         }
@@ -171,6 +176,14 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA>
         return displayChangeObservable;
     }
     
+    public Collection<TILE_DATA> popObsoleteTiles() {
+        Collection<TILE_DATA> result = new ArrayList<>(obsoleteTiles.values());
+        if (!result.isEmpty()) {
+            obsoleteTiles.clear();
+        }
+        return result;
+    }
+
     private synchronized boolean queueLoad(
             final TILE_KEY key, 
             final LoadRunner<TILE_KEY, TILE_DATA> loadRunner)

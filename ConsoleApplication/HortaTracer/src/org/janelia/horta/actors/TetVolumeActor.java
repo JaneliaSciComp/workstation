@@ -172,6 +172,8 @@ implements DepthSlabClipper
     @Override
     public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) 
     {
+        dynamicTiles.disposeObsoleteTiles(gl);
+        
         // 1) Initial fail-fast checks
         if (! isVisible())
             return;

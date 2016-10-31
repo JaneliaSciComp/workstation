@@ -31,9 +31,12 @@
 package org.janelia.horta.blocks;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Map;
 import javax.media.opengl.GL3;
 import org.janelia.horta.actors.SortableBlockActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -43,6 +46,8 @@ public class KtxTileCache
 extends BasicTileCache<BlockTileKey, SortableBlockActor>
 {
     private BlockTileSource source;
+    
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     public KtxTileCache(BlockTileSource source) {
         this.source = source;
@@ -64,6 +69,16 @@ extends BasicTileCache<BlockTileKey, SortableBlockActor>
         this.source = source;
     }
   
+    public void disposeObsoleteTiles(GL3 gl) {
+        Collection<SortableBlockActor> obs = popObsoleteTiles();
+        if (! obs.isEmpty()) {
+            log.info("Disposing {} tile(s)", obs.size());
+        }
+        for (SortableBlockActor actor : obs) {
+            actor.dispose(gl);
+        }
+    }
+    
     public void disposeGL(GL3 gl) {
         disposeActorGroup(gl, nearVolumeInRam);
     }
