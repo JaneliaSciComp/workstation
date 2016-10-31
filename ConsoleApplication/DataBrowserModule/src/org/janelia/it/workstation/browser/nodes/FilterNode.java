@@ -14,6 +14,7 @@ import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInViewerAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
@@ -55,6 +56,7 @@ public class FilterNode extends DomainObjectNode<Filter> {
         actions.add(new CopyToClipboardAction("Name", getName()));
         actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
+        actions.add(new OpenInViewerAction());
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new ViewDetailsAction());
