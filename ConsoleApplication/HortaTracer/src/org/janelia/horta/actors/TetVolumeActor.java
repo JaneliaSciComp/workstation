@@ -438,6 +438,10 @@ implements DepthSlabClipper
         return getChildren().size();
     }
 
+    public void setAutoUpdate(boolean updateCache) {
+        blockDisplayUpdater.setAutoUpdate(updateCache);
+    }
+
     private static class BlockSorter implements Comparator<SortableBlockActor> 
     {
         private Matrix4 viewMatrix;

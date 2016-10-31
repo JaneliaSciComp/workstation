@@ -82,8 +82,8 @@ implements BlockChooser
                     if (tileKey == null)
                         continue;
                     ConstVector3 centroid = tileKey.getCentroid();
-                    logger.info("tile location = " + location);
-                    logger.info("tile centroid = " + centroid);
+                    // logger.info("tile location = " + location);
+                    // logger.info("tile centroid = " + centroid);
                     result0.add(tileKey);
                 }
             }

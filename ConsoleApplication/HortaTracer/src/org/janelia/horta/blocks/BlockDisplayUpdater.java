@@ -53,6 +53,7 @@ public class BlockDisplayUpdater
     private ConstVector3 cachedFocus;
     private final BlockChooser blockChooser;
     private List<BlockTileKey> cachedDesiredBlocks;
+    private boolean doAutoUpdate = true;
     
     public BlockDisplayUpdater(BlockChooser blockChooser) {
         this.blockChooser = blockChooser;
@@ -84,6 +85,8 @@ public class BlockDisplayUpdater
         
     public void refreshBlocks(ConstVector3 focus) 
     {
+        if (! doAutoUpdate)
+            return;
         if (ktxSource == null) {
             return;
         }
@@ -100,11 +103,21 @@ public class BlockDisplayUpdater
         displayChangeObservable.setChanged();
         displayChangeObservable.notifyObservers();
     }
+
+    public void setAutoUpdate(boolean updateCache) {
+        if (doAutoUpdate == updateCache)
+            return; // no change
+        this.doAutoUpdate = updateCache;
+        if (doAutoUpdate)
+            refreshBlocks(cachedFocus);
+    }
     
 
     private class CameraObserver implements Observer {
         @Override
         public void update(Observable o, Object arg) {
+            if (! doAutoUpdate)
+                return;
             if (ktxSource == null) {
                 return;
             }

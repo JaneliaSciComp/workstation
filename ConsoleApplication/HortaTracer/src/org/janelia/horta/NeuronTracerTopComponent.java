@@ -1145,6 +1145,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                             volumeCache.toggleUpdateCache();
                             item.setSelected(volumeCache.isUpdateCache());
+                            TetVolumeActor.getInstance().setAutoUpdate(volumeCache.isUpdateCache());
                         }
                     });
 
