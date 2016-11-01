@@ -1080,12 +1080,12 @@ public final class NeuronTracerTopComponent extends TopComponent
         innerComponent.addMouseListener(new MouseUtils.PopupMouseAdapter() {
             private JPopupMenu createMenu(Point popupMenuScreenPoint) 
             {
-                JPopupMenu menu = new JPopupMenu();
+                JPopupMenu topMenu = new JPopupMenu();
                 
                 Vector3 mouseXyz = worldXyzForScreenXy(popupMenuScreenPoint);
                 Vector3 focusXyz = sceneWindow.getVantage().getFocusPosition();
                 HortaMenuContext menuContext = new HortaMenuContext(
-                        menu,
+                        topMenu,
                         popupMenuScreenPoint,
                         mouseXyz,
                         focusXyz,
@@ -1096,14 +1096,17 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
-                menu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
+                topMenu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
 
                 // SECTION: View options
-                menu.add(new JPopupMenu.Separator());
+                // menu.add(new JPopupMenu.Separator());
+                
+                JMenu viewMenu = new JMenu("View");
+                topMenu.add(viewMenu);
 
                 if (mouseStageLocation != null) {
                     // Recenter
-                    menu.add(new AbstractAction("Recenter on This 3D Position [left-click]") {
+                    viewMenu.add(new AbstractAction("Recenter on This 3D Position [left-click]") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
@@ -1112,7 +1115,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     });
                 }
 
-                menu.add(new AbstractAction("Reset Rotation") {
+                viewMenu.add(new AbstractAction("Reset Rotation") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         Vantage v = sceneWindow.getVantage();
@@ -1122,9 +1125,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                menu.add(new JPopupMenu.Separator());
+                // menu.add(new JPopupMenu.Separator());
 
-                menu.add(new AbstractAction("Auto Contrast") {
+                viewMenu.add(new AbstractAction("Auto Contrast") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         autoContrast();
@@ -1137,7 +1140,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
                             "Auto-load Image Tiles", volumeCache.isUpdateCache());
-                    menu.add(enableVolumeCacheMenu);
+                    topMenu.add(enableVolumeCacheMenu);
                     enableVolumeCacheMenu.addActionListener(new AbstractAction() {
                         @Override
                         public void actionPerformed(ActionEvent e)
@@ -1149,7 +1152,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         }
                     });
 
-                    menu.add(new AbstractAction("Load Image Tile Here") {
+                    topMenu.add(new AbstractAction("Load Image Tile Here") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             loadTileAtCurrentFocusAsynchronous();
@@ -1160,7 +1163,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (volumeState != null) {
                     JMenu projectionMenu = new JMenu("Projection");
                     
-                    menu.add(projectionMenu);
+                    viewMenu.add(projectionMenu);
                     
                     projectionMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Maximum Intensity") 
@@ -1215,7 +1218,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     */
                                         
                     JMenu filterMenu = new JMenu("Rendering Filter");
-                    menu.add(filterMenu);
+                    viewMenu.add(filterMenu);
 
                     filterMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Nearest-neighbor (Discrete Voxels)") 
@@ -1267,7 +1270,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 if (sceneWindow != null) {
                     JMenu stereoMenu = new JMenu("Stereo3D");
-                    menu.add(stereoMenu);
+                    viewMenu.add(stereoMenu);
 
                     stereoMenu.add(new JRadioButtonMenuItem(
                             new AbstractAction("Monoscopic (Not 3D)") 
@@ -1367,7 +1370,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 
                 JCheckBoxMenuItem cubeDistortMenu = new JCheckBoxMenuItem("Compress Voxels in Z", doCubifyVoxels);
-                menu.add(cubeDistortMenu);
+                viewMenu.add(cubeDistortMenu);
                 cubeDistortMenu.addActionListener(new AbstractAction() {
                     @Override
                     public void actionPerformed(ActionEvent e)
@@ -1442,11 +1445,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                             redrawNow();
                         }
                     }));
-                    menu.add(unmixMenu);
+                    topMenu.add(unmixMenu);
 
                 }
                 
-                menu.add(new AbstractAction("Save Screen Shot...") {
+                viewMenu.add(new AbstractAction("Save Screen Shot...") {
                     @Override
                     public void actionPerformed(ActionEvent e) 
                     {
@@ -1477,7 +1480,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 
                 // I could not figure out how to save the settings every time the application closes,
                 // so make the user save the settings on demand.
-                menu.add(new AbstractAction("Save Viewer Settings") {
+                viewMenu.add(new AbstractAction("Save Viewer Settings") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         saveStartupPreferences();
@@ -1485,11 +1488,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                 });
                 
                 // SECTION: Anchors
-                menu.add(new JPopupMenu.Separator());
+                topMenu.add(new JPopupMenu.Separator());
                 final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
 
                 if (interactorContext.canClearParent()) {
-                    menu.add(new AbstractAction("Clear Current Parent Anchor") {
+                    topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         interactorContext.clearParent();
@@ -1498,7 +1501,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
                 
                 if (interactorContext.getCurrentParentAnchor() != null) {
-                    menu.add(new AbstractAction("Center on Current Parent Anchor") {
+                    topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
@@ -1511,7 +1514,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // SECTION: Undo/redo
                 
                 if (undoRedoManager.canUndoOrRedo()) {
-                    menu.add(new JPopupMenu.Separator());                
+                    topMenu.add(new JPopupMenu.Separator());                
                     if (undoRedoManager.canUndo()) {
                         UndoAction undoAction = SystemAction.get(UndoAction.class);
                         JMenuItem undoItem = undoAction.getPopupPresenter();
@@ -1534,7 +1537,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             }
                             undoItem.setAccelerator(shortcut);
                         }
-                        menu.add(undoItem);
+                        topMenu.add(undoItem);
                     }
                     if (undoRedoManager.canRedo()) {
                         RedoAction redoAction = SystemAction.get(RedoAction.class);
@@ -1547,12 +1550,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                                     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() // CTRL on Win/Linux, flower on Mac
                             ));
                         }
-                        menu.add(redoItem);
+                        topMenu.add(redoItem);
                     }
                 }
                 
                 // SECTION: Tracing options
-                menu.add(new JPopupMenu.Separator());
+                // menu.add(new JPopupMenu.Separator());
                 // Fetch anchor location before popping menu, because menu causes
                 // hover location to clear
                 // TODO:
@@ -1563,7 +1566,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
                     // Synchronize with LVV
                     // TODO - is LVV present?
-                    menu.add(new JPopupMenu.Separator());
+                    topMenu.add(new JPopupMenu.Separator());
                     // Want to lookup, get URL and get focus.
                     SynchronizationHelper helper = new SynchronizationHelper();
                     Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
@@ -1580,24 +1583,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                         for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
                             synchronizeAllMenu.add(item);
                         }
-                        menu.add(synchronizeAllMenu);
+                        topMenu.add(synchronizeAllMenu);
                     }
                     else if (locationProviders.size() == 1) {
                         for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            menu.add(item);
+                            topMenu.add(item);
                         }
                     }
                 }
                 
                 // Cancel/do nothing action
-                menu.add(new JPopupMenu.Separator());
-                menu.add(new AbstractAction("Close This Menu [ESC]") {
+                topMenu.add(new JPopupMenu.Separator());
+                topMenu.add(new AbstractAction("Close This Menu [ESC]") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                     }
                 });
 
-                return menu;
+                return topMenu;
             }
 
             @Override

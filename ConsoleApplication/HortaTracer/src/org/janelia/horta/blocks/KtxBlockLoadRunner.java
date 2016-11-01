@@ -108,7 +108,7 @@ implements Runnable
         } catch (IOException ex) {
             state = State.FAILED;
             logger.warn("IOException loading tile {} from stream", blockTileKey);
-            Exceptions.printStackTrace(ex);
+            // Exceptions.printStackTrace(ex);
             return;
         } catch (InterruptedException ex) {
             logger.info("loading tile {} was interrupted", blockTileKey);

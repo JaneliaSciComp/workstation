@@ -187,7 +187,7 @@ vec3 hot_color_for_hue_intensity(in float hue, in float saturation, in float int
     const float s_gray = 0.0625; // location of grayscale stripe
     // intensity
     float i = clamp(intensity, 0, 1);
-    i = pow(i, 1.5); // crude gamma correction of sRGB texture
+    i = pow(i, 1.5); // crude gamma correction of sRGB texture "blacker"
     float r = (0.93750 * i + 0.03125); // dark to light, terminating at pixel centers
     vec3 color_sat = texture(colorMapTexture, vec2(r, s_sat)).rgb;
     vec3 color_gray = texture(colorMapTexture, vec2(r, s_gray)).rgb;
