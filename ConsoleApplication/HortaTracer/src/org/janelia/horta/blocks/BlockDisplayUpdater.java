@@ -90,6 +90,9 @@ public class BlockDisplayUpdater
         if (ktxSource == null) {
             return;
         }
+        if (focus == null) {
+            return;
+        }
         if (focus.equals(cachedFocus)) {
             return; // short circuit when nothing has changed...
         }
