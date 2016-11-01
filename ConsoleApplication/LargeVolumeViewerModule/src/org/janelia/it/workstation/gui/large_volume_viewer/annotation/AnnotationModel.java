@@ -127,9 +127,9 @@ called from a  SimpleWorker thread.
 
     public AnnotationModel() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        filteredAnnotationModel = new FilteredAnnotationModel();
-        modelAdapter = new DomainMgrTmModelAdapter();
-        neuronManager = new TmModelManipulator(modelAdapter);
+        this.modelAdapter = new DomainMgrTmModelAdapter();
+        this.neuronManager = new TmModelManipulator(modelAdapter);
+        this.filteredAnnotationModel = new FilteredAnnotationModel();
 
         // Report performance statistics when program closes
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -187,6 +187,10 @@ called from a  SimpleWorker thread.
 
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
+    }
+    
+    public void saveCurrentWorkspace() throws Exception {
+        tmDomainMgr.save(currentWorkspace);
     }
 
     public TmSample getCurrentSample() {
@@ -759,7 +763,6 @@ called from a  SimpleWorker thread.
             // log.info("Saving source neuron.");
             neuronManager.saveNeuronData(sourceNeuron);
         }
-
 
         // if source neuron is now empty, delete it
         if (sourceNeuron.getGeoAnnotationMap().size() == 0) {
@@ -1389,7 +1392,7 @@ called from a  SimpleWorker thread.
      */
     public synchronized void setNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style) throws Exception {
         ModelTranslation.updateNeuronStyle(style, neuron);
-        tmDomainMgr.saveMetadata(neuron);
+        neuronManager.saveNeuronMetadata(neuron);
         // fire change to listeners
         fireNeuronStyleChanged(neuron, style);
         activityLog.logSetStyle(getCurrentWorkspace().getId(), neuron.getId());

@@ -198,9 +198,9 @@ public class EditWorkspaceNameDialog extends ModalDialog {
             }
             
             StringBuilder sb = new StringBuilder();
-            sb.append(sampleDate).append("-").append(neuronCode).append("-").append(userInitials);
+            sb.append(sampleDate).append("_").append(neuronCode).append("_").append(userInitials);
             if (!StringUtils.isEmpty(suffix)) {
-                sb.append("-").append(suffix);
+                sb.append("_").append(suffix);
             }
     
             this.name = sb.toString();

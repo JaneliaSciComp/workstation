@@ -250,7 +250,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             }
             refreshMeshDrawUpdateTimer();
             fireComponentUpdate();
-            log.info("anchor time=" + TraceMode.getTimerMs());
+            log.debug("anchor time=" + TraceMode.getTimerMs());
         }
     }
 
