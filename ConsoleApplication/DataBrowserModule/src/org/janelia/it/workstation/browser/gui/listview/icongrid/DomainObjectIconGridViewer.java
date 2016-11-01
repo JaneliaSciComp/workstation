@@ -17,7 +17,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -101,7 +101,7 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
             String filename = "question_block_large.png";
-            if (imageObject instanceof Filter) {
+            if (imageObject instanceof Filtering) {
                 filename = "search_large.png";
             }
             else if (imageObject instanceof TreeNode) {

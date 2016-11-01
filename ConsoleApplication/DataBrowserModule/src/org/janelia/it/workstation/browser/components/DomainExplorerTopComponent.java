@@ -13,9 +13,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
-import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingUtilities;
@@ -23,7 +21,7 @@ import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -587,10 +585,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
      * @return
      */
     public static boolean isSupported(DomainObject domainObject) { 
-        if (domainObject instanceof TreeNode) {
+        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
             return true;
         }
-        else if (domainObject instanceof Filter) {
+        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
             return true;
         }
         // TODO: Missing domain specific objects like TmWorkspaces... 

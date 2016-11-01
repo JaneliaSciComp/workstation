@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.swing.Action;
 
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
@@ -14,18 +14,17 @@ import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInViewerAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
-public class FilterNode extends DomainObjectNode<Filter> {
+public class FilterNode extends DomainObjectNode<Filtering> {
         
-    public FilterNode(ChildFactory<?> parentChildFactory, Filter filter) throws Exception {
+    public FilterNode(ChildFactory<?> parentChildFactory, Filtering filter) throws Exception {
         super(parentChildFactory, Children.LEAF, filter);
     }
     
-    public Filter getFilter() {
-        return (Filter)getDomainObject();
+    public Filtering getFilter() {
+        return (Filtering)getDomainObject();
     }
     
     @Override

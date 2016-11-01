@@ -10,6 +10,7 @@ import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -46,14 +47,14 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         for(Reference reference : treeNode.getChildren()) {
             if (reference==null) continue;
 
-            if (reference.getTargetClassName().equals("TreeNode")) {
-                return true;
-            }
-            else if (reference.getTargetClassName().equals("Filter")) {
-                return true;
-            }
-            
             Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(reference.getTargetClassName());
+            if (TreeNode.class.isAssignableFrom(clazz)) {
+                return true;
+            }
+            else if (Filtering.class.isAssignableFrom(clazz)) {
+                return true;
+            }
+            // TODO: missing items with providers? 
             
             try {
                 DomainObject dummyChild = (DomainObject)clazz.newInstance();
@@ -99,7 +100,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                         if (TreeNode.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
-                        else if (Filter.class.isAssignableFrom(obj.getClass())) {
+                        else if (Filtering.class.isAssignableFrom(obj.getClass())) {
                             temp.add(obj);
                         }
                         else {
@@ -131,8 +132,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             if (TreeNode.class.isAssignableFrom(key.getClass())) {
                 return new TreeNodeNode(this, (TreeNode)key);
             }
-            else if (Filter.class.isAssignableFrom(key.getClass())) {
-                return new FilterNode(this, (Filter)key);
+            else if (Filtering.class.isAssignableFrom(key.getClass())) {
+                return new FilterNode(this, (Filtering)key);
             }
             else {
                 DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
