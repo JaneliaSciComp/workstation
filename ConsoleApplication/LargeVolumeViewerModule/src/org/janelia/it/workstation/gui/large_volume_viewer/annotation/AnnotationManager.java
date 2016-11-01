@@ -71,8 +71,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * by events generated at AnnotationModel.
  */
 {
-    private TiledMicroscopeDomainMgr tmDomainMgr;
-
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
     // annotation model object
@@ -102,7 +100,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     }
 
     public boolean editsAllowed() {
@@ -321,12 +318,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
-                } else {
-                    annotationModel.addChildAnnotation(
-                            currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
+                } 
+                else {
+                    annotationModel.addChildAnnotation(currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
                 stopwatch.stop();
-                // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
                 log.info("added annotation; elapsed time = {} ms", stopwatch.getElapsedTime());
             }
 
@@ -1448,7 +1444,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
                 log.info("Setting color model: {}",workspace.getColorModel());
-                tmDomainMgr.save(workspace);
+                saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1466,7 +1462,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
                 log.info("Setting 3d color model: {}",workspace.getColorModel3d());
-                tmDomainMgr.save(workspace);
+                saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1478,7 +1474,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         try {
             TmWorkspace workspace = getCurrentWorkspace();
             workspace.setAutoPointRefinement(state);
-            tmDomainMgr.save(workspace);
+            saveCurrentWorkspace();
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);
@@ -1489,7 +1485,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         try {
             TmWorkspace workspace = getCurrentWorkspace();
             workspace.setAutoTracing(state);
-            tmDomainMgr.save(workspace);
+            saveCurrentWorkspace();
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);
@@ -1659,6 +1655,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public TmWorkspace getCurrentWorkspace() {
         return annotationModel.getCurrentWorkspace();
+    }
+    
+    public void saveCurrentWorkspace() throws Exception {
+        annotationModel.saveCurrentWorkspace();
     }
 
     public AnnotationModel getAnnotationModel() {
