@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -579,19 +582,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     /**
      * Returns true if the given object can be displayed as a node in the explorer.
      * 
-     * TODO: this class shouldn't know about all this, it should be abstracted in Nodes somehow
-     * 
      * @param domainObject
      * @return
      */
-    public static boolean isSupported(DomainObject domainObject) { 
-        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
+    public static boolean isSupported(DomainObject domainObject) {
+        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+        if (provider!=null) {
             return true;
         }
-        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
-            return true;
-        }
-        // TODO: Missing domain specific objects like TmWorkspaces... 
         return false;
     }
     

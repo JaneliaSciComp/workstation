@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.actions;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -9,6 +10,8 @@ import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -81,18 +84,28 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
 
-                // Remove references
+                // Remove any actual objects that are no longer references
+                if (!listToDelete.isEmpty()) {
+                    log.info("Looking for provider to deleting object entirely: {}", listToDelete);
+                    for(DomainObject domainObject : domainObjects) {
+                        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+                        if (provider!=null) {
+                            log.info("Found DomainObjectHelper provider: "+provider);
+                            provider.remove(domainObject);
+                        }
+                        else {
+                            log.info("No DomainObjectHelper found for {}, using default remove function",domainObject);
+                            DomainMgr.getDomainMgr().getModel().remove(Arrays.asList(domainObject));
+                        }
+                    }
+                }
+                
+                // Delete references
                 for (TreeNode treeNode : removeFromFolders.keySet()) {
                     for (DomainObject domainObject : removeFromFolders.get(treeNode)) {
                         log.info("Removing {} from {}", domainObject, treeNode);
                         model.removeChild(treeNode, domainObject);
                     }
-                }
-
-                // Remove any actual objects that are no longer references
-                if (!listToDelete.isEmpty()) {
-                    log.info("Deleting entirely: {}", listToDelete);
-                    model.remove(listToDelete);
                 }
             }
 

@@ -9,7 +9,6 @@ import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
@@ -23,9 +22,6 @@ import org.slf4j.LoggerFactory;
 /**
  * A child factory for tree nodes (i.e. folders). Supports adding and removing 
  * children dynamically.
- *
- * TODO: this class needs an overhaul so that there is one place where we define which nodes appear as children of folders,
- * and everything else that happens in here is a consequence of that.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -43,30 +39,29 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         this.treeNode = treeNode;
     }
 
+    private boolean isSupportedAsChild(Class<? extends DomainObject> clazz) {
+        try {
+            // TODO: this should use the other isCompatible() method which takes a class, 
+            // instead of constructing a dummy object
+            DomainObject dummyChild = (DomainObject)clazz.newInstance();
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
+            if (provider!=null) {
+                return true;
+            }
+        }
+        catch (InstantiationException | IllegalAccessException e) {
+            log.error("Error instantiating purported domain class "+clazz, e);
+        }
+        return false;
+    }
+    
     public boolean hasNodeChildren() {
         for(Reference reference : treeNode.getChildren()) {
             if (reference==null) continue;
-
             Class<? extends DomainObject> clazz = DomainUtils.getObjectClassByName(reference.getTargetClassName());
-            if (TreeNode.class.isAssignableFrom(clazz)) {
+            if (isSupportedAsChild(clazz)) {
                 return true;
             }
-            else if (Filtering.class.isAssignableFrom(clazz)) {
-                return true;
-            }
-            // TODO: missing items with providers? 
-            
-            try {
-                DomainObject dummyChild = (DomainObject)clazz.newInstance();
-                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(dummyChild);
-                if (provider!=null) {
-                    return true;
-                }
-            }
-            catch (InstantiationException | IllegalAccessException e) {
-                log.error("Error instantiating purported domain class "+reference.getTargetClassName(), e);
-            }
-            
         }
         return false;
     }
@@ -97,17 +92,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                     DomainObject obj = map.get(reference.getTargetId());
                     log.trace(reference.getTargetClassName()+"#"+reference.getTargetId()+" -> "+obj);
                     if (obj!=null) {
-                        if (TreeNode.class.isAssignableFrom(obj.getClass())) {
+                        if (isSupportedAsChild(obj.getClass())) {
                             temp.add(obj);
-                        }
-                        else if (Filtering.class.isAssignableFrom(obj.getClass())) {
-                            temp.add(obj);
-                        }
-                        else {
-                            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(obj);
-                            if (provider!=null) {
-                                temp.add(obj);
-                            }
                         }
                     }
                     else {
@@ -129,17 +115,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     protected Node createNodeForKey(DomainObject key) {
         log.debug("Creating node for '{}'",key.getName());
         try {
-            if (TreeNode.class.isAssignableFrom(key.getClass())) {
-                return new TreeNodeNode(this, (TreeNode)key);
-            }
-            else if (Filtering.class.isAssignableFrom(key.getClass())) {
-                return new FilterNode(this, (Filtering)key);
-            }
-            else {
-                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
-                if (provider!=null) {
-                    return provider.getNode(key, this);
-                }
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(key);
+            if (provider!=null) {
+                return provider.getNode(key, this);
             }
             return null;
         }
@@ -182,9 +160,5 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         model.addChildren(treeNode, domainObjects, index);
-    }
-    
-    public void removeChild(final DomainObject domainObject) throws Exception {
-        // Modifying the domain model is now taken care of by the RemoveItemsFromFolderAction
     }
 }

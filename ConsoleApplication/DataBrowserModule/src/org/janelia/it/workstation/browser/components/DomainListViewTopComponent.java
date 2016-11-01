@@ -23,8 +23,6 @@ import org.janelia.it.workstation.browser.gui.find.FindContextActivator;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.support.MouseForwarder;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
-import org.janelia.it.workstation.browser.nodes.FilterNode;
-import org.janelia.it.workstation.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
