@@ -37,7 +37,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
-import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.apache.commons.io.IOUtils;
@@ -56,7 +55,6 @@ import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,9 +167,9 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             nttc.setKtxSource(ktxSource);
             return ktxSource;
         } catch (MalformedURLException ex) {
-            Exceptions.printStackTrace(ex);
+            // Exceptions.printStackTrace(ex);
         } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+            // Exceptions.printStackTrace(ex);
         }
         return null;
     }
