@@ -266,17 +266,25 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
             }
         }
         
+        String logStr = null;
+        if (neuronPairs.size()==1) {
+            TmNeuronMetadata neuron = neuronPairs.iterator().next().getLeft();
+            logStr = neuron==null?"null neuron":neuron.toString();
+        }
+        else {
+            logStr = neuronPairs.size()+" neurons";
+        }
+        
         Response response = manager.getMouselightEndpoint("/workspace/neuron")
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request()
                 .post(Entity.entity(multiPartEntity, MultiPartMediaTypes.MULTIPART_MIXED));
-        if (checkBadResponse(response, "update: " +neuronPairs.size()+" neurons")) {
+        if (checkBadResponse(response, "update: " +logStr)) {
             throw new WebApplicationException(response);
         }
 
         List<TmNeuronMetadata> list = response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
-
-        log.info("Updated {} neurons in {} ms",neuronPairs.size(),w.getElapsedTime());
+        log.info("Updated {} in {} ms",logStr,w.getElapsedTime());
         return list;
     }
 

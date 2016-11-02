@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.util.List;
 import org.janelia.geometry3d.Box3;
 import org.janelia.geometry3d.ConstVector3;
-import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.texture.Texture3d;
 
 /**

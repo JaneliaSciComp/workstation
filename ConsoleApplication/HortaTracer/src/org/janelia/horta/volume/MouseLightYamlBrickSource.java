@@ -32,7 +32,7 @@ package org.janelia.horta.volume;
 
 import org.janelia.geometry3d.Box3;
 import org.janelia.horta.BrainTileInfo;
-import org.janelia.horta.OsFilePathRemapper;
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.netbeans.api.progress.ProgressHandle;
 import org.yaml.snakeyaml.Yaml;

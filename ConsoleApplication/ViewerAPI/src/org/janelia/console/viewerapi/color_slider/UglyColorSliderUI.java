@@ -354,7 +354,12 @@ class UglyColorSliderUI extends BasicSliderUI
 			int delta = 1 * ((direction > 0) ? POSITIVE_SCROLL : NEGATIVE_SCROLL);
 
 			UglyColorSlider colorSlider = (UglyColorSlider) slider;
-			if (selectedThumb == Thumb.WHITE) {
+
+            // For 16-bit ranges, one unit is too small
+            if (colorSlider.getMaximum() > 4000)
+                delta *= 20;
+            
+            if (selectedThumb == Thumb.WHITE) {
 				int oldValue = colorSlider.getWhiteLevel();
 				colorSlider.setWhiteLevel(oldValue + delta);
 			} else if (selectedThumb == Thumb.GRAY) {

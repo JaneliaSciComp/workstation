@@ -45,7 +45,7 @@ public abstract class BasicShaderProgram implements ShaderProgram {
     protected int programHandle = 0;
     protected int previousProgramHandle = 0;
     private final IntBuffer pp = IntBuffer.allocate(1);
-    private final List<ShaderStep> shaderSteps = new ArrayList<ShaderStep>();
+    private final List<ShaderStep> shaderSteps = new ArrayList<>();
 
     public BasicShaderProgram() {
     }

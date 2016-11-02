@@ -9,12 +9,12 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
@@ -163,25 +163,26 @@ implements MouseMode, KeyListener
 		double cutoff = worldRadius * worldRadius;
 		double minDist2 = 10 * cutoff; // start too big
 		Anchor closest = null;
-        // Copy the collection to avoid concurrent modification exception.
-        final Anchor[] anchors = skeleton.getAnchors().toArray( new Anchor[0] );
-		for (Anchor a : anchors) {
-			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
-			if (dz >= 0.95 * viewport.getDepth())
-				continue; // outside of Z (most of) range
-			// Use X/Y (not Z) for distance comparison
-			Vec3 dv = xyz.minus(a.getLocation());
-			dv = viewerInGround.inverse().times(dv); // rotate into screen space
-			double dx = dv.getX();
-			double dy = dv.getY();
-			double d2 = dx*dx + dy*dy;
-			if (d2 > cutoff)
-				continue;
-			if (d2 >= minDist2)
-				continue;
-			minDist2 = d2;
-			closest = a;
-		}
+        Set<Anchor> anchors = skeleton.getAnchors();
+        synchronized (anchors) {
+    		for (Anchor a : anchors) {
+    			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
+    			if (dz >= 0.95 * viewport.getDepth())
+    				continue; // outside of Z (most of) range
+    			// Use X/Y (not Z) for distance comparison
+    			Vec3 dv = xyz.minus(a.getLocation());
+    			dv = viewerInGround.inverse().times(dv); // rotate into screen space
+    			double dx = dv.getX();
+    			double dy = dv.getY();
+    			double d2 = dx*dx + dy*dy;
+    			if (d2 > cutoff)
+    				continue;
+    			if (d2 >= minDist2)
+    				continue;
+    			minDist2 = d2;
+    			closest = a;
+    		}
+        }
 
         // closest == null means you're not on an anchor anymore
 		// but don't hover if the anchor isn't visible; hovering turns out

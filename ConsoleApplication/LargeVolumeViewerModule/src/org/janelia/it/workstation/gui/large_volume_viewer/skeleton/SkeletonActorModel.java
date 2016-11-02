@@ -647,9 +647,12 @@ public class SkeletonActorModel {
     /** Avoid concurrent modification exceptions, during import. */
     private Collection<Anchor> getAnchorsSafe() {
         if (skeleton == null || skeleton.getAnchors() == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        return new ArrayList<>(skeleton.getAnchors());
+        Set<Anchor> anchors = skeleton.getAnchors();
+        synchronized (anchors) {
+            return new ArrayList<>(anchors);
+        }
     }
 
     public synchronized void setHoverAnchor(Anchor anchor) {

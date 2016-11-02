@@ -15,10 +15,10 @@ public class VertexHighlightActor extends SpheresActor {
     public VertexHighlightActor(NeuronModel neuron) {
         super(neuron, 
                 new VertexHighlightTexture(), 
-                new SpheresMaterial.SpheresShader());
+                null);
         material.manageLightProbeTexture = true;
     }
-
+    
     private static class VertexHighlightTexture extends Texture2d {
         public VertexHighlightTexture() {
             try {

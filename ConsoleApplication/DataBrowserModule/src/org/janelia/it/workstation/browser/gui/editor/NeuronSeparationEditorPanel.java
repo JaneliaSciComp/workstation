@@ -106,7 +106,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editModeButton.setToolTipText("Edit the visibility of the fragments in the current separation");
         editModeButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) { enterEditMode(); }
+            public void actionPerformed(ActionEvent e) {
+                enterEditMode();
+            }
         });
         editOkButton = new JButton();
         editOkButton.setIcon(Icons.getIcon("button_ok_16x16.png"));
@@ -145,7 +147,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
-        openInNAButton.addActionListener(new OpenInNeuronAnnotatorAction(separation));
+        openInNAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new OpenInNeuronAnnotatorAction(separation).actionPerformed(e);
+            }
+        });
         
         configPanel = new ConfigPanel(true);
         configPanel.addTitleComponent(fragmentSortButton, true, true);

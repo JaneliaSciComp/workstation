@@ -21,14 +21,24 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 
-import com.google.common.collect.Sets;
-import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
@@ -71,6 +81,9 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Sets;
+import com.google.common.eventbus.Subscribe;
+
 /**
  * The Filter Editor is the main search GUI in the Workstation. Users can create, save, and load filters 
  * into this panel. The filter is executed every time it changes, and shows results in an embedded 
@@ -79,7 +92,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FilterEditorPanel extends JPanel
-        implements DomainObjectNodeSelectionEditor<Filter>, SearchProvider {
+        implements DomainObjectNodeSelectionEditor<Filtering>, SearchProvider {
 
     private static final Logger log = LoggerFactory.getLogger(FilterEditorPanel.class);
 
@@ -120,6 +133,7 @@ public class FilterEditorPanel extends JPanel
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (filter==null) throw new IllegalStateException("Cannot save null filter");
                 SimpleWorker worker = new SimpleWorker() {
                         
                     private Filter savedFilter;
@@ -268,10 +282,13 @@ public class FilterEditorPanel extends JPanel
         add(resultsPanel, BorderLayout.CENTER);
     }
 
-    private void setFilter(Filter canonicalFilter) {
+    private void setFilter(Filtering canonicalFilter) {
         // Clone the filter so that we don't modify the one in the cache
         this.filter = DomainUtils.cloneFilter(canonicalFilter);
-        filter.setId(canonicalFilter.getId());
+        if (Filter.class.equals(canonicalFilter.getClass())) {
+            // We can only override the given object with a cloned filter (e.g. use the "Save" action) if it's a Filter to begin with
+            filter.setId(canonicalFilter.getId());
+        }
         this.searchConfig = new SearchConfiguration(filter, SearchResults.PAGE_SIZE);
     }
     
@@ -286,12 +303,12 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
-    public void loadDomainObjectNode(DomainObjectNode<Filter> filterNode, boolean isUserDriven, Callable<Void> success) {
+    public void loadDomainObjectNode(DomainObjectNode<Filtering> filterNode, boolean isUserDriven, Callable<Void> success) {
         this.filterNode = (FilterNode)filterNode;
         loadDomainObject(filterNode.getDomainObject(), isUserDriven, success);
     }
 
-    public void loadDomainObject(Filter filter, final boolean isUserDriven, final Callable<Void> success) {
+    public void loadDomainObject(Filtering filter, final boolean isUserDriven, final Callable<Void> success) {
 
         if (filter==null) return;
         
@@ -428,7 +445,7 @@ public class FilterEditorPanel extends JPanel
         
         filter.setSearchString(inputFieldValue);
 
-        saveButton.setVisible(dirty && !filter.getName().equals(DEFAULT_FILTER_NAME));
+        saveButton.setVisible(dirty && filter.getId()!=null && !filter.getName().equals(DEFAULT_FILTER_NAME));
         
         performSearch(isUserDriven, success, failure);
     }
@@ -755,13 +772,13 @@ public class FilterEditorPanel extends JPanel
                 if (domainObject.getId().equals(filter.getId())) {
                     log.info("filter invalidated, reloading...");
                     try {
-                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(Filter.class, filter.getId());
-
+                        Filter updatedFilter = getDomainMgr().getModel().getDomainObject(filter.getClass(), filter.getId());
                         if (updatedFilter != null) {
                             filterNode.update(updatedFilter);
                             loadDomainObjectNode(filterNode, false, null);
                         }
-                    } catch (Exception e) {
+                    } 
+                    catch (Exception e) {
                         ConsoleApp.handleException(e);
                     }
                     break;
@@ -863,8 +880,8 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
-    public DomainObjectEditorState<Filter> saveState() {
-        DomainObjectEditorState<Filter> state = new DomainObjectEditorState<>(
+    public DomainObjectEditorState<Filtering> saveState() {
+        DomainObjectEditorState<Filtering> state = new DomainObjectEditorState<>(
                 filterNode,
                 resultsPanel.getCurrPage(),
                 resultsPanel.getViewer().saveState(),
@@ -873,7 +890,7 @@ public class FilterEditorPanel extends JPanel
     }
 
     @Override
-    public void loadState(DomainObjectEditorState<Filter> state) {
+    public void loadState(DomainObjectEditorState<Filtering> state) {
         // TODO: do a better job of restoring the state
         resultsPanel.setViewerType(state.getListViewerState().getType());
         loadDomainObjectNode(state.getDomainObjectNode(), true, null);

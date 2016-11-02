@@ -7,7 +7,7 @@ import javax.swing.JComponent;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -313,11 +313,11 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     }
 
     private static Class<? extends DomainObjectNodeSelectionEditor<?>> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof Filter) {
-            return FilterEditorPanel.class;
-        }
-        else if (domainObject instanceof TreeNode) {
+        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
             return TreeNodeEditorPanel.class;
+        }
+        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
+            return FilterEditorPanel.class;
         }
         return null;
     }

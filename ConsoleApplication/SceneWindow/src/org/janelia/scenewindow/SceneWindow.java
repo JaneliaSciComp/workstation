@@ -111,12 +111,14 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     // immediate blocking repainting
-    public boolean redrawNow() {
+    public boolean redrawImmediately() {
         GLAutoDrawable glad = getGLAutoDrawable();
         if (glad == null) return false;
         GLContext context = glad.getContext();
         if (context == null) return false;
-        context.makeCurrent();
+        int result = context.makeCurrent();
+        if (result == GLContext.CONTEXT_NOT_CURRENT)
+            return false;
         try {
             glad.display();
         }

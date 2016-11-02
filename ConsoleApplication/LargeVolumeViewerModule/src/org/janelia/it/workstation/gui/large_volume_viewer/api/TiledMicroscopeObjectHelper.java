@@ -20,15 +20,26 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
 
     @Override
     public boolean isCompatible(DomainObject domainObject) {
-        return (domainObject instanceof TmWorkspace) || (domainObject instanceof TmSample);
+        return isCompatible(domainObject.getClass());
     }
 
     @Override
+    public boolean isCompatible(Class<? extends DomainObject> clazz) {
+        if (TmSample.class.isAssignableFrom(clazz)) {
+            return true;
+        }
+        else if (TmWorkspace.class.isAssignableFrom(clazz)) {
+            return true;
+        }
+        return false;
+    }
+    
+    @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (domainObject instanceof TmSample) {
+        if (TmSample.class.isAssignableFrom(domainObject.getClass())) {
             return new TmSampleNode(parentChildFactory, (TmSample)domainObject);
         }
-        else if (domainObject instanceof TmWorkspace) {
+        else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
             return new TmWorkspaceNode(parentChildFactory, (TmWorkspace)domainObject);
         }
         else {
@@ -38,11 +49,11 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
     
     @Override
     public String getLargeIcon(DomainObject domainObject) {
-        if (domainObject instanceof TmWorkspace) {
-            return "workspace_large.png";
-        }
-        else if (domainObject instanceof TmSample) {
+        if (TmSample.class.isAssignableFrom(domainObject.getClass())) {
             return "folder_files_large.png";
+        }
+        else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
+            return "workspace_large.png";
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);
@@ -52,11 +63,11 @@ public class TiledMicroscopeObjectHelper implements DomainObjectHelper {
     @Override
     public void remove(DomainObject domainObject) throws Exception {
         TiledMicroscopeDomainMgr mgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        if (domainObject instanceof TmWorkspace) {
-            mgr.remove((TmWorkspace)domainObject);
-        }
-        else if (domainObject instanceof TmSample) {
+        if (TmSample.class.isAssignableFrom(domainObject.getClass())) {
             mgr.remove((TmSample)domainObject);
+        }
+        else if (TmWorkspace.class.isAssignableFrom(domainObject.getClass())) {
+            mgr.remove((TmWorkspace)domainObject);
         }
         else {
             throw new IllegalArgumentException("Domain class not supported: "+domainObject);

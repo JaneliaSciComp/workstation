@@ -2,19 +2,21 @@ package org.janelia.it.workstation.gui.large_volume_viewer.model_adapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
-import org.janelia.it.workstation.gui.large_volume_viewer.CustomNamedThreadFactory;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.util.RequestProcessor;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
@@ -32,37 +34,30 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
 
     private static Logger log = LoggerFactory.getLogger(DomainMgrTmModelAdapter.class);
 
-    // Very large initial work unit estimate; just need to work out the
-    // conversion factor between this and the true number, once that is
-    // learned.
-    public static final int TOTAL_WORKUNITS = 3;
-
-    private static ScheduledThreadPoolExecutor saveQueue = new ScheduledThreadPoolExecutor(1, new CustomNamedThreadFactory("Tm-Save-Queue"));
-    private static boolean saveQueueErrorFlag = false;
-
+    private RequestProcessor loadProcessor = new RequestProcessor("Tm-Save-Queue", 1, true);
+ 
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
 
     @Override
     public List<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) throws Exception {
         log.info("Checking neurons for workspace: "+workspace);
         List<TmNeuronMetadata> neurons = new ArrayList<>();
-        final ProgressHandle progressHandle = ProgressHandleFactory.createHandle("Loading annotations...");
+        final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading annotations...");
 
         try {
-            progressHandle.setInitialDelay(0);
-            progressHandle.start(TOTAL_WORKUNITS);            
-            progressHandle.progress(0);
-            progressHandle.setDisplayName("Loading neuron data...");
+            progress.setInitialDelay(0);
+            progress.start(2);            
+            progress.progress(0);
+            progress.setDisplayName("Loading neuron data...");
             
             StopWatch stopWatch = new StopWatch();
             List<TmNeuronMetadata> neuronList = tmDomainMgr.getWorkspaceNeurons(workspace.getId());
             log.info("Loading {} neurons took {} ms", neuronList.size(), stopWatch.getElapsedTime());
             
-            progressHandle.progress(1);
+            progress.progress(1);
 
             // Await completion.
-            progressHandle.setDisplayName("Populating viewer...");
-            progressHandle.progress(3);
+            progress.setDisplayName("Verifying neuron data...");
 
             // check neuron consistency and repair (some) problems
             for (TmNeuronMetadata neuron: neuronList) {
@@ -80,97 +75,101 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
                 }
                 neurons.add(neuron);
             }
+            
+            progress.progress(2);
 
-            progressHandle.finish();
         }
         catch (Exception ex) {
-            progressHandle.finish();
             throw ex;
+        }
+        finally {
+            progress.finish();
         }
 
         return neurons;
     }
 
-    private static class SaveNeuronRunnable implements Runnable {
+    private enum Action {
+        CREATE,
+        SAVE_METADATA,
+        SAVE,
+        REMOVE
+    }
+    
+    private static class NeuronAction implements Runnable {
 
-        private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-        private TmNeuronMetadata tmNeuronMetadata;
-        private boolean metadataOnly = false;
-        private AtomicBoolean running = new AtomicBoolean(false);
+        private TmNeuronMetadata neuron;
+        private Action action;
+        private SettableFuture<TmNeuronMetadata> future;
 
-        public SaveNeuronRunnable(TmNeuronMetadata tmNeuronMetadata, boolean metadataOnly) {
-            this.tmNeuronMetadata = tmNeuronMetadata;
-            this.metadataOnly = metadataOnly;
+        public NeuronAction(TmNeuronMetadata neuron, Action action, SettableFuture<TmNeuronMetadata> future) {
+            this.neuron = neuron;
+            this.action = action;
+            this.future = future;
         }
 
         @Override
         public void run() {
-            running.set(true);
+            TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+            
+            ProgressHandle progress = ProgressHandleFactory.createHandle("Handling neuron " + neuron.getName() + " ...");
             try {
+                progress.start();
+                progress.switchToIndeterminate();
                 StopWatch w = new StopWatch();
-                if (metadataOnly) {
-                    tmDomainMgr.saveMetadata(tmNeuronMetadata);
+
+                TmNeuronMetadata result = null;
+                if (action==Action.CREATE) {
+                    result = domainMgr.save(neuron);
                 }
-                else {
-                    tmDomainMgr.save(tmNeuronMetadata);
+                else if (action==Action.SAVE_METADATA) {
+                    result = domainMgr.saveMetadata(neuron);
                 }
-                log.trace("Neuron save/update time = {} ms", w.getElapsedTime());
+                else if (action==Action.SAVE) {
+                    result = domainMgr.save(neuron);
+                }
+                else if (action==Action.REMOVE) {
+                    domainMgr.remove(neuron);
+                }
+                
+                log.debug("{} for {} took {} ms", action, neuron, w.getElapsedTime());
+                future.set(result);
             }
             catch (Exception ex) {
-                log.error("Error saving neuron",ex);
-                saveQueueErrorFlag=true;
+                future.setException(ex);
+                FrameworkImplProvider.handleException(new Exception("Error saving neuron",ex));
             }
-            running.set(false); // For completeness.
+            finally {
+                progress.finish();
+            }
         }
     }
 
-    private static void saveNeuronToQueue(TmNeuronMetadata neuron, boolean metadataOnly) throws Exception {
-        if (saveQueueErrorFlag) {
-            throw new Exception("Neuron save queue in error state - workstation should be restarted");
-        } else {
-            // Save-queue tasks are identical to one another.  So let us
-            // not accumulate redundant tasks.  If one is waiting to save
-            // this neuron, no need to schedule another, which will just
-            // save it again after--and possibly after other operations.
-
-
-            // this doesn't work right now; keeping it in because I hope to fix it
-            /*
-            for (Runnable runnable: saveQueue.getQueue()) {
-                SaveNeuronRunnable snr = (SaveNeuronRunnable)runnable;
-                if (snr.sameNeuron(neuron)  &&  ! snr.isRunning()) {
-                    // There is a yet-to-run task focused on saving this neuron.
-                    return;
-                }
-            }
-            */
-            SaveNeuronRunnable saveNeuronRunnable = new SaveNeuronRunnable(neuron, metadataOnly);
-            saveQueue.submit(saveNeuronRunnable);
-        }
-    }
-
-    public TmNeuronMetadata createNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        return tmDomainMgr.save(tmNeuronMetadata);
-    }
-
-    /**
-     * Pushes neuron as entity data, to database.
-     * 
-     * @param tmNeuronMetadata internal-to-LVV object.
-     * @throws Exception 
-     */
     @Override
-    public void saveNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        saveNeuronToQueue(tmNeuronMetadata, false);
+    public ListenableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        loadProcessor.post(new NeuronAction(neuron, Action.CREATE, future), 0, Thread.NORM_PRIORITY);
+        return future;
     }
 
     @Override
-    public void saveNeuronMetadata(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        saveNeuronToQueue(tmNeuronMetadata, true);
+    public ListenableFuture<TmNeuronMetadata> asyncSaveNeuron(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        loadProcessor.post(new NeuronAction(neuron, Action.SAVE, future), 0, Thread.NORM_PRIORITY);
+        return future;
     }
 
     @Override
-    public void deleteNeuron(TmNeuronMetadata tmNeuronMetadata) throws Exception {
-        tmDomainMgr.remove(tmNeuronMetadata);
+    public ListenableFuture<TmNeuronMetadata> asyncSaveNeuronMetadata(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        loadProcessor.post(new NeuronAction(neuron, Action.SAVE_METADATA, future), 0, Thread.NORM_PRIORITY);
+        return future;
+    }
+
+    @Override
+    public ListenableFuture<TmNeuronMetadata> asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
+        SettableFuture<TmNeuronMetadata> future = SettableFuture.create();
+        loadProcessor.post(new NeuronAction(neuron, Action.REMOVE, future), 0, Thread.NORM_PRIORITY);
+        return future;
     }
 }

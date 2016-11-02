@@ -37,25 +37,24 @@ import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.RenderPass;
 import org.janelia.gltools.RenderTarget;
+import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.texture.Texture2d;
-import org.janelia.horta.volume.BrickActor;
 
 /**
  *
  * @author Christopher Bruns
  */
 public class VolumeRenderPass extends RenderPass
+implements DepthSlabClipper
 {
-    private final RenderTarget hdrTarget;
-    private final RenderTarget pickBuffer;
+    private final RenderTarget rgbaTarget;
+    private final RenderTarget coreDepthTarget;
     // private final RenderTarget depthTarget;
     private final float[] clearColor4 = new float[] {0,0,0,0};
     private final int[] clearColor4i = new int[] {0,0,0,0};
     // private final float[] depthOne = new float[] {1};
     private final int targetAttachments[];
     private Texture2d cachedDepthTexture = null;
-    private float cachedOpaqueZNear = 1e-2f;
-    private float cachedOpaqueZFar = 1e4f;
     
     // private float relativeSlabThickness = 0.5f;
     private float relativeZNear = 0.92f;
@@ -67,24 +66,25 @@ public class VolumeRenderPass extends RenderPass
         
         // Create render targets
         // Create G-Buffer for deferred rendering
-        final int hdrAttachment = GL3.GL_COLOR_ATTACHMENT0;
+        final int rgbaAttachment = GL3.GL_COLOR_ATTACHMENT0;
         // final int depthAttachment = GL3.GL_DEPTH_ATTACHMENT;
-        final int pickAttachment = GL3.GL_COLOR_ATTACHMENT1;
-        hdrTarget = framebuffer.addRenderTarget(GL3.GL_RGBA16,
-                hdrAttachment);
+        final int coreDepthAttachment = GL3.GL_COLOR_ATTACHMENT1;
+        rgbaTarget = framebuffer.addRenderTarget(GL3.GL_RGBA12,
+                rgbaAttachment);
         // depthTarget = framebuffer.addRenderTarget(GL3.GL_DEPTH_COMPONENT24, // 16? 24? 32? // 16 does not work; unspecified does not work
         //         depthAttachment);
-        pickBuffer = framebuffer.addRenderTarget(GL3.GL_RG16UI,
-                pickAttachment);
+        // Target needs to be floating point, not integer; otherwise blending will not work with multiple blocks.
+        coreDepthTarget = framebuffer.addRenderTarget(GL3.GL_RG32F,
+                coreDepthAttachment);
         
         // Attach render targets to renderer
-        addRenderTarget(hdrTarget);
-        addRenderTarget(pickBuffer);
+        addRenderTarget(rgbaTarget);
+        addRenderTarget(coreDepthTarget);
         targetAttachments = new int[renderTargets.size()];
         for (int rt = 0; rt < renderTargets.size(); ++rt) {
             targetAttachments[rt] = renderTargets.get(rt).getAttachment();
         }
-        hdrTarget.setDirty(true);
+        rgbaTarget.setDirty(true);
     }
     
     @Override
@@ -103,22 +103,23 @@ public class VolumeRenderPass extends RenderPass
     protected void renderScene(GL3 gl, AbstractCamera camera)
     {
         // if (true) return; // TODO
-        if (! hdrTarget.isDirty())
+        if (! rgbaTarget.isDirty())
             return;
 
         gl.glDrawBuffers(targetAttachments.length, targetAttachments, 0);
 
         gl.glClearBufferfv(GL3.GL_COLOR, 0, clearColor4, 0);
         // gl.glClearBufferfv(GL3.GL_DEPTH, 0, depthOne, 0);
-        gl.glClearBufferuiv(GL3.GL_COLOR, 1, clearColor4i, 0); // pick buffer...
+        gl.glClearBufferfv(GL3.GL_COLOR, 1, clearColor4, 0); // core intensity/depth buffer
 
         // Blend intensity channel, but not pick channel
-        gl.glDisablei(GL3.GL_BLEND, 0); // TODO
-        gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
+        // gl.glEnable(GL3.GL_BLEND);
+        // gl.glDisablei(GL3.GL_BLEND, 0); // TODO
+        // gl.glDisablei(GL3.GL_BLEND, 1); // TODO - how to write pick for BRIGHTER image?
 
         super.renderScene(gl, camera);
 
-        for (RenderTarget rt : new RenderTarget[] {hdrTarget, pickBuffer}) 
+        for (RenderTarget rt : new RenderTarget[] {rgbaTarget, coreDepthTarget}) 
         {
             rt.setHostBufferNeedsUpdate(true);
             rt.setDirty(false);
@@ -126,29 +127,28 @@ public class VolumeRenderPass extends RenderPass
         gl.glDrawBuffers(1, targetAttachments, 0);
     }
     
-    public RenderTarget getIntensityTexture() {
-        return hdrTarget;
+    public RenderTarget getRgbaTexture() {
+        return rgbaTarget;
     }
     
-    public RenderTarget getPickTexture() {
-        return pickBuffer;
+    public RenderTarget getCoreDepthTexture() {
+        return coreDepthTarget;
     }
     
     public Framebuffer getFramebuffer() {
         return framebuffer;
     }
     
-    public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
-        if ((cachedDepthTexture == depthTexture) && (zNear == cachedOpaqueZNear) && (zFar == cachedOpaqueZFar))
+    @Override
+    public void setOpaqueDepthTexture(Texture2d depthTexture) {
+        if (cachedDepthTexture == depthTexture)
             return;
         cachedDepthTexture = depthTexture;
-        cachedOpaqueZNear = zNear;
-        cachedOpaqueZFar = zFar;
         for (GL3Actor actor : getActors()) {
-            if (! (actor instanceof BrickActor)) 
-                continue;
-            BrickActor ba = (BrickActor) actor;
-            ba.setOpaqueDepthTexture(depthTexture, zNear, zFar);
+            if (actor instanceof DepthSlabClipper) {
+                DepthSlabClipper ba = (DepthSlabClipper) actor;
+                ba.setOpaqueDepthTexture(depthTexture);
+            }
         }
     }
     
@@ -156,29 +156,28 @@ public class VolumeRenderPass extends RenderPass
     public void addActor(GL3Actor actor)
     {
         super.addActor(actor);
-        if (! (actor instanceof BrickActor)) 
-            return;
-        BrickActor ba = (BrickActor) actor;
-        ba.setOpaqueDepthTexture(cachedDepthTexture, cachedOpaqueZNear, cachedOpaqueZFar);
-        ba.setRelativeZNear(relativeZNear);
-        ba.setRelativeZFar(relativeZFar);
+        if (actor instanceof DepthSlabClipper) {
+            DepthSlabClipper dsc = (DepthSlabClipper)actor;
+            dsc.setOpaqueDepthTexture(cachedDepthTexture);
+            dsc.setRelativeSlabThickness(relativeZNear, relativeZFar);
+        }
     }
 
-    void setRelativeSlabThickness(float zNear, float zFar)
+    @Override
+    public void setRelativeSlabThickness(float zNear, float zFar)
     {
         if ((zNear == relativeZNear) && (zFar == relativeZFar))
             return; // nothing changed        
         relativeZNear = zNear;
         relativeZFar = zFar;
         for (GL3Actor actor : getActors()) {
-            if (! (actor instanceof BrickActor))
-                continue;
-            BrickActor ba = (BrickActor) actor;
-            ba.setRelativeZNear(zNear);
-            ba.setRelativeZFar(zFar);
+            if (actor instanceof DepthSlabClipper) {
+                DepthSlabClipper ba = (DepthSlabClipper) actor;
+                ba.setRelativeSlabThickness(zNear, zFar);
+            }
         }
-        hdrTarget.setDirty(true);
-        pickBuffer.setDirty(true);
+        rgbaTarget.setDirty(true);
+        coreDepthTarget.setDirty(true);
     }
 
     public float getRelativeZNear() {

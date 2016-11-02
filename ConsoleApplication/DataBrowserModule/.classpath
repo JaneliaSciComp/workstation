@@ -7,6 +7,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Logging"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LZ4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client JAR Dependency Wrapper"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/NetBeans Platform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/Client Integration APIs"/>

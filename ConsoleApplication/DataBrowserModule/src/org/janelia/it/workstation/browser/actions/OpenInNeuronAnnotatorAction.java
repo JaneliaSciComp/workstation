@@ -60,6 +60,9 @@ public class OpenInNeuronAnnotatorAction extends AbstractAction {
 
             @Override
             protected void doStuff() throws Exception {
+                if (fragment==null) {
+                    throw new IllegalStateException("Both fragment and separation were null");
+                }
                 sample = (Sample) DomainMgr.getDomainMgr().getModel().getDomainObject(fragment.getSample());
                 if (sample != null) {
                     separation = SampleUtils.getNeuronSeparation(sample, fragment);

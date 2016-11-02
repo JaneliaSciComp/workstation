@@ -71,8 +71,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
  * by events generated at AnnotationModel.
  */
 {
-    private TiledMicroscopeDomainMgr tmDomainMgr;
-
     private static final Logger log = LoggerFactory.getLogger(AnnotationManager.class);
 
     // annotation model object
@@ -102,7 +100,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
         this.tileServer = tileServer;
-        this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
     }
 
     public boolean editsAllowed() {
@@ -176,8 +173,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             int ans = JOptionPane.showOptionDialog(
                     ComponentUtil.getLVVMainWindow(),
                     String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
-                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()),
-                            annotationModel.getNeuronFromAnnotationID(closest.getId())),
+                            annotationModel.getNeuronFromAnnotationID(anchor.getGuid()).getName(),
+                            annotationModel.getNeuronFromAnnotationID(closest.getId()).getName()),
                     "Merge neurites?",
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE,
@@ -321,12 +318,11 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
-                } else {
-                    annotationModel.addChildAnnotation(
-                            currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
+                } 
+                else {
+                    annotationModel.addChildAnnotation(currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
                 stopwatch.stop();
-                // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
                 log.info("added annotation; elapsed time = {} ms", stopwatch.getElapsedTime());
             }
 
@@ -640,7 +636,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Error while moving neurite!",
-                            "Error",
                             error);
                 }
             };
@@ -663,7 +658,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Error while moving neurite!",
-                            "Error",
                             error);
                 }
             };
@@ -711,7 +705,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split anchor!",
-                        "Error",
                         error);
             }
         };
@@ -739,7 +732,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not reroot neurite!",
-                        "Error",
                         error);
             }
         };
@@ -776,7 +768,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not split neurite!",
-                        "Error",
                         error);
             }
         };
@@ -809,7 +800,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not add anchored path!",
-                        "Error",
                         error);
             }
         };
@@ -861,7 +851,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not remove note!",
-                            "Error",
                             error);
                 }
             };
@@ -898,7 +887,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not set note!",
-                        "Error",
                         error);
             }
         };
@@ -943,7 +931,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not create neuron!",
-                            "Error",
                             error);
                 }
             };
@@ -979,7 +966,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 protected void hadError(Throwable error) {
                     presentError(
                             "Could not delete current neuron!",
-                            "Error",
                             error);
                 }
             };
@@ -1020,7 +1006,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             protected void hadError(Throwable error) {
                 presentError(
                         "Could not rename neuron!",
-                        "Error",
                         error);
             }
         };
@@ -1459,7 +1444,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel(ModelTranslation.translateColorModel(quadViewUi.getImageColorModel()));
                 log.info("Setting color model: {}",workspace.getColorModel());
-                tmDomainMgr.save(workspace);
+                saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1477,7 +1462,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 TmWorkspace workspace = getCurrentWorkspace();
                 workspace.setColorModel3d(ModelTranslation.translateColorModel(colorModel));
                 log.info("Setting 3d color model: {}",workspace.getColorModel3d());
-                tmDomainMgr.save(workspace);
+                saveCurrentWorkspace();
             }
         }
         catch (Exception e) {
@@ -1489,7 +1474,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         try {
             TmWorkspace workspace = getCurrentWorkspace();
             workspace.setAutoPointRefinement(state);
-            tmDomainMgr.save(workspace);
+            saveCurrentWorkspace();
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);
@@ -1500,7 +1485,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         try {
             TmWorkspace workspace = getCurrentWorkspace();
             workspace.setAutoTracing(state);
-            tmDomainMgr.save(workspace);
+            saveCurrentWorkspace();
         }
         catch(Exception e) {
             ConsoleApp.handleException(e);
@@ -1652,9 +1637,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
      * usual error dialog is hiding too much info when it pops within
      * a SimpleWorker's error clause; log those errors!
      */
-    public void presentError(String message, String title, Throwable error) throws HeadlessException {
-        log.error(message, error);
-        presentError(message, title);
+    public void presentError(String message, Throwable error) throws HeadlessException {
+        FrameworkImplProvider.handleException(new Exception(message,error));
     }
 
     private Long getSampleID() {
@@ -1671,6 +1655,10 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
 
     public TmWorkspace getCurrentWorkspace() {
         return annotationModel.getCurrentWorkspace();
+    }
+    
+    public void saveCurrentWorkspace() throws Exception {
+        annotationModel.saveCurrentWorkspace();
     }
 
     public AnnotationModel getAnnotationModel() {

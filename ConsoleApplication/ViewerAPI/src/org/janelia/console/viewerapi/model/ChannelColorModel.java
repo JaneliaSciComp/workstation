@@ -117,6 +117,14 @@ public class ChannelColorModel
         }
     }
 
+    public float getNormalizedMinimum() {
+        return blackLevel / (float) dataMax;
+    }
+    
+    public float getNormalizedMaximum() {
+        return whiteLevel / (float) dataMax;
+    }
+    
 	public int getBitDepth() {
 		return bitDepth;
 	}
