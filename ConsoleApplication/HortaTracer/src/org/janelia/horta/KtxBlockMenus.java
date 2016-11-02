@@ -83,6 +83,7 @@ class KtxBlockMenus {
         
         tilesMenu.add(new JPopupMenu.Separator());
         
+        /*
         JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
                 "Prefer rendered Ktx tiles", preferKtx);
         tilesMenu.add(enableVolumeCacheMenu);
@@ -96,6 +97,7 @@ class KtxBlockMenus {
                 throw new UnsupportedOperationException();
             }
         });
+         */
         
         tilesMenu.add(new JMenuItem(
                 new AbstractAction("Clear all Volume Blocks")
