@@ -544,7 +544,6 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
     }
 
     private void setObjects(List<T> objectList) {
-        log.debug("Setting {} objects",objectList.size());
         this.objectList = objectList;
         this.objectMap = new HashMap<>();
         for(T object : objectList) {

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.browser.gui.editor;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -16,21 +17,35 @@ import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 public class DomainObjectEditorState<T extends DomainObject> {
 
     private final DomainObjectNode<T> domainObjectNode;
+    private final T domainObject;
     private final Integer page;
     private final ListViewerState listViewerState;
     private final Collection<Reference> selectedIds;
 
     private DomainListViewTopComponent topComponent;
 
-    public DomainObjectEditorState(DomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
-        this.domainObjectNode = domainObjectNode;
+    public DomainObjectEditorState(T domainObject, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+        this.domainObjectNode = null;
+        this.domainObject = domainObject;
         this.page = page;
         this.listViewerState = listViewerState;
-        this.selectedIds = selectedIds;
+        this.selectedIds = new ArrayList<>(selectedIds);
+    }
+    
+    public DomainObjectEditorState(DomainObjectNode<T> domainObjectNode, Integer page, ListViewerState listViewerState, Collection<Reference> selectedIds) {
+        this.domainObjectNode = domainObjectNode;
+        this.domainObject = domainObjectNode.getDomainObject();
+        this.page = page;
+        this.listViewerState = listViewerState;
+        this.selectedIds = new ArrayList<>(selectedIds);
     }
 
     public DomainObjectNode<T> getDomainObjectNode() {
         return domainObjectNode;
+    }
+
+    public T getDomainObject() {
+        return domainObject;
     }
 
     public Integer getPage() {
@@ -52,5 +67,38 @@ public class DomainObjectEditorState<T extends DomainObject> {
     public void setTopComponent(DomainListViewTopComponent topComponent) {
         this.topComponent = topComponent;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("DomainObjectEditorState[");
+        if (topComponent != null) {
+            builder.append("\n  topComponent: ");
+            builder.append(topComponent.getClass().getSimpleName());
+        }
+        if (domainObjectNode != null) {
+            builder.append("\n  domainObject: ");
+            builder.append(domainObject.getName());
+            builder.append(" (");
+            builder.append(domainObject);
+            builder.append(")");
+        }
+        if (page != null) {
+            builder.append("\n  page: ");
+            builder.append(page);
+        }
+        if (listViewerState != null) {
+            builder.append("\n  listViewerState: ");
+            builder.append(listViewerState);
+        }
+        if (selectedIds != null) {
+            builder.append("\n  selectedIds: ");
+            builder.append(selectedIds);
+        }
+        builder.append("\n]");
+        return builder.toString();
+    }
+    
+    
 
 }
