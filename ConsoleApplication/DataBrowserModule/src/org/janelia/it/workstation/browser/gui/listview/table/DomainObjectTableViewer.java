@@ -584,5 +584,14 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
         public int getHorizontalScrollValue() {
             return horizontalScrollValue;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("TableViewerState [horizontalScrollValue=");
+            builder.append(horizontalScrollValue);
+            builder.append("]");
+            return builder.toString();
+        }
     }
 }
