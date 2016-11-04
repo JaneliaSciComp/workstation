@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.actions.ServiceAcceptorActionHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.components.DomainListViewManager;
 import org.janelia.it.workstation.browser.components.DomainListViewTopComponent;
 import org.janelia.it.workstation.browser.components.ViewerUtils;
@@ -202,6 +203,7 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         actions.add(new CopyToClipboardAction("Name", getName()));
         actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
+        actions.add(new OpenInViewerAction());
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new ViewDetailsAction());
@@ -290,6 +292,24 @@ public abstract class DomainObjectNode<T extends DomainObject> extends AbstractN
         }
     }
 
+    protected final class OpenInViewerAction extends AbstractAction {
+
+        public OpenInViewerAction() {
+            putValue(NAME, "Open In Viewer");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            DomainListViewTopComponent viewer = ViewerUtils.provisionViewer(DomainListViewManager.getInstance(), "editor");
+            viewer.loadDomainObjectNode(DomainObjectNode.this, true);
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return DomainListViewTopComponent.isSupported(getDomainObject());
+        }
+    }
+    
     protected final class OpenInNewViewerAction extends AbstractAction {
 
         public OpenInNewViewerAction() {

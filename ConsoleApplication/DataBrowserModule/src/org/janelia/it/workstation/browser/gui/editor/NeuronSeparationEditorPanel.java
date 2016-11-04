@@ -47,6 +47,7 @@ import org.janelia.it.workstation.browser.gui.support.SearchProvider;
 import org.janelia.it.workstation.browser.model.DomainModelViewUtils;
 import org.janelia.it.workstation.browser.model.search.ResultPage;
 import org.janelia.it.workstation.browser.model.search.SearchResults;
+import org.janelia.it.workstation.browser.util.ConcurrentUtils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -106,7 +107,9 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         editModeButton.setToolTipText("Edit the visibility of the fragments in the current separation");
         editModeButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) { enterEditMode(); }
+            public void actionPerformed(ActionEvent e) {
+                enterEditMode();
+            }
         });
         editOkButton = new JButton();
         editOkButton.setIcon(Icons.getIcon("button_ok_16x16.png"));
@@ -145,7 +148,12 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         openInNAButton.setIcon(Icons.getIcon("v3d_16x16x32.png"));
         openInNAButton.setFocusable(false);
         openInNAButton.setToolTipText("Open the current separation in Neuron Annotator");
-        openInNAButton.addActionListener(new OpenInNeuronAnnotatorAction(separation));
+        openInNAButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new OpenInNeuronAnnotatorAction(separation).actionPerformed(e);
+            }
+        });
         
         configPanel = new ConfigPanel(true);
         configPanel.addTitleComponent(fragmentSortButton, true, true);
@@ -197,7 +205,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
             } else {
                 domainObjects = DomainMgr.getDomainMgr().getModel().getDomainObjects(separation.getFragmentsReference());
             }
-            showResults(true);
+            showResults(true, null);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -230,7 +238,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
                 }
                 resultsPanel.getViewer().selectEditObjects(visibleNeuronFrags, true);
             }
-            showResults(true);
+            showResults(true, null);
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
@@ -372,9 +380,15 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
             @Override
             protected void hadSuccess() {
-                showResults(isUserDriven);
-                debouncer.success();
-                if (w!=null) ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", separation, w);
+                showResults(isUserDriven, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        debouncer.success();
+                        if (w!=null) ActivityLogHelper.logElapsed("NeuronSeparationEditorPanel.loadSampleResult", separation, w);
+                        return null;
+                    }
+                    
+                });
             }
 
             @Override
@@ -398,11 +412,11 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
         this.searchResults = SearchResults.paginate(domainObjects, annotations);
     }
 
-    public void showResults(boolean isUserDriven) {
+    public void showResults(boolean isUserDriven, Callable<Void> success) {
         add(configPanel, BorderLayout.NORTH);
         add(resultsPanel, BorderLayout.CENTER);
         updateUI();
-        resultsPanel.showSearchResults(searchResults, isUserDriven);
+        resultsPanel.showSearchResults(searchResults, isUserDriven, success);
     }
 
     @Override
@@ -430,7 +444,7 @@ public class NeuronSeparationEditorPanel extends JPanel implements SampleResultE
 
             @Override
             protected void hadSuccess() {
-                showResults(true);
+                showResults(true, null);
             }
 
             @Override

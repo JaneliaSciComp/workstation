@@ -28,88 +28,62 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.geometry3d;
+package org.janelia.horta.loader;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Observable;
 import java.util.Observer;
-import org.janelia.console.viewerapi.ComposableObservable;
-import org.janelia.console.viewerapi.Copyable;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.apache.commons.io.FilenameUtils;
+import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.blocks.KtxBlockLoadRunner;
+import org.janelia.horta.render.NeuronMPRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Christopher Bruns
  */
-public class BrightnessModel 
-implements Copyable<BrightnessModel>, ObservableInterface
+public class HortaKtxLoader implements FileTypeLoader
 {
-    private float minimum = 0; // range 0-1
-    private float maximum = 1; // range 0-1
-    private final ComposableObservable changeObservable = new ComposableObservable();
-
-    public BrightnessModel() {}
-
-    public BrightnessModel(BrightnessModel rhs) {
-        copy(rhs);
-    }
-
-    @Override
-    public final void copy(BrightnessModel rhs) {
-        setMinimum(rhs.minimum);
-        setMaximum(rhs.maximum);        
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NeuronMPRenderer renderer;
+    
+    public HortaKtxLoader(NeuronMPRenderer renderer) {
+        this.renderer = renderer;
     }
     
-    public float getMaximum() {
-        return maximum;
-    }
-
-    public float getMinimum() {
-        return minimum;
-    }
-
-    public final void setMinimum(float minimum) {
-        if (minimum == this.minimum)
-            return;
-        // System.out.println("Min changed!");
-        changeObservable.setChanged();
-        this.minimum = minimum;
-    }
-
-    public final void setMaximum(float maximum) {
-        if (maximum == this.maximum)
-            return;
-        changeObservable.setChanged();
-        this.maximum = maximum;
-    }
-
     @Override
-    public void setChanged() {
-        changeObservable.setChanged();
-    }
-
-    @Override
-    public void notifyObservers() {
-        changeObservable.notifyObservers();
-    }
-
-    @Override
-    public void addObserver(Observer observer) {
-        changeObservable.addObserver(observer);
-    }
-
-    @Override
-    public void deleteObserver(Observer observer) {
-        changeObservable.deleteObserver(observer);
-    }
-
-    @Override
-    public void deleteObservers() {
-        changeObservable.deleteObservers();
-    }
-
-    @Override
-    public boolean hasChanged()
+    public boolean supports(DataSource source)
     {
-        return changeObservable.hasChanged();
+        String ext = FilenameUtils.getExtension(source.getFileName()).toUpperCase();
+        if (ext.equals("KTX"))
+            return true;
+        return false;
     }
-    
+
+    @Override
+    public boolean load(final DataSource source, FileHandler handler) throws IOException
+    {
+        InputStream stream = source.getInputStream();
+        
+        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(stream);
+        loader.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                    return;
+                TetVolumeActor parentActor = TetVolumeActor.getInstance();
+                parentActor.addChild(loader.blockActor);
+                if ( ! renderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                    parentActor.setBrightnessModel(renderer.getBrightnessModel());
+                    renderer.addVolumeActor(parentActor);
+                }
+            }
+        });
+        loader.run();
+        return loader.state == KtxBlockLoadRunner.State.LOADED;
+    }
+
 }

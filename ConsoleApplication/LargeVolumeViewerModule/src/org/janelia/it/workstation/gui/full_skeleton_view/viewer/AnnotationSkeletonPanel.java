@@ -15,6 +15,8 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JColorChooser;
@@ -22,24 +24,25 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileFilter;
+
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
+import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.AxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.DirectionalReferenceAxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.AxesActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton_mesh.NeuronTraceVtxAttribMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
-import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer;
 import org.janelia.it.workstation.gui.viewer3d.OcclusiveRenderer.OcclusiveVolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.OcclusiveViewer;
 import org.janelia.it.workstation.gui.viewer3d.ResetPositionerI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.mesh.actor.AttributeManagerBufferUploader;
@@ -587,41 +590,44 @@ public class AnnotationSkeletonPanel extends JPanel {
             Long minXId = null;
             Long minYId = null;
             Long minZId = null;
-            for (Anchor anchor : skeleton.getAnchors()) {
-                if (minimum == null) {
-                    minimum = anchor.getLocation().clone();
-                } else {
-                    minimum.setX(Math.min(minimum.getX(), anchor.getLocation().getX()));
-                    minimum.setY(Math.min(minimum.getY(), anchor.getLocation().getY()));
-                    minimum.setZ(Math.min(minimum.getZ(), anchor.getLocation().getZ()));
-                    if (logger.isDebugEnabled()) {
-                        if (minimum.getX() == anchor.getLocation().getX()) {
-                            minXId = anchor.getGuid();
-                        }
-                        if (minimum.getY() == anchor.getLocation().getY()) {
-                            minYId = anchor.getGuid();
-                        }
-                        if (minimum.getZ() == anchor.getLocation().getZ()) {
-                            minZId = anchor.getGuid();
+            Set<Anchor> anchors = skeleton.getAnchors();
+            synchronized (anchors) {
+                for (Anchor anchor : anchors) {
+                    if (minimum == null) {
+                        minimum = anchor.getLocation().clone();
+                    } else {
+                        minimum.setX(Math.min(minimum.getX(), anchor.getLocation().getX()));
+                        minimum.setY(Math.min(minimum.getY(), anchor.getLocation().getY()));
+                        minimum.setZ(Math.min(minimum.getZ(), anchor.getLocation().getZ()));
+                        if (logger.isDebugEnabled()) {
+                            if (minimum.getX() == anchor.getLocation().getX()) {
+                                minXId = anchor.getGuid();
+                            }
+                            if (minimum.getY() == anchor.getLocation().getY()) {
+                                minYId = anchor.getGuid();
+                            }
+                            if (minimum.getZ() == anchor.getLocation().getZ()) {
+                                minZId = anchor.getGuid();
+                            }
                         }
                     }
-                }
-
-                if (maximum == null) {
-                    maximum = anchor.getLocation().clone();
-                } else {
-                    maximum.setX(Math.max(maximum.getX(), anchor.getLocation().getX()));
-                    maximum.setY(Math.max(maximum.getY(), anchor.getLocation().getY()));
-                    maximum.setZ(Math.max(maximum.getZ(), anchor.getLocation().getZ()));
-                    if (logger.isDebugEnabled()) {
-                        if (maximum.getX() == anchor.getLocation().getX()) {
-                            maxXId = anchor.getGuid();
-                        }
-                        if (maximum.getY() == anchor.getLocation().getY()) {
-                            maxYId = anchor.getGuid();
-                        }
-                        if (maximum.getZ() == anchor.getLocation().getZ()) {
-                            maxZId = anchor.getGuid();
+    
+                    if (maximum == null) {
+                        maximum = anchor.getLocation().clone();
+                    } else {
+                        maximum.setX(Math.max(maximum.getX(), anchor.getLocation().getX()));
+                        maximum.setY(Math.max(maximum.getY(), anchor.getLocation().getY()));
+                        maximum.setZ(Math.max(maximum.getZ(), anchor.getLocation().getZ()));
+                        if (logger.isDebugEnabled()) {
+                            if (maximum.getX() == anchor.getLocation().getX()) {
+                                maxXId = anchor.getGuid();
+                            }
+                            if (maximum.getY() == anchor.getLocation().getY()) {
+                                maxYId = anchor.getGuid();
+                            }
+                            if (maximum.getZ() == anchor.getLocation().getZ()) {
+                                maxZId = anchor.getGuid();
+                            }
                         }
                     }
                 }

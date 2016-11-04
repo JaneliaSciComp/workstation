@@ -38,6 +38,9 @@ public class SliderPanel extends JPanel {
     private ImageColorModel imageColorModel;
     private ColorModelListener visibilityListener;
 
+    public SliderPanel() { // empty constructor so I can drag this widget in netbeans GUI builder
+    }
+    
     public SliderPanel( ImageColorModel imageColorModel ) {
         setImageColorModel( imageColorModel );
     }

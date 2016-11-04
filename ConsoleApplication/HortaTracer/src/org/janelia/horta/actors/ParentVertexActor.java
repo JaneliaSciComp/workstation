@@ -19,7 +19,7 @@ public class ParentVertexActor extends SpheresActor {
     public ParentVertexActor(NeuronModel neuron) {
         super(neuron, 
                 new ParentVertexTexture(), 
-                new SpheresMaterial.SpheresShader());
+                null);
         material.manageLightProbeTexture = true;
     }
 

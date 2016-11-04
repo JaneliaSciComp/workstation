@@ -75,7 +75,7 @@ import org.openide.util.Utilities;
         preferredID = "MovieMakerTopComponent"
 )
 @Messages({
-    "CTL_MovieMakerAction=MovieMaker",
+    "CTL_MovieMakerAction=Movie Maker",
     "CTL_MovieMakerTopComponent=Movie Maker",
     "HINT_MovieMakerTopComponent=Horta Movie Maker controls"
 })

@@ -38,7 +38,7 @@ public class FrameworkImplProvider {
     }
 
     public static FileAccess getFileAccess() {
-        return get(SettingsModel.LOOKUP_PATH, FileAccess.class);
+        return get(FileAccess.LOOKUP_PATH, FileAccess.class);
     }
     
     public static CompressedFileResolverI getCompressedFileResolver() {

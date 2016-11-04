@@ -341,6 +341,7 @@ implements GLActor
         double dz = 0.50 * tileFormat.getTileSize()[whdToXyz[2]];
         result.include(permutedVertex3d(x0, y0, z-dz, whdToXyz));
         result.include(permutedVertex3d(x1, y1, z+dz, whdToXyz));
+        // log.info("Tile X bounds = " + result.getMinX() + ", " + result.getMaxX());
 		return result;
 	}
 

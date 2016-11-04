@@ -35,12 +35,24 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
     public IndeterminateProgressMonitor(Component parentComponent,
                             Object message,
                             String note) {
+        this(parentComponent, message, note, true);
+    }
+    
+    public IndeterminateProgressMonitor(Component parentComponent,
+                            Object message,
+                            String note, boolean cancelAllowed) {
     	// only extend ProgressMonitor so that we can pass this to methods which expect a ProgressMonitor
     	super(parentComponent, message, note, 0, 100); 
         this.parentComponent = parentComponent;
 
-        cancelOption = new Object[1];
-        cancelOption[0] = UIManager.getString("OptionPane.cancelButtonText");
+        if (cancelAllowed) {
+            cancelOption = new Object[1];
+            cancelOption[0] = UIManager.getString("OptionPane.cancelButtonText");
+        }
+        else {
+            cancelOption = new Object[]{};
+        }
+        
         this.min = 0;
         this.max = 100;
         this.message = message;
@@ -118,7 +130,9 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
                 boolean gotFocus = false;
 
                 public void windowClosing(WindowEvent we) {
-                    setValue(cancelOption[0]);
+                    if (cancelOption.length>0) {
+                        setValue(cancelOption[0]);
+                    }
                 }
 
                 public void windowActivated(WindowEvent we) {
@@ -217,7 +231,7 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
     public boolean isCanceled() {
         if (pane == null) return false;
         Object v = pane.getValue();
-        return ((v != null) &&
+        return ((v != null) && 
                 (cancelOption.length == 1) &&
                 (v.equals(cancelOption[0])));
     }

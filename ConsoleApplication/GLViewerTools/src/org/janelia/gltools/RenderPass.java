@@ -149,6 +149,10 @@ implements GL3Resource
         actors.add(actor);
     }
     
+    public boolean containsActor(GL3Actor actor) {
+        return actors.contains(actor);
+    }
+    
     public void removeActor(GL3Actor actor) {
         if (actors.remove(actor))
             obsoleteResources.add(actor);

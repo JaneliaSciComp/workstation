@@ -400,6 +400,16 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         this.currPage = numPages - 1;
         showCurrPage();
     }
+
+    /**
+     * This is a non-user driven, direct to page navigation.
+     * @param page
+     * @param success
+     */
+    public synchronized void goToPage(int page, Callable<Void> success) {
+        this.currPage = page;
+        showCurrPage(success);
+    }
     
     public void showLoadingIndicator() {
         removeAll();
@@ -431,7 +441,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
         updateUI();
     }
     
-    public void showSearchResults(SearchResults searchResults, boolean isUserDriven) {
+    public void showSearchResults(SearchResults searchResults, boolean isUserDriven, Callable<Void> success) {
 
         if (searchResults==null) {
             // First load into this panel, so we need a top-level loading indicator, since the resultsView isn't active yet
@@ -444,14 +454,22 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             // If the refresh is not user driven, don't jump back to the first page
             this.currPage = 0;
         }
-        showCurrPage(isUserDriven);
+        showCurrPage(isUserDriven, success);
     }
 
     protected void showCurrPage() {
-        showCurrPage(true);
+        showCurrPage(true, null);
     }
     
+    protected void showCurrPage(Callable<Void> success) {
+        showCurrPage(false, success);
+    }
+
     protected void showCurrPage(final boolean isUserDriven) {
+        showCurrPage(isUserDriven, null);
+    }
+    
+    protected void showCurrPage(final boolean isUserDriven, final Callable<Void> success) {
 
         log.debug("showCurrPage(isUserDriven={})",isUserDriven);
 
@@ -473,9 +491,11 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
             protected void hadSuccess() {
                 log.debug("Got results, updating view");
                 final ArrayList<Reference> selectedRefs = new ArrayList<>(selectionModel.getSelectedIds());
+                log.debug("Got selected refs: {}",selectedRefs);
                 updateResultsView(new Callable<Void>() {   
                     @Override
                     public Void call() throws Exception {
+                        log.info("updateResultsView complete, restoring selection");
                         if (isUserDriven) {
                             //
                             // If and only if this is a user driven selection, we should automatically select the first item.
@@ -500,6 +520,7 @@ public abstract class PaginatedResultsPanel extends JPanel implements FindContex
                             resultsView.selectDomainObjects(domainObjects, true, true, false);
                         }
                         resultsView.refreshEditMode();
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
                         return null;
                     }
                 });

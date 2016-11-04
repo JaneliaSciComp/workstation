@@ -1,17 +1,30 @@
 package org.janelia.it.workstation.browser.model.search;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.SwingUtilities;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
-import org.janelia.it.jacs.model.domain.gui.search.criteria.*;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
+import org.janelia.it.jacs.model.domain.gui.search.criteria.FacetCriteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.TreeNodeCriteria;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.support.DomainObjectAttribute;
@@ -31,6 +44,8 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 
 /**

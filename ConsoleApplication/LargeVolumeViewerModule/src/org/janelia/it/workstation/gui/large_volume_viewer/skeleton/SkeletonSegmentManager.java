@@ -152,32 +152,34 @@ public class SkeletonSegmentManager {
         //  returns them in)
 
         Map<Long, List<Integer>> tempLineIndices = new HashMap<>();
-        Collection<Anchor> anchors = new ArrayList<>( skeleton.getAnchors() );
-        for (Anchor anchor : anchors) {
-            int i1 = getIndexForAnchor(anchor);
-            if (i1 < 0) {
-                continue;
-            }
-            for (Anchor neighbor : anchor.getNeighbors()) {
-                int i2 = getIndexForAnchor(neighbor);
-                if (i2 < 0) {
+        Set<Anchor> anchors = skeleton.getAnchors();
+        synchronized (anchors) {
+            for (Anchor anchor : anchors) {
+                int i1 = getIndexForAnchor(anchor);
+                if (i1 < 0) {
                     continue;
                 }
-                if (i1 >= i2) {
-                    continue; // only use ascending pairs, for uniqueness
+                for (Anchor neighbor : anchor.getNeighbors()) {
+                    int i2 = getIndexForAnchor(neighbor);
+                    if (i2 < 0) {
+                        continue;
+                    }
+                    if (i1 >= i2) {
+                        continue; // only use ascending pairs, for uniqueness
+                    }
+                    SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+                    // if neuron has any paths, check and don't draw line
+                    //  where there's already a traced segment
+                    if (getNeuronTracedSegments().containsKey(anchor.getNeuronID())
+                            && getNeuronTracedSegments().get(anchor.getNeuronID()).containsKey(segmentIndex)) {
+                        continue;
+                    }
+                    if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
+                        tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
+                    }
+                    tempLineIndices.get(anchor.getNeuronID()).add(i1);
+                    tempLineIndices.get(anchor.getNeuronID()).add(i2);
                 }
-                SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
-                // if neuron has any paths, check and don't draw line
-                //  where there's already a traced segment
-                if (getNeuronTracedSegments().containsKey(anchor.getNeuronID())
-                        && getNeuronTracedSegments().get(anchor.getNeuronID()).containsKey(segmentIndex)) {
-                    continue;
-                }
-                if (!tempLineIndices.containsKey(anchor.getNeuronID())) {
-                    tempLineIndices.put(anchor.getNeuronID(), new Vector<Integer>());
-                }
-                tempLineIndices.get(anchor.getNeuronID()).add(i1);
-                tempLineIndices.get(anchor.getNeuronID()).add(i2);
             }
         }
         

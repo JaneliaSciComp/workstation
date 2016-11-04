@@ -89,6 +89,7 @@ public class AnnotationPanel extends JPanel
     private JButton createWorkspaceButtonPlus;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
+    private NeuronExportAllAction exportAllSWCAction;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
     private AbstractAction saveColorModelAction;
@@ -100,6 +101,7 @@ public class AnnotationPanel extends JPanel
     
 
     private JMenu sortSubmenu;
+
 
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -141,6 +143,7 @@ public class AnnotationPanel extends JPanel
         // These actions override isEnabled, but they still need to be set in order to fire the right updates
         createNeuronAction.fireEnabledChangeEvent();
         deleteNeuronAction.fireEnabledChangeEvent();
+        exportAllSWCAction.fireEnabledChangeEvent();
         
         updateUI();
     }
@@ -222,7 +225,7 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
 
-        NeuronExportAllAction exportAllSWCAction = new NeuronExportAllAction();
+        exportAllSWCAction = new NeuronExportAllAction();
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
         importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);

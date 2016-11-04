@@ -10,8 +10,14 @@ import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.browser.actions.CopyToClipboardAction;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.nb_action.DownloadAction;
 import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
+import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.ChangePermissionsAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInNewViewerAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInViewerAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.ViewDetailsAction;
 
 /**
  * A top-level Workspace node in the data graph. Functions as a tree node 
@@ -67,8 +73,14 @@ public class WorkspaceNode extends TreeNodeNode {
         actions.add(new CopyToClipboardAction("Name", getName()));
         actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
+        actions.add(new OpenInViewerAction());
+        actions.add(new OpenInNewViewerAction());
+        actions.add(null);
+        actions.add(new ViewDetailsAction());
+        actions.add(new ChangePermissionsAction());
         actions.add(NewDomainObjectAction.get());
-        actions.add(new RenameAction());
+        actions.add(null);
+        actions.add(SearchHereAction.get());
         return actions.toArray(new Action[0]);
     }
 }

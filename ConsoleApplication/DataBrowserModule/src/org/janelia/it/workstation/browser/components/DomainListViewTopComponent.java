@@ -7,7 +7,7 @@ import javax.swing.JComponent;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -235,89 +235,101 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
 
     @SuppressWarnings({ "unchecked" })
     public void loadDomainObjectNode(DomainObjectNode<?> domainObjectNode, boolean isUserDriven) {
-
-        DomainObject domainObject = domainObjectNode.getDomainObject();
-
-        // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            return;
-        }
-
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
-        }
-
-        if (editor==null || !editor.getClass().equals(editorClass)) {
-            setEditorClass(editorClass);
-        }
-
-        editor.loadDomainObjectNode(domainObjectNode, isUserDriven, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                DomainObjectEditorState<?> state = editor.saveState();
-                state.setTopComponent(DomainListViewTopComponent.this);
-                StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
-                return null;
-            }
-        });
-        setName(editor.getName());
+        
+        log.trace("loadDomainObjectNode({}, isUserDriven={})", domainObjectNode.getDomainObject().getName(), isUserDriven);
+        
+        if (!prepareForLoad(domainObjectNode.getDomainObject())) return;
+        editor.loadDomainObjectNode(domainObjectNode, isUserDriven, afterLoad);
     }
 
     @SuppressWarnings({ "unchecked" })
     public void loadDomainObject(DomainObject domainObject, boolean isUserDriven) {
+        
+        log.trace("loadDomainObject({}, isUserDriven={})", domainObject.getName(), isUserDriven);
+        
+        if (!prepareForLoad(domainObject)) return;
+        editor.loadDomainObject(domainObject, isUserDriven, afterLoad);
+    }
+
+    /**
+     * This callback runs after an editor is loaded. It pushes a placeholder state to the history,
+     * and updates the parent component title bar.
+     * 
+     * The placeholder state will be updated with the latest state when the user navigates away 
+     * from the current object (see prepareForLoad).
+     */
+    private Callable<Void> afterLoad = new Callable<Void>() {
+        @Override
+        public Void call() throws Exception {
+
+            DomainObjectEditorState<?> state = editor.saveState();
+            if (state!=null) {
+                state.setTopComponent(DomainListViewTopComponent.this);
+                StateMgr.getStateMgr().getNavigationHistory().pushHistory(state);
+            }
+            else {
+                log.warn("Editor did not provide current state");
+            }
+            
+            // Update the editor name
+            setName(editor.getName());
+
+            return null;
+        }
+    };
+    
+    private boolean prepareForLoad(DomainObject domainObject) {
 
         // Can view display this object?
         final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
         if (editorClass==null) {
-            return;
+            return false;
         }
 
         // Do we already have the given node loaded?
         if (!setCurrent(domainObject)) {
-            return;
+            return false;
         }
 
+        // Update the previous editor state. Things may have changed. 
+        if (editor!=null) {
+            DomainObjectEditorState<?> state = editor.saveState();
+            if (state!=null) {
+                state.setTopComponent(DomainListViewTopComponent.this);
+                StateMgr.getStateMgr().getNavigationHistory().updateCurrentState(state);
+            }
+            else {
+                log.warn("Editor did not provide current state");
+            }
+        }
+
+        // Set the editor type
         if (editor==null || !editor.getClass().equals(editorClass)) {
             setEditorClass(editorClass);
         }
-
-        editor.loadDomainObject(domainObject, isUserDriven, null);
-        setName(editor.getName());
+        
+        return true;
     }
-
+    
     @SuppressWarnings("unchecked")
     public void loadState(DomainObjectEditorState<?> state) {
 
-        DomainObjectNode<?> domainObjectNode = state.getDomainObjectNode();
-        DomainObject domainObject = domainObjectNode.getDomainObject();
-
-        // Can view display this object?
-        final Class<? extends DomainObjectNodeSelectionEditor<?>> editorClass = getEditorClass(domainObject);
-        if (editorClass==null) {
-            return;
-        }
-
-        // Do we already have the given node loaded?
-        if (!setCurrent(domainObject)) {
-            return;
-        }
-
-        if (editor==null || !editor.getClass().equals(editorClass)) {
-            setEditorClass(editorClass);
-        }
-
+        log.trace("loadState({})", state);
+        
+        if (!prepareForLoad(state.getDomainObject())) return;
         editor.loadState(state);
+        
+        // TODO: this should run as a callback after loadState is fully complete
+        // Update the editor name
         setName(editor.getName());
     }
 
     private static Class<? extends DomainObjectNodeSelectionEditor<?>> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof Filter) {
-            return FilterEditorPanel.class;
-        }
-        else if (domainObject instanceof TreeNode) {
+        if (TreeNode.class.isAssignableFrom(domainObject.getClass())) {
             return TreeNodeEditorPanel.class;
+        }
+        else if (Filtering.class.isAssignableFrom(domainObject.getClass())) {
+            return FilterEditorPanel.class;
         }
         return null;
     }

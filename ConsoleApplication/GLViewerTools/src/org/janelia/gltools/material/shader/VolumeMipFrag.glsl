@@ -26,7 +26,7 @@ uniform vec2 opaqueZNearFar = vec2(1e-2, 1e4);
 
 // additional render target for picking
 // TODO: Remove pick part, until it is actually needed
-layout(location = 1) out ivec2 pickId;
+layout(location = 1) out vec2 pickId;
 uniform int pickIndex = 3; // default value for pick buffer
 
 // Mouse Light is restricted to two color channels for the forseeable future
@@ -666,9 +666,24 @@ void sample_intensity(
 // Write out the final color/data after volume ray casting
 void save_color(in IntegratedIntensity i, in ViewSlab slab) 
 {
-    colorOut = vec4(i.intensity, i.coreIntensity, i.opacity);
+    // primary render target contains final color RGBA as of September 2016
+    // hot color map, green only
+    COLOR_VEC rescaled = rampstep(opacityFunctionMin, opacityFunctionMax, i.intensity);
+    vec3 hotColor;
+    const float knot = 0.5; // where to kink linear ramp between three colors
+    float intensity = rescaled.r; // First channel only at the moment
+    if (intensity <= knot)
+        hotColor = mix(vec3(0), vec3(0,1,0), intensity / knot);
+    else
+        hotColor = mix(vec3(0,1,0), vec3(0.95,1,0.9), (intensity - knot)/(1.0 - knot));
+    colorOut = vec4(hotColor, i.opacity);
+    // colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
+
+    // secondary render target contains 1) core intensity and 2) packed combination of opacity and relative depth
     float relativeDepth = (i.coreRayParameter - slab.minRayParam) / (slab.maxRayParam - slab.minRayParam);
-    pickId = ivec2(3, int(relativeDepth * 65535));
+    relativeDepth = clamp(1.0 - relativeDepth, 0, 0.999); // invert and ensure fractionality
+    uint opacityInt = uint(clamp(int(i.opacity * 0x7f), 0, 0x7f));
+    pickId = vec2(i.coreIntensity, opacityInt + relativeDepth);
 }
 
 // Advance ray by one voxel

@@ -466,7 +466,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         log.info("loadDomainObject({},isUserDriven={})",sample.getName(),isUserDriven);
         final StopWatch w = new StopWatch();
 
-        // Save the scroll horizontal position on the table, so that users can compare attribuets more easily
+        // Save the scroll horizontal position on the table, so that users can compare attributes more easily
         final ListViewerState viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
 
         currRunMap.clear();
@@ -584,7 +584,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         areas.add(0, ALL_VALUE);
         populateAreaButton(areas);
 
-        lsmPanel.showSearchResults(lsmSearchResults, isUserDriven);
+        lsmPanel.showSearchResults(lsmSearchResults, isUserDriven, null);
         
         removeAll();
         add(configPanel, BorderLayout.NORTH);

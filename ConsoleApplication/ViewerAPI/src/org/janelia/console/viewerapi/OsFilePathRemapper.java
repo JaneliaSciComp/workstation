@@ -28,7 +28,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.console.viewerapi;
 
 import java.io.File;
 import java.util.HashMap;

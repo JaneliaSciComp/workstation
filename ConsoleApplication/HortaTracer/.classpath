@@ -3,6 +3,7 @@
 	<classpathentry kind="src" path="build/classes-generated"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LZ4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/JOGL 2.2.4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/NetBeans Platform"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GL Viewer Tools"/>

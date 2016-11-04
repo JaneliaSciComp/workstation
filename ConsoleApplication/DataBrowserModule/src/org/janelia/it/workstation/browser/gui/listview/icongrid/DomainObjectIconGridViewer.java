@@ -17,7 +17,6 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Preference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.interfaces.IsParent;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
@@ -101,17 +100,9 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         @Override
         public BufferedImage getStaticIcon(DomainObject imageObject) {
             String filename = "question_block_large.png";
-            if (imageObject instanceof Filter) {
-                filename = "search_large.png";
-            }
-            else if (imageObject instanceof TreeNode) {
-                filename = "folder_large.png";
-            }
-            else {
-                DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
-                if (provider!=null) {
-                    filename = provider.getLargeIcon(imageObject);
-                }
+            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(imageObject);
+            if (provider!=null) {
+                filename = provider.getLargeIcon(imageObject);
             }
             ImageIcon icon = Icons.getIcon(filename);
             if (icon==null) return null;
@@ -509,9 +500,8 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
         SwingUtilities.invokeLater(new Runnable() {
                public void run() {
                    int maxImageWidth = tableViewerState.getMaxImageWidth();
-                   log.debug("Restoring maxImageWidth={}", maxImageWidth);
-                   // TODO: this needs to update the toolbar and trigger a repaint
-                   imagesPanel.setMaxImageWidth(maxImageWidth);
+                   log.debug("Restoring maxImageWidth={}",maxImageWidth);
+                   getToolbar().getImageSizeSlider().setValue(maxImageWidth);
                }
            }
         );
@@ -528,6 +518,15 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
         public int getMaxImageWidth() {
             return maxImageWidth;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("IconGridViewerState[maxImageWidth=");
+            builder.append(maxImageWidth);
+            builder.append("]");
+            return builder.toString();
         }
     }
 }

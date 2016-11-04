@@ -26,6 +26,7 @@ import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
+import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInViewerAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -162,6 +163,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         actions.add(new CopyToClipboardAction("Name", getName()));
         actions.add(new CopyToClipboardAction("GUID", getId()+""));
         actions.add(null);
+        actions.add(new OpenInViewerAction());
         actions.add(new OpenInNewViewerAction());
         actions.add(null);
         actions.add(new ViewDetailsAction());

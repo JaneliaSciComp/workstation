@@ -30,23 +30,24 @@
 package org.janelia.horta;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.text.ParseException;
-import javax.media.opengl.GLAutoDrawable;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import org.apache.commons.io.IOUtils;
 import org.janelia.console.viewerapi.SampleLocation;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import static org.janelia.horta.NeuronTracerTopComponent.BASE_YML_FILE;
+import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
@@ -54,8 +55,6 @@ import org.janelia.it.jacs.shared.lvv.HttpDataSource;
 import org.janelia.scenewindow.SceneWindow;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
-import org.openide.awt.NotificationDisplayer;
-import org.openide.util.Exceptions;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,21 +89,42 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         = ProgressHandleFactory.createHandle("Loading View in Horta...");
                 progress.start();
                 try {
-                    progress.setDisplayName("Loading brain specimen (tilebase.cache.yml)...");
+                    progress.setDisplayName("Loading brain specimen...");
                     // TODO - ensure that Horta viewer is open
                     // First ensure that this component uses same sample.
-                    StaticVolumeBrickSource volumeSource = setSampleUrl(sampleLocation.getSampleUrl(), progress);
-                    if (volumeSource == null) {
-                        throw new IOException("Loading volume source failed");
-                    }
+                    URL url = sampleLocation.getSampleUrl();
+                    
+                    // First check to see if ktx tiles are available
+                    BlockTileSource ktxSource = loadKtxSource(url, progress);
+                    if (ktxSource != null)
+                        nttc.setKtxSource(ktxSource);
+                    // TODO: is ktx loading enabled?
+                    
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
-                    progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
-                    progress.setDisplayName("Loading brain tile image...");
-                    loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                    GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
-                    try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
-                    glAutoDrawable.display();
+                    
+                    if (ktxSource == null) { // Use obsolete single channel raw file loading
+                    // if (true) {
+                        StaticVolumeBrickSource volumeSource = setSampleUrl(url, progress);
+                        if (volumeSource == null) {
+                            throw new IOException("Loading volume source failed");
+                        }
+                        progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
+                        progress.setDisplayName("Loading brain tile image...");
+                        loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
+                        /*
+                        GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
+                        try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
+                        glAutoDrawable.display();
+                         */
+                    }
+                    else { // Load ktx files here
+                        progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
+                        progress.setDisplayName("Loading KTX brain tile image...");
+                        loader.loadKtxTileAtCurrentFocus(ktxSource);
+                        // TODO:
+                    }
+                    nttc.redrawNow();
                 } catch (final IOException ex) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
@@ -117,7 +137,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                                     JOptionPane.ERROR_MESSAGE);
                         }
                     });                   
-                }
+                } 
                 finally {
                     progress.finish();
                 }
@@ -126,21 +146,46 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
         RequestProcessor.getDefault().post(task);
     }
 
-    /**
-     * Returns true if Url was changed. False otherwise.
-     * 
-    */
-    private StaticVolumeBrickSource setSampleUrl(URL focusUrl, ProgressHandle progress) {
-        String urlStr = focusUrl.toString();
+    private BlockTileSource loadKtxSource(URL renderedOctreeUrl, ProgressHandle progress) 
+    {
+        progress.setDisplayName("Checking for ktx rendered tiles");
+        BlockTileSource previousSource = nttc.getKtxSource();
+        if (previousSource != null) {
+            String urlStr = renderedOctreeUrl.toString();
+            String previousUrlStr = previousSource.getRootUrl().toString();
+            if (urlStr.equals(previousUrlStr))
+                return previousSource; // Source did not change
+        }
+        try {
+            URL ktxFolderPathFileUrl = new URL(renderedOctreeUrl, "secondary_folder.txt");
+            InputStream pathStream = ktxFolderPathFileUrl.openStream();
+            String ktxPathStr = IOUtils.toString(pathStream).trim();
+            if (!ktxPathStr.endsWith("/"))
+                ktxPathStr = ktxPathStr + "/";
+            URL ktxFolderUrl = new URL(renderedOctreeUrl, ktxPathStr);
+            BlockTileSource ktxSource = new KtxOctreeBlockTileSource(ktxFolderUrl);
+            nttc.setKtxSource(ktxSource);
+            return ktxSource;
+        } catch (MalformedURLException ex) {
+            // Exceptions.printStackTrace(ex);
+        } catch (IOException ex) {
+            // Exceptions.printStackTrace(ex);
+        }
+        return null;
+    }
+    
+    private StaticVolumeBrickSource setSampleUrl(URL renderedOctreeUrl, ProgressHandle progress) {
+        String urlStr = renderedOctreeUrl.toString();
         // Check: if same as current source, no need to change that.
         if (urlStr.equals(currentSource))
             return nttc.getVolumeSource();
         URI uri;
         // First check whether the yaml file exists at all
         StaticVolumeBrickSource volumeSource = null;
+        progress.setDisplayName("Loading brain specimen (tilebase.cache.yml)...");
         try {
-            uri = focusUrl.toURI();
-            String yamlUrlString = new URL(focusUrl, BASE_YML_FILE).getPath();
+            uri = renderedOctreeUrl.toURI();
+            String yamlUrlString = new URL(renderedOctreeUrl, BASE_YML_FILE).getPath();
             URI yamlUri = new URI(
                     uri.getScheme(),
                     uri.getAuthority(),
@@ -162,7 +207,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             // Something went wrong with loading the Yaml file
             // Exceptions.printStackTrace(ex);
             JOptionPane.showMessageDialog(nttc, 
-                    "Problem Loading Raw Tile Information from " + focusUrl.getPath() +
+                    "Problem Loading Raw Tile Information from " + renderedOctreeUrl.getPath() +
                     "\n  Is the render folder drive mounted?"
                     + "\n  Does the render folder contain a " + BASE_YML_FILE + " file ?"
                     ,
@@ -209,7 +254,7 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
             (float)sampleLocation.getFocusZUm());
         
         if (!v.setFocusPosition(focusVector3)) {
-            logger.warn("Did not change focus as directed.");
+            logger.info("New focus is the same as previous focus");
         }        
         v.setDefaultFocus(focusVector3);
 

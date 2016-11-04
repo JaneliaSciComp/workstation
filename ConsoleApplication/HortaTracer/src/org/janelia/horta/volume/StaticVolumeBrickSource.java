@@ -32,7 +32,6 @@ package org.janelia.horta.volume;
 
 import java.util.Collection;
 import org.janelia.geometry3d.Box3;
-import org.janelia.geometry3d.Vector3;
 
 /**
  * StaticVolumeBrickSource interface is intended to expose a uniform interface

@@ -56,7 +56,7 @@ implements ConstVector3
      * Copy constructor, to avoid broken Java clone() approach.
      * @param cloned 
      */
-    public Vector3(Vector3 cloned) {
+    public Vector3(ConstVector3 cloned) {
         super(cloned);
     }
     
@@ -72,18 +72,20 @@ implements ConstVector3
         return this;
     }
     
-    public Vector3 add(Vector3 rhs) {
+    public Vector3 add(ConstVector3 rhs) {
         for (int i = 0; i < 3; ++i)
-            data[i] += rhs.data[i];
+            data[i] += rhs.get(i);
         return this;
     }
     
-    public Vector3 plus(Vector3 rhs) {
+    public Vector3 plus(ConstVector3 rhs) {
         return new Vector3(this).add(rhs);
     }
 
-    public Vector3 minus(Vector3 rhs) {
-        return new Vector3(this).sub(rhs);
+    public Vector3 minus(ConstVector3 rhs) {
+        Vector3 result = new Vector3(this);
+        result.sub(rhs);
+        return result;
     }
 
     public void copy(Vector3 rhs) {

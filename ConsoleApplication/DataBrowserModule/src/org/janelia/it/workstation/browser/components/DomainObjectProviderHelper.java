@@ -30,7 +30,7 @@ public class DomainObjectProviderHelper {
      * @return some provider has registered to handle this data=T.
      */
     public boolean isSupported(DomainObject dObj) {
-        return findHandlerCollection(dObj).size() > 0;
+        return ServiceAcceptorHelper.findAcceptors(dObj).size() > 0;
     }
 
     /**
@@ -41,11 +41,10 @@ public class DomainObjectProviderHelper {
      */
     public boolean service(DomainObject dObj) {
         boolean handledHere = false;
-        // Option to popup menu is carried out here, if multiple handlers
-        // exist.
+        // Option to popup menu is carried out here, if multiple handlers exist.
         if (dObj != null) {
             handledHere = true;
-            Collection<DomainObjectAcceptor> domainObjectAcceptors = findHandlerCollection(dObj);
+            Collection<DomainObjectAcceptor> domainObjectAcceptors = ServiceAcceptorHelper.findAcceptors(dObj);
             if (domainObjectAcceptors.size() == 1) {
                 DomainObjectAcceptor acceptor = domainObjectAcceptors.iterator().next();
                 acceptor.acceptDomainObject(dObj);
@@ -71,10 +70,6 @@ public class DomainObjectProviderHelper {
         popupMenu.setVisible(true);
     }
     
-    protected Collection<DomainObjectAcceptor> findHandlerCollection(DomainObject dObj) {
-        return ServiceAcceptorHelper.findHandler(dObj, DomainObjectAcceptor.class, DomainObjectAcceptor.DOMAIN_OBJECT_LOOKUP_PATH);
-    }
-
     /**
      * Usable for placing into menu, to make the provider just work.
      */
