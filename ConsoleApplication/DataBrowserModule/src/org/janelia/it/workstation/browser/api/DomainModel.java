@@ -640,21 +640,9 @@ public class DomainModel {
         }
         return null;
     }
-
-    public void remove(List<DomainObject> domainObjects) throws Exception {
-
-        for(DomainObject domainObject : domainObjects) {
-            DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
-            if (provider!=null) {
-                log.debug("Found DomainObjectHelper provider: "+provider);
-                provider.remove(domainObject);
-            }
-            else {
-                log.debug("No DomainObjectHelper found for {}, using default remove function",domainObject);
-                domainFacade.remove(Arrays.asList(Reference.createFor(domainObject)));
-            }
-        }
-
+    
+    public void remove(List<? extends DomainObject> domainObjects) throws Exception {
+        domainFacade.remove(DomainUtils.getReferences(domainObjects));
         invalidate(domainObjects);
         for(DomainObject object : domainObjects) {
             notifyDomainObjectRemoved(object);

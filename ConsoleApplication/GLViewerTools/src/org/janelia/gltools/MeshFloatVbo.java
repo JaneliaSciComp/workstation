@@ -34,6 +34,8 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class intended for use by MeshActor internals.
@@ -47,8 +49,9 @@ public class MeshFloatVbo implements GL3Resource
     private int vboHandle = 0;
     private VertexAttribute[] attributes;
     //
-    private List<Float> floatStorage = new ArrayList<Float>();
+    private final List<Float> floatStorage = new ArrayList<>();
     private boolean verticesNeedUpload = true;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     
     /**
      * 
@@ -100,6 +103,7 @@ public class MeshFloatVbo implements GL3Resource
             return;
         int [] vbos = {vboHandle};
         gl.glDeleteBuffers(1, vbos, 0);
+        // logger.info("deleting vboHandle " + vboHandle);
         vboHandle = 0;
     }
 
@@ -110,6 +114,7 @@ public class MeshFloatVbo implements GL3Resource
         int [] vbos = {0};
         gl.glGenBuffers(1, vbos, 0);
         vboHandle = vbos[0];
+        // logger.info("creating vboHandle " + vboHandle);
         if (floatStorage.size() > 0)
             verticesNeedUpload = true;
     }
@@ -119,6 +124,7 @@ public class MeshFloatVbo implements GL3Resource
             return;
         if (shaderHandle == 0)
             return;
+        // logger.info("binding vboHandle " + vboHandle);
         gl.glBindBuffer(GL3.GL_ARRAY_BUFFER, vboHandle);
         if (verticesNeedUpload) {
             FloatBuffer floatBuffer = Buffers.newDirectFloatBuffer(

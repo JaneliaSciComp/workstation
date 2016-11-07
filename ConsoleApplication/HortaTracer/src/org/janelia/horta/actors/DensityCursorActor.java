@@ -15,7 +15,7 @@ public class DensityCursorActor extends SpheresActor {
     public DensityCursorActor(NeuronModel neuron) {
         super(neuron, 
                 new DensityHighlightTexture(), 
-                new SpheresMaterial.SpheresShader());
+                null);
         material.manageLightProbeTexture = true;
     }
 

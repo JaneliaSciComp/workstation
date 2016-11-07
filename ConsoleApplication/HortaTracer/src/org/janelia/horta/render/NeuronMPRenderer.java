@@ -31,10 +31,10 @@
 package org.janelia.horta.render;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -42,13 +42,10 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.BrightnessModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.BasicScreenBlitActor;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.LightingBlitActor;
@@ -59,7 +56,6 @@ import org.janelia.gltools.RenderTarget;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Object3d;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
@@ -68,10 +64,12 @@ import org.janelia.horta.actors.ConesMaterial;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.SpheresMaterial;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
+import org.janelia.console.viewerapi.model.ImageColorModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.GL3Resource;
-import org.janelia.horta.volume.BrickActor;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Multi-pass renderer for Horta volumes and neuron models
@@ -93,9 +91,20 @@ extends MultipassRenderer
     
     private final Collection<GL3Resource> obsoleteGLResources = new java.util.concurrent.ConcurrentLinkedQueue<>();
 
-    public NeuronMPRenderer(GLAutoDrawable drawable, final BrightnessModel brightnessModel, HortaMetaWorkspace workspace) 
+    // TODO: obsolete brightness model for ImageColorModel
+    // private final ChannelBrightnessModel brightnessModel;
+    private final ImageColorModel imageColorModel;
+    
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    public NeuronMPRenderer(GLAutoDrawable drawable, 
+            // final ChannelBrightnessModel brightnessModel, 
+            HortaMetaWorkspace workspace, 
+            final ImageColorModel imageColorModel) 
     {
         this.drawable = drawable;
+        // this.brightnessModel = brightnessModel;
+        this.imageColorModel = imageColorModel;
         
         this.workspace = workspace;
         workspace.addObserver(neuronListRefresher);
@@ -116,9 +125,7 @@ extends MultipassRenderer
             @Override
             public void display(GL3 gl, AbstractCamera camera) {
                 volumeRenderPass.setOpaqueDepthTexture(
-                        opaqueRenderPass.getFlatDepthTarget(),
-                        opaqueRenderPass.getZNear(),
-                        opaqueRenderPass.getZFar());
+                        opaqueRenderPass.getFlatDepthTarget());
                 super.display(gl, camera);
             }
         });
@@ -135,10 +142,9 @@ extends MultipassRenderer
         // 3) Colormap volume onto screen
         add(new RenderPass(null) { // render to screen
             private GL3Actor lightingActor = new LightingBlitActor(
-                    volumeRenderPass.getIntensityTexture()); // for isosurface
+                    volumeRenderPass.getRgbaTexture()); // for isosurface
             private final GL3Actor colorMapActor = new RemapColorActor(
-                    volumeRenderPass.getIntensityTexture(), brightnessModel); // for MIP, occluding
-
+                    volumeRenderPass.getRgbaTexture(), imageColorModel); // for MIP, occluding
             {
                 // addActor(lightingActor); // TODO - use for isosurface
                 addActor(colorMapActor); // Use for MIP and occluding
@@ -158,6 +164,10 @@ extends MultipassRenderer
         setRelativeSlabThickness(0.92f, 1.08f);
     }
     
+    public ImageColorModel getBrightnessModel() {
+        return imageColorModel;
+    }
+    
     public void addMeshActor(GL3Actor meshActor) {
         opaqueRenderPass.addActor(meshActor);
         setOpaqueBufferDirty();
@@ -166,6 +176,10 @@ extends MultipassRenderer
     public void addVolumeActor(GL3Actor boxMesh) {
         volumeRenderPass.addActor(boxMesh);
         setIntensityBufferDirty();
+    }
+    
+    public boolean containsVolumeActor(GL3Actor actor) {
+        return volumeRenderPass.containsActor(actor);
     }
     
     public void clearVolumeActors() {
@@ -201,64 +215,85 @@ extends MultipassRenderer
         super.dispose(gl);
     }
     
-    public double pickIdForScreenXy(Point2D xy) {
-        return valueForScreenXy(xy, volumeRenderPass.getPickTexture().getAttachment(), 0);
-    }
-
-    public double intensityForScreenXy(Point2D xy) {
-       
+    public double coreIntensityForScreenXy(Point2D xy) {     
         double result;
-        if (false) { // TODO: Testing depth access
-            result = opaqueDepthForScreenXy(xy);
-            // System.out.println("opaque depth intensity = "+result);
-            return result;
-        }
-        
-        // Neurite core tracing intensity is located in the third channel
-        result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 2);
+        // Neurite core tracing intensity is located in the first channel of the coreDepth target
+        result = valueForScreenXy(xy, volumeRenderPass.getCoreDepthTexture().getAttachment(), 0);
+        // Convert from range 0-1 to range 0-65535
+        result *= 65535.0;
         if (result <= 0) {
+            // logger.info("Nonpositive intensity = " + result);
             return -1;
         }
         return result;
     }
     
-    // Ranges from zNear(returns -1.0) to zFar(returns 1.0)
-    private float relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
-        float result = 0;
-        double intensity = intensityForScreenXy(xy);
+    public double volumeOpacityForScreenXy(Point2D xy)
+    {
+        float result = -1;
+        double intensity = coreIntensityForScreenXy(xy);
         if (intensity == -1) {
             return result;
         }
         if (volumeRenderPass.getFramebuffer() == null) {
             return result;
         }
-        RenderTarget intensityDepthTarget = volumeRenderPass.getPickTexture();
-        if (intensityDepthTarget == null) {
+        RenderTarget coreDepthTarget = volumeRenderPass.getCoreDepthTexture();
+        if (coreDepthTarget == null) {
             return result;
         }
-        int relDepth = (int)intensityDepthTarget.getIntensity(
+        // Opacity is packed together with the relative depth
+        double opacity = coreDepthTarget.getIntensity(
                 drawable,
                 (int) xy.getX(),
                 // y convention is opposite between screen and texture buffer
-                intensityDepthTarget.getHeight() - (int) xy.getY(),
+                coreDepthTarget.getHeight() - (int) xy.getY(),
                 1); // channel index
-        result = 2.0f * (relDepth / 65535.0f - 0.5f); // range [-1,1]
-        return result;
+        // Truncate fractional part, and rescale from range 0-127 to 0-1
+        opacity = ((long)opacity) / 127.0;
+        return opacity;
     }
 
-    // TODO: move to volumeRenderpass
-    private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
-        double result = valueForScreenXy(xy, volumeRenderPass.getIntensityTexture().getAttachment(), 3);
-        if (result <= 0)
-            result = 0;
-        return result / 65535; // rescale to range 0-1
+    // Ranges from zNear(returns 0.0) to zFar(returns 1.0)
+    private double relativeTransparentDepthOffsetForScreenXy(Point2D xy, AbstractCamera camera) {
+        double result = 0;
+        double intensity = coreIntensityForScreenXy(xy);
+        if (intensity == -1) {
+            return result;
+        }
+        if (volumeRenderPass.getFramebuffer() == null) {
+            return result;
+        }
+        RenderTarget coreDepthTarget = volumeRenderPass.getCoreDepthTexture();
+        if (coreDepthTarget == null) {
+            return result;
+        }
+        double relDepth = coreDepthTarget.getIntensity(
+                drawable,
+                (int) xy.getX(),
+                // y convention is opposite between screen and texture buffer
+                coreDepthTarget.getHeight() - (int) xy.getY(),
+                1); // channel index
+        // Remove integer part, which contains opacity, for blending purposes
+        long opacityPart = (long)relDepth;
+        relDepth = relDepth - opacityPart;
+        result = 1.0 - relDepth; // Reverse sense of relative depth to near-small from far-small
+        return result;
     }
     
-    private boolean isVisibleOpaqueAtScreenXy(Point2D xy, AbstractCamera camera) {
+    // TODO: move to volumeRenderpass
+    private double opacityForScreenXy(Point2D xy, AbstractCamera camera) {
+        double result = valueForScreenXy(xy, volumeRenderPass.getRgbaTexture().getAttachment(), 3);
+        if (result <= 0)
+            result = 0;
+        return result / 255.0; // rescale to range 0-1
+    }
+    
+    private boolean isVisibleOpaqueAtScreenXy(Point2D xy) {
         double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
         if (od >= 1.0) 
             return false; // far clip value means no geometry there
-        double opacity = opacityForScreenXy(xy, camera);
+        double opacity = volumeOpacityForScreenXy(xy);
         // TODO: threshold might need to be tuned
         // 0.5 seems too small, I want to select that vertex!
         final double opacityThreshold = 0.9; // Always use transparent material, if it's dense enough
@@ -267,15 +302,15 @@ extends MultipassRenderer
         return true; // I see a neuron model at this spot
     }
     
-    private boolean isVisibleTransparentAtScreenXy(Point2D xy, AbstractCamera camera) {
-        double opacity = opacityForScreenXy(xy, camera);
+    private boolean isVisibleTransparentAtScreenXy(Point2D xy) {
+        double opacity = volumeOpacityForScreenXy(xy);
         return (opacity > 0);
     }
     
     // Returns signed difference between focusDistance depth, and depth of item at screen point xy
     public double depthOffsetForScreenXy(Point2D xy, AbstractCamera camera) 
     {
-        if (isVisibleOpaqueAtScreenXy(xy, camera)) {
+        if (isVisibleOpaqueAtScreenXy(xy)) {
             double od = opaqueRenderPass.rawZDepthForScreenXy(xy, drawable);
             // Definitely use opaque geometry for depth at this point
             // TODO - transform to scene units (micrometers)
@@ -287,9 +322,8 @@ extends MultipassRenderer
             double zEye = 2*zFar*zNear / (zFar + zNear - (zFar - zNear)*(2*zBuf - 1));
             return zEye - zFocus;
         }
-        else if (isVisibleTransparentAtScreenXy(xy, camera)) {
-            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [-1,1]
-            zRel = 0.5*(zRel + 1.0); // rescale to range [0,1]
+        else if (isVisibleTransparentAtScreenXy(xy)) {
+            double zRel = relativeTransparentDepthOffsetForScreenXy(xy, camera); // range [0,1]
             double focusDistance = ((PerspectiveCamera)camera).getCameraFocusDistance();
             double zNear = getRelativeZNear() * focusDistance;
             double zFar = getRelativeZFar() * focusDistance;
@@ -305,9 +339,7 @@ extends MultipassRenderer
         opaqueRenderPass.setRelativeSlabThickness(zNear, zFar);
         volumeRenderPass.setRelativeSlabThickness(zNear, zFar);
         volumeRenderPass.setOpaqueDepthTexture(
-            opaqueRenderPass.getFlatDepthTarget(),
-            opaqueRenderPass.getZNear(),
-            opaqueRenderPass.getZFar());
+            opaqueRenderPass.getFlatDepthTarget());
     }
     
     public float getRelativeZNear() {
@@ -353,8 +385,8 @@ extends MultipassRenderer
     
     public void setIntensityBufferDirty() {
         for (RenderTarget rt : new RenderTarget[] {
-                    volumeRenderPass.getIntensityTexture(), 
-                    volumeRenderPass.getPickTexture()}) 
+                    volumeRenderPass.getRgbaTexture(),
+                    volumeRenderPass.getCoreDepthTexture()}) 
         {
             rt.setDirty(true);
         }
@@ -385,20 +417,20 @@ extends MultipassRenderer
         return result;
     }
 
-    public boolean isNeuronModelAt(Point2D xy, AbstractCamera camera)
+    public boolean isNeuronModelAt(Point2D xy)
     {
-        return isVisibleOpaqueAtScreenXy(xy, camera);
+        return isVisibleOpaqueAtScreenXy(xy);
     }
 
-    public boolean isVolumeDensityAt(Point2D xy, AbstractCamera camera)
+    public boolean isVolumeDensityAt(Point2D xy)
     {
-        return isVisibleTransparentAtScreenXy(xy, camera);
+        return isVisibleTransparentAtScreenXy(xy);
     }
 
     public void queueObsoleteResource(GL3Resource resource) {
         obsoleteGLResources.add(resource);
     }
-    
+
     private class VolumeLayerExpirer implements Observer
     {
 

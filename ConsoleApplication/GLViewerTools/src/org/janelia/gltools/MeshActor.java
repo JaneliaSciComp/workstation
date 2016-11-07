@@ -60,20 +60,20 @@ import org.janelia.gltools.MeshFloatVbo.VertexAttribute;
 public class MeshActor extends BasicGL3Actor
 {
     protected final MeshGeometry geometry;
-    private final Material material;
+    protected final Material material;
     
-    private MeshFloatVbo vertexBufferObject = null;
+    protected MeshFloatVbo vertexBufferObject = null;
     
     // Vbo bookkeeping
     private int triangleIndexCount = 0;
     private int particleIndexCount = 0;
     private int edgeIndexCount = 0;
-    private int triangleAdjacencyIndexCount = 0;
+    protected int triangleAdjacencyIndexCount = 0;
     // Intermediate list of actual vbo vertex index for all triangles
     private final List<VertexIndex> triangleVertices = new ArrayList<>();
     private final List<VertexIndex> edgeVertices = new ArrayList<>();
     private int vboTriangleIndices = 0;
-    private int vboTriangleAdjacencyIndices = 0;
+    protected int vboTriangleAdjacencyIndices = 0;
     private int vboParticleIndices = 0;
     private int vboEdgeIndices = 0;
 
@@ -352,7 +352,7 @@ public class MeshActor extends BasicGL3Actor
         particleIndicesAreDirty = false;
     }
     
-    private void initTriangleAdjacencyIndices(GL3 gl) 
+    protected void initTriangleAdjacencyIndices(GL3 gl) 
     {
         if (vboTriangleAdjacencyIndices > 0)
             return; // already initialized

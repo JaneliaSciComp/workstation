@@ -36,7 +36,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.AlignmentScoreType;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.interfaces.HasAnatomicalArea;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
@@ -545,7 +545,7 @@ public class DomainInspectorPanel extends JPanel {
             }
         });
 
-        if (domainObject instanceof Filter) {
+        if (domainObject instanceof Filtering) {
             permissionsNoteLabel.setText("Note: sharing this Filter does not share its results.");
         }
         else if (domainObject instanceof TreeNode) {

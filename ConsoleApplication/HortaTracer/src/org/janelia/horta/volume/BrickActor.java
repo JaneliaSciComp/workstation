@@ -31,8 +31,10 @@
 package org.janelia.horta.volume;
 
 import java.io.IOException;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.gltools.MeshActor;
+import org.janelia.gltools.material.DepthSlabClipper;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.material.VolumeMipMaterial.VolumeState;
 import org.janelia.gltools.texture.Texture2d;
@@ -45,12 +47,13 @@ import org.janelia.horta.actors.BrainTileMesh;
  * @author Christopher Bruns
  */
 public class BrickActor extends MeshActor
+implements DepthSlabClipper
 {
     private final BrainTileInfo brainTile;
     private final BrickMaterial brickMaterial;
     
     public BrickActor(BrainTileInfo brainTile, 
-            BrightnessModel brightnessModel, 
+            ImageColorModel brightnessModel, 
             VolumeState volumeState, 
             int colorChannel) throws IOException 
     {
@@ -66,7 +69,7 @@ public class BrickActor extends MeshActor
     public BrickActor(
             BrainTileInfo brainTile, 
             Texture3d texture3d, 
-            BrightnessModel brightnessModel, 
+            ImageColorModel brightnessModel, 
             VolumeState volumeState) 
     {
         super(
@@ -76,8 +79,8 @@ public class BrickActor extends MeshActor
         this.brainTile = brainTile;
         this.brickMaterial = (BrickMaterial)getMaterial();    }
     
-    public void setOpaqueDepthTexture(Texture2d depthTexture, float zNear, float zFar) {
-        brickMaterial.setOpaqueDepthTexture(depthTexture, zNear, zFar);
+    public void setOpaqueDepthTexture(Texture2d depthTexture) {
+        brickMaterial.setOpaqueDepthTexture(depthTexture);
     }
 
     public BrainTileInfo getBrainTile()
@@ -85,21 +88,15 @@ public class BrickActor extends MeshActor
         return brainTile;
     }
 
-    public void setRelativeZNear(float zNear)
-    {
-        brickMaterial.setRelativeZNear(zNear);
-    }
-
-    public void setRelativeZFar(float zFar)
-    {
-        brickMaterial.setRelativeZFar(zFar);
+    public void setRelativeSlabThickness(float zNear, float zFar) {
+        brickMaterial.setRelativeSlabThickness(zNear, zFar);
     }
 
     private static class BrickMaterial extends VolumeMipMaterial {
 
         private BrickMaterial(
                 BrainTileInfo brainTile, 
-                BrightnessModel brightnessModel,
+                ImageColorModel brightnessModel,
                 VolumeState volumeState,
                 int colorChannel) throws IOException
         {
@@ -118,7 +115,7 @@ public class BrickActor extends MeshActor
         private BrickMaterial(
                 BrainTileInfo brainTile, 
                 Texture3d texture3d, 
-                BrightnessModel brightnessModel, 
+                ImageColorModel brightnessModel, 
                 VolumeState volumeState) 
         {
             super(texture3d, brightnessModel);

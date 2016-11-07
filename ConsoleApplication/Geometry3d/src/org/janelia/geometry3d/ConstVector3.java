@@ -63,4 +63,7 @@ extends ConstVector
 
     float lengthSquared();
     
+    ConstVector3 minus(ConstVector3 rhs);
+    ConstVector3 plus(ConstVector3 rhs);
+    
 }

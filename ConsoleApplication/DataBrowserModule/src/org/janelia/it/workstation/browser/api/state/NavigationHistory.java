@@ -36,11 +36,13 @@ public class NavigationHistory {
     }
 
     public synchronized DomainObjectEditorState<?> goBack() {
-        //pushHistory(state, false);
         if (historyPosition > 0) {
-            historyPosition--;
-            DomainObjectEditorState<?> state = history.get(historyPosition);
+            DomainObjectEditorState<?> state = history.get(historyPosition-1);
             loadState(state);
+            // We must wait until after loading the state to update the history position, 
+            // because loadState will trigger a call to updateCurrentState()
+            historyPosition--;
+            // Now the buttons can be updated
             updateButtons();
             logCurrHistory();
             return state;
@@ -50,9 +52,10 @@ public class NavigationHistory {
 
     public synchronized DomainObjectEditorState<?> goForward() {
         if (historyPosition < history.size() - 1) {
-            historyPosition++;
-            DomainObjectEditorState<?> state = history.get(historyPosition);
+            DomainObjectEditorState<?> state = history.get(historyPosition+1);
             loadState(state);
+            // Same logic as goBack()
+            historyPosition++;
             updateButtons();
             logCurrHistory();
             return state;
@@ -65,11 +68,12 @@ public class NavigationHistory {
     }
     
     private void pushHistory(DomainObjectEditorState<?> state, boolean clearForward) {
-        if (state.getDomainObjectNode()==null) {
-            return;
+        
+        if (state.getDomainObject()==null) {
+            throw new IllegalStateException("State with null domain object");
         }
         
-        log.trace("Pushing {} ({} selected)",state.getDomainObjectNode().getName(),state.getSelectedIds().size());
+        log.debug("Pushing editor state: {}",state);
                     
         if (clearForward) {
             // Clear out navigation in the future direction
@@ -78,22 +82,24 @@ public class NavigationHistory {
         
         if (!history.isEmpty()) {
             DomainObjectEditorState<?> currState = history.get(historyPosition);
-            if (state.getDomainObjectNode().getId().equals(currState.getDomainObjectNode().getId())) {
-                log.trace("Already got this state, updating selections");
-                // Already got this, let's update the selections
-                currState.getSelectedIds().clear();
-                currState.getSelectedIds().addAll(state.getSelectedIds());
-                return;
+            if (state.getDomainObject().getId().equals(currState.getDomainObject().getId())) {
+                log.warn("We already have this state. This shouldn't happen.");
             }
         }
         // Add the new state to the end of the list
         history.add(state);
         historyPosition = history.size() - 1;
-
+        
         updateButtons();
         logCurrHistory();
     }
 
+    public void updateCurrentState(DomainObjectEditorState<?> state) {
+        if (historyPosition<0 || historyPosition>=history.size()) return;
+        log.debug("Updating current state: "+state);
+        history.set(historyPosition, state);
+    }
+    
     private void updateButtons() {
         CallableSystemAction.get(NavigateBack.class).setEnabled(isBackEnabled());
         CallableSystemAction.get(NavigateForward.class).setEnabled(isForwardEnabled());
@@ -106,11 +112,13 @@ public class NavigationHistory {
             tc.open();
         }
         tc.requestVisible();
-        log.info("Restoring state to {}",tc.getName());
+        log.debug("Restoring state to {}",tc.getClass().getSimpleName());
         tc.loadState(state);
 
-        // Only select the node after loading the state to editor above, so that it doesn't trigger a normal load
-        DomainExplorerTopComponent.getInstance().selectNode(state.getDomainObjectNode());
+        if (state.getDomainObjectNode()!=null) {
+            // Only select the node after loading the state to editor above, so that it doesn't trigger a normal load
+            DomainExplorerTopComponent.getInstance().selectNode(state.getDomainObjectNode());
+        }
     }
 
     private void logCurrHistory() {
@@ -118,9 +126,10 @@ public class NavigationHistory {
         log.trace("History: ");
         int i = 0 ;
         for(DomainObjectEditorState<?> state2 : history) {
-            log.trace("  "+i+" "+state2.getDomainObjectNode().getName()+" "+(historyPosition==i?"<-CURR":""));
+            log.trace("  "+i+" "+state2.getDomainObject().getName()+" "+(historyPosition==i?"<-CURR":""));
             i++;
         }
         log.trace("------------------------");
     }
+
 }

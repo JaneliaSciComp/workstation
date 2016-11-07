@@ -1,8 +1,13 @@
 package org.janelia.it.workstation.browser.components;
 
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NAVIGATE_ON_CLICK;
+
 import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -11,14 +16,15 @@ import java.util.concurrent.Callable;
 import javax.swing.ActionMap;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
+import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.gui.search.Filter;
+import org.janelia.it.jacs.model.domain.gui.search.Filtering;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -29,11 +35,11 @@ import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationE
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
-import org.janelia.it.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
 import org.janelia.it.workstation.browser.gui.find.FindContextManager;
 import org.janelia.it.workstation.browser.gui.find.FindToolbar;
 import org.janelia.it.workstation.browser.gui.support.Debouncer;
+import org.janelia.it.workstation.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.browser.gui.support.ExpandedTreeState;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
@@ -59,12 +65,13 @@ import org.openide.util.LookupListener;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
 import org.openide.util.lookup.ProxyLookup;
-import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.eventbus.Subscribe;
 
 
 /**
@@ -150,6 +157,24 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 DomainExplorerTopComponent.this.refresh();
             }
         };
+
+        DropDownButton configButton = new DropDownButton() {
+
+        };
+        configButton.setIcon(Icons.getIcon("cog.png"));
+        configButton.setFocusable(false);
+        configButton.setToolTipText("Options for the Data Explorer");
+
+        final JRadioButtonMenuItem navigateOnClickMenuItem = new JRadioButtonMenuItem("Navigate on click", isNavigateOnClick());
+        navigateOnClickMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setNavigateOnClick(navigateOnClickMenuItem.isSelected());   
+            }
+        });
+        configButton.getPopupMenu().add(navigateOnClickMenuItem);
+        
+        toolbar.getJToolBar().add(configButton);
+        
         this.treePanel = new JPanel(new BorderLayout());
         this.findToolbar = new FindToolbar(this);
         
@@ -164,8 +189,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
-
-//        bindKeys();
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -206,24 +229,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         
         worker.execute();
     }
-
-//    private void bindKeys() {
-//        
-//        CutAction cutAction = SystemAction.get(CutAction.class);
-//        PasteAction pasteAction = SystemAction.get(PasteAction.class);
-//        InputMap keys = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-//        KeyStroke keyCut = (KeyStroke) cutAction.getValue(Action.ACCELERATOR_KEY);
-//        if (keyCut==null) {
-//            keyCut = KeyStroke.getKeyStroke("D-X");
-//        }
-//        keys.put(keyCut, cutAction);
-//        KeyStroke keyPaste = (KeyStroke) pasteAction.getValue(Action.ACCELERATOR_KEY);
-//        if (keyPaste==null) {
-//            keyPaste = KeyStroke.getKeyStroke("D-V");
-//        }
-//        keys.put(keyPaste, pasteAction);
-//    }
-    
     
     /**
      * This method is called from within the constructor to initialize the form.
@@ -574,14 +579,26 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public void openMatch() {
     }
 
+    /**
+     * Returns true if the given object can be displayed as a node in the explorer.
+     * 
+     * @param domainObject
+     * @return
+     */
     public static boolean isSupported(DomainObject domainObject) {
-        // TODO: this class shouldn't know about all this, it should be abstracted in Nodes somehow
-        if (domainObject instanceof TreeNode) {
-            return true;
-        }
-        else if (domainObject instanceof Filter) {
+        DomainObjectHelper provider = ServiceAcceptorHelper.findFirstHelper(domainObject);
+        if (provider!=null) {
             return true;
         }
         return false;
+    }
+    
+    public static boolean isNavigateOnClick() {
+        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(NAVIGATE_ON_CLICK);
+        return navigate==null || navigate;
+    }
+    
+    private static void setNavigateOnClick(boolean value) {
+        ConsoleApp.getConsoleApp().setModelProperty(NAVIGATE_ON_CLICK, value);  
     }
 }

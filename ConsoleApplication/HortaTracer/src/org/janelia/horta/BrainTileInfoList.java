@@ -29,6 +29,7 @@
  */
 package org.janelia.horta;
 
+import org.janelia.console.viewerapi.OsFilePathRemapper;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -18,6 +18,13 @@ public interface DomainObjectHelper extends Compatible<DomainObject> {
      */
     @Override
     boolean isCompatible(DomainObject domainObject);
+
+    /**
+     * Can this service handle the given object class?
+     * @param clazz
+     * @return
+     */
+    boolean isCompatible(Class<? extends DomainObject> clazz);
     
     /**
      * Create a node for the given domain object.

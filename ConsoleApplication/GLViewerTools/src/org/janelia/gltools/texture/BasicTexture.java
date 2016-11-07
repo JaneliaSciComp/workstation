@@ -76,7 +76,7 @@ public abstract class BasicTexture implements GL3Resource
     protected int minFilter = GL3.GL_LINEAR;
     protected int textureWrap = GL3.GL_CLAMP_TO_EDGE;
     protected boolean generateMipmaps = false;
-    protected List<BasicTexture> mipmaps = new ArrayList<BasicTexture>();
+    protected List<BasicTexture> mipmaps = new ArrayList<>();
     protected int unpackAlignment = 1;
     protected boolean useImmutableTexture = false;
     
@@ -106,7 +106,7 @@ public abstract class BasicTexture implements GL3Resource
         this.internalFormat = internalFormat;
         
         // TODO move this logic to something static
-        Set<Integer> sixteenBits = new HashSet<Integer>(
+        Set<Integer> sixteenBits = new HashSet<>(
                 Arrays.asList(ArrayUtils.toObject(new int[] 
         {
             GL3.GL_R16,
@@ -117,8 +117,13 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_RGB16UI,
             GL3.GL_RGBA16,
             GL3.GL_RGBA16UI,
+            GL3.GL_R16F,
+            GL3.GL_RG16F,
+            GL3.GL_RGB16F,
+            GL3.GL_RGBA16F,
+            GL3.GL_DEPTH_COMPONENT16,
         })));
-        Set<Integer> thirtyTwoBits = new HashSet<Integer>(
+        Set<Integer> thirtyTwoBits = new HashSet<>(
                 Arrays.asList(ArrayUtils.toObject(new int[]
         {
             GL3.GL_R32I,
@@ -129,22 +134,15 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_RGB32UI,
             GL3.GL_RGBA32I,
             GL3.GL_RGBA32UI,
+            GL3.GL_R32F,
+            GL3.GL_RG32F,
+            GL3.GL_RGB32F,
+            GL3.GL_RGBA32F,
+            GL3.GL_DEPTH_COMPONENT32,
+            GL3.GL_DEPTH_COMPONENT32F,
         })));
-        
-        if (thirtyTwoBits.contains(internalFormat)) {
-            bytesPerIntensity = 4;
-            type = GL3.GL_UNSIGNED_INT;
-        }
-        else if (sixteenBits.contains(internalFormat)) {
-            bytesPerIntensity = 2;
-            type = GL3.GL_UNSIGNED_SHORT;
-        }
-        else {
-            bytesPerIntensity = 1; // other sizes not supported at the moment...
-            type = GL3.GL_UNSIGNED_BYTE;
-        }
 
-        Set<Integer> oneComponent = new HashSet<Integer>(
+        Set<Integer> oneComponent = new HashSet<>(
                 Arrays.asList(ArrayUtils.toObject(new int[] 
         {
             GL3.GL_R8,
@@ -154,9 +152,16 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_R16UI,
             GL3.GL_R32I,
             GL3.GL_R32UI,
-            GL3.GL_RED
+            GL3.GL_R16F,
+            GL3.GL_R32F,
+            GL3.GL_RED,
+            GL3.GL_DEPTH_COMPONENT,
+            GL3.GL_DEPTH_COMPONENT24,
+            GL3.GL_DEPTH_COMPONENT16,
+            GL3.GL_DEPTH_COMPONENT32,
+            GL3.GL_DEPTH_COMPONENT32F,
         })));
-        Set<Integer> twoComponents = new HashSet<Integer>(
+        Set<Integer> twoComponents = new HashSet<>(
                 Arrays.asList(ArrayUtils.toObject(new int[] 
         {
             GL3.GL_RG8,
@@ -165,9 +170,11 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_RG16UI,
             GL3.GL_RG32UI,
             GL3.GL_RG32I,
-            GL3.GL_RG,
+            GL3.GL_RG16F,
+            GL3.GL_RG32F,
+            GL3.GL_RG
         })));
-        Set<Integer> threeComponents = new HashSet<Integer>(
+        Set<Integer> threeComponents = new HashSet<>(
                 Arrays.asList(ArrayUtils.toObject(new int[] 
         {
             GL3.GL_RGB8,
@@ -176,9 +183,24 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_RGB16UI,
             GL3.GL_RGB32UI,
             GL3.GL_RGB32I,
-            GL3.GL_RGB,
+            GL3.GL_RGB16F,
+            GL3.GL_RGB32F,
+            GL3.GL_RGB
         })));
-        Set<Integer> integerFormat = new HashSet<Integer>(
+        Set<Integer> fourComponents = new HashSet<>(
+                Arrays.asList(ArrayUtils.toObject(new int[] 
+        {
+            GL3.GL_RGBA8,
+            GL3.GL_RGBA8UI,
+            GL3.GL_RGBA16,
+            GL3.GL_RGBA16UI,
+            GL3.GL_RGBA32UI,
+            GL3.GL_RGBA32I,
+            GL3.GL_RGBA16F,
+            GL3.GL_RGBA32F,
+            GL3.GL_RGBA
+        })));
+        Set<Integer> integerFormat = new HashSet<>( // NOTE: "format", not "type"
                 Arrays.asList(ArrayUtils.toObject(new int[] 
         {
             GL3.GL_R8UI,
@@ -199,45 +221,102 @@ public abstract class BasicTexture implements GL3Resource
             GL3.GL_RGB16I,
             GL3.GL_RGB32UI,
             GL3.GL_RGB32I,
-        })));        
+            GL3.GL_RGBA8UI,
+            GL3.GL_RGBA8I,
+            GL3.GL_RGBA16UI,
+            GL3.GL_RGBA16I,
+            GL3.GL_RGBA32UI,
+            GL3.GL_RGBA32I,
+        })));
         
+        Set<Integer> floatType = new HashSet<>(
+                Arrays.asList(ArrayUtils.toObject(new int[] 
+        {
+            GL3.GL_R16F,
+            GL3.GL_R32F,
+            GL3.GL_RG16F,
+            GL3.GL_RG32F,
+            GL3.GL_RGB16F,
+            GL3.GL_RGB32F,
+            GL3.GL_RGBA16F,
+            GL3.GL_RGBA32F,
+            GL3.GL_DEPTH_COMPONENT,
+            GL3.GL_DEPTH_COMPONENT24,
+            GL3.GL_DEPTH_COMPONENT16,
+            GL3.GL_DEPTH_COMPONENT32,
+            GL3.GL_DEPTH_COMPONENT32F,
+        })));
         
-        if (oneComponent.contains(internalFormat)) {
+        Set<Integer> depthFormat = new HashSet<>(
+                Arrays.asList(ArrayUtils.toObject(new int[] 
+        {
+            GL3.GL_DEPTH_COMPONENT,
+            GL3.GL_DEPTH_COMPONENT24,
+            GL3.GL_DEPTH_COMPONENT16,
+            GL3.GL_DEPTH_COMPONENT32,
+            GL3.GL_DEPTH_COMPONENT32F,
+        })));
+        
+        // Populate "numberOfComponents" field
+        if (oneComponent.contains(internalFormat))
             numberOfComponents = 1;
-            if (integerFormat.contains(internalFormat))
-                format = GL3.GL_RED_INTEGER;
-            else
-                format = GL3.GL_RED;
-        }
-        else if (twoComponents.contains(internalFormat)) {
+        else if (twoComponents.contains(internalFormat))
             numberOfComponents = 2;
-            if (integerFormat.contains(internalFormat))
-                format = GL3.GL_RG_INTEGER;
-            else
-                format = GL3.GL_RG;
-        }
-        else if (threeComponents.contains(internalFormat)) {
+        else if (threeComponents.contains(internalFormat))
             numberOfComponents = 3;
-            if (integerFormat.contains(internalFormat))
+        else
+            numberOfComponents = 4;  
+
+        // Populate "bytesPerIntensity" field
+        if (thirtyTwoBits.contains(internalFormat))
+            bytesPerIntensity = 4;
+        else if (sixteenBits.contains(internalFormat))
+            bytesPerIntensity = 2;
+        else
+            bytesPerIntensity = 1; // other sizes not supported at the moment...
+        
+        // Populate "type" field
+        if (floatType.contains(internalFormat)) {
+            if (sixteenBits.contains(internalFormat))
+                type = GL3.GL_HALF_FLOAT;
+            else
+                type = GL3.GL_FLOAT;
+        }
+        else { // assume integer type, if not float
+            if (thirtyTwoBits.contains(internalFormat))
+                type = GL3.GL_UNSIGNED_INT;
+            else if (sixteenBits.contains(internalFormat))
+                type = GL3.GL_UNSIGNED_SHORT;
+            else // Assume 8-bits; other sizes not supported at the moment...
+                type = GL3.GL_UNSIGNED_BYTE;
+        }
+
+        // Populate "format" field
+        if (depthFormat.contains(internalFormat)) {
+            format = GL3.GL_DEPTH_COMPONENT;
+        }
+        else if (integerFormat.contains(internalFormat)) 
+        {
+            if (oneComponent.contains(internalFormat))
+                format = GL3.GL_RED_INTEGER;
+            else if (twoComponents.contains(internalFormat))
+                format = GL3.GL_RG_INTEGER;
+            else if (threeComponents.contains(internalFormat))
                 format = GL3.GL_RGB_INTEGER;
             else
-                format = GL3.GL_RGB;
+                format = GL3.GL_RGBA_INTEGER;
         }
         else {
-            numberOfComponents = 4;
-            if (integerFormat.contains(internalFormat))
-                format = GL3.GL_RGBA_INTEGER;
+            if (oneComponent.contains(internalFormat))
+                format = GL3.GL_RED;
+            else if (twoComponents.contains(internalFormat))
+                format = GL3.GL_RG;
+            else if (threeComponents.contains(internalFormat))
+                format = GL3.GL_RGB;
             else
-                format = GL3.GL_RGBA;
+                format = GL3.GL_RGBA;            
         }
         
-        // TODO: Hard coding depth situation for the moment
-        if (internalFormat == GL3.GL_DEPTH_COMPONENT32) {
-            format = GL3.GL_DEPTH_COMPONENT;
-            type = GL3.GL_FLOAT;
-            bytesPerIntensity = 4; // TODO: 3?
-            numberOfComponents = 1;
-        }
     }
     
     public void bind(GL3 gl) {
@@ -274,7 +353,7 @@ public abstract class BasicTexture implements GL3Resource
             int[] h = {handle};
             gl.glDeleteTextures(1, h, 0);
             handle = 0;
-            log.trace("deleted texture");
+            // log.trace("deleted texture");
         }
     }
 
