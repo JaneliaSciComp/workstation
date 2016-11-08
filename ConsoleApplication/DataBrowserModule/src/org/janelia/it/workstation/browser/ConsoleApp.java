@@ -15,6 +15,7 @@ import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.gui.dialogs.GiantFiberSearchDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.LoginDialog;
 import org.janelia.it.workstation.browser.gui.dialogs.PatternSearchDialog;
+import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
@@ -50,6 +51,7 @@ public class ConsoleApp {
     private final String appVersion;
     private final ImageCache imageCache;
     private final UserNotificationExceptionHandler exceptionHandler;
+    private ReleaseNotesDialog releaseNotesDialog = new ReleaseNotesDialog();
     
     // Lazily initialized
     private PatternSearchDialog patternSearchDialog;
@@ -242,6 +244,10 @@ public class ConsoleApp {
 
     public ImageCache getImageCache() {
         return imageCache;
+    }
+    
+    public ReleaseNotesDialog getReleaseNotesDialog() {
+        return releaseNotesDialog;
     }
 
     public PatternSearchDialog getPatternSearchDialog() {
