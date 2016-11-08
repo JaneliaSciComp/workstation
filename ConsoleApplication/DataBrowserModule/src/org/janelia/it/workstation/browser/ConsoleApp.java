@@ -80,6 +80,9 @@ public class ConsoleApp {
         
         // Minor hack for running NetBeans on Windows 
         findAndRemoveWindowsSplashFile();
+        
+        // Workaround for NetBeans Sierra rendering issues
+        findAndRemoveAllResourcesFile();
     }
     
     public void initSession() {
@@ -139,6 +142,35 @@ public class ConsoleApp {
     }
 
     /**
+     * This is part of a workaround for JW-25338 which is rendering issues for a combination of NetBeans 7.4 with Synthetica themes on Mac OS X Sierra.
+     * 
+     * The other part of the workaround prevents this file from being generated in the future, by setting 
+     * -Dorg.netbeans.core.update.all.resources=never on the startup command line. 
+     */
+    private void findAndRemoveAllResourcesFile() {
+        try {
+            String evilCachedResourcesFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"all-resources.dat";
+            File tmpEvilCachedResourcesFile = new File(evilCachedResourcesFile);
+            if (tmpEvilCachedResourcesFile.exists()) {
+                log.info("Cached all-resources file "+evilCachedResourcesFile+" exists.  Removing...");
+                boolean deleteSuccess = tmpEvilCachedResourcesFile.delete();
+                if (deleteSuccess) {
+                    log.info("Successfully removed the all-resources.dat file");
+                }
+                else {
+                    log.warn("Could not successfully removed the all-resources.dat file");
+                }
+            }
+            else {
+                log.debug("Did not find the cached all-resources.dat file ("+evilCachedResourcesFile+"). Continuing...");
+            }
+        }
+        catch (Exception e) {
+            log.error("Ignoring error trying to exorcise the all-resources.dat", e);
+        }
+    }
+    
+    /**
      * Method to work-around a problem with the NetBeans Windows integration
      * todo Formally submit a bug report and tell Geertjan
      */
@@ -154,16 +186,16 @@ public class ConsoleApp {
                         log.info("Successfully removed the splash.png file");
                     }
                     else {
-                        log.info("Could not successfully removed the splash.png file");
+                        log.warn("Could not successfully removed the splash.png file");
                     }
                 }
                 else {
-                    log.info("Did not find the cached splash file ("+evilCachedSplashFile+").  Continuing...");
+                    log.debug("Did not find the cached splash file ("+evilCachedSplashFile+").  Continuing...");
                 }
             }
         }
         catch (Exception e) {
-            log.error("Error trying to exorcise the splash file on Windows.  Ignoring...");
+            log.error("Ignoring error trying to exorcise the splash file on Windows", e);
         }
     }
 
