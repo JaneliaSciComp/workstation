@@ -75,7 +75,5 @@ public class ShowingHook implements Runnable {
                 frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
             }
         }
-        
-        ConsoleApp.getConsoleApp().getReleaseNotesDialog().showIfFirstRunSinceUpdate();
     }
 }

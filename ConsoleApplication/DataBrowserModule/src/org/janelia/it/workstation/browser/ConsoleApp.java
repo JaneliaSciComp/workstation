@@ -51,11 +51,11 @@ public class ConsoleApp {
     private final String appVersion;
     private final ImageCache imageCache;
     private final UserNotificationExceptionHandler exceptionHandler;
-    private ReleaseNotesDialog releaseNotesDialog = new ReleaseNotesDialog();
     
     // Lazily initialized
     private PatternSearchDialog patternSearchDialog;
     private GiantFiberSearchDialog fiberSearchDialog;
+    private ReleaseNotesDialog releaseNotesDialog;
     
     public ConsoleApp() {
 
@@ -134,6 +134,8 @@ public class ConsoleApp {
                 public void run() {
                     patternSearchDialog = new PatternSearchDialog();
                     fiberSearchDialog = new GiantFiberSearchDialog();
+                    releaseNotesDialog = new ReleaseNotesDialog();
+                    releaseNotesDialog.showIfFirstRunSinceUpdate();
                 }
             });
         }
