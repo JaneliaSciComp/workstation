@@ -1,4 +1,4 @@
-// 4.4.0
+// 5.4.0
 
 Workstation Browser
 * Added release notes popup 
