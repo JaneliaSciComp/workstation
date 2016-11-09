@@ -40,8 +40,8 @@ public class ReleaseNotesDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(ReleaseNotesDialog.class);
     
-    private static final String CURR_RELEASE_FILE = "resources/release_notes/curr_release.yaml";
-    private static final String PREV_RELEASES_FILE = "resources/release_notes/prev_releases.yaml";
+    private static final String CURR_RELEASE_FILE = "resources/release_notes/curr_release.txt";
+    private static final String PREV_RELEASES_FILE = "resources/release_notes/prev_releases.txt";
     
     private final JLabel titleLabel;
     private final JCheckBox showAfterUpdate;
