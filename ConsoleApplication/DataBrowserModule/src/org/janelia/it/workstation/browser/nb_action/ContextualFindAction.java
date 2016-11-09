@@ -19,7 +19,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_ContextualFindAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Edit", position = 1000),
+    @ActionReference(path = "Menu/Edit", position = 3300),
     @ActionReference(path = "Shortcuts", name = "D-F")
 })
 @Messages("CTL_ContextualFindAction=Find")

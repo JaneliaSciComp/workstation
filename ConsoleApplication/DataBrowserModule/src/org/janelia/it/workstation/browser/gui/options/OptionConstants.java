@@ -8,6 +8,8 @@ public class OptionConstants {
     public static final String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
     public static final String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
     public static final String NAVIGATE_ON_CLICK = "SessionMgr.UnloadImagesProperty";
+    public static final String SHOW_RELEASE_NOTES = "SessionMgr.ShowReleaseNotes";
+    public static final String LAST_SHOWN_RELEASE_NOTES = "SessionMgr.LastShownReleaseNotes";
     public static final String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
     public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";

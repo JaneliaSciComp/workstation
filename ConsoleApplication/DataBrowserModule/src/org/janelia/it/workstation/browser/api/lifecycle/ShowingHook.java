@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.lifecycle.InterceptingEventQueue;
 import org.janelia.it.workstation.browser.lifecycle.LoggingEventListener;
@@ -74,5 +75,7 @@ public class ShowingHook implements Runnable {
                 frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
             }
         }
+        
+        ConsoleApp.getConsoleApp().getReleaseNotesDialog().showIfFirstRunSinceUpdate();
     }
 }
