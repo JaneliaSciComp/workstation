@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -50,28 +51,27 @@ public class ReleaseNotesDialog extends ModalDialog {
     
     private List<ReleaseNotes> releaseNotesList;
     private int currIndex = 0;
+
+    private JScrollPane scrollPane;
     
     public ReleaseNotesDialog() {
 
         setTitle("Release Notes");
 
         textArea = new JTextArea();
-        textArea.setPreferredSize(new Dimension(600, 400));
         textArea.setEditable(false);
-        textArea.setLineWrap(false);
         textArea.setText("Loading...");
         
         this.titleLabel = new JLabel("Release Notes");
         add(titleLabel, BorderLayout.NORTH);
         
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(textArea);
-        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
+        scrollPane = new JScrollPane(textArea);
         add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setPreferredSize(new Dimension(800, 600));
         
         this.showAfterUpdate = new JCheckBox("Show release notes after update");
         
-        prevButton = new JButton("Previous");
+        prevButton = new JButton("Loading...");
         prevButton.setEnabled(false);
         prevButton.setToolTipText("See release notes for the previous version");
         prevButton.addActionListener(new ActionListener() {
@@ -155,6 +155,7 @@ public class ReleaseNotesDialog extends ModalDialog {
 
                 @Override
                 protected void hadSuccess() {
+                    prevButton.setText("Previous");
                     updatePrevNextButtons();
                 }
 
@@ -223,6 +224,13 @@ public class ReleaseNotesDialog extends ModalDialog {
         ReleaseNotes releaseNotes = releaseNotesList.get(currIndex);
         titleLabel.setText("Release Notes for Janelia Workstation Version "+releaseNotes.getVersion());
         textArea.setText(releaseNotes.getNotes());
+        
+        // Reset scrollbar
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                scrollPane.getVerticalScrollBar().setValue(0);
+            }
+         });
     }
     
     private void saveAndClose() {
