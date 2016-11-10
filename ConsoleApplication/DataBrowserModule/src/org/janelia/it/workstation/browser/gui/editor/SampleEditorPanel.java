@@ -542,11 +542,11 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
 
             boolean display = true;
 
-            if (!currObjective.equals(ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
+            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !areEqualOrEmpty(currObjective, lsm.getObjective())) {
                 display = false;
             }
 
-            if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
+            if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, lsm.getAnatomicalArea())) {
                 display = false;
             }
 
@@ -659,7 +659,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             String objective = objectiveSample.getObjective();
             boolean diplayObjective = true;
             
-            if (!currObjective.equals(ALL_VALUE) && !currObjective.equals(objective)) {
+            if (!StringUtils.areEqual(currObjective, ALL_VALUE) && !StringUtils.areEqual(currObjective, objective)) {
                 diplayObjective = false;
             }
 
@@ -678,7 +678,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                 }
                 
                 boolean display = diplayObjective;
-                if (!currArea.equals(ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
+                if (!StringUtils.areEqual(currArea, ALL_VALUE) && !areEqualOrEmpty(currArea, area)) {
                     display = false;
                 }
                 
@@ -754,7 +754,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String objective : objectives) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(objective, objective.equals(currObjective));
+            JMenuItem menuItem = new JRadioButtonMenuItem(objective, StringUtils.areEqual(objective, currObjective));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setObjective(objective);
@@ -776,7 +776,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
         popupMenu.removeAll();
         ButtonGroup group = new ButtonGroup();
         for (final String area : areas) {
-            JMenuItem menuItem = new JRadioButtonMenuItem(area, area.equals(currArea));
+            JMenuItem menuItem = new JRadioButtonMenuItem(area, StringUtils.areEqual(area, currArea));
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
                     setArea(area);
@@ -980,7 +980,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
-                    if (domainObject.getId().equals(sample.getId())) {
+                    if (StringUtils.areEqual(domainObject.getId(), sample.getId())) {
                         log.info("objects set invalidated, reloading...");
                         Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                         if (updatedSample!=null) {
@@ -990,7 +990,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
                     }
                     else if (lsms!=null) {
                         for(LSMImage lsm : lsms) {
-                            if (domainObject.getId().equals(lsm.getId())) {
+                            if (StringUtils.areEqual(domainObject.getId(), lsm.getId())) {
                                 log.info("lsm invalidated, reloading...");
                                 Sample updatedSample = DomainMgr.getDomainMgr().getModel().getDomainObject(sample);
                                 if (updatedSample!=null) {
@@ -1010,7 +1010,7 @@ public class SampleEditorPanel extends JPanel implements DomainObjectEditor<Samp
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (sample==null) return;
-        if (event.getDomainObject().getId().equals(sample.getId())) {
+        if (StringUtils.areEqual(event.getDomainObject().getId(), sample.getId())) {
             this.sample = null;
             currRunMap.clear();
             lsms.clear();

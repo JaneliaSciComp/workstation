@@ -16,6 +16,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
@@ -32,6 +33,7 @@ import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.FileMgr;
+import org.janelia.it.workstation.browser.gui.dialogs.ReleaseNotesDialog;
 import org.janelia.it.workstation.browser.gui.support.GroupedKeyValuePanel;
 import org.janelia.it.workstation.browser.gui.support.panels.MemorySettingPanel;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
@@ -49,6 +51,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     
     private JComboBox<LookAndFeel> lookAndFeelCombobox;
 
+    private JCheckBox showReleaseNotesOnStartup;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -83,8 +86,16 @@ final class ApplicationPanel extends javax.swing.JPanel {
         // recreate the entire panel.
         mainPanel.removeAll();
 
+        // General options
+        
+        mainPanel.addSeparator("General");
+        
+        showReleaseNotesOnStartup = new JCheckBox("Show release notes after update");
+        showReleaseNotesOnStartup.setSelected(ReleaseNotesDialog.isShowReleaseNotes());
+        mainPanel.addItem(showReleaseNotesOnStartup);
+        
         // L&F
-
+        
         mainPanel.addSeparator("User Interface");
 
         UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
@@ -156,7 +167,7 @@ final class ApplicationPanel extends javax.swing.JPanel {
     }
 
     private JPanel buildFileCachePanel() {
-
+        
         JPanel fileCachePanel = new JPanel();
 
         fileCachePanel.setLayout(new GridBagLayout());
@@ -320,6 +331,10 @@ final class ApplicationPanel extends javax.swing.JPanel {
     void store() {
         
         log.info("Saving application settings...");
+        
+        // General
+
+        ReleaseNotesDialog.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         
         // Memory
         

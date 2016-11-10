@@ -18,7 +18,7 @@ import org.openide.util.actions.CallableSystemAction;
         displayName = "#CTL_NavigateBack"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/View", position = -100, separatorBefore = -150),
+    @ActionReference(path = "Menu/View", position = 100, separatorBefore = 99),
     @ActionReference(path = "Toolbars/Navigation", position = 100),
     @ActionReference(path = "Shortcuts", name = "D-LEFT")
 })
