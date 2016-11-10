@@ -11,18 +11,66 @@
         <h1>Loading...</h1>
     </div>
 
+    <button ng-click="getStateSummary()">State Summary</button>
+
+    <button ng-click="getCurrentServices()">Current Services</button>
+
+    <div ng-show="isMode('stateSummary')">
+        <h1>State Summary</h1>
+        <table>
+            <tr>Created: {{stateSummary.createdCountString}}</tr>
+            <tr>Submitted: {{stateSummary.submittedCountString}}</tr>
+            <tr>Queued: {{stateSummary.queuedCountString}}</tr>
+            <tr>Running: {{stateSummary.runningCountString}}</tr>
+            <tr>Waiting: {{stateSummary.waitingCountString}}</tr>
+            <tr>Canceled: {{stateSummary.canceledCountString}}</tr>
+            <tr>Error: {{stateSummary.errorCountString}}</tr>
+            <tr>Successful: {{stateSummary.successfulCountString}}</tr>
+        </table>
+    </div>
+
+    <!--
+    public Long timestamp;
+    public String type;
+    public String value;-->
+
+    <!--public long id=0L;
+    public String name;
+    public String jacsServiceClassName;
+    public String owner;
+    public Map<String, String> inputMap=new HashMap<>();
+    public Map<String, String> outputMap=new HashMap<>();
+    public List<JacsEventJson> events=new ArrayList<>();
+    public Long rootServiceId=0L;
+    public Long parentServiceId=0L;
+    public String state;-->
+
     <div ng-show="isMode('currentServices')">
         <h1>Current Services</h1>
         <p>count={{currentServices.length}}</p>
         <table>
-            <tr ng-repeat="x in currentServices | orderBy:'createTimestamp'">
-                <td>{{x.ownerName}}</td>
+            <tr ng-repeat="x in currentServices | orderBy:'id'">
+                <td>{{x.id}}</td>
                 <td>{{x.name}}</td>
-                <td>{{x.createTimeString}}</td>
+                <td>{{x.jacsServiceClassName}}</td>
+                <td>{{x.owner}}</td>
+                <td>{{x.rootServiceId}}</td>
+                <td>{{x.parentServiceId}}</td>
                 <td>{{x.state}}</td>
+                <td><button ng-click="getEventsForService(x)">Event History</button></form></td>
             </tr>
         </table>
+    </div>
 
+    <div ng-show="isMode('eventsForService')">
+        <h1>Event History</h1>
+        <table>
+            <tr ng-repeat="x in eventsForService | orderBy:'timestamp'">
+                <td>{{x.timestamp}}</td>
+                <td>{{x.type}}</td>
+                <td>{{x.value}}</td>
+            </tr>
+        </table>
     </div>
 
 </div>
@@ -49,11 +97,32 @@
             $scope.mode=m;
         }
 
-        $http.get($scope.serverUrl + "/rest-v1/jacsv2/currentServices")
+        $http.get($scope.serverUrl + "/rest-v1/jacsv2/stateSummary")
             .then(function(response) {
-                $scope.currentServices = response.data;
-                $scope.mode="currentServices";
+                $scope.stateSummary = response.data;
+                $scope.mode="stateSummary";
             });
+
+        $scope.getStateSummary = function() {
+            $http.get($scope.serverUrl+"/rest-v1/jacsv2/stateSummary")
+                .then(function(response) {
+                    $scope.stateSummary = response.data;
+                    $scope.mode="stateSummary";
+                });
+        }
+
+        $scope.getCurrentServices = function() {
+            $http.get($scope.serverUrl+"/rest-v1/jacsv2/currentServices")
+                .then(function(response) {
+                    $scope.currentServices = response.data;
+                    $scope.mode="currentServices";
+                });
+        }
+
+        $scope.getEventsForService = function(x) {
+            $scope.eventsForService=x.events;
+            $scope.mode="eventsForService";
+        }
 
     });
 </script>
