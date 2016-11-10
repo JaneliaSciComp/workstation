@@ -59,26 +59,27 @@ public class LocalPreferenceMgr {
         try {
             boolean success = settingsFile.createNewFile();  //only creates if does not exist
             if (success) {
-                log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
+                log.info("Created a new settings file in {}",settingsFile.getAbsolutePath());
                 writeSettings();
             }
             else {
-                log.error("Could not create settings file in "+settingsFile.getAbsolutePath());
+                // Settings file already exists, everything is good.
+                log.trace("Could not create settings file in {}",settingsFile.getAbsolutePath());
             }
         }
         catch (IOException ioEx) {
-            log.warn("Caught exception while creating settings file. Will recover...",ioEx);
+            log.warn("Caught exception while creating settings file. Will recover...", ioEx);
             if (!new File(prefsDir).mkdirs()) {
                 log.error("Could not create prefs dir at " + prefsDir);
             }
             try {
                 boolean success = settingsFile.createNewFile();  //only creates if does not exist
                 if (success) {
-                    log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
+                    log.info("Created a new settings file in {}",settingsFile.getAbsolutePath());
                     writeSettings();
                 }
                 else {
-                    log.error("Could not create settings file in "+settingsFile.getAbsolutePath());
+                    log.error("Could not create settings file in {}",settingsFile.getAbsolutePath());
                 }
             }
             catch (IOException e) {
