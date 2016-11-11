@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ToolString;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.facade.impl.rest.RESTClientManager;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -55,8 +56,9 @@ public class ActivityLogHelper {
             log.info("Failed to get the allocated ram value",ex);
         }
         Long ramTotalInfo = SystemInfo.getTotalSystemMemory();
-        // user/totalRAM/allocatedRAM/JavaInfo/RuntimeJavaInfo/OSInfo
-        activityLogging.logToolEvent(TOOL_STRING, USER_INFO_CTG, buildAction(authenticatedSubject.getName(), ramTotalInfo, ramAllocatedInfo, javaInfo, runtimeJavaInfo, osInfo));
+        String consoleVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
+        // user/totalRAM/allocatedRAM/JavaInfo/RuntimeJavaInfo/OSInfo/ConsoleVersion
+        activityLogging.logToolEvent(TOOL_STRING, USER_INFO_CTG, buildAction(authenticatedSubject.getName(), ramTotalInfo, ramAllocatedInfo, javaInfo, runtimeJavaInfo, osInfo, consoleVersion));
     }
 
     public static void logUserAction(String action) {
