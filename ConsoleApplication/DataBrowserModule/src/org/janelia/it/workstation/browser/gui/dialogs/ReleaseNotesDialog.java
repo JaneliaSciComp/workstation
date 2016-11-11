@@ -124,6 +124,7 @@ public class ReleaseNotesDialog extends ModalDialog {
     public void showIfFirstRunSinceUpdate() {
         if (!isShowReleaseNotes()) return;
         String appVersion = ConsoleApp.getConsoleApp().getApplicationVersion();
+        if ("DEV".equals(appVersion)) return; // Never show release notes in normal development
         if (!appVersion.equals(getLastShownReleaseNotes())) {
             setLastShownReleaseNotes(appVersion);
             showCurrentReleaseNotes();
