@@ -37,7 +37,7 @@ import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 /**
- * A port of data sets management dialog to use domain objects
+ * Dialog for viewing and editing Data Sets. 
  *
  * @author <a href="mailto:schauderd@janelia.hhmi.org">David Schauder</a>
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -50,7 +50,7 @@ public class DataSetListDialog extends ModalDialog {
     private final DataSetDialog dataSetDialog;
 
     public DataSetListDialog() {
-        setTitle("My Data Sets");
+        setTitle("Data Sets");
 
         dataSetDialog = new DataSetDialog(this);
 
@@ -70,6 +70,9 @@ public class DataSetListDialog extends ModalDialog {
             public Object getValue(Object userObject, DynamicColumn column) {
                 DataSet dataSet = (DataSet) userObject;
                 if (dataSet != null) {
+                    if ((DomainModelViewConstants.DATASET_OWNER).equals(column.getName())) {
+                        return dataSet.getOwnerName();
+                    }
                     if (DomainModelViewConstants.DATASET_NAME.equals(column.getName())) {
                         return dataSet.getName();
                     }
@@ -205,6 +208,7 @@ public class DataSetListDialog extends ModalDialog {
             }
         };
 
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_OWNER);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
@@ -242,7 +246,7 @@ public class DataSetListDialog extends ModalDialog {
         loadDataSets();
 
         Component mainFrame = ConsoleApp.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.4)));
 
         ActivityLogHelper.logUserAction("DataSetListDialog.showDialog");
 
