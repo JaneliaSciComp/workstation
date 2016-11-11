@@ -16,7 +16,7 @@
     <button ng-click="getCurrentServices()">Current Services</button>
 
     <div ng-show="isMode('stateSummary')">
-        <h1>State Summary</h1>
+        <h1>State Summary {{stateCount}}</h1>
         <table>
             <tr>Created: {{stateSummary.createdCountString}}</tr>
             <tr>Submitted: {{stateSummary.submittedCountString}}</tr>
@@ -29,24 +29,8 @@
         </table>
     </div>
 
-    <!--
-    public Long timestamp;
-    public String type;
-    public String value;-->
-
-    <!--public long id=0L;
-    public String name;
-    public String jacsServiceClassName;
-    public String owner;
-    public Map<String, String> inputMap=new HashMap<>();
-    public Map<String, String> outputMap=new HashMap<>();
-    public List<JacsEventJson> events=new ArrayList<>();
-    public Long rootServiceId=0L;
-    public Long parentServiceId=0L;
-    public String state;-->
-
     <div ng-show="isMode('currentServices')">
-        <h1>Current Services</h1>
+        <h1>Current Services {{stateCount}}</h1>
         <p>count={{currentServices.length}}</p>
         <table>
             <tr ng-repeat="x in currentServices | orderBy:'id'">
@@ -78,7 +62,7 @@
 
 <script>
     var app = angular.module('myApp', []);
-    app.controller('myCtrl', function($scope, $http, $location) {
+    app.controller('myCtrl', function($scope, $http, $location, $interval) {
 
         $scope.serverUrl = "http://" + $location.host() + ":" + $location.port();
 
@@ -97,13 +81,10 @@
             $scope.mode=m;
         }
 
-        $http.get($scope.serverUrl + "/rest-v1/jacsv2/stateSummary")
-            .then(function(response) {
-                $scope.stateSummary = response.data;
-                $scope.mode="stateSummary";
-            });
+        $scope.stateCount=0;
 
         $scope.getStateSummary = function() {
+            $scope.stateCount=$scope.stateCount+1;
             $http.get($scope.serverUrl+"/rest-v1/jacsv2/stateSummary")
                 .then(function(response) {
                     $scope.stateSummary = response.data;
@@ -123,6 +104,11 @@
             $scope.eventsForService=x.events;
             $scope.mode="eventsForService";
         }
+
+        var intervalFunction;
+        intervalFunction=$interval( $scope.getStateSummary, 1000);
+
+        // $scope.getStateSummary();
 
     });
 </script>
