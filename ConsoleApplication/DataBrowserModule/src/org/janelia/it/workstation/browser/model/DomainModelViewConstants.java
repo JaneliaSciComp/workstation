@@ -7,6 +7,7 @@ package org.janelia.it.workstation.browser.model;
  */
 public class DomainModelViewConstants {
 
+    public static final String DATASET_OWNER = "Owner";
     public static final String DATASET_NAME = "Name";
     public static final String DATASET_PIPELINE_PROCESS = "Pipeline Process";
     public static final String DATASET_SAMPLE_NAME = "Sample Name Pattern";
