@@ -5,7 +5,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.Action;
@@ -26,7 +25,6 @@ import org.janelia.it.workstation.browser.nb_action.NewDomainObjectAction;
 import org.janelia.it.workstation.browser.nb_action.PopupLabelAction;
 import org.janelia.it.workstation.browser.nb_action.RemoveAction;
 import org.janelia.it.workstation.browser.nb_action.SearchHereAction;
-import org.janelia.it.workstation.browser.nodes.DomainObjectNode.OpenInViewerAction;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
