@@ -44,6 +44,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     
     @Override
     public void handleException(Throwable throwable) {
+        log.error("Caught exception",throwable);
         if (throwable instanceof FatalCommError) {
             displayFatalComm(throwable);
             return;
@@ -149,18 +150,21 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
                 sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
                 sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
                 sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
-                sb.append("\n\nException:\n");
-                sb.append(exception.getClass().getName()).append(": "+exception.getMessage()).append("\n");
-                int stackLimit = 100;
-                int i = 0;
-                for (StackTraceElement element : exception.getStackTrace()) {
-                    String s = element.toString();
-                    if (!StringUtils.isEmpty(s)) {
-                        sb.append("at ");
-                        sb.append(element.toString());
-                        sb.append("\n");
-                        if (i++>stackLimit) {
-                            break;
+                if (exception!=null) {
+                    sb.append("\n\nException:\n");
+                    sb.append(exception.getClass().getName()).append(": "+exception.getMessage()).append("\n");
+                    int stackLimit = 100;
+                    int i = 0;
+                    for (StackTraceElement element : exception.getStackTrace()) {
+                        if (element==null) continue;
+                        String s = element.toString();
+                        if (!StringUtils.isEmpty(s)) {
+                            sb.append("at ");
+                            sb.append(element.toString());
+                            sb.append("\n");
+                            if (i++>stackLimit) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -190,5 +194,4 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private URL getEmailURL() {
         return emailURL;
     }
-
 }

@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.49</specification-version>
+                        <specification-version>1.50</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -21,7 +21,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.49</specification-version>
+                        <specification-version>1.50</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -30,7 +30,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.49</specification-version>
+                        <specification-version>1.50</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -39,7 +39,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.49</specification-version>
+                        <specification-version>1.50</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -48,7 +48,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.49</specification-version>
+                        <specification-version>1.50</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -229,9 +229,11 @@
                 <package>org.janelia.it.workstation.browser.tools</package>
                 <package>org.janelia.it.workstation.browser.tools.preferences</package>
                 <package>org.janelia.it.workstation.browser.util</package>
+                <package>org.janelia.it.workstation.browser.util.compression</package>
                 <package>org.janelia.it.workstation.browser.web</package>
                 <package>org.janelia.it.workstation.browser.workers</package>
                 <package>org.janelia.it.workstation.browser.ws</package>
+                <package>org.janelia.it.workstation.gui.framework.console</package>
             </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/jbossall-client.jar</runtime-relative-path>

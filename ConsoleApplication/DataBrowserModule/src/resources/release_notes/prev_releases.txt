@@ -1,0 +1,48 @@
+
+// 5.3.1
+
+Workstation Browser
+* Resolved issues with application installers for new users
+* Fixed Neuron Annotator launch button
+* Fixed error when deleting a saved filter
+* Improved error handling in a number of cases
+
+Large Volume Viewer
+* Added wait dialog for neuron deletion
+* Improved performance of neuron tracing
+* Fixed bug with deleting multiple TM workspaces at once
+* Improved error handling when attempting to export SWC without an opened workspace
+* Properly handle missing data in the workspace naming template
+
+// 5.3.0
+
+Workstation Browser
+* Under View -> Toolbars, you can hide/show/customize toolbars
+* The Options/Preferences panel has been redesigned 
+* Renamed "Default Workspace" folders to "Home"
+* Fixed behavior of window maximization on Windows systems
+
+MouseLight
+* Migrated Mouse data to the Mongo database
+    * Improved performance when loading/saving neurons 
+    * Opening the Data Explorer is much faster
+    * Samples now show Workspaces as child nodes 
+    * Selecting a neuron now shows info in the Data Inspector
+* Neuron list
+    * Added neuron tagging feature 
+    * Single-neuron actions are now on the right-click menu
+    * The gear menu contains actions that operate on whatever neurons are currently visible in the list
+    * Choosing neuron color and visibility are separate actions
+    * Added action for "Hide others"
+    * Full neuron name appears in tool tip
+* Miscellaneous improvements
+    * There is now a option to reopen the previously open workspace when the Workstation is launched
+    * Creating a new workspace provides a naming template
+    * Workspace information dialog now has a table of neurons with number of branches and ends
+    * Improved performance for hide/show/change colors of large neurons or many neurons
+    * Annotations drawn over a larger range of z at high zoom
+* Bug fixes
+    * Merge neurites within neurons works from Horta
+    * Points are no longer duplicated when exporting SWC files
+    * When exporting multiple neurons, SWC files are named for neurons
+    * When importing multiple SWC files, neuron colors will load correctly

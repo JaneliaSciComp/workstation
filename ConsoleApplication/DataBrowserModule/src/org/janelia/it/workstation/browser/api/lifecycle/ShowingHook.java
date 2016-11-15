@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.lifecycle.InterceptingEventQueue;
 import org.janelia.it.workstation.browser.lifecycle.LoggingEventListener;

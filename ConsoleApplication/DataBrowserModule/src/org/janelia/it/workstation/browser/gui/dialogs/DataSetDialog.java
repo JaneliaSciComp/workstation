@@ -12,12 +12,14 @@ import java.util.LinkedHashMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
@@ -27,7 +29,6 @@ import javax.swing.event.DocumentListener;
 
 import org.janelia.it.jacs.model.domain.enums.SampleImageType;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
-import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
@@ -64,7 +65,7 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageGrammarPathInput;
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
-    private HashMap<String, JCheckBox> processCheckboxes = new LinkedHashMap<>();
+    private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
 
     private DataSet dataSet;
 
@@ -190,7 +191,7 @@ public class DataSetDialog extends ModalDialog {
 
         JPanel pipelinesPanel = new JPanel();
         pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
-        addCheckboxes(PipelineProcess.values(), processCheckboxes, pipelinesPanel);
+        addRadioButtons(PipelineProcess.values(), processCheckboxes, pipelinesPanel);
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(pipelinesPanel);
@@ -215,14 +216,14 @@ public class DataSetDialog extends ModalDialog {
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
-                applyCheckboxValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
+                applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
 
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog", dataSet);
         }
         else {
             nameInput.setText("");
-            applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
+            applyRadioButtonValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
 
             ActivityLogHelper.logUserAction("DataSetDialog.showDialog");
         }
@@ -269,7 +270,7 @@ public class DataSetDialog extends ModalDialog {
                 dataSet.setSampleNamePattern(sampleNamePattern);
                 dataSet.setSampleImageType(SampleImageType.valueOf(sampleImageType));
                 java.util.List<String> pipelineProcesses = new ArrayList<>();
-                pipelineProcesses.add(getCheckboxValues(processCheckboxes));
+                pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);
                 dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
                 dataSet.setSageConfigPath(sageConfigPath);
@@ -296,38 +297,39 @@ public class DataSetDialog extends ModalDialog {
         worker.execute();
     }
 
-    private void addCheckboxes(final Object[] choices, final HashMap<String, JCheckBox> checkboxes, final JPanel panel) {
-        for (Object choice : choices) {
-            NamedEnum namedEnum = ((NamedEnum) choice);
-            JCheckBox checkBox = new JCheckBox(namedEnum.getName());
-            checkboxes.put(namedEnum.toString(), checkBox);
+    private void addRadioButtons(final PipelineProcess[] choices, final HashMap<String, JRadioButton> radioButtons, final JPanel panel) {
+        ButtonGroup group = new ButtonGroup();
+        for (PipelineProcess choice : choices) {
+            JRadioButton checkBox = new JRadioButton(choice.getName());
+            radioButtons.put(choice.toString(), checkBox);
             panel.add(checkBox);
+            group.add(checkBox);
         }
     }
 
-    private void applyCheckboxValues(final HashMap<String, JCheckBox> checkboxes, String selected) {
+    private void applyRadioButtonValues(final HashMap<String, JRadioButton> radioButtons, String selectedButtons) {
 
-        for (JCheckBox checkbox : checkboxes.values()) {
+        for (JRadioButton checkbox : radioButtons.values()) {
             checkbox.setSelected(false);
         }
 
-        if (StringUtils.isEmpty(selected)) {
+        if (StringUtils.isEmpty(selectedButtons)) {
             return;
         }
 
-        for (String value : selected.split(",")) {
-            JCheckBox checkbox = checkboxes.get(value);
+        for (String value : selectedButtons.split(",")) {
+            JRadioButton checkbox = radioButtons.get(value);
             if (checkbox != null) {
                 checkbox.setSelected(true);
             }
         }
     }
 
-    private String getCheckboxValues(final HashMap<String, JCheckBox> checkboxes) {
+    private String getRadioButtonValues(final HashMap<String, JRadioButton> radioButtons) {
 
         StringBuilder sb = new StringBuilder();
-        for (String key : checkboxes.keySet()) {
-            JCheckBox checkbox = checkboxes.get(key);
+        for (String key : radioButtons.keySet()) {
+            JRadioButton checkbox = radioButtons.get(key);
             if (checkbox != null && checkbox.isSelected()) {
                 if (sb.length() > 0) {
                     sb.append(",");
