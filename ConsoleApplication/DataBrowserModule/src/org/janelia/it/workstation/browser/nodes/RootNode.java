@@ -69,7 +69,8 @@ public class RootNode extends AbstractNode {
                 List<Workspace> workspaces = new ArrayList<>(model.getWorkspaces());
                 Collections.sort(workspaces, new DomainObjectComparator());
                 list.addAll(workspaces);
-            } catch (Exception ex) {
+            } 
+            catch (Exception ex) {
                 ConsoleApp.handleException(ex);
                 return false;
             }
