@@ -32,6 +32,14 @@ public class Startup implements Runnable {
         
         // Tie NetBeans's error handling popup to the workstation's error handler
         java.util.logging.Logger.getLogger("").addHandler(new NBExceptionHandler());
+
+        // Override the default formatters with the custom formatter
+        LogFormatter formatter = new LogFormatter(); // Custom formatter
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); // Root logger
+        java.util.logging.Handler[] handlers = logger.getHandlers();
+        for (java.util.logging.Handler handler : handlers) {
+            handler.setFormatter(formatter);
+        }
         
         // Create the main console app frame
         ConsoleApp app = ConsoleApp.getConsoleApp();
