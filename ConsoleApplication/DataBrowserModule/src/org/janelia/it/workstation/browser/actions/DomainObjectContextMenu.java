@@ -81,6 +81,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
     public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
+    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation Stack(s)";
 
     // Current selection
     protected DomainObject contextObject;
@@ -628,6 +629,10 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
+        itm = getNeuronSeparationDeletionItem();
+        if (itm != null) {
+            secondaryDeletionMenu.add(itm);
+        }
         if (secondaryDeletionMenu.getItemCount() > 0) {
             add(secondaryDeletionMenu);
         }
@@ -668,6 +673,26 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                             sample,
                             STITCHED_IMG_REMOVAL_MSG,
                             Constants.TRIM_DEPTH_AREA_IMAGE_VALUE
+                    );
+                    dialog.setVisible(true);
+                }
+            });
+        }
+        return rtnVal;
+    }
+
+    protected JMenuItem getNeuronSeparationDeletionItem() {
+        JMenuItem rtnVal = null;
+        if (domainObjectList.size() == 1  &&  domainObjectList.get(0) instanceof Sample) {
+            final Sample sample = (Sample)domainObjectList.get(0);
+            rtnVal = new JMenuItem("  " + NEURON_SEP_REMOVAL_MSG);
+            rtnVal.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent ae) {
+                    SecondaryDataRemovalDialog dialog = new SecondaryDataRemovalDialog(
+                            FrameworkImplProvider.getMainFrame(),
+                            sample,
+                            NEURON_SEP_REMOVAL_MSG,
+                            Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE
                     );
                     dialog.setVisible(true);
                 }
