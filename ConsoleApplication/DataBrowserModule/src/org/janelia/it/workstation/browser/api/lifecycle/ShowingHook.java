@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.lifecycle.InterceptingEventQueue;
 import org.janelia.it.workstation.browser.lifecycle.LoggingEventListener;
@@ -55,6 +55,16 @@ public class ShowingHook implements Runnable {
 
         log.info("Showing main window");
         frame.setVisible(true);
+        
+        if (Startup.isBrandingValidationException()) {
+            JOptionPane.showMessageDialog(
+                    WindowLocator.getMainFrame(),
+                    "Could not initialize configuration. Please reinstall the application.",
+                    "Error initializing configuration",
+                    JOptionPane.ERROR_MESSAGE,
+                    null
+            );
+        }
         
         if (frame.getExtendedState()==JFrame.MAXIMIZED_BOTH) {
             // Workaround for a framework bug. Ensure the window doesn't cover the Windows toolbar. 
