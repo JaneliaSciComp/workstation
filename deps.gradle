@@ -1,0 +1,49 @@
+ext {
+    SLF4J_VERSION = "1.7.21"
+    LOGBACK_VERSION = "1.1.7"
+    JAVAX_ENTERPRISE_VERSION = "1.2"
+}
+
+dependencies {
+    project.ext {
+        GUAVA_LIB = "com.google.guava:guava:19.0"
+        // logging
+        SLF4J_LIB = "org.slf4j:slf4j-api:${SLF4J_VERSION}"
+        LOGBACK_CORE_LIB = "ch.qos.logback:logback-core:${LOGBACK_VERSION}"
+        LOGBACK_CLASSIC_LIB = "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
+        // dependency injection
+        CDI_API_LIB="javax.enterprise:cdi-api:${JAVAX_ENTERPRISE_VERSION}"
+        // persistence
+        JPA_API_LIB = "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final"
+        HIBERNATE_LIB = "org.hibernate:hibernate-core:5.2.4.Final"
+        JAVAX_ENTERPRISE_CONCURRENCY_API_LIB = "org.jboss.spec.javax.enterprise.concurrent:jboss-concurrency-api_1.0_spec:1.0.0.Final"
+        JAVAX_EJB_API_LIB = "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
+        JAVAX_TX_API_LIB = "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final"
+        // apache commons
+        COMMONS_LANG_VERSION = "3.5"
+        COMMONS_LANG_LIB = "org.apache.commons:commons-lang3:${COMMONS_LANG_VERSION}"
+        COMMONS_COLLECTIONS_VERSION = "4.1"
+        COMMONS_COLLECTIONS_LIB = "org.apache.commons:commons-collections4:${COMMONS_COLLECTIONS_VERSION}"
+        // JAX-RS API
+        JAX_RS_API_LIB = "org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec:1.0.0.Final"
+        // drmaa
+        DRMAA1_LIB = "us.levk:drmaa-gridengine:6.2u5"
+        // testing
+        JUNIT_VERSION = "4.12"
+        // drivers
+        MYSQL_JDBC_LIB = "mysql:mysql-connector-java:5.1.40"
+    }
+
+    // Included in ALL projects
+    compile SLF4J_LIB,
+            LOGBACK_CORE_LIB,
+            LOGBACK_CLASSIC_LIB,
+            COMMONS_LANG_LIB,
+            COMMONS_COLLECTIONS_LIB,
+            GUAVA_LIB
+
+    testCompile "org.hamcrest:hamcrest-all:1.3",
+                "junit:junit:${JUNIT_VERSION}",
+                "org.mockito:mockito-core:2.2.12"
+
+}

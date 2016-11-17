@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<datasources xmlns="http://www.jboss.org/ironjacamar/schema"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.jboss.org/ironjacamar/schema http://docs.jboss.org/ironjacamar/schema/datasources_1_0.xsd">
+    <datasource jndi-name="java:jboss/datasources/ComputeDS" pool-name="ComputeDS"
+                enabled="true" use-java-context="true">
+        <connection-property name="url">jdbc:mysql://localhost:3306/jacs2</connection-property>
+        <connection-url>jdbc:mysql://localhost:3306/jacs2</connection-url>
+        <driver>mysql</driver>
+        <security>
+            <user-name>jacs2</user-name>
+            <password>jacs2</password>
+        </security>
+        <validation>
+            <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker"/>
+            <background-validation>true</background-validation>
+            <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter"/>
+        </validation>
+    </datasource>
+</datasources>

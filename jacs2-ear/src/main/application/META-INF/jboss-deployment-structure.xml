@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.2">
+    <deployment>
+        <dependencies>
+            <module name="mysql-connector-java-5.1.40" services="export">
+                <imports>
+                    <include path="META-INF**"/>
+                    <include path="com**"/>
+                </imports>
+            </module>
+        </dependencies>
+
+        <exclude-subsystems>
+            <subsystem name="logging" />
+        </exclude-subsystems>
+    </deployment>
+</jboss-deployment-structure>

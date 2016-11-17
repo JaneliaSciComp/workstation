@@ -1,0 +1,66 @@
+allprojects {
+        apply plugin: 'java'
+        apply plugin: 'idea'
+        group = 'org.janelia.jacs2'
+        version = '2.0.0'
+}
+
+project.ext {
+        eclipseBuildDir = 'eclipseBuild'
+}
+
+
+subprojects {
+    apply plugin: 'eclipse'
+    apply from: "${rootDir}/deps.gradle"
+
+    sourceSets {
+        integrationTest {
+            java {
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+                srcDir file('src/integration-test/java')
+            }
+            resources {
+                srcDir file('src/integration-test/resources')
+            }
+        }
+    }
+
+    configurations {
+        provided
+        compile.extendsFrom provided
+        integrationTestCompile.extendsFrom testCompile
+        integrationTestRuntime.extendsFrom testRuntime
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    eclipse {
+        classpath {
+            defaultOutputDir = file(eclipseBuildDir)
+            downloadSources = true
+            downloadJavadoc = true
+        }
+        project {
+            name = "$project.name"
+        }
+    }
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    task integrationTest(type: Test) {
+        testClassesDir = sourceSets.integrationTest.output.classesDir
+        classpath = sourceSets.integrationTest.runtimeClasspath
+    }
+
+    check.dependsOn integrationTest
+    integrationTest.mustRunAfter test
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = "3.1"
+}

@@ -1,0 +1,20 @@
+project(":jacs2-web") {
+    apply plugin: 'war'
+
+    dependencies {
+        compile project(":jacs2-services")
+
+        provided CDI_API_LIB,
+                 JAX_RS_API_LIB
+    }
+
+    war {
+        archiveName = "jacs2.war"
+
+        from (sourceSets.main.output.classesDir) {
+            into 'WEB-INF/classes'
+        }
+        classpath = configurations.runtime - configurations.provided
+    }
+
+}
