@@ -5,6 +5,8 @@ import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationOpening;
+import org.janelia.it.workstation.browser.logging.LogFormatter;
+import org.janelia.it.workstation.browser.logging.NBExceptionHandler;
 import org.janelia.it.workstation.browser.nb_action.NavigateBack;
 import org.janelia.it.workstation.browser.nb_action.NavigateForward;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
@@ -29,13 +31,15 @@ public class Startup implements Runnable {
     
     @Override
     public void run() {
+
+        // Root logger
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
         
         // Tie NetBeans's error handling popup to the workstation's error handler
-        java.util.logging.Logger.getLogger("").addHandler(new NBExceptionHandler());
+        logger.addHandler(new NBExceptionHandler());
 
         // Override the default formatters with the custom formatter
         LogFormatter formatter = new LogFormatter(); // Custom formatter
-        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); // Root logger
         java.util.logging.Handler[] handlers = logger.getHandlers();
         for (java.util.logging.Handler handler : handlers) {
             handler.setFormatter(formatter);

@@ -29,14 +29,15 @@ import org.slf4j.LoggerFactory;
  */
 @OnShowing
 public class ShowingHook implements Runnable {
+    
+    private static final Logger log = LoggerFactory.getLogger(ShowingHook.class);
+    
     public void run() {
-        
-        Logger log = LoggerFactory.getLogger(ShowingHook.class);
         
         JFrame frame = WindowLocator.getMainFrame();
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle(title);
-
+        
         // Log events.
         final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
         Toolkit.getDefaultToolkit().getSystemEventQueue().push(
