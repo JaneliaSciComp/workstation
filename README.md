@@ -1,4 +1,20 @@
-1. Register mysql driver
+1. Building the application
+
+`gradle build`
+
+2. Sample script to deploy the application
+
+`
+#!/bin/sh
+
+WILDFLY_HOME=/Users/goinac/Tools/wildfly-10.1.0.Final
+WILDFLY_INSTANCE=standalone
+
+echo cp jacs2-ear/build/libs/jacs2.ear ${WILDFLY_HOME}/${WILDFLY_INSTANCE}/deployments
+cp jacs2-ear/build/libs/jacs2.ear ${WILDFLY_HOME}/${WILDFLY_INSTANCE}/deployments
+`
+
+3. Register mysql driver
 
 Use
 `bin/jboss-cli.sh`
