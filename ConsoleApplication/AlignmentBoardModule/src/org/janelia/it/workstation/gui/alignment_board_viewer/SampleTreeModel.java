@@ -142,7 +142,7 @@ public class SampleTreeModel implements TreeModel {
             // Pushing to new connection to avoid concurrent modification.
             for ( AlignmentBoardItem nextChild: new ArrayList<>( item.getChildren() ) ) {
                 if ( nextChild instanceof AlignmentBoardItem ) {
-                    AlignmentBoardItem nextItem = (AlignmentBoardItem)nextChild;
+                    AlignmentBoardItem nextItem = nextChild;
                     if ( InclusionStatus.In == InclusionStatus.get(nextItem.getInclusionStatus()) ) {
                         rtnVal.add( nextChild );
                     }

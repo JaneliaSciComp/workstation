@@ -125,7 +125,7 @@ public class SmartSearchBox extends JComboBox<String> {
 
         List<String> searchHistory = new ArrayList<>();
         for (int i = 0; i < model.getSize(); i++) {
-            searchHistory.add((String) model.getElementAt(i));
+            searchHistory.add(model.getElementAt(i));
         }
 
         setSearchHistory(searchHistory);

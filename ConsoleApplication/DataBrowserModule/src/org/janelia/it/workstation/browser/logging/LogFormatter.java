@@ -36,7 +36,6 @@ public class LogFormatter extends Formatter {
     private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
 
     private static String lineSeparator = System.getProperty("line.separator"); // NOI18N
-//    public static final java.util.logging.Formatter FORMATTER = new NbFormatter();
     
     @Override
     public String format(LogRecord record) {
