@@ -22,6 +22,7 @@ import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.UserNotificationExceptionHandler;
 import org.openide.LifecycleManager;
+import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -162,11 +163,10 @@ public class ConsoleApp {
      */
     private void findAndRemoveAllResourcesFile() {
         try {
-            String evilCachedResourcesFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"all-resources.dat";
-            File tmpEvilCachedResourcesFile = new File(evilCachedResourcesFile);
-            if (tmpEvilCachedResourcesFile.exists()) {
+            File evilCachedResourcesFile = Places.getCacheSubfile("all-resources.dat");
+            if (evilCachedResourcesFile.exists()) {
                 log.info("Cached all-resources file "+evilCachedResourcesFile+" exists.  Removing...");
-                boolean deleteSuccess = tmpEvilCachedResourcesFile.delete();
+                boolean deleteSuccess = evilCachedResourcesFile.delete();
                 if (deleteSuccess) {
                     log.info("Successfully removed the all-resources.dat file");
                 }
@@ -190,11 +190,10 @@ public class ConsoleApp {
     private void findAndRemoveWindowsSplashFile() {
         try {
             if (SystemInfo.isWindows) {
-                String evilCachedSplashFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"splash.png";
-                File tmpEvilCachedSplashFile = new File(evilCachedSplashFile);
-                if (tmpEvilCachedSplashFile.exists()) {
+                File evilCachedSplashFile = Places.getCacheSubfile("splash.png");
+                if (evilCachedSplashFile.exists()) {
                     log.info("Cached splash file "+evilCachedSplashFile+" exists.  Removing...");
-                    boolean deleteSuccess = tmpEvilCachedSplashFile.delete();
+                    boolean deleteSuccess = evilCachedSplashFile.delete();
                     if (deleteSuccess) {
                         log.info("Successfully removed the splash.png file");
                     }

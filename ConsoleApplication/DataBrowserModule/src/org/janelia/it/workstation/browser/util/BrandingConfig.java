@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.openide.modules.InstalledFileLocator;
+import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,6 @@ public class BrandingConfig {
 
     public static final String appnameToken = "JaneliaWorkstation";  // TODO: Get this from NetBeans framework somehow
     
-    private static final String NETBEANS_USER_PATH = System.getProperty("netbeans.user");
     private static final String NETBEANS_HOME_PATH = System.getProperty("netbeans.home");
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     private static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
@@ -81,17 +81,17 @@ public class BrandingConfig {
         try {
             final String configFile = appnameToken + ".conf";
             File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, null, false);
-            log.info("Trying system config at {}", sysWideConfig);
+            log.debug("Trying system config at {}", sysWideConfig);
             if (sysWideConfig == null) {
     
                 File parent = new File(NETBEANS_HOME_PATH).getParentFile();
                 File containingDir = new File(parent, ETC_SUBPATH);
                 sysWideConfig = new File(containingDir, configFile);
-                log.info("Trying system config at {}", sysWideConfig);
+                log.debug("Trying system config at {}", sysWideConfig);
     
                 if (!sysWideConfig.canRead()) {
                     sysWideConfig = new File(containingDir, "netbeans.conf");
-                    log.info("Trying system config at {}", sysWideConfig);
+                    log.debug("Trying system config at {}", sysWideConfig);
                 }
             }
             
@@ -111,7 +111,7 @@ public class BrandingConfig {
     private final void loadBrandingConfig() {
 
         try {
-            File userSettingsDir = new File(NETBEANS_USER_PATH);
+            File userSettingsDir = Places.getUserDirectory();
             if (!userSettingsDir.toString().contains("testuserdir")) {
                 userSettingsDir = new File(userSettingsDir.toString(), ETC_SUBPATH);
             }
@@ -120,7 +120,7 @@ public class BrandingConfig {
             }
             final String configFile = appnameToken + ".conf";
             this.fqBrandingConfig = new File(userSettingsDir, configFile);
-            log.info("Trying branding config at {}", fqBrandingConfig);
+            log.debug("Trying branding config at {}", fqBrandingConfig);
     
             if (fqBrandingConfig.exists()) {
                 loadProperties(fqBrandingConfig, brandingSettings);
@@ -249,7 +249,7 @@ public class BrandingConfig {
     public int getMemoryAllocationGB() {
         // Stored as megabytes. Presented to user as gigabytes.
         if (maxMemoryMB<0) return maxMemoryMB;
-        log.info("Got memory allocation = {} MB", maxMemoryMB);
+        log.debug("Got memory allocation = {} MB", maxMemoryMB);
         return maxMemoryMB / 1024;
     }
     
@@ -259,7 +259,7 @@ public class BrandingConfig {
             saveBrandingConfig();
         }
         this.maxMemoryMB = maxMemoryMB;
-        log.info("Set memory allocation = {} MB", maxMemoryMB);
+        log.debug("Set memory allocation = {} MB", maxMemoryMB);
     }
     
     private void saveBrandingConfig() throws IOException {
