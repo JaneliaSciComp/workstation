@@ -1,15 +1,15 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 
 import java.util.Comparator;
 
-public class DefaultServiceInfoComparator implements Comparator<QueuedService> {
+public class DefaultServiceInfoComparator implements Comparator<QueuedTask> {
 
     @Override
-    public int compare(QueuedService sc1, QueuedService sc2) {
-        ServiceInfo si1 = sc1.getServiceInfo();
-        ServiceInfo si2 = sc2.getServiceInfo();
+    public int compare(QueuedTask sc1, QueuedTask sc2) {
+        TaskInfo si1 = sc1.getTaskInfo();
+        TaskInfo si2 = sc2.getTaskInfo();
         if (si1.priority() < si2.priority() || si1.priority() > si2.priority()) {
             return si1.priority() - si2.priority();
         } else {

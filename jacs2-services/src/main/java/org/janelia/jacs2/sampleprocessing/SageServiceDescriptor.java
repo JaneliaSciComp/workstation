@@ -1,8 +1,6 @@
 package org.janelia.jacs2.sampleprocessing;
 
-import org.janelia.jacs2.model.service.ServiceInfo;
 import org.janelia.jacs2.model.service.ServiceMetaData;
-import org.janelia.jacs2.model.service.ServiceState;
 import org.janelia.jacs2.service.impl.ServiceDescriptor;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 

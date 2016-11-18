@@ -1,24 +1,24 @@
 package org.janelia.jacs2.service;
 
 public class ServerStats {
-    private int runningServices;
-    private int waitingServices;
+    private int runningTasks;
+    private int waitingTasks;
     private int availableSlots;
 
-    public int getRunningServices() {
-        return runningServices;
+    public int getRunningTasks() {
+        return runningTasks;
     }
 
-    public void setRunningServices(int runningServices) {
-        this.runningServices = runningServices;
+    public void setRunningTasks(int runningTasks) {
+        this.runningTasks = runningTasks;
     }
 
-    public int getWaitingServices() {
-        return waitingServices;
+    public int getWaitingTasks() {
+        return waitingTasks;
     }
 
-    public void setWaitingServices(int waitingServices) {
-        this.waitingServices = waitingServices;
+    public void setWaitingTasks(int waitingTasks) {
+        this.waitingTasks = waitingTasks;
     }
 
     public int getAvailableSlots() {

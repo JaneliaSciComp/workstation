@@ -1,9 +1,9 @@
 package org.janelia.jacs2.rest;
 
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.model.service.ServiceMetaData;
-import org.janelia.jacs2.service.ServiceManager;
+import org.janelia.jacs2.service.TaskManager;
 import org.janelia.jacs2.service.ServiceRegistry;
 
 import javax.inject.Inject;
@@ -18,13 +18,13 @@ import javax.ws.rs.core.Response;
 public class ServiceInfoResource {
 
     @Inject
-    private ServiceManager serviceManager;
+    private TaskManager taskManager;
     @Inject
     private ServiceRegistry serviceRegistry;
 
     @GET
     @Produces("application/json")
-    public PageResult<ServiceInfo> getAllServices(@QueryParam("service-name") String serviceName,
+    public PageResult<TaskInfo> getAllServices(@QueryParam("service-name") String serviceName,
                                                   @QueryParam("service-state") String serviceState) {
         System.out.println("!!!! NAME QUERY PARAM " + serviceName);
         System.out.println("!!!! STATE QUERY PARAM " + serviceState);
@@ -34,8 +34,8 @@ public class ServiceInfoResource {
     @GET
     @Path("/{service-instance-id}")
     @Produces("application/json")
-    public ServiceInfo getServiceInfo(@PathParam("service-instance-id") long instanceId) {
-        return serviceManager.retrieveServiceInfo(instanceId);
+    public TaskInfo getServiceInfo(@PathParam("service-instance-id") long instanceId) {
+        return taskManager.retrieveTaskInfo(instanceId);
     }
 
     @GET

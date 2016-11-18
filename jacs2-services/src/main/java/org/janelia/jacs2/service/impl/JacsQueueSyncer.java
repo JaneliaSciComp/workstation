@@ -16,14 +16,14 @@ public class JacsQueueSyncer {
     @Inject
     private Logger logger;
     @Inject
-    private JacsServiceDispatcher jacsServiceDispatcher;
+    private JacsTaskDispatcher jacsTaskDispatcher;
 
     @AccessTimeout(value = 60, unit = TimeUnit.SECONDS)
     @Schedule(second = "*/30", minute = "*", hour = "*", persistent = false)
     public void doWork() {
         try {
             logger.debug("Sync JACS jobs");
-            jacsServiceDispatcher.syncServiceQueue();
+            jacsTaskDispatcher.syncServiceQueue();
         } catch (Exception e) {
             logger.error("Critical error - syncing job queue failed", e);
         }

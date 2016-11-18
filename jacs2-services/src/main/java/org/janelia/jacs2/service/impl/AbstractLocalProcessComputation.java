@@ -1,6 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -17,7 +17,7 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
     private Process localProcess;
 
     @Override
-    protected ServiceInfo doWork(ServiceInfo si) {
+    protected TaskInfo doWork(TaskInfo si) throws ComputationException {
         List<String> cmdLine = prepareCommandLine(si);
         Map<String, String> env = prepareEnvironment(si);
         ProcessBuilder processBuilder = new ProcessBuilder(cmdLine);
@@ -28,18 +28,18 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
             localProcess = processBuilder.start();
         } catch (IOException e) {
             logger.error("Error starting the computation process for {}", cmdLine);
-            throw new IllegalStateException(e);
+            throw new ComputationException(e);
         }
         int returnCode = 1;
         try {
             returnCode = localProcess.waitFor();
         } catch (InterruptedException e) {
             logger.error("Error waiting for the computation process for {}", cmdLine);
-            throw new IllegalStateException(e);
+            throw new ComputationException(e);
         }
         logger.info("Process {} terminated with code {}", localProcess, returnCode);
         if (returnCode != 0) {
-            throw new IllegalStateException("Process terminated with code " + returnCode);
+            throw new ComputationException("Process terminated with code " + returnCode);
         }
         return si;
     }

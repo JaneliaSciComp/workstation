@@ -1,7 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.ServiceInfo;
-import org.janelia.jacs2.persistence.ServiceInfoPersistence;
+import org.janelia.jacs2.model.service.TaskInfo;
+import org.janelia.jacs2.persistence.TaskInfoPersistence;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -27,7 +27,7 @@ public class AbstractServiceComputationTest {
     private static class TestComputation extends AbstractServiceComputation {
 
         @Override
-        protected ServiceInfo doWork(ServiceInfo si) {
+        protected TaskInfo doWork(TaskInfo si) {
             return si;
         }
     }
@@ -35,29 +35,29 @@ public class AbstractServiceComputationTest {
     @Mock
     private Logger logger;
     @Mock
-    private Instance<ServiceInfoPersistence> serviceInfoPersistenceSource;
+    private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
     @Mock
-    private ServiceInfoPersistence serviceInfoPersistence;
+    private TaskInfoPersistence taskInfoPersistence;
 
     @InjectMocks
     private TestComputation testComputation;
-    private ServiceInfo testServiceInfo;
+    private TaskInfo testTaskInfo;
 
     @Before
     public void setUp() {
-        testServiceInfo = new ServiceInfo();
+        testTaskInfo = new TaskInfo();
         testComputation = new TestComputation();
         MockitoAnnotations.initMocks(this);
-        when(serviceInfoPersistenceSource.get()).thenReturn(serviceInfoPersistence);
+        when(serviceInfoPersistenceSource.get()).thenReturn(taskInfoPersistence);
     }
 
     @Test
     public void testSuccessfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<ServiceInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testComputation.getServiceSupplier().put(testServiceInfo);
-            return testServiceInfo;
+        CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
+            testComputation.getTaskSupplier().put(testTaskInfo);
+            return testTaskInfo;
         })
         .thenCompose(si -> {
             return testComputation.processData();
@@ -75,15 +75,15 @@ public class AbstractServiceComputationTest {
     }
 
     @Test
-    public void testFailedProcessing() {
+    public void testFailedProcessing() throws ComputationException {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
         AbstractServiceComputation spyComputation = spy(testComputation);
-        when(spyComputation.doWork(any(ServiceInfo.class))).thenThrow(new IllegalStateException("test"));
+        when(spyComputation.doWork(any(TaskInfo.class))).thenThrow(new IllegalStateException("test"));
 
-        CompletionStage<ServiceInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testComputation.getServiceSupplier().put(testServiceInfo);
-            return testServiceInfo;
+        CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
+            testComputation.getTaskSupplier().put(testTaskInfo);
+            return testTaskInfo;
         })
         .thenCompose(si -> {
             return spyComputation.processData();

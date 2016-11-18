@@ -3,7 +3,7 @@ package org.janelia.jacs2.service.impl;
 /**
  * Exception thrown by a service if something goes wrong during computation.
  */
-public class ComputationException extends Exception {
+public class ComputationException extends RuntimeException {
     public ComputationException() {
     }
 

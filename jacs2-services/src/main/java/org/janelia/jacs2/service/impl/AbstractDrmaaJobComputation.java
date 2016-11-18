@@ -1,16 +1,14 @@
 package org.janelia.jacs2.service.impl;
 
 import org.ggf.drmaa.DrmaaException;
-import org.ggf.drmaa.JobInfo;
 import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
 import org.ggf.drmaa.SessionFactory;
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +19,10 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
     private Logger logger;
     @Inject
     private SessionFactory drmaaSessionFactory;
-    private JobInfo jobInfo;
+    private org.ggf.drmaa.JobInfo jobInfo;
 
     @Override
-    protected ServiceInfo doWork(ServiceInfo si) {
+    protected TaskInfo doWork(TaskInfo si) throws ComputationException {
         List<String> cmdLine = prepareCommandLine(si);
         Map<String, String> env = prepareEnvironment(si);
         Session drmaaSession = drmaaSessionFactory.getSession();
@@ -61,7 +59,7 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
             }
         } catch (DrmaaException e) {
             logger.error("Error running a DRMAA job for " + cmdLine, e);
-            throw new IllegalStateException(e);
+            throw new ComputationException(e);
         } finally {
             if (jt != null) {
                 try {

@@ -3,7 +3,7 @@ package org.janelia.jacs2.service.impl;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class BlockingQueueServiceSupplier<E> implements ServiceSupplier<E> {
+public class BlockingQueueTaskSupplier<E> implements TaskSupplier<E> {
     private BlockingQueue<E> singleElementQueue = new LinkedBlockingDeque<>(1);
 
     @Override

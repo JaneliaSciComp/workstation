@@ -1,8 +1,6 @@
 package org.janelia.jacs2.model.service;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringExclude;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,15 +8,12 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Created by goinac on 11/8/16.
- */
 @Entity
-@Table(name = "service_info")
-public class ServiceInfo {
+@Table(name = "task_info")
+public class TaskInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "service_info_id")
+    @Column(name = "task_info_id")
     private Long id;
     @Column(name = "name")
     private String name;
@@ -28,7 +23,7 @@ public class ServiceInfo {
     private String serviceCmd;
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
-    private ServiceState state;
+    private TaskState state;
     @Column(name = "priority")
     private Integer priority;
     @Column(name = "owner")
@@ -40,25 +35,25 @@ public class ServiceInfo {
     @Column(name = "error_path")
     private String errorPath;
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "service_args")
+    @CollectionTable(name = "task_args")
     private List<String> args;
     @Column(name = "workspace")
     private String workspace;
-    @Column(name = "parent_service_info_id")
-    private Long parentServiceId;
+    @Column(name = "parent_task_info_id")
+    private Long parentTaskId;
     @ManyToOne
-    @JoinColumn(name = "parent_service_info_id", referencedColumnName = "service_info_id", insertable = false, updatable = false)
-    private ServiceInfo parentService;
+    @JoinColumn(name = "parent_task_info_id", referencedColumnName = "task_info_id", insertable = false, updatable = false)
+    private TaskInfo parentTask;
     @OneToMany
-    @JoinColumn(name = "parent_service_info_id", insertable = false, updatable = false)
-    private List<ServiceInfo> childrenServices;
-    @Column(name = "root_service_info_id")
-    private Long rootServiceId;
+    @JoinColumn(name = "parent_task_info_id", insertable = false, updatable = false)
+    private List<TaskInfo> subTasks;
+    @Column(name = "root_task_info_id")
+    private Long rootTaskId;
     @ManyToOne
-    @JoinColumn(name = "root_service_info_id", referencedColumnName = "service_info_id", insertable = false, updatable = false)
-    private ServiceInfo rootService;
-    @OneToMany(mappedBy = "serviceInfo")
-    private List<ServiceEvent> events;
+    @JoinColumn(name = "root_task_info_id", referencedColumnName = "task_info_id", insertable = false, updatable = false)
+    private TaskInfo rootTask;
+    @OneToMany(mappedBy = "taskInfo")
+    private List<TaskEvent> events;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "creation_date")
     private Date creationDate = new Date();
@@ -95,11 +90,11 @@ public class ServiceInfo {
         this.serviceCmd = serviceCmd;
     }
 
-    public ServiceState getState() {
+    public TaskState getState() {
         return state;
     }
 
-    public void setState(ServiceState state) {
+    public void setState(TaskState state) {
         this.state = state;
     }
 
@@ -159,51 +154,51 @@ public class ServiceInfo {
         this.workspace = workspace;
     }
 
-    public Long getParentServiceId() {
-        return parentServiceId;
+    public Long getParentTaskId() {
+        return parentTaskId;
     }
 
-    public void setParentServiceId(Long parentServiceId) {
-        this.parentServiceId = parentServiceId;
+    public void setParentTaskId(Long parentTaskId) {
+        this.parentTaskId = parentTaskId;
     }
 
-    public ServiceInfo getParentService() {
-        return parentService;
+    public TaskInfo getParentTask() {
+        return parentTask;
     }
 
-    public void setParentService(ServiceInfo parentService) {
-        this.parentService = parentService;
+    public void setParentTask(TaskInfo parentTask) {
+        this.parentTask = parentTask;
     }
 
-    public List<ServiceInfo> getChildrenServices() {
-        return childrenServices;
+    public List<TaskInfo> getSubTasks() {
+        return subTasks;
     }
 
-    public void setChildrenServices(List<ServiceInfo> childrenServices) {
-        this.childrenServices = childrenServices;
+    public void setSubTasks(List<TaskInfo> subTasks) {
+        this.subTasks = subTasks;
     }
 
-    public Long getRootServiceId() {
-        return rootServiceId;
+    public Long getRootTaskId() {
+        return rootTaskId;
     }
 
-    public void setRootServiceId(Long rootServiceId) {
-        this.rootServiceId = rootServiceId;
+    public void setRootTaskId(Long rootTaskId) {
+        this.rootTaskId = rootTaskId;
     }
 
-    public ServiceInfo getRootService() {
-        return rootService;
+    public TaskInfo getRootTask() {
+        return rootTask;
     }
 
-    public void setRootService(ServiceInfo rootService) {
-        this.rootService = rootService;
+    public void setRootTask(TaskInfo rootTask) {
+        this.rootTask = rootTask;
     }
 
-    public List<ServiceEvent> getEvents() {
+    public List<TaskEvent> getEvents() {
         return events;
     }
 
-    public void setEvents(List<ServiceEvent> events) {
+    public void setEvents(List<TaskEvent> events) {
         this.events = events;
     }
 
@@ -222,31 +217,31 @@ public class ServiceInfo {
         this.args.add(arg);
     }
 
-    public void addEvent(ServiceEvent se) {
+    public void addEvent(TaskEvent se) {
         if (this.events == null) {
             this.events = new ArrayList<>();
         }
-        se.setServiceInfo(this);
+        se.setTaskInfo(this);
         this.events.add(se);
     }
 
-    public void addChildService(ServiceInfo si) {
-        if (this.childrenServices == null) {
-            this.childrenServices = new ArrayList<>();
+    public void addSubTask(TaskInfo si) {
+        if (this.subTasks == null) {
+            this.subTasks = new ArrayList<>();
         }
-        si.updateParentService(this);
+        si.updateParentTask(this);
     }
 
-    public void updateParentService(ServiceInfo parentService) {
-        setParentService(parentService);
-        if (parentService != null) {
-            setParentServiceId(parentService.getId());
-            if (parentService.getRootServiceId() == null) {
-                setRootServiceId(parentService.getId());
-                setRootService(parentService);
+    public void updateParentTask(TaskInfo parentTask) {
+        setParentTask(parentTask);
+        if (parentTask != null) {
+            setParentTaskId(parentTask.getId());
+            if (parentTask.getRootTaskId() == null) {
+                setRootTaskId(parentTask.getId());
+                setRootTask(parentTask);
             } else {
-                setRootServiceId(parentService.getRootServiceId());
-                setRootService(parentService.getRootService());
+                setRootTaskId(parentTask.getRootTaskId());
+                setRootTask(parentTask.getRootTask());
             }
         }
     }
@@ -257,6 +252,6 @@ public class ServiceInfo {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentService", "rootService", "childrenServices", "events"));
+        return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentTask", "rootTask", "subTasks", "events"));
     }
 }

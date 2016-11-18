@@ -3,15 +3,12 @@ package org.janelia.jacs2.model.service;
 import javax.persistence.*;
 import java.util.Date;
 
-/**
- * Created by goinac on 11/8/16.
- */
 @Entity
-@Table(name = "service_event")
-public class ServiceEvent {
+@Table(name = "task_event")
+public class TaskEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "service_event_id")
+    @Column(name = "task_event_id")
     private Long id;
     @Column(name = "name")
     private String name;
@@ -20,10 +17,9 @@ public class ServiceEvent {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "event_time")
     private Date eventTime = new Date();
-
     @ManyToOne
-    @JoinColumn(name = "service_info_id")
-    private ServiceInfo serviceInfo;
+    @JoinColumn(name = "task_info_id")
+    private TaskInfo taskInfo;
 
     public Long getId() {
         return id;
@@ -49,12 +45,12 @@ public class ServiceEvent {
         this.value = value;
     }
 
-    public ServiceInfo getServiceInfo() {
-        return serviceInfo;
+    public TaskInfo getTaskInfo() {
+        return taskInfo;
     }
 
-    public void setServiceInfo(ServiceInfo service) {
-        this.serviceInfo = serviceInfo;
+    public void setTaskInfo(TaskInfo service) {
+        this.taskInfo = taskInfo;
     }
 
     public Date getEventTime() {

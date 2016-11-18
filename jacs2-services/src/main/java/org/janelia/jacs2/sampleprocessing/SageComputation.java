@@ -3,7 +3,7 @@ package org.janelia.jacs2.sampleprocessing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.service.impl.AbstractLocalProcessComputation;
 
 import javax.inject.Named;
@@ -14,7 +14,7 @@ import java.util.Map;
 public class SageComputation extends AbstractLocalProcessComputation {
 
     @Override
-    protected List<String> prepareCommandLine(ServiceInfo si) {
+    protected List<String> prepareCommandLine(TaskInfo si) {
         ImmutableList.Builder cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder.add(si.getServiceCmd());
         if (CollectionUtils.isNotEmpty(si.getArgs())) {
@@ -24,7 +24,7 @@ public class SageComputation extends AbstractLocalProcessComputation {
     }
 
     @Override
-    protected Map<String, String> prepareEnvironment(ServiceInfo si) {
+    protected Map<String, String> prepareEnvironment(TaskInfo si) {
         return ImmutableMap.of();
     }
 }

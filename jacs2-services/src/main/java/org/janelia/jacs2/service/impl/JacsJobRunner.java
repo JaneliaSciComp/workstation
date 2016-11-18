@@ -16,14 +16,14 @@ public class JacsJobRunner {
     @Inject
     private Logger logger;
     @Inject
-    private JacsServiceDispatcher jacsServiceDispatcher;
+    private JacsTaskDispatcher jacsTaskDispatcher;
 
     @AccessTimeout(value = 60, unit = TimeUnit.SECONDS)
     @Schedule(second = "*/60", minute = "*", hour = "*", persistent = false)
     public void doWork() {
         try {
             logger.debug("Dispatch JACS jobs");
-            jacsServiceDispatcher.dispatchServices();
+            jacsTaskDispatcher.dispatchServices();
         } catch (Exception e) {
             logger.error("Critical error - job dispatch failed", e);
         }

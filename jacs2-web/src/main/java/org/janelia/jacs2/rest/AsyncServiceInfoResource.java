@@ -1,8 +1,8 @@
 package org.janelia.jacs2.rest;
 
-import org.janelia.jacs2.model.service.ServiceInfo;
+import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.service.ServerStats;
-import org.janelia.jacs2.service.ServiceManager;
+import org.janelia.jacs2.service.TaskManager;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -19,21 +19,21 @@ import java.util.Optional;
 public class AsyncServiceInfoResource {
 
     @Inject
-    private ServiceManager serviceManager;
+    private TaskManager taskManager;
 
     @POST
     @Path("/{user}/{service-name}")
     @Consumes("application/json")
     @Produces("application/json")
-    public Response createAsyncService(@PathParam("user") String userName, @PathParam("service-name") String serviceName, ServiceInfo si) {
+    public Response createAsyncService(@PathParam("user") String userName, @PathParam("service-name") String serviceName, TaskInfo si) {
         si.setOwner(userName);
         si.setName(serviceName);
-        ServiceInfo newServiceInfo = serviceManager.startAsyncService(si, Optional.empty());
+        TaskInfo newTaskInfo = taskManager.submitTaskAsync(si, Optional.empty());
         UriBuilder locationURIBuilder = UriBuilder.fromResource(ServiceInfoResource.class);
-        locationURIBuilder.path(Long.toString(newServiceInfo.getId()));
+        locationURIBuilder.path(Long.toString(newTaskInfo.getId()));
         return Response
                 .status(Response.Status.CREATED)
-                .entity(newServiceInfo)
+                .entity(newTaskInfo)
                 .contentLocation(locationURIBuilder.build())
                 .build();
     }
@@ -42,6 +42,6 @@ public class AsyncServiceInfoResource {
     @Path("stats")
     @Produces("application/json")
     public ServerStats getServerStats() {
-        return serviceManager.getServerStats();
+        return taskManager.getServerStats();
     }
 }
