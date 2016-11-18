@@ -6,6 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractExternalProcessComputation extends AbstractServiceComputation {
-    protected abstract List<String> prepareCommandLine();
-    protected abstract Map<String, String> prepareEnvironment();
+    protected abstract List<String> prepareCommandLine(ServiceInfo si);
+    protected abstract Map<String, String> prepareEnvironment(ServiceInfo si);
 }

@@ -1,13 +1,14 @@
 package org.janelia.jacs2.service.impl;
 
+import com.google.common.base.Preconditions;
 import org.janelia.jacs2.model.service.ServiceInfo;
-import org.janelia.jacs2.model.service.ServiceState;
 import org.janelia.jacs2.persistence.ServiceInfoPersistence;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -17,38 +18,41 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     @Inject
     private Logger logger;
     @Inject
+    private JacsServiceDispatcher serviceDispatcher;
+    @Inject
     private Instance<ServiceInfoPersistence> serviceInfoPersistenceSource;
-
-    protected ServiceInfo serviceInfo;
+    private final ServiceSupplier<ServiceInfo> serviceSupplier = new BlockingQueueServiceSupplier<>();
+    private ServiceInfo serviceInfo;
 
     @Override
-    public CompletionStage<ServiceComputation> processData() {
-        CompletableFuture<ServiceComputation> computationFuture;
-        computationFuture = CompletableFuture.supplyAsync(() -> serviceInfo)
-            .thenApplyAsync(si -> {
-                ServiceState state = ServiceState.RUNNING;
-                logger.info("Update state of {} to {}", si, state);
-                si.setState(state);
-                serviceInfoPersistenceSource.get().update(si);
-                return si;
-            })
-            .thenApplyAsync(si -> {
-                performComputation();
-                return this;
-            });
-        return computationFuture;
+    public CompletionStage<ServiceInfo> processData() {
+        return waitForData()
+                .thenApply(this::doWork);
     }
 
-    protected abstract void performComputation();
+    private CompletionStage<ServiceInfo> waitForData() {
+        return CompletableFuture.supplyAsync(() -> {
+            // bring the service info into the computation by getting it from the supplier channel;
+            // the channel will receive the data when the corresponding job is ready to be started
+            // from the dispatcher
+            if (this.serviceInfo == null) {
+                this.serviceInfo = serviceSupplier.take();
+            }
+            return this.serviceInfo;
+        });
+    }
+
+    protected abstract ServiceInfo doWork(ServiceInfo si);
 
     @Override
-    public ServiceInfo getComputationInfo() {
-        return serviceInfo;
+    public ServiceComputation submitChildProcess(ServiceInfo si) {
+        Preconditions.checkState(serviceInfo != null, "Children services can only be created once it's running");
+        return serviceDispatcher.submitService(si, Optional.of(serviceInfo));
     }
 
     @Override
-    public void setComputationInfo(ServiceInfo si) {
-        this.serviceInfo = si;
+    public ServiceSupplier<ServiceInfo> getServiceSupplier() {
+        return serviceSupplier;
     }
 
 }

@@ -26,13 +26,8 @@ public class SageServiceDescriptor implements ServiceDescriptor {
     }
 
     @Override
-    public ServiceComputation createComputationInstance(ServiceInfo serviceInfo) {
-        serviceInfo.setName(SERVICE_NAME);
-        serviceInfo.setServiceType(SageComputation.class.getName());
-        serviceInfo.setState(ServiceState.CREATED);
-        ServiceComputation sageComputation = sageComputationSource.get();
-        sageComputation.setComputationInfo(serviceInfo);
-        return sageComputation;
+    public ServiceComputation createComputationInstance() {
+        return sageComputationSource.get();
     }
 
 }

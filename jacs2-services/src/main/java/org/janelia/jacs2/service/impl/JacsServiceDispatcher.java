@@ -45,7 +45,7 @@ public class JacsServiceDispatcher {
     private Instance<ServiceInfoPersistence> serviceInfoPersistenceSource;
     @Inject
     private Instance<ServiceRegistry> serviceRegistrarSource;
-    private final Queue<ServiceComputation> waitingServices;
+    private final Queue<QueuedService> waitingServices;
     private final Semaphore availableSlots;
     private boolean noWaitingSpaceAvailable;
     private int runningServices;
@@ -56,16 +56,17 @@ public class JacsServiceDispatcher {
         noWaitingSpaceAvailable = false;
     }
 
-    public ServiceInfo submitService(ServiceInfo serviceArgs, Optional<ServiceInfo> currentService) {
+    public ServiceComputation submitService(ServiceInfo serviceArgs, Optional<ServiceInfo> currentService) {
         ServiceDescriptor serviceDescriptor = getServiceDescriptor(serviceArgs.getName());
-        ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance(serviceArgs);
+        ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance();
+        serviceArgs.setServiceType(ServiceComputation.class.getName());
         if (currentService.isPresent()) {
-            serviceComputation.getComputationInfo().updateParentService(currentService.get());
+            serviceArgs.updateParentService(currentService.get());
         }
         ServiceInfoPersistence serviceInfoPersistence = serviceInfoPersistenceSource.get();
-        persistServiceInfo(serviceInfoPersistence, serviceComputation.getComputationInfo());
-        enqueueService(serviceInfoPersistence, serviceComputation);
-        return serviceComputation.getComputationInfo();
+        persistServiceInfo(serviceInfoPersistence, serviceArgs);
+        enqueueService(serviceInfoPersistence, new QueuedService(serviceArgs, serviceComputation));
+        return serviceComputation;
     }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
@@ -78,24 +79,24 @@ public class JacsServiceDispatcher {
         return serviceDescriptor;
     }
 
-    private void enqueueService(ServiceInfoPersistence serviceInfoPersistence, ServiceComputation serviceComputation) {
+    private void enqueueService(ServiceInfoPersistence serviceInfoPersistence, QueuedService service) {
         if (noWaitingSpaceAvailable) {
             // don't even check if anything has become available since last time
             // just drop it for now - the queue will be refilled after it drains.
-            logger.info("In memory queue reached the capacity so service {} will not be put in memory", serviceComputation.getComputationInfo());
+            logger.info("In memory queue reached the capacity so service {} will not be put in memory", service.getServiceInfo());
             return;
         }
-        boolean added = addWaitingService(serviceInfoPersistence, serviceComputation);
+        boolean added = addWaitingService(serviceInfoPersistence, service);
         noWaitingSpaceAvailable  = !added || (waitingCapacity() <= 0);
         if (noWaitingSpaceAvailable) {
-            logger.info("Not enough space in memory queue for {}", serviceComputation.getComputationInfo());
+            logger.info("Not enough space in memory queue for {}", service.getServiceInfo());
         }
     }
 
-    private boolean addWaitingService(ServiceInfoPersistence serviceInfoPersistence, ServiceComputation serviceComputation) {
-        boolean added = waitingServices.offer(serviceComputation);
+    private boolean addWaitingService(ServiceInfoPersistence serviceInfoPersistence, QueuedService service) {
+        boolean added = waitingServices.offer(service);
         if (added) {
-            ServiceInfo si = serviceComputation.getComputationInfo();
+            ServiceInfo si = service.getServiceInfo();
             if (si.getState() == ServiceState.CREATED) {
                 si.setState(ServiceState.QUEUED);
                 updateServiceInfo(serviceInfoPersistence, si);
@@ -118,9 +119,8 @@ public class JacsServiceDispatcher {
                 logger.debug("No available processing slots");
                 return; // no slot available
             }
-            ServiceInfoPersistence serviceInfoPersistence = serviceInfoPersistenceSource.get();
-            ServiceComputation serviceComputation = dequeService(serviceInfoPersistence);
-            if (serviceComputation == null) {
+            QueuedService service = dequeService(serviceInfoPersistenceSource.get());
+            if (service == null) {
                 // nothing to do
                 availableSlots.release();
                 return;
@@ -128,20 +128,21 @@ public class JacsServiceDispatcher {
             CompletableFuture
                     .supplyAsync(() -> {
                         runningServices++;
-                        return serviceComputation;
+                        ServiceInfo si = service.getServiceInfo();
+                        service.getServiceComputation().getServiceSupplier().put(si);
+                        return service;
                     }, managedExecutorService)
                     .thenApply(sc -> {
-                        ServiceInfo si = sc.getComputationInfo();
+                        ServiceInfo si = sc.getServiceInfo();
                         logger.debug("Submit {}" + si);
                         si.setState(ServiceState.SUBMITTED);
-                        updateServiceInfo(serviceInfoPersistence, si);
+                        updateServiceInfo(serviceInfoPersistenceSource.get(), si);
                         return sc;
                     })
-                    .thenComposeAsync(ServiceComputation::processData, managedExecutorService)
-                    .whenCompleteAsync((sc, exc) -> {
+                    .thenComposeAsync(sc -> sc.getServiceComputation().processData(), managedExecutorService)
+                    .whenCompleteAsync((si, exc) -> {
                         availableSlots.release();
                         runningServices--;
-                        ServiceInfo si = sc.getComputationInfo();
                         if (exc == null) {
                             logger.info("Successfully completed {}", si);
                             si.setState(ServiceState.SUCCESSFUL);
@@ -149,8 +150,8 @@ public class JacsServiceDispatcher {
                             logger.error("Error executing {}", si, exc);
                             si.setState(ServiceState.ERROR);
                         }
-                    }, managedExecutorService)
-                    .join();
+                        updateServiceInfo(serviceInfoPersistenceSource.get(), si);
+                    }, managedExecutorService);
         }
     }
 
@@ -163,12 +164,12 @@ public class JacsServiceDispatcher {
         }
     }
 
-    private ServiceComputation dequeService(ServiceInfoPersistence serviceInfoPersistence) {
-        ServiceComputation serviceComputation = waitingServices.poll();
-        if (serviceComputation == null && enqueueAvailableServices(serviceInfoPersistence, EnumSet.of(ServiceState.CREATED, ServiceState.QUEUED))) {
-            serviceComputation = waitingServices.poll();
+    private QueuedService dequeService(ServiceInfoPersistence serviceInfoPersistence) {
+        QueuedService service = waitingServices.poll();
+        if (service == null && enqueueAvailableServices(serviceInfoPersistence, EnumSet.of(ServiceState.CREATED, ServiceState.QUEUED))) {
+            service = waitingServices.poll();
         }
-        return serviceComputation;
+        return service;
     }
 
     private void persistServiceInfo(ServiceInfoPersistence serviceInfoPersistence, ServiceInfo si) {
@@ -197,8 +198,8 @@ public class JacsServiceDispatcher {
             services.getResultList().stream().forEach(si -> {
                 try {
                     ServiceDescriptor serviceDescriptor = getServiceDescriptor(si.getName());
-                    ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance(si);
-                    addWaitingService(serviceInfoPersistence, serviceComputation);
+                    ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance();
+                    addWaitingService(serviceInfoPersistence, new QueuedService(si, serviceComputation));
                 } catch (Exception e) {
                     logger.error("Internal error - no computation can be created for {}", si);
                 }

@@ -15,12 +15,12 @@ import java.util.Map;
 public class NeuronSeparatorComputation extends AbstractLocalProcessComputation {
 
     @Override
-    protected List<String> prepareCommandLine() {
-        return ImmutableList.of("echo", serviceInfo.getServiceType());
+    protected List<String> prepareCommandLine(ServiceInfo si) {
+        return ImmutableList.of("echo", si.getServiceType());
     }
 
     @Override
-    protected Map<String, String> prepareEnvironment() {
+    protected Map<String, String> prepareEnvironment(ServiceInfo si) {
         return ImmutableMap.of();
     }
 }

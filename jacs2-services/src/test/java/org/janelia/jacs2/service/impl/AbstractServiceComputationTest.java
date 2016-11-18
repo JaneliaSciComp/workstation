@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
@@ -26,7 +27,8 @@ public class AbstractServiceComputationTest {
     private static class TestComputation extends AbstractServiceComputation {
 
         @Override
-        protected void performComputation() {
+        protected ServiceInfo doWork(ServiceInfo si) {
+            return si;
         }
     }
 
@@ -45,7 +47,6 @@ public class AbstractServiceComputationTest {
     public void setUp() {
         testServiceInfo = new ServiceInfo();
         testComputation = new TestComputation();
-        testComputation.setComputationInfo(testServiceInfo);
         MockitoAnnotations.initMocks(this);
         when(serviceInfoPersistenceSource.get()).thenReturn(serviceInfoPersistence);
     }
@@ -54,7 +55,13 @@ public class AbstractServiceComputationTest {
     public void testSuccessfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<ServiceComputation> computation = testComputation.processData();
+        CompletionStage<ServiceInfo> computation = CompletableFuture.supplyAsync(() -> {
+            testComputation.getServiceSupplier().put(testServiceInfo);
+            return testServiceInfo;
+        })
+        .thenCompose(si -> {
+            return testComputation.processData();
+        });
         computation
             .thenAccept(successful)
             .exceptionally(ex -> {
@@ -72,9 +79,15 @@ public class AbstractServiceComputationTest {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
         AbstractServiceComputation spyComputation = spy(testComputation);
-        doThrow(new IllegalStateException("test")).when(spyComputation).performComputation();
+        when(spyComputation.doWork(any(ServiceInfo.class))).thenThrow(new IllegalStateException("test"));
 
-        CompletionStage<ServiceComputation> computation = spyComputation.processData();
+        CompletionStage<ServiceInfo> computation = CompletableFuture.supplyAsync(() -> {
+            testComputation.getServiceSupplier().put(testServiceInfo);
+            return testServiceInfo;
+        })
+        .thenCompose(si -> {
+            return spyComputation.processData();
+        });
         computation
                 .thenAccept(successful)
                 .exceptionally(ex -> {

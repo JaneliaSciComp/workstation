@@ -4,12 +4,12 @@ import org.janelia.jacs2.model.service.ServiceInfo;
 
 import java.util.Comparator;
 
-public class DefaultServiceInfoComparator implements Comparator<ServiceComputation> {
+public class DefaultServiceInfoComparator implements Comparator<QueuedService> {
 
     @Override
-    public int compare(ServiceComputation sc1, ServiceComputation sc2) {
-        ServiceInfo si1 = sc1.getComputationInfo();
-        ServiceInfo si2 = sc2.getComputationInfo();
+    public int compare(QueuedService sc1, QueuedService sc2) {
+        ServiceInfo si1 = sc1.getServiceInfo();
+        ServiceInfo si2 = sc2.getServiceInfo();
         if (si1.priority() < si2.priority() || si1.priority() > si2.priority()) {
             return si1.priority() - si2.priority();
         } else {

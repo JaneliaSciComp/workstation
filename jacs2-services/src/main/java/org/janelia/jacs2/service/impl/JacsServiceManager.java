@@ -27,7 +27,8 @@ public class JacsServiceManager implements ServiceManager {
 
     @Override
     public ServiceInfo startAsyncService(ServiceInfo serviceArgs, Optional<ServiceInfo> parentService) {
-        return serviceDispatcher.submitService(serviceArgs, parentService);
+        serviceDispatcher.submitService(serviceArgs, parentService);
+        return serviceArgs;
     }
 
     @Override
