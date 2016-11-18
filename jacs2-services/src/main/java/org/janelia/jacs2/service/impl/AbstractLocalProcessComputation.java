@@ -17,9 +17,9 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
     private Process localProcess;
 
     @Override
-    protected TaskInfo doWork(TaskInfo si) throws ComputationException {
-        List<String> cmdLine = prepareCommandLine(si);
-        Map<String, String> env = prepareEnvironment(si);
+    protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+        List<String> cmdLine = prepareCommandLine(taskInfo);
+        Map<String, String> env = prepareEnvironment(taskInfo);
         ProcessBuilder processBuilder = new ProcessBuilder(cmdLine);
         processBuilder.inheritIO();
         processBuilder.environment().putAll(env);
@@ -41,7 +41,7 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
         if (returnCode != 0) {
             throw new ComputationException("Process terminated with code " + returnCode);
         }
-        return si;
+        return taskInfo;
     }
 
 }

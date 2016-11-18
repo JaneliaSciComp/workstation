@@ -35,7 +35,7 @@ public class TaskInfo {
     @Column(name = "error_path")
     private String errorPath;
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "task_args")
+    @CollectionTable(name = "task_arg")
     private List<String> args;
     @Column(name = "workspace")
     private String workspace;

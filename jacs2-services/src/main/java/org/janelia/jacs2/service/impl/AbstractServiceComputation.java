@@ -42,11 +42,13 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
         });
     }
 
-    protected abstract TaskInfo doWork(TaskInfo si) throws ComputationException;
+    protected abstract TaskInfo doWork(TaskInfo ti) throws ComputationException;
 
     @Override
     public ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo) {
+        logger.debug("Create sub-task {}", subTaskInfo);
         Preconditions.checkState(taskInfo != null, "Children services can only be created once it's running");
+        subTaskInfo.setOwner(taskInfo.getOwner());
         return serviceDispatcher.submitService(subTaskInfo, Optional.of(taskInfo));
     }
 

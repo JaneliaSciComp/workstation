@@ -42,7 +42,7 @@ public class JacsTaskDispatcher {
     @Resource
     private ManagedExecutorService managedExecutorService;
     @Inject
-    private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
+    private Instance<TaskInfoPersistence> taskInfoPersistenceSource;
     @Inject
     private Instance<ServiceRegistry> serviceRegistrarSource;
     private final Queue<QueuedTask> waitingTasks;
@@ -63,7 +63,7 @@ public class JacsTaskDispatcher {
         if (currentService.isPresent()) {
             serviceArgs.updateParentTask(currentService.get());
         }
-        TaskInfoPersistence taskInfoPersistence = serviceInfoPersistenceSource.get();
+        TaskInfoPersistence taskInfoPersistence = taskInfoPersistenceSource.get();
         persistServiceInfo(taskInfoPersistence, serviceArgs);
         enqueueService(taskInfoPersistence, new QueuedTask(serviceArgs, serviceComputation));
         return serviceComputation;
@@ -119,7 +119,8 @@ public class JacsTaskDispatcher {
                 logger.debug("No available processing slots");
                 return; // no slot available
             }
-            QueuedTask service = dequeService(serviceInfoPersistenceSource.get());
+            TaskInfoPersistence taskInfoPersistence = taskInfoPersistenceSource.get();
+            QueuedTask service = dequeService(taskInfoPersistence);
             if (service == null) {
                 // nothing to do
                 availableSlots.release();
@@ -136,11 +137,11 @@ public class JacsTaskDispatcher {
                         TaskInfo si = sc.getTaskInfo();
                         logger.debug("Submit {}" + si);
                         si.setState(TaskState.SUBMITTED);
-                        updateServiceInfo(serviceInfoPersistenceSource.get(), si);
+                        updateServiceInfo(taskInfoPersistence, si);
                         return sc;
                     })
                     .thenComposeAsync(sc -> sc.getServiceComputation().processData(), managedExecutorService)
-                    .whenCompleteAsync((si, exc) -> {
+                    .whenComplete((si, exc) -> {
                         availableSlots.release();
                         runningServices--;
                         if (exc == null) {
@@ -150,8 +151,8 @@ public class JacsTaskDispatcher {
                             logger.error("Error executing {}", si, exc);
                             si.setState(TaskState.ERROR);
                         }
-                        updateServiceInfo(serviceInfoPersistenceSource.get(), si);
-                    }, managedExecutorService);
+                        updateServiceInfo(taskInfoPersistence, si);
+                    });
         }
     }
 
@@ -160,7 +161,7 @@ public class JacsTaskDispatcher {
             logger.info("Sync the waiting queue");
             // if at any point we reached the capacity of the in memory waiting queue
             // synchronize the in memory queue with the database and fill the queue with services that are still in CREATED state
-            enqueueAvailableServices(serviceInfoPersistenceSource.get(), EnumSet.of(TaskState.CREATED));
+            enqueueAvailableServices(taskInfoPersistenceSource.get(), EnumSet.of(TaskState.CREATED));
         }
     }
 

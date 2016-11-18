@@ -22,39 +22,39 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
     private org.ggf.drmaa.JobInfo jobInfo;
 
     @Override
-    protected TaskInfo doWork(TaskInfo si) throws ComputationException {
-        List<String> cmdLine = prepareCommandLine(si);
-        Map<String, String> env = prepareEnvironment(si);
+    protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+        List<String> cmdLine = prepareCommandLine(taskInfo);
+        Map<String, String> env = prepareEnvironment(taskInfo);
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
         try {
             jt = drmaaSession.createJobTemplate();
-            jt.setJobName(si.getName());
-            jt.setRemoteCommand(si.getServiceCmd());
-            jt.setWorkingDirectory(si.getWorkspace());
+            jt.setJobName(taskInfo.getName());
+            jt.setRemoteCommand(taskInfo.getServiceCmd());
+            jt.setWorkingDirectory(taskInfo.getWorkspace());
             jt.setJobEnvironment(env);
-            jt.setInputPath(":" + si.getInputPath());
-            jt.setOutputPath(":" + si.getOutputPath());
-            jt.setErrorPath(":" + si.getErrorPath());
+            jt.setInputPath(":" + taskInfo.getInputPath());
+            jt.setOutputPath(":" + taskInfo.getOutputPath());
+            jt.setErrorPath(":" + taskInfo.getErrorPath());
             String jobId = drmaaSession.runJob(jt);
-            logger.info("Submitted job {} for {}", jobId, si);
+            logger.info("Submitted job {} for {}", jobId, taskInfo);
             drmaaSession.deleteJobTemplate(jt);
             jt = null;
             jobInfo = drmaaSession.wait(jobId, Session.TIMEOUT_WAIT_FOREVER);
 
             if (jobInfo.wasAborted()) {
-                logger.error("Job {} for {} never ran", jobId, si);
+                logger.error("Job {} for {} never ran", jobId, taskInfo);
                 throw new IllegalStateException(String.format("Job %s never ran", jobId));
             } else if (jobInfo.hasExited()) {
-                logger.info("Job {} for {} completed with exist status {}", jobId, si, jobInfo.getExitStatus());
+                logger.info("Job {} for {} completed with exist status {}", jobId, taskInfo, jobInfo.getExitStatus());
                 if (jobInfo.getExitStatus() != 0) {
                     throw new IllegalStateException(String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus()));
                 }
             } else if (jobInfo.hasSignaled()) {
-                logger.warn("Job {} for {} terminated due to signal {}", jobId, si, jobInfo.getTerminatingSignal());
+                logger.warn("Job {} for {} terminated due to signal {}", jobId, taskInfo, jobInfo.getTerminatingSignal());
                 throw new IllegalStateException(String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal()));
             } else {
-                logger.warn("Job {} for {} finished with unclear conditions", jobId, si);
+                logger.warn("Job {} for {} finished with unclear conditions", jobId, taskInfo);
                 throw new IllegalStateException(String.format("Job %s completed with unclear conditions", jobId));
             }
         } catch (DrmaaException e) {
@@ -69,7 +69,7 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
                 }
             }
         }
-        return si;
+        return taskInfo;
     }
 
 }
