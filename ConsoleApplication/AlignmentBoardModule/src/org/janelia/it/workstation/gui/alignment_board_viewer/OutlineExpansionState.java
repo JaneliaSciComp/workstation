@@ -103,7 +103,7 @@ public class OutlineExpansionState {
             lastComponentId = ((AlignmentBoardContext)nodeObject).getAlignmentBoard().getId();
         }
         else if (nodeObject instanceof AlignmentBoardItem) {
-            AlignmentBoardItem abi = (AlignmentBoardItem)nodeObject;
+            AlignmentBoardItem abi = nodeObject;
             AlignmentBoardReference tgt = abi.getTarget();
             if (tgt != null) {
                 lastComponentId = tgt.getObjectRef().getTargetId();

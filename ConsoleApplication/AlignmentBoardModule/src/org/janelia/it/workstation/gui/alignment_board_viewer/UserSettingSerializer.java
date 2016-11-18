@@ -290,7 +290,7 @@ public class UserSettingSerializer implements Serializable {
                 logger.warn(
                         "Invalid number of coordinates deserialized from camera rotation.  " +
                                 "Not restoring camera position.  Full settings string {}.",
-                        settingsStrings
+                        settingsStrings+""
                 );
             }
         }

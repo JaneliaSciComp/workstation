@@ -11,6 +11,8 @@ import java.util.Set;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.Preference;
@@ -159,12 +161,20 @@ public class StateMgr {
             if (lookAndFeelClassName.contains("BlackEye")) {
                 isDarkLook = true;
                 try {
+                    
                     UIManager.setLookAndFeel(new SyntheticaBlackEyeLookAndFeel() {
                         @Override
                         protected void loadCustomXML() throws ParseException {
                             loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
                         }
                     });
+                    
+                    // Override HTML link color to baby blue, which is the same as the Synthetica black eye highlight color. 
+                    // Don't ask me why the following works even after the HTMLEditorKit instance goes out of scope. Some stones are best left unturned.
+                    HTMLEditorKit kit = new HTMLEditorKit();
+                    StyleSheet styleSheet = kit.getStyleSheet();
+                    styleSheet.addRule("a {color:#BADCFB;}");
+                    
                 }
                 catch (IllegalComponentStateException ex) {
                     ConsoleApp.handleException(ex);

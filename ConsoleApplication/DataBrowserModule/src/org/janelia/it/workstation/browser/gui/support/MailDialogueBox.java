@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.gui.support;
 
+import java.io.File;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
@@ -10,7 +12,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.janelia.it.jacs.shared.utils.MailHelper;
+import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +27,8 @@ import org.slf4j.LoggerFactory;
 public class MailDialogueBox {
 
     private Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
+
+    private static final String LOG_FILE_NAME = "messages.log";
     
     private final String toEmail = ConsoleProperties.getString("console.HelpEmail");
     private String fromEmail;
@@ -48,7 +54,7 @@ public class MailDialogueBox {
         String desc = null;
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(new JLabel("Please give a quick description of the problem and any other useful information."));
+        panel.add(new JLabel("If possible, please describe what you were doing when the error occured."));
         panel.add(Box.createVerticalStrut(15));
         JTextArea textArea = new JTextArea(4, 20);
         panel.add(new JScrollPane(textArea));
@@ -60,17 +66,20 @@ public class MailDialogueBox {
         }
         desc+=messageSuffix;
         MailHelper helper = new MailHelper();
-        log.info("Sending email from "+fromEmail+" to "+toEmail);
-        helper.sendEmail(fromEmail, toEmail, subject, desc);
+        
+        File logDir = new File(Places.getUserDirectory(), "var/log");
+        File logfile = new File(logDir, LOG_FILE_NAME);
+        
+        if (!logfile.canRead()) {
+            log.info("Can't read log file at "+logfile.getAbsolutePath());
+            logfile = null;
+        }
+        
+        String filename = AccessManager.getUsername()+"_"+LOG_FILE_NAME;
+        
+        log.info("Sending email from {} to {} with attachment {}",fromEmail,toEmail, logfile);
+        helper.sendEmail(fromEmail, toEmail, subject, desc, logfile, filename);
     }
-
-//    private JOptionPane getOptionPane() {
-//        JFrame mainFrame = new JFrame();
-//        if (parentFrame != null) mainFrame.setIconImage(parentFrame.getIconImage());
-//        JOptionPane optionPane = new JOptionPane();
-//        mainFrame.getContentPane().add(optionPane);
-//        return optionPane;
-//    }
 
     /**
      * This method gives the caller a way to place text at the end of the message.

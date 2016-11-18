@@ -106,7 +106,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         SampleResultViewerManager.getInstance().activate(this);
         // Make our ancestor editor the current find context
         if (findContext!=null) {
-            FindContextManager.getInstance().activateContext((FindContext)findContext);
+            FindContextManager.getInstance().activateContext(findContext);
         }
         if (editor!=null) {
             editor.activate();
@@ -117,7 +117,7 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
     protected void componentDeactivated() {
         this.active = false;
         if (findContext!=null) {
-            FindContextManager.getInstance().deactivateContext((FindContext)findContext);
+            FindContextManager.getInstance().deactivateContext(findContext);
         }
         if (editor!=null) {
             editor.deactivate();

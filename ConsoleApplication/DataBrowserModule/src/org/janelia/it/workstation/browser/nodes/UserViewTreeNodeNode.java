@@ -46,7 +46,7 @@ public class UserViewTreeNodeNode extends DomainObjectNode<TreeNode> {
     }
     
     public TreeNode getTreeNode() {
-        return (TreeNode)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

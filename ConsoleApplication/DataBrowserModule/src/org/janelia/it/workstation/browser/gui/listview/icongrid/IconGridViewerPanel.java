@@ -269,7 +269,7 @@ public abstract class IconGridViewerPanel<T,S> extends JPanel {
             }
             AnnotatedImageButton<T,S> button = getButtonAncestor(e.getComponent());
             if (button!=null) {
-                objectDoubleClick((T)button.getUserObject());
+                objectDoubleClick(button.getUserObject());
                 e.consume();
             }
         }

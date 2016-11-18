@@ -114,7 +114,7 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
 
     private void trackProgressBar(JProgressBar c) {
         synchronized (SharedProgressBarUI.class) {
-            progressBars.add((JProgressBar) c);
+            progressBars.add(c);
         }
     }
 
