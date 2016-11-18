@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.browser.api.lifecycle;
 
+import java.io.IOException;
+import java.util.logging.LogManager;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.api.StateMgr;
@@ -32,7 +35,30 @@ public class Startup implements Runnable {
     @Override
     public void run() {
 
-        // Root logger
+        // Configure default logging levels
+        /*
+         * level jul_name    slf4j_name
+         * 3000  USER_ERROR 
+         * 2000  USER_WARN 
+         * 1000  SEVERE      "error"
+         *  900  WARNING     "warn"
+         *  800  INFO        "info"
+         *  700  CONFIG  
+         *  500  FINE        "debug"
+         *  400  FINER 
+         *  300  FINEST      "trace"
+         *       ALL
+         */
+        System.setProperty("org.janelia.it.workstation.browser.level", "INFO");
+        try {
+            // Re-read the configuration to parse the system properties we just defined
+            LogManager.getLogManager().readConfiguration();
+        }
+        catch (IOException e) {
+            log.error("Problem encountered configuring logging levels", e);
+        }
+        
+        // Get root logger
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
         
         // Tie NetBeans's error handling popup to the workstation's error handler
