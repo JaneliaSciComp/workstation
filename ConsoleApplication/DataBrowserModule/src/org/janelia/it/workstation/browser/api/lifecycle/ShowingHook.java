@@ -9,6 +9,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.slf4j.LoggerFactory;
  * when the application is ready to show.
  * 
  * @author fosterl
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @OnShowing
 public class ShowingHook implements Runnable {
@@ -31,6 +33,9 @@ public class ShowingHook implements Runnable {
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle(title);
         
+        // Inject special exception handling for uncaught exceptions on the EDT so that they are shown to the user 
+        Toolkit.getDefaultToolkit().getSystemEventQueue().push(new EDTExceptionInterceptor());
+                
         // Log events. 
         // KR: After consulting with Les, I'm disabling this for now as it creates a lot of information we don't really have a use for. 
 //        final InterceptingEventQueue interceptingEventQueue = new InterceptingEventQueue();
