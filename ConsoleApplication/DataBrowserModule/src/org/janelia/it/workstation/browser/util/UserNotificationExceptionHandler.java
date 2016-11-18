@@ -10,6 +10,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
+import org.janelia.it.workstation.browser.logging.CustomLoggingLevel;
 
 
 public class UserNotificationExceptionHandler implements ExceptionHandler {
@@ -21,7 +22,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     @Override
     public void handleException(Throwable throwable) {
         // Delegate to java.util.logging, which is then handled by the NetBeans framework. 
-        logger.log(Level.SEVERE, null, throwable);
+        logger.log(CustomLoggingLevel.USER_ERROR, null, throwable);
     }
 
     public static void sendEmail(Throwable exception) {
