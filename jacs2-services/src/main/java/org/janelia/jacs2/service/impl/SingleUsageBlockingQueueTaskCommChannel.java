@@ -3,7 +3,8 @@ package org.janelia.jacs2.service.impl;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class BlockingQueueTaskSupplier<E> implements TaskSupplier<E> {
+public class SingleUsageBlockingQueueTaskCommChannel<E> implements TaskCommChannel<E> {
+    private E lastRetrievedElement;
     private BlockingQueue<E> singleElementQueue = new LinkedBlockingDeque<>(1);
 
     @Override
@@ -19,7 +20,11 @@ public class BlockingQueueTaskSupplier<E> implements TaskSupplier<E> {
     @Override
     public E take() {
         try {
-            return singleElementQueue.take();
+            if (lastRetrievedElement != null) {
+                return lastRetrievedElement;
+            }
+            lastRetrievedElement = singleElementQueue.take();
+            return lastRetrievedElement;
         } catch (InterruptedException exc) {
             throw new IllegalStateException(exc);
         }

@@ -7,22 +7,27 @@ import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.service.impl.AbstractLocalProcessComputation;
 import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.ServiceComputation;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
 @Named("neuronSeparatorService")
 public class NeuronSeparatorComputation extends AbstractLocalProcessComputation {
+
+    @Named("SLF4J")
+    @Inject
+    private Logger logger;
 
     @Override
     protected List<String> prepareCommandLine(TaskInfo si) {
         ImmutableList.Builder cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder.add(si.getServiceCmd());
+        cmdLineBuilder.add(si.getId().toString());
+        cmdLineBuilder.add(si.getName());
         if (CollectionUtils.isNotEmpty(si.getArgs())) {
             cmdLineBuilder.addAll(si.getArgs());
         }
@@ -45,7 +50,11 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         subTask.setName("sage");
 
         ServiceComputation subTaskComputation = submitSubTaskAsync(subTask);
-        CompletableFuture<TaskInfo> taskProcessing = subTaskComputation.processData()
+        CompletableFuture<TaskInfo> taskProcessing = CompletableFuture.supplyAsync(() -> {
+                    TaskInfo subTaskInfo = subTaskComputation.getResultsChannel().take();
+                    logger.debug("Completed sub-task {}", subTaskInfo);
+                    return subTask;
+                })
                 .thenApply(ti -> {
                     return super.doWork(taskInfo);
                 })

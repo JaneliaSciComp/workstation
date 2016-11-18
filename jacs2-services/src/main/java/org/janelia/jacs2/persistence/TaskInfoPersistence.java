@@ -16,7 +16,7 @@ public class TaskInfoPersistence extends AbstractDataPersistence<TaskInfoDao, Ta
         super(dao);
     }
 
-    public PageResult<TaskInfo> findServicesByState(Set<TaskState> requestStates, PageRequest pageRequest) {
+    public PageResult<TaskInfo> findTasksByState(Set<TaskState> requestStates, PageRequest pageRequest) {
         return dao.findTasksByState(requestStates, pageRequest);
     }
 

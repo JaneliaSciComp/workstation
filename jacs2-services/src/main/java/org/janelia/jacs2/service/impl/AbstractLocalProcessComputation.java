@@ -18,26 +18,27 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
 
     @Override
     protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+        logger.debug("Begin local process invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);
         ProcessBuilder processBuilder = new ProcessBuilder(cmdLine);
         processBuilder.inheritIO();
         processBuilder.environment().putAll(env);
-        logger.info("Start {}; env={}", cmdLine, processBuilder.environment());
+        logger.info("Start {} with {}; env={}", taskInfo, cmdLine, processBuilder.environment());
         try {
             localProcess = processBuilder.start();
         } catch (IOException e) {
-            logger.error("Error starting the computation process for {}", cmdLine);
+            logger.error("Error starting the computation process for {} with {}", taskInfo, cmdLine);
             throw new ComputationException(e);
         }
         int returnCode = 1;
         try {
             returnCode = localProcess.waitFor();
         } catch (InterruptedException e) {
-            logger.error("Error waiting for the computation process for {}", cmdLine);
+            logger.error("Error waiting for the process {} with {}", taskInfo, cmdLine);
             throw new ComputationException(e);
         }
-        logger.info("Process {} terminated with code {}", localProcess, returnCode);
+        logger.info("Process {} for {} terminated with code {}", localProcess, taskInfo, returnCode);
         if (returnCode != 0) {
             throw new ComputationException("Process terminated with code " + returnCode);
         }

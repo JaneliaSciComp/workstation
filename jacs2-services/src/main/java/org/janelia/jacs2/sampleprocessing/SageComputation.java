@@ -14,11 +14,13 @@ import java.util.Map;
 public class SageComputation extends AbstractLocalProcessComputation {
 
     @Override
-    protected List<String> prepareCommandLine(TaskInfo si) {
+    protected List<String> prepareCommandLine(TaskInfo taskInfo) {
         ImmutableList.Builder cmdLineBuilder = new ImmutableList.Builder<>();
-        cmdLineBuilder.add(si.getServiceCmd());
-        if (CollectionUtils.isNotEmpty(si.getArgs())) {
-            cmdLineBuilder.addAll(si.getArgs());
+        cmdLineBuilder.add(taskInfo.getServiceCmd());
+        cmdLineBuilder.add(taskInfo.getId().toString());
+        cmdLineBuilder.add(taskInfo.getName());
+        if (CollectionUtils.isNotEmpty(taskInfo.getArgs())) {
+            cmdLineBuilder.addAll(taskInfo.getArgs());
         }
         return cmdLineBuilder.build();
     }

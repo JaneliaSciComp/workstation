@@ -56,7 +56,7 @@ public class AbstractServiceComputationTest {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
         CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testComputation.getTaskSupplier().put(testTaskInfo);
+            testComputation.getReadyChannel().put(testTaskInfo);
             return testTaskInfo;
         })
         .thenCompose(si -> {
@@ -82,7 +82,7 @@ public class AbstractServiceComputationTest {
         when(spyComputation.doWork(any(TaskInfo.class))).thenThrow(new IllegalStateException("test"));
 
         CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testComputation.getTaskSupplier().put(testTaskInfo);
+            testComputation.getReadyChannel().put(testTaskInfo);
             return testTaskInfo;
         })
         .thenCompose(si -> {

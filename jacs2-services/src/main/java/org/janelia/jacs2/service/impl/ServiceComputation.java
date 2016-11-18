@@ -24,5 +24,10 @@ public interface ServiceComputation {
     /**
      * @return this is the communication component of the current service through which data is entered in the computation.
      */
-    TaskSupplier getTaskSupplier();
+    TaskCommChannel<TaskInfo> getReadyChannel();
+
+    /**
+     * @return the channel used for communicating that results are available.
+     */
+    TaskCommChannel<TaskInfo> getResultsChannel();
 }

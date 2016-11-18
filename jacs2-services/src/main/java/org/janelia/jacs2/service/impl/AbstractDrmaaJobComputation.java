@@ -23,6 +23,7 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
 
     @Override
     protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+        logger.debug("Begin DRMAA job invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);
         Session drmaaSession = drmaaSessionFactory.getSession();
@@ -58,14 +59,14 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
                 throw new IllegalStateException(String.format("Job %s completed with unclear conditions", jobId));
             }
         } catch (DrmaaException e) {
-            logger.error("Error running a DRMAA job for " + cmdLine, e);
+            logger.error("Error running a DRMAA job for {} with {}", taskInfo, cmdLine, e);
             throw new ComputationException(e);
         } finally {
             if (jt != null) {
                 try {
                     drmaaSession.deleteJobTemplate(jt);
                 } catch (DrmaaException e) {
-                    logger.warn("Error deleting the DRMAA job template for " + cmdLine, e);
+                    logger.warn("Error deleting the DRMAA job template for {} with {}", taskInfo, cmdLine, e);
                 }
             }
         }

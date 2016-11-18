@@ -21,13 +21,17 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     private JacsTaskDispatcher serviceDispatcher;
     @Inject
     private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
-    private final TaskSupplier<TaskInfo> taskSupplier = new BlockingQueueTaskSupplier<>();
-    private TaskInfo taskInfo;
+    private final TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
+    private final TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
 
     @Override
     public CompletionStage<TaskInfo> processData() {
         return waitForData()
-                .thenApply(this::doWork);
+                .thenApply(this::doWork)
+                .thenApply(taskInfo -> {
+                    taskResultsChannel.put(taskInfo);
+                    return taskInfo;
+                });
     }
 
     private CompletionStage<TaskInfo> waitForData() {
@@ -35,10 +39,7 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
             // bring the service info into the computation by getting it from the supplier channel;
             // the channel will receive the data when the corresponding job is ready to be started
             // from the dispatcher
-            if (this.taskInfo == null) {
-                this.taskInfo = taskSupplier.take();
-            }
-            return this.taskInfo;
+            return taskCommChannel.take();
         });
     }
 
@@ -47,14 +48,19 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     @Override
     public ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo) {
         logger.debug("Create sub-task {}", subTaskInfo);
-        Preconditions.checkState(taskInfo != null, "Children services can only be created once it's running");
-        subTaskInfo.setOwner(taskInfo.getOwner());
-        return serviceDispatcher.submitService(subTaskInfo, Optional.of(taskInfo));
+        TaskInfo currentTaskInfo = taskCommChannel.take();
+        Preconditions.checkState(currentTaskInfo != null, "Sub tasks can only be created if the parent task is already running");
+        subTaskInfo.setOwner(currentTaskInfo.getOwner());
+        return serviceDispatcher.submitService(subTaskInfo, Optional.of(currentTaskInfo));
     }
 
     @Override
-    public TaskSupplier<TaskInfo> getTaskSupplier() {
-        return taskSupplier;
+    public TaskCommChannel<TaskInfo> getReadyChannel() {
+        return taskCommChannel;
     }
 
+    @Override
+    public TaskCommChannel<TaskInfo> getResultsChannel() {
+        return taskResultsChannel;
+    }
 }
