@@ -259,7 +259,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     public class TypeComboBoxEditor extends DefaultCellEditor {
         public TypeComboBoxEditor(String[] items) {
-            super(new JComboBox<String>(items));
+            super(new JComboBox<>(items));
         }
     }
 

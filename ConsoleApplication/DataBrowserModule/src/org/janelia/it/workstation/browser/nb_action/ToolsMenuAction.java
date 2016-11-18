@@ -46,7 +46,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        // TODO implement action body
+        // Do nothing. Action is performed by menu presenter.
     }
 
     @Override
@@ -67,20 +67,19 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
 
     }
 
-    private List<JMenuItem> createMenuItems(Set keySet) {
+    private List<JMenuItem> createMenuItems(Set<String> keySet) {
         List<JMenuItem> newItems = new ArrayList<>();
-        for (final Object o : keySet) {
-            JMenuItem tmpMenuItem = null;
-            ToolInfo tmpTool = ToolMgr.getToolMgr().getTool((String) o);
+        for (final String o : keySet) {
+            ToolInfo tmpTool = ToolMgr.getToolMgr().getTool(o);
             try {
-                tmpMenuItem = new JMenuItem(tmpTool.getName(),
+                JMenuItem tmpMenuItem = new JMenuItem(tmpTool.getName(),
                         Utils.getClasspathImage(tmpTool.getIconPath()));
                 newItems.add(tmpMenuItem);
                 tmpMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         try {
-                            ToolMgr.runTool((String) o);
+                            ToolMgr.runTool(o);
                         }
                         catch (Exception e1) {
                             log.error("Could launch tool: "+o,e1);
