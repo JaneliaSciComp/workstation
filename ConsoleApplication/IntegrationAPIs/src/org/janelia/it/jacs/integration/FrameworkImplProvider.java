@@ -65,13 +65,31 @@ public class FrameworkImplProvider {
         }
     }
 
-    public static void handleException(Throwable th){
+    public static void handleException(Throwable th) {
+        handleException(null, th);
+    }
+
+    public static void handleException(String message, Throwable th) {
         ErrorHandler eh = getErrorHandler();
         if (eh == null) {
-            th.printStackTrace();
+            th.printStackTrace(); // If all else fails. 
         }
         else {
-            eh.handleException(th);
+            eh.handleException(message, th);
+        }
+    }
+
+    public static void handleExceptionQuietly(Throwable th) {
+        handleExceptionQuietly(null, th);
+    }
+
+    public static void handleExceptionQuietly(String message, Throwable th) {
+        ErrorHandler eh = getErrorHandler();
+        if (eh == null) {
+            th.printStackTrace(); // If all else fails.
+        }
+        else {
+            eh.handleExceptionQuietly(message, th);
         }
     }
     

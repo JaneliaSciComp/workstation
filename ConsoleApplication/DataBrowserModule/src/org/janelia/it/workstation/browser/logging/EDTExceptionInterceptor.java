@@ -4,6 +4,11 @@ import java.awt.AWTEvent;
 import java.awt.EventQueue;
 import java.util.logging.Logger;
 
+/**
+ * Handle uncaught exceptions in the EDT thread by presenting them to the user.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class EDTExceptionInterceptor extends EventQueue {
 
     private static final Logger logger = Logger.getLogger(EDTExceptionInterceptor.class.getName());
@@ -17,6 +22,4 @@ public class EDTExceptionInterceptor extends EventQueue {
             logger.log(CustomLoggingLevel.USER_ERROR, null, throwable);
         }
     }
-    
-    
 }
