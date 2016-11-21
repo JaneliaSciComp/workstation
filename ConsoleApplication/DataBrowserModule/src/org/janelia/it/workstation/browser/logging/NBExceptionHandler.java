@@ -96,20 +96,19 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
 
         String st = getStacktrace(throwable);
-        String firstLine = getFirstLine(st);
-
-        // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
-        // second, so we need to acquire a cooldown's worth of locks.
-        if (!rateLimiter.tryAcquire(COOLDOWN_TIME_SEC, 0, TimeUnit.SECONDS)) {
-            log.warn("Exception reports exceeded email rate limit. Omitting auto-send of: {}", firstLine);
-            return;
-        }
-
         String sth = hf.newHasher().putString(st, Charsets.UTF_8).hash().toString();
         log.trace("Got exception hash: {}",sth);
+        String firstLine = getFirstLine(st);
         
         if (!exceptionCounts.contains(sth)) {
-            // First appearance of this stack trace, let's send it to JIRA.
+            // First appearance of this stack trace, let's try to send it to JIRA.
+
+            // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
+            // second, so we need to acquire a cooldown's worth of locks.
+            if (!rateLimiter.tryAcquire(COOLDOWN_TIME_SEC, 0, TimeUnit.SECONDS)) {
+                log.warn("Exception reports exceeded email rate limit. Omitting auto-send of: {}", firstLine);
+                return;
+            }
             sendEmail(st, false);
         }
         else {
