@@ -118,6 +118,7 @@ public class DomainMgr {
     public void runAsUserChanged(RunAsEvent event) {
         log.info("User changed, resetting model");
         model.invalidateAll();
+        preferenceMap = null;
     }
     
     /**
