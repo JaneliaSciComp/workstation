@@ -200,6 +200,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
 
         try {
             final DomainObject objectToLoad = DomainViewerManager.getObjectToLoad(domainObject);
+            if (objectToLoad==null) return null;
             JMenuItem openItem = new JMenuItem("  Open " + objectToLoad.getType() + " In New Viewer");
             openItem.addActionListener(new ActionListener() {
                 @Override
