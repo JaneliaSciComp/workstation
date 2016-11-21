@@ -2,7 +2,9 @@ package org.janelia.it.workstation.browser.logging;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Iterator;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
@@ -14,9 +16,18 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
+import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Charsets;
+import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * Override NetBeans' exception handling to tie into the workstation's error handler.
@@ -38,17 +49,94 @@ import org.slf4j.LoggerFactory;
 public class NBExceptionHandler extends Handler implements Callable<JButton>, ActionListener {
 
     private static final Logger log = LoggerFactory.getLogger(NBExceptionHandler.class);
+
+    private static final int COOLDOWN_TIME_SEC = 300; // Allow one auto exception report every 5 minutes
+    private static final int MAX_STACKTRACE_CACHE_SIZE = 1000; // Keep track of a max number of unique stacktraces
+    private static final boolean AUTO_SEND_EXCEPTIONS = ConsoleProperties.getBoolean("console.AutoSendExceptions", false);
+    private static final String APP_VERSION = ConsoleApp.getConsoleApp().getApplicationVersion();
+
+    private final HashFunction hf = Hashing.md5();
     
-    public static final String SEND_EMAIL_BUTTON_LABEL = "Report This Issue (Recommended)";        
+    private boolean notified = false;
     
     private Throwable throwable;
     private JButton newFunctionButton;
 
+    private final Multiset<String> exceptionCounts = ConcurrentHashMultiset.create();
+    private final RateLimiter rateLimiter = RateLimiter.create(1);
+    
     @Override
     public void publish(LogRecord record) {
         if (record.getThrown()!=null) {
             this.throwable = record.getThrown();
+            try {
+                autoSendNovelExceptions();
+            }
+            catch (Throwable t) {
+                log.error("Error attempting to auto-send exceptions", t);
+            }
         }
+    }
+    
+    /**
+     * If an exception has not appeared before during this session, go ahead and create a JIRA ticket for it. 
+     */
+    private synchronized void autoSendNovelExceptions() {
+
+        if ("DEV".equals(APP_VERSION)) {
+            return;
+        }
+        
+        if (!AUTO_SEND_EXCEPTIONS) {
+            if (!notified) {
+                notified = true;
+                log.warn("Auto-sending exceptions is not configured. To configure auto-send, set console.AutoSendExceptions=true in console.properties.");
+            }
+            return;
+        }
+
+        String st = getStacktrace(throwable);
+        String firstLine = getFirstLine(st);
+
+        // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
+        // second, so we need to acquire a cooldown's worth of locks.
+        if (!rateLimiter.tryAcquire(COOLDOWN_TIME_SEC, 0, TimeUnit.SECONDS)) {
+            log.warn("Exception reports exceeded email rate limit. Omitting auto-send of: {}", firstLine);
+            return;
+        }
+
+        String sth = hf.newHasher().putString(st, Charsets.UTF_8).hash().toString();
+        log.trace("Got exception hash: {}",sth);
+        
+        if (!exceptionCounts.contains(sth)) {
+            // First appearance of this stack trace, let's send it to JIRA.
+            sendEmail(st, false);
+        }
+        else {
+            int count = exceptionCounts.count(sth);
+            if (count % 10 == 0) {
+                log.warn("Exception count reached {} for: {}", count, firstLine);
+                // TODO: create another JIRA ticket?
+            }
+        }
+
+        exceptionCounts.add(sth); // Increment counter
+
+        // Make sure we're not devoting too much memory to stack traces
+        if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
+            log.info("Purging single exceptions (cacheSize={})", exceptionCounts.size());
+            // Try purging all singleton exceptions.
+            for (Iterator<String> i = exceptionCounts.iterator(); i.hasNext();) {
+                if (exceptionCounts.count(i.next())<2) {
+                    i.remove();
+                }
+            }
+            // Still too big? Just clear it out.
+            if (exceptionCounts.size()>=MAX_STACKTRACE_CACHE_SIZE) {
+                log.info("Clearing exception cache (cacheSize={})", exceptionCounts.size());
+                exceptionCounts.clear();
+            }
+        }   
     }
 
     @Override
@@ -64,7 +152,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     @Override
     public JButton call() throws Exception {
         if (newFunctionButton==null) {
-            newFunctionButton = new JButton(SEND_EMAIL_BUTTON_LABEL);
+            newFunctionButton = new JButton("Report This Issue");
             newFunctionButton.addActionListener(this);
         }
         return newFunctionButton;
@@ -73,40 +161,33 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     @Override
     public void actionPerformed(ActionEvent e) {
         SwingUtilities.windowForComponent(newFunctionButton).setVisible(false);
-        // This might not be the exception the user is currently looking at! 
+        // Due to the way the NotifyExcPanel works, this might not be the exception the user is currently looking at! 
         // Maybe it's better than nothing if it's right 80% of the time? 
-        sendEmail(throwable);
+        sendEmail(getStacktrace(throwable), true);
     }
     
-    private void sendEmail(Throwable exception) {
+    private void sendEmail(String stacktrace, boolean askForInput) {
+
         try {
+            String firstLine = getFirstLine(stacktrace);
+            log.info("Reporting exception: "+firstLine);
+            
+            String titleSuffix = " from "+AccessManager.getUsername()+" -- "+firstLine;
+
             MailDialogueBox mailDialogueBox = new MailDialogueBox(ConsoleApp.getMainFrame(),
                     (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL),
-                    "Workstation Exception Report",
-                    "Problem Description: ");
+                    (askForInput?"User-reported Exception":"Auto-reported Exception")+titleSuffix,
+                    askForInput?"Problem Description: ":"");
             try {
                 StringBuilder sb = new StringBuilder();
+                sb.append("\nSubject Key: ").append(AccessManager.getSubjectKey());
                 sb.append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
                 sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
                 sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
                 sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
-                if (exception!=null) {
-                    sb.append("\n\nException:\n");
-                    sb.append(exception.getClass().getName()).append(": "+exception.getMessage()).append("\n");
-                    int stackLimit = 100;
-                    int i = 0;
-                    for (StackTraceElement element : exception.getStackTrace()) {
-                        if (element==null) continue;
-                        String s = element.toString();
-                        if (!StringUtils.isEmpty(s)) {
-                            sb.append("at ");
-                            sb.append(element.toString());
-                            sb.append("\n");
-                            if (i++>stackLimit) {
-                                break;
-                            }
-                        }
-                    }
+                if (stacktrace!=null) {
+                    sb.append("\n\nStack Trace:\n");
+                    sb.append(stacktrace);
                 }
                 
                 mailDialogueBox.addMessageSuffix(sb.toString());
@@ -115,14 +196,45 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
                 // Do nothing if the notification attempt fails.
                 log.warn("Error building exception suffix" , e);
             }
-            mailDialogueBox.showPopupThenSendEmail();
+            
+            if (askForInput) {
+                mailDialogueBox.showPopupThenSendEmail();
+            }
+            else {
+                mailDialogueBox.sendEmail();
+            }
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);
             JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
                     "Your message was NOT able to be sent to our support staff.  "
-                    + "Please contact your support representative.");
+                    + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
         }
     }
     
+    private String getStacktrace(Throwable t) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(t.getClass().getName()).append(": "+t.getMessage()).append("\n");
+        int stackLimit = 100;
+        int i = 0;
+        for (StackTraceElement element : t.getStackTrace()) {
+            if (element==null) continue;
+            String s = element.toString();
+            if (!StringUtils.isEmpty(s)) {
+                sb.append("at ");
+                sb.append(element.toString());
+                sb.append("\n");
+                if (i++>stackLimit) {
+                    break;
+                }
+            }
+        }
+        return sb.toString();
+    }
+    
+    private String getFirstLine(String st) {
+        int n = st.indexOf('\n');
+        if (n<1) return st; 
+        return st.substring(0, n);
+    }
 }

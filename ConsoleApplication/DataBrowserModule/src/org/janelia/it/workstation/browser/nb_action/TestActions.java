@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
@@ -36,24 +37,41 @@ public final class TestActions extends AbstractAction implements Presenter.Menu 
     public TestActions() {
         subMenu = new JMenu("Test");
 
-        JMenuItem test1MenuItem = new JMenuItem("Unhandled EDT Exception");
-        test1MenuItem.addActionListener(new ActionListener() {
+        JMenuItem edtItem = new JMenuItem("Unhandled EDT Exception");
+        edtItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 throw new IllegalStateException("Test Unhandled EDT Exception");
             }
         });
-        subMenu.add(test1MenuItem);
+        subMenu.add(edtItem);
+
+        JMenuItem edtBarrageItem = new JMenuItem("Unhandled EDT Exception (10)");
+        edtBarrageItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for(int i=0; i<11; i++) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            throw new IllegalStateException("Test Unhandled EDT Exception");
+                            
+                        }
+                    });
+                }
+            }
+        });
+        subMenu.add(edtBarrageItem);
         
-        JMenuItem test2MenuItem = new JMenuItem("Unexpected Exception");
-        test2MenuItem.addActionListener(new ActionListener() {
+        JMenuItem unexpectedItem = new JMenuItem("Unexpected Exception");
+        unexpectedItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Exception ex = new Exception("Test Unexpected Exception");
                 FrameworkImplProvider.handleException("Testing Unexpected Exception", ex);
             }
         });
-        subMenu.add(test2MenuItem);
+        subMenu.add(unexpectedItem);
         
     }
     

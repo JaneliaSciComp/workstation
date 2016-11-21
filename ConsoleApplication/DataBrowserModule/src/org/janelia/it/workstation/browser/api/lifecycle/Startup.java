@@ -66,8 +66,7 @@ public class Startup implements Runnable {
 
         // Override the default formatters with the custom formatter
         LogFormatter formatter = new LogFormatter(); // Custom formatter
-        java.util.logging.Handler[] handlers = logger.getHandlers();
-        for (java.util.logging.Handler handler : handlers) {
+        for (java.util.logging.Handler handler : logger.getHandlers()) {
             handler.setFormatter(formatter);
         }
         
