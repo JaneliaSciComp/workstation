@@ -5,6 +5,8 @@ import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.persistence.TaskInfoPersistence;
 import org.slf4j.Logger;
 
+import javax.annotation.Resource;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,17 +23,20 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     private JacsTaskDispatcher serviceDispatcher;
     @Inject
     private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
+    @Resource
+    private ManagedExecutorService managedExecutorService;
+
     private final TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
     private final TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
 
     @Override
     public CompletionStage<TaskInfo> processData() {
         return waitForData()
-                .thenApply(this::doWork)
-                .thenApply(taskInfo -> {
+                .thenApplyAsync(this::doWork, managedExecutorService)
+                .thenApplyAsync(taskInfo -> {
                     taskResultsChannel.put(taskInfo);
                     return taskInfo;
-                });
+                }, managedExecutorService);
     }
 
     private CompletionStage<TaskInfo> waitForData() {
@@ -40,7 +45,7 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
             // the channel will receive the data when the corresponding job is ready to be started
             // from the dispatcher
             return taskCommChannel.take();
-        });
+        }, managedExecutorService);
     }
 
     protected abstract TaskInfo doWork(TaskInfo ti) throws ComputationException;

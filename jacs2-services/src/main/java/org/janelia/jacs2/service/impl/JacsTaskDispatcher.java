@@ -21,12 +21,10 @@ import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
@@ -35,9 +33,8 @@ import java.util.concurrent.Semaphore;
 @Singleton
 public class JacsTaskDispatcher {
 
-    private static final int BATCH_SIZE = 100;
-    private static final int MAX_WAITING_SLOTS = 100;
-    private static final int MAX_RUNNING_SLOTS = 200;
+    private static final int MAX_WAITING_SLOTS = 20;
+    private static final int MAX_RUNNING_SLOTS = 100;
 
     @Named("SLF4J")
     @Inject
@@ -109,7 +106,7 @@ public class JacsTaskDispatcher {
     }
 
     void dispatchServices() {
-        for (int i = 0; i < BATCH_SIZE; i++) {
+        for (int i = 0; i < MAX_WAITING_SLOTS; i++) {
             if (!availableSlots.tryAcquire()) {
                 logger.debug("No available processing slots");
                 return; // no slot available
@@ -127,15 +124,15 @@ public class JacsTaskDispatcher {
                         queuedTask.getServiceComputation().getReadyChannel().put(taskInfo);
                         return queuedTask;
                     }, managedExecutorService)
-                    .thenApply(sc -> {
+                    .thenApplyAsync(sc -> {
                         TaskInfo taskInfo = sc.getTaskInfo();
                         logger.debug("Submit {}", taskInfo);
                         taskInfo.setState(TaskState.SUBMITTED);
                         updateServiceInfo(taskInfoPersistence, taskInfo);
                         return sc;
-                    })
+                    }, managedExecutorService)
                     .thenComposeAsync(sc -> sc.getServiceComputation().processData(), managedExecutorService)
-                    .whenComplete((taskInfo, exc) -> {
+                    .whenCompleteAsync((taskInfo, exc) -> {
                         availableSlots.release();
                         if (exc == null) {
                             logger.info("Successfully completed {}", taskInfo);
@@ -146,7 +143,7 @@ public class JacsTaskDispatcher {
                         }
                         updateServiceInfo(taskInfoPersistence, taskInfo);
                         submittedTaskSet.remove(taskInfo.getId());
-                    });
+                    }, managedExecutorService);
         }
     }
 
@@ -205,6 +202,16 @@ public class JacsTaskDispatcher {
             queuePermit.release();
         }
     }
+
+    private void clearWaitingQueue() {
+        try {
+            queuePermit.acquireUninterruptibly();
+            waitingTasks.clear();
+        } finally {
+            queuePermit.release();
+        }
+    }
+
     private void persistServiceInfo(TaskInfoPersistence taskInfoPersistence, TaskInfo taskInfo) {
         taskInfo.setState(TaskState.CREATED);
         taskInfoPersistence.save(taskInfo);
@@ -217,6 +224,7 @@ public class JacsTaskDispatcher {
     }
 
     private boolean enqueueAvailableServices(TaskInfoPersistence taskInfoPersistence, Set<TaskState> taskStates) {
+        clearWaitingQueue();
         int availableSpaces = waitingCapacity();
         if (availableSpaces <= 0) {
             return false;

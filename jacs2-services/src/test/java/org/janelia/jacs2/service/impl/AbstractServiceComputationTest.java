@@ -7,11 +7,24 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.slf4j.Logger;
 
+import javax.annotation.Resource;
+import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.enterprise.inject.Instance;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +51,8 @@ public class AbstractServiceComputationTest {
     private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
     @Mock
     private TaskInfoPersistence taskInfoPersistence;
+    @Spy
+    private ManagedExecutorService managedExecutorService;
 
     @InjectMocks
     private TestComputation testComputation;
@@ -47,6 +62,73 @@ public class AbstractServiceComputationTest {
     public void setUp() {
         testTaskInfo = new TaskInfo();
         testComputation = new TestComputation();
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        managedExecutorService = new ManagedExecutorService() {
+            @Override
+            public void shutdown() {
+                executorService.shutdown();
+            }
+
+            @Override
+            public List<Runnable> shutdownNow() {
+                return executorService.shutdownNow();
+            }
+
+            @Override
+            public boolean isShutdown() {
+                return executorService.isShutdown();
+            }
+
+            @Override
+            public boolean isTerminated() {
+                return executorService.isTerminated();
+            }
+
+            @Override
+            public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+                return executorService.awaitTermination(timeout, unit);
+            }
+
+            @Override
+            public <T> Future<T> submit(Callable<T> task) {
+                return executorService.submit(task);
+            }
+
+            @Override
+            public <T> Future<T> submit(Runnable task, T result) {
+                return executorService.submit(task, result);
+            }
+
+            @Override
+            public Future<?> submit(Runnable task) {
+                return executorService.submit(task);
+            }
+
+            @Override
+            public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+                return executorService.invokeAll(tasks);
+            }
+
+            @Override
+            public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+                return executorService.invokeAll(tasks, timeout, unit);
+            }
+
+            @Override
+            public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+                return executorService.invokeAny(tasks);
+            }
+
+            @Override
+            public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                return executorService.invokeAny(tasks, timeout, unit);
+            }
+
+            @Override
+            public void execute(Runnable command) {
+                executorService.execute(command);
+            }
+        };
         MockitoAnnotations.initMocks(this);
         when(serviceInfoPersistenceSource.get()).thenReturn(taskInfoPersistence);
     }
@@ -59,9 +141,8 @@ public class AbstractServiceComputationTest {
             testComputation.getReadyChannel().put(testTaskInfo);
             return testTaskInfo;
         })
-        .thenCompose(si -> {
-            return testComputation.processData();
-        });
+        .thenCompose(si -> testComputation.processData());
+
         computation
             .thenAccept(successful)
             .exceptionally(ex -> {

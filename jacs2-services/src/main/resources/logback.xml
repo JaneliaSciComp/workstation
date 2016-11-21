@@ -7,6 +7,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.jboss.as.jpa" level="trace" />
+
     <root level="debug">
         <appender-ref ref="CONSOLE" />
     </root>
