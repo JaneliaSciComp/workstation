@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.util.logging.Handler;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -49,30 +48,30 @@ public final class NbLogging {
        return unwantedMessages == null || !unwantedMessages.matcher(s).find();
    }
 
-   /** Factory to create non-closing, dispatch handler.
-    */
-   public static Handler createDispatchHandler(Handler handler, int flushDelay) {
-       return new DispatchingHandler(handler, flushDelay);
-   }
-   
-   /** Factory that creates <em>messages.log</em> handler in provided directory.
-    * @param dir directory to store logs in
-    */
-   public static Handler createMessagesHandler(File dir) {
-       return new MessagesHandler(dir);
-   }
-
-   /** Does its best to close provided handler. Can close handlers created by
-    * {@link #createDispatchHandler(java.util.logging.Handler, int)} as well.
-    */
-   public static void close(Handler h) {
-       if (h == null) {
-           return;
-       }
-       if (h instanceof DispatchingHandler) {
-           ((DispatchingHandler)h).doClose();
-       } else {
-           h.close();
-       }
-   }
+//   /** Factory to create non-closing, dispatch handler.
+//    */
+//   public static Handler createDispatchHandler(Handler handler, int flushDelay) {
+//       return new DispatchingHandler(handler, flushDelay);
+//   }
+//   
+//   /** Factory that creates <em>messages.log</em> handler in provided directory.
+//    * @param dir directory to store logs in
+//    */
+//   public static Handler createMessagesHandler(File dir) {
+//       return new MessagesHandler(dir);
+//   }
+//
+//   /** Does its best to close provided handler. Can close handlers created by
+//    * {@link #createDispatchHandler(java.util.logging.Handler, int)} as well.
+//    */
+//   public static void close(Handler h) {
+//       if (h == null) {
+//           return;
+//       }
+//       if (h instanceof DispatchingHandler) {
+//           ((DispatchingHandler)h).doClose();
+//       } else {
+//           h.close();
+//       }
+//   }
 }
