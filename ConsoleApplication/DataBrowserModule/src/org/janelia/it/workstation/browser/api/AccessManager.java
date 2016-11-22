@@ -5,8 +5,10 @@ import java.net.PasswordAuthentication;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.domain.Subject;
@@ -405,14 +407,19 @@ public final class AccessManager {
         return subject.getGroups().contains(groupName);
     }
 
-    public static List<String> getSubjectKeys() {
-        List<String> subjectKeys = new ArrayList<>();
+    public static Set<String> getReaderSet() {
         Subject subject = AccessManager.getAccessManager().getSubject();
-        if (subject != null) {
-            subjectKeys.add(subject.getKey());
-            subjectKeys.addAll(subject.getGroups());
-        }
-        return subjectKeys;
+        Set<String> set = new HashSet<>();
+        set.add(subject.getKey());
+        set.addAll(subject.getGroups());
+        return set;
+    }
+    
+    public static Set<String> getWriterSet() {
+        Subject subject = AccessManager.getAccessManager().getSubject();
+        Set<String> set = new HashSet<>();
+        set.add(subject.getKey());
+        return set;
     }
 
     /**
