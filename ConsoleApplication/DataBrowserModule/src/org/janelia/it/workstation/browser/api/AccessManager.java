@@ -2,7 +2,6 @@ package org.janelia.it.workstation.browser.api;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
+import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.ActionString;
 import org.janelia.it.jacs.shared.annotation.metrics_logging.CategoryString;
@@ -398,20 +398,31 @@ public final class AccessManager {
     public static boolean authenticatedSubjectIsInGroup(SubjectRole role) {
         Subject subject = AccessManager.getAccessManager().getAuthenticatedSubject();
         if (subject==null) return false;
-        return subject.getGroups().contains(role.getRole());
+        if (subject instanceof User) {
+            User user = (User)subject;
+            return user.hasGroupRead(role.getRole());
+        }
+        return false;
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
         Subject subject = AccessManager.getAccessManager().getSubject();
         if (subject==null) return false;
-        return subject.getGroups().contains(groupName);
+        if (subject instanceof User) {
+            User user = (User)subject;
+            return user.hasGroupRead(groupName);
+        }
+        return false;
     }
 
     public static Set<String> getReaderSet() {
         Subject subject = AccessManager.getAccessManager().getSubject();
         Set<String> set = new HashSet<>();
         set.add(subject.getKey());
-        set.addAll(subject.getGroups());
+        if (subject instanceof User) {
+            User user = (User)subject;
+            set.addAll(user.getReadGroups());
+        }
         return set;
     }
     
@@ -419,6 +430,10 @@ public final class AccessManager {
         Subject subject = AccessManager.getAccessManager().getSubject();
         Set<String> set = new HashSet<>();
         set.add(subject.getKey());
+        if (subject instanceof User) {
+            User user = (User)subject;
+            set.addAll(user.getWriteGroups());
+        }
         return set;
     }
 
@@ -455,6 +470,10 @@ public final class AccessManager {
         if (subject == null) {
             throw new SystemError("Not logged in");
         }
-        return subject.getEmail();
+        if (subject instanceof User) {
+            User user = (User)subject;
+            return user.getEmail();
+        }
+        return null;
     }
 }

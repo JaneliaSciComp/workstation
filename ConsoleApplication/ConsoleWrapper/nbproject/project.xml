@@ -1563,6 +1563,7 @@
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
                 <package>org.janelia.it.jacs.model.domain.sample</package>
                 <package>org.janelia.it.jacs.model.domain.screen</package>
+                <package>org.janelia.it.jacs.model.domain.subjects</package>
                 <package>org.janelia.it.jacs.model.domain.support</package>
                 <package>org.janelia.it.jacs.model.domain.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.domain.workspace</package>
