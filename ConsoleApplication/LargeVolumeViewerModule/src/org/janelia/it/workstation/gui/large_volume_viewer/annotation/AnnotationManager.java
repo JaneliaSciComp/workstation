@@ -40,7 +40,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronTagsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.ModelTranslation;
-import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PathTraceListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.UpdateAnchorListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;

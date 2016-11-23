@@ -7,6 +7,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.it.jacs.model.user_data.tiled_microscope_builder.TmModelAdapter;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.gui.large_volume_viewer.api.TiledMicroscopeDomainMgr;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -59,21 +60,23 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             // Await completion.
             progress.setDisplayName("Verifying neuron data...");
 
-            // check neuron consistency and repair (some) problems
-            for (TmNeuronMetadata neuron: neuronList) {
-                log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
-                List<String> results = neuron.checkRepairNeuron();
-                // List<String> results = neuron.checkNeuron();
-                if (results.size() > 0) {
-                    // save results, then output to log; this is unfortunately
-                    //  not visible to the user; we aren't in a place in the
-                    //  code where we can pop a dialog
-                    for (String s: results) {
-                        log.warn(s);
+            if (ClientDomainUtils.hasWriteAccess(workspace)) {
+                // check neuron consistency and repair (some) problems
+                for (TmNeuronMetadata neuron: neuronList) {
+                    log.debug("Checking neuron data for TmNeuronMetadata#{}", neuron.getId());
+                    List<String> results = neuron.checkRepairNeuron();
+                    // List<String> results = neuron.checkNeuron();
+                    if (results.size() > 0) {
+                        // save results, then output to log; this is unfortunately
+                        //  not visible to the user; we aren't in a place in the
+                        //  code where we can pop a dialog
+                        for (String s: results) {
+                            log.warn(s);
+                        }
+                    	neuron = tmDomainMgr.save(neuron);
                     }
-                	neuron = tmDomainMgr.save(neuron);
+                    neurons.add(neuron);
                 }
-                neurons.add(neuron);
             }
             
             progress.progress(2);
