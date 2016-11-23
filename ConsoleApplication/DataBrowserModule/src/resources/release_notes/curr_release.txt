@@ -1,11 +1,18 @@
 // 5.5.0
 
 Workstation Browser
+* Added "Recently Opened" folder which shows the 10 items most recently opened in the LVV or Alignment Board. To hide this item, use the gear icon at the top of the Data Explorer.
+* The error reporting system has been overhauled 
+    * All logs are now unified in a single file (messages.log)
+    * Log files are now attached automatically when reporting an error
+    * Some types of errors which were logged silently in the past will now generate a pop-up so that they can be reported. You may see more error pop-ups in the short-term, as we work to clean up remaining bugs. 
+* Many minor bug fixes 
+
+FlyLight
 * Added "Publishing Name" and "Published Externally" indicator to Samples and LSM Images 
 * Added "Owner" column to the Data Set dialog window
 * When sharing an entire data set, a filter is now automatically created under the "Shared Data" folder.
-* The error reporting system has been overhauled. Please remember to click the "Report This Issue" button if you encounter an error pop-up.  
-* Unified all logging to messages.log, which is now automatically sent when you report an issue. 
 
-Large Volume Viewer
+MouseLight
 * Added tooltips for long neuron names
+* Added support for NRS filesystem
