@@ -23,7 +23,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 
@@ -37,7 +37,7 @@ public class JacsTaskDispatcher {
     @Inject
     private Logger logger;
     @Inject
-    private Executor taskExecutor;
+    private ExecutorService taskExecutor;
     @Inject
     private TaskInfoPersistence taskInfoPersistence;
     @Inject
@@ -97,7 +97,8 @@ public class JacsTaskDispatcher {
         ServerStats stats = new ServerStats();
         stats.setWaitingTasks(waitingTasks.size());
         stats.setAvailableSlots(availableSlots.availablePermits());
-        stats.setRunningTasks(submittedTaskSet.size());
+        stats.setRunningTasksCount(submittedTaskSet.size());
+        stats.setRunningTasks(ImmutableList.copyOf(submittedTaskSet));
         return stats;
     }
 
@@ -119,20 +120,22 @@ public class JacsTaskDispatcher {
                     .supplyAsync(() -> {
                         logger.info("Task {} is ready", queuedTask);
                         TaskInfo taskInfo = queuedTask.getTaskInfo();
-                        queuedTask.getServiceComputation().getReadyChannel().put(taskInfo);
+                        queuedTask.getServiceComputation().getBeginChannel().put(taskInfo);
                         return queuedTask;
                     }, taskExecutor)
-                    .thenApplyAsync(sc -> {
-                        TaskInfo taskInfo = sc.getTaskInfo();
+                    .thenApplyAsync(qt -> {
+                        TaskInfo taskInfo = qt.getTaskInfo();
                         logger.debug("Submit {}", taskInfo);
                         taskInfo.setState(TaskState.SUBMITTED);
                         updateServiceInfo(taskInfo);
-                        return sc;
+                        return qt;
                     }, taskExecutor)
-                    .thenComposeAsync(sc -> sc.getServiceComputation().processData(), taskExecutor)
+                    .thenComposeAsync(qt -> qt.getServiceComputation().processData(), taskExecutor)
                     .whenCompleteAsync((taskInfo, exc) -> {
                         logger.debug("Complete {}", taskInfo);
                         availableSlots.release();
+                    }, taskExecutor)
+                    .whenCompleteAsync((taskInfo, exc) -> {
                         if (exc == null) {
                             logger.info("Successfully completed {}", taskInfo);
                             taskInfo.setState(TaskState.SUCCESSFUL);
@@ -141,7 +144,11 @@ public class JacsTaskDispatcher {
                             taskInfo.setState(TaskState.ERROR);
                         }
                         updateServiceInfo(taskInfo);
+                    }, taskExecutor)
+                    .whenCompleteAsync((taskInfo, exc) -> {
                         submittedTaskSet.remove(taskInfo.getId());
+                        queuedTask.getServiceComputation().getDoneChannel().put(taskInfo);
+                        logger.info("Updated results for {}", taskInfo);
                     }, taskExecutor);
         }
     }

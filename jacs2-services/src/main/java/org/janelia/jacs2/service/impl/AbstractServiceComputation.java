@@ -9,7 +9,7 @@ import javax.inject.Named;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 public abstract class AbstractServiceComputation implements ServiceComputation {
 
@@ -19,18 +19,14 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     @Inject
     private JacsTaskDispatcher serviceDispatcher;
     @Inject
-    private Executor taskExecutor;
-    private final TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
-    private final TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
+    private ExecutorService taskExecutor;
+    private TaskCommChannel<TaskInfo> taskBeginChannel;
+    private TaskCommChannel<TaskInfo> taskDoneChannel;
 
     @Override
     public CompletionStage<TaskInfo> processData() {
         return waitForData()
-                .thenComposeAsync(this::doWork, taskExecutor)
-                .thenApplyAsync(taskInfo -> {
-                    taskResultsChannel.put(taskInfo);
-                    return taskInfo;
-                }, taskExecutor);
+                .thenCompose(this::doWork);
     }
 
     private CompletionStage<TaskInfo> waitForData() {
@@ -38,28 +34,38 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
             // bring the service info into the computation by getting it from the supplier channel;
             // the channel will receive the data when the corresponding job is ready to be started
             // from the dispatcher
-            return taskCommChannel.take();
-        });
+            TaskInfo ti = getBeginChannel().take();
+            logger.info("Task {} is ready", ti);
+            return ti;
+        }, taskExecutor);
     }
 
     protected abstract CompletionStage<TaskInfo> doWork(TaskInfo ti);
 
     @Override
     public ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo) {
-        logger.debug("Create sub-task {}", subTaskInfo);
-        TaskInfo currentTaskInfo = taskCommChannel.take();
+        logger.info("Create sub-task {}", subTaskInfo);
+        TaskInfo currentTaskInfo = getBeginChannel().take();
         Preconditions.checkState(currentTaskInfo != null, "Sub tasks can only be created if the parent task is already running");
         subTaskInfo.setOwner(currentTaskInfo.getOwner());
         return serviceDispatcher.submitService(subTaskInfo, Optional.of(currentTaskInfo));
     }
 
     @Override
-    public TaskCommChannel<TaskInfo> getReadyChannel() {
-        return taskCommChannel;
+    public synchronized TaskCommChannel<TaskInfo> getBeginChannel() {
+        if (taskBeginChannel == null) {
+            logger.info("Create start task channel");
+            taskBeginChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
+        }
+        return taskBeginChannel;
     }
 
     @Override
-    public TaskCommChannel<TaskInfo> getResultsChannel() {
-        return taskResultsChannel;
+    public synchronized TaskCommChannel<TaskInfo> getDoneChannel() {
+        if (taskDoneChannel == null) {
+            logger.info("Create end task channel");
+            taskDoneChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
+        }
+        return taskDoneChannel;
     }
 }

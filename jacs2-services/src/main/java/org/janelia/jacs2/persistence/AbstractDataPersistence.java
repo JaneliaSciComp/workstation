@@ -20,7 +20,6 @@ public class AbstractDataPersistence<D extends Dao<T, I>, T, I> {
     public void save(T t) {
         D dao = daoSource.get();
         try {
-            logger.debug("Save {}", t);
             dao.save(t);
         } finally {
             daoSource.destroy(dao);
@@ -30,7 +29,6 @@ public class AbstractDataPersistence<D extends Dao<T, I>, T, I> {
     public void update(T t) {
         D dao = daoSource.get();
         try {
-            logger.debug("Update {}", t);
             dao.update(t);
         } finally {
             daoSource.destroy(dao);

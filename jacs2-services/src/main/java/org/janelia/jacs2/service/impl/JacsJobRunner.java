@@ -36,7 +36,7 @@ public class JacsJobRunner {
 
     @PostConstruct
     public void initialize() {
-        scheduler.scheduleAtFixedRate(() -> doWork(), 30L, 30L, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(() -> doWork(), 30L, 10L, TimeUnit.SECONDS);
     }
 
     @PreDestroy

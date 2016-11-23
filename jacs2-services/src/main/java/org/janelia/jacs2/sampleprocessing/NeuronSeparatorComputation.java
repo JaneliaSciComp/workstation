@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.service.impl.AbstractLocalProcessComputation;
-import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.slf4j.Logger;
 
@@ -15,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 @Named("neuronSeparatorService")
 public class NeuronSeparatorComputation extends AbstractLocalProcessComputation {
@@ -24,7 +23,7 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
     @Inject
     private Logger logger;
     @Inject
-    private Executor taskExecutor;
+    private ExecutorService taskExecutor;
 
     @Override
     protected List<String> prepareCommandLine(TaskInfo si) {
@@ -55,12 +54,17 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         subTask.setPriority(taskInfo.priority() + 1);
 
         ServiceComputation subTaskComputation = submitSubTaskAsync(subTask);
-        CompletionStage<TaskInfo> taskProcessing = CompletableFuture.supplyAsync(() -> {
-                TaskInfo subTaskInfo = subTaskComputation.getResultsChannel().take();
-                logger.info("Completed sub-task {}", subTaskInfo);
-                return subTask;
-            }, taskExecutor)
-            .thenComposeAsync(ti -> super.doWork(taskInfo), taskExecutor);
+        CompletionStage<TaskInfo> taskProcessing =
+                CompletableFuture.supplyAsync(() -> {
+                    logger.info("Waiting for sub-task {} of {} to finish", subTask, taskInfo);
+                    subTaskComputation.getDoneChannel().take();
+                    logger.info("Task {} completed, continue processing {} ", subTask, taskInfo);
+                    return taskInfo;
+                }, taskExecutor)
+                .thenCompose(ti -> {
+                    logger.info("Performing neuron separator work for {}", ti);
+                    return super.doWork(ti);
+                });
         return taskProcessing;
     }
 }

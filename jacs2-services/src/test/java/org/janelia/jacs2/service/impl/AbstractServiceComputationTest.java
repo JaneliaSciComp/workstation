@@ -53,6 +53,10 @@ public class AbstractServiceComputationTest {
     private TaskInfoPersistence taskInfoPersistence;
     @Spy
     private Executor taskExecutor;
+    @Spy
+    private TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
+    @Spy
+    private TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
 
     @InjectMocks
     private TestSuccessfulComputation testSuccessfullComputation;
@@ -74,7 +78,7 @@ public class AbstractServiceComputationTest {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
         CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testSuccessfullComputation.getReadyChannel().put(testTaskInfo);
+            testSuccessfullComputation.getBeginChannel().put(testTaskInfo);
             return testTaskInfo;
         }, taskExecutor)
         .thenComposeAsync(si -> testSuccessfullComputation.processData(), taskExecutor);
@@ -96,7 +100,7 @@ public class AbstractServiceComputationTest {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
         CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testFailedComputation.getReadyChannel().put(testTaskInfo);
+            testFailedComputation.getBeginChannel().put(testTaskInfo);
             return testTaskInfo;
         })
         .thenCompose(si -> {

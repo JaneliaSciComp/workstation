@@ -22,12 +22,12 @@ public interface ServiceComputation {
     ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo);
 
     /**
-     * @return this is the communication component of the current service through which data is entered in the computation.
+     * @return the channel used for communicating that the task can begin processing.
      */
-    TaskCommChannel<TaskInfo> getReadyChannel();
+    TaskCommChannel<TaskInfo> getBeginChannel();
 
     /**
-     * @return the channel used for communicating that results are available.
+     * @return the channel used for communicating that the task completed.
      */
-    TaskCommChannel<TaskInfo> getResultsChannel();
+    TaskCommChannel<TaskInfo> getDoneChannel();
 }

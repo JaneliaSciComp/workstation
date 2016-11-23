@@ -25,7 +25,7 @@ public class TaskInfo {
     @Column(name = "state")
     private TaskState state;
     @Column(name = "priority")
-    private Integer priority;
+    private Integer priority = 0;
     @Column(name = "owner")
     private String owner;
     @Column(name = "input_path")

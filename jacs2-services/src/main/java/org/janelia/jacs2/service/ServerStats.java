@@ -1,16 +1,20 @@
 package org.janelia.jacs2.service;
 
+import java.util.List;
+import java.util.Set;
+
 public class ServerStats {
-    private int runningTasks;
+    private int runningTasksCount;
     private int waitingTasks;
     private int availableSlots;
+    private List<Long> runningTasks;
 
-    public int getRunningTasks() {
-        return runningTasks;
+    public int getRunningTasksCount() {
+        return runningTasksCount;
     }
 
-    public void setRunningTasks(int runningTasks) {
-        this.runningTasks = runningTasks;
+    public void setRunningTasksCount(int runningTasksCount) {
+        this.runningTasksCount = runningTasksCount;
     }
 
     public int getWaitingTasks() {
@@ -27,5 +31,13 @@ public class ServerStats {
 
     public void setAvailableSlots(int availableSlots) {
         this.availableSlots = availableSlots;
+    }
+
+    public List<Long> getRunningTasks() {
+        return runningTasks;
+    }
+
+    public void setRunningTasks(List<Long> runningTasks) {
+        this.runningTasks = runningTasks;
     }
 }

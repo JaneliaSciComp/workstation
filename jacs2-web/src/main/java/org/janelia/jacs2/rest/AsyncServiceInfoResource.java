@@ -44,7 +44,6 @@ public class AsyncServiceInfoResource {
     @Path("/stats")
     public Response getServerStats() {
         ServerStats stats = taskManager.getServerStats();
-        stats.setRunningTasks(1);
         return Response
                 .status(Response.Status.OK)
                 .entity(stats)
