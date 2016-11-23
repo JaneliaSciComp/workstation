@@ -2,12 +2,13 @@ package org.janelia.jacs2.cdi;
 
 import org.ggf.drmaa.SessionFactory;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.inject.Singleton;
 
-public class DrmaaProducers {
+public class DrmaaProducer {
 
-    @Singleton
+    @ApplicationScoped
     @Produces
     public SessionFactory createDrmaaSessionFactory() {
         return SessionFactory.getFactory();

@@ -2,4 +2,3 @@ rootProject.name = 'jacs2'
 
 include 'jacs2-services'
 include 'jacs2-web'
-include 'jacs2-ear'

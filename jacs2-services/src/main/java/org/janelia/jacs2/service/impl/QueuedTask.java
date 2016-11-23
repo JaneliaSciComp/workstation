@@ -1,9 +1,12 @@
 package org.janelia.jacs2.service.impl;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.jacs2.model.service.TaskInfo;
 
+import java.util.Arrays;
+
 /**
- * This contains the task with the corresponding computation.
+ * This contains the queued task with the corresponding computation.
  */
 class QueuedTask {
     private final TaskInfo taskInfo;
@@ -21,4 +24,10 @@ class QueuedTask {
     ServiceComputation getServiceComputation() {
         return serviceComputation;
     }
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this);
+    }
+
 }

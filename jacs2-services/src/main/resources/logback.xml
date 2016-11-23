@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <logger name="org.jboss.as.jpa" level="trace" />
+    <logger name="org.hibernate" level="error" />
 
     <root level="debug">
         <appender-ref ref="CONSOLE" />

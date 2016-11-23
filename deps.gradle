@@ -1,37 +1,64 @@
-ext {
-    SLF4J_VERSION = "1.7.21"
-    LOGBACK_VERSION = "1.1.7"
-    JAVAX_ENTERPRISE_VERSION = "1.2"
-}
-
 dependencies {
     project.ext {
         GUAVA_LIB = "com.google.guava:guava:19.0"
         // logging
+        SLF4J_VERSION = "1.7.21"
+        LOGBACK_VERSION = "1.1.7"
         SLF4J_LIB = "org.slf4j:slf4j-api:${SLF4J_VERSION}"
         LOGBACK_CORE_LIB = "ch.qos.logback:logback-core:${LOGBACK_VERSION}"
         LOGBACK_CLASSIC_LIB = "ch.qos.logback:logback-classic:${LOGBACK_VERSION}"
+
         // dependency injection
-        CDI_API_LIB="javax.enterprise:cdi-api:${JAVAX_ENTERPRISE_VERSION}"
+        JAVAX_ENTERPRISE_VERSION = "1.2"
+        WELD_VERSION = "2.4.1.Final"
+        CDI_API_LIB = "javax.enterprise:cdi-api:${JAVAX_ENTERPRISE_VERSION}"
+        CDI_IMPL_LIB = "org.jboss.weld:weld-core:${WELD_VERSION}"
+        CDI_SERVLET_LIB = "org.jboss.weld.servlet:weld-servlet-core:${WELD_VERSION}"
+
         // persistence
+        HIBERNATE_VERSION = "5.2.4.Final"
         JPA_API_LIB = "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final"
-        HIBERNATE_LIB = "org.hibernate:hibernate-core:5.2.4.Final"
-        JAVAX_ENTERPRISE_CONCURRENCY_API_LIB = "org.jboss.spec.javax.enterprise.concurrent:jboss-concurrency-api_1.0_spec:1.0.0.Final"
-        JAVAX_EJB_API_LIB = "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
-        JAVAX_TX_API_LIB = "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.1.Final"
+        HIBERNATE_CORE_LIB = "org.hibernate:hibernate-core:${HIBERNATE_VERSION}"
+        HIBERNATE_ENTITYMANAGER_LIB = "org.hibernate:hibernate-entitymanager:${HIBERNATE_VERSION}"
+
+        // database drivers
+        MYSQL_JDBC_LIB = "mysql:mysql-connector-java:6.0.5"
+
         // apache commons
         COMMONS_LANG_VERSION = "3.5"
         COMMONS_LANG_LIB = "org.apache.commons:commons-lang3:${COMMONS_LANG_VERSION}"
         COMMONS_COLLECTIONS_VERSION = "4.1"
         COMMONS_COLLECTIONS_LIB = "org.apache.commons:commons-collections4:${COMMONS_COLLECTIONS_VERSION}"
+
         // JAX-RS API
-        JAX_RS_API_LIB = "org.jboss.spec.javax.ws.rs:jboss-jaxrs-api_2.0_spec:1.0.0.Final"
+        JAX_RS_API_LIB = "javax.ws.rs:javax.ws.rs-api:2.0.1"
+        JERSEY_VERSION = "2.24"
+        JAX_RS_CORE_LIB = "org.glassfish.jersey.core:jersey-common:${JERSEY_VERSION}"
+        JAX_RS_SERVER_LIB = "org.glassfish.jersey.core:jersey-server:${JERSEY_VERSION}"
+        JAX_RS_CONTAINERS_LIB = "org.glassfish.jersey.containers:jersey-container-servlet-core:${JERSEY_VERSION}"
+        JAX_RS_CDI_EXT_LIB = "org.glassfish.jersey.ext.cdi:jersey-cdi1x-servlet:${JERSEY_VERSION}"
+
+        // command line args
+        CMDLINE_ARG_LIB = "com.beust:jcommander:1.58"
+
+        // servlet engine
+        JAVAX_SERVLET_API_LIB = "javax.servlet:javax.servlet-api:3.1.0"
+        UNDERTOW_VERSION = "1.4.4.Final"
+        UNDERTOW_CORE_LIB = "io.undertow:undertow-core:${UNDERTOW_VERSION}"
+        UNDERTOW_SERVLET_LIB = "io.undertow:undertow-servlet:${UNDERTOW_VERSION}"
+
+        // JSON
+        JACKSON_VERSION = "2.8.5"
+        JACKSON_CORE_LIB = "com.fasterxml.jackson.core:jackson-core:${JACKSON_VERSION}"
+        JACKSON_ANNOTATIONS_LIB = "com.fasterxml.jackson.core:jackson-annotations:${JACKSON_VERSION}"
+        JACKSON_DATABIND_LIB = "com.fasterxml.jackson.core:jackson-databind:${JACKSON_VERSION}"
+        JACKSON_JAXRS_JSON_PROVIDER = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${JACKSON_VERSION}"
+
         // drmaa
         DRMAA1_LIB = "us.levk:drmaa-gridengine:6.2u5"
+
         // testing
         JUNIT_VERSION = "4.12"
-        // drivers
-        MYSQL_JDBC_LIB = "mysql:mysql-connector-java:5.1.40"
     }
 
     // Included in ALL projects

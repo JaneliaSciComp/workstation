@@ -1,13 +1,13 @@
 project(":jacs2-services") {
     dependencies {
-        provided JPA_API_LIB,
-                 CDI_API_LIB,
-                 JAVAX_ENTERPRISE_CONCURRENCY_API_LIB,
-                 JAVAX_EJB_API_LIB,
-                 JAVAX_TX_API_LIB,
-                 DRMAA1_LIB
+        compile JPA_API_LIB,
+                HIBERNATE_CORE_LIB,
+                HIBERNATE_ENTITYMANAGER_LIB,
+                CDI_API_LIB,
+                DRMAA1_LIB
 
-        integrationTestRuntime MYSQL_JDBC_LIB,
-                               HIBERNATE_LIB
+        runtime MYSQL_JDBC_LIB
+
+        integrationTestRuntime MYSQL_JDBC_LIB
     }
 }

@@ -21,7 +21,7 @@ public class AbstractJpaDaoITest {
     @BeforeClass
     public static void setUpPersistenceFactory() throws IOException {
         Properties persistenceConfig = new Properties();
-        try (InputStream configReader = AbstractJpaDaoITest.class.getResourceAsStream("/compute_test.properties")) {
+        try (InputStream configReader = AbstractJpaDaoITest.class.getResourceAsStream("/jacs_test.properties")) {
             persistenceConfig.load(configReader);
         }
         testEntityManagerFactory = Persistence.createEntityManagerFactory("ComputePU", persistenceConfig);

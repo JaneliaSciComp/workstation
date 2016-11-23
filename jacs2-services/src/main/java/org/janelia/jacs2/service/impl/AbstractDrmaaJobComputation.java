@@ -11,6 +11,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractDrmaaJobComputation extends AbstractExternalProcessComputation {
 
@@ -22,12 +24,13 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
     private org.ggf.drmaa.JobInfo jobInfo;
 
     @Override
-    protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+    protected CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
         logger.debug("Begin DRMAA job invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
+        CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
         try {
             jt = drmaaSession.createJobTemplate();
             jt.setJobName(taskInfo.getName());
@@ -45,22 +48,24 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
 
             if (jobInfo.wasAborted()) {
                 logger.error("Job {} for {} never ran", jobId, taskInfo);
-                throw new IllegalStateException(String.format("Job %s never ran", jobId));
+                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s never ran", jobId)));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, taskInfo, jobInfo.getExitStatus());
                 if (jobInfo.getExitStatus() != 0) {
-                    throw new IllegalStateException(String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus()));
+                    completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
+                } else {
+                    completableFuture.complete(taskInfo);
                 }
             } else if (jobInfo.hasSignaled()) {
                 logger.warn("Job {} for {} terminated due to signal {}", jobId, taskInfo, jobInfo.getTerminatingSignal());
-                throw new IllegalStateException(String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal()));
+                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal())));
             } else {
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, taskInfo);
-                throw new IllegalStateException(String.format("Job %s completed with unclear conditions", jobId));
+                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with unclear conditions", jobId)));
             }
         } catch (DrmaaException e) {
             logger.error("Error running a DRMAA job for {} with {}", taskInfo, cmdLine, e);
-            throw new ComputationException(e);
+            completableFuture.completeExceptionally(e);
         } finally {
             if (jt != null) {
                 try {
@@ -70,7 +75,7 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
                 }
             }
         }
-        return taskInfo;
+        return completableFuture;
     }
 
 }

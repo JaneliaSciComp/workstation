@@ -6,6 +6,7 @@ import org.janelia.jacs2.model.service.ServiceMetaData;
 import org.janelia.jacs2.service.TaskManager;
 import org.janelia.jacs2.service.ServiceRegistry;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,7 +15,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-@Path("services")
+@ApplicationScoped
+@Produces("application/json")
+@Path("/v2/services")
 public class ServiceInfoResource {
 
     @Inject
@@ -23,7 +26,6 @@ public class ServiceInfoResource {
     private ServiceRegistry serviceRegistry;
 
     @GET
-    @Produces("application/json")
     public PageResult<TaskInfo> getAllServices(@QueryParam("service-name") String serviceName,
                                                   @QueryParam("service-state") String serviceState) {
         System.out.println("!!!! NAME QUERY PARAM " + serviceName);
@@ -33,16 +35,15 @@ public class ServiceInfoResource {
 
     @GET
     @Path("/{service-instance-id}")
-    @Produces("application/json")
     public TaskInfo getServiceInfo(@PathParam("service-instance-id") long instanceId) {
         return taskManager.retrieveTaskInfo(instanceId);
     }
 
     @GET
-    @Path("/{service-type}/metadata")
-    @Produces("application/json")
-    public Response getServiceMetadata(@PathParam("service-type") String serviceType) {
-        ServiceMetaData smd = serviceRegistry.getServiceDescriptor(serviceType);
+    @Path("/{service-name}/metadata")
+    public Response getServiceMetadata(@PathParam("service-name") String serviceName) {
+        System.out.println("!!!!!! METADATA " + serviceName);
+        ServiceMetaData smd = serviceRegistry.getServiceDescriptor(serviceName);
         if (smd == null) {
             return Response
                     .status(Response.Status.NOT_FOUND)

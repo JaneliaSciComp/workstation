@@ -1,4 +1,4 @@
-package org.janelia.jacs2.cdi;
+package org.janelia.jacs2.cdi.qualifier;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

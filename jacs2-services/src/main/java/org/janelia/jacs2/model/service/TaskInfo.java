@@ -44,7 +44,7 @@ public class TaskInfo {
     @ManyToOne
     @JoinColumn(name = "parent_task_info_id", referencedColumnName = "task_info_id", insertable = false, updatable = false)
     private TaskInfo parentTask;
-    @OneToMany
+    @OneToMany()
     @JoinColumn(name = "parent_task_info_id", insertable = false, updatable = false)
     private List<TaskInfo> subTasks;
     @Column(name = "root_task_info_id")

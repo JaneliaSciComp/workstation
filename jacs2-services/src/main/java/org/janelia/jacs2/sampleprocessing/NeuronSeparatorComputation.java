@@ -9,13 +9,13 @@ import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 import org.slf4j.Logger;
 
-import javax.annotation.Resource;
-import javax.enterprise.concurrent.ManagedExecutorService;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 
 @Named("neuronSeparatorService")
 public class NeuronSeparatorComputation extends AbstractLocalProcessComputation {
@@ -23,8 +23,8 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
     @Named("SLF4J")
     @Inject
     private Logger logger;
-    @Resource
-    private ManagedExecutorService managedExecutorService;
+    @Inject
+    private Executor taskExecutor;
 
     @Override
     protected List<String> prepareCommandLine(TaskInfo si) {
@@ -45,7 +45,7 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
 
 
     @Override
-    public TaskInfo doWork(TaskInfo taskInfo) {
+    public CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
         // prepare to submit the child task
         TaskInfo subTask = new TaskInfo();
         subTask.setServiceCmd("echo");
@@ -55,17 +55,12 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         subTask.setPriority(taskInfo.priority() + 1);
 
         ServiceComputation subTaskComputation = submitSubTaskAsync(subTask);
-        CompletableFuture<TaskInfo> taskProcessing = CompletableFuture.supplyAsync(() -> {
-                    TaskInfo subTaskInfo = subTaskComputation.getResultsChannel().take();
-                    logger.debug("Completed sub-task {}", subTaskInfo);
-                    return subTask;
-                }, managedExecutorService)
-                .thenApplyAsync(ti -> super.doWork(taskInfo), managedExecutorService)
-                .toCompletableFuture();
-        try {
-            return taskProcessing.get();
-        } catch (Exception e) {
-            throw new ComputationException(e);
-        }
+        CompletionStage<TaskInfo> taskProcessing = CompletableFuture.supplyAsync(() -> {
+                TaskInfo subTaskInfo = subTaskComputation.getResultsChannel().take();
+                logger.info("Completed sub-task {}", subTaskInfo);
+                return subTask;
+            }, taskExecutor)
+            .thenComposeAsync(ti -> super.doWork(taskInfo), taskExecutor);
+        return taskProcessing;
     }
 }

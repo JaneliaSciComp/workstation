@@ -4,6 +4,7 @@ import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.service.ServerStats;
 import org.janelia.jacs2.service.TaskManager;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -15,7 +16,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.util.Optional;
 
-@Path("async-services")
+@ApplicationScoped
+@Produces("application/json")
+@Path("/v2/async-services")
 public class AsyncServiceInfoResource {
 
     @Inject
@@ -24,7 +27,6 @@ public class AsyncServiceInfoResource {
     @POST
     @Path("/{user}/{service-name}")
     @Consumes("application/json")
-    @Produces("application/json")
     public Response createAsyncService(@PathParam("user") String userName, @PathParam("service-name") String serviceName, TaskInfo si) {
         si.setOwner(userName);
         si.setName(serviceName);
@@ -39,9 +41,13 @@ public class AsyncServiceInfoResource {
     }
 
     @GET
-    @Path("stats")
-    @Produces("application/json")
-    public ServerStats getServerStats() {
-        return taskManager.getServerStats();
+    @Path("/stats")
+    public Response getServerStats() {
+        ServerStats stats = taskManager.getServerStats();
+        stats.setRunningTasks(1);
+        return Response
+                .status(Response.Status.OK)
+                .entity(stats)
+                .build();
     }
 }

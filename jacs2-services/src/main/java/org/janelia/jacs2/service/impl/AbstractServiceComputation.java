@@ -2,17 +2,14 @@ package org.janelia.jacs2.service.impl;
 
 import com.google.common.base.Preconditions;
 import org.janelia.jacs2.model.service.TaskInfo;
-import org.janelia.jacs2.persistence.TaskInfoPersistence;
 import org.slf4j.Logger;
 
-import javax.annotation.Resource;
-import javax.enterprise.concurrent.ManagedExecutorService;
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 
 public abstract class AbstractServiceComputation implements ServiceComputation {
 
@@ -22,21 +19,18 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     @Inject
     private JacsTaskDispatcher serviceDispatcher;
     @Inject
-    private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
-    @Resource
-    private ManagedExecutorService managedExecutorService;
-
+    private Executor taskExecutor;
     private final TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
     private final TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
 
     @Override
     public CompletionStage<TaskInfo> processData() {
         return waitForData()
-                .thenApplyAsync(this::doWork, managedExecutorService)
+                .thenComposeAsync(this::doWork, taskExecutor)
                 .thenApplyAsync(taskInfo -> {
                     taskResultsChannel.put(taskInfo);
                     return taskInfo;
-                }, managedExecutorService);
+                }, taskExecutor);
     }
 
     private CompletionStage<TaskInfo> waitForData() {
@@ -45,10 +39,10 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
             // the channel will receive the data when the corresponding job is ready to be started
             // from the dispatcher
             return taskCommChannel.take();
-        }, managedExecutorService);
+        });
     }
 
-    protected abstract TaskInfo doWork(TaskInfo ti) throws ComputationException;
+    protected abstract CompletionStage<TaskInfo> doWork(TaskInfo ti);
 
     @Override
     public ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo) {

@@ -8,7 +8,6 @@ import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
@@ -62,7 +61,6 @@ public abstract class AbstractJpaDao<T, I> implements Dao<T, I> {
     @Override
     public PageResult<T> findAll(PageRequest pageRequest) {
         Class<T> entityType = getEntityType();
-
         String orderByStmt = getOrderByStatement(pageRequest.getSortCriteria());
         String query = String.format("select e from %s e %s", entityType.getSimpleName(), orderByStmt);
         List<T> results = findByQueryParamsWithPaging(query,
@@ -133,4 +131,5 @@ public abstract class AbstractJpaDao<T, I> implements Dao<T, I> {
         String query = String.format("select count(e) from %s e", entityType.getSimpleName());
         return getSingleResult(query, ImmutableMap.<String, Object>of(), Long.class);
     }
+
 }

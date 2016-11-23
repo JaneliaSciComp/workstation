@@ -8,6 +8,8 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractLocalProcessComputation extends AbstractExternalProcessComputation {
 
@@ -17,7 +19,7 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
     private Process localProcess;
 
     @Override
-    protected TaskInfo doWork(TaskInfo taskInfo) throws ComputationException {
+    protected CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
         logger.debug("Begin local process invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);
@@ -25,24 +27,27 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
         processBuilder.inheritIO();
         processBuilder.environment().putAll(env);
         logger.info("Start {} with {}; env={}", taskInfo, cmdLine, processBuilder.environment());
+        CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
         try {
             localProcess = processBuilder.start();
         } catch (IOException e) {
             logger.error("Error starting the computation process for {} with {}", taskInfo, cmdLine);
-            throw new ComputationException(e);
+            completableFuture.completeExceptionally(e);
         }
         int returnCode = 1;
         try {
             returnCode = localProcess.waitFor();
         } catch (InterruptedException e) {
             logger.error("Error waiting for the process {} with {}", taskInfo, cmdLine);
-            throw new ComputationException(e);
+            completableFuture.completeExceptionally(e);
         }
         logger.info("Process {} for {} terminated with code {}", localProcess, taskInfo, returnCode);
         if (returnCode != 0) {
-            throw new ComputationException("Process terminated with code " + returnCode);
+            completableFuture.completeExceptionally(new ComputationException("Process terminated with code " + returnCode));
+        } else {
+            completableFuture.complete(taskInfo);
         }
-        return taskInfo;
+        return completableFuture;
     }
 
 }

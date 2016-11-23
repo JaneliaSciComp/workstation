@@ -1,7 +1,7 @@
 package org.janelia.jacs2.dao.jpa;
 
 import com.google.common.collect.ImmutableMap;
-import org.janelia.jacs2.cdi.ComputePersistence;
+import org.janelia.jacs2.cdi.qualifier.ComputePersistence;
 import org.janelia.jacs2.dao.TaskEventDao;
 import org.janelia.jacs2.model.service.TaskEvent;
 

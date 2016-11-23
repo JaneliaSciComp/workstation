@@ -13,12 +13,17 @@ import java.util.Set;
 public class TaskInfoPersistence extends AbstractDataPersistence<TaskInfoDao, TaskInfo, Long> {
 
     @Inject
-    public TaskInfoPersistence(Instance<TaskInfoDao> daoSource) {
-        super(daoSource);
+    public TaskInfoPersistence(Instance<TaskInfoDao> taskDaoSource) {
+        super(taskDaoSource);
     }
 
     public PageResult<TaskInfo> findTasksByState(Set<TaskState> requestStates, PageRequest pageRequest) {
-        return daoSource.get().findTasksByState(requestStates, pageRequest);
+        TaskInfoDao  taskDao = daoSource.get();
+        try {
+            return taskDao.findTasksByState(requestStates, pageRequest);
+        } finally {
+            daoSource.destroy(taskDao);
+        }
     }
 
 }

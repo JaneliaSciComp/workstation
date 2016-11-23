@@ -5,9 +5,5 @@
      <persistence-unit name="ComputePU">
          <class>org.janelia.jacs2.model.service.TaskInfo</class>
          <class>org.janelia.jacs2.model.service.TaskEvent</class>
-         <properties>
-             <property name="hibernate.hbm2ddl.auto" value="update" />
-             <property name="hibernate.show_sql" value="false" />
-         </properties>
      </persistence-unit>
 </persistence>

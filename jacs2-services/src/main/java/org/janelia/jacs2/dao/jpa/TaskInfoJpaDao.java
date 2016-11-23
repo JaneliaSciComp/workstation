@@ -3,7 +3,7 @@ package org.janelia.jacs2.dao.jpa;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
-import org.janelia.jacs2.cdi.ComputePersistence;
+import org.janelia.jacs2.cdi.qualifier.ComputePersistence;
 import org.janelia.jacs2.dao.TaskInfoDao;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
