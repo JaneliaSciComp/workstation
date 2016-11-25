@@ -34,4 +34,9 @@ public class JacsTaskManager implements TaskManager {
     public ServerStats getServerStats() {
         return taskDispatcher.getServerStats();
     }
+
+    @Override
+    public void setProcessingSlotsCount(int nProcessingSlots) {
+        taskDispatcher.setAvailableSlots(nProcessingSlots);
+    }
 }

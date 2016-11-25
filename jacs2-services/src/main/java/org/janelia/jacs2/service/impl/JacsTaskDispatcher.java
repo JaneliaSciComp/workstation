@@ -31,7 +31,7 @@ import java.util.concurrent.Semaphore;
 public class JacsTaskDispatcher {
 
     private static final int MAX_WAITING_SLOTS = 20;
-    private static final int MAX_RUNNING_SLOTS = 50;
+    private static final int MAX_RUNNING_SLOTS = 1000;
 
     @Named("SLF4J")
     @Inject
@@ -46,14 +46,28 @@ public class JacsTaskDispatcher {
     private final Set<Long> waitingTaskSet = new ConcurrentSkipListSet<>();
     private final Set<Long> submittedTaskSet = new ConcurrentSkipListSet<>();
     private final Semaphore queuePermit;
+    private int nAvailableSlots;
     private final Semaphore availableSlots;
     private boolean noWaitingSpaceAvailable;
 
     public JacsTaskDispatcher() {
         queuePermit = new Semaphore(1, true);
-        availableSlots = new Semaphore(MAX_RUNNING_SLOTS, true);
+        nAvailableSlots = MAX_RUNNING_SLOTS;
+        availableSlots = new Semaphore(nAvailableSlots, true);
         waitingTasks = new PriorityBlockingQueue<>(MAX_WAITING_SLOTS, new DefaultServiceInfoComparator());
         noWaitingSpaceAvailable = false;
+    }
+
+    public void setAvailableSlots(int numberOfSlots) {
+        int nDiff = numberOfSlots - nAvailableSlots;
+        if (nDiff > 0) {
+            availableSlots.release(nDiff);
+            nAvailableSlots = numberOfSlots;
+        } else if (nDiff < 0) {
+            if (availableSlots.tryAcquire(-nDiff)) {
+                nAvailableSlots = numberOfSlots;
+            }
+        }
     }
 
     public TaskInfo submitTaskAsync(TaskInfo serviceTask, Optional<TaskInfo> optionalParentTask) {
