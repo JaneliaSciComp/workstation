@@ -10,6 +10,6 @@ import java.util.Set;
 
 public interface TaskInfoDao extends Dao<TaskInfo, Long> {
     PageResult<TaskInfo> findTasksByState(Set<TaskState> requestStates, PageRequest pageRequest);
-    List<TaskInfo> findSubTasks(Long serviceId);
-    List<TaskInfo> findTaskHierarchy(Long serviceId);
+    List<TaskInfo> findSubTasks(Long taskId);
+    List<TaskInfo> findTaskHierarchy(Long taskId);
 }

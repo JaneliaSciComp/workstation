@@ -12,6 +12,8 @@ import org.janelia.jacs2.model.service.TaskState;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,8 +35,24 @@ public class TaskInfoJpaDao extends AbstractJpaDao<TaskInfo, Long> implements Ta
 
     @Override
     public List<TaskInfo> findTaskHierarchy(Long taskId) {
-        String query = "select ti from TaskInfo ti where ti.rootTaskId = :rootTaskId";
-        return findByQueryParams(query, ImmutableMap.<String, Object>of("rootTaskId", taskId), TaskInfo.class);
+        TaskInfo taskInfo = findById(taskId);
+        Preconditions.checkArgument(taskInfo != null, "Invalid task ID - no task found for " + taskId);
+        Long rootTaskId = taskInfo.getRootTaskId();
+        if (rootTaskId == null) {
+            rootTaskId = taskId;
+        }
+        String query = "select ti from TaskInfo ti where ti.rootTaskId = :rootTaskId order by id ";
+        List<TaskInfo> fullTaskHierachy = findByQueryParams(query, ImmutableMap.<String, Object>of("rootTaskId", rootTaskId), TaskInfo.class);
+        List<TaskInfo> taskHierarchy = new ArrayList<>();
+        Set<Long> taskHierarchySet = new HashSet<>();
+        taskHierarchySet.add(taskId);
+        fullTaskHierachy.stream().forEach(ti -> {
+            if (taskHierarchySet.contains(ti.getParentTaskId())) {
+                taskHierarchy.add(ti);
+                taskHierarchySet.add(ti.getId());
+            }
+        });
+        return taskHierarchy;
     }
 
     @Override

@@ -17,6 +17,15 @@ public class AbstractDataPersistence<D extends Dao<T, I>, T, I> {
         this.daoSource = daoSource;
     }
 
+    public T findById(I id) {
+        D dao = daoSource.get();
+        try {
+            return dao.findById(id);
+        } finally {
+            daoSource.destroy(dao);
+        }
+    }
+
     public void save(T t) {
         D dao = daoSource.get();
         try {

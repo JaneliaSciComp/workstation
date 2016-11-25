@@ -4,16 +4,14 @@ import org.janelia.jacs2.model.service.TaskInfo;
 
 import java.util.Comparator;
 
-public class DefaultServiceInfoComparator implements Comparator<QueuedTask> {
+public class DefaultServiceInfoComparator implements Comparator<TaskInfo> {
 
     @Override
-    public int compare(QueuedTask sc1, QueuedTask sc2) {
-        TaskInfo si1 = sc1.getTaskInfo();
-        TaskInfo si2 = sc2.getTaskInfo();
-        if (si1.priority() < si2.priority() || si1.priority() > si2.priority()) {
-            return si1.priority() - si2.priority();
+    public int compare(TaskInfo ti1, TaskInfo ti2) {
+        if (ti1.priority() < ti2.priority() || ti1.priority() > ti2.priority()) {
+            return ti1.priority() - ti2.priority();
         } else {
-            return si1.getCreationDate().compareTo(si2.getCreationDate());
+            return ti1.getCreationDate().compareTo(ti2.getCreationDate());
         }
     }
 

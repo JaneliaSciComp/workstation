@@ -12,22 +12,27 @@ public interface ServiceComputation {
      * This is the actual processing method which is performed on the enclosed service data.
      * @return a completion stage that could be chained with other computations
      */
-    CompletionStage<TaskInfo> processData();
+    CompletionStage<TaskInfo> processData(TaskInfo taskInfo);
 
     /**
-     *
-     * @param subTaskInfo child service info
+     * Check if the task is ready for processing.
+     * @param taskInfo task to be checked if it can be processed.
+     * @return the corresponding completion stage for this check.
+     */
+    CompletionStage<TaskInfo> isReady(TaskInfo taskInfo);
+
+    /**
+     * Check if the task processing is done.
+     * @param taskInfo task to be checked if it is done.
+     * @return the corresponding completion stage for this check.
+     */
+    CompletionStage<TaskInfo> isDone(TaskInfo taskInfo);
+
+    /**
+     * Submit a sub task.
+     * @param subTaskInfo sub task info
+     * @param parentTask parent task info
      * @return the computation for the child process.
      */
-    ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo);
-
-    /**
-     * @return the channel used for communicating that the task can begin processing.
-     */
-    TaskCommChannel<TaskInfo> getBeginChannel();
-
-    /**
-     * @return the channel used for communicating that the task completed.
-     */
-    TaskCommChannel<TaskInfo> getDoneChannel();
+    ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo, TaskInfo parentTask);
 }

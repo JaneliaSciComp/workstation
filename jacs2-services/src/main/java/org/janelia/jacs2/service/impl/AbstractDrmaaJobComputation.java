@@ -24,7 +24,7 @@ public abstract class AbstractDrmaaJobComputation extends AbstractExternalProces
     private org.ggf.drmaa.JobInfo jobInfo;
 
     @Override
-    protected CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
+    public CompletionStage<TaskInfo> processData(TaskInfo taskInfo) {
         logger.debug("Begin DRMAA job invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);

@@ -27,8 +27,7 @@ public class JacsTaskManager implements TaskManager {
 
     @Override
     public TaskInfo submitTaskAsync(TaskInfo serviceArgs, Optional<TaskInfo> parentTask) {
-        taskDispatcher.submitService(serviceArgs, parentTask);
-        return serviceArgs;
+        return taskDispatcher.submitTaskAsync(serviceArgs, parentTask);
     }
 
     @Override

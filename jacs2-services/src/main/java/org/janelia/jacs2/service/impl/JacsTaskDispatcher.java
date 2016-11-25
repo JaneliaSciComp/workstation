@@ -42,7 +42,7 @@ public class JacsTaskDispatcher {
     private TaskInfoPersistence taskInfoPersistence;
     @Inject
     private Instance<ServiceRegistry> serviceRegistrarSource;
-    private final Queue<QueuedTask> waitingTasks;
+    private final Queue<TaskInfo> waitingTasks;
     private final Set<Long> waitingTaskSet = new ConcurrentSkipListSet<>();
     private final Set<Long> submittedTaskSet = new ConcurrentSkipListSet<>();
     private final Semaphore queuePermit;
@@ -56,17 +56,19 @@ public class JacsTaskDispatcher {
         noWaitingSpaceAvailable = false;
     }
 
-    public ServiceComputation submitService(TaskInfo serviceArgs, Optional<TaskInfo> currentService) {
-        logger.info("Submitted {} as a {}", serviceArgs, currentService.isPresent() ? "sub-task of " + currentService.get().getId() : "root task");
-        ServiceDescriptor serviceDescriptor = getServiceDescriptor(serviceArgs.getName());
-        ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance();
-        serviceArgs.setServiceType(ServiceComputation.class.getName());
-        if (currentService.isPresent()) {
-            serviceArgs.updateParentTask(currentService.get());
+    public TaskInfo submitTaskAsync(TaskInfo serviceTask, Optional<TaskInfo> optionalParentTask) {
+        logger.info("Submitted {} as a {}", serviceTask, optionalParentTask.isPresent() ? "sub-task of " + optionalParentTask.get().getId() : "root task");
+        if (optionalParentTask.isPresent()) {
+            serviceTask.updateParentTask(optionalParentTask.get());
         }
-        persistServiceInfo(serviceArgs);
-        enqueueService(new QueuedTask(serviceArgs, serviceComputation));
-        return serviceComputation;
+        persistServiceInfo(serviceTask);
+        enqueueService(serviceTask);
+        return serviceTask;
+    }
+
+    ServiceComputation getServiceComputation(TaskInfo taskInfo) {
+        ServiceDescriptor serviceDescriptor = getServiceDescriptor(taskInfo.getName());
+        return serviceDescriptor.createComputationInstance();
     }
 
     private ServiceDescriptor getServiceDescriptor(String serviceName) {
@@ -79,17 +81,17 @@ public class JacsTaskDispatcher {
         return serviceDescriptor;
     }
 
-    private void enqueueService(QueuedTask queuedTask) {
+    private void enqueueService(TaskInfo queuedTask) {
         if (noWaitingSpaceAvailable) {
             // don't even check if anything has become available since last time
             // just drop it for now - the queue will be refilled after it drains.
-            logger.info("In memory queue reached the capacity so service {} will not be put in memory", queuedTask.getTaskInfo());
+            logger.info("In memory queue reached the capacity so service {} will not be put in memory", queuedTask);
             return;
         }
         boolean added = addWaitingTask(queuedTask);
         noWaitingSpaceAvailable  = !added || (waitingCapacity() <= 0);
         if (noWaitingSpaceAvailable) {
-            logger.info("Not enough space in memory queue for {}", queuedTask.getTaskInfo());
+            logger.info("Not enough space in memory queue for {}", queuedTask);
         }
     }
 
@@ -108,7 +110,7 @@ public class JacsTaskDispatcher {
                 logger.debug("No available processing slots");
                 return; // no slot available
             }
-            QueuedTask queuedTask = dequeTask();
+            TaskInfo queuedTask = dequeTask();
             logger.info("Dequeued task {}", queuedTask);
             if (queuedTask == null) {
                 // nothing to do
@@ -116,26 +118,21 @@ public class JacsTaskDispatcher {
                 return;
             }
             logger.info("Dispatch task {}", queuedTask);
+            ServiceComputation serviceComputation = getServiceComputation(queuedTask);
             CompletableFuture
-                    .supplyAsync(() -> {
-                        logger.info("Task {} is ready", queuedTask);
-                        TaskInfo taskInfo = queuedTask.getTaskInfo();
-                        queuedTask.getServiceComputation().getBeginChannel().put(taskInfo);
-                        return queuedTask;
+                    .supplyAsync(() -> queuedTask, taskExecutor)
+                    .thenApplyAsync(ti -> {
+                        logger.debug("Submit {}", ti);
+                        ti.setState(TaskState.SUBMITTED);
+                        updateServiceInfo(ti);
+                        availableSlots.release();
+                        return ti;
                     }, taskExecutor)
-                    .thenApplyAsync(qt -> {
-                        TaskInfo taskInfo = qt.getTaskInfo();
-                        logger.debug("Submit {}", taskInfo);
-                        taskInfo.setState(TaskState.SUBMITTED);
-                        updateServiceInfo(taskInfo);
-                        return qt;
-                    }, taskExecutor)
-                    .thenComposeAsync(qt -> qt.getServiceComputation().processData(), taskExecutor)
+                    .thenComposeAsync(serviceComputation::isReady, taskExecutor)
+                    .thenComposeAsync(serviceComputation::processData, taskExecutor)
+                    .thenComposeAsync(serviceComputation::isDone, taskExecutor)
                     .whenCompleteAsync((taskInfo, exc) -> {
                         logger.debug("Complete {}", taskInfo);
-                        availableSlots.release();
-                    }, taskExecutor)
-                    .whenCompleteAsync((taskInfo, exc) -> {
                         if (exc == null) {
                             logger.info("Successfully completed {}", taskInfo);
                             taskInfo.setState(TaskState.SUCCESSFUL);
@@ -144,11 +141,7 @@ public class JacsTaskDispatcher {
                             taskInfo.setState(TaskState.ERROR);
                         }
                         updateServiceInfo(taskInfo);
-                    }, taskExecutor)
-                    .whenCompleteAsync((taskInfo, exc) -> {
                         submittedTaskSet.remove(taskInfo.getId());
-                        queuedTask.getServiceComputation().getDoneChannel().put(taskInfo);
-                        logger.info("Updated results for {}", taskInfo);
                     }, taskExecutor);
         }
     }
@@ -162,24 +155,23 @@ public class JacsTaskDispatcher {
         }
     }
 
-    private QueuedTask dequeTask() {
-        QueuedTask queuedTask = getWaitingTask();
+    private TaskInfo dequeTask() {
+        TaskInfo queuedTask = getWaitingTask();
         if (queuedTask == null && enqueueAvailableServices(EnumSet.of(TaskState.CREATED, TaskState.QUEUED))) {
             queuedTask = getWaitingTask();
         }
         return queuedTask;
     }
 
-    private boolean addWaitingTask(QueuedTask queuedTask) {
+    private boolean addWaitingTask(TaskInfo taskInfo) {
         boolean added = false;
         try {
             queuePermit.acquireUninterruptibly();
-            TaskInfo taskInfo = queuedTask.getTaskInfo();
             if (submittedTaskSet.contains(taskInfo.getId()) || waitingTaskSet.contains(taskInfo.getId())) {
                 // task is already waiting or running
                 return true;
             }
-            added = waitingTasks.offer(queuedTask);
+            added = waitingTasks.offer(taskInfo);
             if (added) {
                 logger.debug("Enqueued task {}", taskInfo);
                 waitingTaskSet.add(taskInfo.getId());
@@ -194,26 +186,17 @@ public class JacsTaskDispatcher {
         return added;
     }
 
-    private QueuedTask getWaitingTask() {
+    private TaskInfo getWaitingTask() {
         try {
             queuePermit.acquireUninterruptibly();
-            QueuedTask queuedTask = waitingTasks.poll();
-            if (queuedTask != null) {
-                logger.debug("Retrieved waiting task {}", queuedTask.getTaskInfo());
-                Long taskId = queuedTask.getTaskInfo().getId();
+            TaskInfo taskInfo = waitingTasks.poll();
+            if (taskInfo != null) {
+                logger.debug("Retrieved waiting task {}", taskInfo);
+                Long taskId = taskInfo.getId();
                 submittedTaskSet.add(taskId);
                 waitingTaskSet.remove(taskId);
             }
-            return queuedTask;
-        } finally {
-            queuePermit.release();
-        }
-    }
-
-    private void clearWaitingQueue() {
-        try {
-            queuePermit.acquireUninterruptibly();
-            waitingTasks.clear();
+            return taskInfo;
         } finally {
             queuePermit.release();
         }
@@ -240,9 +223,7 @@ public class JacsTaskDispatcher {
             services.getResultList().stream().forEach(taskInfo -> {
                 try {
                     if (!submittedTaskSet.contains(taskInfo.getId()) && !waitingTaskSet.contains(taskInfo.getId())) {
-                        ServiceDescriptor serviceDescriptor = getServiceDescriptor(taskInfo.getName());
-                        ServiceComputation serviceComputation = serviceDescriptor.createComputationInstance();
-                        addWaitingTask(new QueuedTask(taskInfo, serviceComputation));
+                        addWaitingTask(taskInfo);
                     }
                 } catch (Exception e) {
                     logger.error("Internal error - no computation can be created for {}", taskInfo);

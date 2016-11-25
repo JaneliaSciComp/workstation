@@ -8,6 +8,7 @@ import org.janelia.jacs2.model.service.TaskState;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
+import java.util.List;
 import java.util.Set;
 
 public class TaskInfoPersistence extends AbstractDataPersistence<TaskInfoDao, TaskInfo, Long> {
@@ -26,4 +27,12 @@ public class TaskInfoPersistence extends AbstractDataPersistence<TaskInfoDao, Ta
         }
     }
 
+    public List<TaskInfo> findTaskHierarchy(Long taskId) {
+        TaskInfoDao  taskDao = daoSource.get();
+        try {
+            return taskDao.findTaskHierarchy(taskId);
+        } finally {
+            daoSource.destroy(taskDao);
+        }
+    }
 }

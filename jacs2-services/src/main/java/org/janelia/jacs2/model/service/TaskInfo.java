@@ -254,4 +254,9 @@ public class TaskInfo {
     public String toString() {
         return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentTask", "rootTask", "subTasks", "events"));
     }
+
+    public boolean hasCompleted() {
+        return state == TaskState.CANCELED || state == TaskState.ERROR || state == TaskState.SUCCESSFUL;
+    }
+
 }

@@ -19,7 +19,7 @@ public abstract class AbstractLocalProcessComputation extends AbstractExternalPr
     private Process localProcess;
 
     @Override
-    protected CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
+    public CompletionStage<TaskInfo> processData(TaskInfo taskInfo) {
         logger.debug("Begin local process invocation for {}", taskInfo);
         List<String> cmdLine = prepareCommandLine(taskInfo);
         Map<String, String> env = prepareEnvironment(taskInfo);

@@ -28,7 +28,7 @@ public class AbstractServiceComputationTest {
     private static class TestSuccessfulComputation extends AbstractServiceComputation {
 
         @Override
-        protected CompletionStage<TaskInfo> doWork(TaskInfo ti) {
+        public CompletionStage<TaskInfo> processData(TaskInfo ti) {
             CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
             completableFuture.complete(ti);
             return completableFuture;
@@ -38,7 +38,7 @@ public class AbstractServiceComputationTest {
     private static class TestFailedComputation extends AbstractServiceComputation {
 
         @Override
-        protected CompletionStage<TaskInfo> doWork(TaskInfo ti) {
+        public CompletionStage<TaskInfo> processData(TaskInfo ti) {
             CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
             completableFuture.completeExceptionally(new IllegalStateException("test"));
             return completableFuture;
@@ -53,10 +53,6 @@ public class AbstractServiceComputationTest {
     private TaskInfoPersistence taskInfoPersistence;
     @Spy
     private Executor taskExecutor;
-    @Spy
-    private TaskCommChannel<TaskInfo> taskCommChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
-    @Spy
-    private TaskCommChannel<TaskInfo> taskResultsChannel = new SingleUsageBlockingQueueTaskCommChannel<>();
 
     @InjectMocks
     private TestSuccessfulComputation testSuccessfullComputation;
@@ -77,12 +73,10 @@ public class AbstractServiceComputationTest {
     public void testSuccessfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testSuccessfullComputation.getBeginChannel().put(testTaskInfo);
-            return testTaskInfo;
-        }, taskExecutor)
-        .thenComposeAsync(si -> testSuccessfullComputation.processData(), taskExecutor);
-
+        CompletionStage<TaskInfo> computation =
+                CompletableFuture
+                    .supplyAsync(() -> testTaskInfo, taskExecutor)
+                    .thenComposeAsync(ti -> testSuccessfullComputation.processData(ti), taskExecutor);
         computation
             .thenAcceptAsync(successful, taskExecutor)
             .exceptionally(ex -> {
@@ -99,13 +93,10 @@ public class AbstractServiceComputationTest {
     public void testFailedProcessing() throws ComputationException {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<TaskInfo> computation = CompletableFuture.supplyAsync(() -> {
-            testFailedComputation.getBeginChannel().put(testTaskInfo);
-            return testTaskInfo;
-        })
-        .thenCompose(si -> {
-            return testFailedComputation.processData();
-        });
+        CompletionStage<TaskInfo> computation =
+                CompletableFuture
+                        .supplyAsync(() -> testTaskInfo, taskExecutor)
+                        .thenComposeAsync(ti -> testFailedComputation.processData(ti), taskExecutor);
         computation
                 .thenAccept(successful)
                 .exceptionally(ex -> {

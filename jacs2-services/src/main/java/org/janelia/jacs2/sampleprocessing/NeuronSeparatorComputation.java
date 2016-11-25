@@ -42,9 +42,8 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         return ImmutableMap.of();
     }
 
-
     @Override
-    public CompletionStage<TaskInfo> doWork(TaskInfo taskInfo) {
+    public CompletionStage<TaskInfo> isReady(TaskInfo taskInfo) {
         // prepare to submit the child task
         TaskInfo subTask = new TaskInfo();
         subTask.setServiceCmd("echo");
@@ -53,18 +52,7 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         subTask.setName("sage");
         subTask.setPriority(taskInfo.priority() + 1);
 
-        ServiceComputation subTaskComputation = submitSubTaskAsync(subTask);
-        CompletionStage<TaskInfo> taskProcessing =
-                CompletableFuture.supplyAsync(() -> {
-                    logger.info("Waiting for sub-task {} of {} to finish", subTask, taskInfo);
-                    subTaskComputation.getDoneChannel().take();
-                    logger.info("Task {} completed, continue processing {} ", subTask, taskInfo);
-                    return taskInfo;
-                }, taskExecutor)
-                .thenCompose(ti -> {
-                    logger.info("Performing neuron separator work for {}", ti);
-                    return super.doWork(ti);
-                });
-        return taskProcessing;
+        ServiceComputation subTaskComputation = submitSubTaskAsync(subTask, taskInfo);
+        return super.isReady(taskInfo);
     }
 }
