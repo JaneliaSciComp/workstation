@@ -6,6 +6,7 @@ import java.security.ProtectionDomain;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -20,7 +21,6 @@ import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.SystemInfo;
-import org.janelia.it.workstation.browser.util.UserNotificationExceptionHandler;
 import org.openide.LifecycleManager;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
@@ -51,7 +51,6 @@ public class ConsoleApp {
     private final String appName;
     private final String appVersion;
     private final ImageCache imageCache;
-    private final UserNotificationExceptionHandler exceptionHandler;
     
     // Lazily initialized
     private PatternSearchDialog patternSearchDialog;
@@ -86,9 +85,6 @@ public class ConsoleApp {
         
         // Init in-memory image cache
         this.imageCache = new ImageCache();
-        
-        // Create a global exception handler
-        this.exceptionHandler = new UserNotificationExceptionHandler();
 
         // Workaround for NetBeans Sierra rendering issues
         findAndRemoveAllResourcesFile();
@@ -237,7 +233,7 @@ public class ConsoleApp {
     }
     
     void handle(Throwable throwable) {
-        exceptionHandler.handleException(throwable);
+        FrameworkImplProvider.handleException(throwable);
     }
 
     public String getApplicationOutputDirectory() {

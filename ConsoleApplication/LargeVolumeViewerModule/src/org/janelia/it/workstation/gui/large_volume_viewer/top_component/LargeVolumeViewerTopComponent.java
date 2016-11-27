@@ -228,16 +228,22 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
                 
                 @Override
                 protected void doStuff() throws Exception {
-                    Reference ref = Reference.createFor(objectStrRef);
-                    TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-                    if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
-                        domainObject = tmDomainMgr.getSample(ref.getTargetId());
+                    try {
+                        Reference ref = Reference.createFor(objectStrRef);
+                        TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                        if (TmSample.class.getSimpleName().equals(ref.getTargetClassName())) {
+                            domainObject = tmDomainMgr.getSample(ref.getTargetId());
+                        }
+                        else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
+                            domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
+                        }
+                        else {
+                            log.error("State object is unsupported by the LVV: "+ref);
+                        }
                     }
-                    else if (TmWorkspace.class.getSimpleName().equals(ref.getTargetClassName())) {
-                        domainObject = tmDomainMgr.getWorkspace(ref.getTargetId());
-                    }
-                    else {
-                        log.error("State object is unsupported by the LVV: "+ref);
+                    catch (Exception e) {
+                        // Squelch this error because the user does not need to know this failed. They can just re-open the sample manually. 
+                        log.error("Error loading last open object: "+objectStrRef, e);
                     }
                 }
 

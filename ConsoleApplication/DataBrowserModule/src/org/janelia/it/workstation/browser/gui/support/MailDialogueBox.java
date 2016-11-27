@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MailDialogueBox {
 
-    private Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
+    private static final Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
 
     private static final String LOG_FILE_NAME = "messages.log";
     
@@ -62,25 +62,42 @@ public class MailDialogueBox {
         while (desc == null || desc.equals("")) {
             ans = JOptionPane.showConfirmDialog(parentFrame, panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (ans == JOptionPane.CANCEL_OPTION) return;
-            desc = messagePrefix + textArea.getText() +"\n";
+            desc = textArea.getText() +"\n";
         }
-        desc+=messageSuffix;
-        MailHelper helper = new MailHelper();
+        sendEmail(desc);
+    }
+
+    public void sendEmail() {
+        sendEmail("");
+    }
+    
+    private void sendEmail(String desc) {
         
+        // Flush all long handlers so that we have a complete log file
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
+        for (java.util.logging.Handler handler : logger.getHandlers()) {
+            handler.flush();
+        }
+        
+        String filename = null;
         File logDir = new File(Places.getUserDirectory(), "var/log");
         File logfile = new File(logDir, LOG_FILE_NAME);
-        
         if (!logfile.canRead()) {
             log.info("Can't read log file at "+logfile.getAbsolutePath());
             logfile = null;
         }
+        else {
+            filename = AccessManager.getUsername()+"_"+LOG_FILE_NAME;
+        }
         
-        String filename = AccessManager.getUsername()+"_"+LOG_FILE_NAME;
+        String body = messagePrefix + desc + messageSuffix;
         
         log.info("Sending email from {} to {} with attachment {}",fromEmail,toEmail, logfile);
-        helper.sendEmail(fromEmail, toEmail, subject, desc, logfile, filename);
+        
+        MailHelper helper = new MailHelper();
+        helper.sendEmail(fromEmail, toEmail, subject, body, logfile, filename);
     }
-
+    
     /**
      * This method gives the caller a way to place text at the end of the message.
      * @param messageSuffixInformation Text to display after everything else.
