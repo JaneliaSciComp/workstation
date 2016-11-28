@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 public class AbstractServiceComputationTest {
 
-    private static class TestSuccessfulComputation extends AbstractServiceComputation {
+    static class TestSuccessfulComputation extends AbstractServiceComputation {
 
         @Override
         public CompletionStage<TaskInfo> processData(TaskInfo ti) {
@@ -35,7 +35,7 @@ public class AbstractServiceComputationTest {
         }
     }
 
-    private static class TestFailedComputation extends AbstractServiceComputation {
+    static class TestFailedComputation extends AbstractServiceComputation {
 
         @Override
         public CompletionStage<TaskInfo> processData(TaskInfo ti) {

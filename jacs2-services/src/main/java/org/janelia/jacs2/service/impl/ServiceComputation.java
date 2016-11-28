@@ -9,6 +9,13 @@ import java.util.concurrent.CompletionStage;
  */
 public interface ServiceComputation {
     /**
+     * Pre-processing stage.
+     *
+     * @return a promise corresponding to the pre-processing stage.
+     */
+    CompletionStage<TaskInfo> preProcessData(TaskInfo taskInfo);
+
+    /**
      * This is the actual processing method which is performed on the enclosed service data.
      * @return a completion stage that could be chained with other computations
      */
@@ -27,6 +34,11 @@ public interface ServiceComputation {
      * @return the corresponding completion stage for this check.
      */
     CompletionStage<TaskInfo> isDone(TaskInfo taskInfo);
+
+    /**
+     * Post-processing.
+     */
+    void postProcessData(TaskInfo taskInfo, Throwable exc);
 
     /**
      * Submit a sub task.

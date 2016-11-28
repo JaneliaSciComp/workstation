@@ -1,6 +1,8 @@
 package org.janelia.jacs2.service.impl;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -121,7 +123,7 @@ public class JacsTaskDispatcher {
     void dispatchServices() {
         for (int i = 0; i < MAX_WAITING_SLOTS; i++) {
             if (!availableSlots.tryAcquire()) {
-                logger.debug("No available processing slots");
+                logger.info("No available processing slots");
                 return; // no slot available
             }
             TaskInfo queuedTask = dequeTask();
@@ -133,6 +135,8 @@ public class JacsTaskDispatcher {
             }
             logger.info("Dispatch task {}", queuedTask);
             ServiceComputation serviceComputation = getServiceComputation(queuedTask);
+            // The service lifecycle is:
+            // preprocess -> isReady -> processData -> isDone -> postProcess
             CompletableFuture
                     .supplyAsync(() -> queuedTask, taskExecutor)
                     .thenApplyAsync(ti -> {
@@ -142,21 +146,33 @@ public class JacsTaskDispatcher {
                         availableSlots.release();
                         return ti;
                     }, taskExecutor)
+                    .thenComposeAsync(serviceComputation::preProcessData, taskExecutor)
                     .thenComposeAsync(serviceComputation::isReady, taskExecutor)
                     .thenComposeAsync(serviceComputation::processData, taskExecutor)
                     .thenComposeAsync(serviceComputation::isDone, taskExecutor)
-                    .whenCompleteAsync((taskInfo, exc) -> {
-                        logger.debug("Complete {}", taskInfo);
-                        if (exc == null) {
-                            logger.info("Successfully completed {}", taskInfo);
-                            taskInfo.setState(TaskState.SUCCESSFUL);
-                        } else {
-                            logger.error("Error executing {}", taskInfo, exc);
-                            taskInfo.setState(TaskState.ERROR);
+                    .whenCompleteAsync((ti, exc) -> {
+                        TaskInfo updatedTask = ti;
+                        if (updatedTask == null) {
+                            updatedTask = queuedTask;
                         }
-                        updateServiceInfo(taskInfo);
-                        submittedTaskSet.remove(taskInfo.getId());
-                    }, taskExecutor);
+                        logger.debug("Complete {}", updatedTask);
+                        if (exc == null) {
+                            logger.info("Successfully completed {}", updatedTask);
+                            updatedTask.setState(TaskState.SUCCESSFUL);
+                        } else {
+                            logger.error("Error executing {}", updatedTask, exc);
+                            updatedTask.setState(TaskState.ERROR);
+                        }
+                        updateServiceInfo(updatedTask);
+                        submittedTaskSet.remove(updatedTask.getId());
+                    }, taskExecutor)
+                    .whenCompleteAsync((ti, exc) -> {
+                        TaskInfo updatedTask = ti;
+                        if (updatedTask == null) {
+                            updatedTask = queuedTask;
+                        }
+                        serviceComputation.postProcessData(updatedTask, exc);
+                    });
         }
     }
 
@@ -233,9 +249,10 @@ public class JacsTaskDispatcher {
                 new SortCriteria("priority", SortDirection.DESC),
                 new SortCriteria("creationDate"))));
         PageResult<TaskInfo> services = taskInfoPersistence.findTasksByState(taskStates, servicePageRequest);
-        if (services.getResultList().size() > 0) {
+        if (CollectionUtils.isNotEmpty(services.getResultList())) {
             services.getResultList().stream().forEach(taskInfo -> {
                 try {
+                    Preconditions.checkArgument(taskInfo.getId() != null, "Invalid task ID");
                     if (!submittedTaskSet.contains(taskInfo.getId()) && !waitingTaskSet.contains(taskInfo.getId())) {
                         addWaitingTask(taskInfo);
                     }

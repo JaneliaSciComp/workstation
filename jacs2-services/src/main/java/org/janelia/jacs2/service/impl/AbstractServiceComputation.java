@@ -23,6 +23,12 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     private TaskInfoPersistence taskInfoPersistence;
 
     @Override
+    public CompletionStage<TaskInfo> preProcessData(TaskInfo taskInfo) {
+        // the default operation is a noop
+        return CompletableFuture.completedFuture(taskInfo);
+    }
+
+    @Override
     public CompletionStage<TaskInfo> isReady(TaskInfo taskInfo) {
         CompletableFuture<TaskInfo> checkIfReadyFuture = new CompletableFuture<>();
         List<TaskInfo> uncompletedSubTasks = taskInfoPersistence.findTaskHierarchy(taskInfo.getId());
@@ -52,6 +58,11 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
         CompletableFuture<TaskInfo> checkIfDoneFuture = new CompletableFuture<>();
         checkIfDoneFuture.complete(taskInfo);
         return checkIfDoneFuture;
+    }
+
+    @Override
+    public void postProcessData(TaskInfo taskInfo, Throwable exc) {
+        // noop
     }
 
     @Override
