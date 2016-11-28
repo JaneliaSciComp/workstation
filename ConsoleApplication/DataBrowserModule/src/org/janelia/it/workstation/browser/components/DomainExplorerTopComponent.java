@@ -23,7 +23,6 @@ import javax.swing.text.Position;
 
 import org.janelia.it.jacs.integration.framework.domain.DomainObjectHelper;
 import org.janelia.it.jacs.integration.framework.domain.ServiceAcceptorHelper;
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -505,7 +504,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     public WorkspaceNode getWorkspaceNode() {
         for(Node node : root.getChildren().getNodes()) {
-            return (WorkspaceNode)node;
+            if (node instanceof WorkspaceNode) {
+                return (WorkspaceNode)node;
+            }
         }
         return null;
     }
