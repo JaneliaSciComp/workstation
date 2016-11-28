@@ -12,8 +12,8 @@ Workstation Browser
 FlyLight
 * Added "Publishing Name" and "Published Externally" indicator to Samples and LSM Images 
 * Added "Owner" column to the Data Set dialog window
-* When sharing an entire data set, a filter is now automatically created under the "Shared Data" folder.
-* Cleaned up the "Shared Data" folders which had redundant Samples 
+* When sharing an entire data set, a filter is now automatically created under the Shared Data folder.
+* Cleaned up the Shared Data folders which had redundant Samples 
 
 MouseLight
 * Added tooltips for long neuron names
