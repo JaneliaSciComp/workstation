@@ -123,7 +123,7 @@ public class JacsTaskDispatcherTest {
         TaskInfo testTask = submitTestTask("submittedTask", null);
 
         when(taskInfoPersistence.findTasksByState(any(Set.class), any(PageRequest.class)))
-                .thenReturn(new PageResult<TaskInfo>());
+                .thenReturn(new PageResult<>());
 
         verifyDispatch(testTask);
     }
@@ -136,7 +136,7 @@ public class JacsTaskDispatcherTest {
         nonEmptyPageResult.setResultList(ImmutableList.of(testTask));
         when(taskInfoPersistence.findTasksByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(nonEmptyPageResult)
-                .thenReturn(new PageResult<TaskInfo>());
+                .thenReturn(new PageResult<>());
 
         verifyDispatch(testTask);
     }
@@ -149,11 +149,12 @@ public class JacsTaskDispatcherTest {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    throw new IllegalStateException(e);
                 }
             }
         }
     }
+
     private void verifyDispatch(TaskInfo testTask) {
         CompletionStage<TaskInfo> process = CompletableFuture.completedFuture(testTask);
         TaskSyncer done = new TaskSyncer();
