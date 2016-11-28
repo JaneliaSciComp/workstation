@@ -203,8 +203,10 @@ public class LargeVolumeViewViewer extends JPanel {
                         // If either load failed
                         logger.error("LVVV load failed", t);
                         try {
-                            annotationModel.clear();
-                            annotationModel.loadComplete();
+                            if (annotationModel!=null) {
+                                annotationModel.clear();
+                                annotationModel.loadComplete();
+                            }
                         }
                         catch (Exception e) {
                             logger.error("Error loading empty workspace",e);

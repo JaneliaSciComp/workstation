@@ -25,6 +25,7 @@ import javax.swing.SwingConstants;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.gui.inspector.DomainInspectorPanel;
@@ -103,7 +104,7 @@ public class DataSetListDialog extends ModalDialog {
 
                     final DataSet dataSet = (DataSet) getRows().get(table.getSelectedRow()).getUserObject();
 
-                    JMenuItem editItem = new JMenuItem("  Edit");
+                    JMenuItem editItem = new JMenuItem("  View Details");
                     editItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
@@ -160,6 +161,11 @@ public class DataSetListDialog extends ModalDialog {
                         }
                     });
                     menu.add(deleteItem);
+                    
+                    if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
+                        permItem.setEnabled(false);
+                        deleteItem.setEnabled(false);
+                    }
                 }
 
                 return menu;
@@ -183,9 +189,18 @@ public class DataSetListDialog extends ModalDialog {
             @Override
             protected void valueChanged(DynamicColumn dc, int row, Object data) {
                 if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+                    
                     final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
                     DynamicRow dr = getRows().get(row);
                     final DataSet dataSet = (DataSet) dr.getUserObject();
+                    
+                    if (!ClientDomainUtils.hasWriteAccess(dataSet)) {
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                                "You do not have permission to change this data set",
+                                "Permission denied", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    
                     SimpleWorker worker = new SimpleWorker() {
 
                         @Override

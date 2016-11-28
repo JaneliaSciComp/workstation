@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,9 +37,27 @@ public class WorkspaceInformationAction extends AbstractAction {
     public void actionPerformed(ActionEvent action) {
         if (annotationModel.getCurrentWorkspace() != null) {
 
-            InfoTableModel tableModel = new InfoTableModel();
+            final InfoTableModel tableModel = new InfoTableModel();
             tableModel.setAnnotationModel(annotationModel);
-            JTable table = new JTable(tableModel);
+            JTable table = new JTable(tableModel) {
+                public String getToolTipText(MouseEvent event) {
+                    String tip = null;
+                    java.awt.Point p = event.getPoint();
+                    int rowIndex = rowAtPoint(p);
+                    if (rowIndex >= 0) {
+                        int colIndex = columnAtPoint(p);
+                        int realColumnIndex = convertColumnIndexToModel(colIndex);
+                        int realRowIndex = convertRowIndexToModel(rowIndex);
+                        if (realColumnIndex == 0) {
+                            tip = (String) tableModel.getValueAt(realRowIndex, realColumnIndex);
+                        }
+                        return tip;
+                    } else {
+                        // off visible rows, returns null = no tip
+                        return tip;
+                    }
+                }
+            };
             JScrollPane scrollPane = new JScrollPane(table);
 
             table.setFillsViewportHeight(true);

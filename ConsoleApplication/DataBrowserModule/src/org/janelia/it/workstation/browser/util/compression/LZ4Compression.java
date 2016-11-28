@@ -109,7 +109,7 @@ public class LZ4Compression implements CompressionAlgorithm {
     public byte[] decompressAsBytes(byte[] inbytes) throws CompressionException {
         
         Date startTime = new Date();
-        final int fileLen = (int) inbytes.length;
+        final int fileLen = inbytes.length;
         byte[] dest = new byte[fileLen * 3];
         
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
@@ -156,7 +156,7 @@ public class LZ4Compression implements CompressionAlgorithm {
         Date startTime = new Date();
         LZ4Factory factory = LZ4Factory.fastestJavaInstance();
         LZ4UnknownSizeDecompressor decompressor = factory.unknownSizeDecompressor();
-        final int fileLen = (int) inbytes.length;
+        final int fileLen = inbytes.length;
 
         decompressor.decompress(inbytes, 0, fileLen, outbytes, 0, outbytes.length);
         Date endDecompress = new Date();

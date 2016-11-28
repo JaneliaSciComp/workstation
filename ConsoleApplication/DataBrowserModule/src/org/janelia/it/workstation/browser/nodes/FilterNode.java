@@ -24,7 +24,7 @@ public class FilterNode extends DomainObjectNode<Filtering> {
     }
     
     public Filtering getFilter() {
-        return (Filtering)getDomainObject();
+        return getDomainObject();
     }
     
     @Override

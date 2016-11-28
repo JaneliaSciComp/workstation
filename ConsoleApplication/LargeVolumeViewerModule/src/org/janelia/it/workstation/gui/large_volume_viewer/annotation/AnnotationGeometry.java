@@ -6,9 +6,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
  */
 public enum AnnotationGeometry {
 
+    // note: this is also the sort order
     ROOT("o--"),
-    BRANCH("--<"),
     LINK("---"),
+    BRANCH("--<"),
     END("--o");
 
     private String texticon;
@@ -20,4 +21,6 @@ public enum AnnotationGeometry {
     public String getTexticon() {
         return texticon;
     }
+
+    public String toString() {return texticon; }
 }

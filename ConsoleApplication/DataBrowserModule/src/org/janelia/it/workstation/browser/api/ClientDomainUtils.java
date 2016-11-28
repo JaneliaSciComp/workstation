@@ -1,10 +1,7 @@
 package org.janelia.it.workstation.browser.api;
 
-import java.util.HashSet;
-
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
-
 
 /**
  * Miscellaneous utility methods for dealing with the Domain model on the client side. Generic utility methods for the domain model 
@@ -29,7 +26,7 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasReadAccess(DomainObject domainObject) {
-        return DomainUtils.hasReadAccess(domainObject, new HashSet<>(AccessManager.getSubjectKeys()));
+        return DomainUtils.hasReadAccess(domainObject, AccessManager.getReaderSet());
     }
     
     /**
@@ -38,7 +35,6 @@ public class ClientDomainUtils {
      * @return T=Yes; F=No
      */
     public static boolean hasWriteAccess(DomainObject domainObject) {
-        return DomainUtils.hasWriteAccess(domainObject, new HashSet<>(AccessManager.getSubjectKeys()));
+        return DomainUtils.hasWriteAccess(domainObject, AccessManager.getWriterSet());
     }
-
 }
