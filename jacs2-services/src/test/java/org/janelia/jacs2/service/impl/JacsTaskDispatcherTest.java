@@ -6,6 +6,7 @@ import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.TaskInfo;
 import org.janelia.jacs2.model.service.TaskState;
 import org.janelia.jacs2.persistence.TaskInfoPersistence;
+import org.janelia.jacs2.service.ServerStats;
 import org.janelia.jacs2.service.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,6 +18,7 @@ import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -105,6 +107,15 @@ public class JacsTaskDispatcherTest {
         submitTestTask("test", null);
         testDispatcher.dispatchServices();
         verify(logger).info("No available processing slots");
+    }
+
+    @Test
+    public void increaseNumberOfSlots() {
+        int nSlots = 110;
+        testDispatcher.setAvailableSlots(0);
+        testDispatcher.setAvailableSlots(nSlots);
+        ServerStats stats = testDispatcher.getServerStats();
+        assertThat(stats.getAvailableSlots(), equalTo(nSlots));
     }
 
     @Test
@@ -221,4 +232,22 @@ public class JacsTaskDispatcherTest {
         assertThat(testTask.getState(), equalTo(TaskState.ERROR));
     }
 
+    @Test
+    public void syncServiceQueue() {
+        PageResult<TaskInfo> taskInfoPageResult = new PageResult<>();
+        List<TaskInfo> taskResults = ImmutableList.<TaskInfo>builder()
+                .add(createTestTask(1L, "t1"))
+                .add(createTestTask(2L, "t2"))
+                .add(createTestTask(3L, "t3"))
+                .add(createTestTask(4L, "t4"))
+                .add(createTestTask(5L, "t5"))
+                .add(createTestTask(6L, "t6"))
+                .add(createTestTask(7L, "t7"))
+                .build();
+        taskInfoPageResult.setResultList(taskResults);
+        when(taskInfoPersistence.findTasksByState(any(Set.class), any(PageRequest.class))).thenReturn(taskInfoPageResult);
+        testDispatcher.syncServiceQueue();
+        ServerStats stats = testDispatcher.getServerStats();
+        assertThat(stats.getWaitingTasks(), equalTo(taskResults.size()));
+    }
 }

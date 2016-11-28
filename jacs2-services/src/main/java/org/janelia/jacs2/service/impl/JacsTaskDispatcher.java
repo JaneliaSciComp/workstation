@@ -135,8 +135,7 @@ public class JacsTaskDispatcher {
             }
             logger.info("Dispatch task {}", queuedTask);
             ServiceComputation serviceComputation = getServiceComputation(queuedTask);
-            // The service lifecycle is:
-            // preprocess -> isReady -> processData -> isDone -> postProcess
+            // The service lifecycle is: preprocess -> isReady -> processData -> isDone -> postProcess
             CompletableFuture
                     .supplyAsync(() -> queuedTask, taskExecutor)
                     .thenApplyAsync(ti -> {
@@ -177,12 +176,9 @@ public class JacsTaskDispatcher {
     }
 
     void syncServiceQueue() {
-        if (noWaitingSpaceAvailable) {
-            logger.info("Sync the waiting queue");
-            // if at any point we reached the capacity of the in memory waiting queue
-            // synchronize the in memory queue with the database and fill the queue with services that are still in CREATED state
-            enqueueAvailableServices(EnumSet.of(TaskState.CREATED));
-        }
+        logger.info("Sync the waiting queue");
+        // check for newly created services and queue them based on their priorities
+        enqueueAvailableServices(EnumSet.of(TaskState.CREATED));
     }
 
     private TaskInfo dequeTask() {
