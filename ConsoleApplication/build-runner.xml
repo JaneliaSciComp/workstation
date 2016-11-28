@@ -129,11 +129,11 @@ of adapter.
     </target>
 
     <target name="prop-copy" description="Get latest versions of properties files from the non-NetBeans Projects.">
-        <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/SharedModelComputeWrapper/src" />
+        <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/ConsoleWrapper/src" />
     </target>
 
     <target name="internal-jar-copy" description="Get latest versions of internally-developed project jars.">
-        <property name="internal-jar-release" value="${basedir}/SharedModelComputeWrapper/release/modules/ext"/>
+        <property name="internal-jar-release" value="${basedir}/ConsoleWrapper/release/modules/ext"/>
         <mkdir dir="${internal-jar-release}"/>
         <copy file="${basedir}/../shared/build/jars/jacs-shared.jar" todir="${internal-jar-release}" />
         <copy file="${basedir}/../model/build/jars/jacs-model.jar" todir="${internal-jar-release}" />

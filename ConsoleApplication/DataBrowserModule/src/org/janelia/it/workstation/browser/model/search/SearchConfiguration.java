@@ -158,7 +158,7 @@ public class SearchConfiguration {
 
         SolrQueryBuilder builder = new SolrQueryBuilder();
         
-        for (String subjectKey : AccessManager.getSubjectKeys()) {
+        for (String subjectKey : AccessManager.getReaderSet()) {
             log.trace("Adding query owner key: {}",subjectKey);
             builder.addOwnerKey(subjectKey);
         }

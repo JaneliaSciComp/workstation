@@ -41,11 +41,11 @@ public class InterceptingEventQueue extends EventQueue implements MessageSource 
             super.dispatchEvent(event);
         } catch (Throwable t) {
             String message = "InterceptingEventQueue Error:" + SystemInfo.getFreeSystemMemory() + "/" + SystemInfo.getTotalSystemMemory();
-            System.err.println(message);
-            System.err.println("Event is: " + event.getClass().toString());
+//            System.err.println(message);
+//            System.err.println("Event is: " + event.getClass().toString());
             BrowserActivityLoggingService activityLogging = new BrowserActivityLoggingService();
             activityLogging.logToolEvent(new ToolString("EventQueue"), new CategoryString("excep:mem"), new ActionString(message));
-            t.printStackTrace();
+//            t.printStackTrace();
             throw t;
         }
     }

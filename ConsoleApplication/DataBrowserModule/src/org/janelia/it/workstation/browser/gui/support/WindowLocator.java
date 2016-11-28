@@ -54,7 +54,7 @@ public class WindowLocator {
         try {
             Runnable runnable = new Runnable() {
                 public void run() {
-                    component[ 0 ] = (TopComponent)WindowManager.getDefault().findTopComponent(frameName);
+                    component[ 0 ] = WindowManager.getDefault().findTopComponent(frameName);
                 }
             };
             if (SwingUtilities.isEventDispatchThread()) {

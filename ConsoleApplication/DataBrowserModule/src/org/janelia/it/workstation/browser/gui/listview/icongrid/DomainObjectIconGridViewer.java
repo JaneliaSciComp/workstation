@@ -266,7 +266,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
 
             @Override
             protected void doStuff() throws Exception {
-                StopWatch stopWatch = new LoggingStopWatch();
 
                 final DomainObject parentObject = (DomainObject)selectionModel.getParentObject();
                 if (parentObject!=null && parentObject.getId()!=null) {
@@ -297,8 +296,6 @@ public class DomainObjectIconGridViewer extends IconGridViewerPanel<DomainObject
                 resultButton.populate(domainObjectList.getDomainObjects());
                 typeButton.setResultDescriptor(resultButton.getResultDescriptor());
                 typeButton.populate(domainObjectList.getDomainObjects());
-
-                stopWatch.stop("showDomainObjects");
             }
 
             @Override

@@ -6,6 +6,7 @@ import java.security.ProtectionDomain;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.api.FileMgr;
@@ -20,8 +21,8 @@ import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.ImageCache;
 import org.janelia.it.workstation.browser.util.SystemInfo;
-import org.janelia.it.workstation.browser.util.UserNotificationExceptionHandler;
 import org.openide.LifecycleManager;
+import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,6 @@ public class ConsoleApp {
     private final String appName;
     private final String appVersion;
     private final ImageCache imageCache;
-    private final UserNotificationExceptionHandler exceptionHandler;
     
     // Lazily initialized
     private PatternSearchDialog patternSearchDialog;
@@ -67,24 +67,30 @@ public class ConsoleApp {
         log.debug("Java version: " + System.getProperty("java.version"));
         ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: "+pd.getCodeSource().getLocation());
-        
-        // System properties
-        System.setProperty("apple.laf.useScreenMenuBar", "false");
-        System.setProperty("winsys.stretching_view_tabs", "true");
-        System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
                 
+        // Put the menu bar on the application window, instead of in the Mac OS X menu bar
+        System.setProperty("apple.laf.useScreenMenuBar", "false");
+
+        // Put the app name in the Mac OS X menu bar
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", appName);
+        
+        // Stretch NetBeans tabs across entire width of window. This allows us to show more of the long window titles.
+        System.setProperty("winsys.stretching_view_tabs", "true"); 
+        
+        // Nicer to shutdown by closing all windows individually instead of just sending a System.exit(0) to the application
+        System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
+
+        // Work-around for NetBeans/OSXSierra bug which causes display issues if a resources cache file is loaded
+        System.setProperty("org.netbeans.core.update.all.resources", "never");
+        
         // Init in-memory image cache
         this.imageCache = new ImageCache();
-        
-        // Create a global exception handler
-        this.exceptionHandler = new UserNotificationExceptionHandler();
+
+        // Workaround for NetBeans Sierra rendering issues
+        findAndRemoveAllResourcesFile();
         
         // Minor hack for running NetBeans on Windows 
         findAndRemoveWindowsSplashFile();
-        
-        // Workaround for NetBeans Sierra rendering issues
-        findAndRemoveAllResourcesFile();
     }
     
     public void initSession() {
@@ -153,11 +159,10 @@ public class ConsoleApp {
      */
     private void findAndRemoveAllResourcesFile() {
         try {
-            String evilCachedResourcesFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"all-resources.dat";
-            File tmpEvilCachedResourcesFile = new File(evilCachedResourcesFile);
-            if (tmpEvilCachedResourcesFile.exists()) {
+            File evilCachedResourcesFile = Places.getCacheSubfile("all-resources.dat");
+            if (evilCachedResourcesFile.exists()) {
                 log.info("Cached all-resources file "+evilCachedResourcesFile+" exists.  Removing...");
-                boolean deleteSuccess = tmpEvilCachedResourcesFile.delete();
+                boolean deleteSuccess = evilCachedResourcesFile.delete();
                 if (deleteSuccess) {
                     log.info("Successfully removed the all-resources.dat file");
                 }
@@ -181,11 +186,10 @@ public class ConsoleApp {
     private void findAndRemoveWindowsSplashFile() {
         try {
             if (SystemInfo.isWindows) {
-                String evilCachedSplashFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"splash.png";
-                File tmpEvilCachedSplashFile = new File(evilCachedSplashFile);
-                if (tmpEvilCachedSplashFile.exists()) {
+                File evilCachedSplashFile = Places.getCacheSubfile("splash.png");
+                if (evilCachedSplashFile.exists()) {
                     log.info("Cached splash file "+evilCachedSplashFile+" exists.  Removing...");
-                    boolean deleteSuccess = tmpEvilCachedSplashFile.delete();
+                    boolean deleteSuccess = evilCachedSplashFile.delete();
                     if (deleteSuccess) {
                         log.info("Successfully removed the splash.png file");
                     }
@@ -229,7 +233,7 @@ public class ConsoleApp {
     }
     
     void handle(Throwable throwable) {
-        exceptionHandler.handleException(throwable);
+        FrameworkImplProvider.handleException(throwable);
     }
 
     public String getApplicationOutputDirectory() {

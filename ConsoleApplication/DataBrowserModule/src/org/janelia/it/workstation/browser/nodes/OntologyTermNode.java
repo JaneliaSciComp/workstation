@@ -135,7 +135,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
     }
     
     public OntologyTerm getOntologyTerm() {
-        return (OntologyTerm)getObject();
+        return getObject();
     }
 
     @Override
@@ -362,7 +362,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
             throw new IllegalStateException("Cannot destroy node without parent");
         }
         if (parentChildFactory instanceof OntologyChildFactory) {
-            OntologyChildFactory ontologyChildFactory = (OntologyChildFactory) parentChildFactory;
+            OntologyChildFactory ontologyChildFactory = parentChildFactory;
             try {
                 ontologyChildFactory.removeChild(getOntologyTerm());
             }
@@ -431,7 +431,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                 return null;
             }
             log.debug("  Single drop - {} with parent {}",node.getDisplayName(),node.getParentNode().getDisplayName());
-            return new OntologyTermPasteType(Arrays.asList((OntologyTermNode)node), this, index);
+            return new OntologyTermPasteType(Arrays.asList(node), this, index);
         }
         else if (t.isDataFlavorSupported(ExTransferable.multiFlavor)) {
             MultiTransferObject multi;
@@ -452,7 +452,7 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> implements HasI
                         continue;
                     }   
                     log.debug("  Multi drop #{} - {} with parent {}",i,node.getDisplayName(),node.getParentNode().getDisplayName());
-                    nodes.add((OntologyTermNode)node);
+                    nodes.add(node);
                 }
                 else {
                     log.debug("Multi-transferable is expected to support OntologyTermNodeFlavor.");

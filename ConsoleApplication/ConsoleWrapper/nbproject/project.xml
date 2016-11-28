@@ -66,77 +66,6 @@
                 <package>antlr.debug</package>
                 <package>antlr.debug.misc</package>
                 <package>antlr.preprocessor</package>
-                <package>ch.qos.logback.access</package>
-                <package>ch.qos.logback.access.boolex</package>
-                <package>ch.qos.logback.access.db</package>
-                <package>ch.qos.logback.access.filter</package>
-                <package>ch.qos.logback.access.html</package>
-                <package>ch.qos.logback.access.jetty</package>
-                <package>ch.qos.logback.access.joran</package>
-                <package>ch.qos.logback.access.joran.action</package>
-                <package>ch.qos.logback.access.net</package>
-                <package>ch.qos.logback.access.net.server</package>
-                <package>ch.qos.logback.access.pattern</package>
-                <package>ch.qos.logback.access.servlet</package>
-                <package>ch.qos.logback.access.sift</package>
-                <package>ch.qos.logback.access.spi</package>
-                <package>ch.qos.logback.access.tomcat</package>
-                <package>ch.qos.logback.classic</package>
-                <package>ch.qos.logback.classic.boolex</package>
-                <package>ch.qos.logback.classic.db</package>
-                <package>ch.qos.logback.classic.db.names</package>
-                <package>ch.qos.logback.classic.encoder</package>
-                <package>ch.qos.logback.classic.filter</package>
-                <package>ch.qos.logback.classic.gaffer</package>
-                <package>ch.qos.logback.classic.helpers</package>
-                <package>ch.qos.logback.classic.html</package>
-                <package>ch.qos.logback.classic.jmx</package>
-                <package>ch.qos.logback.classic.joran</package>
-                <package>ch.qos.logback.classic.joran.action</package>
-                <package>ch.qos.logback.classic.jul</package>
-                <package>ch.qos.logback.classic.log4j</package>
-                <package>ch.qos.logback.classic.net</package>
-                <package>ch.qos.logback.classic.net.server</package>
-                <package>ch.qos.logback.classic.pattern</package>
-                <package>ch.qos.logback.classic.pattern.color</package>
-                <package>ch.qos.logback.classic.selector</package>
-                <package>ch.qos.logback.classic.selector.servlet</package>
-                <package>ch.qos.logback.classic.sift</package>
-                <package>ch.qos.logback.classic.spi</package>
-                <package>ch.qos.logback.classic.turbo</package>
-                <package>ch.qos.logback.classic.util</package>
-                <package>ch.qos.logback.core</package>
-                <package>ch.qos.logback.core.boolex</package>
-                <package>ch.qos.logback.core.db</package>
-                <package>ch.qos.logback.core.db.dialect</package>
-                <package>ch.qos.logback.core.encoder</package>
-                <package>ch.qos.logback.core.filter</package>
-                <package>ch.qos.logback.core.helpers</package>
-                <package>ch.qos.logback.core.html</package>
-                <package>ch.qos.logback.core.joran</package>
-                <package>ch.qos.logback.core.joran.action</package>
-                <package>ch.qos.logback.core.joran.conditional</package>
-                <package>ch.qos.logback.core.joran.event</package>
-                <package>ch.qos.logback.core.joran.spi</package>
-                <package>ch.qos.logback.core.joran.util</package>
-                <package>ch.qos.logback.core.layout</package>
-                <package>ch.qos.logback.core.net</package>
-                <package>ch.qos.logback.core.net.server</package>
-                <package>ch.qos.logback.core.net.ssl</package>
-                <package>ch.qos.logback.core.pattern</package>
-                <package>ch.qos.logback.core.pattern.color</package>
-                <package>ch.qos.logback.core.pattern.parser</package>
-                <package>ch.qos.logback.core.pattern.util</package>
-                <package>ch.qos.logback.core.property</package>
-                <package>ch.qos.logback.core.read</package>
-                <package>ch.qos.logback.core.recovery</package>
-                <package>ch.qos.logback.core.rolling</package>
-                <package>ch.qos.logback.core.rolling.helper</package>
-                <package>ch.qos.logback.core.sift</package>
-                <package>ch.qos.logback.core.spi</package>
-                <package>ch.qos.logback.core.status</package>
-                <package>ch.qos.logback.core.subst</package>
-                <package>ch.qos.logback.core.util</package>
                 <package>ch.systemsx.cisd.args4j</package>
                 <package>ch.systemsx.cisd.args4j.spi</package>
                 <package>ch.systemsx.cisd.base</package>
@@ -1616,6 +1545,110 @@
                 <package>org.hibernate.validator</package>
                 <package>org.hibernate.validator.event</package>
                 <package>org.hibernate.validator.interpolator</package>
+                <package>org.janelia.it.jacs.compute.access</package>
+                <package>org.janelia.it.jacs.compute.api</package>
+                <package>org.janelia.it.jacs.compute.api.support</package>
+                <package>org.janelia.it.jacs.compute.engine.launcher</package>
+                <package>org.janelia.it.jacs.compute.engine.service</package>
+                <package>org.janelia.it.jacs.model</package>
+                <package>org.janelia.it.jacs.model.collections</package>
+                <package>org.janelia.it.jacs.model.common</package>
+                <package>org.janelia.it.jacs.model.domain</package>
+                <package>org.janelia.it.jacs.model.domain.compartments</package>
+                <package>org.janelia.it.jacs.model.domain.enums</package>
+                <package>org.janelia.it.jacs.model.domain.gui.alignment_board</package>
+                <package>org.janelia.it.jacs.model.domain.gui.search</package>
+                <package>org.janelia.it.jacs.model.domain.gui.search.criteria</package>
+                <package>org.janelia.it.jacs.model.domain.interfaces</package>
+                <package>org.janelia.it.jacs.model.domain.ontology</package>
+                <package>org.janelia.it.jacs.model.domain.sample</package>
+                <package>org.janelia.it.jacs.model.domain.screen</package>
+                <package>org.janelia.it.jacs.model.domain.subjects</package>
+                <package>org.janelia.it.jacs.model.domain.support</package>
+                <package>org.janelia.it.jacs.model.domain.tiledMicroscope</package>
+                <package>org.janelia.it.jacs.model.domain.workspace</package>
+                <package>org.janelia.it.jacs.model.entity</package>
+                <package>org.janelia.it.jacs.model.entity.cv</package>
+                <package>org.janelia.it.jacs.model.entity.json</package>
+                <package>org.janelia.it.jacs.model.genomics</package>
+                <package>org.janelia.it.jacs.model.jobs</package>
+                <package>org.janelia.it.jacs.model.ontology</package>
+                <package>org.janelia.it.jacs.model.ontology.types</package>
+                <package>org.janelia.it.jacs.model.sage</package>
+                <package>org.janelia.it.jacs.model.search</package>
+                <package>org.janelia.it.jacs.model.status</package>
+                <package>org.janelia.it.jacs.model.tasks</package>
+                <package>org.janelia.it.jacs.model.tasks.annotation</package>
+                <package>org.janelia.it.jacs.model.tasks.blast</package>
+                <package>org.janelia.it.jacs.model.tasks.colorSeparator</package>
+                <package>org.janelia.it.jacs.model.tasks.export</package>
+                <package>org.janelia.it.jacs.model.tasks.fileDiscovery</package>
+                <package>org.janelia.it.jacs.model.tasks.fly</package>
+                <package>org.janelia.it.jacs.model.tasks.geometricSearch</package>
+                <package>org.janelia.it.jacs.model.tasks.lineageClassifier</package>
+                <package>org.janelia.it.jacs.model.tasks.maskSearch</package>
+                <package>org.janelia.it.jacs.model.tasks.mip</package>
+                <package>org.janelia.it.jacs.model.tasks.neuron</package>
+                <package>org.janelia.it.jacs.model.tasks.neuronSeparator</package>
+                <package>org.janelia.it.jacs.model.tasks.search</package>
+                <package>org.janelia.it.jacs.model.tasks.tic</package>
+                <package>org.janelia.it.jacs.model.tasks.tiledMicroscope</package>
+                <package>org.janelia.it.jacs.model.tasks.utility</package>
+                <package>org.janelia.it.jacs.model.tasks.validation</package>
+                <package>org.janelia.it.jacs.model.user_data</package>
+                <package>org.janelia.it.jacs.model.user_data.blast</package>
+                <package>org.janelia.it.jacs.model.user_data.colorSeparator</package>
+                <package>org.janelia.it.jacs.model.user_data.entity</package>
+                <package>org.janelia.it.jacs.model.user_data.export</package>
+                <package>org.janelia.it.jacs.model.user_data.geometricSearch</package>
+                <package>org.janelia.it.jacs.model.user_data.maskSearch</package>
+                <package>org.janelia.it.jacs.model.user_data.mip</package>
+                <package>org.janelia.it.jacs.model.user_data.neuron</package>
+                <package>org.janelia.it.jacs.model.user_data.neuronSeparator</package>
+                <package>org.janelia.it.jacs.model.user_data.prefs</package>
+                <package>org.janelia.it.jacs.model.user_data.search</package>
+                <package>org.janelia.it.jacs.model.user_data.tic</package>
+                <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
+                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_builder</package>
+                <package>org.janelia.it.jacs.model.user_data.tiled_microscope_protobuf</package>
+                <package>org.janelia.it.jacs.model.user_data.tools</package>
+                <package>org.janelia.it.jacs.model.user_data.validation</package>
+                <package>org.janelia.it.jacs.model.util</package>
+                <package>org.janelia.it.jacs.model.vo</package>
+                <package>org.janelia.it.jacs.shared.annotation</package>
+                <package>org.janelia.it.jacs.shared.annotation.metrics_logging</package>
+                <package>org.janelia.it.jacs.shared.blast</package>
+                <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
+                <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
+                <package>org.janelia.it.jacs.shared.exception</package>
+                <package>org.janelia.it.jacs.shared.export</package>
+                <package>org.janelia.it.jacs.shared.fasta</package>
+                <package>org.janelia.it.jacs.shared.ffmpeg</package>
+                <package>org.janelia.it.jacs.shared.file_chooser</package>
+                <package>org.janelia.it.jacs.shared.genomics</package>
+                <package>org.janelia.it.jacs.shared.geom</package>
+                <package>org.janelia.it.jacs.shared.geometric_search</package>
+                <package>org.janelia.it.jacs.shared.hibernate</package>
+                <package>org.janelia.it.jacs.shared.image.stream</package>
+                <package>org.janelia.it.jacs.shared.img_3d_loader</package>
+                <package>org.janelia.it.jacs.shared.lvv</package>
+                <package>org.janelia.it.jacs.shared.mesh_loader</package>
+                <package>org.janelia.it.jacs.shared.mesh_loader.wavefront_obj</package>
+                <package>org.janelia.it.jacs.shared.node</package>
+                <package>org.janelia.it.jacs.shared.octree</package>
+                <package>org.janelia.it.jacs.shared.perf</package>
+                <package>org.janelia.it.jacs.shared.sample_discovery</package>
+                <package>org.janelia.it.jacs.shared.screen</package>
+                <package>org.janelia.it.jacs.shared.solr</package>
+                <package>org.janelia.it.jacs.shared.swc</package>
+                <package>org.janelia.it.jacs.shared.tasks</package>
+                <package>org.janelia.it.jacs.shared.units</package>
+                <package>org.janelia.it.jacs.shared.utils</package>
+                <package>org.janelia.it.jacs.shared.utils.domain</package>
+                <package>org.janelia.it.jacs.shared.utils.entity</package>
+                <package>org.janelia.it.jacs.shared.utils.genbank</package>
+                <package>org.janelia.it.jacs.shared.utils.zeiss</package>
+                <package>org.janelia.it.jacs.shared.viewer3d</package>
                 <package>org.jaxen</package>
                 <package>org.jaxen.dom</package>
                 <package>org.jaxen.dom4j</package>
@@ -1724,7 +1757,14 @@
                 <package>org.perf4j</package>
                 <package>org.perf4j.aop</package>
                 <package>org.perf4j.chart</package>
+                <package>org.perf4j.commonslog</package>
+                <package>org.perf4j.commonslog.aop</package>
                 <package>org.perf4j.helpers</package>
+                <package>org.perf4j.javalog</package>
+                <package>org.perf4j.javalog.aop</package>
+                <package>org.perf4j.log4j</package>
+                <package>org.perf4j.log4j.aop</package>
+                <package>org.perf4j.log4j.servlet</package>
                 <package>org.perf4j.logback</package>
                 <package>org.perf4j.logback.servlet</package>
                 <package>org.perf4j.servlet</package>
@@ -1857,6 +1897,7 @@
                 <package>org.semanticweb.owlapi.util</package>
                 <package>org.semanticweb.owlapi.vocab</package>
                 <package>org.slf4j</package>
+                <package>org.slf4j.event</package>
                 <package>org.slf4j.helpers</package>
                 <package>org.slf4j.impl</package>
                 <package>org.slf4j.spi</package>
@@ -2015,6 +2056,10 @@
                 <binary-origin>release/modules/ext/groovy-all-1.8.6.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/perf4j-0.9.16.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/perf4j-0.9.16.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/mail-1.4.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/mail-1.4.jar</binary-origin>
             </class-path-extension>
@@ -2111,16 +2156,16 @@
                 <binary-origin>release/modules/ext/platform.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jacs-model.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/javassist-3.16.1-GA.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/javassist-3.16.1-GA.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaAluOxide.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/logback-core-1.0.13.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
@@ -2187,6 +2232,10 @@
                 <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/compute-client.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/ehcache-core-2.5.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
             </class-path-extension>
@@ -2235,8 +2284,8 @@
                 <binary-origin>release/modules/ext/jersey-container-servlet-core-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/lz4-1.3.0.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/lz4-1.3.0.jar</binary-origin>
+                <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT.jar</runtime-relative-path>
@@ -2279,6 +2328,10 @@
                 <binary-origin>release/modules/ext/jersey-container-servlet-2.21.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/slf4j-jdk14-1.7.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-jdk14-1.7.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/javax.inject-2.4.0-b31.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/javax.inject-2.4.0-b31.jar</binary-origin>
             </class-path-extension>
@@ -2303,10 +2356,6 @@
                 <binary-origin>release/modules/ext/axis2-metadata-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/logback-classic-1.0.13.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/logback-classic-1.0.13.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/gson-2.2.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gson-2.2.2.jar</binary-origin>
             </class-path-extension>
@@ -2317,10 +2366,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-http-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-http-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/lz4-1.3.0-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/lz4-1.3.0-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
@@ -2451,10 +2496,6 @@
                 <binary-origin>release/modules/ext/jackson-annotations-2.5.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/slf4j-api-1.7.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/slf4j-api-1.7.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-view-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/protostuff-runtime-view-1.3.9-SNAPSHOT-sources.jar</binary-origin>
             </class-path-extension>
@@ -2469,10 +2510,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-http-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-http-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/logback-access-1.0.13.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/logback-access-1.0.13.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/javacpp.jar</runtime-relative-path>
@@ -2539,12 +2576,12 @@
                 <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/perf4j-0.9.16-logbackonly.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/joda-time-2.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/joda-time-2.8.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/lz4-1.3.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/lz4-1.3.0.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/commons-lang3-3.3.2.jar</runtime-relative-path>
@@ -2619,6 +2656,10 @@
                 <binary-origin>release/modules/ext/commons-httpclient-3.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/slf4j-api-1.7.21.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/slf4j-api-1.7.21.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/guava-13.0.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/guava-13.0.1.jar</binary-origin>
             </class-path-extension>
@@ -2673,6 +2714,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/de-javasoft-synthetica-netbeans.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/de-javasoft-synthetica-netbeans.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/lz4-1.3.0-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/lz4-1.3.0-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/protostuff-runtime-1.3.9-SNAPSHOT-sources.jar</runtime-relative-path>

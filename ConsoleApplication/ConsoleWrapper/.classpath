@@ -123,11 +123,8 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/loci_plugins.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/loci-common.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/log4j-1.2.15.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/logback-access-1.0.13.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/logback-classic-1.0.13.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/logback-core-1.0.13.jar"/>
-	<classpathentry kind="lib" path="release/modules/ext/lz4-1.3.0-sources.jar"/>
-	<classpathentry kind="lib" path="release/modules/ext/lz4-1.3.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/lz4-1.3.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/lz4-1.3.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/mac_widgets-0.9.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/MagicApplet.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/mail-1.4.jar"/>
@@ -144,7 +141,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/org-netbeans-swing-outline.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/owlapi-bin.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/pal-optimization.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/perf4j-0.9.16-logbackonly.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/platform.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/protostuff-api-1.3.9-SNAPSHOT-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/protostuff-api-1.3.9-SNAPSHOT.jar"/>
@@ -176,7 +172,6 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/servlet-api-3.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/sis-jhdf5-batteries_included.jar"/>
-	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-api-1.7.5.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/snakeyaml-1.11-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/snakeyaml-1.11.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/snappy-java-1.0.5-M3.jar"/>
@@ -215,6 +210,9 @@
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/xmlbeans-2.3.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/XmlSchema-1.4.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="release/modules/ext/xuggle-xuggler-5.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/perf4j-0.9.16.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-api-1.7.21.jar"/>
+	<classpathentry exported="true" kind="lib" path="release/modules/ext/slf4j-jdk14-1.7.21.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>
