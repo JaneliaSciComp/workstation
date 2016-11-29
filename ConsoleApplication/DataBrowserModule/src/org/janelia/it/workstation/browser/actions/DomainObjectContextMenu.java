@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -63,6 +65,7 @@ import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
@@ -157,6 +160,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         addPartialSecondaryDataDeletiontItem();
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
+        add(getApplyPublishingNameItem());
         add(getMergeItem());
         
         setNextAddRequiresSeparator(true);
@@ -605,6 +609,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
 
         return blockItem;
+    }
+
+    protected JMenuItem getApplyPublishingNameItem() {
+        
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+        
+        return getNamedActionItem(new SetPublishingNameAction(samples));
     }
 
     /** Allows users to rerun their own samples. */
