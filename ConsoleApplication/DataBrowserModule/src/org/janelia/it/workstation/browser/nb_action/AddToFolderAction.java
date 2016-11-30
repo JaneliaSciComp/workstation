@@ -20,6 +20,7 @@ import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.browser.gui.support.NodeChooser;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
@@ -41,9 +42,6 @@ import org.slf4j.LoggerFactory;
 public class AddToFolderAction extends NodePresenterAction {
 
     private final static Logger log = LoggerFactory.getLogger(AddToFolderAction.class);
-
-    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
-    private static final int MAX_ADD_TO_ROOT_HISTORY = 5;
 
     protected final Component mainFrame = ConsoleApp.getMainFrame();
 
@@ -173,8 +171,7 @@ public class AddToFolderAction extends NodePresenterAction {
         newFolderMenu.add(chooseItem);
         newFolderMenu.addSeparator();
 
-        @SuppressWarnings("unchecked")
-        List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
+        List<String> addHistory = StateMgr.getStateMgr().getAddToFolderHistory();
         if (addHistory!=null && !addHistory.isEmpty()) {
 
             JMenuItem item = new JMenuItem("Recent:");
@@ -262,23 +259,7 @@ public class AddToFolderAction extends NodePresenterAction {
         model.addChildren(treeNode, domainObjects);
 
         // Update history
-        updateAddToFolderHistory(idPath);
-    }
-
-    private void updateAddToFolderHistory(Long[] idPath) {
         String pathString = NodeUtils.createPathString(idPath);
-        @SuppressWarnings("unchecked")
-        List<String> addHistory = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(ADD_TO_FOLDER_HISTORY);
-        if (addHistory==null) {
-            addHistory = new ArrayList<>();
-        }
-        if (addHistory.contains(pathString)) {
-            return;
-        }
-        if (addHistory.size()>=MAX_ADD_TO_ROOT_HISTORY) {
-            addHistory.remove(addHistory.size()-1);
-        }
-        addHistory.add(0, pathString);
-        ConsoleApp.getConsoleApp().setModelProperty(ADD_TO_FOLDER_HISTORY, addHistory);
+        StateMgr.getStateMgr().updateAddToFolderHistory(pathString);
     }
 }

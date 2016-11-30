@@ -66,8 +66,12 @@ public class StateMgr {
         return instance;
     }
     
-    private static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
-
+    public static final String AUTO_SHARE_TEMPLATE = "Browser.AutoShareTemplate";
+    public final static String RECENTLY_OPENED_HISTORY = "Browser.RecentlyOpenedHistory";
+    public static final int MAX_RECENTLY_OPENED_HISTORY = 10;
+    public static final String ADD_TO_FOLDER_HISTORY = "ADD_TO_FOLDER_HISTORY";
+    public static final int MAX_ADD_TO_ROOT_HISTORY = 5;
+    
     private final NavigationHistory navigationHistory = new NavigationHistory();
     private final UserColorMapping userColorMapping = new UserColorMapping();
     
@@ -314,7 +318,47 @@ public class StateMgr {
         this.autoShareTemplate = autoShareTemplate;
         ConsoleApp.getConsoleApp().setModelProperty(AUTO_SHARE_TEMPLATE, autoShareTemplate);
     }
+    
+    public List<String> getRecentlyOpenedHistory() {
+        return getHistoryProperty(RECENTLY_OPENED_HISTORY);
+    }
 
+    public void updateRecentlyOpenedHistory(String ref) {
+        updateHistoryProperty(RECENTLY_OPENED_HISTORY, MAX_RECENTLY_OPENED_HISTORY, ref);
+    }
+
+    public List<String> getAddToFolderHistory() {
+        return getHistoryProperty(ADD_TO_FOLDER_HISTORY);
+    }
+
+    public void updateAddToFolderHistory(String ref) {
+        updateHistoryProperty(ADD_TO_FOLDER_HISTORY, MAX_ADD_TO_ROOT_HISTORY, ref);
+    }
+    
+    private List<String> getHistoryProperty(String prop) {
+        @SuppressWarnings("unchecked")
+        List<String> history = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(prop);
+        if (history == null) return new ArrayList<>();
+        // Must make a copy of the list so that we don't use the same reference that's in the cache.
+        return new ArrayList<>(history);
+    }
+
+    private void updateHistoryProperty(String prop, int maxItems, String value) {
+        List<String> history = getRecentlyOpenedHistory();
+        if (history.contains(value)) {
+            log.trace("Recently opened history already contains {}. Bringing it forward.",value);
+            history.remove(value);
+        }
+        if (history.size()>=maxItems) {
+            history.remove(history.size()-1);
+        }
+        history.add(0, value);
+        log.trace("Adding {} to recently opened history",value);
+        // Must make a copy of the list so that our reference doesn't go into the cache.
+        List<String> copy = new ArrayList<>(history);
+        ConsoleApp.getConsoleApp().setModelProperty(prop, copy); 
+    }
+    
     public Task getTaskById(Long taskId) throws Exception {
         return DomainMgr.getDomainMgr().getLegacyFacade().getTaskById(taskId);
     }

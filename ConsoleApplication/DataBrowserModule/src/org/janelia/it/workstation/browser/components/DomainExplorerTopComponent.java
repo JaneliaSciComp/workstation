@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.components;
 
 import static org.janelia.it.workstation.browser.gui.options.OptionConstants.NAVIGATE_ON_CLICK;
+import static org.janelia.it.workstation.browser.gui.options.OptionConstants.SHOW_RECENTLY_OPENED_ITEMS;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -13,9 +14,9 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.ActionMap;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
@@ -27,9 +28,11 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.model.DomainObjectInvalidationEvent;
 import org.janelia.it.workstation.browser.events.model.DomainObjectRemoveEvent;
+import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectNodeSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.gui.find.FindContext;
@@ -155,20 +158,27 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         };
 
-        DropDownButton configButton = new DropDownButton() {
-
-        };
+        DropDownButton configButton = new DropDownButton();
+        
         configButton.setIcon(Icons.getIcon("cog.png"));
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the Data Explorer");
 
-        final JRadioButtonMenuItem navigateOnClickMenuItem = new JRadioButtonMenuItem("Navigate on click", isNavigateOnClick());
+        final JCheckBoxMenuItem navigateOnClickMenuItem = new JCheckBoxMenuItem("Navigate on click", isNavigateOnClick());
         navigateOnClickMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setNavigateOnClick(navigateOnClickMenuItem.isSelected());   
             }
         });
         configButton.getPopupMenu().add(navigateOnClickMenuItem);
+
+        final JCheckBoxMenuItem showRecentItemsMenuItem = new JCheckBoxMenuItem("Show recently opened items", isShowRecentMenuItems());
+        showRecentItemsMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                setShowRecentMenuItems(showRecentItemsMenuItem.isSelected());
+            }
+        });
+        configButton.getPopupMenu().add(showRecentItemsMenuItem);
         
         toolbar.getJToolBar().add(configButton);
         
@@ -335,6 +345,19 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     @Subscribe
+    public void prefChanged(LocalPreferenceChanged event) {
+        if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
+            // Something was added to the history, so we need to update the node's children
+            root.getRecentlyOpenedItemsNode().refreshChildren();
+            
+        }
+        else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
+            // Recreate the root node so that it picks up the new preferences
+            refresh(false, true, null); 
+        }
+    }
+
+    @Subscribe
     public void objectsInvalidated(DomainObjectRemoveEvent event) {
 
         final List<Long[]> expanded = beanTreeView.getExpandedPaths();
@@ -481,7 +504,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     public WorkspaceNode getWorkspaceNode() {
         for(Node node : root.getChildren().getNodes()) {
-            return (WorkspaceNode)node;
+            if (node instanceof WorkspaceNode) {
+                return (WorkspaceNode)node;
+            }
         }
         return null;
     }
@@ -597,5 +622,14 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     private static void setNavigateOnClick(boolean value) {
         ConsoleApp.getConsoleApp().setModelProperty(NAVIGATE_ON_CLICK, value);  
+    }
+
+    public static boolean isShowRecentMenuItems() {
+        Boolean navigate = (Boolean) ConsoleApp.getConsoleApp().getModelProperty(SHOW_RECENTLY_OPENED_ITEMS);
+        return navigate==null || navigate;
+    }
+    
+    private static void setShowRecentMenuItems(boolean value) {
+        ConsoleApp.getConsoleApp().setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);  
     }
 }
