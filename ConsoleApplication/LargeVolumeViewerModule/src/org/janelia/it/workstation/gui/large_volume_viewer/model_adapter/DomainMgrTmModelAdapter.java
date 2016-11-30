@@ -140,7 +140,7 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
             }
             catch (Exception ex) {
                 future.setException(ex);
-                FrameworkImplProvider.handleException(new Exception("Error saving neuron",ex));
+                FrameworkImplProvider.handleException("Error saving neuron",ex);
             }
             finally {
                 progress.finish();
