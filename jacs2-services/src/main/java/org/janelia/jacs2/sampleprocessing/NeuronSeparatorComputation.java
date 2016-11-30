@@ -43,8 +43,7 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
     }
 
     @Override
-    public CompletionStage<TaskInfo> isReady(TaskInfo taskInfo) {
-        // prepare to submit the child task
+    public CompletionStage<TaskInfo> preProcessData(TaskInfo taskInfo) {
         TaskInfo subTask = new TaskInfo();
         subTask.setServiceCmd("echo");
         subTask.addArg("!!!!!!!!!!!!!!!!!!!!!! running as a neuron separator sub-task");
@@ -52,7 +51,8 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
         subTask.setName("sage");
         subTask.setPriority(taskInfo.priority() + 1);
 
-        ServiceComputation subTaskComputation = submitSubTaskAsync(subTask, taskInfo);
-        return super.isReady(taskInfo);
+        submitSubTaskAsync(subTask, taskInfo);
+        return super.preProcessData(taskInfo);
     }
+
 }

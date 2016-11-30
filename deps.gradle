@@ -23,6 +23,7 @@ dependencies {
 
         // database drivers
         MYSQL_JDBC_LIB = "mysql:mysql-connector-java:6.0.5"
+        MONGODB_DRIVER_LIB = "org.mongodb:mongodb-driver:3.4.0"
 
         // apache commons
         COMMONS_LANG_VERSION = "3.5"

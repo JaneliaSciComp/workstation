@@ -1,20 +1,35 @@
 package org.janelia.jacs2.cdi;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoDatabase;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.cdi.qualifier.ApplicationProperties;
 import org.janelia.jacs2.cdi.qualifier.ComputePersistence;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
+import org.janelia.jacs2.utils.DomainCodecProvider;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Disposes;
 import javax.enterprise.inject.Produces;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 public class PersistenceProducer {
+
+    @PropertyValue(name = "MongoDB.ConnectionURL")
+    @Inject
+    private String nmongoConnectionURL;
+    @PropertyValue(name = "MongoDB.Database")
+    @Inject
+    private String mongoDatabase;
 
     /**
      * Note that there's no disposer for this as we don't want to close it since creating the persistence factory is expensive.
@@ -52,4 +67,22 @@ public class PersistenceProducer {
             em.close();
         }
     }
+
+    @Produces
+    public MongoClient createMongoClient(ObjectMapper objectMapper) {
+        CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+                MongoClient.getDefaultCodecRegistry(),
+                CodecRegistries.fromProviders(new DomainCodecProvider(objectMapper))
+        );
+        MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
+        MongoClientURI mongoConnectionString = new MongoClientURI(nmongoConnectionURL, optionsBuilder);
+        MongoClient mongoClient = new MongoClient(mongoConnectionString);
+        return mongoClient;
+    }
+
+    @Produces
+    public MongoDatabase createMongoDatabase(MongoClient mongoClient) {
+        return mongoClient.getDatabase(mongoDatabase);
+    }
+
 }

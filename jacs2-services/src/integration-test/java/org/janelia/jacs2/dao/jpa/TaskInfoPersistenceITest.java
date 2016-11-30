@@ -44,9 +44,6 @@ public class TaskInfoPersistenceITest extends AbstractJpaDaoITest {
     @After
     public void tearDown() {
         // delete the data that was created for testing
-        PageRequest pageRequest = new PageRequest();
-        pageRequest.setSortCriteria(ImmutableList.of(new SortCriteria("id", SortDirection.DESC)));
-        PageResult<TaskInfo> tasks = taskInfoTestDao.findAll(new PageRequest());
         for (TaskInfo t : testData) {
             deleteTask(t);
         }

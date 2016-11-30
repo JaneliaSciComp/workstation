@@ -6,13 +6,11 @@ import org.junit.BeforeClass;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-/**
- * Created by goinac on 11/9/16.
- */
 public class AbstractJpaDaoITest {
     private static EntityManagerFactory testEntityManagerFactory;
 
@@ -21,7 +19,7 @@ public class AbstractJpaDaoITest {
     @BeforeClass
     public static void setUpPersistenceFactory() throws IOException {
         Properties persistenceConfig = new Properties();
-        try (InputStream configReader = AbstractJpaDaoITest.class.getResourceAsStream("/jacs_test.properties")) {
+        try (InputStream configReader = new FileInputStream("build/resources/integrationTest/jacs_test.properties")) {
             persistenceConfig.load(configReader);
         }
         testEntityManagerFactory = Persistence.createEntityManagerFactory("ComputePU", persistenceConfig);

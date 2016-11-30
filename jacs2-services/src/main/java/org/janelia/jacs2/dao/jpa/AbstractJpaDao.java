@@ -3,6 +3,7 @@ package org.janelia.jacs2.dao.jpa;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.dao.AbstractDao;
 import org.janelia.jacs2.dao.Dao;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -20,18 +21,12 @@ import java.util.Optional;
 /**
  * Base JPA implementation for a DAO
  */
-public abstract class AbstractJpaDao<T, I> implements Dao<T, I> {
+public abstract class AbstractJpaDao<T, I> extends AbstractDao<T, I> {
 
     private EntityManager entityManager;
 
-    AbstractJpaDao(EntityManager entityManager) {
+    protected AbstractJpaDao(EntityManager entityManager) {
         this.entityManager = entityManager;
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<T> getEntityType() {
-        Class<T> entityClazz = (Class<T>)((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        return entityClazz;
     }
 
     @Override

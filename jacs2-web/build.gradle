@@ -16,9 +16,6 @@ project(":jacs2-web") {
                 JAX_RS_CORE_LIB,
                 JAX_RS_SERVER_LIB,
                 JAX_RS_CDI_EXT_LIB,
-                JACKSON_CORE_LIB,
-                JACKSON_ANNOTATIONS_LIB,
-                JACKSON_DATABIND_LIB,
                 JACKSON_JAXRS_JSON_PROVIDER
     }
 }

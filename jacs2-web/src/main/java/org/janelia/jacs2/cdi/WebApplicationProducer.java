@@ -9,16 +9,7 @@ import org.janelia.jacs2.job.BackgroundJobs;
 import javax.enterprise.inject.Produces;
 import javax.inject.Singleton;
 
-public class ApplicationProducer {
-
-    @Singleton
-    @Produces
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper()
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    }
+public class WebApplicationProducer {
 
     @Singleton
     @Produces
