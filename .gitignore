@@ -15,6 +15,7 @@ ConsoleApplication/ConsoleWrapper/src/jacs.properties
 ConsoleApplication/ConsoleWrapper/release/modules/ext/compute-client.jar
 ConsoleApplication/ConsoleWrapper/release/modules/ext/jacs-model.jar
 ConsoleApplication/ConsoleWrapper/release/modules/ext/jacs-shared.jar
+ConsoleApplication/ConsoleWrapper/release/config
 .metadata
 .recommenders
 ConsoleApplication/HortaTracer/*.log

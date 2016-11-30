@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
+import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
@@ -62,6 +63,15 @@ public class ShowingHook implements Runnable {
                     "Could not initialize configuration. Please reinstall the application.",
                     "Error initializing configuration",
                     JOptionPane.ERROR_MESSAGE,
+                    null
+            );
+        }
+        else if (BrandingConfig.getBrandingConfig().isNeedsRestart()) {
+            JOptionPane.showMessageDialog(
+                    WindowLocator.getMainFrame(),
+                    "Configuration has been updated. Please restart the application.",
+                    "Configuration updated",
+                    JOptionPane.WARNING_MESSAGE,
                     null
             );
         }
