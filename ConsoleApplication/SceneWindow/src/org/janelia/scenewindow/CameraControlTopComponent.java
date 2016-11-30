@@ -41,6 +41,7 @@ import org.janelia.geometry3d.CoordinateAxis;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.ViewSlab;
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.geometry3d.Vector3;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -49,6 +50,8 @@ import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.Utilities;
 
@@ -79,6 +82,8 @@ import org.openide.util.Utilities;
 public final class CameraControlTopComponent extends TopComponent 
 implements LookupListener
 {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    
     private Lookup.Result<Vantage> vantageResult = null;
     private Lookup.Result<ViewSlab> viewSlabResult = null;
     
@@ -1069,7 +1074,12 @@ implements LookupListener
             {
                 @Override
                 public void run() {
-                    immediateUpdateControllerFields();
+                    try {
+                        immediateUpdateControllerFields();
+                    }
+                    catch (Exception e) {
+                        FrameworkImplProvider.handleException("Error updating controller fields",e);
+                    }
                 }
             }, remaining);
             return;
