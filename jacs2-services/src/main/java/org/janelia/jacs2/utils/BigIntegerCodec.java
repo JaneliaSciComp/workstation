@@ -1,16 +1,18 @@
 package org.janelia.jacs2.utils;
 
-import org.bson.BsonBinary;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
-import org.bson.types.Decimal128;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
+/**
+ * BigIntegerCodec implements a Codec for a big integer type. The problem with the big ints is
+ * that mongo as of 3.4 does not support big ints so I had to serialize this as a long. If I serialize it
+ * as a string or binary the queries don't work so for now this is the only working option.
+ */
 public class BigIntegerCodec implements Codec<BigInteger> {
 
     @Override
