@@ -138,7 +138,7 @@ of adapter.
     <target name="internal-jar-copy" description="Get latest versions of internally-developed project jars.">
 
         <property name="old-internal-jar-release" value="${basedir}/SharedModelComputeWrapper/release/modules/ext"/>
-        <delete>
+        <delete failonerror="false">
             <fileset dir="${old-internal-jar-release}" includes="*.jar"/>
         </delete>
 
