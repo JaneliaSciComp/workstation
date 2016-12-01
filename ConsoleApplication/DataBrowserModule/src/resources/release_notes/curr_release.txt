@@ -1,4 +1,8 @@
-// 5.5.1
+// 5.5.2
+
+Changes
+* Increased update check interval from 1 hour to 15 minutes
 
 Bug fixes
-* Fixed some program configuration issues that caused issues for some users
+* Fixed issue with Add to Folder
+* Fixed issues caused by legacy modules

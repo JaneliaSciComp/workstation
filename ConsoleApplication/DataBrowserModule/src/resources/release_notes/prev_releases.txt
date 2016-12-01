@@ -1,3 +1,8 @@
+// 5.5.1
+
+Bug fixes
+* Fixed some program configuration issues that caused issues for some users
+
 // 5.5.0
 
 Workstation Browser
