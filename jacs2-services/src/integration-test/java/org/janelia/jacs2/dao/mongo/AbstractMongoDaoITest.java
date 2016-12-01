@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class AbstractMongoDaoITest<T, I> {
+public class AbstractMongoDaoITest<T, Number> {
 
     private static MongoClient testMongoClient;
     private static ObjectMapper testObjectMapper = ObjectMapperFactory.instance().getObjectMapper();
@@ -49,7 +49,7 @@ public class AbstractMongoDaoITest<T, I> {
         testMongoDatabase = testMongoClient.getDatabase(testConfig.getProperty("MongoDB.Database"));
     }
 
-    protected void delete(Dao<T, I> dao, T e) {
+    protected void delete(Dao<T, Number> dao, T e) {
         dao.delete(e);
     }
 

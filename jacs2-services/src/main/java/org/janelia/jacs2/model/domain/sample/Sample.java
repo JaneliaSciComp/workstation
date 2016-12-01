@@ -2,6 +2,7 @@ package org.janelia.jacs2.model.domain.sample;
 
 import org.janelia.jacs2.model.domain.AbstractDomainObject;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class Sample extends AbstractDomainObject {
     private String compressionType;
     private Date tmogDate;
     private Date completionDate;
-    private List<SampleObjective> objectives;
+    private List<SampleObjective> objectives = new ArrayList<>();
 
     public String getDataSet() {
         return dataSet;

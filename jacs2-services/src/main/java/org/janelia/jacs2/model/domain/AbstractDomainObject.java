@@ -2,6 +2,7 @@ package org.janelia.jacs2.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -37,6 +38,7 @@ public abstract class AbstractDomainObject implements DomainObject {
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
     private Date updatedDate;
 
+    @JsonIgnore
     public String getOwnerName() {
         return DomainUtils.getNameFromSubjectKey(ownerKey);
     }

@@ -3,6 +3,7 @@ package org.janelia.jacs2.dao.mongo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Updates;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
@@ -89,12 +90,25 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
         mongoCollection.insertOne(entity);
     }
 
+    /**
+     * Generic update implementation which updates all first level fields - if their value is set or removes them if the value is null.
+     * @param entity to be updated.
+     */
     @Override
     public void update(T entity) {
         try {
             String jsonEntity = objectMapper.writeValueAsString(entity);
             Document bsonEntity = Document.parse(jsonEntity);
-            mongoCollection.updateOne(eq("_id", entity.getId()), bsonEntity);
+            List<Bson> fieldUpdates = bsonEntity.entrySet().stream().map(e -> {
+                Object value = e.getValue();
+                if (value == null) {
+                    return Updates.unset(e.getKey());
+                } else {
+                    return Updates.set(e.getKey(), e.getValue());
+                }
+            }).collect(Collectors.toList());
+            Bson toUpdate = Updates.combine(fieldUpdates);
+            mongoCollection.updateOne(eq("_id", entity.getId()), toUpdate);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
