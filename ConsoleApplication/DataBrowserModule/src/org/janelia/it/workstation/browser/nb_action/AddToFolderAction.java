@@ -180,6 +180,11 @@ public class AddToFolderAction extends NodePresenterAction {
 
             for (String path : addHistory) {
 
+                if (path.contains("#")) {
+                    log.warn("Ignoring reference in add history: "+path);
+                    continue;
+                }
+                
                 final Long[] idPath = NodeUtils.createIdPath(path);
                 final Long folderId = idPath[idPath.length-1];
                 
