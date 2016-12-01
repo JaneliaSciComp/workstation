@@ -16,13 +16,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import static java.util.Objects.isNull;
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.same;
+
 public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Long> {
 
     private List<Sample> testData = new ArrayList<>();
     @Spy
     private ObjectMapper objectMapper = ObjectMapperFactory.instance().getObjectMapper();
     @Spy
-    private TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator();
+    private TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     @InjectMocks
     private SampleDao testDao;
 
@@ -37,7 +44,7 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Long> 
     public void tearDown() {
         // delete the data that was created for testing
         for (Sample s : testData) {
-            delete(testDao, s);
+//            delete(testDao, s);
         }
     }
 
@@ -46,6 +53,14 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Long> 
         Sample testSample = createTestSample();
         testDao.save(testSample);
         testData.add(0, testSample);
+        Sample retrievedSample = testDao.findById(testSample.getId());
+        assertThat(retrievedSample, not(isNull(Sample.class)));
+        assertThat(retrievedSample, not(same(testSample)));
+        assertThat(retrievedSample.getId(), allOf(
+                not(isNull(Long.class)),
+                equalTo(testSample.getId())
+        ));
+
     }
 
     private Sample createTestSample() {

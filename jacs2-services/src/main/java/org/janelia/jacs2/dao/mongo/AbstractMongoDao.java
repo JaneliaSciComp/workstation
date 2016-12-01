@@ -1,7 +1,6 @@
 package org.janelia.jacs2.dao.mongo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import org.apache.commons.collections4.CollectionUtils;
@@ -10,7 +9,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.AbstractDao;
 import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -26,11 +24,11 @@ import java.util.stream.Collectors;
 import static com.mongodb.client.model.Filters.eq;
 
 /**
+ * Abstract Mongo DAO.
  *
  * @param <T> type of the element
- * @param <I> type of the ID
  */
-public abstract class AbstractMongoDao<T extends DomainObject, I> extends AbstractDao<T, I> {
+public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractDao<T, Number> {
 
     @Inject
     protected ObjectMapper objectMapper;
@@ -43,7 +41,7 @@ public abstract class AbstractMongoDao<T extends DomainObject, I> extends Abstra
     }
 
     @Override
-    public T findById(I id) {
+    public T findById(Number id) {
         List<T> entityDocs = find(eq("_id", id), null, 0, 1, getEntityType());
         return CollectionUtils.isEmpty(entityDocs) ? null : entityDocs.get(0);
     }

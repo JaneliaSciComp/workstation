@@ -26,12 +26,12 @@ public class DomainCodecProvider implements CodecProvider {
     @Override
     public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
         if (DomainObject.class.isAssignableFrom(clazz)) {
-            final Codec<Document> rawBsonDocumentCodec = registry.get(Document.class);
+            final Codec<RawBsonDocument> rawBsonDocumentCodec = registry.get(RawBsonDocument.class);
             return new Codec<T>() {
                 @Override
                 public T decode(BsonReader reader, DecoderContext decoderContext) {
                     try {
-                        Document document = rawBsonDocumentCodec.decode(reader, decoderContext);
+                        RawBsonDocument document = rawBsonDocumentCodec.decode(reader, decoderContext);
                         return objectMapper.readValue(document.toJson(), clazz);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
@@ -42,8 +42,7 @@ public class DomainCodecProvider implements CodecProvider {
                 public void encode(BsonWriter writer, T value, EncoderContext encoderContext) {
                     try {
                         String json = objectMapper.writeValueAsString(value);
-                        Document jsonDoc = Document.parse(json);
-                        rawBsonDocumentCodec.encode(writer, jsonDoc, encoderContext);
+                        rawBsonDocumentCodec.encode(writer, RawBsonDocument.parse(json), encoderContext);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }

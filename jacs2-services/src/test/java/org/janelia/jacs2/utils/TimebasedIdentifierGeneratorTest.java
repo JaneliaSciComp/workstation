@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -14,12 +15,12 @@ public class TimebasedIdentifierGeneratorTest {
 
     @Before
     public void setUp() {
-        idGenerator = new TimebasedIdentifierGenerator();
+        idGenerator = new TimebasedIdentifierGenerator(0);
     }
 
     @Test
     public void generateLargeListOfIds() {
-        List<Long> idList = idGenerator.generateIdList(16384);
+        List<Number> idList = idGenerator.generateIdList(16384);
         assertThat(ImmutableSet.copyOf(idList), hasSize(idList.size()));
     }
 }

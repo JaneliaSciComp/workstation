@@ -2,6 +2,7 @@ package org.janelia.jacs2.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.Set;
 
@@ -13,8 +14,8 @@ import java.util.Set;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public interface DomainObject {
-    Long getId();
-    void setId(Long id);
+    Number getId();
+    void setId(Number id);
     String getName();
     void setName(String name);
     String getOwnerKey();

@@ -28,8 +28,8 @@ public class ApplicationProducer {
     }
 
     @Produces
-    public TimebasedIdentifierGenerator idGenerator() {
-        return new TimebasedIdentifierGenerator();
+    public TimebasedIdentifierGenerator idGenerator(@PropertyValue(name = "TimebasedIdentifierGenerator.DeploymentContext") Integer deploymentContext) {
+        return new TimebasedIdentifierGenerator(deploymentContext);
     }
 
     @Produces

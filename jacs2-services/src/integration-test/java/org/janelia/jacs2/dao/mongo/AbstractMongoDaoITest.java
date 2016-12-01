@@ -9,7 +9,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
-import org.janelia.jacs2.model.domain.sample.Sample;
+import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -36,9 +36,10 @@ public class AbstractMongoDaoITest<T, I> {
         }
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
-                CodecRegistries.fromProviders(new DomainCodecProvider(testObjectMapper))
+                CodecRegistries.fromProviders(new DomainCodecProvider(testObjectMapper)),
+                CodecRegistries.fromCodecs(new BigIntegerCodec())
         );
-        MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
+        MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry).maxConnectionIdleTime(60000);
         MongoClientURI mongoConnectionString = new MongoClientURI(testConfig.getProperty("MongoDB.ConnectionURL"), optionsBuilder);
         testMongoClient = new MongoClient(mongoConnectionString);
     }

@@ -1,11 +1,17 @@
 package org.janelia.jacs2.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
 import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,8 +25,9 @@ import java.util.Set;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public abstract class AbstractDomainObject implements DomainObject {
-    @JsonProperty(value="_id")
-    private Long id;
+    @JsonProperty("_id")
+    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    private Number id;
     private String name;
     private String ownerKey;
     private Set<String> readers = new HashSet<>();
@@ -35,12 +42,12 @@ public abstract class AbstractDomainObject implements DomainObject {
     }
 
     @Override
-    public Long getId() {
+    public Number getId() {
         return id;
     }
 
     @Override
-    public void setId(Long id) {
+    public void setId(Number id) {
         this.id = id;
     }
 
