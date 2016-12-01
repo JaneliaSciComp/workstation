@@ -2,7 +2,6 @@ package org.janelia.jacs2.utils;
 
 import com.google.common.base.Preconditions;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -25,11 +24,11 @@ public class TimebasedIdentifierGenerator {
         private long ipComponent;
         private long currentIndex = 0;
 
-        private boolean hasNext() {
+        private synchronized boolean hasNext() {
             return currentIndex < BLOCK_SIZE;
         }
 
-        public Number next() {
+        private synchronized Number next() {
             BigInteger nextId = BigInteger.valueOf(timeComponent).shiftLeft(22)
                                     .add(BigInteger.valueOf(currentIndex << 12))
                                     .add(BigInteger.valueOf(deploymentContext << 8))

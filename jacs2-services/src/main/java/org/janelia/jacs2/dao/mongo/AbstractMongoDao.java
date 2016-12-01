@@ -1,6 +1,7 @@
 package org.janelia.jacs2.dao.mongo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Updates;
@@ -18,6 +19,7 @@ import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -63,7 +65,11 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
         if (CollectionUtils.isNotEmpty(sortCriteria)) {
             Map<String, Object> sortCriteriaAsMap = sortCriteria.stream()
                 .filter(sc -> StringUtils.isNotBlank(sc.getField()))
-                .collect(Collectors.toMap(sc -> sc.getField(), sc -> sc.getDirection() == SortDirection.DESC ? -1 : 1));
+                .collect(Collectors.toMap(
+                        sc -> sc.getField(),
+                        sc -> sc.getDirection() == SortDirection.DESC ? -1 : 1,
+                        (sc1, sc2) -> sc2,
+                        LinkedHashMap::new));
             bsonSortCriteria = new Document(sortCriteriaAsMap);
         }
         return bsonSortCriteria;
@@ -76,8 +82,11 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
 
     protected <R> List<R> find(Bson queryFilter, Bson sortCriteria, long offset, int length, Class<R> resultType) {
         List<R> entityDocs = new ArrayList<>();
-        return mongoCollection.find(resultType)
-                .filter(queryFilter)
+        FindIterable<R> results = mongoCollection.find(resultType);
+        if (queryFilter != null) {
+            results = results.filter(queryFilter);
+        }
+        return results
                 .skip((int) offset)
                 .limit(length)
                 .sort(sortCriteria)

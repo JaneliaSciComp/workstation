@@ -9,6 +9,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
+import org.janelia.jacs2.model.domain.DomainObject;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.junit.Before;
@@ -19,7 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class AbstractMongoDaoITest<T, Number> {
+public class AbstractMongoDaoITest<T extends DomainObject, Number> {
 
     private static MongoClient testMongoClient;
     private static ObjectMapper testObjectMapper = ObjectMapperFactory.instance().getObjectMapper();
@@ -50,7 +51,9 @@ public class AbstractMongoDaoITest<T, Number> {
     }
 
     protected void delete(Dao<T, Number> dao, T e) {
-        dao.delete(e);
+        if (e.getId() != null) {
+            dao.delete(e);
+        }
     }
 
 }
