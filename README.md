@@ -1,29 +1,56 @@
-1. Building the application
+# Setting up the development environment
+
+To build the application you can either install gradle locally on your machine using the appropriate package manager for your OS
+(brew or macports for OSX, yum for Centos based Linux distros, apt-get for Debian based Linux distros) or use gradle scripts packaged
+with the project.
+
+Because the build is configure to run the integration tests as part of the full build you also need access to a MySQL database and
+to a Mongo database.
+
+## Setup MySQL test database.
+
+1. Start mysql as root or as a user that has admin privileges
+`mysql -u root -p`
+2. Create the test database and the test user.
+```
+create database jacs2_test;
+create user jacs2 identified by 'jacs2';
+grant all on jacs2.* to 'jacs2' identified by 'jacs2';
+```
+
+## Setup MongoDB
+
+For mongo you really don't have to do anything else because the tests will create the needed databases and the collections as long as the user
+has prvileges to do so.
+
+## Building and running the application
+
+### Building the application
 
 `gradle build`
+or
+`./gradlew build`
 
-2. Sample script to deploy the application
+### Running only the integration tests
 
-`
-#!/bin/sh
+`gradle integrationTest`
 
-WILDFLY_HOME=/Users/goinac/Tools/wildfly-10.1.0.Final
-WILDFLY_INSTANCE=standalone
+### Package the application
 
-echo cp jacs2-ear/build/libs/jacs2.ear ${WILDFLY_HOME}/${WILDFLY_INSTANCE}/deployments
-cp jacs2-ear/build/libs/jacs2.ear ${WILDFLY_HOME}/${WILDFLY_INSTANCE}/deployments
-`
+`gradle installDist`
 
-3. Register mysql driver
+Note that 'installDist' target will not run any tests or unit tests.
 
-Use
-`bin/jboss-cli.sh`
+### Run the application
 
-`
-module add --name=mysql-connector-java-5.1.40 --resources=/Users/goinac/Tools/wildfly-10.1.0.Final/standalone/lib/ext  mysql-connector-java-5.1.40.jar
+`jacs2-web/build/install/jacs2-web/bin/jacs2-web`
 
-/subsystem=datasources/jdbc-driver=mysql:add(driver-name="mysql", driver-module-name="mysql-connector-java-5.1.40", driver-class-name=com.mysql.jdbc.Driver, driver-datasource-class-name=com.mysql.jdbc.jdbc2.optional.MysqlDataSource, driver-xa-datasource-class-name=com.mysql.jdbc.jdbc2.optional.MysqlXADataSource)
+If you want to debug the application you can start the application with the debug agent as below:
 
-data-source add --name=ComputeDS --driver-name=mysql --jndi-name=java:jboss/datasources/ComputeDS --connection-url=jdbc:mysql://localhost:3306/jacs2 --user-name=jacs2 --password=jacs2 --connection-properties={"url"=>"jdbc:mysql://localhost:3306/jacs2"}
+`JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005" jacs2-web/build/install/jacs2-web/bin/jacs2-web`
 
-`
+The application uses a default configuration that is packaged in the applications' jar but this can be overwritten with your own settings
+by simply creating a java properties file in which you overwrite the settings that you want and setup an environment variable JACS2_CONFIG to
+reference that file, e.g.
+
+`JACS2_CONFIG=/usr/local/etc/myjacs2-config.properties jacs2-web/build/install/jacs2-web/bin/jacs2-web`
