@@ -1,8 +1,6 @@
 package org.janelia.jacs2.dao.mongo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.SampleDao;
 import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.domain.sample.SampleObjective;
@@ -10,13 +8,11 @@ import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 import org.janelia.jacs2.model.page.SortDirection;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.same;
 
-public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number> {
+public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample> {
 
     private List<Sample> testData = new ArrayList<>();
     @InjectMocks
@@ -55,19 +51,7 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
 
     @Test
     public void findAll() {
-        List<Sample> testSamples = ImmutableList.of(
-            createTestSample("ds1", "sc1"),
-            createTestSample("ds1", "sc2"),
-            createTestSample("ds1", "sc3"),
-            createTestSample("ds1", "sc4"),
-            createTestSample("ds1", "sc5"),
-            createTestSample("ds2", "sc1"),
-            createTestSample("ds2", "sc2"),
-            createTestSample("ds2", "sc3"),
-            createTestSample("ds2", "sc4"),
-            createTestSample("ds2", "sc5")
-        );
-        testData.addAll(testSamples);
+        List<Sample> testSamples = createMultipleTestItems();
         testSamples.parallelStream().forEach(s -> testDao.save(s));
         PageRequest pageRequest = new PageRequest();
         pageRequest.setPageNumber(0);
@@ -100,6 +84,16 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
     }
 
     @Test
+    public void findByOwner() {
+        findByOwner(testDao);
+    }
+
+    @Test
+    public void findByIds() {
+        findByIds(testDao);
+    }
+
+    @Test
     public void persistSample() {
         Sample testSample = createTestSample("ds1", "sc1");
         testSample.getObjectives().addAll(ImmutableList.of(
@@ -107,7 +101,6 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
                 createSampleObjective("o2"),
                 createSampleObjective("o3")));
         testDao.save(testSample);
-        testData.add(0, testSample);
         Sample retrievedSample = testDao.findById(testSample.getId());
         assertThat(retrievedSample, not(isNull(Sample.class)));
         assertThat(retrievedSample, not(same(testSample)));
@@ -121,7 +114,6 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
     public void updateSample() {
         Sample testSample = createTestSample("ds1", "sc1");
         testDao.save(testSample);
-        testData.add(0, testSample);
         testSample.setOwnerKey("subject:verify");
         testSample.setFlycoreAlias(null);
         testSample.setDataSet("newDataSet that has been changed");
@@ -145,6 +137,21 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
         return so;
     }
 
+    protected List<Sample> createMultipleTestItems() {
+        return ImmutableList.of(
+                createTestSample("ds1", "sc1"),
+                createTestSample("ds1", "sc2"),
+                createTestSample("ds1", "sc3"),
+                createTestSample("ds1", "sc4"),
+                createTestSample("ds1", "sc5"),
+                createTestSample("ds2", "sc1"),
+                createTestSample("ds2", "sc2"),
+                createTestSample("ds2", "sc3"),
+                createTestSample("ds2", "sc4"),
+                createTestSample("ds2", "sc5")
+        );
+    }
+
     private Sample createTestSample(String dataset, String slideCode) {
         Sample testSample = new Sample();
         Date currentTime = new Date();
@@ -153,6 +160,8 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
         testSample.setFlycoreAlias("testAlias");
         testSample.setCompletionDate(currentTime);
         testSample.setTmogDate(currentTime);
+        testSample.setOwnerKey(TEST_OWNER_KEY);
+        testData.add(testSample);
         return testSample;
     }
 }

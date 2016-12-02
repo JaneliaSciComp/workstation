@@ -1,12 +1,15 @@
 package org.janelia.jacs2.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.domain.AbstractDomainObject;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * All the processing results of a particular specimen. Uniqueness of a Sample is determined by a combination
@@ -137,4 +140,15 @@ public class Sample extends AbstractDomainObject {
     public void setObjectives(List<SampleObjective> objectives) {
         this.objectives = objectives;
     }
+
+    public Optional<SampleObjective> lookupObjective(String objectiveName) {
+        Optional<SampleObjective> objective = Optional.empty();
+        if (CollectionUtils.isNotEmpty(objectives)) {
+            objective = objectives.stream()
+                    .filter(o -> objectiveName == null && o.getObjective() == null || objectiveName.equals(o.getObjective()))
+                    .findFirst();
+        }
+        return objective;
+    }
+
 }

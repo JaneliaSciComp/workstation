@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,9 +49,20 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
 
     protected String getDomainObjectCollection() {
         Class<T> entityClass = getEntityType();
-        MongoMapping mongoMapping = entityClass.getAnnotation(MongoMapping.class);
+        MongoMapping mongoMapping = getMapping(entityClass);
         Preconditions.checkArgument(mongoMapping != null, "Entity class " + entityClass.getName() + "is not annotated with MongoMapping");
         return mongoMapping.collectionName();
+    }
+
+    protected <D> MongoMapping getMapping(Class<D> objectClass) {
+        MongoMapping mongoMapping = null;
+        for(Class<?> clazz = objectClass; clazz != null; clazz = clazz.getSuperclass()) {
+            if (clazz.isAnnotationPresent(MongoMapping.class)) {
+                mongoMapping = clazz.getAnnotation(MongoMapping.class);
+                break;
+            }
+        }
+        return mongoMapping;
     }
 
     @Override
@@ -96,9 +108,13 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
         if (queryFilter != null) {
             results = results.filter(queryFilter);
         }
+        if (offset > 0) {
+            results = results.skip((int) offset);
+        }
+        if (length > 0) {
+            results = results.limit((int) length);
+        }
         return results
-                .skip((int) offset)
-                .limit(length)
                 .sort(sortCriteria)
                 .into(entityDocs);
     }
@@ -146,5 +162,14 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
                 pageRequest.getPageSize(),
                 getEntityType());
         return new PageResult<>(pageRequest, results);
+    }
+
+    @Override
+    public List<T> findByIds(List<Number> ids) {
+        return find(Filters.in("_id", ids),
+                null,
+                0,
+                -1,
+                getEntityType());
     }
 }
