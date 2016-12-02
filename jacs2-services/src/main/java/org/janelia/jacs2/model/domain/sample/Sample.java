@@ -1,6 +1,8 @@
 package org.janelia.jacs2.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.janelia.jacs2.model.domain.AbstractDomainObject;
+import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -14,6 +16,7 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@MongoMapping(collectionName="sample", label="Sample")
 public class Sample extends AbstractDomainObject {
     private String dataSet;
     private String slideCode;
@@ -25,7 +28,9 @@ public class Sample extends AbstractDomainObject {
     private Integer crossBarcode;
     private String status;
     private String compressionType;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
     private Date tmogDate;
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
     private Date completionDate;
     private List<SampleObjective> objectives = new ArrayList<>();
 

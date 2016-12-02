@@ -12,13 +12,17 @@ import org.janelia.jacs2.dao.Dao;
 import org.janelia.jacs2.model.domain.DomainObject;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
+import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.mockito.Spy;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 public class AbstractMongoDaoITest<T extends DomainObject, Number> {
 
@@ -28,6 +32,11 @@ public class AbstractMongoDaoITest<T extends DomainObject, Number> {
     private static Properties testConfig;
 
     protected MongoDatabase testMongoDatabase;
+    @Spy
+    protected ObjectMapper objectMapper = ObjectMapperFactory.instance().getObjectMapper();
+    @Spy
+    protected TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
+    protected Random dataGenerator = new Random();
 
     @BeforeClass
     public static void setUpMongoClient() throws IOException {
@@ -48,6 +57,12 @@ public class AbstractMongoDaoITest<T extends DomainObject, Number> {
     @Before
     public final void setUpMongoDatabase() {
         testMongoDatabase = testMongoClient.getDatabase(testConfig.getProperty("MongoDB.Database"));
+    }
+
+    protected void deleteAll(Dao<T, Number> dao, List<T> es) {
+        for (T e : es) {
+            delete(dao, e);
+        }
     }
 
     protected void delete(Dao<T, Number> dao, T e) {

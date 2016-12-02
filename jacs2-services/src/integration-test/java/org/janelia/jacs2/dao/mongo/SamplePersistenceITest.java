@@ -38,16 +38,11 @@ import static org.mockito.ArgumentMatchers.same;
 public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number> {
 
     private List<Sample> testData = new ArrayList<>();
-    @Spy
-    private ObjectMapper objectMapper = ObjectMapperFactory.instance().getObjectMapper();
-    @Spy
-    private TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     @InjectMocks
     private SampleDao testDao;
 
     @Before
     public void setUp() {
-        testData = new ArrayList<>();
         testDao = new SampleMongoDao(testMongoDatabase);
         MockitoAnnotations.initMocks(this);
     }
@@ -55,9 +50,7 @@ public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample, Number
     @After
     public void tearDown() {
         // delete the data that was created for testing
-        for (Sample s : testData) {
-            delete(testDao, s);
-        }
+        deleteAll(testDao, testData);
     }
 
     @Test

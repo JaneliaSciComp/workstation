@@ -1,6 +1,7 @@
 package org.janelia.jacs2.dao.mongo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -10,7 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.AbstractDao;
+import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
+import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -31,7 +34,7 @@ import static com.mongodb.client.model.Filters.eq;
  *
  * @param <T> type of the element
  */
-public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractDao<T, Number> {
+public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractDao<T, Number> implements DomainObjectDao<T> {
 
     @Inject
     protected ObjectMapper objectMapper;
@@ -39,8 +42,15 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
     protected TimebasedIdentifierGenerator idGenerator;
     protected MongoCollection<T> mongoCollection;
 
-    protected AbstractMongoDao(MongoDatabase mongoDatabase, String collectionName) {
-        mongoCollection = mongoDatabase.getCollection(collectionName, getEntityType());
+    protected AbstractMongoDao(MongoDatabase mongoDatabase) {
+        mongoCollection = mongoDatabase.getCollection(getDomainObjectCollection(), getEntityType());
+    }
+
+    protected String getDomainObjectCollection() {
+        Class<T> entityClass = getEntityType();
+        MongoMapping mongoMapping = entityClass.getAnnotation(MongoMapping.class);
+        Preconditions.checkArgument(mongoMapping != null, "Entity class " + entityClass.getName() + "is not annotated with MongoMapping");
+        return mongoMapping.collectionName();
     }
 
     @Override
@@ -126,5 +136,15 @@ public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractD
     @Override
     public void delete(T entity) {
         mongoCollection.deleteOne(eq("_id", entity.getId()));
+    }
+
+    @Override
+    public PageResult<T> findByOwnerKey(String ownerKey, PageRequest pageRequest) {
+        List<T> results = find(eq("ownerKey", ownerKey),
+                createBsonSortCriteria(pageRequest.getSortCriteria()),
+                pageRequest.getOffset(),
+                pageRequest.getPageSize(),
+                getEntityType());
+        return new PageResult<>(pageRequest, results);
     }
 }

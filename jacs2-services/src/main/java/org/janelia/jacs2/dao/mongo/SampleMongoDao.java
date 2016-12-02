@@ -10,6 +10,6 @@ import java.math.BigInteger;
 public class SampleMongoDao extends AbstractMongoDao<Sample> implements SampleDao {
     @Inject
     public SampleMongoDao(MongoDatabase mongoDatabase) {
-        super(mongoDatabase, "sample");
+        super(mongoDatabase);
     }
 }
