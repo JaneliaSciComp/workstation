@@ -13,7 +13,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.AbstractDao;
 import org.janelia.jacs2.dao.DomainObjectDao;
-import org.janelia.jacs2.model.domain.DomainObject;
+import org.janelia.jacs2.model.domain.HasIdentifier;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -35,7 +35,7 @@ import static com.mongodb.client.model.Filters.eq;
  *
  * @param <T> type of the element
  */
-public abstract class AbstractMongoDao<T extends DomainObject> extends AbstractDao<T, Number> implements DomainObjectDao<T> {
+public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> implements DomainObjectDao<T> {
 
     @Inject
     protected ObjectMapper objectMapper;

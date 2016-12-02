@@ -13,9 +13,7 @@ import java.util.Set;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
-public interface DomainObject {
-    Number getId();
-    void setId(Number id);
+public interface DomainObject extends HasIdentifier {
     String getName();
     void setName(String name);
     String getOwnerKey();

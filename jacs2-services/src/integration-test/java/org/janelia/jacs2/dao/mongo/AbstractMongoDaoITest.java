@@ -12,6 +12,7 @@ import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
+import org.janelia.jacs2.model.domain.HasIdentifier;
 import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -41,7 +42,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertThat;
 
-public abstract class AbstractMongoDaoITest<T extends DomainObject> {
+public abstract class AbstractMongoDaoITest<T extends HasIdentifier> {
     protected static final String TEST_OWNER_KEY = "user:test";
 
     private static MongoClient testMongoClient;
@@ -89,10 +90,10 @@ public abstract class AbstractMongoDaoITest<T extends DomainObject> {
         }
     }
 
-    protected void findByOwner(DomainObjectDao<T> dao) {
+    protected <R extends DomainObject> void findByOwner(DomainObjectDao<R> dao) {
         String otherOwner = "group:other";
-        List<T> testItems = createMultipleTestItems();
-        List<T> otherOwnersItems = new ArrayList<>();
+        List<R> testItems = createMultipleTestItems();
+        List<R> otherOwnersItems = new ArrayList<>();
         testItems.parallelStream().forEach(s -> {
             if (dataGenerator.nextBoolean()) {
                 s.setOwnerKey(otherOwner);
@@ -106,8 +107,8 @@ public abstract class AbstractMongoDaoITest<T extends DomainObject> {
         pageRequest.setSortCriteria(ImmutableList.of(
                 new SortCriteria("ownerKey", SortDirection.ASC),
                 new SortCriteria("creationDate", SortDirection.DESC)));
-        PageResult<T> u1Data = dao.findByOwnerKey(TEST_OWNER_KEY, pageRequest);
-        PageResult<T> u2Data = dao.findByOwnerKey(otherOwner, pageRequest);
+        PageResult<R> u1Data = dao.findByOwnerKey(TEST_OWNER_KEY, pageRequest);
+        PageResult<R> u2Data = dao.findByOwnerKey(otherOwner, pageRequest);
         assertThat(u1Data.getResultList(), everyItem(hasProperty("ownerKey", equalTo(TEST_OWNER_KEY))));
         assertThat(u2Data.getResultList(), everyItem(hasProperty("ownerKey", equalTo(otherOwner))));
         assertThat(u1Data.getResultList(), hasSize(testItems.size() - otherOwnersItems.size()));
@@ -123,6 +124,6 @@ public abstract class AbstractMongoDaoITest<T extends DomainObject> {
         assertThat(res, everyItem(hasProperty("id", isIn(testItemIds))));
     }
 
-    protected abstract List<T> createMultipleTestItems();
+    protected abstract <R> List<R> createMultipleTestItems();
 
 }
