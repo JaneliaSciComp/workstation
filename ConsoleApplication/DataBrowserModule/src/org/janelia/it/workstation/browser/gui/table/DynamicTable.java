@@ -545,6 +545,14 @@ public abstract class DynamicTable extends JPanel {
         return row;
     }
 
+    public void removeRow(Object userObject) {
+        int index = userObjects.indexOf(userObject);
+        if (index<0) return;
+        userObjects.remove(index);
+        rows.remove(index);
+        updateTableModel();
+    }
+
     /**
      * Returns a list of the rows in display order.
      *
@@ -557,7 +565,7 @@ public abstract class DynamicTable extends JPanel {
     public List<Object> getUserObjects() {
         return userObjects;
     }
-
+    
     public void removeRow(DynamicRow row) {
         userObjects.remove(rows.indexOf(row));
         rows.remove(row);
