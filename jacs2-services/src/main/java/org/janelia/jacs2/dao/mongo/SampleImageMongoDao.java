@@ -6,7 +6,7 @@ import org.janelia.jacs2.model.domain.sample.SampleImage;
 
 import javax.inject.Inject;
 
-public class SampleImageMongoDao extends AbstractMongoDao<SampleImage> implements SampleImageDao {
+public class SampleImageMongoDao extends AbstractDomainObjectDao<SampleImage> implements SampleImageDao {
     @Inject
     public SampleImageMongoDao(MongoDatabase mongoDatabase) {
         super(mongoDatabase);

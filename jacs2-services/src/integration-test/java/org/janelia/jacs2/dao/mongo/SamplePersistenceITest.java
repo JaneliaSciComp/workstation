@@ -31,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.same;
 
-public class SamplePersistenceITest extends AbstractMongoDaoITest<Sample> {
+public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample> {
 
     private List<Sample> testData = new ArrayList<>();
     @InjectMocks

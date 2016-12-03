@@ -23,7 +23,7 @@ import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertThat;
 
-public class SampleImagePersistenceITest extends AbstractMongoDaoITest<SampleImage> {
+public class SampleImagePersistenceITest extends AbstractDomainObjectDaoITest<SampleImage> {
     private List<SampleImage> testData = new ArrayList<>();
     @InjectMocks
     private SampleImageDao testDao;

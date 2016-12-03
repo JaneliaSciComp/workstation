@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @MongoMapping(collectionName="subject", label="Subject")
-public class Subject {
+public class Subject implements HasIdentifier {
     public static final String ADMIN_KEY = "group:admin";
     public static final String USERS_KEY = "group:workstation_users";
 

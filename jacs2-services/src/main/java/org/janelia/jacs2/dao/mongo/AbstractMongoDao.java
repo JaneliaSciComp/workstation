@@ -35,7 +35,7 @@ import static com.mongodb.client.model.Filters.eq;
  *
  * @param <T> type of the element
  */
-public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> implements DomainObjectDao<T> {
+public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> {
 
     @Inject
     protected ObjectMapper objectMapper;
@@ -71,7 +71,6 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
         return CollectionUtils.isEmpty(entityDocs) ? null : entityDocs.get(0);
     }
 
-
     @Override
     public PageResult<T> findAll(PageRequest pageRequest) {
         List<T> results = find(null,
@@ -82,7 +81,7 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
         return new PageResult<>(pageRequest, results);
     }
 
-    private Bson createBsonSortCriteria(List<SortCriteria> sortCriteria) {
+    protected Bson createBsonSortCriteria(List<SortCriteria> sortCriteria) {
         Bson bsonSortCriteria = null;
         if (CollectionUtils.isNotEmpty(sortCriteria)) {
             Map<String, Object> sortCriteriaAsMap = sortCriteria.stream()
@@ -154,22 +153,4 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
         mongoCollection.deleteOne(eq("_id", entity.getId()));
     }
 
-    @Override
-    public PageResult<T> findByOwnerKey(String ownerKey, PageRequest pageRequest) {
-        List<T> results = find(eq("ownerKey", ownerKey),
-                createBsonSortCriteria(pageRequest.getSortCriteria()),
-                pageRequest.getOffset(),
-                pageRequest.getPageSize(),
-                getEntityType());
-        return new PageResult<>(pageRequest, results);
-    }
-
-    @Override
-    public List<T> findByIds(List<Number> ids) {
-        return find(Filters.in("_id", ids),
-                null,
-                0,
-                -1,
-                getEntityType());
-    }
 }
