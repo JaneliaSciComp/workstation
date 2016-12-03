@@ -15,6 +15,7 @@ import org.janelia.jacs2.dao.AbstractDao;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
 import org.janelia.jacs2.model.domain.HasIdentifier;
+import org.janelia.jacs2.model.domain.Subject;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -43,7 +44,7 @@ public abstract class AbstractDomainObjectDao<T extends DomainObject> extends Ab
     }
 
     @Override
-    public PageResult<T> findByOwnerKey(String ownerKey, PageRequest pageRequest) {
+    public PageResult<T> findByOwnerKey(Subject subject, String ownerKey, PageRequest pageRequest) {
         List<T> results = find(eq("ownerKey", ownerKey),
                 createBsonSortCriteria(pageRequest.getSortCriteria()),
                 pageRequest.getOffset(),
@@ -53,7 +54,7 @@ public abstract class AbstractDomainObjectDao<T extends DomainObject> extends Ab
     }
 
     @Override
-    public List<T> findByIds(List<Number> ids) {
+    public List<T> findByIds(Subject subject, List<Number> ids) {
         return find(Filters.in("_id", ids),
                 null,
                 0,

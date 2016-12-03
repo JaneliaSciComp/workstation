@@ -57,13 +57,13 @@ public class SampleImagePersistenceITest extends AbstractDomainObjectDaoITest<Sa
     }
 
     @Test
-    public void findByOwner() {
-        findByOwner(testDao);
+    public void findByOwnerWithoutSubject() {
+        findByOwner(null, testDao);
     }
 
     @Test
-    public void findByIds() {
-        findByIds(testDao);
+    public void findByIdsWithoutSubject() {
+        findByIds(null, testDao);
     }
 
     @Override

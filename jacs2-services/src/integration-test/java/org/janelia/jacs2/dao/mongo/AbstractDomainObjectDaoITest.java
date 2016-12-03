@@ -13,6 +13,7 @@ import org.janelia.jacs2.dao.Dao;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
 import org.janelia.jacs2.model.domain.HasIdentifier;
+import org.janelia.jacs2.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertThat;
 public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> extends AbstractMongoDaoITest<T> {
     protected static final String TEST_OWNER_KEY = "user:test";
 
-    protected void findByOwner(DomainObjectDao<T> dao) {
+    protected void findByOwner(Subject subject, DomainObjectDao<T> dao) {
         String otherOwner = "group:other";
         List<T> testItems = createMultipleTestItems();
         List<T> otherOwnersItems = new ArrayList<>();
@@ -60,19 +61,19 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
         pageRequest.setSortCriteria(ImmutableList.of(
                 new SortCriteria("ownerKey", SortDirection.ASC),
                 new SortCriteria("creationDate", SortDirection.DESC)));
-        PageResult<T> u1Data = dao.findByOwnerKey(TEST_OWNER_KEY, pageRequest);
-        PageResult<T> u2Data = dao.findByOwnerKey(otherOwner, pageRequest);
+        PageResult<T> u1Data = dao.findByOwnerKey(subject, TEST_OWNER_KEY, pageRequest);
+        PageResult<T> u2Data = dao.findByOwnerKey(subject, otherOwner, pageRequest);
         assertThat(u1Data.getResultList(), everyItem(hasProperty("ownerKey", equalTo(TEST_OWNER_KEY))));
         assertThat(u2Data.getResultList(), everyItem(hasProperty("ownerKey", equalTo(otherOwner))));
         assertThat(u1Data.getResultList(), hasSize(testItems.size() - otherOwnersItems.size()));
         assertThat(u2Data.getResultList(), hasSize(otherOwnersItems.size()));
     }
 
-    protected void findByIds(DomainObjectDao<T> dao) {
+    protected void findByIds(Subject subject, DomainObjectDao<T> dao) {
         List<T> testItems = createMultipleTestItems();
         testItems.parallelStream().forEach(dao::save);
         List<Number> testItemIds = testItems.stream().map(d -> d.getId()).collect(Collectors.toCollection(ArrayList<Number>::new));
-        List<T> res = dao.findByIds(testItemIds);
+        List<T> res = dao.findByIds(subject, testItemIds);
         assertThat(res, hasSize(testItems.size()));
         assertThat(res, everyItem(hasProperty("id", isIn(testItemIds))));
     }
