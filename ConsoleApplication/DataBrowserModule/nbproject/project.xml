@@ -48,7 +48,15 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.35.1</specification-version>
+                        <specification-version>1.47.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.api.progress.nb</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.47.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -98,7 +106,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>7.59.1</specification-version>
+                        <specification-version>7.67.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -115,6 +123,22 @@
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>8.8.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.filesystems.compat8</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.9.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.filesystems.nb</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.9.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -147,6 +171,14 @@
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>8.22.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.util.ui</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.6.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -211,6 +243,7 @@
                 <package>org.janelia.it.workstation.browser.gui.table</package>
                 <package>org.janelia.it.workstation.browser.gui.tree</package>
                 <package>org.janelia.it.workstation.browser.lifecycle</package>
+                <package>org.janelia.it.workstation.browser.logging</package>
                 <package>org.janelia.it.workstation.browser.model</package>
                 <package>org.janelia.it.workstation.browser.model.keybind</package>
                 <package>org.janelia.it.workstation.browser.model.search</package>

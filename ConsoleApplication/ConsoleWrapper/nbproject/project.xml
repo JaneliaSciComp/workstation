@@ -11,7 +11,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.34.1</specification-version>
+                        <specification-version>1.41.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -19,7 +19,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.46.1</specification-version>
+                        <specification-version>1.56.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -27,7 +27,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>7.59.1</specification-version>
+                        <specification-version>7.67.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -35,7 +35,15 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>7.36.1</specification-version>
+                        <specification-version>7.45.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.util.ui</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.6.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -43,7 +51,7 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>6.65.1</specification-version>
+                        <specification-version>6.75.1</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
