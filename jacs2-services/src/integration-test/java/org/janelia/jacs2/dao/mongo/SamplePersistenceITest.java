@@ -55,7 +55,18 @@ public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample>
 
     @Test
     public void findAll() {
-        List<Sample> testSamples = createMultipleTestItems();
+        List<Sample> testSamples = ImmutableList.of(
+            createTestSample("ds1", "sc1"),
+            createTestSample("ds1", "sc2"),
+            createTestSample("ds1", "sc3"),
+            createTestSample("ds1", "sc4"),
+            createTestSample("ds1", "sc5"),
+            createTestSample("ds2", "sc1"),
+            createTestSample("ds2", "sc2"),
+            createTestSample("ds2", "sc3"),
+            createTestSample("ds2", "sc4"),
+            createTestSample("ds2", "sc5")
+        );
         testSamples.parallelStream().forEach(s -> testDao.save(s));
         PageRequest pageRequest = new PageRequest();
         pageRequest.setPageNumber(0);
@@ -93,8 +104,13 @@ public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample>
     }
 
     @Test
-    public void findByIdsWithoutSubject() {
-        findByIds(null, testDao);
+    public void findByIdsWithNoSubject() {
+        findByIdsWithNoSubject(testDao);
+    }
+
+    @Test
+    public void findByIdsWithSubject() {
+        findByIdsWithSubject(testDao);
     }
 
     @Test
@@ -141,19 +157,12 @@ public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample>
         return so;
     }
 
-    protected List<Sample> createMultipleTestItems() {
-        return ImmutableList.of(
-                createTestSample("ds1", "sc1"),
-                createTestSample("ds1", "sc2"),
-                createTestSample("ds1", "sc3"),
-                createTestSample("ds1", "sc4"),
-                createTestSample("ds1", "sc5"),
-                createTestSample("ds2", "sc1"),
-                createTestSample("ds2", "sc2"),
-                createTestSample("ds2", "sc3"),
-                createTestSample("ds2", "sc4"),
-                createTestSample("ds2", "sc5")
-        );
+    protected List<Sample> createMultipleTestItems(int nItems) {
+        List<Sample> testItems = new ArrayList<>();
+        for (int i = 0; i < nItems; i++) {
+            testItems.add(createTestSample("ds" + (i + 1), "sc" + (i + 1)));
+        }
+        return testItems;
     }
 
     private Sample createTestSample(String dataset, String slideCode) {

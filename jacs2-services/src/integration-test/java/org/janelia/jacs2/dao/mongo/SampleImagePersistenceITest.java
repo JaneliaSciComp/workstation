@@ -42,7 +42,7 @@ public class SampleImagePersistenceITest extends AbstractDomainObjectDaoITest<Sa
 
     @Test
     public void persistLSMs() {
-        List<SampleImage> testLSMs = createMultipleTestItems();
+        List<SampleImage> testLSMs = createMultipleTestItems(10);
         testLSMs.forEach(si -> testDao.save(si));
         PageRequest pageRequest = new PageRequest();
         pageRequest.setSortCriteria(ImmutableList.of(
@@ -62,23 +62,22 @@ public class SampleImagePersistenceITest extends AbstractDomainObjectDaoITest<Sa
     }
 
     @Test
-    public void findByIdsWithoutSubject() {
-        findByIds(null, testDao);
+    public void findByIdsWithNoSubject() {
+        findByIdsWithNoSubject(testDao);
+    }
+
+    @Test
+    public void findByIdsWithSubject() {
+        findByIdsWithSubject(testDao);
     }
 
     @Override
-    protected List<SampleImage> createMultipleTestItems() {
-        return ImmutableList.of(
-                createLSM("l1", "a1"),
-                createLSM("l2", "a2"),
-                createLSM("l3", "a3"),
-                createLSM("l4", "a4"),
-                createLSM("l5", "a5"),
-                createLSM("l6", "a6"),
-                createLSM("l7", "a7"),
-                createLSM("l8", "a8"),
-                createLSM("l9", "a9")
-        );
+    protected List<SampleImage> createMultipleTestItems(int nItems) {
+        List<SampleImage> testItems = new ArrayList<>();
+        for (int i = 0; i < nItems; i++) {
+            testItems.add(createLSM("l" + (i + 1), "a" + (i + 1)));
+        }
+        return testItems;
     }
 
     private LSMSampleImage createLSM(String line, String area) {

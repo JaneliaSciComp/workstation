@@ -80,6 +80,6 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> {
         }
     }
 
-    protected abstract List<T> createMultipleTestItems();
+    protected abstract List<T> createMultipleTestItems(int nItems);
 
 }

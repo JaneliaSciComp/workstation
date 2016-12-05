@@ -20,8 +20,10 @@ public interface DomainObject extends HasIdentifier {
     void setOwnerKey(String ownerKey);
     Set<String> getReaders();
     void setReaders(Set<String> readers);
+    void addReader(String reader);
     Set<String> getWriters();
     void setWriters(Set<String> writers);
+    void addWriter(String writer);
     Date getCreationDate();
     void setCreationDate(Date creationDate);
     Date getUpdatedDate();

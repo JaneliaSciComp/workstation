@@ -4,6 +4,7 @@ import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.janelia.jacs2.model.domain.Subject;
 
 import java.util.List;
 
@@ -40,4 +41,7 @@ public class DomainUtils {
         return subjectKeyComponents;
     }
 
+    public static boolean isAdminOrUndefined(Subject subject) {
+        return subject == null || subject.isAdmin();
+    }
 }

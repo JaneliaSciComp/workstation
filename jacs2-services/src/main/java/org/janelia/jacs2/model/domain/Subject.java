@@ -1,8 +1,10 @@
 package org.janelia.jacs2.model.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @MongoMapping(collectionName="subject", label="Subject")
@@ -63,5 +65,24 @@ public class Subject implements HasIdentifier {
 
     public void setGroups(Set<String> groups) {
         this.groups = groups;
+    }
+
+    public void addGroup(String group) {
+        this.groups.add(group);
+    }
+
+    @JsonIgnore
+    public boolean isAdmin() {
+        return groups != null && groups.contains(ADMIN_KEY);
+    }
+
+    @JsonIgnore
+    public Set<String> getSubjectClaims() {
+        Set<String> claims = new LinkedHashSet<>();
+        claims.add(key);
+        for (String group : groups) {
+            claims.add(group);
+        }
+        return claims;
     }
 }

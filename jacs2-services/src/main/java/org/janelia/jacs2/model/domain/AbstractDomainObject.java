@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.jacs2.utils.DomainUtils;
@@ -87,6 +88,11 @@ public abstract class AbstractDomainObject implements DomainObject {
     }
 
     @Override
+    public void addReader(String reader) {
+        if (StringUtils.isNotBlank(reader)) readers.add(reader);
+    }
+
+    @Override
     public Set<String> getWriters() {
         return writers;
     }
@@ -95,6 +101,11 @@ public abstract class AbstractDomainObject implements DomainObject {
     public void setWriters(Set<String> writers) {
         Preconditions.checkArgument(writers != null, "Writers property cannot be null");
         this.writers = writers;
+    }
+
+    @Override
+    public void addWriter(String writer) {
+        if (StringUtils.isNotBlank(writer)) writers.add(writer);
     }
 
     @Override

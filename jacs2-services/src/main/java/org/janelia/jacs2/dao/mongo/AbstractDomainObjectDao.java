@@ -1,34 +1,16 @@
 package org.janelia.jacs2.dao.mongo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.janelia.jacs2.dao.AbstractDao;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.HasIdentifier;
 import org.janelia.jacs2.model.domain.Subject;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.page.SortCriteria;
-import org.janelia.jacs2.model.page.SortDirection;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
+import org.janelia.jacs2.utils.DomainUtils;
 
-import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.eq;
 
@@ -55,10 +37,29 @@ public abstract class AbstractDomainObjectDao<T extends DomainObject> extends Ab
 
     @Override
     public List<T> findByIds(Subject subject, List<Number> ids) {
-        return find(Filters.in("_id", ids),
-                null,
-                0,
-                -1,
-                getEntityType());
+        if (DomainUtils.isAdminOrUndefined(subject)) {
+            return find(Filters.in("_id", ids),
+                    null,
+                    0,
+                    -1,
+                    getEntityType());
+        } else {
+            return find(
+                    Filters.and(
+                        createSubjectPermissionFilter(subject),
+                        Filters.in("_id", ids)
+                    ),
+                    null,
+                    0,
+                    -1,
+                    getEntityType());
+        }
+    }
+
+    protected Bson createSubjectPermissionFilter(Subject subject) {
+        return Filters.or(
+                Filters.eq("ownerKey", subject.getKey()),
+                Filters.in("readers", subject.getSubjectClaims())
+        );
     }
 }
