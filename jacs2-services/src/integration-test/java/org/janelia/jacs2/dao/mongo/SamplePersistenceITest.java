@@ -2,8 +2,12 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.SampleDao;
+import org.janelia.jacs2.model.domain.DataFile;
+import org.janelia.jacs2.model.domain.FileType;
+import org.janelia.jacs2.model.domain.Reference;
 import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.domain.sample.SampleObjective;
+import org.janelia.jacs2.model.domain.sample.SampleTile;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -161,7 +165,30 @@ public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample>
         testSample.setCompletionDate(currentTime);
         testSample.setTmogDate(currentTime);
         testSample.setOwnerKey(TEST_OWNER_KEY);
+        testSample.addObjective(createTestObjective());
         testData.add(testSample);
         return testSample;
+    }
+
+    private SampleObjective createTestObjective() {
+        SampleObjective objective = new SampleObjective();
+        objective.setObjective("testObjective");
+        objective.setChanSpec("rgb");
+        objective.addTile(createTile());
+        return objective;
+    }
+
+    private SampleTile createTile() {
+        SampleTile sampleTile = new SampleTile();
+        sampleTile.addLsmReference(new Reference("LSMImage", dataGenerator.nextLong()));
+        sampleTile.addDataFile(createDataFile());
+        return sampleTile;
+    }
+
+    private DataFile createDataFile() {
+        DataFile dataFile = new DataFile();
+        dataFile.setFileName("testFile");
+        dataFile.setFileType(FileType.ChanFile);
+        return dataFile;
     }
 }

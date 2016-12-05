@@ -1,5 +1,6 @@
 package org.janelia.jacs2.model.domain.sample;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,5 +36,12 @@ public class SampleObjective {
 
     public void setTiles(List<SampleTile> tiles) {
         this.tiles = tiles;
+    }
+
+    public void addTile(SampleTile tile) {
+        if (tiles == null) {
+            tiles = new ArrayList<>();
+        }
+        tiles.add(tile);
     }
 }

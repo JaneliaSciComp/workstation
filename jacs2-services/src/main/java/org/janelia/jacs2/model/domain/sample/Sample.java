@@ -151,4 +151,10 @@ public class Sample extends AbstractDomainObject {
         return objective;
     }
 
+    public void addObjective(SampleObjective objective) {
+        if (objectives == null) {
+            objectives  = new ArrayList<>();
+        }
+        objectives.add(objective);
+    }
 }

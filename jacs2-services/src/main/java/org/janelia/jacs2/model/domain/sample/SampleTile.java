@@ -3,6 +3,7 @@ package org.janelia.jacs2.model.domain.sample;
 import org.janelia.jacs2.model.domain.DataFile;
 import org.janelia.jacs2.model.domain.Reference;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,11 +43,25 @@ public class SampleTile {
         this.lsmReferences = lsmReferences;
     }
 
+    public void addLsmReference(Reference ref) {
+        if (lsmReferences == null) {
+            lsmReferences = new ArrayList<>();
+        }
+        lsmReferences.add(ref);
+    }
+
     public List<DataFile> getDataFiles() {
         return dataFiles;
     }
 
     public void setDataFiles(List<DataFile> dataFiles) {
         this.dataFiles = dataFiles;
+    }
+
+    public void addDataFile(DataFile dataFile) {
+        if (dataFiles == null) {
+            dataFiles = new ArrayList<>();
+        }
+        dataFiles.add(dataFile);
     }
 }
