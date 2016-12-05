@@ -227,11 +227,9 @@ public class ReleaseNotesDialog extends ModalDialog {
         textArea.setText(releaseNotes.getNotes());
         
         // Reset scrollbar
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                scrollPane.getVerticalScrollBar().setValue(0);
-            }
-         });
+        SwingUtilities.invokeLater(() -> {
+            scrollPane.getVerticalScrollBar().setValue(0);
+        });
     }
     
     private void saveAndClose() {

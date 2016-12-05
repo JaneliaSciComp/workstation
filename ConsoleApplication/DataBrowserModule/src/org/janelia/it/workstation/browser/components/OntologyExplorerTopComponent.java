@@ -428,12 +428,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         }
         else {
             showTree();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    if (expandAll) beanTreeView.expandAll();
-                    beanTreeView.replaceKeyListeners(keyListener);
-                }
+            SwingUtilities.invokeLater(() -> {
+                if (expandAll) beanTreeView.expandAll();
+                beanTreeView.replaceKeyListeners(keyListener);
             });
         }
     }

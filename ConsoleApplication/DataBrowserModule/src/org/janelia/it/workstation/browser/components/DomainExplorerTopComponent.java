@@ -302,12 +302,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 final ExpandedTreeState expandedState =  mapper.readValue(expandedPathStr, ExpandedTreeState.class);
                 if (expandedState!=null) {
                     log.info("Reading state: {} expanded paths",expandedState.getExpandedArrayPaths().size());
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            pathsToExpand = expandedState.getExpandedArrayPaths();
-                        }
-                    });
+                    SwingUtilities.invokeLater(() -> { pathsToExpand = expandedState.getExpandedArrayPaths(); });
                 }
             }
             catch (Exception e) {
@@ -377,11 +372,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             }
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                beanTreeView.expand(expanded);
-            }
+        SwingUtilities.invokeLater(() -> {
+            beanTreeView.expand(expanded);
         });
     }
     
@@ -417,11 +409,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 }
             }
 
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    beanTreeView.expand(expanded);
-                }
+            SwingUtilities.invokeLater(() -> {
+                beanTreeView.expand(expanded);
             });
         }
     }

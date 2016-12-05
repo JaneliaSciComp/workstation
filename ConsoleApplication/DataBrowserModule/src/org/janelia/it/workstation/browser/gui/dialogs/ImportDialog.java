@@ -398,14 +398,12 @@ public class ImportDialog extends ModalDialog {
                                                         }
                                                     }
                                                     final Long[] idPath = NodeUtils.createIdPath(rootFolder, importFolder);
-                                                    SwingUtilities.invokeLater(new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            explorer.selectAndNavigateNodeByPath(idPath);
-                                                            setVisible(false);
-                                                        }
+                                                    SwingUtilities.invokeLater(() -> {
+                                                        explorer.selectAndNavigateNodeByPath(idPath);
+                                                        setVisible(false);
                                                     });
-                                                }  catch (Exception e) {
+                                                }  
+                                                catch (Exception e) {
                                                     ConsoleApp.handleException(e);
                                                 }
                                             }

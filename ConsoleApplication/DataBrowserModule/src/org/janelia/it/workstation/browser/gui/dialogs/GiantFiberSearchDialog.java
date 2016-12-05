@@ -1011,13 +1011,10 @@ public class GiantFiberSearchDialog extends ModalDialog {
             protected void hadSuccess() {
                 final DomainExplorerTopComponent explorer = DomainExplorerTopComponent.getInstance();
                 final Long[] idPath = NodeUtils.createIdPath(outputFolder, saveFolder);
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        explorer.selectAndNavigateNodeByPath(idPath);
-                        setVisible(false);
-                        resetSearchState();
-                    }
+                SwingUtilities.invokeLater(() -> {
+                    explorer.selectAndNavigateNodeByPath(idPath);
+                    setVisible(false);
+                    resetSearchState();
                 });
             }
 
