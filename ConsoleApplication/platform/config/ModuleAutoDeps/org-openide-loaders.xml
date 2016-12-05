@@ -60,5 +60,18 @@ made subject to such option by the copyright holder.
             </implies>
         </transformation>
     </transformationgroup>
+    <transformationgroup>
+        <description>Templates API has been separated into its own module.</description>
+        <transformation>
+            <trigger-dependency type="older">
+                <module-dependency codenamebase="org.openide.loaders" spec="7.61"/>
+            </trigger-dependency>
+            <implies>
+                <result>
+                    <module-dependency codenamebase="org.netbeans.api.templates" spec="1.0"/>
+                </result>
+            </implies>
+        </transformation>
+    </transformationgroup>
 
 </transformations>
