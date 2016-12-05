@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.RateLimiter;
@@ -69,11 +68,13 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     public void publish(LogRecord record) {
         if (record.getThrown()!=null) {
             this.throwable = record.getThrown();
-            try {
-                autoSendNovelExceptions();
-            }
-            catch (Throwable t) {
-                log.error("Error attempting to auto-send exceptions", t);
+            if (AccessManager.getAccessManager().isLoggedIn()) { // JW-25430: Only attempt to auto-send exceptions once the user has logged in
+                try {
+                    autoSendNovelExceptions();
+                }
+                catch (Throwable t) {
+                    log.error("Error attempting to auto-send exceptions", t);
+                }
             }
         }
     }
@@ -205,9 +206,11 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                    "Your message was NOT able to be sent to our support staff.  "
-                    + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
+            if (askForInput) { // JW-25430: Only show this message if the email was initiated by the user
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                        "Your message was NOT able to be sent to our support staff.  "
+                        + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
     

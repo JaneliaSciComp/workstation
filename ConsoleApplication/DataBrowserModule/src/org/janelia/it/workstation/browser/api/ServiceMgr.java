@@ -2,6 +2,9 @@ package org.janelia.it.workstation.browser.api;
 
 import java.net.BindException;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.web.EmbeddedWebServer;
@@ -51,28 +54,33 @@ public class ServiceMgr {
             while (true) {
                 try {
                     axisServer.start(port);
-                    log.info("Started external client web services on port " + port);
+                    log.info("Started external client web services on port: {}", port);
                     ExternalClientMgr.getInstance().setPortOffset(port);
                     break;
                 } 
                 catch (Exception e) {
                     if (e instanceof BindException || e.getCause() instanceof BindException) {
-                        log.info("Could not start web service on port: " + port);
+                        log.info("Could not start external client web service on port: {}", port);
                         port += PORT_INCREMENT;
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
-                            log.error("Tried to start web service on " + MAX_PORT_TRIES + " ports, giving up.");
+                            log.error("Tried to start external client web services on " + MAX_PORT_TRIES + " ports, giving up.");
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start external client services. Do you have another instance of the Janelia Workstation already open?");
+                                }
+                            });
                             return -1;
                         }
                     } 
                     else {
-                        log.error("Could not start web service on port: " + port);
                         throw e;
                     }
                 }
             }
             return port;
-        } 
+        }
         catch (Exception e) {
             ConsoleApp.handleException(e);
             return -1;
@@ -89,27 +97,32 @@ public class ServiceMgr {
             while (true) {
                 try {
                     webServer.start(port);
-                    log.info("Started embedded web server on port " + port);
+                    log.info("Started embedded web server on port: {}", port);
                     break;
                 } 
                 catch (Exception e) {
                     if (e instanceof BindException || e.getCause() instanceof BindException) {
-                        log.info("Could not start web server on port: " + port);
+                        log.info("Could not start web server on port: {}", port);
                         port += PORT_INCREMENT;
                         tries++;
                         if (tries >= MAX_PORT_TRIES) {
                             log.error("Tried to start web server on " + MAX_PORT_TRIES + " ports, giving up.");
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Could not start proxy services. Do you have another instance of the Janelia Workstation already open?");
+                                }
+                            });
                             return -1;
                         }
                     } 
                     else {
-                        log.error("Could not start web server on port: " + port);
                         throw e;
                     }
                 }
             }
             return port;
-        } 
+        }
         catch (Exception e) {
             ConsoleApp.handleException(e);
             return -1;

@@ -57,7 +57,6 @@ public class BrandingConfig {
 
     public static final String appnameToken = "JaneliaWorkstation";  // TODO: Get this from NetBeans framework somehow
     
-    private static final String NETBEANS_HOME_PATH = System.getProperty("netbeans.home");
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     private static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     private static final String DEFAULT_OPTIONS_PROP = "default_options";
@@ -66,12 +65,23 @@ public class BrandingConfig {
     private final Map<String,String> systemSettings = new LinkedHashMap<>();
     private final Map<String,String> brandingSettings = new LinkedHashMap<>();
     
+    private final boolean devMode;
     private File fqBrandingConfig; 
     private int maxMemoryMB = -1;
+    private boolean needsRestart = false;
     
     private BrandingConfig() {
-        loadSystemConfig();
-        loadBrandingConfig();
+        this.devMode = Places.getUserDirectory().toString().contains("testuserdir");
+        if (devMode) {
+            // TODO: It would be nice to get this working in development, but NetBeans does things very differently in dev mode, 
+            // and it's not clear if it's even possible to have a branding config. Maybe someday we'll investigate this further. 
+            log.info("Branding config is disabled in development. Memory preference will have no effect. "
+                    + "To change the max memory in development, temporarily edit the nbproject/project.properties file directly.");
+        }
+        else {
+            loadSystemConfig();
+            loadBrandingConfig();
+        }
     }
 
     /**
@@ -79,25 +89,18 @@ public class BrandingConfig {
      */
     private final void loadSystemConfig() {
         try {
-            final String configFile = appnameToken + ".conf";
-            File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, null, false);
+            // Find the current bona-fide production config, which is copied from harness/etc/app.conf 
+            // to ConsoleWrapper/release/config by build-runner.xml
+            final String configFile = "config/app.conf";
+            File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.it.workstation", false);
             log.debug("Trying system config at {}", sysWideConfig);
-            if (sysWideConfig == null) {
-    
-                File parent = new File(NETBEANS_HOME_PATH).getParentFile();
-                File containingDir = new File(parent, ETC_SUBPATH);
-                sysWideConfig = new File(containingDir, configFile);
-                log.debug("Trying system config at {}", sysWideConfig);
-    
-                if (!sysWideConfig.canRead()) {
-                    sysWideConfig = new File(containingDir, "netbeans.conf");
-                    log.debug("Trying system config at {}", sysWideConfig);
-                }
-            }
-            
+                        
             if (sysWideConfig != null && sysWideConfig.canRead()) {
                 loadProperties(sysWideConfig, systemSettings);
                 log.info("Loaded {} properties from {}", systemSettings.size(), sysWideConfig);
+            }
+            else {
+                log.error("Error locating system configuration in resources directory: "+configFile);
             }
         }
         catch (IOException e) {
@@ -109,12 +112,9 @@ public class BrandingConfig {
      * This loads the user-customized configuration file.
      */
     private final void loadBrandingConfig() {
-
+        
         try {
-            File userSettingsDir = Places.getUserDirectory();
-            if (!userSettingsDir.toString().contains("testuserdir")) {
-                userSettingsDir = new File(userSettingsDir.toString(), ETC_SUBPATH);
-            }
+            File userSettingsDir = new File(Places.getUserDirectory(), ETC_SUBPATH);
             if (!userSettingsDir.exists()) {
                 userSettingsDir.mkdirs();
             }
@@ -150,6 +150,10 @@ public class BrandingConfig {
         log.info("Loaded existing branding memory setting: "+maxMemoryMB);
     }
 
+    public boolean isNeedsRestart() {
+        return needsRestart;
+    }
+
     private final String getJavaMemOption() {
         String defaultOptions = brandingSettings.get(DEFAULT_OPTIONS_PROP);
         String[] defaultOptionsArr = defaultOptions == null ? new String[0] : defaultOptions.split(" ");
@@ -167,12 +171,9 @@ public class BrandingConfig {
      */
     public void validateBrandingConfig() {
 
-        log.info("Validating branding configuration...");
+        if (devMode) return;
         
-        if (!fqBrandingConfig.exists()) {
-            log.info("Branding config does not exist. Skipping validation.");
-            return;
-        }
+        log.info("Validating branding configuration...");
         
         try {
             boolean dirty = false;
@@ -232,12 +233,22 @@ public class BrandingConfig {
         if (maxMemoryMB > 0) {
             int optStart = systemValue.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
             int optEnd = systemValue.indexOf(" ", optStart);
+            if (optEnd<0) {
+                optEnd = systemValue.indexOf("\"", optStart);
+                if (optEnd<0) {
+                    optEnd = systemValue.length();
+                }
+            }
             customDefaultOpts = systemValue.substring(0, optStart) + maxMemoryMB + "m" + systemValue.substring(optEnd);
         }
 
         if (!StringUtils.areEqual(brandingValue, customDefaultOpts)) {
             log.info("Updating branding config for {}={} to {}", DEFAULT_OPTIONS_PROP, brandingValue, customDefaultOpts);
             brandingSettings.put(DEFAULT_OPTIONS_PROP, customDefaultOpts);
+            // If the branding value has changed, we'll need to restart to pick it up.
+            if (brandingValue!=null) {
+                needsRestart = true;
+            }
             return true;
         }
         else {
@@ -255,8 +266,10 @@ public class BrandingConfig {
     
     public void setMemoryAllocationGB(int maxMemoryGB) throws IOException {
         int maxMemoryMB  = maxMemoryGB * 1024;
-        if (syncDefaultOptions(maxMemoryMB)) {
-            saveBrandingConfig();
+        if (fqBrandingConfig!=null) {
+            if (syncDefaultOptions(maxMemoryMB)) {
+                saveBrandingConfig();
+            }
         }
         this.maxMemoryMB = maxMemoryMB;
         log.debug("Set memory allocation = {} MB", maxMemoryMB);
@@ -280,7 +293,7 @@ public class BrandingConfig {
         log.info("Wrote updated branding config to {}", fqBrandingConfig);
     }
     
-    private static void loadProperties(File infile, Map<String,String> map) throws IOException {
+    private void loadProperties(File infile, Map<String,String> map) throws IOException {
         Properties props = new Properties();
         if (infile.exists()) {
             props.load(new FileInputStream(infile));
