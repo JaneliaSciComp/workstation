@@ -15,8 +15,6 @@ import org.janelia.jacs2.model.page.SortDirection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,16 +33,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.same;
 
-public class SamplePersistenceITest extends AbstractDomainObjectDaoITest<Sample> {
+public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
 
     private List<Sample> testData = new ArrayList<>();
-    @InjectMocks
     private SampleDao testDao;
 
     @Before
     public void setUp() {
         testDao = new SampleMongoDao(testMongoDatabase);
-        MockitoAnnotations.initMocks(this);
+        setIdGeneratorAndObjectMapper((SampleMongoDao) testDao);
     }
 
     @After

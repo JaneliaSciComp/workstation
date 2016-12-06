@@ -5,20 +5,19 @@ import com.google.common.base.Preconditions;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.AbstractDao;
-import org.janelia.jacs2.dao.DomainObjectDao;
-import org.janelia.jacs2.model.domain.HasIdentifier;
+import org.janelia.jacs2.model.Identifiable;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 import org.janelia.jacs2.model.page.SortDirection;
+import org.janelia.jacs2.utils.DomainUtils;
 import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 
 import javax.inject.Inject;
@@ -35,7 +34,7 @@ import static com.mongodb.client.model.Filters.eq;
  *
  * @param <T> type of the element
  */
-public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> {
+public abstract class AbstractMongoDao<T extends Identifiable> extends AbstractDao<T, Number> {
 
     @Inject
     protected ObjectMapper objectMapper;
@@ -49,20 +48,9 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
 
     protected String getDomainObjectCollection() {
         Class<T> entityClass = getEntityType();
-        MongoMapping mongoMapping = getMapping(entityClass);
-        Preconditions.checkArgument(mongoMapping != null, "Entity class " + entityClass.getName() + "is not annotated with MongoMapping");
+        MongoMapping mongoMapping = DomainUtils.getMapping(entityClass);
+        Preconditions.checkArgument(mongoMapping != null, "Entity class " + entityClass.getName() + " is not annotated with MongoMapping");
         return mongoMapping.collectionName();
-    }
-
-    protected <D> MongoMapping getMapping(Class<D> objectClass) {
-        MongoMapping mongoMapping = null;
-        for(Class<?> clazz = objectClass; clazz != null; clazz = clazz.getSuperclass()) {
-            if (clazz.isAnnotationPresent(MongoMapping.class)) {
-                mongoMapping = clazz.getAnnotation(MongoMapping.class);
-                break;
-            }
-        }
-        return mongoMapping;
     }
 
     @Override

@@ -11,6 +11,7 @@ import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.model.domain.DomainObject;
+import org.janelia.jacs2.model.domain.Subject;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -25,7 +26,8 @@ public class DomainCodecProvider implements CodecProvider {
 
     @Override
     public <T> Codec<T> get(Class<T> clazz, CodecRegistry registry) {
-        if (DomainObject.class.isAssignableFrom(clazz)) {
+        if (DomainObject.class.isAssignableFrom(clazz)
+                || Subject.class.equals(clazz)) {
             final Codec<RawBsonDocument> rawBsonDocumentCodec = registry.get(RawBsonDocument.class);
             return new Codec<T>() {
                 @Override

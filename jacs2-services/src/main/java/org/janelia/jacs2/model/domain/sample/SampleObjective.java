@@ -1,5 +1,7 @@
 package org.janelia.jacs2.model.domain.sample;
 
+import com.google.common.base.Preconditions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +14,7 @@ public class SampleObjective {
 
     private String objective;
     private String chanSpec;
-    private List<SampleTile> tiles;
+    private List<SampleTile> tiles = new ArrayList<>();
 
     public String getObjective() {
         return objective;
@@ -35,13 +37,12 @@ public class SampleObjective {
     }
 
     public void setTiles(List<SampleTile> tiles) {
+        Preconditions.checkArgument(tiles != null, "The tile list for a sample objective cannot be null");
         this.tiles = tiles;
     }
 
     public void addTile(SampleTile tile) {
-        if (tiles == null) {
-            tiles = new ArrayList<>();
-        }
+        tile.setParent(this);
         tiles.add(tile);
     }
 }

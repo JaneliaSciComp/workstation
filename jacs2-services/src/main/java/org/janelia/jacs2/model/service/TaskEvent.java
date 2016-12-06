@@ -1,11 +1,13 @@
 package org.janelia.jacs2.model.service;
 
+import org.janelia.jacs2.model.BaseEntity;
+
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "task_event")
-public class TaskEvent {
+public class TaskEvent implements BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "task_event_id")
@@ -27,6 +29,12 @@ public class TaskEvent {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Transient
+    @Override
+    public String getEntityName() {
+        return "TaskEvent";
     }
 
     public String getName() {

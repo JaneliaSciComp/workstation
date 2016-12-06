@@ -1,37 +1,16 @@
 package org.janelia.jacs2.dao.mongo;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoDatabase;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
-import org.janelia.jacs2.cdi.ObjectMapperFactory;
-import org.janelia.jacs2.dao.Dao;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.HasIdentifier;
 import org.janelia.jacs2.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
 import org.janelia.jacs2.model.page.SortDirection;
-import org.janelia.jacs2.utils.BigIntegerCodec;
-import org.janelia.jacs2.utils.DomainCodecProvider;
-import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.mockito.Spy;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
-import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -47,7 +26,7 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
     protected static final String TEST_OWNER_KEY = "user:test";
 
     protected void findByOwner(Subject subject, DomainObjectDao<T> dao) {
-        String otherOwner = "group:other";
+        String otherOwner = "group:findByOwner";
         List<T> testItems = createMultipleTestItems(10);
         List<T> otherOwnersItems = new ArrayList<>();
         testItems.parallelStream().forEach(s -> {
@@ -79,8 +58,8 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
     }
 
     protected void findByIdsWithSubject(DomainObjectDao<T> dao) {
-        String otherOwner = "user:otherUser";
-        String otherGroup = "group:otherGroup";
+        String otherOwner = "user:findByIdsWithSubject";
+        String otherGroup = "group:findByIdsWithSubject";
         Subject otherSubject = new Subject();
         otherSubject.setKey(otherOwner);
         otherSubject.addGroup(otherGroup);
@@ -89,7 +68,9 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
         List<T> accessibleItems = new ArrayList<>();
         IntStream.range(0, testItems.size()).parallel().forEach(i -> {
             T testItem = testItems.get(i);
-            if (i % 4 == 1) {
+            if (i % 4 == 0) {
+                testItem.setOwnerKey(TEST_OWNER_KEY);
+            } else if (i % 4 == 1) {
                 testItem.setOwnerKey(otherOwner);
                 accessibleItems.add(testItem); // object owned by other owner
             } else if (i % 4 == 2) {

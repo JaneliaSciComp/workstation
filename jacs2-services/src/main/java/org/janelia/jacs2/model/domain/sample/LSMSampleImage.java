@@ -1,11 +1,13 @@
 package org.janelia.jacs2.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.jacs2.model.domain.Reference;
 
 import java.util.Date;
 
 public class LSMSampleImage extends SampleImage {
+    public static final String ENTITY_NAME = "LSMImage";
     private Reference sampleRef;
     private Boolean sageSynced;
     private String channelColors;
@@ -92,6 +94,12 @@ public class LSMSampleImage extends SampleImage {
     private String flycoreProject;
     private String flycorePSubcategory;
     private String lineHide;
+
+    @JsonIgnore
+    @Override
+    public String getEntityName() {
+        return ENTITY_NAME;
+    }
 
     public Reference getSampleRef() {
         return sampleRef;

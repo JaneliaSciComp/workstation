@@ -1,12 +1,16 @@
 package org.janelia.jacs2.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import org.janelia.jacs2.model.domain.AbstractDomainObject;
+import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@MongoMapping(collectionName="dataSet", label="Data Set")
 public class DataSet extends AbstractDomainObject {
+    public static final String ENTITY_NAME = "DataSet";
     private String identifier;
     private String sampleNamePattern;
     private SampleImageType sampleImageType;
@@ -14,6 +18,12 @@ public class DataSet extends AbstractDomainObject {
     private List<String> pipelineProcesses = new ArrayList<>();
     private String sageConfigPath;
     private String sageGrammarPath;
+
+    @JsonIgnore
+    @Override
+    public String getEntityName() {
+        return ENTITY_NAME;
+    }
 
     public String getIdentifier() {
         return identifier;

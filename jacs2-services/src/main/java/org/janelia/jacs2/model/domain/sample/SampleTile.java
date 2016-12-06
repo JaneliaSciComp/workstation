@@ -1,5 +1,6 @@
 package org.janelia.jacs2.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.jacs2.model.domain.DataFile;
 import org.janelia.jacs2.model.domain.Reference;
 
@@ -18,6 +19,8 @@ public class SampleTile {
     private String anatomicalArea;
     private List<Reference> lsmReferences;
     private List<DataFile> dataFiles;
+    @JsonIgnore
+    private SampleObjective parent;
 
     public String getName() {
         return name;
@@ -63,5 +66,13 @@ public class SampleTile {
             dataFiles = new ArrayList<>();
         }
         dataFiles.add(dataFile);
+    }
+
+    public SampleObjective getParent() {
+        return parent;
+    }
+
+    public void setParent(SampleObjective parent) {
+        this.parent = parent;
     }
 }

@@ -1,17 +1,24 @@
 package org.janelia.jacs2.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.janelia.jacs2.model.BaseEntity;
+import org.janelia.jacs2.model.Identifiable;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @MongoMapping(collectionName="subject", label="Subject")
-public class Subject implements HasIdentifier {
+public class Subject implements BaseEntity, Identifiable {
     public static final String ADMIN_KEY = "group:admin";
     public static final String USERS_KEY = "group:workstation_users";
 
+    @JsonProperty("_id")
+    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
     private Number id;
     private String key;
     private String name;
@@ -25,6 +32,11 @@ public class Subject implements HasIdentifier {
 
     public void setId(Number id) {
         this.id = id;
+    }
+
+    @Override
+    public String getEntityName() {
+        return "Subject";
     }
 
     public String getKey() {

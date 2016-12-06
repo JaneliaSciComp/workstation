@@ -12,8 +12,6 @@ import org.janelia.jacs2.model.page.SortDirection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,15 +21,14 @@ import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertThat;
 
-public class SampleImagePersistenceITest extends AbstractDomainObjectDaoITest<SampleImage> {
+public class SampleImageMongoDaoITest extends AbstractDomainObjectDaoITest<SampleImage> {
     private List<SampleImage> testData = new ArrayList<>();
-    @InjectMocks
     private SampleImageDao testDao;
 
     @Before
     public void setUp() {
         testDao = new SampleImageMongoDao(testMongoDatabase);
-        MockitoAnnotations.initMocks(this);
+        setIdGeneratorAndObjectMapper((SampleImageMongoDao) testDao);
     }
 
     @After

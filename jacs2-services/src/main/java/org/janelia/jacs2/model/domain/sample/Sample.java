@@ -21,6 +21,8 @@ import java.util.Optional;
  */
 @MongoMapping(collectionName="sample", label="Sample")
 public class Sample extends AbstractDomainObject {
+    public static final String ENTITY_NAME = "Sample";
+
     private String dataSet;
     private String slideCode;
     private String age;
@@ -36,6 +38,12 @@ public class Sample extends AbstractDomainObject {
     @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
     private Date completionDate;
     private List<SampleObjective> objectives = new ArrayList<>();
+
+    @JsonIgnore
+    @Override
+    public String getEntityName() {
+        return ENTITY_NAME;
+    }
 
     public String getDataSet() {
         return dataSet;

@@ -1,6 +1,7 @@
 package org.janelia.jacs2.model.service;
 
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.janelia.jacs2.model.BaseEntity;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -10,7 +11,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "task_info")
-public class TaskInfo {
+public class TaskInfo implements BaseEntity {
+    public static final String ENTITY_NAME = "Task";
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "task_info_id")
@@ -57,6 +60,12 @@ public class TaskInfo {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "creation_date")
     private Date creationDate = new Date();
+
+    @Transient
+    @Override
+    public String getEntityName() {
+        return ENTITY_NAME;
+    }
 
     public Long getId() {
         return id;

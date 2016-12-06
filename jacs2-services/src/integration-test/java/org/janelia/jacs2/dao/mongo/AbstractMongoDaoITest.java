@@ -1,7 +1,6 @@
 package org.janelia.jacs2.dao.mongo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableList;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
@@ -10,14 +9,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
-import org.janelia.jacs2.dao.DomainObjectDao;
-import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.HasIdentifier;
-import org.janelia.jacs2.model.domain.sample.Sample;
-import org.janelia.jacs2.model.page.PageRequest;
-import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.page.SortCriteria;
-import org.janelia.jacs2.model.page.SortDirection;
+import org.janelia.jacs2.model.Identifiable;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
@@ -32,7 +24,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
-public abstract class AbstractMongoDaoITest<T extends HasIdentifier> {
+public abstract class AbstractMongoDaoITest<T extends Identifiable> {
     protected static final String TEST_OWNER_KEY = "user:test";
 
     private static MongoClient testMongoClient;
@@ -41,9 +33,7 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> {
     private static Properties testConfig;
 
     protected MongoDatabase testMongoDatabase;
-    @Spy
     protected ObjectMapper objectMapper = ObjectMapperFactory.instance().getObjectMapper();
-    @Spy
     protected TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     protected Random dataGenerator = new Random();
 
@@ -66,6 +56,11 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> {
     @Before
     public final void setUpMongoDatabase() {
         testMongoDatabase = testMongoClient.getDatabase(testConfig.getProperty("MongoDB.Database"));
+    }
+
+    protected void setIdGeneratorAndObjectMapper(AbstractMongoDao<T> dao) {
+        dao.idGenerator = idGenerator;
+        dao.objectMapper = objectMapper;
     }
 
     protected void deleteAll(Dao<T, Number> dao, List<T> es) {

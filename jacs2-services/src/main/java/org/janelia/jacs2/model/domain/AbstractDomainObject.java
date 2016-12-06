@@ -15,7 +15,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.jacs2.utils.DomainUtils;
 import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
