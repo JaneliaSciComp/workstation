@@ -27,7 +27,9 @@ public class ServiceInfoResource {
 
     @GET
     public PageResult<TaskInfo> getAllServices(@QueryParam("service-name") String serviceName,
-                                                  @QueryParam("service-state") String serviceState) {
+                                               @QueryParam("service-state") String serviceState,
+                                               @QueryParam("page") Integer pageNumber,
+                                               @QueryParam("length") Integer pageLength) {
         System.out.println("!!!! NAME QUERY PARAM " + serviceName);
         System.out.println("!!!! STATE QUERY PARAM " + serviceState);
         return new PageResult<>(); // TODO implement me

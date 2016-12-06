@@ -13,8 +13,6 @@ import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.domain.sample.SampleObjective;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class SampleDataService {
