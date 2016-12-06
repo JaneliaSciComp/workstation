@@ -17,8 +17,8 @@ import org.janelia.it.jacs.model.domain.gui.search.criteria.AttributeValueCriter
 import org.janelia.it.jacs.model.domain.gui.search.criteria.Criteria;
 import org.janelia.it.jacs.model.domain.gui.search.criteria.DateRangeCriteria;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
+import org.jdesktop.swingx.JXDatePicker;
 
-import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -29,8 +29,8 @@ import net.miginfocom.swing.MigLayout;
 public class EditCriteriaDialog extends ModalDialog {
 
     private final JPanel attrPanel;
-    private DateComboBox startDatePicker;
-    private DateComboBox endDatePicker;
+    private JXDatePicker startDatePicker;
+    private JXDatePicker endDatePicker;
     private JTextField textField;
     private Criteria criteria;
     private boolean save = false;
@@ -80,11 +80,11 @@ public class EditCriteriaDialog extends ModalDialog {
 
             JPanel inputPanel = new JPanel();
             inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.LINE_AXIS));
-            startDatePicker = new DateComboBox();
+            startDatePicker = new JXDatePicker();
             
             inputPanel.add(startDatePicker);
             inputPanel.add(new JLabel(" to "));
-            endDatePicker = new DateComboBox();
+            endDatePicker = new JXDatePicker();
             inputPanel.add(endDatePicker);
             
             JLabel dateLabel = new JLabel(label);

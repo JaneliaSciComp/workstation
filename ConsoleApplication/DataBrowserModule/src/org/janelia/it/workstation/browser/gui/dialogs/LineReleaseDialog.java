@@ -22,6 +22,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -50,8 +51,8 @@ import org.janelia.it.workstation.browser.gui.support.SubjectComboBoxRenderer;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import org.jdesktop.swingx.JXDatePicker;
 
-import de.javasoft.swing.DateComboBox;
 import net.miginfocom.swing.MigLayout;
 
 /**
@@ -69,7 +70,7 @@ public class LineReleaseDialog extends ModalDialog {
     private JPanel attrPanel;
     private JTextField nameInput = new JTextField(30);
     private JCheckBox autoReleaseCheckbox;
-    private DateComboBox dateInput = new DateComboBox();
+    private JXDatePicker dateInput = new JXDatePicker();
     private JTextField lagTimeInput = new JTextField(10);
     private JCheckBox sageSyncCheckbox;
     private ComboMembershipListPanel<DataSet> dataSetPanel;
