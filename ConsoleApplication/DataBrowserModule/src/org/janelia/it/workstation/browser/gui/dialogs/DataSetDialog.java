@@ -65,6 +65,7 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageGrammarPathInput;
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
+    private JCheckBox neuronSeparationCheckbox;
     private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
 
     private DataSet dataSet;
@@ -189,6 +190,10 @@ public class DataSetDialog extends ModalDialog {
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para, span 2");
 
+        neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
+        neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
+        attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
+
         JPanel pipelinesPanel = new JPanel();
         pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
         addRadioButtons(PipelineProcess.values(), processCheckboxes, pipelinesPanel);
@@ -215,6 +220,7 @@ public class DataSetDialog extends ModalDialog {
             }
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
+            neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
                 applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
@@ -273,6 +279,7 @@ public class DataSetDialog extends ModalDialog {
                 pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);
                 dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
+                dataSet.setNeuronSeparationSupported(new Boolean(neuronSeparationCheckbox.isSelected()));
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
