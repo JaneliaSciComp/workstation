@@ -59,6 +59,7 @@ public class JacsTaskDispatcherTest {
 
     @Before
     public void setUp() {
+        testDispatcher = new JacsTaskDispatcher();
         taskExecutor = Executors.newFixedThreadPool(25);
         MockitoAnnotations.initMocks(this);
         when(serviceRegistrarSource.get()).thenReturn(serviceRegistry);

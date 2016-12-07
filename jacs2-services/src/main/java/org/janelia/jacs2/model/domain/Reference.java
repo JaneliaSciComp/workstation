@@ -54,10 +54,15 @@ public class Reference {
         this.targetId = targetId;
     }
 
+    @JsonIgnore
+    public String getTargetRefId() {
+        return targetClassname + "#" + targetId;
+    }
+
     @JsonValue
     @Override
     public String toString() {
-        return targetClassname + "#" + targetId;
+        return getTargetRefId();
     }
 
     @Override

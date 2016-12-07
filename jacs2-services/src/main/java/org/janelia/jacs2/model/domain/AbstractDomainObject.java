@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.jacs2.utils.DomainUtils;
+import org.janelia.jacs2.utils.ISODateDeserializer;
 import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
 import java.util.Date;
@@ -35,10 +36,22 @@ public abstract class AbstractDomainObject implements DomainObject {
     private String ownerKey;
     private Set<String> readers = new HashSet<>();
     private Set<String> writers = new HashSet<>();
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date creationDate;
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date updatedDate;
+
+    @JsonIgnore
+    @Override
+    public String getEntityName() {
+        return this.getClass().getSimpleName();
+    }
+
+    @JsonIgnore
+    @Override
+    public String getEntityRefId() {
+        return getEntityName() + "#" + (getId() != null ? getId() : "");
+    }
 
     @JsonIgnore
     public String getOwnerName() {
@@ -139,6 +152,6 @@ public abstract class AbstractDomainObject implements DomainObject {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "#" + id;
+        return getEntityName() + "#" + id;
     }
 }

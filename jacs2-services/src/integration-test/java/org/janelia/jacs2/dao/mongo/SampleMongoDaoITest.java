@@ -180,7 +180,7 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
         SampleObjective objective = new SampleObjective();
         objective.setObjective("testObjective");
         objective.setChanSpec("rgb");
-        objective.addTile(createTile());
+        objective.addTiles(createTile());
         return objective;
     }
 

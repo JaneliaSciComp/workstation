@@ -41,8 +41,10 @@ public class SampleObjective {
         this.tiles = tiles;
     }
 
-    public void addTile(SampleTile tile) {
-        tile.setParent(this);
-        tiles.add(tile);
+    public void addTiles(SampleTile... tiles) {
+        for (SampleTile t : tiles) {
+            t.setParent(this);
+            this.tiles.add(t);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package org.janelia.jacs2.rest;
 
+import org.janelia.jacs2.model.domain.sample.AnatomicalArea;
 import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.domain.sample.SampleObjective;
 import org.janelia.jacs2.model.page.PageResult;
@@ -41,13 +42,13 @@ public class SampleDataResource {
     }
 
     @GET
-    @Path("/{sample-id}/objective/{objective}")
-    public Response getSample(@HeaderParam("authToken") String authToken, @PathParam("sample-id") Long sampleId, @PathParam("objective") String objectiveName) {
-        Optional<SampleObjective> sampleObjective = sampleDataService.getLSMsBySampleIdAndObjective(extractSubjectFromAuthToken(authToken), sampleId, objectiveName);
-        if (sampleObjective.isPresent()) {
+    @Path("/{sample-id}/objective/{objective}/anatomicalArea")
+    public Response getAnatomicalArea(@HeaderParam("authToken") String authToken, @PathParam("sample-id") Long sampleId, @PathParam("objective") String objectiveName) {
+        Optional<AnatomicalArea> anatomicalArea = sampleDataService.getAnatomicalAreaBySampleIdAndObjective(extractSubjectFromAuthToken(authToken), sampleId, objectiveName);
+        if (anatomicalArea.isPresent()) {
             return Response
                     .status(Response.Status.OK)
-                    .entity(sampleObjective.get())
+                    .entity(anatomicalArea.get())
                     .build();
         } else {
             return Response

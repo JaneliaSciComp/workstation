@@ -3,6 +3,8 @@ package org.janelia.jacs2.model.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.jacs2.model.Identifiable;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
@@ -97,4 +99,10 @@ public class Subject implements BaseEntity, Identifiable {
         }
         return claims;
     }
+
+    public <D extends DomainObject> boolean canRead(D dobj) {
+        Set<String> subjectClaims = getSubjectClaims();
+        return subjectClaims.contains(dobj.getOwnerKey()) || CollectionUtils.isNotEmpty(Sets.intersection(subjectClaims, dobj.getReaders()));
+    }
+
 }

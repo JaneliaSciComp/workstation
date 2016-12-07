@@ -66,7 +66,7 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
 
         List<T> testItems = createMultipleTestItems(40);
         List<T> accessibleItems = new ArrayList<>();
-        IntStream.range(0, testItems.size()).parallel().forEach(i -> {
+        IntStream.range(0, testItems.size()).forEach(i -> {
             T testItem = testItems.get(i);
             if (i % 4 == 0) {
                 testItem.setOwnerKey(TEST_OWNER_KEY);
@@ -84,8 +84,8 @@ public abstract class AbstractDomainObjectDaoITest<T extends DomainObject> exten
         });
         List<Number> testItemIds = testItems.stream().map(d -> d.getId()).collect(Collectors.toCollection(ArrayList<Number>::new));
         List<T> res = dao.findByIds(otherSubject, testItemIds);
-        assertTrue(res.size() < testItemIds.size());
         assertThat(res, everyItem(hasProperty("id", isIn(accessibleItems.stream().map(s -> s.getId()).collect(Collectors.toList())))));
+        assertTrue(res.size() == accessibleItems.size());
     }
 
 }

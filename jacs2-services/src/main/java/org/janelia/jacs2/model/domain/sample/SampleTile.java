@@ -75,4 +75,8 @@ public class SampleTile {
     public void setParent(SampleObjective parent) {
         this.parent = parent;
     }
+
+    public Reference getLsmReferenceAt(int index) {
+        return lsmReferences != null && index < lsmReferences.size() ? lsmReferences.get(index) : null;
+    }
 }

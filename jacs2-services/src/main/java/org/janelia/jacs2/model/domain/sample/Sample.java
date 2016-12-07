@@ -2,9 +2,12 @@ package org.janelia.jacs2.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.domain.AbstractDomainObject;
 import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.jacs2.utils.ISODateDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,10 +36,11 @@ public class Sample extends AbstractDomainObject {
     private Integer crossBarcode;
     private String status;
     private String compressionType;
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date tmogDate;
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date completionDate;
+    @JsonProperty("objectiveSamples")
     private List<SampleObjective> objectives = new ArrayList<>();
 
     @JsonIgnore

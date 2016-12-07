@@ -8,6 +8,7 @@ project(":jacs2-services") {
                 JACKSON_CORE_LIB,
                 JACKSON_ANNOTATIONS_LIB,
                 JACKSON_DATABIND_LIB,
+                JACKSON_DATATYPE_JODA_LIB,
                 MONGODB_DRIVER_LIB
 
         runtime MYSQL_JDBC_LIB
