@@ -314,14 +314,15 @@ public class ToolMgr extends PreferenceManager {
             }
             Process p = Runtime.getRuntime().exec(path);
             
-            if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
-                // Process terminated immediately, check the exit code
-                if (p.exitValue()!=0) {
-                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
-                        "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
-                    OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
-                }
-            }
+            // TODO: this form of waitFor is not supported until Java 8. Once we move to 8, uncomment this code.
+//            if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
+//                // Process terminated immediately, check the exit code
+//                if (p.exitValue()!=0) {
+//                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+//                        "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
+//                    OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
+//                }
+//            }
         }
     }
 
