@@ -368,11 +368,12 @@ public class ToolMgr extends PreferenceManager {
 
                     final File exeFile = new File(toolPath);
                     if (! exeFile.exists()) {
-                        throw new IOException("Tool " + tool + " (" +
-                                              exeFile.getAbsolutePath() + ") does not exist.");
-                    } else if (! exeFile.canExecute()) {
-                        throw new IOException("Tool " + tool + " (" +
-                                              exeFile.getAbsolutePath() + ") cannot be executed.");
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                                "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+                    } 
+                    else if (! exeFile.canExecute()) {
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                                "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") cannot be executed.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
 
                     final String exeCmd = cmd.toString();
@@ -380,7 +381,8 @@ public class ToolMgr extends PreferenceManager {
 
                     if (exeCmd.endsWith(".app")) {
                         runTool(tool);
-                    } else {
+                    } 
+                    else {
                         Runtime.getRuntime().exec(exeCmd);
                     }
                 }
