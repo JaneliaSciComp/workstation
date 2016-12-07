@@ -305,9 +305,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
                 for(DomainObjectNode<?> node : nodes) {
-                    TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                    TreeNode originalParent = originalParentNode.getTreeNode();
-                    originalParents.add(originalParent);
+                    if (node.getParentNode() instanceof TreeNodeNode) {
+                        TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
+                        TreeNode originalParent = originalParentNode.getTreeNode();
+                        originalParents.add(originalParent);
+                    }
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();
