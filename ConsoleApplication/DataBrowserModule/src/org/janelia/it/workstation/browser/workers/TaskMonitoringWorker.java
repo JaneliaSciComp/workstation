@@ -79,7 +79,6 @@ public class TaskMonitoringWorker extends BackgroundWorker {
             }
             catch (InterruptedException e) {
                 handle.finish();
-                hadError(e);
                 return;
             }
         }

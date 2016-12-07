@@ -1543,16 +1543,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             }
 
             @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
-            }
-
-            @Override
             public Callable<Void> getSuccessCallback() {
                 return new Callable<Void>() {
                     @Override
@@ -1607,11 +1597,6 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void hadSuccess() {
                 annotationModel.postWorkspaceUpdate(neuron);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                ConsoleApp.handleException(error);
             }
         };
         importer.executeWithEvents();
