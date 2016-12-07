@@ -186,21 +186,13 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
             if (treeNodeNode==null || treeNode==null) return;
             if (event.isTotalInvalidation()) {
                 log.info("total invalidation, reloading...");
-                TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-                if (updatedFolder!=null) {
-                    treeNodeNode.update(updatedFolder);
-                    loadDomainObjectNode(treeNodeNode, false, null);
-                }
+                reload();
             }
             else {
                 for (DomainObject domainObject : event.getDomainObjects()) {
                     if (domainObject.getId().equals(treeNode.getId())) {
                         log.info("tree node invalidated, reloading...");
-                        TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
-                        if (updatedFolder!=null) {
-                            treeNodeNode.update(updatedFolder);
-                            loadDomainObjectNode(treeNodeNode, false, null);
-                        }
+                        reload();
                         break;
                     }
                 }
@@ -210,6 +202,17 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<TreeNode> imple
         }
     }
 
+    private void reload() throws Exception {
+        if (treeNodeNode==null || treeNode==null) return;
+        TreeNode updatedFolder = DomainMgr.getDomainMgr().getModel().getDomainObject(TreeNode.class, treeNode.getId());
+        if (updatedFolder!=null) {
+            if (!treeNodeNode.getTreeNode().equals(updatedFolder)) {
+                treeNodeNode.update(updatedFolder);
+            }
+            loadDomainObjectNode(treeNodeNode, false, null);
+        }
+    }
+    
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
         if (treeNode==null) return;
