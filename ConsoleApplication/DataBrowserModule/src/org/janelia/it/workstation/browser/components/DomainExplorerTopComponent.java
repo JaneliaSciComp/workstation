@@ -331,24 +331,20 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         repaint();
     }
 
-    public void showTree() {
+    private void showTree() {
         treePanel.removeAll();
         treePanel.add(beanTreeView);
         revalidate();
         repaint();
-    }
-    
-    private void showRootNode() {
-        this.root = new RootNode();
-        mgr.setRootContext(root);
-        showTree();
     }
 
     @Subscribe
     public void prefChanged(LocalPreferenceChanged event) {
         if (event.getKey().equals(StateMgr.RECENTLY_OPENED_HISTORY)) {
             // Something was added to the history, so we need to update the node's children
-            root.getRecentlyOpenedItemsNode().refreshChildren();
+            if (root!=null) {
+                root.getRecentlyOpenedItemsNode().refreshChildren();
+            }
             
         }
         else if (event.getKey().equals(SHOW_RECENTLY_OPENED_ITEMS)) {
@@ -460,7 +456,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             @Override
             protected void hadSuccess() {
                 try {
-                    showRootNode();
+                    root = new RootNode();
+                    mgr.setRootContext(root);
+                    showTree();
+                    
                     int numExpanded = 0;
                     if (restoreState) {
                         numExpanded = beanTreeView.expand(expanded);
@@ -503,6 +502,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     }
 
     public WorkspaceNode getWorkspaceNode() {
+        if (root==null) return null;
         for(Node node : root.getChildren().getNodes()) {
             if (node instanceof WorkspaceNode) {
                 return (WorkspaceNode)node;
@@ -518,10 +518,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     public DomainObjectNodeSelectionModel getSelectionModel() {
         return selectionModel;
-    }
-    
-    public RootNode getRoot() {
-        return root;
     }
 
     public void expand(Long[] idPath) {
