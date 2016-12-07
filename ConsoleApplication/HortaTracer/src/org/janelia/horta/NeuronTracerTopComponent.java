@@ -53,6 +53,7 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -144,6 +145,7 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.horta.actions.ResetRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -1097,10 +1099,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 Action resetRotationAction = new AbstractAction("Reset Rotation") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        Vantage v = sceneWindow.getVantage();
-                        animateToCameraRotation(
-                                v.getDefaultRotation(),
-                                v, 150);
+                        new ResetRotationAction().actionPerformed(e);
                     }
                 };
 
@@ -1949,6 +1948,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JOptionPane.ERROR_MESSAGE);                    
             return null;
         }
+    }
+
+    public void resetRotation() {
+        Vantage v = sceneWindow.getVantage();
+        animateToCameraRotation(
+                v.getDefaultRotation(),
+                v, 150);
     }
 
 }
