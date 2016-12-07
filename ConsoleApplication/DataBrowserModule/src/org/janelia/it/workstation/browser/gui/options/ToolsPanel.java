@@ -255,7 +255,9 @@ final class ToolsPanel extends javax.swing.JPanel {
             fileChooser.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                    if (fileChooser.getSelectedFile()!=null) {
+                        pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                    }
                 }
             });
 
