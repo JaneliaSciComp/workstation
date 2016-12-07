@@ -18,7 +18,7 @@ public class JacsJobRunner {
     @Inject
     private Logger logger;
     @Inject
-    private JacsTaskDispatcher jacsTaskDispatcher;
+    private JacsServiceDispatcher jacsServiceDispatcher;
     private final ScheduledExecutorService scheduler;
 
     public JacsJobRunner() {
@@ -28,7 +28,7 @@ public class JacsJobRunner {
     private void doWork() {
         try {
             logger.debug("Dispatch JACS jobs");
-            jacsTaskDispatcher.dispatchServices();
+            jacsServiceDispatcher.dispatchServices();
         } catch (Exception e) {
             logger.error("Critical error - job dispatch failed", e);
         }

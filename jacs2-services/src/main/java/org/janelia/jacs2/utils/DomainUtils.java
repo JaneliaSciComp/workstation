@@ -8,7 +8,8 @@ import org.janelia.jacs2.model.domain.annotations.MongoMapping;
 import org.janelia.jacs2.model.domain.sample.LSMSampleImage;
 import org.janelia.jacs2.model.domain.sample.Sample;
 import org.janelia.jacs2.model.domain.sample.SampleImage;
-import org.janelia.jacs2.model.service.TaskInfo;
+import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.model.service.JacsServiceEvent;
 
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
@@ -57,9 +58,10 @@ public class DomainUtils {
 
     public static Class<? extends BaseEntity> getBaseEntityClass(String entityType) {
         switch(entityType) {
-            case "TaskInfo":
-            case TaskInfo.ENTITY_NAME:
-                return TaskInfo.class;
+            case "JacsServiceData":
+                return JacsServiceData.class;
+            case "JacsServiceEvent":
+                return JacsServiceEvent.class;
             case Sample.ENTITY_NAME:
                 return Sample.class;
             case "SampleImage":

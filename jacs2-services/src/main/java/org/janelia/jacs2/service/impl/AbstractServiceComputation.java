@@ -1,7 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.TaskInfo;
-import org.janelia.jacs2.persistence.TaskInfoPersistence;
+import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -18,34 +18,34 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     @Inject
     private Logger logger;
     @Inject
-    private JacsTaskDispatcher serviceDispatcher;
+    private JacsServiceDispatcher serviceDispatcher;
     @Inject
-    private TaskInfoPersistence taskInfoPersistence;
+    private JacsServiceDataPersistence jacsServiceDataPersistence;
 
     @Override
-    public CompletionStage<TaskInfo> preProcessData(TaskInfo taskInfo) {
+    public CompletionStage<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
         // the default operation is a noop
-        return CompletableFuture.completedFuture(taskInfo);
+        return CompletableFuture.completedFuture(jacsServiceData);
     }
 
     @Override
-    public CompletionStage<TaskInfo> isReady(TaskInfo taskInfo) {
-        CompletableFuture<TaskInfo> checkIfReadyFuture = new CompletableFuture<>();
-        List<TaskInfo> uncompletedSubTasks = taskInfoPersistence.findTaskHierarchy(taskInfo.getId());
+    public CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData) {
+        CompletableFuture<JacsServiceData> checkIfReadyFuture = new CompletableFuture<>();
+        List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
         for (;;) {
-            if (uncompletedSubTasks.isEmpty()) {
-                checkIfReadyFuture.complete(taskInfo);
+            if (uncompletedChildServices.isEmpty()) {
+                checkIfReadyFuture.complete(jacsServiceData);
                 break;
             }
-            List<TaskInfo> firstPass =  uncompletedSubTasks.stream()
-                .map(ti -> taskInfoPersistence.findById(ti.getId()))
+            List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
+                .map(ti -> jacsServiceDataPersistence.findById(ti.getId()))
                 .filter(ti -> !ti.hasCompleted())
                 .collect(Collectors.toList());
-            uncompletedSubTasks = firstPass;
+            uncompletedChildServices = firstPass;
             try {
                 Thread.currentThread().sleep(1000);
             } catch (InterruptedException e) {
-                logger.warn("Interrup {}", taskInfo, e);
+                logger.warn("Interrup {}", jacsServiceData, e);
                 checkIfReadyFuture.completeExceptionally(e);
                 break;
             }
@@ -54,23 +54,23 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     }
 
     @Override
-    public CompletionStage<TaskInfo> isDone(TaskInfo taskInfo) {
-        CompletableFuture<TaskInfo> checkIfDoneFuture = new CompletableFuture<>();
-        checkIfDoneFuture.complete(taskInfo);
+    public CompletionStage<JacsServiceData> isDone(JacsServiceData jacsServiceData) {
+        CompletableFuture<JacsServiceData> checkIfDoneFuture = new CompletableFuture<>();
+        checkIfDoneFuture.complete(jacsServiceData);
         return checkIfDoneFuture;
     }
 
     @Override
-    public void postProcessData(TaskInfo taskInfo, Throwable exc) {
+    public void postProcessData(JacsServiceData jacsServiceData, Throwable exc) {
         // noop
     }
 
     @Override
-    public ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo, TaskInfo parentTask) {
-        logger.info("Create sub-task {}", subTaskInfo);
-        subTaskInfo.setOwner(parentTask.getOwner());
-        TaskInfo task = serviceDispatcher.submitTaskAsync(subTaskInfo, Optional.of(parentTask));
-        return serviceDispatcher.getServiceComputation(task);
+    public ServiceComputation submitChildServiceAsync(JacsServiceData childServiceData, JacsServiceData parentService) {
+        logger.info("Create child service {}", childServiceData);
+        childServiceData.setOwner(parentService.getOwner());
+        JacsServiceData serviceData = serviceDispatcher.submitServiceAsync(childServiceData, Optional.of(parentService));
+        return serviceDispatcher.getServiceComputation(serviceData);
     }
 
 }

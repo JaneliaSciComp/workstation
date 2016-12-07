@@ -1,7 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.TaskInfo;
-import org.janelia.jacs2.persistence.TaskInfoPersistence;
+import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -28,8 +28,8 @@ public class AbstractServiceComputationTest {
     static class TestSuccessfulComputation extends AbstractServiceComputation {
 
         @Override
-        public CompletionStage<TaskInfo> processData(TaskInfo ti) {
-            CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
+        public CompletionStage<JacsServiceData> processData(JacsServiceData ti) {
+            CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
             completableFuture.complete(ti);
             return completableFuture;
         }
@@ -38,8 +38,8 @@ public class AbstractServiceComputationTest {
     static class TestFailedComputation extends AbstractServiceComputation {
 
         @Override
-        public CompletionStage<TaskInfo> processData(TaskInfo ti) {
-            CompletableFuture<TaskInfo> completableFuture = new CompletableFuture<>();
+        public CompletionStage<JacsServiceData> processData(JacsServiceData ti) {
+            CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
             completableFuture.completeExceptionally(new IllegalStateException("test"));
             return completableFuture;
         }
@@ -48,37 +48,37 @@ public class AbstractServiceComputationTest {
     @Mock
     private Logger logger;
     @Mock
-    private Instance<TaskInfoPersistence> serviceInfoPersistenceSource;
+    private Instance<JacsServiceDataPersistence> serviceInfoPersistenceSource;
     @Mock
-    private TaskInfoPersistence taskInfoPersistence;
+    private JacsServiceDataPersistence jacsServiceDataPersistence;
     @Spy
-    private Executor taskExecutor;
+    private Executor serviceExecutor;
 
     @InjectMocks
     private TestSuccessfulComputation testSuccessfullComputation;
     @InjectMocks
     private TestFailedComputation testFailedComputation;
 
-    private TaskInfo testTaskInfo;
+    private JacsServiceData testJacsServiceData;
 
     @Before
     public void setUp() {
-        testTaskInfo = new TaskInfo();
-        taskExecutor = Executors.newCachedThreadPool();
+        testJacsServiceData = new JacsServiceData();
+        serviceExecutor = Executors.newCachedThreadPool();
         MockitoAnnotations.initMocks(this);
-        when(serviceInfoPersistenceSource.get()).thenReturn(taskInfoPersistence);
+        when(serviceInfoPersistenceSource.get()).thenReturn(jacsServiceDataPersistence);
     }
 
     @Test
     public void testSuccessfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<TaskInfo> computation =
+        CompletionStage<JacsServiceData> computation =
                 CompletableFuture
-                    .supplyAsync(() -> testTaskInfo, taskExecutor)
-                    .thenComposeAsync(ti -> testSuccessfullComputation.processData(ti), taskExecutor);
+                    .supplyAsync(() -> testJacsServiceData, serviceExecutor)
+                    .thenComposeAsync(ti -> testSuccessfullComputation.processData(ti), serviceExecutor);
         computation
-            .thenAcceptAsync(successful, taskExecutor)
+            .thenAcceptAsync(successful, serviceExecutor)
             .exceptionally(ex -> {
                 failure.accept(ex);
                 return null;
@@ -93,10 +93,10 @@ public class AbstractServiceComputationTest {
     public void testFailedProcessing() throws ComputationException {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<TaskInfo> computation =
+        CompletionStage<JacsServiceData> computation =
                 CompletableFuture
-                        .supplyAsync(() -> testTaskInfo, taskExecutor)
-                        .thenComposeAsync(ti -> testFailedComputation.processData(ti), taskExecutor);
+                        .supplyAsync(() -> testJacsServiceData, serviceExecutor)
+                        .thenComposeAsync(ti -> testFailedComputation.processData(ti), serviceExecutor);
         computation
                 .thenAccept(successful)
                 .exceptionally(ex -> {

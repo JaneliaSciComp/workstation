@@ -1,6 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.TaskInfo;
+import org.janelia.jacs2.model.service.JacsServiceData;
 
 import java.util.concurrent.CompletionStage;
 
@@ -13,38 +13,38 @@ public interface ServiceComputation {
      *
      * @return a promise corresponding to the pre-processing stage.
      */
-    CompletionStage<TaskInfo> preProcessData(TaskInfo taskInfo);
+    CompletionStage<JacsServiceData> preProcessData(JacsServiceData jacsServiceData);
 
     /**
      * This is the actual processing method which is performed on the enclosed service data.
      * @return a completion stage that could be chained with other computations
      */
-    CompletionStage<TaskInfo> processData(TaskInfo taskInfo);
+    CompletionStage<JacsServiceData> processData(JacsServiceData jacsServiceData);
 
     /**
-     * Check if the task is ready for processing.
-     * @param taskInfo task to be checked if it can be processed.
+     * Check if the service is ready for processing.
+     * @param jacsServiceData service to be checked if it can be processed.
      * @return the corresponding completion stage for this check.
      */
-    CompletionStage<TaskInfo> isReady(TaskInfo taskInfo);
+    CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData);
 
     /**
-     * Check if the task processing is done.
-     * @param taskInfo task to be checked if it is done.
+     * Check if the service processing is done.
+     * @param jacsServiceData service to be checked if it is done.
      * @return the corresponding completion stage for this check.
      */
-    CompletionStage<TaskInfo> isDone(TaskInfo taskInfo);
+    CompletionStage<JacsServiceData> isDone(JacsServiceData jacsServiceData);
 
     /**
      * Post-processing.
      */
-    void postProcessData(TaskInfo taskInfo, Throwable exc);
+    void postProcessData(JacsServiceData jacsServiceData, Throwable exc);
 
     /**
-     * Submit a sub task.
-     * @param subTaskInfo sub task info
-     * @param parentTask parent task info
+     * Submit a child service.
+     * @param childServiceData child service info
+     * @param parentService parent service info
      * @return the computation for the child process.
      */
-    ServiceComputation submitSubTaskAsync(TaskInfo subTaskInfo, TaskInfo parentTask);
+    ServiceComputation submitChildServiceAsync(JacsServiceData childServiceData, JacsServiceData parentService);
 }

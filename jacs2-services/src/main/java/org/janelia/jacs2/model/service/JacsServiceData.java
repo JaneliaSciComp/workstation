@@ -10,13 +10,12 @@ import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "task_info")
-public class TaskInfo implements BaseEntity {
-    public static final String ENTITY_NAME = "Task";
-
+@Table(name = "jacs_service_data")
+@Access(AccessType.FIELD)
+public class JacsServiceData implements BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "task_info_id")
+    @Column(name = "jacs_service_data_id")
     private Long id;
     @Column(name = "name")
     private String name;
@@ -26,7 +25,7 @@ public class TaskInfo implements BaseEntity {
     private String serviceCmd;
     @Enumerated(EnumType.STRING)
     @Column(name = "state")
-    private TaskState state;
+    private JacsServiceState state;
     @Column(name = "priority")
     private Integer priority = 0;
     @Column(name = "owner")
@@ -38,34 +37,28 @@ public class TaskInfo implements BaseEntity {
     @Column(name = "error_path")
     private String errorPath;
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "task_arg")
+    @CollectionTable(name = "jacs_service_arg")
     private List<String> args;
     @Column(name = "workspace")
     private String workspace;
-    @Column(name = "parent_task_info_id")
-    private Long parentTaskId;
+    @Column(name = "parent_jacs_service_data_id")
+    private Long parentServiceId;
     @ManyToOne
-    @JoinColumn(name = "parent_task_info_id", referencedColumnName = "task_info_id", insertable = false, updatable = false)
-    private TaskInfo parentTask;
+    @JoinColumn(name = "parent_jacs_service_data_id", referencedColumnName = "jacs_service_data_id", insertable = false, updatable = false)
+    private JacsServiceData parentService;
     @OneToMany()
-    @JoinColumn(name = "parent_task_info_id", insertable = false, updatable = false)
-    private List<TaskInfo> subTasks;
-    @Column(name = "root_task_info_id")
-    private Long rootTaskId;
+    @JoinColumn(name = "parent_jacs_service_data_id", insertable = false, updatable = false)
+    private List<JacsServiceData> childServices;
+    @Column(name = "root_jacs_service_data_id")
+    private Long rootServiceId;
     @ManyToOne
-    @JoinColumn(name = "root_task_info_id", referencedColumnName = "task_info_id", insertable = false, updatable = false)
-    private TaskInfo rootTask;
-    @OneToMany(mappedBy = "taskInfo")
-    private List<TaskEvent> events;
+    @JoinColumn(name = "root_jacs_service_data_id", referencedColumnName = "jacs_service_data_id", insertable = false, updatable = false)
+    private JacsServiceData rootService;
+    @OneToMany(mappedBy = "jacsServiceData")
+    private List<JacsServiceEvent> events;
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "creation_date")
     private Date creationDate = new Date();
-
-    @Transient
-    @Override
-    public String getEntityName() {
-        return ENTITY_NAME;
-    }
 
     public Long getId() {
         return id;
@@ -99,11 +92,11 @@ public class TaskInfo implements BaseEntity {
         this.serviceCmd = serviceCmd;
     }
 
-    public TaskState getState() {
+    public JacsServiceState getState() {
         return state;
     }
 
-    public void setState(TaskState state) {
+    public void setState(JacsServiceState state) {
         this.state = state;
     }
 
@@ -163,51 +156,51 @@ public class TaskInfo implements BaseEntity {
         this.workspace = workspace;
     }
 
-    public Long getParentTaskId() {
-        return parentTaskId;
+    public Long getParentServiceId() {
+        return parentServiceId;
     }
 
-    public void setParentTaskId(Long parentTaskId) {
-        this.parentTaskId = parentTaskId;
+    public void setParentServiceId(Long parentServiceId) {
+        this.parentServiceId = parentServiceId;
     }
 
-    public TaskInfo getParentTask() {
-        return parentTask;
+    public JacsServiceData getParentService() {
+        return parentService;
     }
 
-    public void setParentTask(TaskInfo parentTask) {
-        this.parentTask = parentTask;
+    public void setParentService(JacsServiceData parentService) {
+        this.parentService = parentService;
     }
 
-    public List<TaskInfo> getSubTasks() {
-        return subTasks;
+    public List<JacsServiceData> getChildServices() {
+        return childServices;
     }
 
-    public void setSubTasks(List<TaskInfo> subTasks) {
-        this.subTasks = subTasks;
+    public void setChildServices(List<JacsServiceData> childServices) {
+        this.childServices = childServices;
     }
 
-    public Long getRootTaskId() {
-        return rootTaskId;
+    public Long getRootServiceId() {
+        return rootServiceId;
     }
 
-    public void setRootTaskId(Long rootTaskId) {
-        this.rootTaskId = rootTaskId;
+    public void setRootServiceId(Long rootServiceId) {
+        this.rootServiceId = rootServiceId;
     }
 
-    public TaskInfo getRootTask() {
-        return rootTask;
+    public JacsServiceData getRootService() {
+        return rootService;
     }
 
-    public void setRootTask(TaskInfo rootTask) {
-        this.rootTask = rootTask;
+    public void setRootService(JacsServiceData rootService) {
+        this.rootService = rootService;
     }
 
-    public List<TaskEvent> getEvents() {
+    public List<JacsServiceEvent> getEvents() {
         return events;
     }
 
-    public void setEvents(List<TaskEvent> events) {
+    public void setEvents(List<JacsServiceEvent> events) {
         this.events = events;
     }
 
@@ -226,31 +219,31 @@ public class TaskInfo implements BaseEntity {
         this.args.add(arg);
     }
 
-    public void addEvent(TaskEvent se) {
+    public void addEvent(JacsServiceEvent se) {
         if (this.events == null) {
             this.events = new ArrayList<>();
         }
-        se.setTaskInfo(this);
+        se.setJacsServiceData(this);
         this.events.add(se);
     }
 
-    public void addSubTask(TaskInfo si) {
-        if (this.subTasks == null) {
-            this.subTasks = new ArrayList<>();
+    public void addChildService(JacsServiceData si) {
+        if (this.childServices == null) {
+            this.childServices = new ArrayList<>();
         }
-        si.updateParentTask(this);
+        si.updateParentService(this);
     }
 
-    public void updateParentTask(TaskInfo parentTask) {
-        setParentTask(parentTask);
-        if (parentTask != null) {
-            setParentTaskId(parentTask.getId());
-            if (parentTask.getRootTaskId() == null) {
-                setRootTaskId(parentTask.getId());
-                setRootTask(parentTask);
+    public void updateParentService(JacsServiceData parentService) {
+        setParentService(parentService);
+        if (parentService != null) {
+            setParentServiceId(parentService.getId());
+            if (parentService.getRootServiceId() == null) {
+                setRootServiceId(parentService.getId());
+                setRootService(parentService);
             } else {
-                setRootTaskId(parentTask.getRootTaskId());
-                setRootTask(parentTask.getRootTask());
+                setRootServiceId(parentService.getRootServiceId());
+                setRootService(parentService.getRootService());
             }
         }
     }
@@ -261,11 +254,11 @@ public class TaskInfo implements BaseEntity {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentTask", "rootTask", "subTasks", "events"));
+        return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentService", "rootService", "childServices", "events"));
     }
 
     public boolean hasCompleted() {
-        return state == TaskState.CANCELED || state == TaskState.ERROR || state == TaskState.SUCCESSFUL;
+        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.SUCCESSFUL;
     }
 
 }

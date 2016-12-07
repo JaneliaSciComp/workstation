@@ -18,7 +18,7 @@ public class JacsQueueSyncer {
     @Inject
     private Logger logger;
     @Inject
-    private JacsTaskDispatcher jacsTaskDispatcher;
+    private JacsServiceDispatcher jacsServiceDispatcher;
     private final ScheduledExecutorService scheduler;
 
     public JacsQueueSyncer() {
@@ -28,7 +28,7 @@ public class JacsQueueSyncer {
     private void doWork() {
         try {
             logger.debug("Sync JACS jobs");
-            jacsTaskDispatcher.syncServiceQueue();
+            jacsServiceDispatcher.syncServiceQueue();
         } catch (Exception e) {
             logger.error("Critical error - syncing job queue failed", e);
         }

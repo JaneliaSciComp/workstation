@@ -10,8 +10,8 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 
-@Named("sageService")
-public class SageComputation extends AbstractLocalProcessComputation {
+@Named("lsmMetadataFilesService")
+public class CreateLsmMetadataFiledsComputation extends AbstractLocalProcessComputation {
 
     @Override
     protected List<String> prepareCommandLine(JacsServiceData jacsServiceData) {

@@ -6,11 +6,12 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "task_event")
-public class TaskEvent implements BaseEntity {
+@Table(name = "jacs_service_event")
+@Access(AccessType.FIELD)
+public class JacsServiceEvent implements BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "task_event_id")
+    @Column(name = "jacs_service_event_id")
     private Long id;
     @Column(name = "name")
     private String name;
@@ -20,8 +21,8 @@ public class TaskEvent implements BaseEntity {
     @Column(name = "event_time")
     private Date eventTime = new Date();
     @ManyToOne
-    @JoinColumn(name = "task_info_id")
-    private TaskInfo taskInfo;
+    @JoinColumn(name = "jacs_service_data_id")
+    private JacsServiceData jacsServiceData;
 
     public Long getId() {
         return id;
@@ -29,12 +30,6 @@ public class TaskEvent implements BaseEntity {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    @Transient
-    @Override
-    public String getEntityName() {
-        return "TaskEvent";
     }
 
     public String getName() {
@@ -53,12 +48,12 @@ public class TaskEvent implements BaseEntity {
         this.value = value;
     }
 
-    public TaskInfo getTaskInfo() {
-        return taskInfo;
+    public JacsServiceData getJacsServiceData() {
+        return jacsServiceData;
     }
 
-    public void setTaskInfo(TaskInfo service) {
-        this.taskInfo = taskInfo;
+    public void setJacsServiceData(JacsServiceData service) {
+        this.jacsServiceData = jacsServiceData;
     }
 
     public Date getEventTime() {

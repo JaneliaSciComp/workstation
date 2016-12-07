@@ -1,9 +1,9 @@
 package org.janelia.jacs2.rest;
 
 import org.janelia.jacs2.model.page.PageResult;
-import org.janelia.jacs2.model.service.TaskInfo;
+import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.ServiceMetaData;
-import org.janelia.jacs2.service.TaskManager;
+import org.janelia.jacs2.service.JacsServiceDataManager;
 import org.janelia.jacs2.service.ServiceRegistry;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -21,12 +21,12 @@ import javax.ws.rs.core.Response;
 public class ServiceInfoResource {
 
     @Inject
-    private TaskManager taskManager;
+    private JacsServiceDataManager jacsServiceDataManager;
     @Inject
     private ServiceRegistry serviceRegistry;
 
     @GET
-    public PageResult<TaskInfo> getAllServices(@QueryParam("service-name") String serviceName,
+    public PageResult<JacsServiceData> getAllServices(@QueryParam("service-name") String serviceName,
                                                @QueryParam("service-state") String serviceState,
                                                @QueryParam("page") Integer pageNumber,
                                                @QueryParam("length") Integer pageLength) {
@@ -37,8 +37,8 @@ public class ServiceInfoResource {
 
     @GET
     @Path("/{service-instance-id}")
-    public TaskInfo getServiceInfo(@PathParam("service-instance-id") long instanceId) {
-        return taskManager.retrieveTaskInfo(instanceId);
+    public JacsServiceData getServiceInfo(@PathParam("service-instance-id") long instanceId) {
+        return jacsServiceDataManager.retrieveServiceData(instanceId);
     }
 
     @GET
