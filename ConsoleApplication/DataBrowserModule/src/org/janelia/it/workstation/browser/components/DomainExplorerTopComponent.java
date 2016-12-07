@@ -469,7 +469,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                         log.info("Expanding first node");
                         for(Node node : root.getChildren().getNodes()) {
                             beanTreeView.expandNode(node);
-                            break; // For now, we'll only expand first node
+                            if (node instanceof WorkspaceNode) {
+                                break; // Expand everything up to and including the first Home
+                            }
                         }
                     }
 
