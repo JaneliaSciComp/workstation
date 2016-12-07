@@ -1093,6 +1093,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                         neuronMPRenderer,
                         sceneWindow
                 );
+                
+                Action resetRotationAction = new AbstractAction("Reset Rotation") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Vantage v = sceneWindow.getVantage();
+                        animateToCameraRotation(
+                                v.getDefaultRotation(),
+                                v, 150);
+                    }
+                };
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
@@ -1100,6 +1110,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 // SECTION: View options
                 // menu.add(new JPopupMenu.Separator());
+                
+                // Annotators want "Reset Rotation" on the top level menu
+                // Issue JW-25370
+                topMenu.add(resetRotationAction);
                 
                 JMenu viewMenu = new JMenu("View");
                 topMenu.add(viewMenu);
@@ -1115,15 +1129,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     });
                 }
 
-                viewMenu.add(new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Vantage v = sceneWindow.getVantage();
-                        animateToCameraRotation(
-                                v.getDefaultRotation(),
-                                v, 150);
-                    }
-                });
+                viewMenu.add(resetRotationAction);
 
                 // menu.add(new JPopupMenu.Separator());
 
