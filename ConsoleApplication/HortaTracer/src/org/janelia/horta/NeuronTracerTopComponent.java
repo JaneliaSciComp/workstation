@@ -53,6 +53,7 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
@@ -144,6 +145,7 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.horta.actions.ResetRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
@@ -1093,6 +1095,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                         neuronMPRenderer,
                         sceneWindow
                 );
+                
+                Action resetRotationAction = new AbstractAction("Reset Rotation") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        new ResetRotationAction().actionPerformed(e);
+                    }
+                };
 
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
@@ -1100,6 +1109,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 // SECTION: View options
                 // menu.add(new JPopupMenu.Separator());
+                
+                // Annotators want "Reset Rotation" on the top level menu
+                // Issue JW-25370
+                topMenu.add(resetRotationAction);
                 
                 JMenu viewMenu = new JMenu("View");
                 topMenu.add(viewMenu);
@@ -1115,15 +1128,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     });
                 }
 
-                viewMenu.add(new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        Vantage v = sceneWindow.getVantage();
-                        animateToCameraRotation(
-                                v.getDefaultRotation(),
-                                v, 150);
-                    }
-                });
+                viewMenu.add(resetRotationAction);
 
                 // menu.add(new JPopupMenu.Separator());
 
@@ -1943,6 +1948,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                     JOptionPane.ERROR_MESSAGE);                    
             return null;
         }
+    }
+
+    public void resetRotation() {
+        Vantage v = sceneWindow.getVantage();
+        animateToCameraRotation(
+                v.getDefaultRotation(),
+                v, 150);
     }
 
 }
