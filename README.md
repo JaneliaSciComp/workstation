@@ -67,6 +67,14 @@ or
 
 `gradle integrationTest`
 
+If you want to use a different test database that the one running locally on your machine you can create a configuration file in which you
+override the database connection settings and then use JACS2_CONFIG_TEST environment variable to point to it, eg.,
+`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties gradle integrationTest`
+
+Keep in mind that since the integrationTests are configured to run as part of the build check stage you also need to have the environment variable
+set you you run the build:
+`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties gradle build`
+
 ### Package the application
 
 `gradle installDist`
