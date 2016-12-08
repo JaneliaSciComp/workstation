@@ -1,23 +1,24 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.janelia.jacs2.model.domain.Reference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.jacs2.utils.ISODateDeserializer;
 
 import java.util.Date;
 
-public class LSMSampleImage extends SampleImage {
-    public static final String ENTITY_NAME = "LSMImage";
+public class LSMImage extends Image {
     private Reference sampleRef;
-    private Boolean sageSynced;
+    private Boolean sageSynced = false;
     private String channelColors;
     private String channelDyeNames;
     private String brightnessCompensation;
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date completionDate;
 
     // SAGE Terms
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date tmogDate;
     private Integer sageId;
     private String line;
@@ -28,7 +29,7 @@ public class LSMSampleImage extends SampleImage {
     private String bcCorrection1;
     private String bcCorrection2;
     private Integer bitsPerSample;
-    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ssX")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date captureDate;
     private String chanSpec;
     private String detectionChannel1DetectorGain;
@@ -94,12 +95,6 @@ public class LSMSampleImage extends SampleImage {
     private String flycoreProject;
     private String flycorePSubcategory;
     private String lineHide;
-
-    @JsonIgnore
-    @Override
-    public String getEntityName() {
-        return ENTITY_NAME;
-    }
 
     public Reference getSampleRef() {
         return sampleRef;

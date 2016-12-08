@@ -1,9 +1,9 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
 public class TileLsmPair {
     private String tileName;
-    private LSMSampleImage firstLsm;
-    private LSMSampleImage secondLsm;
+    private LSMImage firstLsm;
+    private LSMImage secondLsm;
 
     public String getTileName() {
         return tileName;
@@ -13,19 +13,19 @@ public class TileLsmPair {
         this.tileName = tileName;
     }
 
-    public LSMSampleImage getFirstLsm() {
+    public LSMImage getFirstLsm() {
         return firstLsm;
     }
 
-    public void setFirstLsm(LSMSampleImage firstLsm) {
+    public void setFirstLsm(LSMImage firstLsm) {
         this.firstLsm = firstLsm;
     }
 
-    public LSMSampleImage getSecondLsm() {
+    public LSMImage getSecondLsm() {
         return secondLsm;
     }
 
-    public void setSecondLsm(LSMSampleImage secondLsm) {
+    public void setSecondLsm(LSMImage secondLsm) {
         this.secondLsm = secondLsm;
     }
 }

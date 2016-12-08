@@ -1,7 +1,7 @@
 package org.janelia.jacs2.dao;
 
-import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 

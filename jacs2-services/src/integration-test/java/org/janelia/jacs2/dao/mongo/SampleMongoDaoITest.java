@@ -2,12 +2,11 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.SampleDao;
-import org.janelia.jacs2.model.domain.DataFile;
-import org.janelia.jacs2.model.domain.FileType;
-import org.janelia.jacs2.model.domain.Reference;
-import org.janelia.jacs2.model.domain.sample.Sample;
-import org.janelia.jacs2.model.domain.sample.SampleObjective;
-import org.janelia.jacs2.model.domain.sample.SampleTile;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -113,7 +112,7 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     @Test
     public void persistSample() {
         Sample testSample = createTestSample("ds1", "sc1");
-        testSample.getObjectives().addAll(ImmutableList.of(
+        testSample.getObjectiveSamples().addAll(ImmutableList.of(
                 createSampleObjective("o1"),
                 createSampleObjective("o2"),
                 createSampleObjective("o3")));
@@ -136,7 +135,7 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
         testSample.setDataSet("newDataSet that has been changed");
         testSample.setLine("Updated line");
         testSample.setEffector("best effector");
-        testSample.getObjectives().addAll(ImmutableList.of(
+        testSample.getObjectiveSamples().addAll(ImmutableList.of(
                 createSampleObjective("new_o1"),
                 createSampleObjective("new_o2"),
                 createSampleObjective("new_o3")));
@@ -147,8 +146,8 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
         assertThat(retrievedSample, hasProperty("dataSet", equalTo(testSample.getDataSet())));
     }
 
-    private SampleObjective createSampleObjective(String o) {
-        SampleObjective so = new SampleObjective();
+    private ObjectiveSample createSampleObjective(String o) {
+        ObjectiveSample so = new ObjectiveSample();
         so.setObjective(o);
         so.setChanSpec("cs");
         return so;
@@ -176,8 +175,8 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
         return testSample;
     }
 
-    private SampleObjective createTestObjective() {
-        SampleObjective objective = new SampleObjective();
+    private ObjectiveSample createTestObjective() {
+        ObjectiveSample objective = new ObjectiveSample();
         objective.setObjective("testObjective");
         objective.setChanSpec("rgb");
         objective.addTiles(createTile());
@@ -187,14 +186,9 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     private SampleTile createTile() {
         SampleTile sampleTile = new SampleTile();
         sampleTile.addLsmReference(new Reference("LSMImage", dataGenerator.nextLong()));
-        sampleTile.addDataFile(createDataFile());
+        sampleTile.setFileType(FileType.ChanFile, "testChanFile");
+        sampleTile.setFileType(FileType.MaskFile, "testMaskFile");
         return sampleTile;
     }
 
-    private DataFile createDataFile() {
-        DataFile dataFile = new DataFile();
-        dataFile.setFileName("testFile");
-        dataFile.setFileType(FileType.ChanFile);
-        return dataFile;
-    }
 }

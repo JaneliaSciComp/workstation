@@ -50,21 +50,10 @@ public class ApplicationProducer {
     @ApplicationProperties
     @Produces
     public Properties properties() throws IOException {
-        Properties appProperties = new Properties();
-        try (InputStream configReader = PersistenceProducer.class.getResourceAsStream("/jacs.properties")) {
-            appProperties.load(configReader);
-        }
-        String jacs2ConfigEnv = System.getenv("JACS2_CONFIG");
-        if (StringUtils.isBlank(jacs2ConfigEnv)) {
-            return appProperties;
-        }
-        File jacs2ConfigFile = new File(jacs2ConfigEnv);
-        if (jacs2ConfigFile.exists() && jacs2ConfigFile.isFile()) {
-            try (InputStream configReader = new FileInputStream(jacs2ConfigFile)) {
-                appProperties.load(configReader);
-            }
-        }
-        return appProperties;
+        return new ApplicationPropertiesProvider()
+                .fromDefaultResource()
+                .fromEnvVar("JACS2_CONFIG")
+                .build();
     }
 
 }

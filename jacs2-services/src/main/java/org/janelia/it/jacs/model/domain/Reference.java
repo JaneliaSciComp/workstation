@@ -1,4 +1,4 @@
-package org.janelia.jacs2.model.domain;
+package org.janelia.it.jacs.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

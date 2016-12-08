@@ -4,14 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bson.BsonReader;
 import org.bson.BsonWriter;
 import org.bson.Document;
-import org.bson.RawBsonDocument;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.EncoderContext;
 import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Subject;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;

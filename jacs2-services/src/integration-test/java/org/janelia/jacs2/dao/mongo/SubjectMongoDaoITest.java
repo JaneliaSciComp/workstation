@@ -2,13 +2,7 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.SubjectDao;
-import org.janelia.jacs2.model.domain.DataFile;
-import org.janelia.jacs2.model.domain.FileType;
-import org.janelia.jacs2.model.domain.Reference;
-import org.janelia.jacs2.model.domain.Subject;
-import org.janelia.jacs2.model.domain.sample.Sample;
-import org.janelia.jacs2.model.domain.sample.SampleObjective;
-import org.janelia.jacs2.model.domain.sample.SampleTile;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -18,14 +12,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;

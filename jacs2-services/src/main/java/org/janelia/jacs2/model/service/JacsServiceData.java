@@ -148,6 +148,14 @@ public class JacsServiceData implements BaseEntity {
         this.args = args;
     }
 
+    public String[] getArgsAsArray() {
+        if (args == null) {
+            return new String[0];
+        } else {
+            return args.toArray(new String[0]);
+        }
+    }
+
     public String getWorkspace() {
         return workspace;
     }

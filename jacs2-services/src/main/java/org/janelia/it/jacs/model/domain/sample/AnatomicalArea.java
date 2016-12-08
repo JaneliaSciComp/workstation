@@ -1,6 +1,4 @@
-package org.janelia.jacs2.model.domain.sample;
-
-import com.sun.javafx.scene.control.skin.VirtualFlow;
+package org.janelia.it.jacs.model.domain.sample;
 
 import java.util.ArrayList;
 import java.util.List;

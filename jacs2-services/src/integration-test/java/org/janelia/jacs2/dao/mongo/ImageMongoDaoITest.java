@@ -3,8 +3,8 @@ package org.janelia.jacs2.dao.mongo;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
 import org.janelia.jacs2.dao.SampleImageDao;
-import org.janelia.jacs2.model.domain.sample.LSMSampleImage;
-import org.janelia.jacs2.model.domain.sample.SampleImage;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -21,8 +21,8 @@ import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertThat;
 
-public class SampleImageMongoDaoITest extends AbstractDomainObjectDaoITest<SampleImage> {
-    private List<SampleImage> testData = new ArrayList<>();
+public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
+    private List<Image> testData = new ArrayList<>();
     private SampleImageDao testDao;
 
     @Before
@@ -39,16 +39,16 @@ public class SampleImageMongoDaoITest extends AbstractDomainObjectDaoITest<Sampl
 
     @Test
     public void persistLSMs() {
-        List<SampleImage> testLSMs = createMultipleTestItems(10);
+        List<Image> testLSMs = createMultipleTestItems(10);
         testLSMs.forEach(si -> testDao.save(si));
         PageRequest pageRequest = new PageRequest();
         pageRequest.setSortCriteria(ImmutableList.of(
                 new SortCriteria("line", SortDirection.ASC)));
-        PageResult<SampleImage> res = testDao.findAll(pageRequest);
+        PageResult<Image> res = testDao.findAll(pageRequest);
 
         assertThat(res.getResultList(), everyItem(
                 allOf(
-                        Matchers.<SampleImage>instanceOf(LSMSampleImage.class),
+                        Matchers.<Image>instanceOf(LSMImage.class),
                         isIn(testLSMs)
                 )));
     }
@@ -69,16 +69,16 @@ public class SampleImageMongoDaoITest extends AbstractDomainObjectDaoITest<Sampl
     }
 
     @Override
-    protected List<SampleImage> createMultipleTestItems(int nItems) {
-        List<SampleImage> testItems = new ArrayList<>();
+    protected List<Image> createMultipleTestItems(int nItems) {
+        List<Image> testItems = new ArrayList<>();
         for (int i = 0; i < nItems; i++) {
             testItems.add(createLSM("l" + (i + 1), "a" + (i + 1)));
         }
         return testItems;
     }
 
-    private LSMSampleImage createLSM(String line, String area) {
-        LSMSampleImage lsmImage = new LSMSampleImage();
+    private LSMImage createLSM(String line, String area) {
+        LSMImage lsmImage = new LSMImage();
         lsmImage.setChannelColors("cygkrgb");
         lsmImage.setChannelDyeNames("dye");
         lsmImage.setBrightnessCompensation("compensated");

@@ -1,4 +1,4 @@
-package org.janelia.jacs2.model.domain;
+package org.janelia.it.jacs.model.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.BaseEntity;
-import org.janelia.jacs2.model.Identifiable;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
 import java.util.HashSet;
@@ -15,7 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @MongoMapping(collectionName="subject", label="Subject")
-public class Subject implements BaseEntity, Identifiable {
+public class Subject implements BaseEntity, HasIdentifier {
     public static final String ADMIN_KEY = "group:admin";
     public static final String USERS_KEY = "group:workstation_users";
 

@@ -20,8 +20,6 @@ public class NeuronSeparatorComputation extends AbstractLocalProcessComputation 
     @Named("SLF4J")
     @Inject
     private Logger logger;
-    @Inject
-    private ExecutorService serviceExecutor;
 
     @Override
     protected List<String> prepareCommandLine(JacsServiceData si) {

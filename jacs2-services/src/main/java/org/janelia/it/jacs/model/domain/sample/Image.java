@@ -1,27 +1,23 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.janelia.jacs2.model.domain.AbstractDomainObject;
-import org.janelia.jacs2.model.domain.DataFile;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.it.jacs.model.domain.AbstractDomainObject;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasRelativeFiles;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @MongoMapping(collectionName="image", label="Image")
-public class SampleImage extends AbstractDomainObject {
-    public static final String ENTITY_NAME = "Image";
+public class Image extends AbstractDomainObject implements HasRelativeFiles {
     private String filepath;
     private String imageSize;
     private String opticalResolution;
     private String objective;
     private Integer numChannels;
-    private List<DataFile> dataFiles;
-
-    @JsonIgnore
-    @Override
-    public String getEntityName() {
-        return ENTITY_NAME;
-    }
+    // files are in fact alternate representations of this image instance
+    private Map<FileType, String> files = new HashMap<>();
 
     public String getFilepath() {
         return filepath;
@@ -63,11 +59,11 @@ public class SampleImage extends AbstractDomainObject {
         this.numChannels = numChannels;
     }
 
-    public List<DataFile> getDataFiles() {
-        return dataFiles;
+    public Map<FileType, String> getFiles() {
+        return files;
     }
 
-    public void setDataFiles(List<DataFile> dataFiles) {
-        this.dataFiles = dataFiles;
+    public void setFiles(Map<FileType, String> files) {
+        this.files = files;
     }
 }

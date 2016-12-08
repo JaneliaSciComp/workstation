@@ -2,8 +2,8 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.DomainObjectDao;
-import org.janelia.jacs2.model.domain.DomainObject;
-import org.janelia.jacs2.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;

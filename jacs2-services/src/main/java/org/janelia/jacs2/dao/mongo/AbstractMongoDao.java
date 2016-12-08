@@ -11,8 +11,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.AbstractDao;
-import org.janelia.jacs2.model.Identifiable;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -34,7 +34,7 @@ import static com.mongodb.client.model.Filters.eq;
  *
  * @param <T> type of the element
  */
-public abstract class AbstractMongoDao<T extends Identifiable> extends AbstractDao<T, Number> {
+public abstract class AbstractMongoDao<T extends HasIdentifier> extends AbstractDao<T, Number> {
 
     @Inject
     protected ObjectMapper objectMapper;

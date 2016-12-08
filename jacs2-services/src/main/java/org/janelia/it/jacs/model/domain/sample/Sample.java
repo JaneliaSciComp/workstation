@@ -1,12 +1,12 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.collections4.CollectionUtils;
-import org.janelia.jacs2.model.domain.AbstractDomainObject;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.it.jacs.model.domain.AbstractDomainObject;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.utils.ISODateDeserializer;
 
 import java.util.ArrayList;
@@ -24,30 +24,23 @@ import java.util.Optional;
  */
 @MongoMapping(collectionName="sample", label="Sample")
 public class Sample extends AbstractDomainObject {
-    public static final String ENTITY_NAME = "Sample";
-
-    private String dataSet;
-    private String slideCode;
     private String age;
+    private String dataSet;
     private String effector;
     private String flycoreAlias;
     private String gender;
     private String line;
+    private String slideCode;
     private Integer crossBarcode;
     private String status;
+    private Boolean visited = false;
+    private Boolean sageSynced = false;
     private String compressionType;
     @JsonDeserialize(using = ISODateDeserializer.class)
     private Date tmogDate;
     @JsonDeserialize(using = ISODateDeserializer.class)
     private Date completionDate;
-    @JsonProperty("objectiveSamples")
-    private List<SampleObjective> objectives = new ArrayList<>();
-
-    @JsonIgnore
-    @Override
-    public String getEntityName() {
-        return ENTITY_NAME;
-    }
+    private List<ObjectiveSample> objectiveSamples = new ArrayList<>();
 
     public String getDataSet() {
         return dataSet;
@@ -145,28 +138,29 @@ public class Sample extends AbstractDomainObject {
         this.completionDate = completionDate;
     }
 
-    public List<SampleObjective> getObjectives() {
-        return objectives;
+    public List<ObjectiveSample> getObjectiveSamples() {
+        return objectiveSamples;
     }
 
-    public void setObjectives(List<SampleObjective> objectives) {
-        this.objectives = objectives;
+    public void setObjectiveSamples(List<ObjectiveSample> objectiveSamples) {
+        this.objectiveSamples = objectiveSamples;
     }
 
-    public Optional<SampleObjective> lookupObjective(String objectiveName) {
-        Optional<SampleObjective> objective = Optional.empty();
-        if (CollectionUtils.isNotEmpty(objectives)) {
-            objective = objectives.stream()
+    public Optional<ObjectiveSample> lookupObjective(String objectiveName) {
+        Optional<ObjectiveSample> objective = Optional.empty();
+        if (CollectionUtils.isNotEmpty(objectiveSamples)) {
+            objective = objectiveSamples.stream()
                     .filter(o -> objectiveName == null && o.getObjective() == null || objectiveName.equals(o.getObjective()))
                     .findFirst();
         }
         return objective;
     }
 
-    public void addObjective(SampleObjective objective) {
-        if (objectives == null) {
-            objectives  = new ArrayList<>();
+    public void addObjective(ObjectiveSample objective) {
+        if (objectiveSamples == null) {
+            objectiveSamples  = new ArrayList<>();
         }
-        objectives.add(objective);
+        objective.setParent(this);
+        objectiveSamples.add(objective);
     }
 }

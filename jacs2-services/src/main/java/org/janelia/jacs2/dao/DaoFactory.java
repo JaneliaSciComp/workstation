@@ -1,6 +1,5 @@
 package org.janelia.jacs2.dao;
 
-import org.janelia.jacs2.model.domain.DomainObject;
 import org.janelia.jacs2.utils.DomainUtils;
 
 import javax.enterprise.inject.Any;

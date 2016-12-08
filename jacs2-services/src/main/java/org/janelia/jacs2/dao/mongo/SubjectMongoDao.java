@@ -3,7 +3,7 @@ package org.janelia.jacs2.dao.mongo;
 import com.mongodb.client.MongoDatabase;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.dao.SubjectDao;
-import org.janelia.jacs2.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.Subject;
 
 import javax.inject.Inject;
 import java.util.List;

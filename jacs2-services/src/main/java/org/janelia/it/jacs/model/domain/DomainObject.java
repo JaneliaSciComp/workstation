@@ -1,8 +1,9 @@
-package org.janelia.jacs2.model.domain;
+package org.janelia.it.jacs.model.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.janelia.jacs2.model.BaseEntity;
-import org.janelia.jacs2.model.Identifiable;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 
 import java.util.Date;
 import java.util.Set;
@@ -14,7 +15,8 @@ import java.util.Set;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
-public interface DomainObject extends BaseEntity, Identifiable {
+public interface DomainObject extends BaseEntity, HasIdentifier {
+    @JsonIgnore
     String getEntityRefId();
     String getName();
     void setName(String name);

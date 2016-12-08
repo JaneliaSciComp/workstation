@@ -2,7 +2,7 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.mongodb.client.MongoDatabase;
 import org.janelia.jacs2.dao.SampleDao;
-import org.janelia.jacs2.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 
 import javax.inject.Inject;
 

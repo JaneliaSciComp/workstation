@@ -1,4 +1,4 @@
-package org.janelia.jacs2.model.domain;
+package org.janelia.it.jacs.model.domain.enums;
 
 public enum FileType {
     FirstAvailable2d("First Available", true, false),

@@ -1,6 +1,6 @@
 package org.janelia.jacs2.dao;
 
-import org.janelia.jacs2.model.domain.sample.SampleImage;
+import org.janelia.it.jacs.model.domain.sample.Image;
 
-public interface SampleImageDao extends DomainObjectDao<SampleImage> {
+public interface SampleImageDao extends DomainObjectDao<Image> {
 }

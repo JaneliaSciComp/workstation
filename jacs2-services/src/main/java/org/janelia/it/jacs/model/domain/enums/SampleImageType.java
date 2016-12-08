@@ -1,4 +1,4 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.enums;
 
 /**
  * The type of image to show for given sample.
@@ -25,4 +25,8 @@ public enum SampleImageType {
         return displayName;
     }
 
+    @Override
+    public String toString() {
+        return displayName;
+    }
 }

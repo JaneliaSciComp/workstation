@@ -5,17 +5,17 @@ mainClassName = 'org.janelia.jacs2.app.Application'
 project(":jacs2-web") {
     dependencies {
         compile project(":jacs2-services"),
-                CMDLINE_ARG_LIB,
                 CDI_API_LIB,
                 CDI_SERVLET_LIB,
+                CMDLINE_ARG_LIB,
+                JACKSON_JAXRS_JSON_PROVIDER,
                 JAVAX_SERVLET_API_LIB,
                 JAX_RS_API_LIB,
-                UNDERTOW_CORE_LIB,
-                UNDERTOW_SERVLET_LIB,
+                JAX_RS_CDI_EXT_LIB,
                 JAX_RS_CONTAINERS_LIB,
                 JAX_RS_CORE_LIB,
                 JAX_RS_SERVER_LIB,
-                JAX_RS_CDI_EXT_LIB,
-                JACKSON_JAXRS_JSON_PROVIDER
+                UNDERTOW_CORE_LIB,
+                UNDERTOW_SERVLET_LIB
     }
 }

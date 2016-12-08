@@ -15,6 +15,7 @@ public class ObjectMapperFactory {
         objectMapper = new ObjectMapper()
                 .registerModule(new JodaModule())
                 .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true)
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }

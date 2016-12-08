@@ -2,7 +2,7 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.DatasetDao;
-import org.janelia.jacs2.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;

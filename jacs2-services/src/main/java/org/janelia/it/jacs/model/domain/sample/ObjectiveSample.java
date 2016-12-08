@@ -1,5 +1,6 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 import java.util.ArrayList;
@@ -10,11 +11,13 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SampleObjective {
+public class ObjectiveSample {
 
     private String objective;
     private String chanSpec;
     private List<SampleTile> tiles = new ArrayList<>();
+    @JsonIgnore
+    private transient Sample parent;
 
     public String getObjective() {
         return objective;
@@ -46,5 +49,13 @@ public class SampleObjective {
             t.setParent(this);
             this.tiles.add(t);
         }
+    }
+
+    public Sample getParent() {
+        return parent;
+    }
+
+    public void setParent(Sample parent) {
+        this.parent = parent;
     }
 }

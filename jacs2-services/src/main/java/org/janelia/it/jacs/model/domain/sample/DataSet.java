@@ -1,9 +1,10 @@
-package org.janelia.jacs2.model.domain.sample;
+package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
-import org.janelia.jacs2.model.domain.AbstractDomainObject;
-import org.janelia.jacs2.model.domain.annotations.MongoMapping;
+import org.janelia.it.jacs.model.domain.AbstractDomainObject;
+import org.janelia.it.jacs.model.domain.enums.SampleImageType;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 
 import java.util.ArrayList;
 import java.util.List;

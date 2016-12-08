@@ -1,7 +1,7 @@
 package org.janelia.jacs2.rest;
 
-import org.janelia.jacs2.model.domain.sample.AnatomicalArea;
-import org.janelia.jacs2.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.service.dataservice.sample.SampleDataService;
 

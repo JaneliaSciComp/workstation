@@ -1,41 +1,33 @@
 package org.janelia.jacs2.service.dataservice.sample;
 
 import com.google.common.collect.ImmutableList;
-import org.hamcrest.Matcher;
-import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.janelia.jacs2.dao.DaoFactory;
-import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.dao.SampleDao;
 import org.janelia.jacs2.dao.SampleImageDao;
 import org.janelia.jacs2.dao.SubjectDao;
-import org.janelia.jacs2.model.domain.Reference;
-import org.janelia.jacs2.model.domain.Subject;
-import org.janelia.jacs2.model.domain.sample.AnatomicalArea;
-import org.janelia.jacs2.model.domain.sample.LSMSampleImage;
-import org.janelia.jacs2.model.domain.sample.Sample;
-import org.janelia.jacs2.model.domain.sample.SampleObjective;
-import org.janelia.jacs2.model.domain.sample.SampleTile;
+import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 public class SampleDataServiceTest {
@@ -132,7 +124,7 @@ public class SampleDataServiceTest {
         testSample.addReader("group:testGroup");
         testSample.setName("test sample name");
 
-        SampleObjective testObjective = new SampleObjective();
+        ObjectiveSample testObjective = new ObjectiveSample();
         testObjective.setObjective(TEST_OBJECTIVE);
         testObjective.addTiles(sampleTiles);
         testSample.addObjective(testObjective);
@@ -147,8 +139,8 @@ public class SampleDataServiceTest {
         return sampleTile;
     }
 
-    private LSMSampleImage createLSMImage(Long lsmId, Integer numChannels) {
-        LSMSampleImage sampleImage = new LSMSampleImage();
+    private LSMImage createLSMImage(Long lsmId, Integer numChannels) {
+        LSMImage sampleImage = new LSMImage();
         sampleImage.setId(lsmId);
         sampleImage.setNumChannels(numChannels);
         return sampleImage;
