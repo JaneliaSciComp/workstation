@@ -33,6 +33,7 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
+import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
@@ -1141,7 +1142,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             @Override
             protected void doStuff() throws Exception {
                 // now we can create the workspace
-                annotationModel.createWorkspace(ID, workspaceName);
+                TmWorkspace workspace = annotationModel.createWorkspace(ID, workspaceName);
+                annotationModel.loadWorkspace(workspace);
 
                 // and if there was a previously existing workspace, we'll save the
                 //  existing color model (which isn't cleared by creating a new
@@ -1164,6 +1166,42 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         creator.execute();
     }
 
+    public void saveWorkspaceCopy() {
+
+        EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
+        final String workspaceName = dialog.showForSample(getAnnotationModel().getCurrentSample());
+        
+        if (workspaceName==null) {
+            log.info("Aborting workspace creation: no valid name was provided by the user");
+            return;
+        }
+
+        final TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        
+        SimpleWorker creator = new SimpleWorker() {
+            
+            private TmWorkspace workspaceCopy;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                workspaceCopy = annotationModel.copyWorkspace(workspace, workspaceName);
+                annotationModel.loadWorkspace(workspaceCopy);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                annotationModel.loadComplete();
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                ConsoleApp.handleException(error);
+            }
+        };
+
+        creator.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), "Copying workspace...", ""));
+        creator.execute();
+    }
 
     /**
      * find an annotation relative to the input annotation in
