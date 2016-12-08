@@ -327,6 +327,11 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
+        public void annotationMoved(TmGeoAnnotation annotation) {
+            logger.info("annotationNotMoved");
+        }
+
+        @Override
         public void annotationNotMoved(TmGeoAnnotation annotation)
         {
             logger.info("annotationNotMoved");

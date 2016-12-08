@@ -15,4 +15,5 @@ public interface TmGeoAnnotationModListener {
     void annotationsDeleted(List<TmGeoAnnotation> annotations);
     void annotationReparented(TmGeoAnnotation annotation);
     void annotationNotMoved(TmGeoAnnotation annotation);
+    void annotationMoved(TmGeoAnnotation annotation);
 }
