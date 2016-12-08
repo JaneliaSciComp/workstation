@@ -4,7 +4,10 @@ Changes
 * Increased update check interval from 1 hour to 15 minutes
 * Restore Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
 * Move "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
 
 Bug fixes
 * Fixed issue with Add to Folder
 * Fixed issues caused by legacy modules
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+
