@@ -1110,6 +1110,36 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // SECTION: View options
                 // menu.add(new JPopupMenu.Separator());
                 
+                boolean showLinkToLvv = true;
+                if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
+                    // Synchronize with LVV
+                    // TODO - is LVV present?
+                    // Want to lookup, get URL and get focus.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor origin = 
+                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
+                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
+                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
+                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
+                    );
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    if (locationProviders.size() > 1) {
+                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
+                        for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            synchronizeAllMenu.add(item);
+                        }
+                        topMenu.add(synchronizeAllMenu);
+                    }
+                    else if (locationProviders.size() == 1) {
+                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
+                            topMenu.add(item);
+                        }
+                    }
+                    topMenu.add(new JPopupMenu.Separator());
+                }
+                
                 // Annotators want "Reset Rotation" on the top level menu
                 // Issue JW-25370
                 topMenu.add(resetRotationAction);
@@ -1567,36 +1597,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                 // NeuriteAnchor hoverAnchor = tracingInteractor.getHoverLocation();
                 // tracingInteractor.exportMenuItems(menu, hoverAnchor);
 
-                boolean showLinkToLvv = true;
-                if ( (mouseStageLocation != null) && (showLinkToLvv) ) {
-                    // Synchronize with LVV
-                    // TODO - is LVV present?
-                    topMenu.add(new JPopupMenu.Separator());
-                    // Want to lookup, get URL and get focus.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                            helper.getSampleLocationProviders(HortaLocationProvider.UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor origin = 
-                            helper.getSampleLocationProviderByName(HortaLocationProvider.UNIQUE_NAME);
-                    logger.info("Found {} synchronization providers for neuron tracer.", locationProviders.size());
-                    ViewerLocationAcceptor acceptor = new SampleLocationAcceptor(
-                            currentSource, loader, NeuronTracerTopComponent.this, sceneWindow
-                    );
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    if (locationProviders.size() > 1) {
-                        JMenu synchronizeAllMenu = new JMenu("Synchronize with Other 3D Viewer.");
-                        for (JMenuItem item: menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            synchronizeAllMenu.add(item);
-                        }
-                        topMenu.add(synchronizeAllMenu);
-                    }
-                    else if (locationProviders.size() == 1) {
-                        for (JMenuItem item : menuBuilder.buildSyncMenu(locationProviders, origin, acceptor)) {
-                            topMenu.add(item);
-                        }
-                    }
-                }
-                
                 // Cancel/do nothing action
                 topMenu.add(new JPopupMenu.Separator());
                 topMenu.add(new AbstractAction("Close This Menu [ESC]") {
