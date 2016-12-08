@@ -466,10 +466,32 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
             v.setSharedVolumeImage(volumeImage);
-            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+            v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
+                    
+                    // Add menus/items for relocating per other views.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor originator =
+                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+                    for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
+                        navigateToHortaMenu.add(navItem);
+                    }
+                    // navigateToHortaMenu.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
+                    result.add(navigateToHortaMenu);
+
+                    return result;
+                }
+            });
+            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+                @Override
+                public List<JMenuItem> getMenus(MouseEvent event) {
+                    List<JMenuItem> result = new Vector<>();                    
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
@@ -479,14 +501,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
                     
-                    // Add menus/items for relocating per other views.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor originator =
-                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
                     return result;
                 }
             });

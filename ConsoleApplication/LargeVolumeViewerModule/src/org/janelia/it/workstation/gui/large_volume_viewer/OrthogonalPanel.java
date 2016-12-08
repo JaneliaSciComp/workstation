@@ -147,6 +147,11 @@ extends JPanel implements VolumeLoadListener, MouseWheelModeListener
 		viewer.setTileServer(tileServer);
 	}
 	
+	public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator)
+	{
+		viewer.setNavigationMenuItemGenerator(navigationMenuItemGenerator);
+	}
+
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator)
 	{
 		viewer.setSystemMenuItemGenerator(systemMenuItemGenerator);

@@ -294,11 +294,6 @@ implements MouseMode, KeyListener
             	    List<JMenuItem> result = new Vector<JMenuItem>();
                     popupXyz = worldFromPixel(event.getPoint());
                     // Cancel 
-                    result.add(new JMenuItem(new AbstractAction("Cancel [Escape]") {
-                        private static final long serialVersionUID = 1L;
-                        @Override
-                        public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
-                    }));
                     ///// Popup menu items that require an anchor under the mouse /////
                     Anchor hover = getHoverAnchor();
                     Anchor parent = skeletonActor.getModel().getNextParent();
