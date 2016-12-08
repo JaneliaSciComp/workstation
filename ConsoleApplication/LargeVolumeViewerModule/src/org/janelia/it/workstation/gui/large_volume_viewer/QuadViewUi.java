@@ -482,7 +482,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
                         navigateToHortaMenu.add(navItem);
                     }
-                    // navigateToHortaMenu.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
                     result.add(navigateToHortaMenu);
 
                     return result;
