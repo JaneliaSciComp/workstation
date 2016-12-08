@@ -5,21 +5,14 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractLocalProcessComputation;
-import org.slf4j.Logger;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutorService;
 
 @Named("neuronSeparatorService")
 public class NeuronSeparatorComputation extends AbstractLocalProcessComputation {
-
-    @Named("SLF4J")
-    @Inject
-    private Logger logger;
 
     @Override
     protected List<String> prepareCommandLine(JacsServiceData si) {
