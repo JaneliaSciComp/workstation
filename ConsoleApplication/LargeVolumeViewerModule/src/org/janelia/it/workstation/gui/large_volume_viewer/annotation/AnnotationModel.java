@@ -537,12 +537,24 @@ called from a  SimpleWorker thread.
      * @param name = name of new workspace
      * @throws Exception
      */
-    public synchronized void createWorkspace(Long sampleId, String name) throws Exception {
+    public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
         activityLog.logCreateWorkspace(workspace.getId());
-        loadWorkspace(workspace);
+        return workspace;
     }
 
+    /**
+     * Create a new copy of the given workspace, owned by the current user.
+     * @param sampleId = workspace Id
+     * @param name = name of new workspace
+     * @throws Exception
+     */
+    public synchronized TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
+        TmWorkspace workspaceCopy = tmDomainMgr.copyWorkspace(workspace, name);
+        activityLog.logCreateWorkspace(workspace.getId());
+        return workspaceCopy;
+    }
+    
     /**
      * add a root annotation to the given neuron; this is an annotation without a parent
      *

@@ -47,7 +47,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
-    private final TreeNodeChildFactory childFactory;
+    private TreeNodeChildFactory childFactory;
     
     public TreeNodeNode(ChildFactory<?> parentChildFactory, TreeNode treeNode) {
         this(parentChildFactory, new TreeNodeChildFactory(treeNode), treeNode);
@@ -91,25 +91,10 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
             });
         }
     }
-
-    public final void checkChildren() {
-        boolean isLeaf = getChildren()==Children.LEAF;
-        boolean hasChildren = childFactory.hasNodeChildren();
-        if (isLeaf == hasChildren) {
-            log.trace("Node {} changed child-having status",getDisplayName());
-            this.setChildren(createChildren());
-        }
-    }
-
-    public Children createChildren() {
-        if (childFactory.hasNodeChildren()) {
-            return Children.create(new TreeNodeChildFactory(getTreeNode()), false);
-        }
-        else {
-            return Children.LEAF;
-        }
-    }
     
+    /**
+     * This method should be called whenever the underlying domain object changes. It updates the UI to reflect the new object state.
+     */
     @Override
     public void update(TreeNode treeNode) {
         log.debug("Refreshing node@{} -> {}",System.identityHashCode(this),getDisplayName());
@@ -119,9 +104,32 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
         refreshChildren();
     }
     
-    public void refreshChildren() {
+    /**
+     * Updates the UI state of the nodes to reflect the object state. 
+     */
+    private void refreshChildren() {
+        // Update the child factory
         childFactory.refresh();
-        checkChildren();
+        // Ensure that the node has the correct type of "Children" object (leaf or non-leaf)
+        boolean isLeaf = getChildren()==Children.LEAF;
+        boolean hasChildren = childFactory.hasNodeChildren();
+        if (isLeaf == hasChildren) {
+            log.debug("Node {} changed child-having status",getDisplayName());
+            this.setChildren(createChildren());
+        }
+    }
+
+    /**
+     * Creates the correct type of "Children" object (leaf or non-leaf)
+     */
+    private Children createChildren() {
+        if (childFactory.hasNodeChildren()) {
+            childFactory = new TreeNodeChildFactory(getTreeNode());
+            return Children.create(childFactory, false);
+        }
+        else {
+            return Children.LEAF;
+        }
     }
     
     public TreeNode getTreeNode() {
@@ -297,9 +305,11 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                 // because once we start moving nodes, the parents will be recreated
                 List<TreeNode> originalParents = new ArrayList<>();
                 for(DomainObjectNode<?> node : nodes) {
-                    TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
-                    TreeNode originalParent = originalParentNode.getTreeNode();
-                    originalParents.add(originalParent);
+                    if (node.getParentNode() instanceof TreeNodeNode) {
+                        TreeNodeNode originalParentNode = (TreeNodeNode)node.getParentNode();
+                        TreeNode originalParent = originalParentNode.getTreeNode();
+                        originalParents.add(originalParent);
+                    }
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();

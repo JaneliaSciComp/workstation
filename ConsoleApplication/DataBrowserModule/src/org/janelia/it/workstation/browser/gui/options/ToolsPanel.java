@@ -124,7 +124,7 @@ final class ToolsPanel extends javax.swing.JPanel {
 
         File selectedFile = toolFileChooser.getSelectedFile();
 
-        if (selectedFile!=null & selectedFile.exists()) {
+        if (selectedFile!=null && selectedFile.exists()) {
             ToolInfo toolTest = ToolMgr.getToolMgr().getTool(ToolInfo.TOOL_PREFIX + ToolInfo.USER + "." + toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
             if (null == toolTest) {
                 try {
@@ -255,7 +255,9 @@ final class ToolsPanel extends javax.swing.JPanel {
             fileChooser.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                    if (fileChooser.getSelectedFile()!=null) {
+                        pathTextField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                    }
                 }
             });
 
