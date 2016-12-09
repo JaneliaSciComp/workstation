@@ -153,6 +153,21 @@ public class TiledMicroscopeRestClient extends RESTClientImpl {
         return response.readEntity(TmWorkspace.class);
     }
 
+    public TmWorkspace copy(TmWorkspace tmWorkspace, String name) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(tmWorkspace);
+        query.setPropertyName("name");
+        query.setPropertyValue(name);
+        Response response = manager.getMouselightEndpoint("/workspace/copy")
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response, "create: "+tmWorkspace)) {
+            throw new WebApplicationException(response);
+        }
+        return response.readEntity(TmWorkspace.class);
+    }
+    
     public TmWorkspace update(TmWorkspace tmWorkspace) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);

@@ -78,6 +78,9 @@ public class DomainMgrTmModelAdapter implements TmModelAdapter {
                     neurons.add(neuron);
                 }
             }
+            else {
+                neurons.addAll(neuronList);
+            }
             
             progress.progress(2);
 
