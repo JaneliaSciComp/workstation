@@ -18,6 +18,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.gui.search.Filter;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
@@ -994,6 +995,10 @@ public class DomainModel {
             log.trace("Generating DomainObjectRemoveEvent for {}", DomainUtils.identify(domainObject));
         }
         Events.getInstance().postOnEventBus(new DomainObjectRemoveEvent(domainObject));
+    }
+
+    public void addPipelineStatusTransition(Sample sample, PipelineStatus target) throws Exception {
+        sampleFacade.addStatusTransition(sample, target);
     }
 
     private void notifyDomainObjectsInvalidated(Collection<? extends DomainObject> objects, boolean invalidateTree) {

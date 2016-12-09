@@ -4,9 +4,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 
 /**
  * Implementations provide access to Samples, Data Sets, and related concepts. 
@@ -81,5 +83,13 @@ public interface SampleFacade {
      * @throws Exception
      */
     public void remove(LineRelease release) throws Exception;
+
+    /**
+     * Adds a status transition for front-end actions that mess with a Sample directly.
+     * @param sample that sample's id
+     * @param targetStatus target status
+     * @throws Exception
+     */
+    public void addStatusTransition(Sample sample, PipelineStatus targetStatus) throws Exception;
     
 }

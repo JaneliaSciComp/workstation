@@ -9,7 +9,9 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.LineRelease;
 import org.janelia.it.jacs.shared.utils.DomainQuery;
@@ -149,6 +151,18 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
                 .request("application/json")
                 .delete();
         if (checkBadResponse(response.getStatus(), "problem making request removeRelease from server: " + release)) {
+            throw new WebApplicationException(response);
+        }
+    }
+
+    public void addStatusTransition(Sample sample, PipelineStatus targetStatus) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(sample);
+        query.setPropertyValue(targetStatus.getStatus().toString());
+        Response response = manager.getSampleEndpoint()
+                .request("application/json")
+                .post(Entity.json(query));
+        if (checkBadResponse(response.getStatus(), "problem making request to add a pipeline status transition: " + sample.getId())) {
             throw new WebApplicationException(response);
         }
     }
