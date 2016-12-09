@@ -81,7 +81,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
     private static final Logger log = LoggerFactory.getLogger(DomainObjectContextMenu.class);
     public static final String WHOLE_AA_REMOVAL_MSG = "Remove/preclude anatomical area of sample";
     public static final String STITCHED_IMG_REMOVAL_MSG = "Remove/preclude Stitched Image";
-    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation Stack(s)";
+    public static final String NEURON_SEP_REMOVAL_MSG = "Remove/preclude Neuron Separation(s)";
 
     // Current selection
     protected DomainObject contextObject;
