@@ -4,9 +4,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.jacs2.dao.DaoFactory;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.dao.SampleDao;
+import org.janelia.jacs2.dao.SampleImageDao;
 import org.janelia.jacs2.dao.SubjectDao;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -16,6 +18,7 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.sample.TileLsmPair;
+import org.janelia.jacs2.utils.DomainUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -36,6 +39,8 @@ public class SampleDataService {
     private SubjectDao subjectDao;
     @Inject
     private DaoFactory daoFactory;
+    @Inject
+    private SampleImageDao sampleImageDao;
 
     public Sample getSampleById(String subjectName, Number sampleId) {
         Subject subject = null;
@@ -135,5 +140,10 @@ public class SampleDataService {
         lsmPair.setFirstLsm(firstLSM);
         lsmPair.setSecondLsm(secondLSM);
         return lsmPair;
+    }
+
+    public void updateLMSMetadata(LSMImage lsmImage, String lsmMetadata) {
+        DomainUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
+        sampleImageDao.updateImageFiles(lsmImage);
     }
 }

@@ -30,27 +30,7 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
 
     @Override
     public CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> checkIfReadyFuture = new CompletableFuture<>();
-        List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
-        for (;;) {
-            if (uncompletedChildServices.isEmpty()) {
-                checkIfReadyFuture.complete(jacsServiceData);
-                break;
-            }
-            List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
-                .map(ti -> jacsServiceDataPersistence.findById(ti.getId()))
-                .filter(ti -> !ti.hasCompleted())
-                .collect(Collectors.toList());
-            uncompletedChildServices = firstPass;
-            try {
-                Thread.currentThread().sleep(1000);
-            } catch (InterruptedException e) {
-                logger.warn("Interrup {}", jacsServiceData, e);
-                checkIfReadyFuture.completeExceptionally(e);
-                break;
-            }
-        }
-        return checkIfReadyFuture;
+        return waitForChildServiceToComplete(jacsServiceData);
     }
 
     @Override
@@ -71,6 +51,30 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
         childServiceData.setOwner(parentService.getOwner());
         JacsServiceData serviceData = serviceDispatcher.submitServiceAsync(childServiceData, Optional.of(parentService));
         return serviceDispatcher.getServiceComputation(serviceData);
+    }
+
+    protected CompletionStage<JacsServiceData> waitForChildServiceToComplete(JacsServiceData jacsServiceData) {
+        CompletableFuture<JacsServiceData> waitForChildrenToEndFuture = new CompletableFuture<>();
+        List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+        for (;;) {
+            if (uncompletedChildServices.isEmpty()) {
+                waitForChildrenToEndFuture.complete(jacsServiceData);
+                break;
+            }
+            List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
+                    .map(ti -> jacsServiceDataPersistence.findById(ti.getId()))
+                    .filter(ti -> !ti.hasCompleted())
+                    .collect(Collectors.toList());
+            uncompletedChildServices = firstPass;
+            try {
+                Thread.currentThread().sleep(1000);
+            } catch (InterruptedException e) {
+                logger.warn("Interrup {}", jacsServiceData, e);
+                waitForChildrenToEndFuture.completeExceptionally(e);
+                break;
+            }
+        }
+        return waitForChildrenToEndFuture;
     }
 
 }

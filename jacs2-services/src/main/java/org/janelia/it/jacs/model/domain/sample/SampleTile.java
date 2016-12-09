@@ -71,10 +71,6 @@ public class SampleTile implements HasFiles {
         this.files = files;
     }
 
-    public void setFileType(FileType fileType, String fileName) {
-        files.put(fileType, fileName);
-    }
-
     public ObjectiveSample getParent() {
         return parent;
     }

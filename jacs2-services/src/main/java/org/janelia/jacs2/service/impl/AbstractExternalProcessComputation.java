@@ -1,5 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -33,6 +34,16 @@ public abstract class AbstractExternalProcessComputation extends AbstractService
         }
         cmdBuilder.append(exeName);
         return cmdBuilder.toString();
+    }
+
+    protected String getUpdatedEnvValue(String varName, String addedValue) {
+        Preconditions.checkArgument(StringUtils.isNotBlank(addedValue), "Cannot update environment variable " + varName + " with a null or empty value");
+        Optional<String> currentValue = getEnvVar(varName);
+        if (currentValue.isPresent()) {
+            return currentValue.get() + ":" + addedValue;
+        } else {
+            return addedValue;
+        }
     }
 
     @Override

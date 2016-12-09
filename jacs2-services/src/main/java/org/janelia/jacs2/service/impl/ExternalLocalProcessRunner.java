@@ -1,11 +1,13 @@
 package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,10 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
     public CompletionStage<JacsServiceData> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsServiceData serviceContext) {
         logger.debug("Begin local process invocation for {}", serviceContext);
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
+        if (StringUtils.isNotBlank(serviceContext.getWorkspace())) {
+            File workingDirectory = new File(serviceContext.getWorkspace());
+            processBuilder.directory(workingDirectory);
+        }
         processBuilder.inheritIO();
         processBuilder.environment().putAll(env);
         logger.info("Start {} with {}; env={}", serviceContext, cmdArgs, processBuilder.environment());

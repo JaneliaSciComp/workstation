@@ -8,13 +8,13 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-@Named("lsmMetadataFiles")
-public class CreateLsmMetadataFilesServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "lsmMetadataFiles";
+@Named("sampleLsmMetadata")
+public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescriptor {
+    private static String SERVICE_NAME = "sampleLsmMetadata";
 
-    @Named("lsmMetadataFilesService")
+    @Named("sampleLsmMetadataService")
     @Inject
-    private Instance<ServiceComputation> lsmMetadataFilesComputationSource;
+    private Instance<ServiceComputation> sampleLsmMetadataComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {
@@ -25,7 +25,7 @@ public class CreateLsmMetadataFilesServiceDescriptor implements ServiceDescripto
 
     @Override
     public ServiceComputation createComputationInstance() {
-        return lsmMetadataFilesComputationSource.get();
+        return sampleLsmMetadataComputationSource.get();
     }
 
 }

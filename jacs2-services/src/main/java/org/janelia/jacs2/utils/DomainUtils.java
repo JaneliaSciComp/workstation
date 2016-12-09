@@ -3,6 +3,8 @@ package org.janelia.jacs2.utils;
 import com.google.common.base.Splitter;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
@@ -95,6 +97,14 @@ public class DomainUtils {
             }
         }
         return mongoMapping;
+    }
+
+    public static void setFileType(HasFiles objWithFiles, FileType fileType, String fileName) {
+        if (StringUtils.isBlank(fileName)) {
+            objWithFiles.getFiles().remove(fileType);
+        } else {
+            objWithFiles.getFiles().put(fileType, fileName);
+        }
     }
 
 }

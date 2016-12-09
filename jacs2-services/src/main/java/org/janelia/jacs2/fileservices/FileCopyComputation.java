@@ -110,22 +110,13 @@ public class FileCopyComputation extends AbstractExternalProcessComputation {
 
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData si) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedLibraryPath());
+        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
     private FileCopyArgs getArgs(JacsServiceData jacsServiceData) {
         FileCopyArgs fileCopyArgs = new FileCopyArgs();
         new JCommander(fileCopyArgs).parse(jacsServiceData.getArgsAsArray());
         return fileCopyArgs;
-    }
-
-    private String getUpdatedLibraryPath() {
-        Optional<String> currentLibraryPath = getEnvVar(DY_LIBRARY_PATH_VARNAME);
-        if (currentLibraryPath.isPresent()) {
-            return libraryPath + ":" + currentLibraryPath.get();
-        } else {
-            return libraryPath;
-        }
     }
 
 }
