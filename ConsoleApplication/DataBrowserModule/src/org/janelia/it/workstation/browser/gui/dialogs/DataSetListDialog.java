@@ -87,6 +87,9 @@ public class DataSetListDialog extends ModalDialog {
                     else if ((DomainModelViewConstants.DATASET_SAGE_SYNC).equals(column.getName())) {
                         return dataSet.isSageSync();
                     }
+                    else if ((DomainModelViewConstants.DATASET_NEURON_SEPARATION).equals(column.getName())) {
+                        return dataSet.isNeuronSeparationSupported();
+                    }
                 }
                 return null;
             }
@@ -180,15 +183,17 @@ public class DataSetListDialog extends ModalDialog {
             @Override
             public Class<?> getColumnClass(int column) {
                 DynamicColumn dc = getColumns().get(column);
-                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)  ||
+                    dc.getName().equals(DomainModelViewConstants.DATASET_NEURON_SEPARATION)) {
                     return Boolean.class;
                 }
                 return super.getColumnClass(column);
             }
 
             @Override
-            protected void valueChanged(DynamicColumn dc, int row, Object data) {
-                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+            protected void valueChanged(final DynamicColumn dc, int row, Object data) {
+                if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC) ||
+                    dc.getName().equals(DomainModelViewConstants.DATASET_NEURON_SEPARATION)) {
                     
                     final Boolean selected = data == null ? Boolean.FALSE : (Boolean) data;
                     DynamicRow dr = getRows().get(row);
@@ -205,8 +210,14 @@ public class DataSetListDialog extends ModalDialog {
 
                         @Override
                         protected void doStuff() throws Exception {
-                            dataSet.setSageSync(selected);
-                            DomainMgr.getDomainMgr().getModel().save(dataSet);
+                            if (dc.getName().equals(DomainModelViewConstants.DATASET_SAGE_SYNC)) {
+                                dataSet.setSageSync(selected);
+                                DomainMgr.getDomainMgr().getModel().save(dataSet);
+                            }
+                            if (dc.getName().equals(DomainModelViewConstants.DATASET_NEURON_SEPARATION)) {
+                                dataSet.setNeuronSeparationSupported(selected);
+                                DomainMgr.getDomainMgr().getModel().save(dataSet);
+                            }
                         }
 
                         @Override
@@ -228,7 +239,8 @@ public class DataSetListDialog extends ModalDialog {
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
-    
+        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION).setEditable(true);
+
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
         addButton.addActionListener(new ActionListener() {

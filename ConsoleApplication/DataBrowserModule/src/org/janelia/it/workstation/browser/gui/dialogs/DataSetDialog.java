@@ -188,7 +188,7 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sampleImageInput);
 
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
-        attrPanel.add(sageSyncCheckbox, "gap para, span 2");
+        attrPanel.add(sageSyncCheckbox, "gap para");
 
         neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
         neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
