@@ -7,7 +7,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.service.impl.AbstractLocalProcessComputation;
+import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
+import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 
 import javax.inject.Inject;
@@ -22,16 +23,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("fileCopyService")
-public class FileCopyComputation extends AbstractLocalProcessComputation {
+public class FileCopyComputation extends AbstractExternalProcessComputation {
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
+    @Named("localProcessRunner") @Inject
+    private ExternalProcessRunner processRunner;
     @PropertyValue(name = "VAA3D.LibraryPath")
     @Inject
     private String libraryPath;
     @PropertyValue(name = "Convert.ScriptPath")
     @Inject
     private String scriptName;
+
 
     static class FileCopyArgs {
         @Parameter(names = "-src", description = "Source file name", required = true)
@@ -42,6 +46,11 @@ public class FileCopyComputation extends AbstractLocalProcessComputation {
         boolean deleteSourceFile = false;
         @Parameter(names = "-convert8", arity = 0, description = "If set it converts the image to 8bit", required = false)
         boolean convertTo8Bits = false;
+    }
+
+    @Override
+    protected ExternalProcessRunner getProcessRunner() {
+        return processRunner;
     }
 
     @Override
@@ -87,11 +96,10 @@ public class FileCopyComputation extends AbstractLocalProcessComputation {
     }
 
     @Override
-    protected List<String> prepareCommandLine(JacsServiceData jacsServiceData) {
+    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
         FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
-
+        jacsServiceData.setServiceCmd(getFullExecutableName(scriptName));
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
-        cmdLineBuilder.add(getFullExecutableName(scriptName));
         cmdLineBuilder.add(fileCopyArgs.sourceFilename);
         cmdLineBuilder.add(fileCopyArgs.targetFilename);
         if (fileCopyArgs.convertTo8Bits) {

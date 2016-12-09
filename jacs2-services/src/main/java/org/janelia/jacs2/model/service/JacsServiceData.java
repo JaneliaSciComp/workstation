@@ -38,7 +38,7 @@ public class JacsServiceData implements BaseEntity {
     private String errorPath;
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "jacs_service_arg")
-    private List<String> args;
+    private List<String> args = new ArrayList<>();
     @Column(name = "workspace")
     private String workspace;
     @Column(name = "parent_jacs_service_data_id")

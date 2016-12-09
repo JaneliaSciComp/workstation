@@ -8,13 +8,15 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 
 public abstract class AbstractExternalProcessComputation extends AbstractServiceComputation {
     @PropertyValue(name = "Executables.ModuleBase")
     @Inject
     private String executablesBaseDir;
 
-    protected abstract List<String> prepareCommandLine(JacsServiceData jacsServiceData);
+    protected abstract ExternalProcessRunner getProcessRunner();
+    protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
     protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);
 
     protected Optional<String> getEnvVar(String varName) {
@@ -31,5 +33,10 @@ public abstract class AbstractExternalProcessComputation extends AbstractService
         }
         cmdBuilder.append(exeName);
         return cmdBuilder.toString();
+    }
+
+    @Override
+    public CompletionStage<JacsServiceData> processData(JacsServiceData jacsServiceData) {
+        return getProcessRunner().runCmd(jacsServiceData.getServiceCmd(), prepareCmdArgs(jacsServiceData), prepareEnvironment(jacsServiceData), jacsServiceData);
     }
 }
