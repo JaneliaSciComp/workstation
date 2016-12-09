@@ -40,7 +40,7 @@ import org.janelia.console.viewerapi.Command;
  */
 public class CreateNeuronCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command
+implements UndoableEdit, Command, VertexAdder
 {
     private final String initialNeuronName;
     private final float[] initialCoordinates;
@@ -48,6 +48,8 @@ implements UndoableEdit, Command
     
     private NeuronModel newNeuron = null;
     private final NeuronSet workspace;
+    
+    NeuronVertex rootVertex = null;
     
     public CreateNeuronCommand(
             NeuronSet workspace,
@@ -66,9 +68,9 @@ implements UndoableEdit, Command
         newNeuron = workspace.createNeuron(initialNeuronName);
         if (newNeuron == null)
             return false;
-        NeuronVertex root = newNeuron.appendVertex(
+        rootVertex = newNeuron.appendVertex(
                 null, initialCoordinates, initialRadius);
-        if (root == null) {
+        if (rootVertex == null) {
             workspace.remove(newNeuron);
             return false;
         }        
@@ -101,6 +103,17 @@ implements UndoableEdit, Command
             return;
         }
         try {
+            // First remove the root vertex
+            if (rootVertex != null) {
+                try {
+                    if (! newNeuron.deleteVertex(rootVertex))
+                        die();
+                } catch (Exception exc) {
+                    // Something went wrong. Perhaps this anchor no longer exists
+                    die(); // This Command object is no longer useful
+                }
+                rootVertex = null;
+            }
             if (! workspace.remove(newNeuron)) {
                 newNeuron = null;
                 die();
@@ -110,5 +123,19 @@ implements UndoableEdit, Command
             newNeuron = null;
             die(); // This Command object is no longer useful
         }
+    }
+
+    @Override
+    public NeuronVertex getAddedVertex() {
+        return rootVertex;
+    }
+
+    @Override
+    public NeuronVertex getParentVertex() {
+        return null; // root vertex has no parent
+    }
+    
+    public NeuronModel getNewNeuron() {
+        return newNeuron;
     }
 }

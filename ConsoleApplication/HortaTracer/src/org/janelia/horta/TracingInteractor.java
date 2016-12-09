@@ -64,10 +64,13 @@ import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.VertexAdder;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adapted from C:\Users\brunsc\Documents\Fiji_Plugins\Auto_Trace\Semi_Trace.java
@@ -104,7 +107,7 @@ public class TracingInteractor extends MouseAdapter
     private final UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
-    Map<List<Float>, AppendNeuronVertexCommand> appendCommandForVertex = new HashMap<>();
+    Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
             // new TwoDimensionalRadiusEstimator(); // TODO: Use this again
@@ -113,6 +116,8 @@ public class TracingInteractor extends MouseAdapter
     private StatusDisplayer.Message previousHoverMessage;
     
     private NeuronSet defaultWorkspace = null;
+
+    private Logger log = LoggerFactory.getLogger(this.getClass());
 
     public NeuronSet getDefaultWorkspace() {
         return defaultWorkspace;
@@ -210,7 +215,7 @@ public class TracingInteractor extends MouseAdapter
                 }
                 else {
                     if (context.canCreateNeuron()) {
-                        // context.createNeuron(); // TODO: still needs work
+                        context.createNeuron();
                     }
                 }
             }
@@ -655,7 +660,7 @@ public class TracingInteractor extends MouseAdapter
         }
         // Maybe set parent to previous parent
         if (removedParent != null) {
-            AppendNeuronVertexCommand removedParentAppendCommand = appendCommandForVertex.get(vtxKey(removedParent));
+            VertexAdder removedParentAppendCommand = appendCommandForVertex.get(vtxKey(removedParent));
             if (removedParentAppendCommand != null) {
                 NeuronVertex previousParent = removedParentAppendCommand.getParentVertex();
                 if (previousParent != null) {
@@ -721,7 +726,7 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
             // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
-            AppendNeuronVertexCommand parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
+            VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
             AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(
                     parentNeuron, 
                     parentVertex, 
@@ -732,13 +737,12 @@ public class TracingInteractor extends MouseAdapter
             if (appendCmd.execute()) {
                 long endExecuteTime = System.nanoTime();
                 // System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
-                NeuronVertex addedVertex = appendCmd.getAppendedVertex();
+                NeuronVertex addedVertex = appendCmd.getAddedVertex();
                 if (addedVertex != null) {
                     selectParentVertex(addedVertex, parentNeuron);
                     // undoRedoManager.addEdit(appendCmd);
                     undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
                     appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
-                    long endAppendTime = System.nanoTime();
                     return true;
                 }
             }
@@ -793,7 +797,13 @@ public class TracingInteractor extends MouseAdapter
             String errorMessage = "Failed to create neuron";
             try {
                 if (cmd.execute()) {
-                    // TODO: log creation event
+                    log.info("Neuron created in Horta");
+                    NeuronVertex addedVertex = cmd.getAddedVertex();
+                    if (addedVertex != null) {
+                        selectParentVertex(addedVertex, cmd.getNewNeuron());
+                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                        appendCommandForVertex.put(vtxKey(addedVertex), cmd);
+                    }
                     return true;
                 }
             }

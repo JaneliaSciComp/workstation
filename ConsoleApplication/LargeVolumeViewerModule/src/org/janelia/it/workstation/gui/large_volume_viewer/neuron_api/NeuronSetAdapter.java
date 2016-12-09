@@ -100,41 +100,7 @@ implements NeuronSet// , LookupListener
             return null;
         }
         return new NeuronModelAdapter(neuron, annotationModel, workspace, sample);
-    }
-    
-    private boolean removeNeuron(NeuronModel neuron) {
-        if (! (neuron instanceof NeuronModelAdapter))
-            return false;
-        
-        NeuronModelAdapter nma = (NeuronModelAdapter) neuron;
-        TmNeuronMetadata tmn = nma.getTmNeuronMetadata();
-        TmNeuronMetadata previousNeuron = annotationModel.getCurrentNeuron();
-        boolean removingCurrentNeuron = (previousNeuron.getId() == tmn.getId());
-        
-        if (! super.remove(nma))
-            return false;
-        
-        if (! removingCurrentNeuron) 
-            annotationModel.selectNeuron(tmn);
-        
-        try {
-            annotationModel.deleteCurrentNeuron();
-        } catch (Exception ex) {
-            // Exceptions.printStackTrace(ex);
-        }
-        if (! removingCurrentNeuron) // restore previous selected neuron
-            annotationModel.selectNeuron(previousNeuron);
-        
-        return true;
-    }
-    
-    @Override
-    public boolean remove(Object o)
-    {
-        if (! (o instanceof NeuronModelAdapter))
-            return super.remove(o);
-        return removeNeuron((NeuronModelAdapter) o);
-    }    
+    }  
     
     public void observe(AnnotationModel annotationModel)
     {
@@ -536,7 +502,30 @@ implements NeuronSet// , LookupListener
         @Override
         public boolean remove(Object o)
         {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if (! ( o instanceof NeuronModelAdapter ))
+                return false;
+            
+            NeuronModelAdapter neuron = (NeuronModelAdapter)o;
+            TmNeuronMetadata tmn = neuron.getTmNeuronMetadata();
+            TmNeuronMetadata previousNeuron = annotationModel.getCurrentNeuron();
+            Long neuronId = tmn.getId();
+            boolean removingCurrentNeuron = (previousNeuron.getId() == neuronId);
+
+            if (! removingCurrentNeuron) 
+                annotationModel.selectNeuron(tmn);
+            try {
+                annotationModel.deleteCurrentNeuron();
+            } catch (Exception exc) {
+                return false;
+            }
+            finally {
+                if (! removingCurrentNeuron) // restore previous selected neuron
+                    annotationModel.selectNeuron(previousNeuron);
+            }
+
+            cachedNeurons.remove(neuronId);
+
+            return true;
         }
 
         @Override
