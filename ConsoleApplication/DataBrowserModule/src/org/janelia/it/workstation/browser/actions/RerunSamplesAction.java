@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.enums.SubjectRole;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -115,7 +116,8 @@ public class RerunSamplesAction extends AbstractAction {
                     // Wish to obtain very latest version of the sample.  Avoid letting users step on each other.
                     sample = DomainMgr.getDomainMgr().getModel().getDomainObject(Sample.class, sample.getId());
                     if (sample.getStatus() != null  &&
-                        (sample.getStatus().equals(DomainConstants.VALUE_MARKED)  ||  sample.getStatus().equals(DomainConstants.VALUE_PROCESSING))) {
+                        (sample.getStatus().equals(PipelineStatus.Scheduled.toString())  ||
+                                sample.getStatus().equals(PipelineStatus.Processing.toString()))) {
                         logger.info("Bypassing sample " + sample.getName() + " because it is already marked {}.", sample.getStatus());
                         continue;
                     }
@@ -131,7 +133,8 @@ public class RerunSamplesAction extends AbstractAction {
                             taskParameters, TASK_LABEL, TASK_LABEL);
                     try {
                         task = StateMgr.getStateMgr().saveOrUpdateTask(task);
-                        DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
+                        DomainMgr.getDomainMgr().getModel().addPipelineStatusTransition(sample, PipelineStatus.Scheduled);
+                        DomainMgr.getDomainMgr().getModel().updateProperty(sample, "status", PipelineStatus.Scheduled.toString());
                         StateMgr.getStateMgr().dispatchJob(TASK_LABEL, task);
                     } 
                     catch (Exception ex) {

@@ -1,0 +1,563 @@
+ <!-- 
+      Fully process a single objective for a sample. Potentially this can include merging LSMs, stitching and blending them, 
+      aligning, and running analysis algorithms such as neuron separation. 
+ -->
+ <process name="FlyLight Sample Pipeline" processor="queue/samplePipelineLauncher" startEvent="pending">
+	<sequence name="Main">
+
+        <input name="SAMPLE_ENTITY_ID"/>                 <!-- The GUID of the Sample to process -->
+        <input name="OBJECTIVE"/>                        <!-- The objective to process -->  
+        <input name="PIPELINE_NAME"/>                    <!-- The name of the pipeline being run --> 
+        <input name="PIPELINE_PROCESS"/>                 <!-- The name of the process file being run  --> 
+        <input name="MERGE_ALGORITHMS"/>                 <!-- Comma-delimited list of merging algorithms to use (see MergeAlgorithm enum) --> 
+        <input name="STITCH_ALGORITHMS"/>                <!-- Comma-delimited list of stitching algorithms to use (see StitchAlgorithm enum) --> 
+        <input name="ALIGNMENT_ALGORITHMS"/>             <!-- Comma-delimited list of alignment algorithms to use (see AlignmentAlgorithm enum) --> 
+        <input name="ALIGNMENT_ALGORITHM_PARAMS"/>       <!-- Comma-delimited list of parameters, one for each alignment algorithm --> 
+        <input name="ALIGNMENT_ALGORITHM_RESULT_NAMES"/> <!-- Comma-delimited list of alignment result names, one for each alignment algorithm --> 
+        <input name="SKIP_ALIGNMENT_TILE_FILTER"/>       <!-- Regular expression selecting the tiles that should skip alignment --> 
+        <input name="ANALYSIS_ALGORITHMS"/>              <!-- Comma-delimited list of analysis algorithms to use (see AnalysisAlgorithm enum) --> 
+        <input name="CHANNEL_DYE_SPEC"/>                 <!-- Mapping of dyes to content tags --> 
+        <input name="OUTPUT_CHANNEL_ORDER"/>             <!-- List of content tags describing the channels to output in the final images --> 
+        <input name="OUTPUT_COLOR_SPEC"/>                <!-- Color specification for the post-processed MIPs and movies --> 
+        <input name="IMAGE_TYPE"/>                       <!-- Type of image (e.g. screen, polarity, MCFO, etc) --> 
+        <input name="REUSE_SUMMARY"/>                    <!-- If true, reuse summary results from previous pipeline run when available --> 
+        <input name="REUSE_PROCESSING"/>                 <!-- If true, reuse processing results from previous pipeline run when available --> 
+        <input name="REUSE_POST"/>                       <!-- If true, reuse post-processing results from previous pipeline run when available --> 
+        <input name="REUSE_ALIGNMENT"/>                  <!-- If true, reuse alignment results from previous pipeline run when available --> 
+        <input name="PERSIST"/>                          <!-- Persist the results in the database? Set to false if the results will be used by another pipeline and then discarded --> 
+        
+        <!-- Import variables from the task which do not override the above parameters -->
+        <operation name="Import Variables" processor="org.janelia.it.jacs.compute.service.common.InitVariablesFromTaskService">
+            <input name="OVERRIDE" value="false"/>
+            <input name="SAMPLE_ENTITY_ID"/>
+            <input name="OBJECTIVE"/>
+            <input name="PIPELINE_NAME"/>
+            <input name="PIPELINE_PROCESS"/>
+            <input name="TASK_PARAMETER_MAP">
+                <entry key="sample entity id" value="SAMPLE_ENTITY_ID"/>
+                <entry key="objective" value="OBJECTIVE"/>
+                <entry key="pipeline name" value="PIPELINE_NAME"/>
+                <entry key="pipeline process" value="PIPELINE_PROCESS"/>
+            </input>
+            <output name="SAMPLE_ENTITY_ID"/>
+            <output name="OBJECTIVE"/>
+            <output name="PIPELINE_NAME"/>
+            <output name="PIPELINE_PROCESS"/>
+        </operation>
+            
+        <!-- Import variables from the task to override any of the above parameters 
+             Yes, this can be confusing, but it's necessary for now. It should definitely be refactored later so that all inputs come from the same place. -->
+        <operation name="Import Variables" processor="org.janelia.it.jacs.compute.service.common.InitVariablesFromTaskService">
+            <input name="OVERRIDE" value="true"/>
+            <input name="MERGE_ALGORITHMS"/>
+            <input name="STITCH_ALGORITHMS"/>
+            <input name="ALIGNMENT_ALGORITHMS"/>
+            <input name="ALIGNMENT_ALGORITHM_PARAMS"/>
+            <input name="ALIGNMENT_ALGORITHM_RESULT_NAMES"/>
+            <input name="ANALYSIS_ALGORITHMS"/>
+            <input name="REUSE_SUMMARY"/>
+            <input name="REUSE_PROCESSING"/>
+            <input name="REUSE_POST"/>
+            <input name="REUSE_ALIGNMENT"/>
+            <input name="PERSIST"/>
+            <input name="TASK_PARAMETER_MAP">
+                <entry key="merge algorithms" value="MERGE_ALGORITHMS"/>
+                <entry key="stitch algorithms" value="STITCH_ALGORITHMS"/>
+                <entry key="alignment algorithms" value="ALIGNMENT_ALGORITHMS"/>
+                <entry key="alignment algorithm parameters" value="ALIGNMENT_ALGORITHM_PARAMS"/>
+                <entry key="alignment algorithm result names" value="ALIGNMENT_ALGORITHM_RESULT_NAMES"/>
+                <entry key="analysis algorithms" value="ANALYSIS_ALGORITHMS"/>
+                <entry key="reuse summary" value="REUSE_SUMMARY"/>
+                <entry key="reuse processing" value="REUSE_PROCESSING"/>
+                <entry key="reuse post" value="REUSE_POST"/>
+                <entry key="reuse alignment" value="REUSE_ALIGNMENT"/>
+                <entry key="persist" value="PERSIST"/>
+            </input>
+            <output name="MERGE_ALGORITHMS"/>
+            <output name="STITCH_ALGORITHMS"/>
+            <output name="ALIGNMENT_ALGORITHMS"/>
+            <output name="ALIGNMENT_ALGORITHM_PARAMS"/>
+            <output name="ALIGNMENT_ALGORITHM_RESULT_NAMES"/>
+            <output name="ANALYSIS_ALGORITHMS"/>
+            <output name="REUSE_SUMMARY"/>
+            <output name="REUSE_PROCESSING"/>
+            <output name="REUSE_POST"/>
+            <output name="REUSE_ALIGNMENT"/>
+            <output name="PERSIST"/>
+        </operation>
+        
+        <!-- Init default values for uninitialized variables --> 
+        <operation name="Init Variables" processor="org.janelia.it.jacs.compute.service.common.InitVariablesService">
+            <input name="SKIP_ALIGNMENT_TILE_FILTER"/>
+            <input name="PERSIST"/>
+            <input name="OVERRIDE" value="false"/>
+            <input name="PROCESS_VARIABLE_MAP">
+                <entry key="SKIP_ALIGNMENT_TILE_FILTER" value="(?i).*lamina.*"/> <!-- By default, skip alignment if any lamina tiles are present. -->
+                <entry key="PERSIST" value="true"/>
+            </input>
+            <output name="SKIP_ALIGNMENT_TILE_FILTER"/>
+            <output name="PERSIST"/>
+        </operation>
+        
+        <sequence if="PERSIST=false">
+        
+            <!-- Force all reuse flags to false, because if we're not persisting the output then we need a clean run with temporary lossless output --> 
+            <operation name="Init Variables" processor="org.janelia.it.jacs.compute.service.common.InitVariablesService">
+                <input name="REUSE_SUMMARY"/>
+                <input name="REUSE_PROCESSING"/>
+                <input name="REUSE_POST"/>
+                <input name="REUSE_ALIGNMENT"/>
+                <input name="OVERRIDE" value="true"/>
+                <input name="PROCESS_VARIABLE_MAP">
+                    <entry key="REUSE_SUMMARY" value="false"/>
+                    <entry key="REUSE_PROCESSING" value="false"/>
+                    <entry key="REUSE_POST" value="false"/>
+                    <entry key="REUSE_ALIGNMENT" value="false"/>
+                </input>
+                <output name="REUSE_SUMMARY"/>
+                <output name="REUSE_PROCESSING"/>
+                <output name="REUSE_POST"/>
+                <output name="REUSE_ALIGNMENT"/>
+            </operation>
+        
+        </sequence>
+
+        <!-- Pre-processing only if we're persisting results -->
+        <sequence if="PERSIST=true">
+            
+            <!-- Set the sample status -->
+            <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="PIPELINE_NAME"/>
+                <input name="STATUS" value="Processing"/>
+            </operation>
+    
+            <!-- Create a pipeline run -->
+            <operation name="Create Pipeline Run" processor="org.janelia.it.jacs.compute.service.domain.sample.CreatePipelineRunEntityService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="PIPELINE_NAME"/>
+                <input name="PIPELINE_PROCESS"/>
+                <output name="PIPELINE_RUN_ENTITY_ID"/>
+            </operation>
+            
+            <!-- Run summary service on all LSMs -->
+            <include name="Summary" process="FlyLightLSMSummaryPipeline" startEvent="running">
+                <input name="PIPELINE_RUN_ENTITY_ID"/>
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="REUSE_SUMMARY"/>
+                <input name="CHANNEL_DYE_SPEC"/>
+                <output name="SUMMARY_RESULT_FILE_NODE"/>
+            </include>
+            
+        </sequence>
+        
+        <!-- Read from the Entity model and export the data into parameters that will be used by the subsequent services -->
+        <operation name="Get Sample Attributes" processor="org.janelia.it.jacs.compute.service.domain.sample.InitSampleAttributesService">
+            <input name="SAMPLE_ENTITY_ID"/>
+            <input name="OBJECTIVE"/>
+            <output name="SAMPLE_AREAS"/>
+            <output name="SAMPLE_AREA"/>
+        </operation>
+        
+        <sequence forEach="SAMPLE_AREA">
+            
+            <!-- Decide which types of processing will be run -->
+            <operation name="Choose Sample Area Processing Steps" processor="org.janelia.it.jacs.compute.service.domain.sample.ChooseSampleAreaPipelineStepsService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="SAMPLE_AREA"/>
+                <input name="MERGE_ALGORITHMS"/>
+                <input name="STITCH_ALGORITHMS"/>
+                <input name="ANALYSIS_ALGORITHMS"/>
+                <output name="RUN_PROCESSING"/>
+                <output name="RUN_MERGE"/>
+                <output name="RUN_STITCH"/>
+                <output name="RUN_ANALYSIS"/>
+                <output name="MERGE_ALGORITHM"/>
+                <output name="STITCH_ALGORITHM"/>
+                <output name="ANALYSIS_ALGORITHM"/>
+            </operation>
+            
+            <operation name="Filter Anatomical Areas from Stitching" processor="org.janelia.it.jacs.compute.service.domain.sample.FilterExcludedImagesService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="FILTER_EXCLUDED_IMAGE_MODE" value="Stitcher"/>
+                <input name="SAMPLE_AREA"/>
+                <input name="RUN_STITCH"/>
+                <input name="RUN_ANALYSIS"/>
+                <input name="RUN_ALIGNMENT"/>
+                <output name="RUN_STITCH"/>
+                <output name="RUN_ANALYSIS"/>
+                <output name="RUN_ALIGNMENT"/>
+                <output name="USER_OMITTED_STITCH"/>
+            </operation>
+
+    		<sequence if="REUSE_PROCESSING=true">
+        		
+                <!-- Reuse sample processing from previous pipeline run -->
+                <operation name="Reuse Sample Processing Entity" processor="org.janelia.it.jacs.compute.service.domain.sample.ReuseSampleProcessingResultService">
+                    <input name="SAMPLE_ENTITY_ID"/>
+                    <input name="OBJECTIVE"/>
+                    <input name="PIPELINE_RUN_ENTITY_ID"/>
+                    <input name="SAMPLE_AREA"/>
+                    <output name="SAMPLE_AREA"/>
+                    <output name="RUN_PROCESSING"/>
+                    <output name="RESULT_ENTITY_ID"/>
+                </operation>
+            
+                <!-- Was there a sample processing result that could be reused? -->
+                <sequence if="RUN_PROCESSING=false">
+                                        
+                    <!-- Extract default image filepath --> 
+                    <operation name="Get Default Image" processor="org.janelia.it.jacs.compute.service.common.InitVariablesFromBeanService">
+                        <input name="BEAN" value="$V{SAMPLE_AREA}"/>
+                        <input name="BEAN_PROPERTY_1" value="stitchedFilepath"/>
+                        <input name="PROCESS_VARIABLE_1" value="DEFAULT_IMAGE_FILENAME"/>
+                        <output name="DEFAULT_IMAGE_FILENAME"/>
+                    </operation>
+                    
+                </sequence>
+                
+            </sequence>
+            
+            <sequence if="RUN_PROCESSING=true" name="Sample processing" startEvent="running">
+            
+        	    <!-- Create a sample result node, with nested result nodes for all the pipeline steps -->
+        	    <operation name="Create Sample Result Nodes" processor="org.janelia.it.jacs.compute.service.domain.node.CreateSampleResultFileNodeService">
+        	        <output name="RESULT_FILE_NODE"/>
+        	        <output name="RESULT_FILE_NODE_ID"/>
+        	        <output name="SAMPLE_RESULT_FILE_NODE"/>
+        	        <output name="MERGE_RESULT_FILE_NODE"/>
+        	        <output name="GROUP_RESULT_FILE_NODE"/>
+        	        <output name="STITCH_RESULT_FILE_NODE"/>
+        	        <output name="MIPS_RESULT_FILE_NODE"/>
+        	    </operation>
+        	    
+        	    <!-- Read from the Entity model and export the data into parameters that will be used by the subsequent services -->
+        	    <sequence name="Wait Async" waitForAsync="true">
+    			    <operation name="Init Processing Parameters" processor="org.janelia.it.jacs.compute.service.domain.sample.InitSampleProcessingParametersService">
+    			        <input name="MERGE_RESULT_FILE_NODE"/>
+    			        <input name="STITCH_RESULT_FILE_NODE"/>
+    					<input name="SAMPLE_ENTITY_ID"/>
+                        <input name="OBJECTIVE"/>
+                        <input name="SAMPLE_AREA"/>
+    					<input name="RUN_STITCH"/>
+    					<output name="SAMPLE_AREA"/>
+    					<output name="STACK_FILENAMES"/>
+    					<output name="SAMPLE_PROCESSING_RESULTS_NAME"/>
+    				</operation>
+        	    </sequence>
+                
+    		    <!-- Create a result node for this group -->
+    		    <operation name="Create Temp Result Node" processor="org.janelia.it.jacs.compute.service.domain.node.CreateNamedResultFileNodeService">
+    			    <input name="NAME" value="Temp"/>
+    			    <input name="OUTPUT_VAR_NAME" value="LSM_FILE_NODE"/>
+    		        <output name="LSM_FILE_NODE"/>
+    		        <output name="LSM_FILE_NODE_ID"/>
+    		    </operation>
+    		    
+    		    <!-- Get the LSM file paths and update the bulk merge parameters to use the copied files -->
+		        <operation name="Get LSM file paths" processor="org.janelia.it.jacs.compute.service.domain.sample.GetLsmFilePathsService">
+                    <input name="RESULT_FILE_NODE" value="$V{LSM_FILE_NODE}"/>
+					<input name="SAMPLE_AREA"/>
+                    <output name="SAMPLE_AREA"/>
+                    <output name="LSM_SOURCE_FILE_PATHS"/>
+                    <output name="LSM_TARGET_FILE_PATHS"/>
+		        </operation>
+    		
+                <!-- Copy the files from archive -->
+                <sequence name="Wait Async" waitForAsync="true">
+                    <operation name="Copy LSMs" processor="queue/gridSubmitAndWait">
+                        <input name="iservice" value="org.janelia.it.jacs.compute.service.utility.ArchiveGridService"/>
+                        <input name="RESULT_FILE_NODE" value="$V{LSM_FILE_NODE}"/>
+                        <input name="SOURCE_FILE_PATHS" value="$V{LSM_SOURCE_FILE_PATHS}"/>
+                        <input name="TARGET_FILE_PATHS" value="$V{LSM_TARGET_FILE_PATHS}"/>
+                    </operation>
+                </sequence>
+                
+                <!-- Run merging? -->
+            	<sequence if="RUN_MERGE=true">
+        		     
+        		    <!-- Despite this loop, currently this pipeline supports only a single merge algorithm at time. -->
+                    <sequence forEach="MERGE_ALGORITHM">
+                    
+            		    <!-- Merge all the LSM pairs in parallel -->
+            	        <sequence name="Merge LSM Pairs" waitForAsync="true">
+            		        <operation name="Merge LSM Pairs" processor="queue/gridSubmitAndWait">
+            		            <input name="iservice" value="org.janelia.it.jacs.compute.service.vaa3d.Vaa3DBulkMergeService"/>
+            		    		<input name="RESULT_FILE_NODE" value="$V{MERGE_RESULT_FILE_NODE}"/>
+            					<input name="SAMPLE_AREA"/>
+            					<input name="MERGE_ALGORITHM"/>
+            		        </operation>
+            	        </sequence>
+            	        
+                    </sequence>
+        		
+                </sequence>
+                
+                <!-- Rearrange the channels on each tile so that they are in the correct output format -->
+                <sequence name="Convert to sample image" waitForAsync="true">
+                    <operation name="Convert to sample image" processor="queue/gridSubmitAndWait">
+                        <input name="iservice" value="org.janelia.it.jacs.compute.service.vaa3d.Vaa3DConvertToSampleImageService"/>
+                        <input name="RESULT_FILE_NODE" value="$V{MERGE_RESULT_FILE_NODE}"/>
+                        <input name="MERGE_ALGORITHM"/>
+                        <input name="METADATA_RESULT_FILE_NODE" value="$V{SUMMARY_RESULT_FILE_NODE}"/>
+                        <input name="RUN_MERGE"/>
+                        <input name="SAMPLE_ENTITY_ID"/>
+                        <input name="OBJECTIVE"/>
+                        <input name="SAMPLE_AREA"/>
+                        <input name="CHANNEL_DYE_SPEC"/>
+                        <input name="OUTPUT_CHANNEL_ORDER"/>
+                        <output name="CHANNEL_SPEC"/>
+                        <output name="SIGNAL_CHANNELS"/>
+                        <output name="REFERENCE_CHANNEL"/>
+                        <output name="LSM_CHANNEL_MAPPING"/>
+                    </operation>
+                </sequence>
+        	            	
+    		    <!-- We're done with the LSMs -->
+    		    <operation name="Remove Temp Result Nodes" processor="org.janelia.it.jacs.compute.service.domain.node.TrashFileNodeService">
+    		        <input name="FILE_NODE_ID" value="$V{LSM_FILE_NODE_ID}"/>
+    		    </operation>
+    		   
+            	<!-- Run stitcher? -->
+            	<sequence if="RUN_STITCH=true" name="Tile stitching">
+        	
+        		    <!-- Determine tile groupings and pick the largest group for processing -->
+        	        <sequence name="Determine Stitch Grouping" waitForAsync="true">
+        		        <operation name="Stitch Grouping" processor="queue/gridSubmitAndWait">
+        		            <input name="iservice" value="org.janelia.it.jacs.compute.service.vaa3d.Vaa3DStitchGroupingService"/>
+        		    		<input name="RESULT_FILE_NODE" value="$V{GROUP_RESULT_FILE_NODE}"/>
+        		    		<input name="INPUT_FILE_NODE" value="$V{MERGE_RESULT_FILE_NODE}"/>
+        					<input name="REFERENCE_CHANNEL"/>
+        					<input name="SAMPLE_AREA"/>
+        					<output name="SAMPLE_AREA"/>
+        					<output name="RUN_STITCH"/>
+        		        </operation>
+        	        </sequence>
+	        	        
+                	<!-- Run the stitcher, unless if the grouper decides we don't need to -->
+	            	<sequence if="RUN_STITCH=true">
+	            	
+	        		    <!-- Stitch the merged files into a single result -->
+	        	        <sequence name="Stitch and Blend" waitForAsync="true">
+	        		        <operation name="Stitch and Blend" processor="queue/gridSubmitAndWait">
+	        		            <input name="iservice" value="org.janelia.it.jacs.compute.service.vaa3d.Vaa3DStitchAndBlendService"/>
+	        		    		<input name="RESULT_FILE_NODE" value="$V{STITCH_RESULT_FILE_NODE}"/>
+	        		    		<input name="INPUT_FILE_NODE" value="$V{GROUP_RESULT_FILE_NODE}"/>
+                                <input name="SAMPLE_AREA"/>
+	        					<input name="REFERENCE_CHANNEL"/>
+	        		        </operation>
+	        	        </sequence>
+	        	        
+	                </sequence>
+	                
+                </sequence>
+                
+                <!-- Else, or if the grouper determined we don't need to run the stitcher -->
+            	<sequence if="RUN_STITCH=false">
+        	    
+        		    <!-- If we're not stitching then the single tile is considered the stitched file -->
+        		    <operation name="Create Parameters" processor="org.janelia.it.jacs.compute.service.domain.sample.InitSingleMergeParametersService">
+        		        <input name="USER_OMITTED_STITCH"/>
+        		        <input name="SAMPLE_AREA"/>
+        		        <output name="SAMPLE_AREA"/>
+        			</operation>
+                    
+                </sequence>
+            
+                <!-- Extract default image filepath --> 
+                <operation name="Get Default Image" processor="org.janelia.it.jacs.compute.service.common.InitVariablesFromBeanService">
+                    <input name="BEAN" value="$V{SAMPLE_AREA}"/>
+                    <input name="BEAN_PROPERTY_1" value="stitchedFilepath"/>
+                    <input name="PROCESS_VARIABLE_1" value="DEFAULT_IMAGE_FILENAME"/>
+                    <output name="DEFAULT_IMAGE_FILENAME"/>
+                </operation>
+                
+                <!-- Generate and register MIPs only if we're persisting results -->
+                <sequence if="PERSIST=true">
+                     
+            	    <!-- Generate MIP for the stitched file -->
+                    <sequence name="Generate sample MIPs" waitForAsync="true">
+            	        <operation name="Generate MIPs" processor="queue/gridSubmitAndWait">
+            	            <input name="iservice" value="org.janelia.it.jacs.compute.service.neuronSeparator.MIPGenerationService"/>
+            				<input name="RESULT_FILE_NODE" value="$V{MIPS_RESULT_FILE_NODE}"/>
+            				<input name="INPUT_FILENAMES" value="$V{STACK_FILENAMES}"/>
+            				<input name="SIGNAL_CHANNELS"/>
+            				<input name="REFERENCE_CHANNEL"/>
+            	        </operation>
+                    </sequence>
+                    
+            	    <!-- Load the sample analysis results into the database -->
+            		<operation name="Discover Sample Processing Results" processor="org.janelia.it.jacs.compute.service.domain.discovery.SampleProcessingResultsDiscoveryService">
+            			<input name="ROOT_FILE_NODE" value="$V{SAMPLE_RESULT_FILE_NODE}"/>
+            			<input name="RESULT_ENTITY_NAME" value="$V{SAMPLE_PROCESSING_RESULTS_NAME}"/>
+            			<input name="SAMPLE_ENTITY_ID"/>
+                        <input name="OBJECTIVE"/>
+                        <input name="PIPELINE_RUN_ENTITY_ID"/>
+            			<input name="CHANNEL_SPEC"/>
+            			<input name="SAMPLE_AREA"/>
+            			<input name="LSM_CHANNEL_MAPPING"/>
+            			<input name="USER_OMITTED_STITCH"/>
+            			<output name="RESULT_ENTITY_ID"/>
+            	    </operation>
+        		
+                    <sequence if="RUN_ANALYSIS=true">
+                        <sequence forEach="ANALYSIS_ALGORITHM">
+                                
+                            <!-- Get analysis parameters -->
+                            <operation name="Get Parameters" processor="org.janelia.it.jacs.compute.service.domain.sample.InitAnalysisParametersService">
+                                <input name="ANALYSIS_ALGORITHM"/>
+                                <output name="ANALYSIS_PIPELINE_NAME"/>
+                            </operation>
+                    
+                            <!-- Run neuron separation on prealigned data -->
+                            <include process="FlyLightSeparationPipeline" name="Unaligned neuron separation" startEvent="running">
+                                <input name="SAMPLE_ENTITY_ID"/>
+                                <input name="OBJECTIVE"/>
+                                <input name="PIPELINE_RUN_ENTITY_ID"/>
+                                <input name="ROOT_ENTITY_ID" value="$V{RESULT_ENTITY_ID}"/>
+                                <input name="RESULT_ENTITY_NAME" value="Neuron Separation"/>
+                            </include>
+                            
+                        </sequence>
+                    </sequence>
+                
+                </sequence>
+
+                <!-- Update SAMPLE_AREAS list -->
+                <operation name="Update sample areas" processor="org.janelia.it.jacs.compute.service.domain.sample.UpdateSampleAreasList">
+                    <input name="SAMPLE_AREAS"/>
+                    <input name="SAMPLE_AREA"/>
+                    <output name="SAMPLE_AREAS"/>
+                </operation>
+
+            </sequence>
+                
+        </sequence>
+        
+        <!-- Post-processing only if we're persisting -->
+        <sequence if="PERSIST=true">
+    
+            <!-- Run post processing service -->        
+            <include name="Post-processing" process="FlyLightPostProcessingPipeline" startEvent="running">
+                <input name="SAMPLE_AREAS"/>
+                <input name="PIPELINE_RUN_ENTITY_ID"/>
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="REUSE_POST"/>
+                <input name="OUTPUT_COLOR_SPEC"/>
+                <input name="IMAGE_TYPE"/>
+                <input name="USER_OMITTED_STITCH"/>
+            </include>
+            
+        </sequence>
+        
+        <!-- Clean up merged files for all sample areas -->
+        <operation name="Remove merged files" processor="org.janelia.it.jacs.compute.service.domain.sample.CleanUpMergedTilesService">
+            <input name="SAMPLE_AREAS"/>
+        </operation>
+            
+        <!-- Decide which types of processing will be run -->
+        <operation name="Choose Next Steps" processor="org.janelia.it.jacs.compute.service.domain.sample.ChoosePostSampleProcessingStepsService">
+            <input name="SAMPLE_ENTITY_ID"/>
+            <input name="OBJECTIVE"/>
+            <input name="SAMPLE_AREAS"/>
+            <input name="ALIGNMENT_ALGORITHMS"/>
+            <input name="ALIGNMENT_ALGORITHM_PARAMS"/>
+            <input name="ALIGNMENT_ALGORITHM_RESULT_NAMES"/>
+            <input name="SKIP_ALIGNMENT_TILE_FILTER"/>
+            <input name="ANALYSIS_ALGORITHMS"/>
+            <output name="RUN_ALIGNMENT"/>
+            <output name="RUN_ANALYSIS"/>
+            <output name="PARAMETERIZED_ALIGNMENT_ALGORITHM"/>
+            <output name="ANALYSIS_ALGORITHM"/>
+        </operation>
+
+        <!-- Eliminate steps opted-in above, based on user-selected flags, stored in the sample. -->
+        <operation name="Filter Anatomical Areas from Stitching" processor="org.janelia.it.jacs.compute.service.domain.sample.FilterExcludedImagesService">
+            <input name="SAMPLE_ENTITY_ID"/>
+            <input name="FILTER_EXCLUDED_IMAGE_MODE" value="Stitcher"/>
+            <input name="SAMPLE_AREA"/>
+            <input name="RUN_STITCH"/>
+            <input name="RUN_ANALYSIS"/>
+            <input name="RUN_ALIGNMENT"/>
+            <output name="RUN_STITCH"/>
+            <output name="RUN_ANALYSIS"/>
+            <output name="RUN_ALIGNMENT"/>
+            <output name="USER_OMITTED_STITCH"/>
+        </operation>
+
+        <sequence if="RUN_ALIGNMENT=true">
+            <sequence forEach="PARAMETERIZED_ALIGNMENT_ALGORITHM">
+                <sequence>
+            
+                    <!-- Run brain alignment on prealigned data -->
+                    <include name="Alignment" process="FlyLightAlignmentPipeline" startEvent="running">
+                        <input name="PIPELINE_RUN_ENTITY_ID"/>
+                        <input name="SAMPLE_ENTITY_ID"/>
+                        <input name="OBJECTIVE"/>
+                        <input name="SAMPLE_AREAS"/>
+                        <input name="PARAMETERIZED_ALIGNMENT_ALGORITHM"/>
+                        <input name="RUN_ANALYSIS"/>
+                        <input name="RUN_ALIGNMENT"/>
+                        <input name="ANALYSIS_ALGORITHM"/>
+                        <input name="REUSE_ALIGNMENT"/>
+                    </include>
+                    
+                </sequence>
+            </sequence>
+        </sequence>
+        
+        <!-- Compress files only if we're persisting -->
+        <sequence if="PERSIST=true">
+                
+    		<!-- Compress all v3draw files to v3dpbd, and generate accompanying h5j files -->
+            <include name="Sample compression" process="PostPipeline_SampleCompression">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="COMPRESSION_TYPE" value="Visually Lossless"/>
+            </include>
+             
+            <!-- Set our status -->
+            <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="PIPELINE_NAME"/>
+                <input name="STATUS" value="Complete"/>
+            </operation>
+            
+        </sequence>
+        
+        <operation name="Set Results as Task Message" processor="org.janelia.it.jacs.compute.service.utility.SetTaskFileResultsService">
+            <input name="SAMPLE_ENTITY_ID"/>
+            <input name="OBJECTIVE"/>
+            <input name="SAMPLE_AREAS"/>
+        </operation>
+        
+	    <exceptionHandler>
+	    
+            <!-- Set our status -->
+            <operation name="Set Status" processor="org.janelia.it.jacs.compute.service.domain.sample.SetSampleStatusService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+                <input name="PIPELINE_NAME"/>
+                <input name="STATUS" value="Error"/>
+            </operation>
+            
+		    <!-- Log the exception into the Pipeline Run -->
+			<operation name="Handle exceptions" processor="org.janelia.it.jacs.compute.service.domain.sample.CreateErrorEntityService">
+                <input name="SAMPLE_ENTITY_ID"/>
+                <input name="OBJECTIVE"/>
+				<input name="PIPELINE_RUN_ENTITY_ID"/>
+                <input name="PIPELINE_NAME"/>
+				<input name="RESULT_FILE_NODE"/>
+				<input name="PROCESSING_EXCEPTION"/>
+		    </operation>
+		
+	    </exceptionHandler>
+	    
+    </sequence>
+    
+</process>

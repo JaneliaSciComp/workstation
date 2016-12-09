@@ -25,6 +25,7 @@ import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.enums.PipelineStatus;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
@@ -499,8 +500,9 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         for(final Sample sample : samples) {
+                            model.addPipelineStatusTransition(sample, PipelineStatus.Scheduled);
                             model.updateProperty(sample, "compressionType", targetCompression);
-                            model.updateProperty(sample, "status", DomainConstants.VALUE_MARKED);
+                            model.updateProperty(sample, "status", PipelineStatus.Scheduled.toString());
                         }
                     }
 
