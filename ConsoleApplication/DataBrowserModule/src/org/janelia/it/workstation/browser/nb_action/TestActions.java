@@ -55,7 +55,6 @@ public final class TestActions extends AbstractAction implements Presenter.Menu 
                         @Override
                         public void run() {
                             throw new IllegalStateException("Test Unhandled EDT Exception");
-                            
                         }
                     });
                 }
@@ -67,12 +66,29 @@ public final class TestActions extends AbstractAction implements Presenter.Menu 
         unexpectedItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Exception ex = new Exception("Test Unexpected Exception");
-                FrameworkImplProvider.handleException("Testing Unexpected Exception", ex);
+                try {
+                    try {
+                        exceptionTest(); // Generate some causes to test the "Caused:" logging
+                    }
+                    catch (Exception ex2) {
+                        throw new Exception("Exception wrapper", ex2);
+                    }
+                }
+                catch (Exception ex) {
+                    FrameworkImplProvider.handleException("Testing Unexpected Exception", ex);
+                }
             }
         });
         subMenu.add(unexpectedItem);
         
+    }
+    
+    private void exceptionTest() {
+        exceptionTestInner();
+    }
+    
+    private void exceptionTestInner() {
+        throw new IllegalStateException("Test Unexpected Exception");
     }
     
     @Override

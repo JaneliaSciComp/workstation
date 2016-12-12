@@ -62,6 +62,10 @@ public class ExternalClient {
 		this.targetEPR = new EndpointReference(endpointUrl);
     }
 
+    public boolean isInitialized() {
+        return targetEPR != null;
+    }
+    
     private ServiceClient getNewClient() throws Exception {
     	
         Options options = new Options();
@@ -81,9 +85,9 @@ public class ExternalClient {
 
     	final ServiceClient client = getNewClient();
     	
-    	if (targetEPR == null) {
+    	if (!isInitialized()) {
             log.error("External client {} on port {} has no end point",name,clientPort);
-    		throw new IllegalStateException("init(String endpointUrl) must be called on the ExternalClient before any other methods.");
+            return;
     	}
     	
     	log.info("Sending {} message to endpoint {}",operationName,targetEPR.getAddress());

@@ -1,3 +1,17 @@
+// 5.5.2
+
+Changes
+* Increased update check interval from 1 hour to 15 minutes
+
+Bug fixes
+* Fixed issue with Add to Folder
+* Fixed issues caused by legacy modules
+
+// 5.5.1
+
+Bug fixes
+* Fixed some program configuration issues that caused issues for some users
+
 // 5.5.0
 
 Workstation Browser

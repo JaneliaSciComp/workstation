@@ -340,20 +340,21 @@ public class StateMgr {
         List<String> history = (List<String>)ConsoleApp.getConsoleApp().getModelProperty(prop);
         if (history == null) return new ArrayList<>();
         // Must make a copy of the list so that we don't use the same reference that's in the cache.
+        log.debug("History property {} contains {}",prop,history);
         return new ArrayList<>(history);
     }
 
     private void updateHistoryProperty(String prop, int maxItems, String value) {
-        List<String> history = getRecentlyOpenedHistory();
+        List<String> history = getHistoryProperty(prop);
         if (history.contains(value)) {
-            log.trace("Recently opened history already contains {}. Bringing it forward.",value);
+            log.debug("Recently opened history already contains {}. Bringing it forward.",value);
             history.remove(value);
         }
         if (history.size()>=maxItems) {
             history.remove(history.size()-1);
         }
         history.add(0, value);
-        log.trace("Adding {} to recently opened history",value);
+        log.debug("Adding {} to recently opened history",value);
         // Must make a copy of the list so that our reference doesn't go into the cache.
         List<String> copy = new ArrayList<>(history);
         ConsoleApp.getConsoleApp().setModelProperty(prop, copy); 

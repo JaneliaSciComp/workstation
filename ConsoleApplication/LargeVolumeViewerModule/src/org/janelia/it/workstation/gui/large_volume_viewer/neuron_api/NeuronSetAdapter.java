@@ -200,6 +200,14 @@ implements NeuronSet// , LookupListener
         return true;
     }
 
+    private void repaintHorta() {
+        if (cachedHortaWorkspace == null)
+            return;
+        // Below is the way to trigger a repaint, without changing the viewpoint
+        cachedHortaWorkspace.setChanged();
+        cachedHortaWorkspace.notifyObservers();                
+    }
+
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
         
@@ -247,15 +255,14 @@ implements NeuronSet// , LookupListener
 
                 // 2) repaint Horta now, to update view without further user interaction
                 // Below is the way to trigger a repaint, without changing the viewpoint
-                cachedHortaWorkspace.setChanged();
-                cachedHortaWorkspace.notifyObservers();
+                repaintHorta();
                 // Emit annotation added signal, to update Horta spatial index
                 NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
                 addedSignal.setChanged();
                 addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
         }
-
+        
         @Override
         public void annotationsDeleted(List<TmGeoAnnotation> annotations)
         {
@@ -296,8 +303,7 @@ implements NeuronSet// , LookupListener
                 
                 // Repaint Horta now, to update view without further user interaction
                 // (but do not recenter, as LVV does not recenter in this situation either)
-                cachedHortaWorkspace.setChanged();
-                cachedHortaWorkspace.notifyObservers();                
+                repaintHorta();
             }
         }
 
@@ -350,33 +356,58 @@ implements NeuronSet// , LookupListener
         @Override
         public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style)
         {
+            if (updateOneNeuronStyle(neuron, style)) {
+                repaintHorta();
+            }
+        }
+            
+        private boolean updateOneNeuronStyle(TmNeuronMetadata neuron, NeuronStyle style)
+        {
             if (neuron == null)
-                return;
+                return false;
             if (style == null)
-                return;
+                return false;
             NeuronList nl = (NeuronList) neurons;
             if (! nl.hasCachedNeuronId(neuron.getId()))
-                return; // Don't instantiate the neuron now, if it is not previously instantiated.
+                return false; // Don't instantiate the neuron now, if it is not previously instantiated.
 
             // Update Horta color when LVV color changes
+            boolean result = false;
             NeuronModel neuronModel = nl.neuronModelForTmNeuron(neuron);
 
             Color newColor = style.getColor();
             if (! newColor.equals(neuronModel.getColor())) {
                 neuronModel.setColor(newColor);
                 neuronModel.getColorChangeObservable().notifyObservers();
+                result = true;
             }
             
             boolean vis = style.isVisible();
             if (vis != neuronModel.isVisible()) {
                 neuronModel.setVisible(vis);
                 neuronModel.getVisibilityChangeObservable().notifyObservers();
+                result = true;
             }
+            
+            return result;
         }
 
         @Override
         public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStylemap)
-        {}
+        {
+            if (neuronStylemap == null)
+                return;
+            
+            // bulk color/visibility change
+            boolean bChanged = false;
+            for (Map.Entry<TmNeuronMetadata, NeuronStyle> entry : neuronStylemap.entrySet()) {
+                if (updateOneNeuronStyle(entry.getKey(), entry.getValue()))
+                    bChanged = true;
+            }
+            
+            if (bChanged)
+                repaintHorta();
+        }
 
         @Override
         public void neuronTagsChanged(List<TmNeuronMetadata> neuronList)

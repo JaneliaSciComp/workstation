@@ -136,6 +136,12 @@ of adapter.
     </target>
 
     <target name="internal-jar-copy" description="Get latest versions of internally-developed project jars.">
+
+        <property name="old-internal-jar-release" value="${basedir}/SharedModelComputeWrapper/release/modules/ext"/>
+        <delete failonerror="false">
+            <fileset dir="${old-internal-jar-release}" includes="*.jar"/>
+        </delete>
+
         <property name="internal-jar-release" value="${basedir}/ConsoleWrapper/release/modules/ext"/>
         <mkdir dir="${internal-jar-release}"/>
         <copy file="${basedir}/../shared/build/jars/jacs-shared.jar" todir="${internal-jar-release}" />

@@ -31,10 +31,16 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     private TreeNode treeNode;
 
     TreeNodeChildFactory(TreeNode treeNode) {
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Cannot create child factory with null tree node");
+        }
         this.treeNode = treeNode;
     }
 
     public void update(TreeNode treeNode) {
+        if (treeNode==null) {
+            throw new IllegalArgumentException("Cannot set null tree node for child factory");
+        }
         this.treeNode = treeNode;
     }
 
@@ -68,7 +74,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     @Override
     protected boolean createKeys(List<DomainObject> list) {
         try {
-            if (treeNode==null) return false;
+            if (treeNode==null) {
+                throw new IllegalStateException("No tree node is set for this child factory");
+            }
 
             log.debug("Creating children keys for {}",treeNode.getName());
 
