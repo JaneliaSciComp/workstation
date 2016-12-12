@@ -823,6 +823,7 @@ public class TracingInteractor extends MouseAdapter
             if (hoveredVertex == null) return false;
             if (parentVertex == null) return false;
             if (hoveredVertex == parentVertex) return false;
+            if (hoveredNeuron == parentNeuron) return false; // cannot merge a neuron with itself
             return true;
         }
         
