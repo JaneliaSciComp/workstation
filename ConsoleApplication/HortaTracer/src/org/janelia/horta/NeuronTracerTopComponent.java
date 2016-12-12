@@ -123,7 +123,7 @@ import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
@@ -239,7 +239,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     
-    private final NeuronManager neuronManager;
+    private final NeuronEditDispatcher neuronManager;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
     private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
@@ -269,7 +269,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
 
-        neuronManager = new NeuronManager(metaWorkspace);
+        neuronManager = new NeuronEditDispatcher(metaWorkspace);
         neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
         
 
@@ -537,7 +537,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             if (tracingActor instanceof SpheresActor) // highlight hover actor
             {
                 SpheresActor spheresActor = (SpheresActor)tracingActor;
-                spheresActor.getNeuron().getVertexAddedObservable().addObserver(new NeuronVertexAdditionObserver() {
+                spheresActor.getNeuron().getVertexCreatedObservable().addObserver(new NeuronVertexCreationObserver() {
                     @Override
                     public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg) {
                         redrawNow();

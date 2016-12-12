@@ -59,11 +59,11 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         NeuronVertexCreationListener, NeuronVertexDeletionListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
-    private final NeuronManager neuronManager;
+    private final NeuronEditDispatcher neuronManager;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 
-    public NeuronVertexSpatialIndex(NeuronManager neuronManager) {
+    public NeuronVertexSpatialIndex(NeuronEditDispatcher neuronManager) {
         this.neuronManager = neuronManager;
         rebuildIndex(neuronManager.getWorkspace());
         neuronManager.addNeuronCreationListener(this);

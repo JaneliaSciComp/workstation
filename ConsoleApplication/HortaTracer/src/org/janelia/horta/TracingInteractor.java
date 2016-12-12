@@ -51,7 +51,7 @@ import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.geometry3d.Vector3;
@@ -300,7 +300,7 @@ public class TracingInteractor extends MouseAdapter
         parentVertexModel.getVertexes().add(parentVertex);
         
         // parentVertexModel.setColor(Color.MAGENTA); // for debugging
-        NeuronVertexAdditionObservable addedSignal = parentVertexModel.getVertexAddedObservable();
+        NeuronVertexCreationObservable addedSignal = parentVertexModel.getVertexCreatedObservable();
         addedSignal.setChanged();
         addedSignal.notifyObservers(new VertexWithNeuron(parentVertex, neuron));
 
@@ -380,9 +380,9 @@ public class TracingInteractor extends MouseAdapter
         // densityCursorModel.setColor(Color.MAGENTA); // for debugging
 
         densityCursorModel.getVertexes().add(densityVertex);
-        densityCursorModel.getVertexAddedObservable().setChanged();
+        densityCursorModel.getVertexCreatedObservable().setChanged();
 
-        densityCursorModel.getVertexAddedObservable().notifyObservers(new VertexWithNeuron(densityVertex, null));     
+        densityCursorModel.getVertexCreatedObservable().notifyObservers(new VertexWithNeuron(densityVertex, null));     
         densityCursorModel.getColorChangeObservable().notifyObservers();
         
         return true; 
@@ -461,9 +461,9 @@ public class TracingInteractor extends MouseAdapter
             // highlightHoverModel.setColor(Color.MAGENTA); // for debugging
             
             highlightHoverModel.getVertexes().add(highlightVertex);
-            highlightHoverModel.getVertexAddedObservable().setChanged();
+            highlightHoverModel.getVertexCreatedObservable().setChanged();
             
-            highlightHoverModel.getVertexAddedObservable().notifyObservers(new VertexWithNeuron(highlightVertex, neuron));     
+            highlightHoverModel.getVertexCreatedObservable().notifyObservers(new VertexWithNeuron(highlightVertex, neuron));     
             highlightHoverModel.getColorChangeObservable().notifyObservers();
         }
         

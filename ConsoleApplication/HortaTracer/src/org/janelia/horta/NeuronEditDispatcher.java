@@ -44,12 +44,14 @@ import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObserver;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObserver;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.openide.util.Lookup;
@@ -60,10 +62,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * NeuronManager helps synchronized neuron models between Horta and Large Volume Viewer
+ * NeuronEditDispatcher helps synchronize neuron models between Horta and Large Volume Viewer.
+ * NeuronEditDispatcher listens for neuron editing changes in a NeuronSet in the Netbeans Lookup
+ * and NeuronEditDispatcher broadcasts those edits as instantiations of GenericObservable to interested parties, such as
+ *   a) the Horta Neuron spatial index
+ *   b) the Horta Neuron renderer
+ * 
+ * 
  * @author Christopher Bruns
  */
-public class NeuronManager implements LookupListener
+public class NeuronEditDispatcher implements LookupListener
 {
     // Use Lookup to access neuron models from LVV
     // Based on tutorial at https://platform.netbeans.org/tutorials/74/nbm-selection-1.html
@@ -74,8 +82,8 @@ public class NeuronManager implements LookupListener
     private final Set<NeuronModel> currentNeuronModels = new HashSet<>();
     private final Map<NeuronVertex, NeuronModel> vertexNeurons = new HashMap<>();
         
-    private final NeuronVertexAdditionObserver vertexAdditionObserver = 
-            new NeuronVertexAdditionObserver() {
+    private final NeuronVertexCreationObserver vertexAdditionObserver = 
+            new NeuronVertexCreationObserver() {
                 @Override
                 public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
                     if (vertexNeurons.containsKey(data.vertex)) 
@@ -84,6 +92,7 @@ public class NeuronManager implements LookupListener
                     neuronVertexCreationObservable.setChangedAndNotifyObservers(data);
                 }
             };
+
     private final NeuronVertexDeletionObserver vertexDeletionObserver = 
             new NeuronVertexDeletionObserver() {
                 @Override
@@ -93,16 +102,30 @@ public class NeuronManager implements LookupListener
                     neuronVertexDeletionObservable.deleteAndNotify(data);
                 }
             };
+
+    private final NeuronVertexUpdateObserver vertexUpdateObserver = 
+            new NeuronVertexUpdateObserver() {
+                @Override
+                public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                    synchronized(vertexNeurons) {                        
+                        vertexNeurons.remove(data.vertex);
+                        vertexNeurons.put(data.vertex, data.neuron);
+                    }
+                    neuronVertexUpdateObservable.updateAndNotify(data);
+                }
+            };
     
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private final NeuronCreationObservable neuronCreationObservable = new NeuronCreationObservable();
-    private final NeuronVertexCreationObservable neuronVertexCreationObservable =
-            new NeuronVertexCreationObservable();
-    private final NeuronVertexDeletionObservable neuronVertexDeletionObservable =
-            new NeuronVertexDeletionObservable();
+    private final VertexCreationObservable neuronVertexCreationObservable =
+            new VertexCreationObservable();
+    private final VertexUpdateObservable neuronVertexUpdateObservable =
+            new VertexUpdateObservable();
+    private final VertexDeletionObservable neuronVertexDeletionObservable =
+            new VertexDeletionObservable();
     
-    public NeuronManager(HortaMetaWorkspace workspace) {
+    public NeuronEditDispatcher(HortaMetaWorkspace workspace) {
         this.workspace = workspace;
     }
     
@@ -162,7 +185,8 @@ public class NeuronManager implements LookupListener
             vertexNeurons.put(vertex, neuron);
         }
         // Observe neuron changes
-        neuron.getVertexAddedObservable().addObserver(vertexAdditionObserver);
+        neuron.getVertexCreatedObservable().addObserver(vertexAdditionObserver);
+        neuron.getVertexUpdatedObservable().addObserver(vertexUpdateObserver);
         neuron.getVertexesRemovedObservable().addObserver(vertexDeletionObserver);
     }
     
@@ -225,7 +249,7 @@ public class NeuronManager implements LookupListener
     }
     
     
-    private static class NeuronVertexCreationObservable {
+    private static class VertexCreationObservable {
         private final GenericObservable<VertexWithNeuron> observable = new BasicGenericObservable<>();
 
         public void addNeuronVertexCreationListener(NeuronVertexCreationListener listener) {
@@ -254,8 +278,37 @@ public class NeuronManager implements LookupListener
         }
     }
     
+    private static class VertexUpdateObservable {
+        private final GenericObservable<VertexWithNeuron> observable = new BasicGenericObservable<>();
+
+        public void addNeuronVertexUpdateListener(NeuronVertexUpdateListener listener) {
+            observable.addObserver(new NeuronVertexUpdateListenerAdapter(listener));
+        }
+        
+        public void updateAndNotify(VertexWithNeuron vertexWithNeuron) {
+            observable.setChanged();
+            observable.notifyObservers(vertexWithNeuron);
+        }
+
+        private static class NeuronVertexUpdateListenerAdapter 
+        implements GenericObserver<VertexWithNeuron>
+        {
+            private final NeuronVertexUpdateListener listener;
+
+            private NeuronVertexUpdateListenerAdapter(NeuronVertexUpdateListener listener) {
+                this.listener = listener;
+            }
+
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                listener.neuronVertexUpdated(data);
+            }
+            
+        }
+    }
+    
     // Watches NeuronModel signal, and rebroadcasts to NeuronVertexDeletionListeners
-    private static class NeuronVertexDeletionObservable {
+    private static class VertexDeletionObservable {
         private final GenericObservable<VertexCollectionWithNeuron> observable = new BasicGenericObservable<>();
 
         public void addNeuronVertexDeletionListener(NeuronVertexDeletionListener listener) {

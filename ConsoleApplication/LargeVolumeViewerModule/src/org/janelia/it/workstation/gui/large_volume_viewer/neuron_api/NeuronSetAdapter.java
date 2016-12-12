@@ -45,7 +45,7 @@ import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -223,7 +223,7 @@ implements NeuronSet// , LookupListener
                 // Below is the way to trigger a repaint, without changing the viewpoint
                 repaintHorta();
                 // Emit annotation added signal, to update Horta spatial index
-                NeuronVertexAdditionObservable addedSignal = neuron.getVertexAddedObservable();
+                NeuronVertexCreationObservable addedSignal = neuron.getVertexCreatedObservable();
                 addedSignal.setChanged();
                 addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
