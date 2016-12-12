@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.tools;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Map;
@@ -11,7 +10,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
 
@@ -336,6 +334,7 @@ public class ToolMgr extends PreferenceManager {
             @Override
             public void call(File file) throws Exception {
                 if (file==null) {
+                    log.error("Could not open file path "+standardFilepath);
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -368,12 +367,14 @@ public class ToolMgr extends PreferenceManager {
 
                     final File exeFile = new File(toolPath);
                     if (! exeFile.exists()) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
-                                "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+                        String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") does not exist.";
+                        log.error(msg);
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                     } 
                     else if (! exeFile.canExecute()) {
-                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
-                                "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") cannot be executed.", "Error", JOptionPane.ERROR_MESSAGE);
+                        String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
+                        log.error(msg);
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
                     }
 
                     final String exeCmd = cmd.toString();
