@@ -68,6 +68,7 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -630,9 +631,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         if (itm != null) {
             secondaryDeletionMenu.add(itm);
         }
-        itm = getNeuronSeparationDeletionItem();
-        if (itm != null) {
-            secondaryDeletionMenu.add(itm);
+        /* Removing this feature until such time as this level of flexibility has user demand. */
+        if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION) {
+            itm = getNeuronSeparationDeletionItem();
+            if (itm != null) {
+                secondaryDeletionMenu.add(itm);
+            }
         }
         if (secondaryDeletionMenu.getItemCount() > 0) {
             add(secondaryDeletionMenu);

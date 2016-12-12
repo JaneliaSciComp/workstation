@@ -38,6 +38,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.util.Utils;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 import net.miginfocom.swing.MigLayout;
@@ -190,8 +191,10 @@ public class DataSetDialog extends ModalDialog {
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para");
 
+        /* Removing this feature until such time as this level of flexibility has user demand. */
         neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
         neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
+        neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION);
         attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
 
         JPanel pipelinesPanel = new JPanel();

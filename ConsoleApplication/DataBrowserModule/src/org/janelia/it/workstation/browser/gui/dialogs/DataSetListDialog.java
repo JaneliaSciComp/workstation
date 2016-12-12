@@ -35,6 +35,7 @@ import org.janelia.it.workstation.browser.gui.table.DynamicRow;
 import org.janelia.it.workstation.browser.gui.table.DynamicTable;
 import org.janelia.it.workstation.browser.model.DomainModelViewConstants;
 import org.janelia.it.workstation.browser.util.Utils;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 /**
@@ -239,7 +240,8 @@ public class DataSetListDialog extends ModalDialog {
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_PIPELINE_PROCESS);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAMPLE_NAME);
         dynamicTable.addColumn(DomainModelViewConstants.DATASET_SAGE_SYNC).setEditable(true);
-        dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION).setEditable(true);
+        DynamicColumn neuSepCol = dynamicTable.addColumn(DomainModelViewConstants.DATASET_NEURON_SEPARATION);
+        neuSepCol.setEditable(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
