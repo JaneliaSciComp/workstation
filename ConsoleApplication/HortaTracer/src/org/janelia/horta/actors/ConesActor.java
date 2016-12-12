@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import javax.media.opengl.GL3;
+import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
@@ -46,6 +47,8 @@ import org.janelia.gltools.MeshActor;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
+import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.gltools.ShaderProgram;
 import org.janelia.gltools.texture.Texture2d;
 import org.slf4j.Logger;
@@ -91,6 +94,13 @@ public class ConesActor extends BasicGL3Actor
             public void update(Observable o, Object arg)
             {
                 setColor(neuron.getColor());
+            }
+        });
+        neuron.getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+            @Override
+            public void update(GenericObservable<VertexWithNeuron> o, VertexWithNeuron arg)
+            {
+                updateGeometry();
             }
         });
         neuron.getGeometryChangeObservable().addObserver(new Observer() {

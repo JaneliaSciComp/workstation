@@ -120,6 +120,7 @@ import org.janelia.console.viewerapi.ViewerLocationAcceptor;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -239,7 +240,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     
     private boolean doCubifyVoxels = false; // Always begin in "no distortion" state
     
-    private final NeuronEditDispatcher neuronManager;
+    private final NeuronEditDispatcher neuronEditDispatcher;
     private Logger logger = LoggerFactory.getLogger(this.getClass());
     
     private UndoRedo.Manager undoRedoManager = new UndoRedo.Manager();
@@ -269,8 +270,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Insert a specialized SceneWindow into the component
         initialize3DViewer(); // initializes workspace
 
-        neuronManager = new NeuronEditDispatcher(metaWorkspace);
-        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronManager);
+        neuronEditDispatcher = new NeuronEditDispatcher(metaWorkspace);
+        neuronVertexIndex = new NeuronVertexSpatialIndex(neuronEditDispatcher);
         
 
         // Change default rotation to Y-down, like large-volume viewer
@@ -280,19 +281,26 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         setupMouseNavigation();
         
-        neuronManager.addNeuronVertexCreationListener(tracingInteractor);
-        neuronManager.addNeuronVertexDeletionListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexCreationListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexDeletionListener(tracingInteractor);
+        neuronEditDispatcher.addNeuronVertexUpdateListener(tracingInteractor);
         
-        // Redraw the density when annotations are added
-        neuronManager.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
+        // Redraw the density when annotations are added/deleted/moved
+        neuronEditDispatcher.addNeuronVertexCreationListener(new NeuronVertexCreationListener() {
             @Override
             public void neuronVertexCreated(VertexWithNeuron vertexWithNeuron) {
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
-        neuronManager.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
+        neuronEditDispatcher.addNeuronVertexDeletionListener(new NeuronVertexDeletionListener() {
             @Override
             public void neuronVertexesDeleted(VertexCollectionWithNeuron vertexesWithNeurons) {
+                neuronMPRenderer.setIntensityBufferDirty();
+            }
+        });
+        neuronEditDispatcher.addNeuronVertexUpdateListener(new NeuronVertexUpdateListener() {
+            @Override
+            public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
@@ -1792,7 +1800,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     @Override
     public void componentOpened() {
         // logger.info("Horta opened");
-        neuronManager.onOpened();
+        neuronEditDispatcher.onOpened();
         // loadStartupPreferences();
     }
     
@@ -1802,7 +1810,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void componentClosed() {
         // logger.info("Horta closed");
         // saveStartupPreferences(); // not called at application close...
-        neuronManager.onClosed();
+        neuronEditDispatcher.onClosed();
     }
 
     @Override

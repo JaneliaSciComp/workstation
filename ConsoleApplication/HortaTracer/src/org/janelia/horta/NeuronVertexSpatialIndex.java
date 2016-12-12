@@ -35,7 +35,9 @@ import edu.wlu.cs.levy.CG.KeyDuplicateException;
 import edu.wlu.cs.levy.CG.KeyMissingException;
 import edu.wlu.cs.levy.CG.KeySizeException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
@@ -46,6 +48,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,19 +59,22 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronVertexSpatialIndex 
 implements Collection<NeuronVertex>, NeuronCreationListener, 
-        NeuronVertexCreationListener, NeuronVertexDeletionListener
+        NeuronVertexCreationListener, NeuronVertexDeletionListener,
+        NeuronVertexUpdateListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
+    private Map<NeuronVertex, Vector3> cachedKeys = new HashMap<>();
     private final NeuronEditDispatcher neuronManager;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
 
-    public NeuronVertexSpatialIndex(NeuronEditDispatcher neuronManager) {
-        this.neuronManager = neuronManager;
-        rebuildIndex(neuronManager.getWorkspace());
-        neuronManager.addNeuronCreationListener(this);
-        neuronManager.addNeuronVertexCreationListener(this);
-        neuronManager.addNeuronVertexDeletionListener(this);
+    public NeuronVertexSpatialIndex(NeuronEditDispatcher neuronEditDispatcher) {
+        this.neuronManager = neuronEditDispatcher;
+        rebuildIndex(neuronEditDispatcher.getWorkspace());
+        neuronEditDispatcher.addNeuronCreationListener(this);
+        neuronEditDispatcher.addNeuronVertexCreationListener(this);
+        neuronEditDispatcher.addNeuronVertexUpdateListener(this);
+        neuronEditDispatcher.addNeuronVertexDeletionListener(this);
     }
     
     public NeuronModel neuronForVertex(NeuronVertex vertex)
@@ -99,7 +105,13 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     
     private double[] keyForVertex(NeuronVertex v)
     {
-        float xyz[] = v.getLocation();
+        float xyz[];
+        if (cachedKeys.containsKey(v)) {
+            xyz = cachedKeys.get(v).toArray();
+        }
+        else {
+            xyz = v.getLocation();
+        }
         return new double[] {xyz[0], xyz[1], xyz[2]};
     }
     
@@ -170,11 +182,17 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         throw new UnsupportedOperationException();
     }
     
+    private static Vector3 cacheableKey(double[] key) {
+        return new Vector3(new float[] {(float)key[0], (float)key[1], (float)key[2]});
+    }
+    
     private boolean addPrivately(NeuronVertex e)
     {
         try {
             double[] key = keyForVertex(e);
             index.insert(key, e);
+            // Store original key, in case the old position changes
+            cachedKeys.put(e, cacheableKey(key));
         } catch (KeySizeException | KeyDuplicateException ex) {
             // Exceptions.printStackTrace(ex);
             return false;
@@ -191,6 +209,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
             NeuronVertex v = (NeuronVertex) o;
             double[] k = keyForVertex(v);
             index.delete(k);
+            cachedKeys.remove(v);
         } catch (KeySizeException | KeyMissingException ex) {
             // Exceptions.printStackTrace(ex);
             return false;
@@ -245,6 +264,12 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         for (NeuronVertex vertex : vertexesWithNeurons.vertexes) {
             remove(vertex);
         }
+    }
+
+    @Override
+    public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
+        remove(vertexWithNeuron.vertex);
+        addPrivately(vertexWithNeuron.vertex);
     }
 
 }

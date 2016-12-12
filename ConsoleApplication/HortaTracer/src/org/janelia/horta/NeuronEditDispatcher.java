@@ -137,6 +137,10 @@ public class NeuronEditDispatcher implements LookupListener
         neuronVertexCreationObservable.addNeuronVertexCreationListener(listener);
     }
     
+    public void addNeuronVertexUpdateListener(NeuronVertexUpdateListener listener) {
+        neuronVertexUpdateObservable.addNeuronVertexUpdateListener(listener);
+    }
+    
     public void addNeuronVertexDeletionListener(NeuronVertexDeletionListener listener) {
         neuronVertexDeletionObservable.addNeuronVertexDeletionListener(listener);
     }

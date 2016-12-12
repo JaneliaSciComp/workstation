@@ -46,6 +46,7 @@ import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -177,6 +178,20 @@ implements NeuronSet// , LookupListener
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
         
+        private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
+        {
+            // TODO: Use a more efficient index here...            
+            // Find neuron
+            Long neuronId = annotation.getNeuronId();
+            NeuronModelAdapter neuron = null;
+            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
+                neuron = (NeuronModelAdapter)neuron0;
+                if (neuron.getTmNeuronMetadata().getId().equals(neuronId))
+                    break;
+            }
+            return neuron;
+        }
+        
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
         {
@@ -186,14 +201,7 @@ implements NeuronSet// , LookupListener
             // Surgical approach only adds the one new edge
             // (vertex is added implicitly)
                         
-            // Find neuron
-            Long neuronId = annotation.getNeuronId();
-            NeuronModelAdapter neuron = null;
-            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
-                neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuronMetadata().getId().equals(neuronId))
-                    break;
-            }
+            NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
             if (neuron == null) {
                 logger.error("could not find NeuronModel for newly added TmGeoAnnotation");
                 return;
@@ -293,15 +301,30 @@ implements NeuronSet// , LookupListener
         }
 
         @Override
-        public void annotationMoved(TmGeoAnnotation annotation) {
+        public void annotationMoved(TmGeoAnnotation movedAnnotation) {
+            sanityCheckWorkspace();
+            NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(movedAnnotation);
+            if (neuron == null) {
+                logger.warn("Could not find neuron for moved anchor");
+                return;
+            }
+            NeuronVertex movedVertex = neuron.getVertexForAnnotation(movedAnnotation);
+            if (movedVertex == null) {
+                logger.info("Skipping moved anchor not yet instantiated in Horta");
+                return;
+            }
+            NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
+            signal.setChanged();
+            signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
             logger.info("annotationMoved");
+            repaintHorta();
         }
 
         @Override
         public void annotationNotMoved(TmGeoAnnotation annotation)
         {
             logger.info("annotationNotMoved");
-            updateEdges();
+            // updateEdges();
         }
     }
 

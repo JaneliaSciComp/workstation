@@ -49,6 +49,7 @@ import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
+import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
@@ -78,7 +79,8 @@ import org.slf4j.LoggerFactory;
  */
 public class TracingInteractor extends MouseAdapter
         implements MouseInputListener, KeyListener, 
-        NeuronVertexDeletionListener, NeuronVertexCreationListener
+        NeuronVertexDeletionListener, NeuronVertexCreationListener,
+        NeuronVertexUpdateListener
 {
     private final VolumeProjection volumeProjection;
     private final int max_tol = 5; // pixels
@@ -677,6 +679,18 @@ public class TracingInteractor extends MouseAdapter
 
     public InteractorContext createContext() {
         return new InteractorContext();
+    }
+
+    @Override
+    public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
+        if (cachedParentVertex == null) {
+            return; // no sense checking now
+        }
+        if (cachedParentVertex == vertexWithNeuron.vertex) {
+            // To keep things simple, just delete and recreate
+            clearParentVertex();
+            selectParentVertex(vertexWithNeuron.vertex, vertexWithNeuron.neuron);
+        }
     }
 
     
