@@ -7,9 +7,12 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,6 +37,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleListenableFuture;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
@@ -1344,21 +1348,23 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         setBulkNeuronVisibility(null, visibility);
     }
 
-    public void setBulkNeuronVisibility(final List<TmNeuronMetadata> neuronList, final boolean visibility) {
+    public SimpleListenableFuture setBulkNeuronVisibility(Collection<TmNeuronMetadata> neuronList, final boolean visibility) {
+        final Collection<TmNeuronMetadata> neurons = neuronList==null?annotationModel.getNeuronList():neuronList;
+        log.info("setBulkNeuronVisibility(neurons.size={}, visibility={})",neurons.size(),visibility);
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                if (neuronList==null) {
-                    annotationModel.setAllNeuronVisibility(visibility);
-                }
-                else {
-                    annotationModel.setNeuronVisibility(neuronList, visibility);
-                }
+                annotationModel.setNeuronVisibility(neurons, visibility);
             }
 
             @Override
             protected void hadSuccess() {
-                // nothing; listeners will update
+                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
+                for (TmNeuronMetadata neuron : neurons) {
+                    neuron.setVisible(visibility);
+                    updateMap.put(neuron, getNeuronStyle(neuron));
+                }
+                annotationModel.fireNeuronStylesChanged(updateMap);
             }
 
             @Override
@@ -1366,7 +1372,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 ConsoleApp.handleException(error);
             }
         };
-        updater.execute();
+        updater.setProgressMonitor(new IndeterminateProgressMonitor(ConsoleApp.getMainFrame(), visibility?"Showing neurons...":"Hiding neurons...", ""));
+        return updater.executeWithFuture();
     }
 
     // hide others = hide all then show current; this is purely a convenience function
@@ -1374,16 +1381,22 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         SimpleWorker updater = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setAllNeuronVisibility(false);
+                annotationModel.setNeuronVisibility(annotationModel.getNeuronList(), false);
             }
 
             @Override
             protected void hadSuccess() {
+                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
+                for (TmNeuronMetadata neuron : annotationModel.getNeuronList()) {
+                    neuron.setVisible(false);
+                    updateMap.put(neuron, getNeuronStyle(neuron));
+                }
+                annotationModel.fireNeuronStylesChanged(updateMap);
                 // This hack is currently needed because the event model is so screwed up
                 SimpleWorker updater = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
-                        setNeuronVisibility(true);
+                        setCurrentNeuronVisibility(true);
                     }
 
                     @Override
@@ -1406,7 +1419,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         };
         updater.execute();
     }
-
+    
     public void toggleSelectedNeurons() {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
@@ -1423,7 +1436,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     /**
      * as with chooseNeuronStyle, multiple versions allow for multiple entry points
      */
-    public void setNeuronVisibility(boolean visibility) {
+    public void setCurrentNeuronVisibility(boolean visibility) {
         if (annotationModel.getCurrentWorkspace() == null) {
             return;
         }
@@ -1553,7 +1566,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         // worker.executeWithEvents();
     }
 
-    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final List<TmNeuronMetadata> neurons) {
+    public void exportNeuronsAsSWC(final File swcFile, final int downsampleModulo, final Collection<TmNeuronMetadata> neurons) {
         int nannotations = 0;
         for (TmNeuronMetadata neuron : neurons) {
             nannotations += neuron.getGeoAnnotationMap().size();
