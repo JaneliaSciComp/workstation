@@ -65,6 +65,7 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
     public static final String WHOLE_AA_IMPLICATIONS_PROP = "SecondaryDataRemoval.aa_rm_implications";
     public static final String STITCHED_IMPLICATIONS_PROP = "SecondaryDataRemoval.stitched_file_rm_implications";
+    public static final String NEURON_SEP_IMPLICATIONS_PROP = "SecondaryDataRemoval.neuron_sep_rm_implications";
 
     // For now, keeping it simple.
     private static final String[] COLUMN_HEADERS = new String[] {
@@ -321,6 +322,9 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
         else if (trimDepth.equals(Constants.TRIM_DEPTH_WHOLE_AREA_VALUE)) {
             return getWholeAADeletionWarning(subpartNames);
         }
+        else if (trimDepth.equals(Constants.TRIM_DEPTH_NEURON_SEPARATION_VALUE)) {
+            return getNeuronSeparationDeletionWarning(subpartNames);
+        }
         else {
             return null;
         }
@@ -328,14 +332,21 @@ public class SecondaryDataRemovalDialog extends ModalDialog {
 
     private String getWholeAADeletionWarning(StringBuilder subpartNames) {
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(WHOLE_AA_IMPLICATIONS_PROP);
-        log.info("Whole AA Appended text file name=" + appendedTextFile);
+        log.debug("Whole AA Appended text file name=" + appendedTextFile);
         String format = readFromResource(appendedTextFile);
         return String.format(format, subpartNames.toString(), sample.getName());
     }
 
     private String getStitchedFileDeletionWarning(StringBuilder subpartNames) {
         String appendedTextFile = ConsoleProperties.getInstance().getProperty(STITCHED_IMPLICATIONS_PROP);
-        log.info("StitchedImage Appended text file name=" + appendedTextFile);
+        log.debug("StitchedImage Appended text file name=" + appendedTextFile);
+        String format = readFromResource(appendedTextFile);
+        return String.format(format, subpartNames.toString(), sample.getName());
+    }
+
+    private String getNeuronSeparationDeletionWarning(StringBuilder subpartNames) {
+        String appendedTextFile = ConsoleProperties.getInstance().getProperty(NEURON_SEP_IMPLICATIONS_PROP);
+        log.debug("NeuSep Appended text file name=" + appendedTextFile);
         String format = readFromResource(appendedTextFile);
         return String.format(format, subpartNames.toString(), sample.getName());
     }
