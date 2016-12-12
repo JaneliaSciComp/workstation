@@ -38,6 +38,7 @@ import org.janelia.it.workstation.browser.api.ClientDomainUtils;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.util.Utils;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 
 import net.miginfocom.swing.MigLayout;
@@ -65,6 +66,7 @@ public class DataSetDialog extends ModalDialog {
     private JTextField sageGrammarPathInput;
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
+    private JCheckBox neuronSeparationCheckbox;
     private HashMap<String, JRadioButton> processCheckboxes = new LinkedHashMap<>();
 
     private DataSet dataSet;
@@ -187,7 +189,13 @@ public class DataSetDialog extends ModalDialog {
         attrPanel.add(sampleImageInput);
 
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
-        attrPanel.add(sageSyncCheckbox, "gap para, span 2");
+        attrPanel.add(sageSyncCheckbox, "gap para");
+
+        /* Removing this feature until such time as this level of flexibility has user demand. */
+        neuronSeparationCheckbox = new JCheckBox("Support Neuron Separation");
+        neuronSeparationCheckbox.setToolTipText("If pipeline does Neuron Separation by default, unchecking avoids it");
+        neuronSeparationCheckbox.setEnabled(SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION);
+        attrPanel.add(neuronSeparationCheckbox, "gap para, span 2");
 
         JPanel pipelinesPanel = new JPanel();
         pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
@@ -215,6 +223,7 @@ public class DataSetDialog extends ModalDialog {
             }
 
             sageSyncCheckbox.setSelected(dataSet.isSageSync());
+            neuronSeparationCheckbox.setSelected(dataSet.isNeuronSeparationSupported());
             if (dataSet.getPipelineProcesses()!=null && !dataSet.getPipelineProcesses().isEmpty()) {
                 applyRadioButtonValues(processCheckboxes, dataSet.getPipelineProcesses().get(0));
             }
@@ -273,6 +282,7 @@ public class DataSetDialog extends ModalDialog {
                 pipelineProcesses.add(getRadioButtonValues(processCheckboxes));
                 dataSet.setPipelineProcesses(pipelineProcesses);
                 dataSet.setSageSync(new Boolean(sageSyncCheckbox.isSelected()));
+                dataSet.setNeuronSeparationSupported(new Boolean(neuronSeparationCheckbox.isSelected()));
                 dataSet.setSageConfigPath(sageConfigPath);
                 dataSet.setSageGrammarPath(sageGrammarPath);
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
