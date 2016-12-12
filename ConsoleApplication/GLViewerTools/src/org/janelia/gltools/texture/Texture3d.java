@@ -247,9 +247,6 @@ public class Texture3d extends BasicTexture implements GL3Resource
     }
     
     public Texture3d loadStack(String dvidServer, int offsetX, int offsetY, int offsetZ) {
-                
-
-        
         PerformanceTimer timer = new PerformanceTimer();
 
         // hard coded here for testing
@@ -260,9 +257,7 @@ public class Texture3d extends BasicTexture implements GL3Resource
             URI dvidURI = new URI("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100");
             
             System.out.println("... debug ... set getMethod ...");
-            
-            //getMethod = new GetMethod("http://tem-dvid:7400/api/node/0dd/grayscale/raw/0_1_2/2048_1536_251/53760_17664_5100"); // hard coded here by yuy for DVID Testing
-            
+
             byte[] bytes = null;
             
             if (optionalFileStreamSource!=null) {
