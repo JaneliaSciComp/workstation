@@ -1333,6 +1333,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/nobackup/mousebrainmicro/",
                     "/nobackup2/mouselight",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
+                    "/nrs/mouselight",
                     "/nrs/mltest/"
             };
             Path linuxPrefix = null;
@@ -1367,7 +1368,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mountNames = {"", "mousebrainmicro", "mouselight",
                     "nobackup/mousebrainmicro", "nobackup2/mouselight",
                     "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "mltest"};
+                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight", "mltest"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
