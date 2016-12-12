@@ -3,13 +3,14 @@
 Workstation Browser
 * Fixed issue preventing user's Home folder from being automatically opened
 * Fixed issue where Explorer tree was not refreshed when adding to a folder in some cases
+* Restored missing "Report A Bug" menu item
 * Many other minor bug fixes (see JIRA)
 
 MouseLight    
-* Changes
-    * Restore Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
-    * Move "Navigate to this location in LVV/Horta" context menu items to top of list.
-    * Hide/show neuron in LVV now instantly reflected in Horta
-* Bug fixes
-    * Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
-    * Fixed problems affecting samples with origin at x=0
+* Added "Save As" feature for Workspaces
+* Restored Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
+* Moved "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+* Fixed problems affecting samples with origin at x=0
+* Fixed problem where neurons did not display when read-only access to granted to a Workspace
