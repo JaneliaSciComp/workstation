@@ -360,6 +360,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 presentError(
                         "No annotation to delete.",
                         "No such annotation");
+                return;
             }
             if (annotation.isRoot() && annotation.getChildIds().size() > 0) {
                 presentError(
