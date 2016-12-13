@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -595,7 +596,7 @@ class NeuronTableModel extends AbstractTableModel {
         fireTableDataChanged();
     }
 
-    public void addNeurons(List<TmNeuronMetadata> neuronList) {
+    public void addNeurons(Collection<TmNeuronMetadata> neuronList) {
         neurons.addAll(neuronList);
         if (hasFilter()) {
             for (TmNeuronMetadata neuron: neuronList) {
@@ -611,24 +612,11 @@ class NeuronTableModel extends AbstractTableModel {
 
     public void updateNeuron(TmNeuronMetadata neuron) {
         updateNeurons(Arrays.asList(neuron));
+        // To optimize for performance, it would be better to do targeted updates:
+        // fireTableRowsUpdated(firstRow, lastRow);
     }
 
     public void updateNeurons(List<TmNeuronMetadata> neuronList) {
-        if (hasFilter()) {
-            for (TmNeuronMetadata neuron: neuronList) {
-                replaceNeuron(neuron, neurons);
-                if (matchesTagFilter(neuron)) {
-                    replaceNeuron(neuron, matchedNeurons);
-                } else {
-                    replaceNeuron(neuron, unmatchedNeurons);
-                }
-            }
-        }
-        else {
-            for (TmNeuronMetadata neuron: neuronList) {
-                replaceNeuron(neuron, neurons);
-            }
-        }
         fireTableDataChanged();
     }
     
