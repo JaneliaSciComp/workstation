@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.browser.gui.support;
 
-import java.awt.Component;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,15 +11,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.JOptionPane;
-
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.StateMgr;
-import org.janelia.it.workstation.browser.gui.support.DesktopApi;
 import org.janelia.it.workstation.browser.util.Utils;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
@@ -32,11 +26,13 @@ import org.slf4j.LoggerFactory;
  * Worker for downloading a sample image (or set of split channel images) in a specific format.
  * The specified extension is used to determine whether conversion is necessary and when necessary,
  * if conversion can be managed locally or remotely (via task submission).
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FileDownloadWorker {
 
     private static final Logger log = LoggerFactory.getLogger(FileDownloadWorker.class);
-
+    
     private final DownloadItem downloadItem;
     private final Lock copyFileLock;
     private final String objectName;
@@ -52,14 +48,14 @@ public class FileDownloadWorker {
         this.sourceFilePath = downloadItem.getSourceFile();
         this.targetDir = downloadItem.getTargetFile().getParentFile();
     }
-    
+
     public void startDownload() {
 
-        log.debug("Starting download of {} to {}",downloadItem.getSourceExtension(),downloadItem.getTargetExtension());
-        
+        log.debug("Starting download of {} to {}", downloadItem.getSourceExtension(), downloadItem.getTargetExtension());
+
         try {
             boolean convertOnServer = true;
-            
+
             if (!downloadItem.isSplitChannels()) {
                 if (sourceFilePath.endsWith(targetExtension)) {
                     // no conversion needed, simply transfer the file
@@ -71,61 +67,18 @@ public class FileDownloadWorker {
                 }
             }
             
-            if (checkForAlreadyDownloadedFiles()) {
-                if (convertOnServer) {
-                    convertOnServer();
-                } 
-                else {
-                    transferAndConvertLocallyAsNeeded();
-                }
+            if (convertOnServer) {
+                convertOnServer();
+            } 
+            else {
+                transferAndConvertLocallyAsNeeded();
             }
         }
         catch (Exception e) {
             ConsoleApp.handleException(e);
         }
     }
-
-    private boolean checkForAlreadyDownloadedFiles() {
-
-        boolean continueWithDownload = true;
-
-        final String targetName = downloadItem.getTargetFile().getName();
-        final String basename = FileUtil.getBasename(targetName).replaceAll("#","");
-
-        File[] files = targetDir.listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith(basename) && name.endsWith(targetExtension);
-            }
-        });
-
-        if ((files != null) && (files.length > 0)) {
-
-            String msg = "The file " + files[0].getName() + " was";
-            String titlePrefix = "File";
-                
-            final String[] options = { "Open Folder", "Run Download", "Cancel" };
-            final Component mainFrame = ConsoleApp.getMainFrame();
-            final int chosenOptionIndex = JOptionPane.showOptionDialog(
-                    mainFrame,
-                    msg + " previously downloaded.\nOpen the existing download folder or re-run the download anyway?",
-                    titlePrefix + " Previously Downloaded",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    options,
-                    options[0]);
-
-            continueWithDownload = (chosenOptionIndex == 1);
-
-            if (chosenOptionIndex == 0) {
-                DesktopApi.browse(targetDir);
-            }
-        }
-
-        return continueWithDownload;
-    }
-
+    
     private void copyFile(String remoteFile,
                           File localFile,
                           BackgroundWorker worker) throws Exception {
@@ -277,5 +230,25 @@ public class FileDownloadWorker {
                 return null;
             }
         };
+    }
+
+    public DownloadItem getDownloadItem() {
+        return downloadItem;
+    }
+
+    public String getObjectName() {
+        return objectName;
+    }
+
+    public String getTargetExtension() {
+        return targetExtension;
+    }
+
+    public String getSourceFilePath() {
+        return sourceFilePath;
+    }
+
+    public File getTargetDir() {
+        return targetDir;
     }
 }
