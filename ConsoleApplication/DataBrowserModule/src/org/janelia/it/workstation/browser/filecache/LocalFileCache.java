@@ -322,7 +322,7 @@ public class LocalFileCache {
                         return getFile(asyncRetrievalUrl);
                     }
                     catch (FileNotCacheableException e) {
-                        LOG.warn("Error caching file asynchronously",e);
+                        LOG.error("Error caching file asynchronously",e);
                         throw e;
                     }
                 }
