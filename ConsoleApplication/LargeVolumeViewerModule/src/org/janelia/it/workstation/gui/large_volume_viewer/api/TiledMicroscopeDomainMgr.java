@@ -203,8 +203,7 @@ public class TiledMicroscopeDomainMgr {
             log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
             neurons.add(neuronMetadata);
         }
-
-        log.info("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
+        log.trace("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
         return neurons;
     }
 

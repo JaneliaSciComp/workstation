@@ -149,7 +149,6 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class QuadViewUi extends JPanel implements VolumeLoadListener
 {
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
     private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
@@ -1317,6 +1316,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
 
+        log.info("loadFile: {}", canonicalLinuxPath);
+        
         // on Linux, this just works, as the input path is the Linux path;
         //  for Mac and Windows, we need to guess the mount point of the
         //  shared disk and alter the path accordingly
@@ -1427,7 +1428,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);       
+        
         return loadURL(url);
     }
 
@@ -1447,6 +1449,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     public boolean loadURL(URL url) {  
+        log.info("loadURL: {}", url);
         boolean rtnVal = false;
     	// Check if url exists first...
     	try {
@@ -1466,9 +1469,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         try {
             TileStackCacheController.getInstance().init(url);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log.error(ex.toString());
+        } 
+        catch (Exception ex) {
+            log.error("Error initializing TileStackCacheController", ex);
             rtnVal=false;
         }
 

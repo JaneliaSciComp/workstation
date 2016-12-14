@@ -149,6 +149,10 @@ called from a  SimpleWorker thread.
         return neuronManager.getNeurons();
     }
 
+    public void addNeuron(TmNeuronMetadata neuron) {
+        neuronManager.addNeuron(neuron);
+    }
+    
     public FilteredAnnotationModel getFilteredAnnotationModel() {
         return filteredAnnotationModel;
     }
@@ -213,6 +217,7 @@ called from a  SimpleWorker thread.
     }
 
     public synchronized void clear() {
+        log.info("Clearing annotation model");
         currentWorkspace = null;
         currentSample = null;
         currentTagMap = null;
@@ -223,6 +228,8 @@ called from a  SimpleWorker thread.
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
+        
+        log.info("Loading sample {}", sample.getId());
         currentWorkspace = null;
         currentSample = sample;
         currentTagMap = null;
@@ -232,21 +239,26 @@ called from a  SimpleWorker thread.
         if (workspace == null) {
             throw new IllegalArgumentException("Cannot load null workspace");
         }
-        
+
+        log.info("Loading workspace {}", workspace.getId());
         currentWorkspace = workspace;
         currentSample = tmDomainMgr.getSample(workspace);
 
         // Neurons need to be loaded en masse from raw data from server.
+        log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
 
         // Create the local tag map for cached access to tags
+        log.info("Creating tag map for workspace {}", workspace.getId());
         currentTagMap = new TmNeuronTagMap();
         for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
         }
+        
         // Clear neuron selection
+        log.info("Clearing current neuron for workspace {}", workspace.getId());
         setCurrentNeuron(null);        
     }
     
@@ -414,7 +426,6 @@ called from a  SimpleWorker thread.
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);
-        getNeuronList().add(neuron);
         setCurrentNeuron(neuron);
         
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -476,7 +487,6 @@ called from a  SimpleWorker thread.
 
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
-        getNeuronList().remove(deletedNeuron);
 
         final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
@@ -764,9 +774,9 @@ called from a  SimpleWorker thread.
 
         // Save the target neuron.
         // log.info("Saving target neuron.");
-        getNeuronList().remove(targetNeuron);
+        neuronManager.removeNeuron(targetNeuron);
         neuronManager.saveNeuronData(updateTargetNeuron);
-        getNeuronList().add(updateTargetNeuron);
+        neuronManager.addNeuron(updateTargetNeuron);
         // Save the source neuron, empty or not.
         if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
             // log.info("Saving source neuron.");
@@ -1573,7 +1583,7 @@ called from a  SimpleWorker thread.
         neuronManager.saveNeuronData(neuron);
 
         // add it to the workspace
-        getNeuronList().add(neuron);
+        neuronManager.addNeuron(neuron);
         
         return neuron;
     }
