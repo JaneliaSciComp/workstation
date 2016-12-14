@@ -205,6 +205,7 @@ public class SageDiscoverServiceHelper {
                     iterator.close();
                 }
                 catch (Exception e) {
+                    // log a status transition
                     logger.error("Unable to close ResultSetIterator for line properties "+
                             "\n"+e.getMessage()+"\n. Continuing...");
                 }
