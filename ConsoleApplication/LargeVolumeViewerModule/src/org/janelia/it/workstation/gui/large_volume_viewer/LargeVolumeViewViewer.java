@@ -137,7 +137,6 @@ public class LargeVolumeViewViewer extends JPanel {
                     protected void hadSuccess() {
                         if (success) {
                             logger.info("Image data loading completed");
-                            progress.finish();
                         }
                         else {
                             logger.info("Image data loading failed");
@@ -146,6 +145,7 @@ public class LargeVolumeViewViewer extends JPanel {
                                     "Could not open workspace",
                                     JOptionPane.ERROR_MESSAGE);
                         }
+                        progress.finish();
                     }
 
                     @Override
