@@ -59,8 +59,8 @@ public class RerunSamplesAction extends AbstractAction {
                 if (sample.getStatus() == null) {
                     logger.info("Null sample status in selection Name={}, ID={}.", sample.getName(), sample.getId());
                 }
-                if (!DomainConstants.VALUE_PROCESSING.equals(sample.getStatus())  &&
-                    !DomainConstants.VALUE_MARKED.equals(sample.getStatus())  &&
+                if (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
+                    !PipelineStatus.Scheduled.toString().equals(sample.getStatus())  &&
                     ClientDomainUtils.hasWriteAccess(sample)) {
                     samples.add(sample);
                 }
