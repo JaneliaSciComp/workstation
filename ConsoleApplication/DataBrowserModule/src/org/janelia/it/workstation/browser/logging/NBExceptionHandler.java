@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import javax.swing.JButton;
@@ -68,13 +69,18 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     public void publish(LogRecord record) {
         if (record.getThrown()!=null) {
             this.throwable = record.getThrown();
-            if (AccessManager.getAccessManager().isLoggedIn()) { // JW-25430: Only attempt to auto-send exceptions once the user has logged in
-                try {
-                    autoSendNovelExceptions();
-                }
-                catch (Throwable t) {
-                    log.error("Error attempting to auto-send exceptions", t);
-                }
+            
+            // Only auto-send exceptions which are logged at error ("SEVERE") level or higher
+            if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
+            
+            // JW-25430: Only attempt to auto-send exceptions once the user has logged in
+            if (!AccessManager.getAccessManager().isLoggedIn()) return; 
+            
+            try {
+                autoSendNovelExceptions();
+            }
+            catch (Throwable t) {
+                log.error("Error attempting to auto-send exceptions", t);
             }
         }
     }

@@ -29,6 +29,6 @@ public class NeuronHideAction extends EditAction {
     @Override
     public void actionPerformed(ActionEvent e) {
         AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-        annotationMgr.setNeuronVisibility(false);
+        annotationMgr.setCurrentNeuronVisibility(false);
     }
 }
