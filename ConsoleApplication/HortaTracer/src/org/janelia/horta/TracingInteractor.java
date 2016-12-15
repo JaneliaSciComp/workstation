@@ -120,6 +120,7 @@ public class TracingInteractor extends MouseAdapter
     private NeuronSet defaultWorkspace = null;
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
+    private NeuronVertex cachedDragVertex;
 
     public NeuronSet getDefaultWorkspace() {
         return defaultWorkspace;
@@ -487,11 +488,44 @@ public class TracingInteractor extends MouseAdapter
         return true;
     }
     
+    @Override 
+    public void mouseDragged(MouseEvent event) {
+        // log.info("Tracing Dragging");
+        if (cachedDragVertex != null) {
+            // TODO: update display (only) of dragged vertex
+            // log.info("Dragging a vertex");       
+            event.consume(); // Don't let OrbitPanZoomInteractor drag the world
+            log.info("Consumed tracing drag event");
+        }
+    }
+    
     @Override
     public void mouseMoved(MouseEvent event) 
     {
         // TODO: update old provisional tracing behavior
         moveHoverCursor(event.getPoint());
+    }
+    
+    @Override
+    public void mousePressed(MouseEvent event) {
+        // log.info("Begin drag");
+        if (cachedHighlightVertex != null) {
+            cachedDragVertex = cachedHighlightVertex;
+            // log.info("Begin drag vertex");
+        }
+        else {
+            cachedDragVertex = null;
+        }
+    }
+    
+    @Override
+    public void mouseReleased(MouseEvent event) {
+        // log.info("End drag");
+        if (cachedDragVertex != null) {
+            // log.info("End drag vertex");
+            // TODO: Maybe fire a "anchor moved" signal
+        }
+        cachedDragVertex = null;
     }
 
     // Show provisional Anchor radius and position for current mouse location
