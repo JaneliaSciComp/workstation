@@ -11,7 +11,7 @@
         <h1>Loading...</h1>
     </div>
 
-    <button ng-click="getStateSummary()">State Summary</button>
+    <button ng-click="modeStateSummary()">State Summary</button>
 
     <button ng-click="getCurrentServices()">Current Services</button>
 
@@ -82,26 +82,35 @@
         }
 
         $scope.stateCount=0;
+        $scope.retrieveOn=false;
+
+        $scope.modeStateSummary = function () {
+            $scope.retrieveOn=true;
+            $scope.mode="stateSummary";
+        }
 
         $scope.getStateSummary = function() {
-            $scope.stateCount=$scope.stateCount+1;
-            $http.get($scope.serverUrl+"/rest-v1/jacsv2/stateSummary")
-                .then(function(response) {
-                    $scope.stateSummary = response.data;
-                    $scope.mode="stateSummary";
-                });
+            if ($scope.retrieveOn==true) {
+                $scope.stateCount = $scope.stateCount + 1;
+                $http.get($scope.serverUrl + "/rest-v1/jacsv2/stateSummary")
+                    .then(function (response) {
+                        $scope.stateSummary = response.data;
+                    });
+            }
         }
 
         $scope.getCurrentServices = function() {
             $http.get($scope.serverUrl+"/rest-v1/jacsv2/currentServices")
                 .then(function(response) {
                     $scope.currentServices = response.data;
+                    $scope.retrieveOn=false;
                     $scope.mode="currentServices";
                 });
         }
 
         $scope.getEventsForService = function(x) {
             $scope.eventsForService=x.events;
+            $scope.retrieveOn=false;
             $scope.mode="eventsForService";
         }
 
