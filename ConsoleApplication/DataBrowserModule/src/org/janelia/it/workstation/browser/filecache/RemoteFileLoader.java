@@ -139,6 +139,15 @@ public abstract class RemoteFileLoader
 
         createParentDirectroiesIfNeccesary(activeFile);
 
+        if (activeFile.exists()) {
+            LOG.debug("loadRemoteFile: active file exists, and will be deleted: {}", 
+                    activeFile.getAbsolutePath());
+            if (!activeFile.delete()) {
+                LOG.warn("loadRemoteFile: before move, failed to remove active file {}",
+                        activeFile.getAbsolutePath());
+            }
+        }
+        
         if (tempFile.renameTo(activeFile)) {
             LOG.debug("loadRemoteFile: copied {} to {}", remoteFileUrl, activeFile.getAbsolutePath());
         } else {

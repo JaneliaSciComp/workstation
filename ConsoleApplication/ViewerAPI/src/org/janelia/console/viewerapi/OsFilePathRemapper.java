@@ -50,7 +50,8 @@ public class OsFilePathRemapper
         sWinPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/from_tier2", "//dm11/mousebrainmicro/from_tier2");
         sWinPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "//tier2/mousebrainmicro/mousebrainmicro/");
         sWinPrefixMappings.put("/nrs/mltest/", "//nrs/mltest/");
-        
+        sWinPrefixMappings.put("/nrs/mouselight/", "//nrs/mouselight/");
+
         //prefixMappings.put("/tier2/", "//tier2/"); // Windows
         //prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
 
@@ -60,6 +61,7 @@ public class OsFilePathRemapper
         sMacPrefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/from_tier2", "/Volumes/mousebrainmicro/from_tier2");
         sMacPrefixMappings.put("/tier2/mousebrainmicro/mousebrainmicro/", "/Volumes/mousebrainmicro/mousebrainmicro/");
         sMacPrefixMappings.put("/nrs/mltest/", "/Volumes/mltest/");
+        sMacPrefixMappings.put("/nrs/mouselight/", "/Volumes/mouselight/");
     }
     
     public static String remapLinuxPath(String linuxPath) {

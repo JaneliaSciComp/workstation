@@ -102,13 +102,8 @@ public abstract class BackgroundWorker extends SimpleWorker {
      * Same as execute(), except throws events on the EventBus.
      */
     public void executeWithEvents() {
+        ProgressTopComponent.ensureActive();
+        Events.getInstance().postOnEventBus(new WorkerStartedEvent(BackgroundWorker.this));
         execute();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                ProgressTopComponent.ensureActive();
-            }
-        });
-        Events.getInstance().postOnEventBus(new WorkerStartedEvent(this));
     }
 }

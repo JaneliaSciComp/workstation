@@ -325,7 +325,7 @@ public class ProgressMeterPanel extends JPanel {
                 statusLabel.setText("Cancelled");
             }
             else if (error!=null) {
-                log.warn("Error occurred while running task",error);
+                log.error("Error occurred while running task", error);
                 statusLabel.setText("ERROR: "+error.getMessage());
                 nextButton.setEnabled(true);
                 nextButton.setIcon(Icons.getIcon("bullet_error.png"));

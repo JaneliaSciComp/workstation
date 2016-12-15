@@ -70,6 +70,10 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             removeFromFolders.put(treeNode,domainObject);
         }
 
+        // TODO: Currently, this alerts the user that e.g. neuron fragments will be deleted permanently, even though they're 
+        // still referenced by their sample. This needs a better solution which takes into account all types of parent/child 
+        // relationships, not only folders.
+        
         if (!listToDelete.isEmpty()) {
             int deleteConfirmation = JOptionPane.showConfirmDialog(ConsoleApp.getMainFrame(),
                     "There are " + listToDelete.size() + " items in your remove list that will be deleted permanently.",
@@ -84,7 +88,7 @@ public class RemoveItemsFromFolderAction extends AbstractAction {
             @Override
             protected void doStuff() throws Exception {
 
-                // Remove any actual objects that are no longer references
+                // Remove any actual objects that are no longer referenced
                 if (!listToDelete.isEmpty()) {
                     log.info("Looking for provider to deleting object entirely: {}", listToDelete);
                     for(DomainObject domainObject : domainObjects) {

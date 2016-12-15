@@ -250,6 +250,6 @@ public final class DomainViewerTopComponent extends TopComponent {
     }
     
     public static boolean isSupported(DomainObject domainObject) {
-        return getEditorClass(domainObject)!=null;
+        return domainObject!=null && getEditorClass(domainObject)!=null;
     }
 }

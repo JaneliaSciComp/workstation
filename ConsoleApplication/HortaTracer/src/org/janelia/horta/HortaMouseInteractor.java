@@ -30,10 +30,15 @@
 
 package org.janelia.horta;
 
+import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.MouseInputListener;
+
 /**
  *
  * @author brunsc
  */
-public class HortaMouseInteractor {
-    
+public class HortaMouseInteractor 
+extends MouseInputAdapter
+implements MouseInputListener
+{
 }

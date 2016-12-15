@@ -97,7 +97,7 @@ implements NeuronSet// , LookupListener
         try {
             neuron = annotationModel.createNeuron(neuronName);
         } catch (Exception ex) {
-            // Exceptions.printStackTrace(ex);
+            logger.warn("Error creating neuron",ex);
             return null;
         }
         return new NeuronModelAdapter(neuron, annotationModel, workspace, sample);
@@ -334,7 +334,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void workspaceLoaded(TmWorkspace workspace)
         {
-            logger.info("Workspace loaded");
+            logger.debug("Workspace loaded");
             setWorkspace(workspace);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
@@ -415,6 +415,7 @@ implements NeuronSet// , LookupListener
         private TmSample sample;
         private final Map<Long, NeuronModelAdapter> cachedNeurons = new HashMap<>();
         private AnnotationModel annotationModel;
+        private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
         private NeuronModel neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) 
         {
@@ -538,7 +539,8 @@ implements NeuronSet// , LookupListener
                 annotationModel.selectNeuron(tmn);
             try {
                 annotationModel.deleteCurrentNeuron();
-            } catch (Exception exc) {
+            } catch (Exception ex) {
+                logger.warn("Error deleting neuron",ex);
                 return false;
             }
             finally {
