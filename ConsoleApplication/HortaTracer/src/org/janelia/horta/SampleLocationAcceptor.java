@@ -100,7 +100,6 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         ktxSource = loadKtxSource(url, progress);
                         if (ktxSource != null)
                             nttc.setKtxSource(ktxSource);
-                        // TODO: is ktx loading enabled?
                     }
                     else {
                         nttc.setKtxSource(null);
@@ -118,17 +117,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                        /*
-                        GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
-                        try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
-                        glAutoDrawable.display();
-                         */
                     }
                     else { // Load ktx files here
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
                         loader.loadKtxTileAtCurrentFocus(ktxSource);
-                        // TODO:
                     }
                     nttc.redrawNow();
                 } catch (final IOException ex) {
