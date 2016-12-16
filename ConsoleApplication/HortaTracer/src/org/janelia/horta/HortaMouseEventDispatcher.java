@@ -47,11 +47,13 @@ implements MouseInputListener
     
     public HortaMouseEventDispatcher(
             MouseInputListener TracingInteractor,
-            MouseInputListener WorldInteractor)
+            MouseInputListener WorldInteractor,
+            MouseInputListener HortaInteractor)
     {
         // Use explicit ordering of event dispatch
         listeners.add(TracingInteractor);
-        listeners.add(WorldInteractor);        
+        listeners.add(WorldInteractor);
+        listeners.add(HortaInteractor);
     }
 
     @Override

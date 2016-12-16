@@ -627,21 +627,27 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Delegate tracing interaction to customized class
         tracingInteractor = new TracingInteractor(this, undoRedoManager);
         
-        // TODO: push listening into HortaMouseEventDispatcher
+        // push listening into HortaMouseEventDispatcher
+        final boolean bDispatchMouseEvents = true;
+        
+        Component interactorComponent = getMouseableComponent();
         MouseInputListener listener = new TolerantMouseClickListener(tracingInteractor, 5);
-        getMouseableComponent().addMouseListener(listener);
-        getMouseableComponent().addMouseMotionListener(listener);
-        getMouseableComponent().addKeyListener(tracingInteractor);
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(listener);
+            interactorComponent.addMouseMotionListener(listener);
+        }
+        interactorComponent.addKeyListener(tracingInteractor);
         
         // Setup 3D viewer mouse interaction
-        Component interactorComponent = sceneWindow.getInnerComponent();
         worldInteractor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
                 sceneWindow.getInnerComponent());
         
         // TODO: push listening into HortaMouseEventDispatcher
-        interactorComponent.addMouseListener(worldInteractor);
-        interactorComponent.addMouseMotionListener(worldInteractor);
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(worldInteractor);
+            interactorComponent.addMouseMotionListener(worldInteractor);
+        }
         interactorComponent.addMouseWheelListener(worldInteractor);
         
         // 3) Add custom interactions
@@ -712,10 +718,21 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
         };
-        // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
-        TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
-        sceneWindow.getInnerComponent().addMouseListener(tolerantMouseClickListener);
-        sceneWindow.getInnerComponent().addMouseMotionListener(tolerantMouseClickListener);
+        
+        if (! bDispatchMouseEvents) {
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
+        
+        if (bDispatchMouseEvents) {
+            HortaMouseEventDispatcher listener0 = new HortaMouseEventDispatcher(tracingInteractor, worldInteractor, hortaMouseListener);
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(listener0, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
 
     }
 
