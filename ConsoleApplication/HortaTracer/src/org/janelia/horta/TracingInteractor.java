@@ -66,6 +66,7 @@ import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.model.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
+import org.janelia.console.viewerapi.model.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.VertexAdder;
 import org.janelia.geometry3d.ConstVector3;
@@ -544,24 +545,44 @@ public class TracingInteractor extends MouseAdapter
             ConstVector3 newLocation = new Vector3(hoverVertex.getLocation());
             if (! newLocation.equals(startingDragVertexLocation)) 
             {
-                // TODO: use an undoable MoveVertex Command 
-                
-                cachedHighlightVertex.setLocation(
-                        newLocation.getX(),
-                        newLocation.getY(),
-                        newLocation.getZ()
-                );
-                // fire a "anchor moved" signal
-                cachedHighlightNeuron.getVertexUpdatedObservable().setChanged();
-                cachedHighlightNeuron.getVertexUpdatedObservable().notifyObservers(
-                     new VertexWithNeuron(cachedHighlightVertex, cachedHighlightNeuron));
-                
-                // TODO: repaint right now...
-                highlightHoverModel.getVertexUpdatedObservable().setChanged();
-                highlightHoverModel.getVertexUpdatedObservable().notifyObservers(null);
+                moveAnchor(cachedHighlightNeuron, cachedHighlightVertex, newLocation);
             }
         }
         cachedDragVertex = null;
+    }
+    
+    private boolean moveAnchor(NeuronModel neuron, NeuronVertex anchor, ConstVector3 newLocation) 
+    {
+        MoveNeuronAnchorCommand cmd = new MoveNeuronAnchorCommand(
+                neuron,
+                anchor,
+                new float[] {
+                    newLocation.getX(),
+                    newLocation.getY(),
+                    newLocation.getZ()
+                }
+        );
+        String errorMessage = "Failed to move neuron anchor";
+        try {
+            if (cmd.execute()) {
+                log.info("User drag-moved anchor in Horta");
+                undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+
+                // repaint right now...
+                highlightHoverModel.getVertexUpdatedObservable().setChanged();
+                highlightHoverModel.getVertexUpdatedObservable().notifyObservers(null);
+                return true;
+            }
+        }
+        catch (Exception exc) {
+            errorMessage += ":\n" + exc.getMessage();
+        }
+        JOptionPane.showMessageDialog(
+                volumeProjection.getMouseableComponent(),
+                errorMessage,
+                "Failed to move neuron anchor",
+                JOptionPane.WARNING_MESSAGE);
+        return false;
     }
 
     // Show provisional Anchor radius and position for current mouse location
