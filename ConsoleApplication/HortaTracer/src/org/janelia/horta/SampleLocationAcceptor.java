@@ -95,10 +95,16 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     URL url = sampleLocation.getSampleUrl();
                     
                     // First check to see if ktx tiles are available
-                    BlockTileSource ktxSource = loadKtxSource(url, progress);
-                    if (ktxSource != null)
-                        nttc.setKtxSource(ktxSource);
-                    // TODO: is ktx loading enabled?
+                    BlockTileSource ktxSource = null;
+                    if (nttc.isPreferKtx()) {
+                        ktxSource = loadKtxSource(url, progress);
+                        if (ktxSource != null)
+                            nttc.setKtxSource(ktxSource);
+                        // TODO: is ktx loading enabled?
+                    }
+                    else {
+                        nttc.setKtxSource(null);
+                    }
                     
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);

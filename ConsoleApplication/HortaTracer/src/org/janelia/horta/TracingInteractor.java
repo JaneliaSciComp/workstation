@@ -495,7 +495,7 @@ public class TracingInteractor extends MouseAdapter
             // TODO: update display (only) of dragged vertex
             // log.info("Dragging a vertex");       
             event.consume(); // Don't let OrbitPanZoomInteractor drag the world
-            log.info("Consumed tracing drag event");
+            // log.info("Consumed tracing drag event");
         }
     }
     

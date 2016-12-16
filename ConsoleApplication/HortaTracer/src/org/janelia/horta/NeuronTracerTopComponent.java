@@ -252,7 +252,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     private final HortaVolumeCache volumeCache;
     private final HortaMovieSource movieSource = new HortaMovieSource(this);
     
-    private final KtxBlockMenus ktxBlockMenus = new KtxBlockMenus();
+    private final KtxBlockMenuBuilder ktxBlockMenuBuilder = new KtxBlockMenuBuilder();
 
     public static final NeuronTracerTopComponent getInstance() {
         return findThisComponent();
@@ -840,6 +840,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
                 prefs.getBoolean("bCacheHortaTiles", volumeCache.isUpdateCache()));
+        setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
     
     private void saveStartupPreferences() {
@@ -875,6 +876,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
         prefs.putBoolean("bCacheHortaTiles", volumeCache.isUpdateCache());
+        prefs.putBoolean("bPreferKtxTiles", isPreferKtx());
     }
 
     private void initialize3DViewer() {
@@ -1103,18 +1105,10 @@ public final class NeuronTracerTopComponent extends TopComponent
                         popupMenuScreenPoint,
                         mouseXyz,
                         focusXyz,
-                        null, // TOreDO: Ktx block tile source
                         neuronMPRenderer,
                         sceneWindow
                 );
                 
-                Action resetRotationAction = new AbstractAction("Reset Rotation") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        new ResetRotationAction().actionPerformed(e);
-                    }
-                };
-
                 // Setting popup menu title here instead of in JPopupMenu constructor,
                 // because title from constructor is not shown in default look and feel.
                 topMenu.add("Options:").setEnabled(false); // TODO should I place title in constructor?
@@ -1152,6 +1146,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                     topMenu.add(new JPopupMenu.Separator());
                 }
                 
+                Action resetRotationAction = new AbstractAction("Reset Rotation") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        new ResetRotationAction().actionPerformed(e);
+                    }
+                };
+
                 // Annotators want "Reset Rotation" on the top level menu
                 // Issue JW-25370
                 topMenu.add(resetRotationAction);
@@ -1181,7 +1182,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                ktxBlockMenus.populateMenus(menuContext);
+                ktxBlockMenuBuilder.populateMenus(menuContext);
                 
                 if (currentSource != null) 
                 {
@@ -1969,4 +1970,11 @@ public final class NeuronTracerTopComponent extends TopComponent
                 v, 150);
     }
 
+    public boolean isPreferKtx() {
+        return ktxBlockMenuBuilder.isPreferKtx();
+    }
+
+    public void setPreferKtx(boolean doPreferKtx) {
+        ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    }
 }
