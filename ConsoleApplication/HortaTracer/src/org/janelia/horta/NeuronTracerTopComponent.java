@@ -203,7 +203,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
     
     private SceneWindow sceneWindow;
-    private OrbitPanZoomInteractor interactor;
+    private OrbitPanZoomInteractor worldInteractor;
     private HortaMetaWorkspace metaWorkspace;
     private final NeuronVertexSpatialIndex neuronVertexIndex;
     
@@ -626,11 +626,23 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         // Delegate tracing interaction to customized class
         tracingInteractor = new TracingInteractor(this, undoRedoManager);
-
+        
+        // TODO: push listening into HortaMouseEventDispatcher
+        MouseInputListener listener = new TolerantMouseClickListener(tracingInteractor, 5);
+        getMouseableComponent().addMouseListener(listener);
+        getMouseableComponent().addMouseMotionListener(listener);
+        getMouseableComponent().addKeyListener(tracingInteractor);
+        
         // Setup 3D viewer mouse interaction
-        interactor = new OrbitPanZoomInteractor(
+        Component interactorComponent = sceneWindow.getInnerComponent();
+        worldInteractor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
                 sceneWindow.getInnerComponent());
+        
+        // TODO: push listening into HortaMouseEventDispatcher
+        interactorComponent.addMouseListener(worldInteractor);
+        interactorComponent.addMouseMotionListener(worldInteractor);
+        interactorComponent.addMouseWheelListener(worldInteractor);
         
         // 3) Add custom interactions
         MouseInputListener hortaMouseListener = new MouseInputAdapter() 

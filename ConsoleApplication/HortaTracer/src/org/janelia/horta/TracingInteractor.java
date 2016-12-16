@@ -153,7 +153,7 @@ public class TracingInteractor extends MouseAdapter
             UndoRedo.Manager undoRedoManager) 
     {
         this.volumeProjection = volumeProjection;
-        connectMouseToComponent();
+        // connectMouseToComponent();
         this.undoRedoManager = undoRedoManager;
     }
 

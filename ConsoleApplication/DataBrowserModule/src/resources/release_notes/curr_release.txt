@@ -2,4 +2,5 @@
 
 MouseLight
 * Add Horta menu to toggle loading of Ktx/Rendered tiles vs Raw/Unsupported tiles
-* Synchronized Horta display after moving an anchor in LVV
+* Synchronize Horta display after moving an anchor in LVV
+* Add ability to create new Neurons in Horta

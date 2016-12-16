@@ -75,9 +75,6 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     public OrbitPanZoomInteractor(AbstractCamera camera, Component component) 
     {
         super(camera, component);
-        component.addMouseListener(this);
-        component.addMouseMotionListener(this);
-        component.addMouseWheelListener(this);
         createCursorImages();
         this.component = component;
         checkCursor(crosshairCursor);
