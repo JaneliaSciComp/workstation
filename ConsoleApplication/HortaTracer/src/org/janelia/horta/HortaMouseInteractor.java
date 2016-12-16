@@ -28,16 +28,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.horta;
 
-import org.janelia.console.viewerapi.BasicGenericObservable;
+import javax.swing.event.MouseInputAdapter;
+import javax.swing.event.MouseInputListener;
 
 /**
  *
  * @author brunsc
  */
-public class BasicNeuronVertexAdditionObservable 
-extends BasicGenericObservable<VertexWithNeuron>
-implements NeuronVertexAdditionObservable
+public class HortaMouseInteractor 
+extends MouseInputAdapter
+implements MouseInputListener
 {
 }

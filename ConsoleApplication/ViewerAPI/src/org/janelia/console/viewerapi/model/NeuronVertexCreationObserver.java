@@ -36,5 +36,5 @@ import org.janelia.console.viewerapi.GenericObserver;
  *
  * @author brunsc
  */
-public interface NeuronVertexAdditionObserver extends GenericObserver<VertexWithNeuron> 
+public interface NeuronVertexCreationObserver extends GenericObserver<VertexWithNeuron> 
 {}

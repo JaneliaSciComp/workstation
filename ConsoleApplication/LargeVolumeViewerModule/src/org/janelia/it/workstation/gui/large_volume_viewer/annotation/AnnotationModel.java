@@ -666,6 +666,7 @@ called from a  SimpleWorker thread.
             // Update value in database.
             synchronized(neuron) {
                 neuronManager.saveNeuronData(neuron);
+                fireAnnotationMoved(annotationID);
             }
         } catch (Exception e) {
             // error means not persisted; however, in the process of moving,
@@ -1671,6 +1672,12 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public void fireAnnotationMoved(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationMoved(annotation);
+        }
+    }
+
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
         // update workspace; update and select new neuron; this will draw points as well
@@ -1681,6 +1688,10 @@ called from a  SimpleWorker thread.
 
     private boolean eitherIsNull(Object object1, Object object2) {
         return object1 == null || object2 == null;
+    }
+
+    void fireAnnotationMoved(Long annotationID) {
+        fireAnnotationMoved(getGeoAnnotationFromID(annotationID));
     }
 
     void fireAnnotationNotMoved(Long annotationID) {

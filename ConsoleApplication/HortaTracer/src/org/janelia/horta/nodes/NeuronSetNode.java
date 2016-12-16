@@ -221,7 +221,7 @@ public class NeuronSetNode extends AbstractNode
             for (NeuronModel neuron : neurons) {
                 neuron.getGeometryChangeObservable().setChanged();
                 neuron.getVertexesRemovedObservable().setChanged();
-                neuron.getVertexAddedObservable().setChanged();
+                neuron.getVertexCreatedObservable().setChanged();
                 neuron.getVisibilityChangeObservable().setChanged();
                 neuron.getColorChangeObservable().setChanged();
             }

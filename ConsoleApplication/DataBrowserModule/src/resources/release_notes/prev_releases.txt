@@ -1,3 +1,27 @@
+// 5.6.0
+
+Workstation Browser
+* Fixed issue preventing the Home folder from being automatically opened at startup
+* Fixed issue where Explorer tree was not refreshed when adding to a folder in some cases
+* Fixed bug where fast background tasks did not show in progress panel
+* Restored missing "Report A Bug" menu item
+* Many other minor bug fixes (see JIRA)
+
+FlyLight
+* Added "apply to all" check box to file download pop-up dialog
+* Fixed bug preventing users from removing neuron fragments from folders 
+
+MouseLight    
+* Added "Save As" feature for Workspaces
+* Restored Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
+* Moved "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+* Fixed problems affecting samples with origin at x=0
+* Fixed problem where neurons did not display when read-only access to granted to a Workspace
+* Greatly improved performance of "Load Linux SWC Folder" action
+* Improved performance of bulk hide/show and other neuron actions
+
 // 5.5.2
 
 Changes

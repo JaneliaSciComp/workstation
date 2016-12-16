@@ -51,6 +51,8 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Vantage manages a View matrix
@@ -68,6 +70,8 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     private Cursor currentCursor;
     private Component component;
     
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+
     public OrbitPanZoomInteractor(AbstractCamera camera, Component component) 
     {
         super(camera, component);
@@ -177,6 +181,11 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
 
     @Override
     public void mouseDragged(MouseEvent event) {
+        if (event.isConsumed()) {
+            // log.info("Skipping consumed Pan drag event");
+            return; // So TracingInteractor can avoid world drag
+        }
+        // log.info("PanZoom dragging");
         boolean bChanged = false;
         if (previousPoint != null) {
             int dx = event.getPoint().x - previousPoint.x;
