@@ -145,6 +145,7 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.horta.actions.ResetRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
@@ -303,7 +304,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
-
+        
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
         
@@ -553,6 +554,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                 spheresActor.getNeuron().getVertexesRemovedObservable().addObserver(new NeuronVertexDeletionObserver() {
                     @Override
                     public void update(GenericObservable<VertexCollectionWithNeuron> object, VertexCollectionWithNeuron data) {
+                        redrawNow();
+                    }
+                });
+                spheresActor.getNeuron().getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+                    @Override
+                    public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
                         redrawNow();
                     }
                 });
@@ -1736,6 +1743,17 @@ public final class NeuronTracerTopComponent extends TopComponent
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
+        Vector3 xyz = worldXyzForScreenXy(
+                xy,
+                pCam,
+                depthOffset);
+        return xyz;
+    }
+
+    @Override
+    public Vector3 worldXyzForScreenXyInPlane(Point2D xy) {
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        double depthOffset = 0.0;
         Vector3 xyz = worldXyzForScreenXy(
                 xy,
                 pCam,
