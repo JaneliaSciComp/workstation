@@ -1,8 +1,5 @@
 package org.janelia.it.jacs.model.domain.sample;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.AbstractDomainObject;
