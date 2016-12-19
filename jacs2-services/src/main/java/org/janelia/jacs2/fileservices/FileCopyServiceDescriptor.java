@@ -12,9 +12,8 @@ import javax.inject.Named;
 public class FileCopyServiceDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "fileCopy";
 
-    @Named("fileCopyService")
     @Inject
-    private Instance<ServiceComputation> sageComputationSource;
+    private Instance<FileCopyComputation> sageComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {

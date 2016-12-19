@@ -12,9 +12,8 @@ import javax.inject.Named;
 public class FlylightSamplePipelineDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "flylightSamplePipeline";
 
-    @Named("flylightSamplePipelineService")
     @Inject
-    private Instance<ServiceComputation> flylightSamplePipelineComputationSource;
+    private Instance<FlylightSamplePipelineComputation> flylightSamplePipelineComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {

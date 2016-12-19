@@ -1,10 +1,12 @@
 package org.janelia.jacs2.sampleprocessing;
 
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.service.ServiceMetaData;
 import org.janelia.jacs2.service.impl.ServiceDescriptor;
 import org.janelia.jacs2.service.impl.ServiceComputation;
 
 import javax.enterprise.inject.Instance;
+import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -12,9 +14,8 @@ import javax.inject.Named;
 public class SageServiceDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "sage";
 
-    @Named("sageService")
     @Inject
-    private Instance<ServiceComputation> sageComputationSource;
+    private Instance<SageComputation> sageComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {
@@ -24,7 +25,7 @@ public class SageServiceDescriptor implements ServiceDescriptor {
     }
 
     @Override
-    public ServiceComputation createComputationInstance() {
+    public ServiceComputation<Void> createComputationInstance() {
         return sageComputationSource.get();
     }
 

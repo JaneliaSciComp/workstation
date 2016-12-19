@@ -2,6 +2,7 @@ package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.service.qualifier.LocalJob;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -13,14 +14,14 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-@Named("localProcessRunner")
-public class ExternalLocalProcessRunner<R> implements ExternalProcessRunner<R> {
+@LocalJob
+public class ExternalLocalProcessRunner implements ExternalProcessRunner {
     @Named("SLF4J")
     @Inject
     private Logger logger;
 
     @Override
-    public CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
+    public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
         logger.debug("Begin local process invocation for {}", serviceContext);
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
         if (StringUtils.isNotBlank(serviceContext.getJacsServiceData().getWorkspace())) {

@@ -5,10 +5,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
-import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsService;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
@@ -16,14 +14,6 @@ import java.util.concurrent.CompletionStage;
 
 @Named("neuronSeparatorService")
 public class NeuronSeparatorComputation extends AbstractExternalProcessComputation<Void> {
-
-    @Named("localProcessRunner") @Inject
-    private ExternalProcessRunner processRunner;
-
-    @Override
-    protected ExternalProcessRunner getProcessRunner() {
-        return processRunner;
-    }
 
     @Override
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {

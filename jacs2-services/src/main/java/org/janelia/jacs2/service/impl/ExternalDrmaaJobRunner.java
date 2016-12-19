@@ -6,6 +6,7 @@ import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
 import org.ggf.drmaa.SessionFactory;
 import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.service.qualifier.ClusterJob;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -13,11 +14,10 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
-@Named("gridRunner")
-public class ExternalDrmaaJobRunner<R> implements ExternalProcessRunner<R> {
+@ClusterJob
+public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
 
     @Named("SLF4J")
     @Inject
@@ -26,7 +26,7 @@ public class ExternalDrmaaJobRunner<R> implements ExternalProcessRunner<R> {
     private SessionFactory drmaaSessionFactory;
 
     @Override
-    public CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
+    public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;

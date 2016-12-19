@@ -10,6 +10,7 @@ import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsService;
+import org.janelia.jacs2.service.qualifier.LocalJob;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -27,8 +27,6 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
-    @Named("localProcessRunner") @Inject
-    private ExternalProcessRunner processRunner;
     @PropertyValue(name = "VAA3D.LibraryPath")
     @Inject
     private String libraryPath;
@@ -46,11 +44,6 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
         boolean deleteSourceFile = false;
         @Parameter(names = "-convert8", arity = 0, description = "If set it converts the image to 8bit", required = false)
         boolean convertTo8Bits = false;
-    }
-
-    @Override
-    protected ExternalProcessRunner getProcessRunner() {
-        return processRunner;
     }
 
     @Override

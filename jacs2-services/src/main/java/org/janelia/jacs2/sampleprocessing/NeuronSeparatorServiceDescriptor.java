@@ -12,9 +12,8 @@ import javax.inject.Named;
 public class NeuronSeparatorServiceDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "neuronSeparator";
 
-    @Named("neuronSeparatorService")
     @Inject
-    private Instance<ServiceComputation> neuronSeparatorComputationSource;
+    private Instance<NeuronSeparatorComputation> neuronSeparatorComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {

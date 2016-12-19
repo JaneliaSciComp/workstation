@@ -12,9 +12,8 @@ import javax.inject.Named;
 public class ExtractLsmMetadataServiceDescriptor implements ServiceDescriptor {
     private static String SERVICE_NAME = "lsmMetadata";
 
-    @Named("lsmMetadataService")
     @Inject
-    private Instance<ServiceComputation> lsmMetadataComputationSource;
+    private Instance<ExtractLsmMetadataComputation> lsmMetadataComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {

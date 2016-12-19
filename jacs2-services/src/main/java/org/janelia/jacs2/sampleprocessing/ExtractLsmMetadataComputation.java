@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
-import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
@@ -25,8 +24,6 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     private static final String PATH_VARNAME = "PATH";
     private static final String PERLLIB_VARNAME = "PERL5LIB";
 
-    @Named("localProcessRunner") @Inject
-    private ExternalProcessRunner processRunner;
     @PropertyValue(name = "Perl.Path")
     @Inject
     private String perlExecutable;
@@ -42,11 +39,6 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         String inputLSMFile;
         @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
         String outputLSMMetadata;
-    }
-
-    @Override
-    protected ExternalProcessRunner getProcessRunner() {
-        return processRunner;
     }
 
     @Override
