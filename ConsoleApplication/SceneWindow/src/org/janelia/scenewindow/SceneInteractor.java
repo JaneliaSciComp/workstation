@@ -32,7 +32,10 @@ package org.janelia.scenewindow;
 import org.janelia.geometry3d.Vector3;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Rotation;
@@ -44,6 +47,7 @@ import org.janelia.geometry3d.Viewport;
  * @author brunsc
  */
 public abstract class SceneInteractor 
+implements MouseListener, MouseMotionListener, MouseWheelListener
 {
     protected final AbstractCamera camera;
     protected final Component component;
