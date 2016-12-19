@@ -33,7 +33,7 @@ On Debian based Linux distributions (Debian, Ubuntu) you can use:
 ```
 create database jacs2_test;
 create user jacs2 identified by 'jacs2';
-grant all on jacs2.* to 'jacs2' identified by 'jacs2';
+grant all on jacs2_test.* to 'jacs2' identified by 'jacs2';
 ```
 
 ## Setup MongoDB
@@ -65,15 +65,30 @@ or
 
 ### Running only the integration tests
 
-`gradle integrationTest`
+`./gradlew integrationTest`
 
 If you want to use a different test database that the one running locally on your machine you can create a configuration file in which you
 override the database connection settings and then use JACS2_CONFIG_TEST environment variable to point to it, eg.,
-`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties gradle integrationTest`
+`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties ./gradlew integrationTest`
 
 Keep in mind that since the integrationTests are configured to run as part of the build check stage you also need to have the environment variable
 set you you run the build:
-`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties gradle build`
+`JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties ./gradlew build`
+
+For example my-config-test.properties could look as below (if you want to run this on the grid make sure you use the IP if the DB is installed 
+on your local dev workstation):
+`
+javax.persistence.jdbc.url=jdbc:mysql://10.101.10.158:3306/jacs2_test?useSSL=false
+javax.persistence.jdbc.user=jacs2
+javax.persistence.jdbc.password=jacs2
+
+MongoDB.ConnectionURL=mongodb://10.101.10.158:27017
+MongoDB.Database=jacs_test
+`
+
+and to build the application you simply run:
+
+`JACS2_CONFIG_TEST=$PWD/my-config-test.properties ./gradlew clean build installDist`
 
 ### Package the application
 
