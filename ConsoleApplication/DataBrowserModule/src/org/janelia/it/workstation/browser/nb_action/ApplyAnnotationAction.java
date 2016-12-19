@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
@@ -159,13 +160,13 @@ public class ApplyAnnotationAction extends NodeAction {
         setReferenceAnnotations(targetIds, ontologyTerm, value, null);
     }
     
-    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, SimpleWorker worker) throws Exception {
+    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         List<DomainObject> domainObjects = model.getDomainObjects(targetIds);
-        setObjectAnnotations(domainObjects, ontologyTerm, value, worker);
+        setObjectAnnotations(domainObjects, ontologyTerm, value, progress);
     }
     
-    public void setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, SimpleWorker worker) throws Exception {
+    public void setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
 
@@ -189,8 +190,9 @@ public class ApplyAnnotationAction extends NodeAction {
             }
             
             doAnnotation(domainObject, existingAnnotation, ontologyTerm, value);
-            if (worker!=null) {
-                worker.setProgress(i++, domainObjects.size());
+            if (progress!=null) {
+                if (progress.isCancelled()) return;
+                progress.setProgress(i++, domainObjects.size());
             }
         }
     }

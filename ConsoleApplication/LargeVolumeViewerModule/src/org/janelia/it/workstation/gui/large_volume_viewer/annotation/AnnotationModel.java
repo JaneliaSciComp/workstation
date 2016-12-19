@@ -33,6 +33,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
@@ -1443,10 +1444,10 @@ called from a  SimpleWorker thread.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, BackgroundWorker worker) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, Progress progress) throws Exception {
 
         log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
-        worker.setStatus("Creating headers");
+        progress.setStatus("Creating headers");
         
         Map<Long,List<String>> neuronHeaders = new HashMap<>();
         for (TmNeuronMetadata neuron: neurons) {
@@ -1465,7 +1466,7 @@ called from a  SimpleWorker thread.
             }
         }
         
-        worker.setStatus("Exporting neuron files");
+        progress.setStatus("Exporting neuron files");
 
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
@@ -1475,19 +1476,19 @@ called from a  SimpleWorker thread.
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
-                worker.setStatus("Exporting neuron file "+(i+1));
+                progress.setStatus("Exporting neuron file "+(i+1));
                 if (swcDatas.size() == 1) {
                     swcData.write(swcFile, -1);
                 }
                 else {
                     swcData.write(swcFile, i);
                 }
-                worker.setProgress(i, total);
+                progress.setProgress(i, total);
                 i++;
             }
         }
 
-        worker.setStatus("Exporting combined file");
+        progress.setStatus("Exporting combined file");
         
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
@@ -1498,13 +1499,13 @@ called from a  SimpleWorker thread.
             }
         }
 
-        worker.setProgress(total, total);
-        worker.setStatus("Done");
+        progress.setProgress(total, total);
+        progress.setStatus("Done");
     }
 
     // TODO: This method seems to be almost exactly the same as the one on the server-side (TiledMicroscopeDAO), except this one
     // updates the SimpleWorker. These code bases should be factored in a common class in the Shared modules.
-    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, SimpleWorker worker) throws Exception {
+    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, Progress progress) throws Exception {
 
         log.info("Importing neuron from SWC file {}",swcFile);
         
@@ -1540,8 +1541,8 @@ called from a  SimpleWorker thread.
         if (updateFrequency == 0) {
             updateFrequency = 1;
         }
-        if (worker != null) {
-            worker.setProgress(0L, totalLength);
+        if (progress != null) {
+            progress.setProgress(0L, totalLength);
         }
 
         Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
@@ -1568,8 +1569,8 @@ called from a  SimpleWorker thread.
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
             
-            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
-                worker.setProgress(node.getIndex(), totalLength);
+            if (progress != null && (node.getIndex() % updateFrequency) == 0) {
+                progress.setProgress(node.getIndex(), totalLength);
             }
         }
 
