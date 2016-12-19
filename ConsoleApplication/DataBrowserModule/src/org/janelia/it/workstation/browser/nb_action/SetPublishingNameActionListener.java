@@ -10,24 +10,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
@@ -40,10 +34,8 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.sage_responder.SageResponderRestClient;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
-import org.janelia.it.workstation.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
-import org.netbeans.api.autoupdate.UpdateUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +142,7 @@ public final class SetPublishingNameActionListener implements ActionListener {
             setLayout(new BorderLayout());
             setPreferredSize(new Dimension(300, 200));
 
-            this.mainPanel = new JPanel(new MigLayout("wrap 2, ins 10, fill"));
+            this.mainPanel = new JPanel(new MigLayout("wrap 2, ins 10, fill", "[grow 0][grow 1]"));
             
             this.comboBox = new JComboBox<>(); 
             comboBox.setEditable(false);
@@ -197,6 +189,8 @@ public final class SetPublishingNameActionListener implements ActionListener {
             buttonPane.add(cancelButton);
             add(buttonPane, BorderLayout.SOUTH);
 
+            getRootPane().setDefaultButton(okButton);
+            
             addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
                     returnValue = null;
@@ -225,7 +219,6 @@ public final class SetPublishingNameActionListener implements ActionListener {
                         boolean selected = false;
                         DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) comboBox.getModel();
                         model.removeAllElements();
-                        model.addElement("");
                         for (final String publishingName : possibleNames) {
                             model.addElement(publishingName);
                             if (publishingName.equals(currValue)) {
@@ -238,9 +231,9 @@ public final class SetPublishingNameActionListener implements ActionListener {
                         }
                         
                         mainPanel.add(new JLabel("Line Name:"), "gap para");
-                        mainPanel.add(new JLabel(lineName), "gap para");
+                        mainPanel.add(new JLabel(lineName), "gap para, ax left");
                         mainPanel.add(new JLabel("Publishing Name:"), "gap para");
-                        mainPanel.add(comboBox, "gap para");
+                        mainPanel.add(comboBox, "gap para, ax left");
                     }
                 }
 

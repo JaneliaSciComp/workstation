@@ -39,7 +39,7 @@ public class SetPublishingNameAction extends AbstractAction {
     private List<Sample> samples;
 
     public SetPublishingNameAction() {
-        super("Choose Line Publishing Name on Selected Samples");
+        super("Choose Line Publishing Name");
     }
     
     public SetPublishingNameAction(List<Sample> samples) {
@@ -58,6 +58,9 @@ public class SetPublishingNameAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        // Important that we don't set the instance variable, because there is a shared instance of this class
+        // that NetBeans uses for all shortcut invocations.
+        List<Sample> samples = this.samples;
         try {
             if (samples==null) {
                 samples = new ArrayList<>();
