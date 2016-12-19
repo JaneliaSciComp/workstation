@@ -40,7 +40,7 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
     public DomainObjectEditorState<T> saveState() {
         if (getDomainObjectNode()==null) {
             if (getDomainObject()==null) {
-                log.warn("No filter is loaded, so state cannot be saved");
+                log.warn("No object is loaded, so state cannot be saved");
                 return null;
             }
             return new DomainObjectEditorState<T>(
@@ -50,6 +50,10 @@ public abstract class DomainObjectEditorPanel<T extends DomainObject> extends JP
                     getSelectionModel().getSelectedIds());
         }
         else {
+            if (getDomainObjectNode()==null || getDomainObjectNode().getDomainObject()==null) {
+                log.warn("No object is loaded, so state cannot be saved");
+                return null;
+            }
             return new DomainObjectEditorState<>(
                     getDomainObjectNode(),
                     getResultsPanel().getCurrPage(),
