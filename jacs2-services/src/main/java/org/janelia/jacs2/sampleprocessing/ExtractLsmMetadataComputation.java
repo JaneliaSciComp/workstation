@@ -9,7 +9,7 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.ExternalProcessRunner;
-import org.janelia.jacs2.service.impl.ServiceComputation;
+import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("lsmMetadataService")
-public class ExtractLsmMetadataComputation extends AbstractExternalProcessComputation {
+public class ExtractLsmMetadataComputation extends AbstractExternalProcessComputation<Void> {
 
     private static final String PATH_VARNAME = "PATH";
     private static final String PERLLIB_VARNAME = "PERL5LIB";
@@ -50,28 +50,23 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     }
 
     @Override
-    public CompletionStage<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> preProcess = new CompletableFuture<>();
-        LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
+    public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
+        CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
+        LsmMetadataArgs lsmMetadataArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(lsmMetadataArgs.inputLSMFile)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Input LSM file name must be specified"));
         } else if (StringUtils.isBlank(lsmMetadataArgs.outputLSMMetadata)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Output LSM metadata name must be specified"));
         } else {
-            preProcess.complete(jacsServiceData);
+            preProcess.complete(jacsService);
         }
         return preProcess;
     }
 
     @Override
-    public CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData) {
+    public CompletionStage<JacsService<Void>> isReadyToProcess(JacsService<Void> jacsService) {
         // this service has no child services
-        return CompletableFuture.completedFuture(jacsServiceData);
-    }
-
-    @Override
-    public ServiceComputation submitChildServiceAsync(JacsServiceData childServiceData, JacsServiceData parentService) {
-        throw new UnsupportedOperationException("FileCopyService does not support child services");
+        return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override

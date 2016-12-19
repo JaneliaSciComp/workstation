@@ -4,5 +4,5 @@ import org.janelia.jacs2.model.service.ServiceMetaData;
 
 public interface ServiceDescriptor {
     ServiceMetaData getMetadata();
-    ServiceComputation createComputationInstance();
+    ServiceComputation<?> createComputationInstance();
 }

@@ -25,22 +25,22 @@ import static org.mockito.Mockito.when;
 
 public class AbstractServiceComputationTest {
 
-    static class TestSuccessfulComputation extends AbstractServiceComputation {
+    static class TestSuccessfulComputation extends AbstractServiceComputation<Void> {
 
         @Override
-        public CompletionStage<JacsServiceData> processData(JacsServiceData ti) {
-            CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
-            completableFuture.complete(ti);
+        public CompletionStage<JacsService<Void>> processData(JacsService<Void> js) {
+            CompletableFuture<JacsService<Void>> completableFuture = new CompletableFuture<>();
+            completableFuture.complete(js);
             return completableFuture;
         }
     }
 
-    static class TestFailedComputation extends AbstractServiceComputation {
+    static class TestFailedComputation extends AbstractServiceComputation<Void> {
 
         @Override
-        public CompletionStage<JacsServiceData> processData(JacsServiceData ti) {
-            CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
-            completableFuture.completeExceptionally(new IllegalStateException("test"));
+        public CompletionStage<JacsService<Void>> processData(JacsService<Void> js) {
+            CompletableFuture<JacsService<Void>> completableFuture = new CompletableFuture<>();
+            completableFuture.completeExceptionally(new ComputationException(js, "test"));
             return completableFuture;
         }
     }
@@ -73,10 +73,10 @@ public class AbstractServiceComputationTest {
     public void testSuccessfulProcessing() {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<JacsServiceData> computation =
+        CompletionStage<JacsService<Void>> computation =
                 CompletableFuture
-                    .supplyAsync(() -> testJacsServiceData, serviceExecutor)
-                    .thenComposeAsync(ti -> testSuccessfullComputation.processData(ti), serviceExecutor);
+                    .supplyAsync(() -> new JacsService<Void>(null, testJacsServiceData), serviceExecutor)
+                    .thenComposeAsync(js -> testSuccessfullComputation.processData(js), serviceExecutor);
         computation
             .thenAcceptAsync(successful, serviceExecutor)
             .exceptionally(ex -> {
@@ -93,10 +93,10 @@ public class AbstractServiceComputationTest {
     public void testFailedProcessing() throws ComputationException {
         Consumer successful = mock(Consumer.class);
         Consumer failure = mock(Consumer.class);
-        CompletionStage<JacsServiceData> computation =
+        CompletionStage<JacsService<Void>> computation =
                 CompletableFuture
-                        .supplyAsync(() -> testJacsServiceData, serviceExecutor)
-                        .thenComposeAsync(ti -> testFailedComputation.processData(ti), serviceExecutor);
+                        .supplyAsync(() -> new JacsService<Void>(null, testJacsServiceData), serviceExecutor)
+                        .thenComposeAsync(js -> testFailedComputation.processData(js), serviceExecutor);
         computation
                 .thenAccept(successful)
                 .exceptionally(ex -> {

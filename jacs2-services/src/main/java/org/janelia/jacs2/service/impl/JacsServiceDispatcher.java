@@ -82,7 +82,7 @@ public class JacsServiceDispatcher {
         return serviceData;
     }
 
-    ServiceComputation getServiceComputation(JacsServiceData jacsServiceData) {
+    ServiceComputation<?> getServiceComputation(JacsServiceData jacsServiceData) {
         ServiceDescriptor serviceDescriptor = getServiceDescriptor(jacsServiceData.getName());
         return serviceDescriptor.createComputationInstance();
     }
@@ -134,25 +134,27 @@ public class JacsServiceDispatcher {
                 return;
             }
             logger.info("Dispatch service {}", queuedService);
-            ServiceComputation serviceComputation = getServiceComputation(queuedService);
-            // The service lifecycle is: preprocess -> isReady -> processData -> isDone -> postProcess
+            ServiceComputation<Object> serviceComputation = (ServiceComputation<Object>) getServiceComputation(queuedService);
+            // The service lifecycle is: preprocess -> isReadyToProcess -> processData -> isDone -> postProcess
             CompletableFuture
                     .supplyAsync(() -> queuedService, serviceExecutor)
-                    .thenApplyAsync(ti -> {
-                        logger.debug("Submit {}", ti);
-                        ti.setState(JacsServiceState.SUBMITTED);
-                        updateServiceInfo(ti);
+                    .thenApplyAsync(serviceData -> {
+                        logger.debug("Submit {}", serviceData);
+                        serviceData.setState(JacsServiceState.SUBMITTED);
+                        updateServiceInfo(serviceData);
                         availableSlots.release();
-                        return ti;
+                        return new JacsService<Object>(this, serviceData);
                     }, serviceExecutor)
                     .thenComposeAsync(serviceComputation::preProcessData, serviceExecutor)
-                    .thenComposeAsync(serviceComputation::isReady, serviceExecutor)
+                    .thenComposeAsync(serviceComputation::isReadyToProcess, serviceExecutor)
                     .thenComposeAsync(serviceComputation::processData, serviceExecutor)
                     .thenComposeAsync(serviceComputation::isDone, serviceExecutor)
-                    .whenCompleteAsync((ti, exc) -> {
-                        JacsServiceData updatedServiceData = ti;
-                        if (updatedServiceData == null) {
+                    .whenCompleteAsync((js, exc) -> {
+                        JacsServiceData updatedServiceData;
+                        if (js == null) {
                             updatedServiceData = queuedService;
+                        } else {
+                            updatedServiceData = js.getJacsServiceData();
                         }
                         logger.debug("Complete {}", updatedServiceData);
                         if (exc == null) {
@@ -165,12 +167,14 @@ public class JacsServiceDispatcher {
                         updateServiceInfo(updatedServiceData);
                         submittedServicesSet.remove(updatedServiceData.getId());
                     }, serviceExecutor)
-                    .whenCompleteAsync((ti, exc) -> {
-                        JacsServiceData updatedServiceData = ti;
-                        if (updatedServiceData == null) {
-                            updatedServiceData = queuedService;
+                    .whenCompleteAsync((js, exc) -> {
+                        JacsService<Object> jacsService;
+                        if (js == null) {
+                            jacsService = new JacsService<Object>(this, queuedService);
+                        } else {
+                            jacsService = js;
                         }
-                        serviceComputation.postProcessData(updatedServiceData, exc);
+                        serviceComputation.postProcessData(jacsService, exc);
                     });
         }
     }

@@ -7,12 +7,11 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
 
-public abstract class AbstractServiceComputation implements ServiceComputation {
+public abstract class AbstractServiceComputation<R> implements ServiceComputation<R> {
 
     @Named("SLF4J")
     @Inject
@@ -23,42 +22,33 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
     private JacsServiceDataPersistence jacsServiceDataPersistence;
 
     @Override
-    public CompletionStage<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
+    public CompletionStage<JacsService<R>> preProcessData(JacsService<R> jacsService) {
         // the default operation is a noop
-        return CompletableFuture.completedFuture(jacsServiceData);
+        return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override
-    public CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData) {
-        return waitForChildServiceToComplete(jacsServiceData);
+    public CompletionStage<JacsService<R>> isReadyToProcess(JacsService<R> jacsService) {
+        return waitForChildServiceToComplete(jacsService);
     }
 
     @Override
-    public CompletionStage<JacsServiceData> isDone(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> checkIfDoneFuture = new CompletableFuture<>();
-        checkIfDoneFuture.complete(jacsServiceData);
-        return checkIfDoneFuture;
+    public CompletionStage<JacsService<R>> isDone(JacsService<R> jacsService) {
+        return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override
-    public void postProcessData(JacsServiceData jacsServiceData, Throwable exc) {
+    public void postProcessData(JacsService<R> jacsService, Throwable exc) {
         // noop
     }
 
-    @Override
-    public ServiceComputation submitChildServiceAsync(JacsServiceData childServiceData, JacsServiceData parentService) {
-        logger.info("Create child service {}", childServiceData);
-        childServiceData.setOwner(parentService.getOwner());
-        JacsServiceData serviceData = serviceDispatcher.submitServiceAsync(childServiceData, Optional.of(parentService));
-        return serviceDispatcher.getServiceComputation(serviceData);
-    }
-
-    protected CompletionStage<JacsServiceData> waitForChildServiceToComplete(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> waitForChildrenToEndFuture = new CompletableFuture<>();
+    protected CompletionStage<JacsService<R>> waitForChildServiceToComplete(JacsService<R> jacsService) {
+        CompletableFuture<JacsService<R>> waitForChildrenToEndFuture = new CompletableFuture<>();
+        JacsServiceData jacsServiceData = jacsService.getJacsServiceData();
         List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
         for (;;) {
             if (uncompletedChildServices.isEmpty()) {
-                waitForChildrenToEndFuture.complete(jacsServiceData);
+                waitForChildrenToEndFuture.complete(jacsService);
                 break;
             }
             List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
@@ -70,7 +60,7 @@ public abstract class AbstractServiceComputation implements ServiceComputation {
                 Thread.currentThread().sleep(1000);
             } catch (InterruptedException e) {
                 logger.warn("Interrup {}", jacsServiceData, e);
-                waitForChildrenToEndFuture.completeExceptionally(e);
+                waitForChildrenToEndFuture.completeExceptionally(new ComputationException(jacsService, e));
                 break;
             }
         }

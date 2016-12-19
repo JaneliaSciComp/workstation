@@ -7,6 +7,7 @@ import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.ExternalLocalProcessRunner;
 import org.janelia.jacs2.service.impl.ExternalProcessRunner;
+import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Named("sageService")
-public class SageComputation extends AbstractExternalProcessComputation {
+public class SageComputation extends AbstractExternalProcessComputation<Void> {
 
     @Named("localProcessRunner") @Inject
     private ExternalProcessRunner processRunner;
@@ -39,4 +40,5 @@ public class SageComputation extends AbstractExternalProcessComputation {
     protected Map<String, String> prepareEnvironment(JacsServiceData si) {
         return ImmutableMap.of();
     }
+
 }

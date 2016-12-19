@@ -1,6 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
+import org.hamcrest.beans.HasPropertyWithValue;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -10,6 +11,7 @@ import org.janelia.jacs2.service.ServerStats;
 import org.janelia.jacs2.service.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -27,7 +29,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -157,7 +162,7 @@ public class JacsServiceDispatcherTest {
     }
 
     private void verifyDispatch(JacsServiceData testServiceData) {
-        CompletionStage<JacsServiceData> process = CompletableFuture.completedFuture(testServiceData);
+        CompletionStage<JacsService> process = CompletableFuture.completedFuture(new JacsService(testDispatcher, testServiceData));
         ServiceSyncer done = new ServiceSyncer();
         Thread joiner = new Thread(done);
         joiner.start();
@@ -176,26 +181,36 @@ public class JacsServiceDispatcherTest {
             fail(e.getMessage());
         }
         verify(logger).info("Dequeued service {}", testServiceData);
-        verify(testComputation).preProcessData(testServiceData);
-        verify(testComputation).isReady(testServiceData);
-        verify(testComputation).processData(testServiceData);
-        verify(testComputation).isDone(testServiceData);
+        ArgumentCaptor<JacsService> jacsServiceArg = ArgumentCaptor.forClass(JacsService.class);
+        verify(testComputation).preProcessData(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation).isReadyToProcess(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation).processData(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation).isDone(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
         verify(jacsServiceDataPersistence, atLeast(2)).update(testServiceData);
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.SUCCESSFUL));
     }
 
-    private ServiceComputation prepareComputations(JacsServiceData testServiceData, Throwable exc, CompletionStage<JacsServiceData> processingStage, Answer<Void> doneAnswer) {
+    private ServiceComputation prepareComputations(JacsServiceData testServiceData, Throwable exc, CompletionStage<JacsService> processingStage, Answer<Void> doneAnswer) {
         ServiceDescriptor testDescriptor = mock(ServiceDescriptor.class);
         ServiceComputation testComputation = mock(ServiceComputation.class);
 
         when(serviceRegistry.lookupService(testServiceData.getName())).thenReturn(testDescriptor);
         when(testDescriptor.createComputationInstance()).thenReturn(testComputation);
 
-        when(testComputation.preProcessData(testServiceData)).thenReturn(CompletableFuture.completedFuture(testServiceData));
-        when(testComputation.isReady(testServiceData)).thenReturn(CompletableFuture.completedFuture(testServiceData));
-        when(testComputation.processData(testServiceData)).thenReturn(processingStage);
-        when(testComputation.isDone(testServiceData)).thenReturn(CompletableFuture.completedFuture(testServiceData));
-        doAnswer(doneAnswer).when(testComputation).postProcessData(same(testServiceData), exc != null ? any(Throwable.class) : isNull());
+        when(testComputation.preProcessData(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
+        when(testComputation.isReadyToProcess(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
+        when(testComputation.processData(any(JacsService.class))).thenReturn(processingStage);
+        when(testComputation.isDone(any(JacsService.class))).then(invocation -> CompletableFuture.completedFuture(invocation.getArgument(0)));
+
+        doAnswer(doneAnswer).when(testComputation).postProcessData(any(JacsService.class), exc != null ? any(Throwable.class) : isNull());
         return testComputation;
     }
 
@@ -208,8 +223,10 @@ public class JacsServiceDispatcherTest {
         Thread joiner = new Thread(done);
         joiner.start();
 
-        CompletableFuture<JacsServiceData> process = new CompletableFuture<>();
-        ComputationException processException = new ComputationException("test exception");
+        JacsService processingService = new JacsService(testDispatcher, testServiceData);
+
+        CompletableFuture<JacsService> process = new CompletableFuture<>();
+        ComputationException processException = new ComputationException(processingService, "test exception");
         process.completeExceptionally(processException);
 
         Answer<Void> doneAnswer = invocation -> {
@@ -226,10 +243,18 @@ public class JacsServiceDispatcherTest {
             fail(e.getMessage());
         }
         verify(logger).info("Dequeued service {}", testServiceData);
-        verify(testComputation).preProcessData(testServiceData);
-        verify(testComputation).isReady(testServiceData);
-        verify(testComputation).processData(testServiceData);
-        verify(testComputation, never()).isDone(testServiceData);
+
+        ArgumentCaptor<JacsService> jacsServiceArg = ArgumentCaptor.forClass(JacsService.class);
+        verify(testComputation).preProcessData(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation).isReadyToProcess(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation).processData(jacsServiceArg.capture());
+        assertSame(testServiceData, jacsServiceArg.getValue().getJacsServiceData());
+
+        verify(testComputation, never()).isDone(any(JacsService.class));
         verify(jacsServiceDataPersistence, times(3)).update(testServiceData);
         assertThat(testServiceData.getState(), equalTo(JacsServiceState.ERROR));
     }

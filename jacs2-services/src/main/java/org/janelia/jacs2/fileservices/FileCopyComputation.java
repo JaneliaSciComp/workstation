@@ -9,7 +9,7 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.ExternalProcessRunner;
-import org.janelia.jacs2.service.impl.ServiceComputation;
+import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("fileCopyService")
-public class FileCopyComputation extends AbstractExternalProcessComputation {
+public class FileCopyComputation extends AbstractExternalProcessComputation<Void> {
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -54,34 +54,29 @@ public class FileCopyComputation extends AbstractExternalProcessComputation {
     }
 
     @Override
-    public CompletionStage<JacsServiceData> preProcessData(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> preProcess = new CompletableFuture<>();
-        FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
+    public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
+        CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
+        FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Source file name must be specified"));
         } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Target file name must be specified"));
         } else {
-            preProcess.complete(jacsServiceData);
+            preProcess.complete(jacsService);
         }
         return preProcess;
     }
 
     @Override
-    public CompletionStage<JacsServiceData> isReady(JacsServiceData jacsServiceData) {
+    public CompletionStage<JacsService<Void>> isReadyToProcess(JacsService<Void> jacsService) {
         // this service has no child services
-        return CompletableFuture.completedFuture(jacsServiceData);
+        return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override
-    public ServiceComputation submitChildServiceAsync(JacsServiceData childServiceData, JacsServiceData parentService) {
-        throw new UnsupportedOperationException("FileCopyService does not support child services");
-    }
-
-    @Override
-    public CompletionStage<JacsServiceData> isDone(JacsServiceData jacsServiceData) {
-        CompletableFuture<JacsServiceData> doneFuture = new CompletableFuture<>();
-        FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
+    public CompletionStage<JacsService<Void>> isDone(JacsService<Void> jacsService) {
+        CompletableFuture<JacsService<Void>> doneFuture = new CompletableFuture<>();
+        FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
         if (fileCopyArgs.deleteSourceFile) {
             try {
                 File sourceFile = new File(fileCopyArgs.sourceFilename);
@@ -90,7 +85,7 @@ public class FileCopyComputation extends AbstractExternalProcessComputation {
                 doneFuture.completeExceptionally(e);
             }
         } else {
-            doneFuture.complete(jacsServiceData);
+            doneFuture.complete(jacsService);
         }
         return doneFuture;
     }

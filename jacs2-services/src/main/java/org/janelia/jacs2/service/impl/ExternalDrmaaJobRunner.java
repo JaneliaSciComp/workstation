@@ -13,10 +13,11 @@ import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 
 @Named("gridRunner")
-public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
+public class ExternalDrmaaJobRunner<R> implements ExternalProcessRunner<R> {
 
     @Named("SLF4J")
     @Inject
@@ -25,21 +26,22 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     private SessionFactory drmaaSessionFactory;
 
     @Override
-    public CompletionStage<JacsServiceData> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsServiceData serviceContext) {
+    public CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
-        CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
+        CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         try {
+            JacsServiceData serviceData = serviceContext.getJacsServiceData();
             jt = drmaaSession.createJobTemplate();
-            jt.setJobName(serviceContext.getName());
+            jt.setJobName(serviceData.getName());
             jt.setRemoteCommand(cmd);
-            jt.setArgs(serviceContext.getArgs());
-            jt.setWorkingDirectory(serviceContext.getWorkspace());
+            jt.setArgs(cmdArgs);
+            jt.setWorkingDirectory(serviceData.getWorkspace());
             jt.setJobEnvironment(env);
-            jt.setInputPath(":" + serviceContext.getInputPath());
-            jt.setOutputPath(":" + serviceContext.getOutputPath());
-            jt.setErrorPath(":" + serviceContext.getErrorPath());
+            jt.setInputPath(":" + serviceData.getInputPath());
+            jt.setOutputPath(":" + serviceData.getOutputPath());
+            jt.setErrorPath(":" + serviceData.getErrorPath());
             String jobId = drmaaSession.runJob(jt);
             logger.info("Submitted job {} for {}", jobId, serviceContext);
             drmaaSession.deleteJobTemplate(jt);
@@ -48,24 +50,24 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
 
             if (jobInfo.wasAborted()) {
                 logger.error("Job {} for {} never ran", jobId, serviceContext);
-                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s never ran", jobId)));
+                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s never ran", jobId)));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
                 if (jobInfo.getExitStatus() != 0) {
-                    completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
                 } else {
                     completableFuture.complete(serviceContext);
                 }
             } else if (jobInfo.hasSignaled()) {
                 logger.warn("Job {} for {} terminated due to signal {}", jobId, serviceContext, jobInfo.getTerminatingSignal());
-                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal())));
+                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %s", jobId, jobInfo.getTerminatingSignal())));
             } else {
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, serviceContext);
-                completableFuture.completeExceptionally(new IllegalStateException(String.format("Job %s completed with unclear conditions", jobId)));
+                completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId)));
             }
         } catch (DrmaaException e) {
             logger.error("Error running a DRMAA job for {} with {}", serviceContext, cmdArgs, e);
-            completableFuture.completeExceptionally(e);
+            completableFuture.completeExceptionally(new ComputationException(serviceContext, e));
         } finally {
             if (jt != null) {
                 try {

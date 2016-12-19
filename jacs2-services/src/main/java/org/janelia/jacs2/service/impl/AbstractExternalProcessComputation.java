@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 
-public abstract class AbstractExternalProcessComputation extends AbstractServiceComputation {
+public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceComputation<R> {
     @PropertyValue(name = "Executables.ModuleBase")
     @Inject
     private String executablesBaseDir;
@@ -47,7 +47,11 @@ public abstract class AbstractExternalProcessComputation extends AbstractService
     }
 
     @Override
-    public CompletionStage<JacsServiceData> processData(JacsServiceData jacsServiceData) {
-        return getProcessRunner().runCmd(jacsServiceData.getServiceCmd(), prepareCmdArgs(jacsServiceData), prepareEnvironment(jacsServiceData), jacsServiceData);
+    public CompletionStage<JacsService<R>> processData(JacsService<R> jacsService) {
+        return getProcessRunner().runCmd(
+                jacsService.getJacsServiceData().getServiceCmd(),
+                prepareCmdArgs(jacsService.getJacsServiceData()),
+                prepareEnvironment(jacsService.getJacsServiceData()),
+                jacsService);
     }
 }

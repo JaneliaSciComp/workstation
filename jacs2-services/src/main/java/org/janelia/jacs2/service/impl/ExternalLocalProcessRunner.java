@@ -2,7 +2,6 @@ package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.jacs2.model.service.JacsServiceData;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -15,23 +14,23 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("localProcessRunner")
-public class ExternalLocalProcessRunner implements ExternalProcessRunner {
+public class ExternalLocalProcessRunner<R> implements ExternalProcessRunner<R> {
     @Named("SLF4J")
     @Inject
     private Logger logger;
 
     @Override
-    public CompletionStage<JacsServiceData> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsServiceData serviceContext) {
+    public CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
         logger.debug("Begin local process invocation for {}", serviceContext);
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
-        if (StringUtils.isNotBlank(serviceContext.getWorkspace())) {
-            File workingDirectory = new File(serviceContext.getWorkspace());
+        if (StringUtils.isNotBlank(serviceContext.getJacsServiceData().getWorkspace())) {
+            File workingDirectory = new File(serviceContext.getJacsServiceData().getWorkspace());
             processBuilder.directory(workingDirectory);
         }
         processBuilder.inheritIO();
         processBuilder.environment().putAll(env);
         logger.info("Start {} with {}; env={}", serviceContext, cmdArgs, processBuilder.environment());
-        CompletableFuture<JacsServiceData> completableFuture = new CompletableFuture<>();
+        CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
             localProcess = processBuilder.start();
@@ -39,7 +38,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
                 int returnCode = localProcess.waitFor();
                 logger.info("Process {} for {} terminated with code {}", localProcess, serviceContext, returnCode);
                 if (returnCode != 0) {
-                    completableFuture.completeExceptionally(new ComputationException("Process terminated with code " + returnCode));
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process terminated with code " + returnCode));
                 } else {
                     completableFuture.complete(serviceContext);
                 }
