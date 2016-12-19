@@ -193,6 +193,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
+    public void anchorMoved(TmGeoAnnotation anchor) {
+        skeleton.moveTmGeoAnchor(anchor);
+    }
+
+    @Override
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {

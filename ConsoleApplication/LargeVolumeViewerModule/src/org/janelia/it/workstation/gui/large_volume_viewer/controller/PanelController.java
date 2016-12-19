@@ -186,6 +186,11 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         filteredAnnotationList.annotationChanged(annotation);
     }
 
+    @Override
+    public void anchorMoved(TmGeoAnnotation anchor) {
+        filteredAnnotationList.annotationChanged(anchor);
+    }
+
     public void clearAnchors() {
         filteredAnnotationList.annotationsChanged(new ArrayList<TmGeoAnnotation>());
     }

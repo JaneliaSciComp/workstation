@@ -351,6 +351,15 @@ public class Skeleton {
         anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
     }
     
+    public void moveTmGeoAnchor(TmGeoAnnotation tga) {
+        Anchor anchor = anchorsByGuid.get(tga.getId());
+        if (anchor == null) {
+            return;
+        }
+        final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+        anchor.setLocation(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+    }
+    
 	public void clear() {
 		if (anchors.size() == 0) {
 			return; // no change
