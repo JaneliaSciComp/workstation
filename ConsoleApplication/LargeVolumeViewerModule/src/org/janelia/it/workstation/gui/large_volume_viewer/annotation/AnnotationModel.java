@@ -333,11 +333,14 @@ called from a  SimpleWorker thread.
         }
 
         TmNeuronMetadata foundNeuron = null;
-        for (TmNeuronMetadata neuron: getNeuronList()) {
+        for (TmNeuronMetadata neuron : getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
                 break;
             }
+        }
+        if (foundNeuron==null) {
+            throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
         }
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
@@ -361,7 +364,7 @@ called from a  SimpleWorker thread.
             return annotation;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());
+        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());        
         TmGeoAnnotation current = annotation;
         TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
