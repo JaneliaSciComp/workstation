@@ -1,10 +1,11 @@
 package org.janelia.it.workstation.browser.actions;
 
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +16,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JComponent;
 import javax.swing.JMenu;
@@ -23,6 +23,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -71,7 +72,6 @@ import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -353,12 +353,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
                             "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if (value==null || value.equals("")) return;
+                    if (StringUtils.isEmpty(value)) return;
 
                     SimpleWorker simpleWorker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            action.doAnnotation(domainObject, term, value);
+                            action.addAnnotation(domainObject, term, value);
                             String annotationValue = "";
                             List<Annotation> annotations = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
                             for (Annotation annotation : annotations) {

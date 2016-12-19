@@ -7,7 +7,6 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +61,6 @@ public class RESTClientManager {
         });
 
         client.register(provider);
-        client.register(MultiPartFeature.class);
     }
 
     public WebTarget getPublishingInfoLineEndpoint() {

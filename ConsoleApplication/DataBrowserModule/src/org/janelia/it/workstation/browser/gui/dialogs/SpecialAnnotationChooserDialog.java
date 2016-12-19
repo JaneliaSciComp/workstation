@@ -166,7 +166,7 @@ public class SpecialAnnotationChooserDialog extends JFrame {
                                 DomainObject target = DomainMgr.getDomainMgr().getModel().getDomainObject(selectedId);
                                 for(OntologyTerm element: OntologyTerms){
                                     ApplyAnnotationAction action = ApplyAnnotationAction.get();
-                                    action.doAnnotation(target, element, model.getValueAt(i,1));
+                                    action.addAnnotation(target, element, model.getValueAt(i,1));
                                     i++;
                                 }
                             }

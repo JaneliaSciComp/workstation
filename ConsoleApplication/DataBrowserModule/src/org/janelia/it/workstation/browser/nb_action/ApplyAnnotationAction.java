@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.browser.nb_action;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.swing.ProgressMonitor;
@@ -13,6 +14,7 @@ import org.janelia.it.jacs.model.domain.ontology.EnumItem;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTermReference;
+import org.janelia.it.jacs.model.domain.support.DomainUtils;
 import org.janelia.it.jacs.model.util.PermissionTemplate;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
@@ -28,6 +30,8 @@ import org.openide.util.HelpCtx;
 import org.openide.util.actions.NodeAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Multimap;
 
 /**
  * Create an annotation by applying the current ontology term to the 
@@ -106,7 +110,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
             log.info("Will annotate all selected objects with: {} ({})",keyTermValue,keyTermId);
 
-            List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
+            final List<Reference> selectedIds = GlobalDomainObjectSelectionModel.getInstance().getSelectedIds();
 
             if (selectedIds.isEmpty()) {
                 // Cannot annotate nothing
@@ -118,8 +122,6 @@ public class ApplyAnnotationAction extends NodeAction {
                 log.debug("Selected: "+id);
             }
 
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            final List<DomainObject> selectedDomainObjects = model.getDomainObjects(selectedIds);
 
             AnnotationEditor editor = new AnnotationEditor(ontology, ontologyTerm);
             final String value = editor.showEditor();
@@ -130,11 +132,7 @@ public class ApplyAnnotationAction extends NodeAction {
 
                 @Override
                 protected void doStuff() throws Exception {
-                    int i = 1;
-                    for (DomainObject domainObject : selectedDomainObjects) {
-                        doAnnotation(domainObject, ontologyTerm, value);
-                        setProgress(i++, selectedDomainObjects.size());
-                    }
+                    setReferenceAnnotations(selectedIds, ontologyTerm, value, this);
                 }
 
                 @Override
@@ -156,8 +154,52 @@ public class ApplyAnnotationAction extends NodeAction {
             ConsoleApp.handleException(e);
         }
     }
+
+    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value) throws Exception {
+        setReferenceAnnotations(targetIds, ontologyTerm, value, null);
+    }
     
-    public void doAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
+    public void setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, SimpleWorker worker) throws Exception {
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+        List<DomainObject> domainObjects = model.getDomainObjects(targetIds);
+        setObjectAnnotations(domainObjects, ontologyTerm, value, worker);
+    }
+    
+    public void setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, SimpleWorker worker) throws Exception {
+
+        DomainModel model = DomainMgr.getDomainMgr().getModel();
+
+        List<Reference> refs = DomainUtils.getReferences(domainObjects);
+        Multimap<Long,Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(refs));
+        
+        
+        int i = 1;
+        for (DomainObject domainObject : domainObjects) {
+            
+            Annotation existingAnnotation = null;
+            
+            Collection<Annotation> annotations = annotationMap.get(domainObject.getId());
+            if (annotations!=null) {
+                for(Annotation annotation : annotations) {
+                    if (annotation.getKeyTerm().getOntologyTermId().equals(ontologyTerm.getId())) {
+                        existingAnnotation = annotation;
+                        break;
+                    }
+                }
+            }
+            
+            doAnnotation(domainObject, existingAnnotation, ontologyTerm, value);
+            if (worker!=null) {
+                worker.setProgress(i++, domainObjects.size());
+            }
+        }
+    }
+
+    public void addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
+        doAnnotation(target, null, ontologyTerm, value);
+    }
+    
+    private void doAnnotation(DomainObject target, Annotation existingAnnotation, OntologyTerm ontologyTerm, Object value) throws Exception {
         
         // TODO: after domainModel.createAnnotation is implemented in the web service, we can use it instead, like this:
 //        DomainModel model = DomainMgr.getDomainMgr().getModel();
@@ -178,7 +220,7 @@ public class ApplyAnnotationAction extends NodeAction {
             valueString = valueTerm.getName();
         }
 
-        final Annotation annotation = new Annotation();
+        final Annotation annotation = existingAnnotation == null? new Annotation() : existingAnnotation;
         annotation.setKey(keyString);
         annotation.setValue(valueString);
         annotation.setTarget(Reference.createFor(target));
@@ -198,7 +240,7 @@ public class ApplyAnnotationAction extends NodeAction {
     private void createAndShareAnnotation(Annotation annotation) throws Exception {
         
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        Annotation savedAnnotation = model.create(annotation);
+        Annotation savedAnnotation = model.save(annotation);
         log.info("Saved annotation as " + savedAnnotation.getId());
         
         PermissionTemplate template = StateMgr.getStateMgr().getAutoShareTemplate();

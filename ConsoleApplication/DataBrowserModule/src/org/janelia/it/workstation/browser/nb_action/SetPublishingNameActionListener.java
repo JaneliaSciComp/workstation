@@ -1,28 +1,33 @@
 package org.janelia.it.workstation.browser.nb_action;
 
-import static org.janelia.it.workstation.browser.gui.editor.FilterEditorPanel.DEFAULT_SEARCH_CLASS;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
-import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
@@ -33,14 +38,18 @@ import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.activity_logging.ActivityLogHelper;
 import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
+import org.janelia.it.workstation.browser.api.sage_responder.SageResponderRestClient;
 import org.janelia.it.workstation.browser.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.browser.gui.support.DropDownButton;
 import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
+import org.netbeans.api.autoupdate.UpdateUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ListMultimap;
+
+import net.miginfocom.swing.MigLayout;
 
 /**
  * Business logic for setting a line publishing name on one or more Samples.  
@@ -65,6 +74,12 @@ public final class SetPublishingNameActionListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
+        if (samples==null || samples.isEmpty()) {
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                    "In order to annotate the published line name, first select some Samples.");
+            return;
+        }
+        
         try {
             ActivityLogHelper.logUserAction("SetPublishingNameActionListener.actionPerformed");
     
@@ -75,14 +90,13 @@ public final class SetPublishingNameActionListener implements ActionListener {
                 }
                 else if (!consensusLine.equals(sample.getLine())) {
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                            "In order to annotate the published line name for multiple samples, "
+                            "In order to annotate the published line name for multiple Samples, "
                             + "they must all share the same line name.");
                     return;
                 }
             }
             
-            PublishingNameDialog dialog = new PublishingNameDialog();
-            dialog.load();
+            PublishingNameDialog dialog = new PublishingNameDialog(consensusLine);
             final String publishedName = dialog.showDialog();
             if (StringUtils.isEmpty(publishedName)) {
                 return;
@@ -97,7 +111,8 @@ public final class SetPublishingNameActionListener implements ActionListener {
                     Ontology publicationOntology = getPublicationOntology();
                     OntologyTerm publishingNameTerm = getPublishedTerm(publicationOntology, ANNOTATION_PUBLISHING_NAME);
                     
-                    
+                    ApplyAnnotationAction action = ApplyAnnotationAction.get();
+                    action.setObjectAnnotations(samples, publishingNameTerm, publishedName, this);
                 }
     
                 @Override
@@ -120,18 +135,41 @@ public final class SetPublishingNameActionListener implements ActionListener {
 
     private class PublishingNameDialog extends ModalDialog {
 
-        private final JPanel mainPanel = new JPanel(new BorderLayout());
-        private DropDownButton publishingNameButton;
+        private final JLabel loadingLabel = new JLabel(Icons.getLoadingIcon());
+        private final JPanel mainPanel;
+        private final JComboBox<String> comboBox; 
         
+        private String lineName;
         private String returnValue;
         
-        public PublishingNameDialog() {
+        public PublishingNameDialog(String lineName) {
 
+            this.lineName = lineName;
+            
+            setTitle("Choose Publishing Name");
             setLayout(new BorderLayout());
+            setPreferredSize(new Dimension(300, 200));
+
+            this.mainPanel = new JPanel(new MigLayout("wrap 2, ins 10, fill"));
             
-            add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
+            this.comboBox = new JComboBox<>(); 
+            comboBox.setEditable(false);
+            comboBox.setToolTipText("Choose a publishing name for this line");
+            comboBox.addItemListener(new ItemListener() {
+                @Override
+                public void itemStateChanged(ItemEvent e) {
+                    if (e.getStateChange()==ItemEvent.SELECTED) {
+                        String value = (String)comboBox.getSelectedItem();
+                        if (!StringUtils.isEmpty(value)) {
+                            returnValue = value;
+                        }
+                    }
+                }
+            });
             
-            JButton okButton = new JButton("OK");
+            add(loadingLabel, BorderLayout.CENTER);
+            
+            JButton okButton = new JButton("Apply To "+samples.size()+" Samples");
             okButton.setToolTipText("Apply changes and close");
             okButton.addActionListener(new ActionListener() {
                 @Override
@@ -168,41 +206,56 @@ public final class SetPublishingNameActionListener implements ActionListener {
         
         public void load() {
 
-            final DomainModel model = DomainMgr.getDomainMgr().getModel();
-            
-            // Save the filter and select it in the explorer so that it opens
             SimpleWorker worker = new SimpleWorker() {
 
                 @Override
                 protected void doStuff() throws Exception {
 
-                    String currValue = getCurrValue();
-                    returnValue = currValue;
+                    String currValue = getCurrAnnotationValue();
 
-                    publishingNameButton = new DropDownButton();
+                    final SageResponderRestClient sageClient = DomainMgr.getDomainMgr().getSageClient();
                     
-                    List<String> possibleNames = null;//TODO: implement restful client
-                    
-                    ButtonGroup typeGroup = new ButtonGroup();
-                    for (final String publishingName : possibleNames) {
-                        JMenuItem menuItem = new JRadioButtonMenuItem(publishingName, publishingName.equals(currValue));
-                        menuItem.addActionListener(new ActionListener() {
-                            public void actionPerformed(ActionEvent e) {
-                                returnValue = publishingName;
+                    Collection<String> possibleNames = sageClient.getPublishingNames(lineName);
+                    log.info("Creating drop down menu with possible names: "+possibleNames);
+
+                    if (possibleNames.isEmpty()) {
+                        mainPanel.add(new JLabel("No publishing names are available for this line."));
+                    }
+                    else {
+                        boolean selected = false;
+                        DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>) comboBox.getModel();
+                        model.removeAllElements();
+                        model.addElement("");
+                        for (final String publishingName : possibleNames) {
+                            model.addElement(publishingName);
+                            if (publishingName.equals(currValue)) {
+                                selected = true;
                             }
-                        });
-                        typeGroup.add(menuItem);
-                        publishingNameButton.getPopupMenu().add(menuItem);
+                        }
+                        if (selected && currValue!=null) {
+                            model.setSelectedItem(currValue);
+                            returnValue = currValue;
+                        }
+                        
+                        mainPanel.add(new JLabel("Line Name:"), "gap para");
+                        mainPanel.add(new JLabel(lineName), "gap para");
+                        mainPanel.add(new JLabel("Publishing Name:"), "gap para");
+                        mainPanel.add(comboBox, "gap para");
                     }
                 }
 
                 @Override
                 protected void hadSuccess() {
+                    remove(loadingLabel);
                     add(mainPanel, BorderLayout.CENTER);
+                    // Repack to fit everything
+                    setPreferredSize(null);
+                    packAndShow();
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
+                    setVisible(false);
                     ConsoleApp.handleException(error);
                 }
             };
@@ -211,16 +264,18 @@ public final class SetPublishingNameActionListener implements ActionListener {
         }
         
         public String showDialog() {
+            load();
             packAndShow();
             // Blocks until dialog is no longer visible, and then:
             removeAll();
             dispose();
+            log.info("Returning value: "+returnValue);
             return returnValue;
         }
         
     }
     
-    private String getCurrValue() throws Exception {
+    private String getCurrAnnotationValue() throws Exception {
         ListMultimap<Long,Annotation> annotationMap = DomainUtils.getAnnotationsByDomainObjectId(model.getAnnotations(DomainUtils.getReferences(samples)));                    
         for(Sample sample : samples) {
             for (Annotation annotation : annotationMap.get(sample.getId())) {
