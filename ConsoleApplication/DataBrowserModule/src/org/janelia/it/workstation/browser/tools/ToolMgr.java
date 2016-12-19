@@ -3,7 +3,6 @@ package org.janelia.it.workstation.browser.tools;
 import java.awt.Desktop;
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Map;
@@ -19,12 +18,14 @@ import org.janelia.it.workstation.browser.api.ServiceMgr;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
 import org.janelia.it.workstation.browser.events.prefs.LocalPreferenceChanged;
+import org.janelia.it.workstation.browser.gui.options.ToolsOptionsPanelController;
 import org.janelia.it.workstation.browser.tools.preferences.InfoObject;
 import org.janelia.it.workstation.browser.tools.preferences.PrefMgrListener;
 import org.janelia.it.workstation.browser.tools.preferences.PreferenceManager;
 import org.janelia.it.workstation.browser.util.FileCallable;
 import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.janelia.it.workstation.browser.util.Utils;
+import org.netbeans.api.options.OptionsDisplayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -284,15 +285,21 @@ public class ToolMgr extends PreferenceManager {
     }
 
     public static void runTool(String toolName) throws Exception {
-        ToolInfo tmpTool = toolTreeMap.get(toolName);
-        if (tmpTool==null || null == tmpTool.getPath() || "".equals(tmpTool.getPath())) {
+        
+        ToolInfo tool = toolTreeMap.get(toolName);
+        if (tool==null || null == tool.getPath() || "".equals(tool.getPath())) {
             log.error("Cannot find tool "+toolName+" in map: "+toolTreeMap.keySet());
-            throw new Exception("Cannot run the tool '"+toolName+"'. A path to the program is not defined.");
+            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+                    "'"+toolName+"' is not configured. Please set a path for this tool in "+SystemInfo.optionsMenuName+".", "Error", JOptionPane.ERROR_MESSAGE);
+            OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
+            return;
         }
-        if (tmpTool.getPath().endsWith(".app")) {
-            Desktop.getDesktop().open(new File(tmpTool.getPath()));
-        } else {
-            String path = tmpTool.getPath();
+        
+        if (tool.getPath().endsWith(".app")) {
+            Desktop.getDesktop().open(new File(tool.getPath()));
+        } 
+        else {
+            String path = tool.getPath();
             // When executing vaa3d, give it a port to connect back to the console
             if (toolName.equals(TOOL_NA) || toolName.equals(TOOL_VAA3D)) {
                 int consolePort = ServiceMgr.getServiceMgr().getAxisServerPort();
@@ -303,7 +310,17 @@ public class ToolMgr extends PreferenceManager {
                     log.info("Executing: " + path);
                 }
             }
-            Runtime.getRuntime().exec(path);
+            Process p = Runtime.getRuntime().exec(path);
+            
+            // TODO: this form of waitFor is not supported until Java 8. Once we move to 8, uncomment this code.
+//            if (p.waitFor(100, TimeUnit.MILLISECONDS)) {
+//                // Process terminated immediately, check the exit code
+//                if (p.exitValue()!=0) {
+//                    JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
+//                        "'"+toolName+"' could not start. Please check your configuration.", "Error", JOptionPane.ERROR_MESSAGE);
+//                    OptionsDisplayer.getDefault().open(ToolsOptionsPanelController.PATH);
+//                }
+//            }
         }
     }
 
@@ -317,8 +334,10 @@ public class ToolMgr extends PreferenceManager {
             @Override
             public void call(File file) throws Exception {
                 if (file==null) {
+                    log.error("Could not open file path "+standardFilepath);
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
                 else {
                     ToolInfo tmpTool = getToolMgr().getTool(tool);
@@ -337,7 +356,6 @@ public class ToolMgr extends PreferenceManager {
                     }
 
                     if (TOOL_FIJI.equals(tool)) {
-
                         if (toolPath.endsWith(".app")) {
                             final String relativeFijiPath = "/Contents/MacOS/fiji-macosx";
                             cmd.append(relativeFijiPath);
@@ -350,11 +368,16 @@ public class ToolMgr extends PreferenceManager {
 
                     final File exeFile = new File(toolPath);
                     if (! exeFile.exists()) {
-                        throw new IOException("Tool " + tool + " (" +
-                                              exeFile.getAbsolutePath() + ") does not exist.");
-                    } else if (! exeFile.canExecute()) {
-                        throw new IOException("Tool " + tool + " (" +
-                                              exeFile.getAbsolutePath() + ") cannot be executed.");
+                        String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") does not exist.";
+                        log.error(msg);
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    } 
+                    else if (! exeFile.canExecute()) {
+                        String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
+                        log.error(msg);
+                        JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
                     }
 
                     final String exeCmd = cmd.toString();
@@ -362,7 +385,8 @@ public class ToolMgr extends PreferenceManager {
 
                     if (exeCmd.endsWith(".app")) {
                         runTool(tool);
-                    } else {
+                    } 
+                    else {
                         Runtime.getRuntime().exec(exeCmd);
                     }
                 }

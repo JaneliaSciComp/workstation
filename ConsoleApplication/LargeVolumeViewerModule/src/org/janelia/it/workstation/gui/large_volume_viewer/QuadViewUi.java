@@ -149,7 +149,6 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("serial")
 public class QuadViewUi extends JPanel implements VolumeLoadListener
 {
-	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
     private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
@@ -466,10 +465,31 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
             v.setSharedVolumeImage(volumeImage);
-            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+            v.setNavigationMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
+                    
+                    // Add menus/items for relocating per other views.
+                    SynchronizationHelper helper = new SynchronizationHelper();
+                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
+                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    Tiled3dSampleLocationProviderAcceptor originator =
+                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
+                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
+                    JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+                    for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
+                        navigateToHortaMenu.add(navItem);
+                    }
+                    result.add(navigateToHortaMenu);
+
+                    return result;
+                }
+            });
+            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+                @Override
+                public List<JMenuItem> getMenus(MouseEvent event) {
+                    List<JMenuItem> result = new Vector<>();                    
                     result.add(addFileMenuItem());
                     result.add(addCopyMicronLocMenuItem());
                     result.add(addCopyTileLocMenuItem());
@@ -479,14 +499,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     result.addAll(annotationSkeletonViewLauncher.getMenuItems());
                     result.add(addViewMenuItem());                    
                     
-                    // Add menus/items for relocating per other views.
-                    SynchronizationHelper helper = new SynchronizationHelper();
-                    Collection<Tiled3dSampleLocationProviderAcceptor> locationProviders =
-                        helper.getSampleLocationProviders(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    Tiled3dSampleLocationProviderAcceptor originator =
-                        helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
-                    RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    result.addAll( menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor()) );
                     return result;
                 }
             });
@@ -1303,6 +1315,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
     public boolean loadFile(String canonicalLinuxPath) throws MalformedURLException {
 
+        log.info("loadFile: {}", canonicalLinuxPath);
+        
         // on Linux, this just works, as the input path is the Linux path;
         //  for Mac and Windows, we need to guess the mount point of the
         //  shared disk and alter the path accordingly
@@ -1319,6 +1333,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     "/nobackup/mousebrainmicro/",
                     "/nobackup2/mouselight",
                     "/tier2/mousebrainmicro/mousebrainmicro/",
+                    "/nrs/mouselight",
                     "/nrs/mltest/"
             };
             Path linuxPrefix = null;
@@ -1353,7 +1368,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
             String [] mountNames = {"", "mousebrainmicro", "mouselight",
                     "nobackup/mousebrainmicro", "nobackup2/mouselight",
                     "nobackup/mousebrainmicro/from_tier2", "mousebrainmicro/from_tier2",
-                    "mousebrainmicro/mousebrainmicro", "mltest"};
+                    "mousebrainmicro/mousebrainmicro", "nrs/mouselight", "mltest"};
 
             boolean found = false;
             for (Path prefix: prefixesToTry) {
@@ -1412,7 +1427,8 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
         );
         snapshot3dLauncher.setAnnotationManager(annotationMgr);
         annotationSkeletonViewLauncher = new AnnotationSkeletonViewLauncher();
-        volumeImage.setRemoteBasePath(canonicalLinuxPath);        
+        volumeImage.setRemoteBasePath(canonicalLinuxPath);       
+        
         return loadURL(url);
     }
 
@@ -1432,6 +1448,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
     }
 
     public boolean loadURL(URL url) {  
+        log.info("loadURL: {}", url);
         boolean rtnVal = false;
     	// Check if url exists first...
     	try {
@@ -1451,9 +1468,9 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
 
         try {
             TileStackCacheController.getInstance().init(url);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log.error(ex.toString());
+        } 
+        catch (Exception ex) {
+            log.error("Error initializing TileStackCacheController", ex);
             rtnVal=false;
         }
 

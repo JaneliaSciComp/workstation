@@ -30,14 +30,11 @@
 
 package org.janelia.console.viewerapi.model;
 
-import org.janelia.console.viewerapi.BasicGenericObservable;
+import org.janelia.console.viewerapi.GenericObserver;
 
 /**
  *
  * @author brunsc
  */
-public class BasicNeuronVertexAdditionObservable 
-extends BasicGenericObservable<VertexWithNeuron>
-implements NeuronVertexAdditionObservable
-{
-}
+public interface NeuronVertexCreationObserver extends GenericObserver<VertexWithNeuron> 
+{}

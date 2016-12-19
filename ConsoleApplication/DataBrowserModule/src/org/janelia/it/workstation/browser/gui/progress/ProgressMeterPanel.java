@@ -20,6 +20,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.browser.events.workers.WorkerChangedEvent;
 import org.janelia.it.workstation.browser.events.workers.WorkerEndedEvent;
@@ -261,7 +262,12 @@ public class ProgressMeterPanel extends JPanel {
             nextButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    worker.runSuccessCallback();
+                    if (worker.getError()!=null) {
+                        FrameworkImplProvider.handleException("User viewing background task error", worker.getError());
+                    }
+                    else {
+                        worker.runSuccessCallback();    
+                    }
                 }
             });
             nextButton.setEnabled(false);
@@ -319,8 +325,11 @@ public class ProgressMeterPanel extends JPanel {
                 statusLabel.setText("Cancelled");
             }
             else if (error!=null) {
-                log.error("Error running task",error);
+                log.error("Error occurred while running task", error);
                 statusLabel.setText("ERROR: "+error.getMessage());
+                nextButton.setEnabled(true);
+                nextButton.setIcon(Icons.getIcon("bullet_error.png"));
+                nextButton.setToolTipText("View error details");
             }
             else {
                 if (worker.isDone()) {

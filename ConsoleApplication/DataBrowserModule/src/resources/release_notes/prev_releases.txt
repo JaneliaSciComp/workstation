@@ -1,3 +1,65 @@
+// 5.6.0
+
+Workstation Browser
+* Fixed issue preventing the Home folder from being automatically opened at startup
+* Fixed issue where Explorer tree was not refreshed when adding to a folder in some cases
+* Fixed bug where fast background tasks did not show in progress panel
+* Restored missing "Report A Bug" menu item
+* Many other minor bug fixes (see JIRA)
+
+FlyLight
+* Added "apply to all" check box to file download pop-up dialog
+* Fixed bug preventing users from removing neuron fragments from folders 
+
+MouseLight    
+* Added "Save As" feature for Workspaces
+* Restored Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
+* Moved "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+* Fixed problems affecting samples with origin at x=0
+* Fixed problem where neurons did not display when read-only access to granted to a Workspace
+* Greatly improved performance of "Load Linux SWC Folder" action
+* Improved performance of bulk hide/show and other neuron actions
+
+// 5.5.2
+
+Changes
+* Increased update check interval from 1 hour to 15 minutes
+
+Bug fixes
+* Fixed issue with Add to Folder
+* Fixed issues caused by legacy modules
+
+// 5.5.1
+
+Bug fixes
+* Fixed some program configuration issues that caused issues for some users
+
+// 5.5.0
+
+Workstation Browser
+* Added "Recently Opened" folder which shows the 10 items most recently opened in the LVV or Alignment Board. 
+   To hide this item, use the gear icon at the top of the Data Explorer.
+* The error reporting system has been overhauled 
+    * All logs are now unified in a single file (messages.log)
+    * Log files are now attached automatically when reporting an error
+    * Some types of errors which were logged silently in the past will now generate a pop-up so that they can 
+       be reported. You may see more error pop-ups in the short-term, as we work to clean up remaining bugs. 
+* Items inside of a shared folder are no longer individually added to the Shared Data folder
+* Filtering reliability improvements
+
+FlyLight
+* Added "Publishing Name" and "Published Externally" indicator to Samples and LSM Images 
+* Added "Owner" column to the Data Set dialog window
+* When sharing an entire data set, a filter is now automatically created under the Shared Data folder.
+* Cleaned up the Shared Data folders which had redundant Samples 
+
+MouseLight
+* Added tooltips for long neuron names
+* Added support for NRS filesystem
+* Fixed bug where neurons could not be annotated immediately after restarting the Workstation
+
 // 5.4.0
 
 Workstation Browser

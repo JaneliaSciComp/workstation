@@ -41,12 +41,12 @@ import java.util.Set;
 
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
-import org.janelia.console.viewerapi.model.BasicNeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.BasicNeuronVertexDeletionObservable;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.janelia.console.viewerapi.model.NeuronVertexAdditionObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -62,6 +62,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import Jama.Matrix;
+import org.janelia.console.viewerapi.model.BasicNeuronVertexUpdateObservable;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObservable;
 
 /**
  *
@@ -76,8 +78,10 @@ public class NeuronModelAdapter implements NeuronModel
     private final ObservableInterface colorChangeObservable = new ComposableObservable();
     private final ObservableInterface geometryChangeObservable = new ComposableObservable();
     private final ObservableInterface visibilityChangeObservable = new ComposableObservable();
-    private final NeuronVertexAdditionObservable membersAddedObservable = 
-            new BasicNeuronVertexAdditionObservable();
+    private final NeuronVertexCreationObservable membersAddedObservable = 
+            new BasicNeuronVertexCreationObservable();
+    private final NeuronVertexUpdateObservable vertexUpdatedObservable =
+            new BasicNeuronVertexUpdateObservable();
     private final NeuronVertexDeletionObservable membersRemovedObservable = 
             new BasicNeuronVertexDeletionObservable();
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
@@ -184,6 +188,35 @@ public class NeuronModelAdapter implements NeuronModel
         return true;
     }
     
+    @Override
+    public boolean moveVertex(NeuronVertex vertex, float[] micronXyz) {
+        try {
+            if (! (vertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
+            
+            // Be Careful! I'm calling setLocation() here, so I don't have
+            // recompute the coordinate transform.
+            // But moveAnnotation() might someday notice that the 
+            // destination coordinates are already there
+            nva.setLocation(
+                    micronXyz[0],
+                    micronXyz[1],
+                    micronXyz[2]);
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            Vec3 destination = new Vec3(
+                    annotation.getX(),
+                    annotation.getY(),
+                    annotation.getZ());
+            annotationModel.moveAnnotation(annotation.getId(), destination);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
     @Override
     public boolean deleteVertex(NeuronVertex doomedVertex) {
         try {
@@ -333,7 +366,7 @@ public class NeuronModelAdapter implements NeuronModel
     }
 
     @Override
-    public NeuronVertexAdditionObservable getVertexAddedObservable()
+    public NeuronVertexCreationObservable getVertexCreatedObservable()
     {
         return membersAddedObservable;
     }
@@ -412,6 +445,11 @@ public class NeuronModelAdapter implements NeuronModel
     TmNeuronMetadata getTmNeuronMetadata()
     {
         return neuron;
+    }
+
+    @Override
+    public NeuronVertexUpdateObservable getVertexUpdatedObservable() {
+        return vertexUpdatedObservable;
     }
 
     // TODO: - implement Edges correctly

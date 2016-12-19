@@ -47,11 +47,19 @@ import org.slf4j.LoggerFactory;
  * Create popup menus related to Ktx volume tile blocks.
  * @author brunsc
  */
-class KtxBlockMenus {
+class KtxBlockMenuBuilder {
 
     private boolean preferKtx = true;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    public boolean isPreferKtx() {
+        return preferKtx;
+    }
+
+    void setPreferKtx(boolean doPreferKtx) {
+        preferKtx = doPreferKtx;
+    }
     
     void populateMenus(final HortaMenuContext context) 
     {
@@ -83,7 +91,7 @@ class KtxBlockMenus {
         
         tilesMenu.add(new JPopupMenu.Separator());
         
-        /*
+        /* */
         JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
                 "Prefer rendered Ktx tiles", preferKtx);
         tilesMenu.add(enableVolumeCacheMenu);
@@ -94,10 +102,9 @@ class KtxBlockMenus {
                 JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
                 preferKtx = item.isSelected();
                 item.setSelected(preferKtx);
-                throw new UnsupportedOperationException();
             }
         });
-         */
+        /* */
         
         tilesMenu.add(new JMenuItem(
                 new AbstractAction("Clear all Volume Blocks")

@@ -6,13 +6,14 @@ import java.util.Iterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
@@ -24,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.Multiset;
-import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.RateLimiter;
@@ -69,6 +69,13 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
     public void publish(LogRecord record) {
         if (record.getThrown()!=null) {
             this.throwable = record.getThrown();
+            
+            // Only auto-send exceptions which are logged at error ("SEVERE") level or higher
+            //if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
+            
+            // JW-25430: Only attempt to auto-send exceptions once the user has logged in
+            if (!AccessManager.getAccessManager().isLoggedIn()) return; 
+            
             try {
                 autoSendNovelExceptions();
             }
@@ -95,12 +102,17 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             return;
         }
 
-        String st = getStacktrace(throwable);
+        String st = ExceptionUtils.getStackTrace(throwable);
         String sth = hf.newHasher().putString(st, Charsets.UTF_8).hash().toString();
         log.trace("Got exception hash: {}",sth);
         String firstLine = getFirstLine(st);
         
-        if (!exceptionCounts.contains(sth)) {
+        // We remove the first line before checking for uniqueness. 
+        // Ignoring the exception message when looking for duplicates can cause some false positives, but it's better than a flood. 
+        // Even if we miss a novel exception, if it matters then sooner or later it will come up again. 
+        String trace = getTrace(st);
+        
+        if (!exceptionCounts.contains(trace)) {  
             // First appearance of this stack trace, let's try to send it to JIRA.
 
             // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
@@ -112,14 +124,14 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             sendEmail(st, false);
         }
         else {
-            int count = exceptionCounts.count(sth);
+            int count = exceptionCounts.count(trace);
             if (count % 10 == 0) {
                 log.warn("Exception count reached {} for: {}", count, firstLine);
                 // TODO: create another JIRA ticket?
             }
         }
 
-        exceptionCounts.add(sth); // Increment counter
+        exceptionCounts.add(trace); // Increment counter
 
         // Make sure we're not devoting too much memory to stack traces
         if (exceptionCounts.size()>MAX_STACKTRACE_CACHE_SIZE) {
@@ -162,7 +174,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         SwingUtilities.windowForComponent(newFunctionButton).setVisible(false);
         // Due to the way the NotifyExcPanel works, this might not be the exception the user is currently looking at! 
         // Maybe it's better than nothing if it's right 80% of the time? 
-        sendEmail(getStacktrace(throwable), true);
+        sendEmail(ExceptionUtils.getStackTrace(throwable), true);
     }
     
     private void sendEmail(String stacktrace, boolean askForInput) {
@@ -205,35 +217,23 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);
-            JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
-                    "Your message was NOT able to be sent to our support staff.  "
-                    + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-    
-    private String getStacktrace(Throwable t) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(t.getClass().getName()).append(": "+t.getMessage()).append("\n");
-        int stackLimit = 100;
-        int i = 0;
-        for (StackTraceElement element : t.getStackTrace()) {
-            if (element==null) continue;
-            String s = element.toString();
-            if (!StringUtils.isEmpty(s)) {
-                sb.append("at ");
-                sb.append(element.toString());
-                sb.append("\n");
-                if (i++>stackLimit) {
-                    break;
-                }
+            if (askForInput) { // JW-25430: Only show this message if the email was initiated by the user
+                JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), 
+                        "Your message was NOT able to be sent to our support staff.  "
+                        + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
             }
         }
-        return sb.toString();
     }
     
     private String getFirstLine(String st) {
         int n = st.indexOf('\n');
         if (n<1) return st; 
         return st.substring(0, n);
+    }
+
+    private String getTrace(String st) {
+        int n = st.indexOf('\n');
+        if (n+1>st.length()) return st; 
+        return st.substring(n+1);
     }
 }

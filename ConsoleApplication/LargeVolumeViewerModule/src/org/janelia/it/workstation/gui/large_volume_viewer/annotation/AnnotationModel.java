@@ -145,10 +145,14 @@ called from a  SimpleWorker thread.
         return selectionModel;
     }
     
-    public List<TmNeuronMetadata> getNeuronList() {
+    public Collection<TmNeuronMetadata> getNeuronList() {
         return neuronManager.getNeurons();
     }
 
+    public void addNeuron(TmNeuronMetadata neuron) {
+        neuronManager.addNeuron(neuron);
+    }
+    
     public FilteredAnnotationModel getFilteredAnnotationModel() {
         return filteredAnnotationModel;
     }
@@ -213,6 +217,7 @@ called from a  SimpleWorker thread.
     }
 
     public synchronized void clear() {
+        log.info("Clearing annotation model");
         currentWorkspace = null;
         currentSample = null;
         currentTagMap = null;
@@ -223,6 +228,8 @@ called from a  SimpleWorker thread.
         if (sample == null) {
             throw new IllegalArgumentException("Cannot load null sample");
         }
+        
+        log.info("Loading sample {}", sample.getId());
         currentWorkspace = null;
         currentSample = sample;
         currentTagMap = null;
@@ -232,21 +239,26 @@ called from a  SimpleWorker thread.
         if (workspace == null) {
             throw new IllegalArgumentException("Cannot load null workspace");
         }
-        
+
+        log.info("Loading workspace {}", workspace.getId());
         currentWorkspace = workspace;
         currentSample = tmDomainMgr.getSample(workspace);
 
         // Neurons need to be loaded en masse from raw data from server.
+        log.info("Loading neurons for workspace {}", workspace.getId());
         neuronManager.loadWorkspaceNeurons(workspace);
 
         // Create the local tag map for cached access to tags
+        log.info("Creating tag map for workspace {}", workspace.getId());
         currentTagMap = new TmNeuronTagMap();
         for(TmNeuronMetadata tmNeuronMetadata : neuronManager.getNeurons()) {
             for(String tag : tmNeuronMetadata.getTags()) {
                 currentTagMap.addTag(tag, tmNeuronMetadata);
             }
         }
+        
         // Clear neuron selection
+        log.info("Clearing current neuron for workspace {}", workspace.getId());
         setCurrentNeuron(null);        
     }
     
@@ -321,23 +333,23 @@ called from a  SimpleWorker thread.
         }
 
         TmNeuronMetadata foundNeuron = null;
-        for (TmNeuronMetadata neuron: getNeuronList()) {
+        for (TmNeuronMetadata neuron : getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
                 break;
             }
         }
+        if (foundNeuron==null) {
+            throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
+        }
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }
-
+    
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
-        TmNeuronMetadata foundNeuron = null;
-        for (TmNeuronMetadata neuron: getNeuronList()) {
-            if (neuron.getId().equals(neuronID)) {
-                foundNeuron = neuron;
-                break;
-            }
+        TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
+        if (foundNeuron==null) {
+            throw new IllegalStateException("Neuron does not exist: "+neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
@@ -352,7 +364,7 @@ called from a  SimpleWorker thread.
             return annotation;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());
+        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());        
         TmGeoAnnotation current = annotation;
         TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
@@ -417,7 +429,6 @@ called from a  SimpleWorker thread.
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);
-        getNeuronList().add(neuron);
         setCurrentNeuron(neuron);
         
         final TmWorkspace workspace = getCurrentWorkspace();
@@ -479,7 +490,6 @@ called from a  SimpleWorker thread.
 
         // updates
         final TmWorkspace workspace = getCurrentWorkspace();
-        getNeuronList().remove(deletedNeuron);
 
         final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
@@ -537,12 +547,24 @@ called from a  SimpleWorker thread.
      * @param name = name of new workspace
      * @throws Exception
      */
-    public synchronized void createWorkspace(Long sampleId, String name) throws Exception {
+    public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
         activityLog.logCreateWorkspace(workspace.getId());
-        loadWorkspace(workspace);
+        return workspace;
     }
 
+    /**
+     * Create a new copy of the given workspace, owned by the current user.
+     * @param sampleId = workspace Id
+     * @param name = name of new workspace
+     * @throws Exception
+     */
+    public synchronized TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
+        TmWorkspace workspaceCopy = tmDomainMgr.copyWorkspace(workspace, name);
+        activityLog.logCreateWorkspace(workspace.getId());
+        return workspaceCopy;
+    }
+    
     /**
      * add a root annotation to the given neuron; this is an annotation without a parent
      *
@@ -647,6 +669,7 @@ called from a  SimpleWorker thread.
             // Update value in database.
             synchronized(neuron) {
                 neuronManager.saveNeuronData(neuron);
+                fireAnnotationMoved(annotationID);
             }
         } catch (Exception e) {
             // error means not persisted; however, in the process of moving,
@@ -755,9 +778,9 @@ called from a  SimpleWorker thread.
 
         // Save the target neuron.
         // log.info("Saving target neuron.");
-        getNeuronList().remove(targetNeuron);
+        neuronManager.removeNeuron(targetNeuron);
         neuronManager.saveNeuronData(updateTargetNeuron);
-        getNeuronList().add(updateTargetNeuron);
+        neuronManager.addNeuron(updateTargetNeuron);
         // Save the source neuron, empty or not.
         if (! sourceNeuron.getId().equals(updateTargetNeuron.getId())) {
             // log.info("Saving source neuron.");
@@ -1343,47 +1366,11 @@ called from a  SimpleWorker thread.
         });
     }
 
-    public void setAllNeuronVisibility(final boolean visibility) throws Exception {
-
-        List<TmNeuronMetadata> neuronList = getNeuronList();
+    public void setNeuronVisibility(final Collection<TmNeuronMetadata> neuronList, final boolean visibility) throws Exception {
         BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
         bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
         bulkNeuronStyleUpdate.setVisible(visibility);
         tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-                for (TmNeuronMetadata neuron: getNeuronList()) {
-                    if (neuron.isVisible() != visibility) {
-                        neuron.setVisible(visibility);
-                        updateMap.put(neuron, getNeuronStyle(neuron));
-                    }
-                }
-                fireNeuronStylesChanged(updateMap);
-            }
-        });
-    }
-
-    public void setNeuronVisibility(final List<TmNeuronMetadata> neuronList, final boolean visibility) throws Exception {
-
-        BulkNeuronStyleUpdate bulkNeuronStyleUpdate = new BulkNeuronStyleUpdate();
-        bulkNeuronStyleUpdate.setNeuronIds(DomainUtils.getIds(neuronList));
-        bulkNeuronStyleUpdate.setVisible(visibility);
-        tmDomainMgr.updateNeuronStyles(bulkNeuronStyleUpdate);
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Map<TmNeuronMetadata, NeuronStyle> updateMap = new HashMap<>();
-                for (TmNeuronMetadata neuron: neuronList) {
-                    neuron.setVisible(visibility);
-                    updateMap.put(neuron, getNeuronStyle(neuron));
-                }
-                fireNeuronStylesChanged(updateMap);
-            }
-        });
     }
     
     /**
@@ -1456,7 +1443,7 @@ called from a  SimpleWorker thread.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, int downsampleModulo, List<TmNeuronMetadata> neurons, BackgroundWorker worker) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, BackgroundWorker worker) throws Exception {
 
         log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
         worker.setStatus("Creating headers");
@@ -1600,7 +1587,7 @@ called from a  SimpleWorker thread.
         neuronManager.saveNeuronData(neuron);
 
         // add it to the workspace
-        getNeuronList().add(neuron);
+        neuronManager.addNeuron(neuron);
         
         return neuron;
     }
@@ -1688,6 +1675,12 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public void fireAnnotationMoved(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationMoved(annotation);
+        }
+    }
+
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
         // update workspace; update and select new neuron; this will draw points as well
@@ -1700,49 +1693,53 @@ called from a  SimpleWorker thread.
         return object1 == null || object2 == null;
     }
 
-    private void fireAnnotationNotMoved(Long annotationID) {
+    void fireAnnotationMoved(Long annotationID) {
+        fireAnnotationMoved(getGeoAnnotationFromID(annotationID));
+    }
+
+    void fireAnnotationNotMoved(Long annotationID) {
         fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
     }
 
-    private void fireAnnotationAdded(TmGeoAnnotation annotation) {
+    void fireAnnotationAdded(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
             l.annotationAdded(annotation);
         }
     }
 
-    private void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList) {
+    void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList) {
         // undraw deleted annotation
         for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
             l.annotationsDeleted(deleteList);
         }
     }
 
-    private void fireAnnotationReparented(TmGeoAnnotation annotation) {
+    void fireAnnotationReparented(TmGeoAnnotation annotation) {
         for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
             l.annotationReparented(annotation);
         }
     }
 
-    private void fireAnchoredPathsRemoved(List<TmAnchoredPath> deleteList) {
+    void fireAnchoredPathsRemoved(List<TmAnchoredPath> deleteList) {
         // undraw deleted annotation
         for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
             l.removeAnchoredPaths(deleteList);
         }
     }
 
-    private void fireAnchoredPathAdded(TmAnchoredPath path) {
+    void fireAnchoredPathAdded(TmAnchoredPath path) {
         for (TmAnchoredPathListener l : tmAnchoredPathListeners) {
             l.addAnchoredPath(path);
         }
     }
 
-    private void fireWorkspaceLoaded(TmWorkspace workspace) {
+    void fireWorkspaceLoaded(TmWorkspace workspace) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.workspaceLoaded(workspace);
         }
     }
 
-    private void fireNeuronSelected(TmNeuronMetadata neuron) {
+    void fireNeuronSelected(TmNeuronMetadata neuron) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronSelected(neuron);
         }
@@ -1751,25 +1748,25 @@ called from a  SimpleWorker thread.
         }
     }
 
-    private void fireNeuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
+    void fireNeuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronStyleChanged(neuron, style);
         }
     }
 
-    private void fireNeuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+    void fireNeuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronStylesChanged(neuronStyleMap);
         }
     }
 
-    private void fireNeuronTagsChanged(List<TmNeuronMetadata> neuronList) {
+    void fireNeuronTagsChanged(List<TmNeuronMetadata> neuronList) {
         for (GlobalAnnotationListener l: globalAnnotationListeners) {
             l.neuronTagsChanged(neuronList);
         }
     }
 
-    private void fireNotesUpdated(TmWorkspace workspace) {
+    void fireNotesUpdated(TmWorkspace workspace) {
         if (notesUpdateListener != null) {
             notesUpdateListener.notesUpdated(workspace);
         }

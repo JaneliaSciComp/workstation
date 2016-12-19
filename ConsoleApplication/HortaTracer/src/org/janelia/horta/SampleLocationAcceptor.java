@@ -95,10 +95,15 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                     URL url = sampleLocation.getSampleUrl();
                     
                     // First check to see if ktx tiles are available
-                    BlockTileSource ktxSource = loadKtxSource(url, progress);
-                    if (ktxSource != null)
-                        nttc.setKtxSource(ktxSource);
-                    // TODO: is ktx loading enabled?
+                    BlockTileSource ktxSource = null;
+                    if (nttc.isPreferKtx()) {
+                        ktxSource = loadKtxSource(url, progress);
+                        if (ktxSource != null)
+                            nttc.setKtxSource(ktxSource);
+                    }
+                    else {
+                        nttc.setKtxSource(null);
+                    }
                     
                     progress.setDisplayName("Centering on location...");
                     setCameraLocation(sampleLocation);
@@ -112,17 +117,11 @@ public class SampleLocationAcceptor implements ViewerLocationAcceptor {
                         progress.switchToIndeterminate(); // TODO - enhance tile loading with a progress listener
                         progress.setDisplayName("Loading brain tile image...");
                         loader.loadTileAtCurrentFocus(volumeSource, sampleLocation.getDefaultColorChannel());
-                        /*
-                        GLAutoDrawable glAutoDrawable=sceneWindow.getGLAutoDrawable();
-                        try { Thread.sleep(100); } catch (Exception ex) {} // this delay is required to avoid occasional GL exception
-                        glAutoDrawable.display();
-                         */
                     }
                     else { // Load ktx files here
                         progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
                         progress.setDisplayName("Loading KTX brain tile image...");
                         loader.loadKtxTileAtCurrentFocus(ktxSource);
-                        // TODO:
                     }
                     nttc.redrawNow();
                 } catch (final IOException ex) {

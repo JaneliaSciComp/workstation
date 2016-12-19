@@ -38,50 +38,57 @@ public class TaskMonitoringWorker extends BackgroundWorker {
     
     @Override
     protected void doStuff() throws Exception {
-        
-        while (true) {
-            this.task = StateMgr.getStateMgr().getTaskById(taskId);
-            setStatus(task.getLastEvent().getDescription());
-            
-            if (handle==null) {
-                handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
-                        if (tc!=null) {
-                            tc.open();
-                            tc.requestVisible();
-                        }
-                    }
-                });
-                handle.start();
-                handle.switchToIndeterminate();
-            }
-            
-            Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
-            
-            if (task==null) {
-                handle.finish();
-                throw new IllegalStateException("Task does not exist: "+taskId);
-            }   
 
-            if (task.isDone()) {
-                handle.finish();
-                // Check for errors
-                if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
-                    throw new ServiceException(task.getLastEvent().getDescription());
+        try {
+
+            while (true) {
+                this.task = StateMgr.getStateMgr().getTaskById(taskId);
+                setStatus(task.getLastEvent().getDescription());
+
+                if (handle==null) {
+                    handle = ProgressHandleFactory.createHandle(task.getDisplayName(), new AbstractAction() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
+                            if (tc!=null) {
+                                tc.open();
+                                tc.requestVisible();
+                            }
+                        }
+                    });
+                    handle.start();
+                    handle.switchToIndeterminate();
                 }
-                return;
+
+                Events.getInstance().postOnEventBus(new WorkerChangedEvent(this));
+
+                if (task==null) {
+                    handle.finish();
+                    throw new IllegalStateException("Task does not exist: "+taskId);
+                }   
+
+                if (task.isDone()) {
+                    handle.finish();
+                    // Check for errors
+                    if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
+                        throw new ServiceException(task.getLastEvent().getDescription());
+                    }
+                    return;
+                }
+
+                try {
+                    Thread.sleep(REFRESH_DELAY_MS);
+                }
+                catch (InterruptedException e) {
+                    handle.finish();
+                    return;
+                }
             }
-            
-            try {
-                Thread.sleep(REFRESH_DELAY_MS);
-            }
-            catch (InterruptedException e) {
-                handle.finish();
-                hadError(e);
-                return;
-            }
+        
+        }
+        catch (Exception e) {
+            handle.finish();
+            throw e;
         }
     }
     

@@ -128,7 +128,7 @@ public class TiledMicroscopeDomainMgr {
     }
     
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
-        log.debug("createTiledMicroscopeWorkspace(sampleId={}, name={})", sampleId, name);
+        log.debug("createWorkspace(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
         if (sample==null) {
             throw new IllegalArgumentException("TM sample does not exist: "+sampleId);
@@ -150,6 +150,26 @@ public class TiledMicroscopeDomainMgr {
         model.invalidate(sample);
         
         return workspace;
+    }
+
+    public TmWorkspace copyWorkspace(TmWorkspace workspace, String name) throws Exception {
+        log.debug("copyWorkspace(workspace={}, name={})", workspace, name);
+        
+        TmWorkspace workspaceCopy = client.copy(workspace, name);
+        
+        // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
+        TreeNode folder = model.getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
+        model.invalidate(folder);
+        
+        // Also invalidate the sample, so that the Explorer tree can be updated 
+        TmSample sample = getSample(workspace.getSampleId());
+        if (sample==null) {
+            throw new IllegalArgumentException("TM sample does not exist: "+workspace.getSampleId());
+        }
+        
+        model.invalidate(sample);
+        
+        return workspaceCopy;
     }
 
     public TmWorkspace save(TmWorkspace workspace) throws Exception {
@@ -183,8 +203,7 @@ public class TiledMicroscopeDomainMgr {
             log.trace("Got neuron {} with payload '{}'", neuronMetadata.getId(), neuronMetadata);
             neurons.add(neuronMetadata);
         }
-
-        log.info("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
+        log.trace("Loaded {} neurons for workspace {}", neurons.size(), workspaceId);
         return neurons;
     }
 

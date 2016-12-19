@@ -230,6 +230,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     @Override
+    public void annotationMoved(TmGeoAnnotation annotation) {
+        // Graphics already updated during drag, so nothing to do here
+    }
+
+    @Override
     public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         fireNeuronStyleChangeEvent(neuron, style);
     }

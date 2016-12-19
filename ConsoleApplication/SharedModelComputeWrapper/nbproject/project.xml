@@ -4,7 +4,7 @@
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
             <code-name-base>org.janelia.it.jacs.shared</code-name-base>
-            <standalone/>
+            <suite-component/>
             <module-dependencies>
                 <dependency>
                     <code-name-base>org.janelia.it.workstation</code-name-base>
@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.50</specification-version>
+                        <specification-version>1.55</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>

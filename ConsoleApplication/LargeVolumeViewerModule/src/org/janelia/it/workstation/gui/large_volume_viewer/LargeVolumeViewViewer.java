@@ -120,32 +120,31 @@ public class LargeVolumeViewViewer extends JPanel {
             	logger.info("Found sample {}", sliceSample.getId());
 
                 // but now we have to do the load in another thread, so we don't lock the UI:
-                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading sample...");
+                final ProgressHandle progress = ProgressHandleFactory.createHandle("Loading image data...");
                 progress.start();
-                progress.setDisplayName("Loading sample");
+                progress.setDisplayName("Loading image data");
                 progress.switchToIndeterminate();
 
                 SimpleWorker volumeLoader = new SimpleWorker() {
+                    boolean success = false;
+                    
                     @Override
                     protected void doStuff() throws Exception {
-                        // be sure we've successfully gotten the sample before loading it!
-                        if (sliceSample != null) {
-                            if (!viewUI.loadFile(sliceSample.getFilepath())) {
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
-                                                "Could not open sample entity for this workspace!",
-                                                "Could not open workspace",
-                                                JOptionPane.ERROR_MESSAGE);
-                                    }
-                                });
-                            }
-                        }
+                        success = viewUI.loadFile(sliceSample.getFilepath());
                     }
 
                     @Override
                     protected void hadSuccess() {
+                        if (success) {
+                            logger.info("Image data loading completed");
+                        }
+                        else {
+                            logger.info("Image data loading failed");
+                            JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                    "Could not open sample entity for this workspace!",
+                                    "Could not open workspace",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
                         progress.finish();
                     }
 
@@ -158,9 +157,9 @@ public class LargeVolumeViewViewer extends JPanel {
                 
                 SimpleListenableFuture future1 = volumeLoader.executeWithFuture();
 
-                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading workspace...");
+                final ProgressHandle progress2 = ProgressHandleFactory.createHandle("Loading metadata...");
                 progress2.start();
-                progress2.setDisplayName("Loading workspace");
+                progress2.setDisplayName("Loading metadata");
                 progress2.switchToIndeterminate();
                 
                 SimpleWorker workspaceLoader = new SimpleWorker() {
@@ -180,6 +179,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
                     @Override
                     protected void hadSuccess() {
+                        logger.info("Metadata loading completed");
                         progress2.finish();
                     }
 
@@ -197,6 +197,7 @@ public class LargeVolumeViewViewer extends JPanel {
                 Futures.addCallback(combinedFuture, new FutureCallback<List<Boolean>>() {
                     public void onSuccess(List<Boolean> result) {
                         // If both loads succeeded
+                        logger.info("Loading completed");
                         annotationModel.loadComplete();
                     }
                     public void onFailure(Throwable t) {

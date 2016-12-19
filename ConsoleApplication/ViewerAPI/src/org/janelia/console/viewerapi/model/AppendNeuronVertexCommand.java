@@ -40,19 +40,19 @@ import javax.swing.undo.UndoableEdit;
  */
 public class AppendNeuronVertexCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command
+implements UndoableEdit, Command, VertexAdder
 {
     private final NeuronModel neuron;
     private NeuronVertex parentVertex;
     private NeuronVertex newVertex = null; // caches the newly added vertex
     private final float[] coordinates;
     private final float radius;
-    private final AppendNeuronVertexCommand parentCommand; // maintains a linked list, to help resolve stale parent vertices after serial undo/redo
+    private final VertexAdder parentCommand; // maintains a linked list, to help resolve stale parent vertices after serial undo/redo
     
     public AppendNeuronVertexCommand(
             NeuronModel neuron, 
             NeuronVertex parentVertex,
-            AppendNeuronVertexCommand parentCommand, // to help unravel serial undo/redo, with replaced parent vertices, in case parentVertex is stale
+            VertexAdder parentCommand, // to help unravel serial undo/redo, with replaced parent vertices, in case parentVertex is stale
             float[] micronXyz,
             float radius) 
     {
@@ -74,18 +74,20 @@ implements UndoableEdit, Command
         return true;
     }
     
-    public NeuronVertex getAppendedVertex() {
+    @Override
+    public NeuronVertex getAddedVertex() {
         return newVertex;
     }
     
     private void refreshParent() {
         if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale
-            NeuronVertex updatedParent = parentCommand.getAppendedVertex();
+            NeuronVertex updatedParent = parentCommand.getAddedVertex();
             if (updatedParent != parentVertex)
                 parentVertex = updatedParent; // update link
         }        
     }
     
+    @Override
     public NeuronVertex getParentVertex() {
         refreshParent();
         return parentVertex;

@@ -15,10 +15,13 @@ import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SharedVolumeImage 
 implements VolumeImage3d
 {
+    private Logger logger = LoggerFactory.getLogger(SharedVolumeImage.class);
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
@@ -144,6 +147,8 @@ implements VolumeImage3d
 
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
+
+        logger.info("Volume loaded: {}", folderUrl);
 		fireVolumeLoaded(folderUrl);
 		
 		return true;
