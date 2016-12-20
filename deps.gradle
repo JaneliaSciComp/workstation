@@ -16,14 +16,7 @@ dependencies {
         CDI_IMPL_LIB = "org.jboss.weld:weld-core:${WELD_VERSION}"
         CDI_SERVLET_LIB = "org.jboss.weld.servlet:weld-servlet-core:${WELD_VERSION}"
 
-        // persistence
-        HIBERNATE_VERSION = "5.2.4.Final"
-        JPA_API_LIB = "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Final"
-        HIBERNATE_CORE_LIB = "org.hibernate:hibernate-core:${HIBERNATE_VERSION}"
-        HIBERNATE_ENTITYMANAGER_LIB = "org.hibernate:hibernate-entitymanager:${HIBERNATE_VERSION}"
-
         // database drivers
-        MYSQL_JDBC_LIB = "mysql:mysql-connector-java:6.0.5"
         MONGODB_DRIVER_LIB = "org.mongodb:mongodb-driver:3.4.0"
 
         // apache commons
@@ -72,8 +65,8 @@ dependencies {
             COMMONS_COLLECTIONS_LIB,
             GUAVA_LIB
 
-    testCompile "org.hamcrest:hamcrest-all:1.3",
-                "junit:junit:${JUNIT_VERSION}",
+    testCompile "junit:junit:${JUNIT_VERSION}",
+                "org.hamcrest:hamcrest-all:1.3",
                 "org.mockito:mockito-core:2.2.12",
                 "org.assertj:assertj-core:3.6.1"
 

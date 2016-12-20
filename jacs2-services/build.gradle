@@ -3,18 +3,11 @@ project(":jacs2-services") {
         compile CDI_API_LIB,
                 CMDLINE_ARG_LIB,
                 DRMAA1_LIB,
-                HIBERNATE_CORE_LIB,
-                HIBERNATE_ENTITYMANAGER_LIB,
                 JACKSON_ANNOTATIONS_LIB,
                 JACKSON_CORE_LIB,
                 JACKSON_DATABIND_LIB,
                 JACKSON_DATATYPE_JODA_LIB,
-                JPA_API_LIB,
                 MONGODB_DRIVER_LIB,
                 REFLECTIONS_LIB
-
-        runtime MYSQL_JDBC_LIB
-
-        integrationTestRuntime MYSQL_JDBC_LIB
     }
 }
