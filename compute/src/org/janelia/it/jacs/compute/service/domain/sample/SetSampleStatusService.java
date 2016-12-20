@@ -28,7 +28,8 @@ public class SetSampleStatusService extends AbstractDomainService {
         this.sample = sampleHelper.getRequiredSample(data);
         String status = data.getRequiredItemAsString("STATUS");
         sampleHelper.setProcess(data.getRequiredItemAsString("PIPELINE_NAME"));
-        sampleHelper.logStatusTransition(sample.getId(), PipelineStatus.valueOf(sample.getStatus()), PipelineStatus.valueOf(status));
+        String currentStatus=(sample.getStatus()==null)?"New":sample.getStatus();
+        sampleHelper.logStatusTransition(sample.getId(), PipelineStatus.valueOf(currentStatus), PipelineStatus.valueOf(status));
 
 	    Date now = new Date();
 	    DateTime sampleCompletion = new DateTime(sample.getCompletionDate());

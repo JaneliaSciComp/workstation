@@ -16,7 +16,6 @@ import org.janelia.it.jacs.compute.service.domain.model.AnatomicalArea;
 import org.janelia.it.jacs.compute.service.domain.model.SlideImage;
 import org.janelia.it.jacs.compute.service.domain.model.SlideImageGroup;
 import org.janelia.it.jacs.compute.util.ChanSpecUtils;
-import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
@@ -773,7 +772,7 @@ public class SampleHelperNG extends DomainHelper {
     }
     
     private void markForProcessing(Sample sample) throws Exception {
-        if (sample.isBlocked()) {
+        if (sample.getBlocked()) {
             return;
         }
         logStatusTransition(sample.getId(), PipelineStatus.valueOf(sample.getStatus()), PipelineStatus.Scheduled);

@@ -160,8 +160,9 @@ public class SampleFacadeImpl extends RESTClientImpl implements SampleFacade {
         query.setDomainObject(sample);
         query.setPropertyValue(targetStatus.getStatus().toString());
         Response response = manager.getSampleEndpoint()
+                .path("transitions")
                 .request("application/json")
-                .post(Entity.json(query));
+                .put(Entity.json(query));
         if (checkBadResponse(response.getStatus(), "problem making request to add a pipeline status transition: " + sample.getId())) {
             throw new WebApplicationException(response);
         }

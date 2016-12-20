@@ -149,6 +149,8 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         add(getVaa3dTriViewItem());
         add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
+
+        add(getFijiViewerItem());
         add(getDownloadItem());
 
         setNextAddRequiresSeparator(true);
