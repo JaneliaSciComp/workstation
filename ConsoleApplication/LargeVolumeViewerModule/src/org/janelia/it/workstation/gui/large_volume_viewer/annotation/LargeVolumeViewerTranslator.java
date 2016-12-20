@@ -184,6 +184,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         fireAnchorMoved(annotation);
     }
 
+    public void updateAnnotationRadius(TmGeoAnnotation annotation) {
+        fireAnchorRadiusChanged(annotation);
+    }
+
     //-----------------------------IMPLEMENTS TmAnchoredPathListener
     //  This listener functions as a value-remarshalling relay to next listener.
     @Override
@@ -237,6 +241,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     public void annotationMoved(TmGeoAnnotation annotation) {
         // Update LVV here, in case move came from Horta
         moveAnnotation(annotation);
+    }
+    
+    @Override
+    public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
+        updateAnnotationRadius(annotation);
     }
 
     @Override
@@ -401,6 +410,11 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     private void fireAnchorMoved(TmGeoAnnotation anchor) {
         for (TmGeoAnnotationAnchorListener l: anchorListeners) {
             l.anchorMoved(anchor);
+        }
+    }
+    private void fireAnchorRadiusChanged(TmGeoAnnotation anchor) {
+        for (TmGeoAnnotationAnchorListener l: anchorListeners) {
+            l.anchorRadiusChanged(anchor);
         }
     }
     private void fireClearAnchors() {

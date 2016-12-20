@@ -74,6 +74,11 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         annotationModel.setNotesUpdateListener(null);
         globalListener = null;
     }
+
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        filteredAnnotationList.annotationChanged(anchor);
+    }
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
         @Override

@@ -189,6 +189,22 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     @Override
+    public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
+        try {
+            if (! (vertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            annotationModel.updateAnnotationRadius(annotation.getId(), micronRadius);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+    @Override
     public boolean moveVertex(NeuronVertex vertex, float[] micronXyz) {
         try {
             if (! (vertex instanceof NeuronVertexAdapter) )

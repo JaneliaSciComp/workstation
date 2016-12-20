@@ -347,6 +347,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
     }
 
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        // Do nothing: radius has no effect on skeleton view
+    }
+
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {
 
         @Override

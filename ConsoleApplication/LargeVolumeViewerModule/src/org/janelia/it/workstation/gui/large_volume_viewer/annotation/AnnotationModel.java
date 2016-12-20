@@ -711,6 +711,71 @@ called from a  SimpleWorker thread.
     }
 
     /**
+     * change radius of an existing annotation
+     *
+     * @param annotationID = ID of annotation to move
+     * @param radius = new radius, in units of micrometers
+     * @throws Exception
+     */
+    public synchronized void updateAnnotationRadius(final Long annotationID, final float radius) throws Exception {
+        final TmNeuronMetadata neuron = this.getNeuronFromAnnotationID(annotationID);
+        final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
+
+        // update local annotation object
+        final Double oldRadius = annotation.getRadius();
+        synchronized(annotation) {
+            annotation.setRadius(new Double(radius));
+        }
+
+        try {
+            // Update value in database.
+            synchronized(neuron) {
+                neuronManager.saveNeuronData(neuron);
+                fireAnnotationRadiusUpdated(annotationID);
+            }
+        } catch (Exception e) {
+            // error means not persisted; however, in the process of moving,
+            //  the marker's already been moved, to give interactive feedback
+            //  to the user; so in case of error, tell the view to update to current
+            //  position (pre-move)
+            // this is unfortunately untested, because I couldn't think of an
+            //  easy way to simulate or force a failure!
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    annotation.setRadius(oldRadius);
+                    // activityLog.logEndOfOperation(getWsId(), location);
+                }
+            });
+            throw e;
+        }
+
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        if (automatedTracingEnabled()) {
+            // trace to parent, and each child to this parent:
+            viewStateListener.pathTraceRequested(annotation.getId());
+            for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
+                viewStateListener.pathTraceRequested(child.getId());
+            }
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNotesUpdated(workspace);
+
+                if (getCurrentNeuron() != null) {
+                    if (neuron.getId().equals(getCurrentNeuron().getId())) {
+                        fireNeuronSelected(getCurrentNeuron());
+                    }
+                }
+                // activityLog.logEndOfOperation(getWsId(), location);
+            }
+        });
+    }
+
+    /**
      * merge the neurite that has source Annotation into the neurite containing
      * targetAnnotation
      */
@@ -1678,6 +1743,12 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationRadiusUpdated(annotation);
+        }
+    }
+
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
         // update workspace; update and select new neuron; this will draw points as well
@@ -1696,6 +1767,10 @@ called from a  SimpleWorker thread.
 
     void fireAnnotationNotMoved(Long annotationID) {
         fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
+    }
+
+    void fireAnnotationRadiusUpdated(Long annotationID) {
+        fireAnnotationRadiusUpdated(getGeoAnnotationFromID(annotationID));
     }
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {

@@ -1575,13 +1575,22 @@ public final class NeuronTracerTopComponent extends TopComponent
                 topMenu.add(new JPopupMenu.Separator());
                 final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
 
+                if (interactorContext.canUpdateAnchorRadius()) {
+                    topMenu.add(new AbstractAction("Adjust Anchor Radius") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.updateAnchorRadius();
+                        }
+                    });
+
                 if (interactorContext.canClearParent()) {
                     topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        interactorContext.clearParent();
-                    }
-                });
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.clearParent();
+                        }
+                    });
+                }
                 }
                 
                 if (interactorContext.getCurrentParentAnchor() != null) {

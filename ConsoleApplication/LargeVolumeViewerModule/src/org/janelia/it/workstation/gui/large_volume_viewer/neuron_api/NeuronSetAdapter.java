@@ -326,6 +326,26 @@ implements NeuronSet// , LookupListener
             logger.info("annotationNotMoved");
             // updateEdges();
         }
+
+        @Override
+        public void annotationRadiusUpdated(TmGeoAnnotation annotation) {
+            sanityCheckWorkspace();
+            NeuronModelAdapter neuron = neuronModelForTmGeoAnnotation(annotation);
+            if (neuron == null) {
+                logger.warn("Could not find neuron for reradiused anchor");
+                return;
+            }
+            NeuronVertex movedVertex = neuron.getVertexForAnnotation(annotation);
+            if (movedVertex == null) {
+                logger.info("Skipping reradiused anchor not yet instantiated in Horta");
+                return;
+            }
+            NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
+            signal.setChanged();
+            signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
+            logger.info("annotationRadiusUpdated");
+            repaintHorta();
+        }
     }
 
 

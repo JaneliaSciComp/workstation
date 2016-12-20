@@ -16,4 +16,5 @@ public interface TmGeoAnnotationModListener {
     void annotationReparented(TmGeoAnnotation annotation);
     void annotationNotMoved(TmGeoAnnotation annotation);
     void annotationMoved(TmGeoAnnotation annotation);
+    void annotationRadiusUpdated(TmGeoAnnotation annotation);
 }
