@@ -6,7 +6,7 @@ public class ServerStats {
     private int runningServicesCount;
     private int waitingServices;
     private int availableSlots;
-    private List<Long> runningServices;
+    private List<Number> runningServices;
 
     public int getRunningServicesCount() {
         return runningServicesCount;
@@ -32,11 +32,11 @@ public class ServerStats {
         this.availableSlots = availableSlots;
     }
 
-    public List<Long> getRunningServices() {
+    public List<Number> getRunningServices() {
         return runningServices;
     }
 
-    public void setRunningServices(List<Long> runningServices) {
+    public void setRunningServices(List<Number> runningServices) {
         this.runningServices = runningServices;
     }
 }

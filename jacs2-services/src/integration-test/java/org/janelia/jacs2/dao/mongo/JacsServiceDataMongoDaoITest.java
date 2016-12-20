@@ -1,9 +1,8 @@
-package org.janelia.jacs2.dao.jpa;
+package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
-import org.janelia.jacs2.dao.JacsServiceEventDao;
 import org.janelia.jacs2.dao.JacsServiceDataDao;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -25,27 +24,21 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.junit.Assert.assertThat;
 
-public class JacsServiceDataPersistenceITest extends AbstractJpaDaoITest {
+public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServiceData> {
 
-    private List<JacsServiceData> testData;
-    private JacsServiceDataDao serviceDataTestDao;
-    private JacsServiceEventDao serviceEventTestDao;
+    private List<JacsServiceData> testData = new ArrayList<>();
+    private JacsServiceDataDao testDao;
 
     @Before
     public void setUp() {
-        testData = new ArrayList<>();
-        serviceDataTestDao = new JacsServiceDataJpaDao(testEntityManager);
-        serviceEventTestDao = new JacsServiceEventJpaDao(testEntityManager);
-        testEntityManager.getTransaction().begin();
+        testDao = new JacsServiceDataMongoDao(testMongoDatabase);
+        setIdGeneratorAndObjectMapper((JacsServiceDataMongoDao) testDao);
     }
 
     @After
     public void tearDown() {
         // delete the data that was created for testing
-        for (JacsServiceData t : testData) {
-            deleteServiceData(t);
-        }
-        testEntityManager.getTransaction().commit();
+        deleteAll(testDao, testData);
     }
 
     @Test
@@ -53,59 +46,51 @@ public class JacsServiceDataPersistenceITest extends AbstractJpaDaoITest {
         JacsServiceData si = persistServiceWithEvents(createTestService("s", "t"),
                 createTestServiceEvent("e1", "v1"),
                 createTestServiceEvent("e2", "v2"));
-        JacsServiceData retrievedSi = serviceDataTestDao.findById(si.getId());
+        JacsServiceData retrievedSi = testDao.findById(si.getId());
         assertThat(retrievedSi.getName(), equalTo(si.getName()));
     }
 
     @Test
     public void persistServiceHierarchy() {
         JacsServiceData si1 = persistServiceWithEvents(createTestService("s1", "t1"));
-        JacsServiceData retrievedSi1 = serviceDataTestDao.findById(si1.getId());
+        JacsServiceData retrievedSi1 = testDao.findById(si1.getId());
         assertThat(retrievedSi1, allOf(
                 hasProperty("parentServiceId", nullValue(Long.class)),
                 hasProperty("rootServiceId", nullValue(Long.class))
         ));
         JacsServiceData si1_1 = createTestService("s1.1", "t1.1");
-        si1.addChildService(si1_1);
-        serviceDataTestDao.save(si1_1);
-        testData.add(0, si1_1);
-        JacsServiceData retrievedSi1_1 = serviceDataTestDao.findById(si1_1.getId());
+        si1_1.updateParentService(si1);
+        testDao.save(si1_1);
+        JacsServiceData retrievedSi1_1 = testDao.findById(si1_1.getId());
         assertThat(retrievedSi1_1, allOf(
                 hasProperty("parentServiceId", equalTo(si1.getId())),
                 hasProperty("rootServiceId", equalTo(si1.getId()))
         ));
 
         JacsServiceData si1_2 = createTestService("s1.2", "t1.2");
-        si1.addChildService(si1_2);
-        serviceDataTestDao.save(si1_2);
-        testData.add(0, si1_2);
-        JacsServiceData retrievedSi1_2 = serviceDataTestDao.findById(si1_2.getId());
+        si1_2.updateParentService(si1);
+        testDao.save(si1_2);
+        JacsServiceData retrievedSi1_2 = testDao.findById(si1_2.getId());
         assertThat(retrievedSi1_2, allOf(
                 hasProperty("parentServiceId", equalTo(si1.getId())),
                 hasProperty("rootServiceId", equalTo(si1.getId()))
         ));
 
         JacsServiceData si1_2_1 = createTestService("s1.2.1", "t1.2.1");
-        si1_2.addChildService(si1_2_1);
-        serviceDataTestDao.save(si1_2_1);
-        testData.add(0, si1_2_1);
+        si1_2_1.updateParentService(si1_2);
+        testDao.save(si1_2_1);
 
-        JacsServiceData retrievedSi1_2_1 = serviceDataTestDao.findById(si1_2_1.getId());
+        JacsServiceData retrievedSi1_2_1 = testDao.findById(si1_2_1.getId());
         assertThat(retrievedSi1_2_1, allOf(
                 hasProperty("parentServiceId", equalTo(si1_2.getId())),
                 hasProperty("rootServiceId", equalTo(si1.getId()))
         ));
 
-        commit();
-
-        // we need to flush otherwise the statements are not sent to the DB and the query will not find them from the cache
-        if (testEntityManager.getTransaction().isActive()) testEntityManager.flush();
-
-        List<JacsServiceData> s1Children = serviceDataTestDao.findChildServices(si1.getId());
+        List<JacsServiceData> s1Children = testDao.findChildServices(si1.getId());
         assertThat(s1Children.size(), equalTo(2));
         assertThat(s1Children, everyItem(Matchers.hasProperty("parentServiceId", equalTo(si1.getId()))));
 
-        List<JacsServiceData> s1Hierarchy = serviceDataTestDao.findServiceHierarchy(si1.getId());
+        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
         assertThat(s1Hierarchy.size(), equalTo(3));
         assertThat(s1Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
     }
@@ -141,24 +126,29 @@ public class JacsServiceDataPersistenceITest extends AbstractJpaDaoITest {
             persistServiceWithEvents(s);
         });
         PageRequest pageRequest = new PageRequest();
-        PageResult<JacsServiceData> retrievedQueuedServices = serviceDataTestDao.findServiceByState(ImmutableSet.of(JacsServiceState.QUEUED), pageRequest);
+        PageResult<JacsServiceData> retrievedQueuedServices = testDao.findServiceByState(ImmutableSet.of(JacsServiceState.QUEUED), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("state", equalTo(JacsServiceState.QUEUED))));
         assertThat(retrievedQueuedServices.getResultList().size(), equalTo(servicesInQueuedState.size()));
 
-        PageResult<JacsServiceData> retrievedRunningOrCanceledServices = serviceDataTestDao.findServiceByState(
+        PageResult<JacsServiceData> retrievedRunningOrCanceledServices = testDao.findServiceByState(
                 ImmutableSet.of(JacsServiceState.RUNNING, JacsServiceState.CANCELED), pageRequest);
         assertThat(retrievedRunningOrCanceledServices.getResultList().size(), equalTo(servicesInRunningState.size() + servicesInCanceledState.size()));
     }
 
     private JacsServiceData persistServiceWithEvents(JacsServiceData si, JacsServiceEvent... jacsServiceEvents) {
-        serviceDataTestDao.save(si);
         for (JacsServiceEvent se : jacsServiceEvents) {
             si.addEvent(se);
-            serviceEventTestDao.save(se);
         }
-        commit();
-        testData.add(0, si);
+        testDao.save(si);
         return si;
+    }
+
+    protected List<JacsServiceData> createMultipleTestItems(int nItems) {
+        List<JacsServiceData> testItems = new ArrayList<>();
+        for (int i = 0; i < nItems; i++) {
+            testItems.add(createTestService("s" + (i + 1), "t" + (i + 1)));
+        }
+        return testItems;
     }
 
     private JacsServiceData createTestService(String serviceName, String serviceType) {
@@ -167,6 +157,7 @@ public class JacsServiceDataPersistenceITest extends AbstractJpaDaoITest {
         si.setServiceType(serviceType);
         si.addArg("I1");
         si.addArg("I2");
+        testData.add(si);
         return si;
     }
 
@@ -177,12 +168,4 @@ public class JacsServiceDataPersistenceITest extends AbstractJpaDaoITest {
         return se;
     }
 
-    private void deleteServiceData(JacsServiceData ti) {
-        serviceDataTestDao.delete(ti);
-    }
-
-    private void commit() {
-        testEntityManager.getTransaction().commit();
-        testEntityManager.getTransaction().begin();
-    }
 }

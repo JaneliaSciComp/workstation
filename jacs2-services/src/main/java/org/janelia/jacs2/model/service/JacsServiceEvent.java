@@ -1,36 +1,15 @@
 package org.janelia.jacs2.model.service;
 
-import org.janelia.jacs2.model.BaseEntity;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.janelia.jacs2.utils.ISODateDeserializer;
 
-import javax.persistence.*;
 import java.util.Date;
 
-@Entity
-@Table(name = "jacs_service_event")
-@Access(AccessType.FIELD)
-public class JacsServiceEvent implements BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "jacs_service_event_id")
-    private Long id;
-    @Column(name = "name")
+public class JacsServiceEvent {
     private String name;
-    @Column(name = "value")
     private String value;
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "event_time")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date eventTime = new Date();
-    @ManyToOne
-    @JoinColumn(name = "jacs_service_data_id")
-    private JacsServiceData jacsServiceData;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getName() {
         return name;
@@ -46,14 +25,6 @@ public class JacsServiceEvent implements BaseEntity {
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    public JacsServiceData getJacsServiceData() {
-        return jacsServiceData;
-    }
-
-    public void setJacsServiceData(JacsServiceData service) {
-        this.jacsServiceData = jacsServiceData;
     }
 
     public Date getEventTime() {

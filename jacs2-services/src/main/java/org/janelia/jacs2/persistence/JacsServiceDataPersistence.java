@@ -11,7 +11,7 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
 
-public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServiceDataDao, JacsServiceData, Long> {
+public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServiceDataDao, JacsServiceData, Number> {
 
     @Inject
     public JacsServiceDataPersistence(Instance<JacsServiceDataDao> serviceDataDaoSource) {
@@ -27,7 +27,7 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
         }
     }
 
-    public List<JacsServiceData> findServiceHierarchy(Long serviceId) {
+    public List<JacsServiceData> findServiceHierarchy(Number serviceId) {
         JacsServiceDataDao jacsServiceDataDao = daoSource.get();
         try {
             return jacsServiceDataDao.findServiceHierarchy(serviceId);

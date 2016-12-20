@@ -1,70 +1,47 @@
 package org.janelia.jacs2.model.service;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
+import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
+import org.janelia.jacs2.utils.ISODateDeserializer;
+import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
 
-import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-@Entity
-@Table(name = "jacs_service_data")
-@Access(AccessType.FIELD)
-public class JacsServiceData implements BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "jacs_service_data_id")
-    private Long id;
-    @Column(name = "name")
+@MongoMapping(collectionName="jacsService", label="JacsService")
+public class JacsServiceData implements BaseEntity, HasIdentifier {
+    @JsonProperty("_id")
+    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    private Number id;
     private String name;
-    @Column(name = "service_type")
     private String serviceType;
-    @Column(name = "service_cmd")
     private String serviceCmd;
-    @Enumerated(EnumType.STRING)
-    @Column(name = "state")
     private JacsServiceState state;
-    @Column(name = "priority")
     private Integer priority = 0;
-    @Column(name = "owner")
     private String owner;
-    @Column(name = "input_path")
     private String inputPath;
-    @Column(name = "output_path")
     private String outputPath;
-    @Column(name = "error_path")
     private String errorPath;
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "jacs_service_arg")
     private List<String> args = new ArrayList<>();
-    @Column(name = "workspace")
     private String workspace;
-    @Column(name = "parent_jacs_service_data_id")
-    private Long parentServiceId;
-    @ManyToOne
-    @JoinColumn(name = "parent_jacs_service_data_id", referencedColumnName = "jacs_service_data_id", insertable = false, updatable = false)
-    private JacsServiceData parentService;
-    @OneToMany()
-    @JoinColumn(name = "parent_jacs_service_data_id", insertable = false, updatable = false)
-    private List<JacsServiceData> childServices;
-    @Column(name = "root_jacs_service_data_id")
-    private Long rootServiceId;
-    @ManyToOne
-    @JoinColumn(name = "root_jacs_service_data_id", referencedColumnName = "jacs_service_data_id", insertable = false, updatable = false)
-    private JacsServiceData rootService;
-    @OneToMany(mappedBy = "jacsServiceData")
+    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    private Number parentServiceId;
+    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    private Number rootServiceId;
     private List<JacsServiceEvent> events;
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "creation_date")
+    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date creationDate = new Date();
 
-    public Long getId() {
+    public Number getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Number id) {
         this.id = id;
     }
 
@@ -164,44 +141,20 @@ public class JacsServiceData implements BaseEntity {
         this.workspace = workspace;
     }
 
-    public Long getParentServiceId() {
+    public Number getParentServiceId() {
         return parentServiceId;
     }
 
-    public void setParentServiceId(Long parentServiceId) {
+    public void setParentServiceId(Number parentServiceId) {
         this.parentServiceId = parentServiceId;
     }
 
-    public JacsServiceData getParentService() {
-        return parentService;
-    }
-
-    public void setParentService(JacsServiceData parentService) {
-        this.parentService = parentService;
-    }
-
-    public List<JacsServiceData> getChildServices() {
-        return childServices;
-    }
-
-    public void setChildServices(List<JacsServiceData> childServices) {
-        this.childServices = childServices;
-    }
-
-    public Long getRootServiceId() {
+    public Number getRootServiceId() {
         return rootServiceId;
     }
 
-    public void setRootServiceId(Long rootServiceId) {
+    public void setRootServiceId(Number rootServiceId) {
         this.rootServiceId = rootServiceId;
-    }
-
-    public JacsServiceData getRootService() {
-        return rootService;
-    }
-
-    public void setRootService(JacsServiceData rootService) {
-        this.rootService = rootService;
     }
 
     public List<JacsServiceEvent> getEvents() {
@@ -231,28 +184,20 @@ public class JacsServiceData implements BaseEntity {
         if (this.events == null) {
             this.events = new ArrayList<>();
         }
-        se.setJacsServiceData(this);
         this.events.add(se);
     }
 
-    public void addChildService(JacsServiceData si) {
-        if (this.childServices == null) {
-            this.childServices = new ArrayList<>();
-        }
-        si.updateParentService(this);
-    }
-
     public void updateParentService(JacsServiceData parentService) {
-        setParentService(parentService);
         if (parentService != null) {
             setParentServiceId(parentService.getId());
             if (parentService.getRootServiceId() == null) {
                 setRootServiceId(parentService.getId());
-                setRootService(parentService);
             } else {
                 setRootServiceId(parentService.getRootServiceId());
-                setRootService(parentService.getRootService());
             }
+        } else {
+            setParentServiceId(null);
+            setRootServiceId(null);
         }
     }
 
@@ -262,7 +207,7 @@ public class JacsServiceData implements BaseEntity {
 
     @Override
     public String toString() {
-        return ReflectionToStringBuilder.toStringExclude(this, Arrays.asList("parentService", "rootService", "childServices", "events"));
+        return ReflectionToStringBuilder.toString(this);
     }
 
     public boolean hasCompleted() {

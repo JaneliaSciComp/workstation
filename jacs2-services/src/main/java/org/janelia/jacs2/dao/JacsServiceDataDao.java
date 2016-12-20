@@ -8,8 +8,8 @@ import org.janelia.jacs2.model.service.JacsServiceState;
 import java.util.List;
 import java.util.Set;
 
-public interface JacsServiceDataDao extends Dao<JacsServiceData, Long> {
+public interface JacsServiceDataDao extends Dao<JacsServiceData, Number> {
     PageResult<JacsServiceData> findServiceByState(Set<JacsServiceState> requestStates, PageRequest pageRequest);
-    List<JacsServiceData> findChildServices(Long serviceId);
-    List<JacsServiceData> findServiceHierarchy(Long serviceId);
+    List<JacsServiceData> findChildServices(Number serviceId);
+    List<JacsServiceData> findServiceHierarchy(Number serviceId);
 }

@@ -33,7 +33,7 @@ public class AsyncServiceInfoResource {
         si.setName(serviceName);
         JacsServiceData newJacsServiceData = jacsServiceDataManager.submitServiceAsync(si, Optional.empty());
         UriBuilder locationURIBuilder = UriBuilder.fromResource(ServiceInfoResource.class);
-        locationURIBuilder.path(Long.toString(newJacsServiceData.getId()));
+        locationURIBuilder.path(newJacsServiceData.getId().toString());
         return Response
                 .status(Response.Status.CREATED)
                 .entity(newJacsServiceData)

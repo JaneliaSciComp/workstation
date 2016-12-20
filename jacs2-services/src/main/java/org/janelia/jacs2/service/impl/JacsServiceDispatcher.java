@@ -45,8 +45,8 @@ public class JacsServiceDispatcher {
     @Inject
     private Instance<ServiceRegistry> serviceRegistrarSource;
     private final Queue<JacsServiceData> waitingServices;
-    private final Set<Long> waitingServicesSet = new ConcurrentSkipListSet<>();
-    private final Set<Long> submittedServicesSet = new ConcurrentSkipListSet<>();
+    private final Set<Number> waitingServicesSet = new ConcurrentSkipListSet<>();
+    private final Set<Number> submittedServicesSet = new ConcurrentSkipListSet<>();
     private final Semaphore queuePermit;
     private int nAvailableSlots;
     private final Semaphore availableSlots;
@@ -222,7 +222,7 @@ public class JacsServiceDispatcher {
             JacsServiceData jacsServiceData = waitingServices.poll();
             if (jacsServiceData != null) {
                 logger.debug("Retrieved waiting service {}", jacsServiceData);
-                Long serviceId = jacsServiceData.getId();
+                Number serviceId = jacsServiceData.getId();
                 submittedServicesSet.add(serviceId);
                 waitingServicesSet.remove(serviceId);
             }
