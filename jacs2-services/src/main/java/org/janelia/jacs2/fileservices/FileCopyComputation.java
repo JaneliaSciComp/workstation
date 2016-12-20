@@ -1,16 +1,13 @@
 package org.janelia.jacs2.fileservices;
 
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
-import org.janelia.jacs2.service.impl.ExternalProcessRunner;
 import org.janelia.jacs2.service.impl.JacsService;
-import org.janelia.jacs2.service.qualifier.LocalJob;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -35,21 +32,10 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
     private String scriptName;
 
 
-    static class FileCopyArgs {
-        @Parameter(names = "-src", description = "Source file name", required = true)
-        String sourceFilename;
-        @Parameter(names = "-dst", description = "Destination file name or location", required = true)
-        String targetFilename;
-        @Parameter(names = "-mv", arity = 0, description = "If used the file will be moved to the target", required = false)
-        boolean deleteSourceFile = false;
-        @Parameter(names = "-convert8", arity = 0, description = "If set it converts the image to 8bit", required = false)
-        boolean convertTo8Bits = false;
-    }
-
     @Override
     public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
         CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
-        FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Source file name must be specified"));
         } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
@@ -69,7 +55,7 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
     @Override
     public CompletionStage<JacsService<Void>> isDone(JacsService<Void> jacsService) {
         CompletableFuture<JacsService<Void>> doneFuture = new CompletableFuture<>();
-        FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
         if (fileCopyArgs.deleteSourceFile) {
             try {
                 File sourceFile = new File(fileCopyArgs.sourceFilename);
@@ -85,7 +71,7 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
 
     @Override
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
-        FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
         jacsServiceData.setServiceCmd(getFullExecutableName(scriptName));
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder.add(fileCopyArgs.sourceFilename);
@@ -101,8 +87,8 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
-    private FileCopyArgs getArgs(JacsServiceData jacsServiceData) {
-        FileCopyArgs fileCopyArgs = new FileCopyArgs();
+    private FileCopyServiceDescriptor.FileCopyArgs getArgs(JacsServiceData jacsServiceData) {
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = new FileCopyServiceDescriptor.FileCopyArgs();
         new JCommander(fileCopyArgs).parse(jacsServiceData.getArgsAsArray());
         return fileCopyArgs;
     }

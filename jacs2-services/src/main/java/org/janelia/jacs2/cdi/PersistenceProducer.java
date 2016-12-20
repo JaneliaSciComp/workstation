@@ -30,7 +30,7 @@ public class PersistenceProducer {
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
                 CodecRegistries.fromProviders(new DomainCodecProvider(objectMapper)),
-                CodecRegistries.fromCodecs(new BigIntegerCodec(), new EnumCodec<JacsServiceState>(JacsServiceState.class))
+                CodecRegistries.fromCodecs(new BigIntegerCodec(), new EnumCodec<>(JacsServiceState.class))
         );
         MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
         MongoClientURI mongoConnectionString = new MongoClientURI(nmongoConnectionURL, optionsBuilder);

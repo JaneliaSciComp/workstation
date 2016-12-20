@@ -1,7 +1,6 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -22,22 +21,13 @@ import java.util.stream.Collectors;
 @Named("sampleLsmMetadataService")
 public class CreateSampleLsmMetadataComputation extends AbstractServiceComputation<Void> {
 
-    static class SampleLsmMetadataArgs {
-        @Parameter(names = "-sampleId", description = "Sample ID", required = true)
-        Long sampleId;
-        @Parameter(names = "-objective", description = "Sample objective", required = true)
-        String sampleObjective;
-        @Parameter(names = "-outputDir", description = "Destination directory", required = true)
-        String outputDir;
-    }
-
     @Inject
     private SampleDataService sampleDataService;
 
     @Override
     public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
         JacsServiceData serviceData = jacsService.getJacsServiceData();
-        SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
+        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
         Optional<AnatomicalArea> anatomicalArea =
                 sampleDataService.getAnatomicalAreaBySampleIdAndObjective(jacsService.getOwner(), sampleLsmMetadataArgs.sampleId, sampleLsmMetadataArgs.sampleObjective);
         if (!anatomicalArea.isPresent()) {
@@ -49,6 +39,7 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
                 .map(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()).collect(Collectors.toList())).map(lsmFiles -> lsmFiles.stream().map(lf -> {
                     JacsServiceData lsmMetadataServiceData =
                         new JacsServiceDataBuilder(serviceData)
+                                .setName("lsmMetadata")
                                 .addArg("-inputLSM", lf.getFilepath())
                                 .addArg("-outputLSMMetadata", getOutputFileName(sampleLsmMetadataArgs.outputDir, lf.getFilepath()))
                                 .build();
@@ -63,7 +54,7 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
     public CompletionStage<JacsService<Void>> processData(JacsService<Void> jacsService) {
         // collect the metadata files and update the corresponding LSMs
         JacsServiceData serviceData = jacsService.getJacsServiceData();
-        SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
+        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
         Optional<AnatomicalArea> anatomicalArea =
                 sampleDataService.getAnatomicalAreaBySampleIdAndObjective(jacsService.getOwner(), sampleLsmMetadataArgs.sampleId, sampleLsmMetadataArgs.sampleObjective);
         CompletableFuture<JacsService<Void>> processData = new CompletableFuture<>();
@@ -85,8 +76,8 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
         return processData;
     }
 
-    private SampleLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
-        SampleLsmMetadataArgs sampleLsmMetadataArgs = new SampleLsmMetadataArgs();
+    private CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
+        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = new CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs();
         new JCommander(sampleLsmMetadataArgs).parse(jacsServiceData.getArgsAsArray());
         return sampleLsmMetadataArgs;
     }

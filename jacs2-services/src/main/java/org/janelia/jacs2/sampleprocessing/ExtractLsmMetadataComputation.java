@@ -1,7 +1,6 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
@@ -34,17 +33,10 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     @Inject
     private String scriptName;
 
-    static class LsmMetadataArgs {
-        @Parameter(names = "-inputLSM", description = "LSM Input file name", required = true)
-        String inputLSMFile;
-        @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
-        String outputLSMMetadata;
-    }
-
     @Override
     public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
         CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
-        LsmMetadataArgs lsmMetadataArgs = getArgs(jacsService.getJacsServiceData());
+        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(lsmMetadataArgs.inputLSMFile)) {
             preProcess.completeExceptionally(new IllegalArgumentException("Input LSM file name must be specified"));
         } else if (StringUtils.isBlank(lsmMetadataArgs.outputLSMMetadata)) {
@@ -63,7 +55,7 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
 
     @Override
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
-        LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
+        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
         jacsServiceData.setServiceCmd(perlExecutable);
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder
@@ -82,17 +74,17 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         );
     }
 
-    private LsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
-        LsmMetadataArgs lsmMetadataArgs = new LsmMetadataArgs();
+    private ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
+        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = new ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs();
         new JCommander(lsmMetadataArgs).parse(jacsServiceData.getArgsAsArray());
         return lsmMetadataArgs;
     }
 
-    private String getInputFileName(LsmMetadataArgs lsmMetadataArg) {
+    private String getInputFileName(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
         return new File(lsmMetadataArg.inputLSMFile).getAbsolutePath();
     }
 
-    private String getOutputFileName(LsmMetadataArgs lsmMetadataArg) {
+    private String getOutputFileName(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
         return new File(lsmMetadataArg.outputLSMMetadata).getAbsolutePath();
     }
 }

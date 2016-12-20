@@ -103,8 +103,9 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         assertThat(s1Children, everyItem(Matchers.hasProperty("parentServiceId", equalTo(si1.getId()))));
 
         List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
-        assertThat(s1Hierarchy.size(), equalTo(3));
-        assertThat(s1Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+        assertThat(s1Hierarchy.size(), equalTo(4));
+        assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+        assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
     }
 
     @Test

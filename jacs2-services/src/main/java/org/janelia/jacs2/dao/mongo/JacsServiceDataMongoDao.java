@@ -46,6 +46,7 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
         List<JacsServiceData> fullServiceHierachy = find(eq("rootServiceId", rootServiceId), createBsonSortCriteria(ImmutableList.of(new SortCriteria("_id"))), 0, -1, JacsServiceData.class);
         List<JacsServiceData> serviceHierarchy = new ArrayList<>();
         Set<Number> serviceHierarchySet = new HashSet<>();
+        serviceHierarchy.add(jacsServiceData);
         serviceHierarchySet.add(serviceId);
         fullServiceHierachy.stream().forEach(ti -> {
             if (serviceHierarchySet.contains(ti.getParentServiceId())) {
