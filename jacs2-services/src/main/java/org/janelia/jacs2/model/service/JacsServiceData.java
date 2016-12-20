@@ -21,7 +21,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private String name;
     private String serviceType;
     private String serviceCmd;
-    private JacsServiceState state;
+    private JacsServiceState state = JacsServiceState.CREATED;
     private Integer priority = 0;
     private String owner;
     private String inputPath;

@@ -51,6 +51,18 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
     }
 
     @Test
+    public void addServiceEvent() {
+        JacsServiceData si = persistServiceWithEvents(createTestService("s", "t"),
+                createTestServiceEvent("e1", "v1"),
+                createTestServiceEvent("e2", "v2"));
+        si.addEvent(createTestServiceEvent("e3", "v3"));
+        si.setState(JacsServiceState.RUNNING);
+        testDao.update(si);
+        JacsServiceData retrievedSi = testDao.findById(si.getId());
+        assertThat(retrievedSi.getName(), equalTo(si.getName()));
+    }
+
+    @Test
     public void persistServiceHierarchy() {
         JacsServiceData si1 = persistServiceWithEvents(createTestService("s1", "t1"));
         JacsServiceData retrievedSi1 = testDao.findById(si1.getId());
