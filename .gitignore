@@ -15,6 +15,7 @@ bin
 Distribution
 build
 eclipseBuild
+localConfig
 target
 ear
 dist
