@@ -1,5 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
+import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.JobInfo;
@@ -47,11 +48,16 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             jt.setJobName(serviceData.getName());
             jt.setRemoteCommand(cmd);
             jt.setArgs(cmdArgs);
+            String workingDirectory;
             if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
-                jt.setWorkingDirectory(serviceData.getWorkspace());
+                workingDirectory = serviceData.getWorkspace();
             } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-                jt.setWorkingDirectory(new File(defaultWorkingDir, serviceData.getName()).getAbsolutePath());
+                workingDirectory = new File(defaultWorkingDir, serviceData.getName()).getAbsolutePath();
+            } else {
+                workingDirectory = Files.createTempDir().getAbsolutePath();
             }
+            logger.debug("Use '{}' as working directory for {}", workingDirectory, serviceData);
+            jt.setWorkingDirectory(workingDirectory);
             jt.setJobEnvironment(env);
             if (StringUtils.isNotBlank(serviceData.getInputPath())) {
                 jt.setInputPath(":" + serviceData.getInputPath());
