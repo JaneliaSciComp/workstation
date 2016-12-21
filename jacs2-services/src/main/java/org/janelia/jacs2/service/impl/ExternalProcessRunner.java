@@ -5,5 +5,8 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 
 public interface ExternalProcessRunner {
-    <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext);
+    <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
+                                               ExternalProcessOutputHandler outStreamHandler,
+                                               ExternalProcessOutputHandler errStreamHandler,
+                                               JacsService<R> serviceContext);
 }

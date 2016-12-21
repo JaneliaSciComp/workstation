@@ -11,10 +11,12 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
+import java.util.function.Consumer;
 
 @ClusterJob
 public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
@@ -26,7 +28,10 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     private SessionFactory drmaaSessionFactory;
 
     @Override
-    public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env, JacsService<R> serviceContext) {
+    public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
+                                                      ExternalProcessOutputHandler outStreamHandler,
+                                                      ExternalProcessOutputHandler errStreamHandler,
+                                                      JacsService<R> serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
