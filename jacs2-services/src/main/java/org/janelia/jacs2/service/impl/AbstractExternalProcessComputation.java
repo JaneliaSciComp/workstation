@@ -76,10 +76,13 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
 
     @Override
     public CompletionStage<JacsService<R>> processData(JacsService<R> jacsService) {
-        return getProcessRunner(jacsService.getJacsServiceData().getServiceType()).runCmd(
-                jacsService.getJacsServiceData().getServiceCmd(),
-                prepareCmdArgs(jacsService.getJacsServiceData()),
-                prepareEnvironment(jacsService.getJacsServiceData()),
+        JacsServiceData serviceData = jacsService.getJacsServiceData();
+        List<String> args = prepareCmdArgs(serviceData);
+        Map<String, String> env = prepareEnvironment(serviceData);
+        return getProcessRunner(serviceData.getServiceType()).runCmd(
+                serviceData.getServiceCmd(),
+                args,
+                env,
                 jacsService);
     }
 }
