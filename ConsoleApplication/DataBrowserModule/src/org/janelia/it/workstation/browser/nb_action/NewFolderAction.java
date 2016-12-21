@@ -59,7 +59,6 @@ public final class NewFolderAction extends CallableSystemAction {
 
     @Override
     public void performAction() {
-
         NewFolderActionListener actionListener = new NewFolderActionListener();
         actionListener.actionPerformed(null);
     }
