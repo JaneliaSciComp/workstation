@@ -29,8 +29,6 @@
  */
 package org.janelia.horta;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import org.janelia.console.viewerapi.BasicSampleLocation;
 import org.janelia.console.viewerapi.SampleLocation;
@@ -45,7 +43,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author fosterl
  */
-@ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
+@ServiceProvider(
+        service = Tiled3dSampleLocationProviderAcceptor.class, 
+        path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH,
+        position=120)
 public class HortaLocationProviderChannel2 
     extends HortaLocationProvider
     implements Tiled3dSampleLocationProviderAcceptor 
