@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +28,6 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     @PropertyValue(name = "service.DefaultWorkingDir")
     @Inject
     private String defaultWorkingDir;
-
     @Inject
     private SessionFactory drmaaSessionFactory;
 
@@ -50,7 +50,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
                 jt.setWorkingDirectory(serviceData.getWorkspace());
             } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-                jt.setWorkingDirectory(defaultWorkingDir);
+                jt.setWorkingDirectory(new File(defaultWorkingDir, serviceData.getName()).getAbsolutePath());
             }
             jt.setJobEnvironment(env);
             if (StringUtils.isNotBlank(serviceData.getInputPath())) {

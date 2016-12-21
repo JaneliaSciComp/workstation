@@ -2,6 +2,7 @@ package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.service.qualifier.LocalJob;
 import org.slf4j.Logger;
 
@@ -19,6 +20,9 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
     @Named("SLF4J")
     @Inject
     private Logger logger;
+    @PropertyValue(name = "service.DefaultWorkingDir")
+    @Inject
+    private String defaultWorkingDir;
 
     @Override
     public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
@@ -29,6 +33,9 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
         if (StringUtils.isNotBlank(serviceContext.getJacsServiceData().getWorkspace())) {
             File workingDirectory = new File(serviceContext.getJacsServiceData().getWorkspace());
+            processBuilder.directory(workingDirectory);
+        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+            File workingDirectory = new File(defaultWorkingDir, serviceContext.getJacsServiceData().getName());
             processBuilder.directory(workingDirectory);
         }
         processBuilder.environment().putAll(env);
