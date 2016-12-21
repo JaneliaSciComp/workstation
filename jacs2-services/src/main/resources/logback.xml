@@ -23,6 +23,7 @@
     </appender>
 
     <logger name="org.hibernate" level="error" />
+    <logger name="org.janelia.jacs2.service.impl" level="error" />
 
     <root level="debug">
         <appender-ref ref="CONSOLE" />
