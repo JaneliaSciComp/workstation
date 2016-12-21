@@ -8,6 +8,7 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.JacsService;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -24,6 +25,9 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
+    @Named("SLF4J")
+    @Inject
+    private Logger logger;
     @PropertyValue(name = "VAA3D.LibraryPath")
     @Inject
     private String libraryPath;
@@ -93,4 +97,13 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
         return fileCopyArgs;
     }
 
+    @Override
+    protected boolean checkForErrors(String l) {
+        if (l.regionMatches(true, 0, "error", 0, l.length())) {
+            logger.error(l);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

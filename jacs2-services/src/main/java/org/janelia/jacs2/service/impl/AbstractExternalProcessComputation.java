@@ -85,11 +85,11 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     }
 
     protected String outputStreamHandler(InputStream outStream) {
-        return streamHandler(outStream, s -> logger.debug(s));
+        return streamHandler(outStream, s -> {if (StringUtils.isNotBlank(s)) logger.debug(s);});
     }
 
     protected String errStreamHandler(InputStream outStream) {
-        return streamHandler(outStream, s -> logger.error(s));
+        return streamHandler(outStream, s -> {if (StringUtils.isNotBlank(s)) logger.error(s);});
     }
 
     private String streamHandler(InputStream outStream, Consumer<String> logWriter) {
