@@ -35,6 +35,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         JobTemplate jt = null;
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         try {
+            drmaaSession.init(null); // initialize DRMAA session
             JacsServiceData serviceData = serviceContext.getJacsServiceData();
             jt = drmaaSession.createJobTemplate();
             jt.setJobName(serviceData.getName());
@@ -78,6 +79,11 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 } catch (DrmaaException e) {
                     logger.warn("Error deleting the DRMAA job template for {} with {}", serviceContext, cmdArgs, e);
                 }
+            }
+            try {
+                drmaaSession.exit();
+            } catch (DrmaaException e) {
+                logger.warn("Error exiting DRMAA session for {} with {}", serviceContext, cmdArgs, e);
             }
         }
         return completableFuture;
