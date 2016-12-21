@@ -16,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
@@ -93,22 +94,25 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     }
 
     private String streamHandler(InputStream outStream, Consumer<String> logWriter) {
-        BufferedReader outputReader = new BufferedReader(new InputStreamReader(outStream));
-        String error = null;
-        for (;;) {
-            try {
-                String l = outputReader.readLine();
-                if (l == null) break;
-                logWriter.accept(l);
-                if (checkForErrors(l)) {
-                    error = l;
+        try (BufferedReader outputReader = new BufferedReader(new InputStreamReader(outStream))) {
+            String error = null;
+            for (; ; ) {
+                try {
+                    String l = outputReader.readLine();
+                    if (l == null) break;
+                    logWriter.accept(l);
+                    if (checkForErrors(l)) {
+                        error = l;
+                    }
+                } catch (IOException re) {
+                    logger.error("Error reading process output", re);
+                    return "Error reading process output";
                 }
-            } catch (IOException e) {
-                logger.error("Error reading process output", e);
-                return "Error reading process output";
             }
+            return error;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
-        return error;
     }
 
     protected boolean checkForErrors(String l) {

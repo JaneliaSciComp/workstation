@@ -15,6 +15,9 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -41,6 +44,8 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
+        File outputFile = null;
+        File errorFile = null;
         try {
             drmaaSession.init(null); // initialize DRMAA session
             JacsServiceData serviceData = serviceContext.getJacsServiceData();
@@ -48,30 +53,31 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             jt.setJobName(serviceData.getName());
             jt.setRemoteCommand(cmd);
             jt.setArgs(cmdArgs);
-            String workingDirectory;
-            if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
-                workingDirectory = serviceData.getWorkspace();
-            } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-                workingDirectory = new File(defaultWorkingDir, serviceData.getName()).getAbsolutePath();
-            } else {
-                workingDirectory = Files.createTempDir().getAbsolutePath();
-            }
-            logger.debug("Use '{}' as working directory for {}", workingDirectory, serviceData);
-            jt.setWorkingDirectory(workingDirectory);
+            File workingDirectory = setJobWorkingDirectory(jt, serviceData);
             jt.setJobEnvironment(env);
             if (StringUtils.isNotBlank(serviceData.getInputPath())) {
                 jt.setInputPath(":" + serviceData.getInputPath());
             }
             if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
-                jt.setOutputPath(":" + serviceData.getOutputPath());
+                outputFile = new File(serviceData.getOutputPath());
+                Files.createParentDirs(outputFile);
+                jt.setOutputPath(":" + outputFile.getAbsolutePath());
             }
             if (StringUtils.isNotBlank(serviceData.getErrorPath())) {
-                jt.setErrorPath(":" + serviceData.getErrorPath());
+                errorFile = new File(serviceData.getErrorPath());
+                Files.createParentDirs(errorFile);
+                jt.setErrorPath(":" + errorFile.getAbsolutePath());
             }
             String jobId = drmaaSession.runJob(jt);
             logger.info("Submitted job {} for {}", jobId, serviceContext);
             drmaaSession.deleteJobTemplate(jt);
             jt = null;
+            if (outputFile == null) {
+                outputFile = new File(workingDirectory, serviceData.getName() + ".o" + jobId);
+            }
+            if (errorFile == null) {
+                errorFile = new File(workingDirectory, serviceData.getName() + ".e" + jobId);
+            }
             JobInfo jobInfo = drmaaSession.wait(jobId, Session.TIMEOUT_WAIT_FOREVER);
 
             if (jobInfo.wasAborted()) {
@@ -79,8 +85,16 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s never ran", jobId)));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
+                ExternalProcessIOHandler processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(outputFile));
+                processStdoutHandler.run();
+                ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(errorFile));
+                processStderrHandler.run();
                 if (jobInfo.getExitStatus() != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
+                } else if (processStdoutHandler.getResult() != null) {
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult()));
+                } else if (processStderrHandler.getResult() != null) {
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult()));
                 } else {
                     completableFuture.complete(serviceContext);
                 }
@@ -91,7 +105,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 logger.warn("Job {} for {} finished with unclear conditions", jobId, serviceContext);
                 completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with unclear conditions", jobId)));
             }
-        } catch (DrmaaException e) {
+        } catch (Exception e) {
             logger.error("Error running a DRMAA job for {} with {}", serviceContext, cmdArgs, e);
             completableFuture.completeExceptionally(new ComputationException(serviceContext, e));
         } finally {
@@ -109,5 +123,25 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             }
         }
         return completableFuture;
+    }
+
+    private File setJobWorkingDirectory(JobTemplate jt, JacsServiceData serviceData) {
+        File workingDirectory;
+        if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
+            workingDirectory = new File(serviceData.getWorkspace());
+        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+            workingDirectory = new File(defaultWorkingDir, serviceData.getName());
+        } else {
+            workingDirectory = Files.createTempDir();
+        }
+        if (!workingDirectory.exists()) {
+            workingDirectory.mkdirs();
+        }
+        if (!workingDirectory.exists()) {
+            throw new IllegalStateException("Cannot create working directory " + workingDirectory.getAbsolutePath());
+        } else {
+            logger.debug("Use '{}' as working directory for {}", workingDirectory, serviceData);
+        }
+        return workingDirectory;
     }
 }
