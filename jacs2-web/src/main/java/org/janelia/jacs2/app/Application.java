@@ -35,13 +35,19 @@ public class Application {
         private String deployment = "jacs";
         @Parameter(names = "-context-path", description = "Base context path", required = false)
         private String baseContextPath = "jacs";
+        @Parameter(names = "-h", description = "Display help", arity = 0, required = false)
+        private boolean displayUsage = false;
     }
 
     public static void main(String[] args) throws ServletException {
         final AppArgs appArgs = new AppArgs();
-        new JCommander(appArgs, args);
-        Application app = createApp(appArgs);
-        app.run();
+        JCommander cmdline = new JCommander(appArgs, args);
+        if (appArgs.displayUsage) {
+            cmdline.usage();
+        } else {
+            Application app = createApp(appArgs);
+            app.run();
+        }
     }
 
     private static Application createApp(AppArgs appArgs) throws ServletException {
