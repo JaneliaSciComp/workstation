@@ -6,6 +6,7 @@ import org.ggf.drmaa.JobInfo;
 import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
 import org.ggf.drmaa.SessionFactory;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.qualifier.ClusterJob;
 import org.slf4j.Logger;
@@ -23,6 +24,10 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     @Named("SLF4J")
     @Inject
     private Logger logger;
+    @PropertyValue(name = "service.DefaultWorkingDir")
+    @Inject
+    private String defaultWorkingDir;
+
     @Inject
     private SessionFactory drmaaSessionFactory;
 
@@ -44,6 +49,8 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             jt.setArgs(cmdArgs);
             if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
                 jt.setWorkingDirectory(serviceData.getWorkspace());
+            } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+                jt.setWorkingDirectory(defaultWorkingDir);
             }
             jt.setJobEnvironment(env);
             if (StringUtils.isNotBlank(serviceData.getInputPath())) {

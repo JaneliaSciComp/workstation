@@ -7,37 +7,18 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.function.Consumer;
 
 @LocalJob
 public class ExternalLocalProcessRunner implements ExternalProcessRunner {
     @Named("SLF4J")
     @Inject
     private Logger logger;
-
-    private static class ProcessIOHandler extends Thread {
-        private ExternalProcessOutputHandler processOutputHandler;
-        private InputStream processOutput;
-        private String result;
-
-        ProcessIOHandler(ExternalProcessOutputHandler processOutputHandler, InputStream processOutput) {
-            this.processOutputHandler = processOutputHandler;
-            this.processOutput = processOutput;
-        }
-
-        public void run() {
-            result = processOutputHandler.handle(processOutput);
-        }
-    }
 
     @Override
     public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
@@ -56,8 +37,8 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
         Process localProcess;
         try {
             localProcess = processBuilder.start();
-            ProcessIOHandler processStdoutHandler = new ProcessIOHandler(outStreamHandler, localProcess.getInputStream());
-            ProcessIOHandler processStderrHandler = new ProcessIOHandler(outStreamHandler, localProcess.getInputStream());
+            ExternalProcessIOHandler processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
+            ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
             processStdoutHandler.start();
             processStderrHandler.start();
             try {
@@ -67,10 +48,10 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
                 logger.info("Process {} for {} terminated with code {}", localProcess, serviceContext, returnCode);
                 if (returnCode != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process terminated with code " + returnCode));
-                } else if (processStdoutHandler.result != null) {
-                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStdoutHandler.result));
-                } else if (processStderrHandler.result != null) {
-                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStderrHandler.result));
+                } else if (processStdoutHandler.getResult() != null) {
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStdoutHandler.getResult()));
+                } else if (processStderrHandler.getResult() != null) {
+                    completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process error: " + processStderrHandler.getResult()));
                 } else {
                     completableFuture.complete(serviceContext);
                 }
