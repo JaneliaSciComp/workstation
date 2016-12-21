@@ -25,12 +25,22 @@ import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentContext;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.browser.events.Events;
+import org.janelia.it.workstation.browser.events.lifecycle.ApplicationClosing;
+import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
+import org.janelia.it.workstation.browser.gui.listview.icongrid.ImageModel;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.WindowLocator;
+import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.activity_logging.ActivityLogHelper;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
+import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
@@ -44,29 +54,18 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelAdapter;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardOpenEvent;
-import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.browser.events.Events;
-import org.janelia.it.workstation.gui.browser.events.selection.DomainObjectSelectionModel;
-import org.janelia.it.workstation.gui.browser.gui.listview.icongrid.ImageModel;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Created with IntelliJ IDEA.
@@ -115,7 +114,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean connectEditEvents = true;
 
     private final AlignmentBoardSettings settingsData;
-    private final ShutdownListener shutdownListener;
     private final DomainHelper domainHelper = new DomainHelper();
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
@@ -136,10 +134,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 return AlignmentBoardPanel.this;
             }
         });
-
-        // Saveback settings.
-        shutdownListener = new ShutdownListener();
-        SessionMgr.getSessionMgr().addSessionModelListener( shutdownListener );                
     }
 
     /** Call this at clear-time. */
@@ -159,7 +153,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     @Override
     public void close() {
-        logger.info( "Closing" );
+        logger.info( "Closing" ); 
         // Cleanup this listener to avoid mem leaks.
         LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
         removeSettingsPanel( layersPanel );
@@ -260,7 +254,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                                 ai.setVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
                             }
                         } catch ( Exception ex ) {
-                            ModelMgr.getModelMgr().handleException(ex);
+                            FrameworkImplProvider.handleException(ex);
                         }
                     }
                 }
@@ -1033,11 +1027,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         }
     }
 
-    private class ShutdownListener extends SessionModelAdapter {
-        @Override
-        public void sessionWillExit() {
-            serializeInWorker();
-        }
+    @Subscribe
+    public void applicationClosing(ApplicationClosing event) {
+        serializeInWorker();
     }
 
 }

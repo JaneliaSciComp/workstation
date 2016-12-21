@@ -240,7 +240,7 @@ public class MeasureDecodeTime
 	    double decomp1Ms = (decomp1Time - startTime) / (double)1e6;
 	    // - method 2: when the compressed length is known (a little slower)
 	    // the destination buffer needs to be over-sized
-	    LZ4UnknownSizeDecompressor decompressor2 = factory.unknwonSizeDecompressor();
+	    LZ4UnknownSizeDecompressor decompressor2 = factory.unknownSizeDecompressor();
 	    int decompressedLength2 = decompressor2.decompress(compressed, 0, compressedLength, restored, 0);
 	    // decompressedLength == decompressedLength2
 	    

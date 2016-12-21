@@ -4,6 +4,8 @@ import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Rotation3d;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.browser.gui.support.MouseHandler;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
@@ -13,8 +15,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.controller.MessageList
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.RepaintListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
@@ -59,6 +59,7 @@ implements MouseModalWidget, TileConsumer, RepaintListener
     private WheelMode wheelMode;
     private WheelMode.Mode wheelModeId;
     // Popup menu
+    MenuItemGenerator navigationMenuItemGenerator;
     MenuItemGenerator systemMenuItemGenerator;
     MenuItemGenerator modeMenuItemGenerator;
     private Point popupPoint = null; // Cache location of popup menu item
@@ -169,6 +170,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                     return;
                 popupPoint = e.getPoint();
                 JPopupMenu popupMenu = new JPopupMenu();
+                
+                // Annotators requested "Navigate to Horta..." menus to appear first
+                for (JMenuItem item : navigationMenuItemGenerator.getMenus(e)) {
+                    if (item == null)
+                        popupMenu.addSeparator();
+                    else
+                        popupMenu.add(item);                    
+                }
+                
                 // Mode specific menu items first
                 List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
                 List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
@@ -191,6 +201,15 @@ implements MouseModalWidget, TileConsumer, RepaintListener
                     else
                         popupMenu.add(item);
                 }
+                
+                // Dummy "cancel" item at very bottom
+                popupMenu.addSeparator();
+                popupMenu.add(new JMenuItem(new AbstractAction("Cancel [Escape]") {
+                    private static final long serialVersionUID = 1L;
+                    @Override
+                    public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
+                }));
+                
                 popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 e.consume();
             }
@@ -222,6 +241,11 @@ implements MouseModalWidget, TileConsumer, RepaintListener
             skeletonActor.getModel().setCamera(camera);
 	}
 	
+	public void setNavigationMenuItemGenerator(MenuItemGenerator navigationMenuItemGenerator) 
+	{
+		this.navigationMenuItemGenerator = navigationMenuItemGenerator;
+	}
+
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
 	{
 		this.systemMenuItemGenerator = systemMenuItemGenerator;
@@ -387,7 +411,6 @@ implements MouseModalWidget, TileConsumer, RepaintListener
 		if (this.skeletonActor == skeletonActor)
 			return;
 		this.skeletonActor = skeletonActor;
-		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
 		skeletonActor.getModel().setCamera(camera);
         skeletonActor.getModel().getUpdater().addListener(this);
         renderer.addActor(skeletonActor);

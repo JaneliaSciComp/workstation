@@ -53,8 +53,8 @@ extends Hideable
     Collection<NeuronEdge> getEdges();
     
     // Adding a vertex is so common that it gets its own signal
-    NeuronVertexAdditionObservable getVertexAddedObservable(); // vertices added to neuron
-    
+    NeuronVertexCreationObservable getVertexCreatedObservable(); // vertices added to neuron
+    NeuronVertexUpdateObservable getVertexUpdatedObservable(); // vertex changed
     NeuronVertexDeletionObservable getVertexesRemovedObservable(); // vertices removed from neuron
     
     // Probably too much overhead to attach a listener to every vertex, so listen to vertex changes
@@ -67,6 +67,8 @@ extends Hideable
     // Custom methods to help hook into LVV model from Horta
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
     boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
+    boolean moveVertex(NeuronVertex vertex, float[] micronXyz);
+    boolean updateVertexRadius(NeuronVertex vertex, float micronRadius);
     
     boolean deleteVertex(NeuronVertex doomedVertex);
 }

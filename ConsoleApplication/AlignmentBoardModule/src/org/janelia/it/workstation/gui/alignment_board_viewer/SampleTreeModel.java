@@ -7,11 +7,11 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.AlignmentBoardContext;
 import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoardItem;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,7 +142,7 @@ public class SampleTreeModel implements TreeModel {
             // Pushing to new connection to avoid concurrent modification.
             for ( AlignmentBoardItem nextChild: new ArrayList<>( item.getChildren() ) ) {
                 if ( nextChild instanceof AlignmentBoardItem ) {
-                    AlignmentBoardItem nextItem = (AlignmentBoardItem)nextChild;
+                    AlignmentBoardItem nextItem = nextChild;
                     if ( InclusionStatus.In == InclusionStatus.get(nextItem.getInclusionStatus()) ) {
                         rtnVal.add( nextChild );
                     }

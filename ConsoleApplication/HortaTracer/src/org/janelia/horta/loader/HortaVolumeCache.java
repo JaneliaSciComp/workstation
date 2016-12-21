@@ -45,7 +45,8 @@ import java.util.prefs.Preferences;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jetty.util.ConcurrentHashSet;
-import org.janelia.geometry3d.BrightnessModel;
+import org.janelia.console.viewerapi.model.ImageColorModel;
+// import org.janelia.geometry3d.ChannelBrightnessModel;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.gltools.material.VolumeMipMaterial;
 import org.janelia.gltools.texture.Texture3d;
@@ -107,17 +108,20 @@ public class HortaVolumeCache
     float cachedZoom = Float.NaN;
     
     private RequestProcessor loadProcessor;
-    private final BrightnessModel brightnessModel;
+    // private final ChannelBrightnessModel brightnessModel;
+    private final ImageColorModel imageColorModel;
     private final VolumeMipMaterial.VolumeState volumeState;
     private final Collection<TileDisplayObserver> observers = new java.util.concurrent.ConcurrentLinkedQueue<>();
     private int currentColorChannel = 0;
 
     public HortaVolumeCache(final PerspectiveCamera camera, 
-            final BrightnessModel brightnessModel,
+            final ImageColorModel imageColorModel,
+            // final ChannelBrightnessModel brightnessModel,
             final VolumeMipMaterial.VolumeState volumeState,
             int currentColorChannel) 
     {
-        this.brightnessModel = brightnessModel;
+        this.imageColorModel = imageColorModel;
+        // this.brightnessModel = brightnessModel;
         this.volumeState = volumeState;
         this.currentColorChannel = currentColorChannel;
 
@@ -459,7 +463,7 @@ public class HortaVolumeCache
         log.info("Loading to GPU: "+brick.getLocalPath());
 
         // System.out.println("I should be displaying tile " + brick.getLocalPath() + " now");
-        final BrickActor actor = new BrickActor(brick, texture3d, brightnessModel, volumeState);
+        final BrickActor actor = new BrickActor(brick, texture3d, imageColorModel, volumeState);
         actualDisplayTiles.put(brick, actor);
         
         // Hide obsolete displayed tiles

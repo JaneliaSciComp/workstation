@@ -1,14 +1,5 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
-import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
-import org.janelia.it.jacs.shared.lvv.TileFormat;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
-import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -16,9 +7,21 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.janelia.it.jacs.shared.exception.DataSourceInitializeException;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.jacs.shared.lvv.AbstractTextureLoadAdapter;
+import org.janelia.it.jacs.shared.lvv.TileFormat;
+import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.VolumeLoadListener;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SharedVolumeImage 
 implements VolumeImage3d
 {
+    private Logger logger = LoggerFactory.getLogger(SharedVolumeImage.class);
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Collection<VolumeLoadListener> volumeLoadListeners = new ArrayList<>();
@@ -117,8 +120,7 @@ implements VolumeImage3d
 			File fileFolder = new File(folderUrl.toURI());
 			testLoadAdapter=new TileStackOctreeLoadAdapter(remoteBasePath, fileFolder);
 		} catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
-			ex.printStackTrace();
-			ModelMgr.getModelMgr().handleException(ex);
+			ConsoleApp.handleException(ex);
 		}
 
 		return testLoadAdapter;
@@ -145,6 +147,8 @@ implements VolumeImage3d
 
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
+
+        logger.info("Volume loaded: {}", folderUrl);
 		fireVolumeLoaded(folderUrl);
 		
 		return true;

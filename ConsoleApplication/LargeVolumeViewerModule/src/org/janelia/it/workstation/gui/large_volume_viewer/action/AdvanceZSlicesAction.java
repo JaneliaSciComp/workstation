@@ -3,8 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.action;
 import javax.swing.KeyStroke;
 
 import com.jogamp.newt.event.KeyEvent;
+
+import org.janelia.it.workstation.browser.gui.support.Icons;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class AdvanceZSlicesAction extends SliceScanAction {

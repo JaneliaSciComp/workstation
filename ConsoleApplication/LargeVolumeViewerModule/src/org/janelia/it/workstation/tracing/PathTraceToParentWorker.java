@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.it.jacs.shared.geom.CoordinateAxis;
 import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.jacs.shared.octree.ZoomLevel;
 import org.janelia.it.jacs.shared.octree.ZoomedVoxelIndex;
-import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 
 import java.util.List;
 import java.util.Vector;

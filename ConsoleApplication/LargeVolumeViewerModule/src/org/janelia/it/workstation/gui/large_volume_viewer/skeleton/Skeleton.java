@@ -7,7 +7,7 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.HistoryStack;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.lvv.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
 import org.slf4j.Logger;
@@ -23,9 +23,9 @@ public class Skeleton {
     private class VersionedLinkedHashSet<E> extends LinkedHashSet<E> {
         private int version=0;
 
-        public int getVersion() { return version; }
+        public synchronized int getVersion() { return version; }
 
-        public void incrementVersion() { version++; }
+        public synchronized void incrementVersion() { version++; }
 
         @Override
         public boolean add(E e) {
@@ -116,22 +116,22 @@ public class Skeleton {
     private SkeletonController controller;
     private TileFormat tileFormat;
 
-	private VersionedLinkedHashSet<Anchor> anchors = new VersionedLinkedHashSet<>();
+	private final VersionedLinkedHashSet<Anchor> _anchors = new VersionedLinkedHashSet<>();
+    private final Set<Anchor> anchors = Collections.synchronizedSet(_anchors);
     private Anchor nextParent;
     private Anchor hoverAnchor;
 	
-	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
-			new ConcurrentHashMap<>();
+	private final Map<SegmentIndex, AnchoredVoxelPath> tracedSegments = new ConcurrentHashMap<>();
 	
-	private Map<Long, Anchor> anchorsByGuid = new HashMap<>();
+	private final Map<Long, Anchor> anchorsByGuid = new HashMap<>();
 	// TODO - anchor browsing history should maybe move farther back
-	private HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
+	private final HistoryStack<Anchor> anchorHistory = new HistoryStack<>();
 
     public void setController(SkeletonController controller) {
         this.controller = controller;
     }
 
-    public void incrementAnchorVersion() { anchors.incrementVersion(); }
+    public void incrementAnchorVersion() { _anchors.incrementVersion(); }
     
 	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
@@ -141,10 +141,14 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
 		anchorHistory.push(anchor);
-        controller.annotationSelected(guid);
-
 		return anchor;
 	}
+
+    public void addAnchors(List<Anchor> anchorList) {
+        for (Anchor anchor: anchorList) {
+            addAnchor(anchor);
+        }
+    }
 
     /**
      * @param tileFormat the tileFormat to set
@@ -156,18 +160,6 @@ public class Skeleton {
     public TileFormat getTileFormat() {
         return tileFormat;
     }
-	
-	public void addAnchors(List<Anchor> anchorList) {
-        for (Anchor anchor: anchorList) {
-            if (anchors.contains(anchor))
-                continue;
-            anchors.add(anchor);
-            Long guid = anchor.getGuid();
-            if (guid != null)
-                anchorsByGuid.put(guid, anchor);
-            anchorHistory.push(anchor);
-        }
-	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
         controller.anchorAdded(new AnchorSeed(xyz, parent));
@@ -195,7 +187,7 @@ public class Skeleton {
 			return false;
 		if (! anchor1.addNeighbor(anchor2))
 			return false;
-        anchors.incrementVersion();
+        _anchors.incrementVersion();
         controller.skeletonChanged();
 		return true;
 	}
@@ -248,6 +240,10 @@ public class Skeleton {
         controller.addEditNoteRequested(anchor);
     }
 
+    public void editNeuronTagRequest(Anchor anchor) {
+        controller.editNeuronTagRequested(anchor);
+    }
+
     public void moveNeuriteRequest(Anchor anchor) {
         controller.moveNeuriteRequested(anchor);
     }
@@ -294,6 +290,7 @@ public class Skeleton {
         Anchor anchor = new Anchor(location, parentAnchor, tga.getNeuronId(), tileFormat);
         anchor.setGuid(tga.getId());
         addAnchor(anchor);
+        controller.annotationSelected(anchor.getGuid());
         return anchor;
     }
     
@@ -354,6 +351,15 @@ public class Skeleton {
         anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
     }
     
+    public void moveTmGeoAnchor(TmGeoAnnotation tga) {
+        Anchor anchor = anchorsByGuid.get(tga.getId());
+        if (anchor == null) {
+            return;
+        }
+        final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+        anchor.setLocation(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
+    }
+    
 	public void clear() {
 		if (anchors.size() == 0) {
 			return; // no change
@@ -398,9 +404,13 @@ public class Skeleton {
             anchor.getNeighbors().remove(removeAnchor);
             removeAnchor.getNeighbors().remove(anchor);
         }
-        anchors.incrementVersion();
+        _anchors.incrementVersion();
     }
 
+    /**
+     * Returns a synchronized set of anchors. To safely iterate over this 
+     * set, synchronize on it first.
+     */
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
@@ -453,7 +463,7 @@ public class Skeleton {
 	}
 
     public int getAnchorSetVersion() {
-        return anchors.getVersion();
+        return _anchors.getVersion();
     }
 
 }

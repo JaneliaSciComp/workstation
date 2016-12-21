@@ -105,8 +105,12 @@ public final class SceneWindowTopComponent extends TopComponent {
         
         sceneWindow.getRenderer().addActor(cubeMesh);
         // Canvas->Camera information flow
+        Component component = sceneWindow.getInnerComponent();
         interactor = new OrbitPanZoomInteractor(sceneWindow.getCamera(), 
-                sceneWindow.getInnerComponent());
+                component);
+        component.addMouseListener(interactor);
+        component.addMouseMotionListener(interactor);
+        component.addMouseWheelListener(interactor);
         setToolTipText(interactor.getToolTipText());
         Component c = sceneWindow.getOuterComponent();
         if (c instanceof JComponent) {

@@ -1,0 +1,135 @@
+// 5.6.0
+
+Workstation Browser
+* Fixed issue preventing the Home folder from being automatically opened at startup
+* Fixed issue where Explorer tree was not refreshed when adding to a folder in some cases
+* Fixed bug where fast background tasks did not show in progress panel
+* Restored missing "Report A Bug" menu item
+* Many other minor bug fixes (see JIRA)
+
+FlyLight
+* Added "apply to all" check box to file download pop-up dialog
+* Fixed bug preventing users from removing neuron fragments from folders 
+
+MouseLight    
+* Added "Save As" feature for Workspaces
+* Restored Horta "Reset Rotation" to top-level context menu, and make it hot-keyable
+* Moved "Navigate to this location in LVV/Horta" context menu items to top of list.
+* Hide/show neuron in LVV now instantly reflected in Horta
+* Fixed Bulk Hide/Show Neurons in LVV not reflected in Horta
+* Fixed problems affecting samples with origin at x=0
+* Fixed problem where neurons did not display when read-only access to granted to a Workspace
+* Greatly improved performance of "Load Linux SWC Folder" action
+* Improved performance of bulk hide/show and other neuron actions
+
+// 5.5.2
+
+Changes
+* Increased update check interval from 1 hour to 15 minutes
+
+Bug fixes
+* Fixed issue with Add to Folder
+* Fixed issues caused by legacy modules
+
+// 5.5.1
+
+Bug fixes
+* Fixed some program configuration issues that caused issues for some users
+
+// 5.5.0
+
+Workstation Browser
+* Added "Recently Opened" folder which shows the 10 items most recently opened in the LVV or Alignment Board. 
+   To hide this item, use the gear icon at the top of the Data Explorer.
+* The error reporting system has been overhauled 
+    * All logs are now unified in a single file (messages.log)
+    * Log files are now attached automatically when reporting an error
+    * Some types of errors which were logged silently in the past will now generate a pop-up so that they can 
+       be reported. You may see more error pop-ups in the short-term, as we work to clean up remaining bugs. 
+* Items inside of a shared folder are no longer individually added to the Shared Data folder
+* Filtering reliability improvements
+
+FlyLight
+* Added "Publishing Name" and "Published Externally" indicator to Samples and LSM Images 
+* Added "Owner" column to the Data Set dialog window
+* When sharing an entire data set, a filter is now automatically created under the Shared Data folder.
+* Cleaned up the Shared Data folders which had redundant Samples 
+
+MouseLight
+* Added tooltips for long neuron names
+* Added support for NRS filesystem
+* Fixed bug where neurons could not be annotated immediately after restarting the Workstation
+
+// 5.4.0
+
+Workstation Browser
+* Added release notes popup 
+* Viewer state is now preserved when navigating using the back/forward actions
+* Fly Lines are now navigable. Double clicking on a Fly Line will return all of the Gen1 Screen Samples associated with that line.
+* Fixed 3d checkbox in the Lightbox
+* Fixed rendering issues with OS X Sierra
+
+Large Volume Viewer
+* Added option to disable right-click navigation in the Data Explorer, which can interfere with LVV usage.  
+* Fixed workspace naming delimiter
+* Fixed spurious neuron saving errors
+
+Horta
+* General Horta improvements:
+    * Add slab-thickness shortcut buttons
+    * Use LVV-like color sliders in Horta
+    * Enhance sensitivity of scroll-wheel adjustment for color slider thumb widgets  
+* Horta rendering of KTX-enabled mouse brain images:
+    * Enable dynamic loading and display of multiple smaller volume tiles
+    * Render multiple color channels
+    * Allow manual unmixing of background staining using new third synthetic tracing channel
+    * Render very thin slabs for LVV-like rendering
+    * Allow manual loading of KTX tiles by drag-and-drop
+    
+// 5.3.1
+
+Workstation Browser
+* Resolved issues with application installers for new users
+* Fixed Neuron Annotator launch button
+* Fixed error when deleting a saved filter
+* Improved error handling in a number of cases
+
+Large Volume Viewer
+* Added wait dialog for neuron deletion
+* Improved performance of neuron tracing
+* Fixed bug with deleting multiple TM workspaces at once
+* Improved error handling when attempting to export SWC without an opened workspace
+* Properly handle missing data in the workspace naming template
+
+// 5.3.0
+
+Workstation Browser
+* Under View -> Toolbars, you can hide/show/customize toolbars
+* The Options/Preferences panel has been redesigned 
+* Renamed "Default Workspace" folders to "Home"
+* Fixed behavior of window maximization on Windows systems
+
+MouseLight
+* Migrated Mouse data to the Mongo database
+    * Improved performance when loading/saving neurons 
+    * Opening the Data Explorer is much faster
+    * Samples now show Workspaces as child nodes 
+    * Selecting a neuron now shows info in the Data Inspector
+* Neuron list
+    * Added neuron tagging feature 
+    * Single-neuron actions are now on the right-click menu
+    * The gear menu contains actions that operate on whatever neurons are currently visible in the list
+    * Choosing neuron color and visibility are separate actions
+    * Added action for "Hide others"
+    * Full neuron name appears in tool tip
+* Miscellaneous improvements
+    * There is now a option to reopen the previously open workspace when the Workstation is launched
+    * Creating a new workspace provides a naming template
+    * Workspace information dialog now has a table of neurons with number of branches and ends
+    * Improved performance for hide/show/change colors of large neurons or many neurons
+    * Annotations drawn over a larger range of z at high zoom
+* Bug fixes
+    * Merge neurites within neurons works from Horta
+    * Points are no longer duplicated when exporting SWC files
+    * When exporting multiple neurons, SWC files are named for neurons
+    * When importing multiple SWC files, neuron colors will load correctly

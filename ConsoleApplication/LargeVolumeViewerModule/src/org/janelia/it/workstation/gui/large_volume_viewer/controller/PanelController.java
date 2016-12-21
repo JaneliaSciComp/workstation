@@ -1,19 +1,21 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
-
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.shared.geom.Vec3;
-import org.janelia.it.workstation.gui.large_volume_viewer.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.shared.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.FilteredAnnotationList;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.LargeVolumeViewerTranslator;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceInfoPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.WorkspaceNeuronList;
+import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
 
 /**
  * This will have access to setters, etc. on the panels, to provide
@@ -72,6 +74,11 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         annotationModel.setNotesUpdateListener(null);
         globalListener = null;
     }
+
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        filteredAnnotationList.annotationChanged(anchor);
+    }
     
     private class PanelGlobalListener extends GlobalAnnotationAdapter {
         @Override
@@ -83,10 +90,26 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
         
         @Override
-        public void neuronSelected(TmNeuron neuron) {
+        public void neuronSelected(TmNeuronMetadata neuron) {
             filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.selectNeuron(neuron);
         }
+
+        @Override
+        public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
+            wsNeuronList.neuronStyleChanged(neuron, style);
+        }
+
+        @Override
+        public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+            wsNeuronList.neuronStylesChanged(neuronStyleMap);
+        }
+
+        @Override
+        public void neuronTagsChanged(List<TmNeuronMetadata> neuronList) {
+            wsNeuronList.neuronTagsChanged(neuronList);
+        }
+
     }
     
     private class PanelPanListener implements CameraPanToListener {
@@ -125,7 +148,7 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
         }
         
         @Override
-        public void selectNeuron(TmNeuron neuron) {
+        public void selectNeuron(TmNeuronMetadata neuron) {
             model.selectNeuron(neuron);
         }
         
@@ -166,6 +189,11 @@ public class PanelController implements TmGeoAnnotationAnchorListener {
 
     public void anchorMovedBack(TmGeoAnnotation annotation) {
         filteredAnnotationList.annotationChanged(annotation);
+    }
+
+    @Override
+    public void anchorMoved(TmGeoAnnotation anchor) {
+        filteredAnnotationList.annotationChanged(anchor);
     }
 
     public void clearAnchors() {

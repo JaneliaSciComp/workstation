@@ -22,8 +22,8 @@ import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.alignment_board.util.ABItem;
-import org.janelia.it.workstation.gui.browser.api.DomainMgr;
-
+import org.janelia.it.workstation.browser.api.DomainMgr;
+import org.janelia.it.workstation.browser.events.Events;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
@@ -31,7 +31,6 @@ import org.janelia.it.workstation.gui.alignment_board.events.AlignmentBoardItemR
 import org.janelia.it.workstation.gui.alignment_board.util.ABReferenceChannel;
 import org.janelia.it.workstation.gui.alignment_board_viewer.CompatibilityChecker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.creation.DomainHelper;
-import org.janelia.it.workstation.gui.browser.events.Events;
 import org.janelia.it.workstation.model.viewer.AlignedItem.InclusionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

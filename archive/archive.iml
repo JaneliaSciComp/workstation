@@ -8,6 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$/jacs-old" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/model-old" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/shared-old" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

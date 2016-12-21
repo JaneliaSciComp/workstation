@@ -31,12 +31,18 @@ package org.janelia.horta;
 
 import org.janelia.horta.render.NeuronMPRenderer;
 import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
+import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.blocks.BlockTileKey;
+import org.janelia.horta.blocks.BlockTileSource;
+import org.janelia.horta.blocks.KtxBlockLoadRunner;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
@@ -51,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class NeuronTraceLoader {
-    private Logger logger = LoggerFactory.getLogger(NeuronTraceLoader.class);
+    private final Logger logger = LoggerFactory.getLogger(NeuronTraceLoader.class);
     
     private final NeuronTracerTopComponent nttc;
     private final NeuronMPRenderer neuronMPRenderer;
@@ -165,7 +171,6 @@ public class NeuronTraceLoader {
 
         // Check for existing brick already loaded here
         BrainTileInfo brainTileInfo = (BrainTileInfo) brickInfo;
-        String brickName = brainTileInfo.getLocalPath();
         boolean tileAlreadyLoaded = false;
         for (GL3Actor actor : neuronMPRenderer.getVolumeActors()) {
             if (!(actor instanceof BrickActor))
@@ -196,5 +201,40 @@ public class NeuronTraceLoader {
         }
         
         return brickInfo;
+    }
+
+    public void loadKtxTileAtLocation(BlockTileSource ktxSource, Vector3 location) 
+            throws IOException
+    {
+        if (ktxSource == null)
+            return;
+        BlockTileKey centerKey = ktxSource.getBlockKeyAt(location, ktxSource.getMaximumResolution());
+        if (centerKey == null)
+            return;
+        
+        final KtxBlockLoadRunner loader = new KtxBlockLoadRunner(ktxSource, centerKey);
+        loader.addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                if (loader.state != KtxBlockLoadRunner.State.LOADED)
+                    return;
+                TetVolumeActor parentActor = TetVolumeActor.getInstance();
+                parentActor.addChild(loader.blockActor);
+                if ( ! neuronMPRenderer.containsVolumeActor(parentActor) ) { // just add singleton actor once...
+                    parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                    neuronMPRenderer.addVolumeActor(parentActor);
+                }
+                neuronMPRenderer.setIntensityBufferDirty();
+                nttc.redrawNow();
+            }
+        });
+        loader.run();
+    }
+    
+    public void loadKtxTileAtCurrentFocus(BlockTileSource ktxSource) 
+            throws IOException
+    {
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        loadKtxTileAtLocation(ktxSource, focus);
     }
 }

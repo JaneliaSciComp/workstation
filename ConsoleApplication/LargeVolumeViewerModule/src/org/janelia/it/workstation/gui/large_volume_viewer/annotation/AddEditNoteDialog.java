@@ -1,12 +1,21 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 
 /**
  * allow the user to add a note to an annotation, including selecting
@@ -19,7 +28,7 @@ public class AddEditNoteDialog extends JDialog {
     private boolean success = false;
     private String outputText;
 
-    public AddEditNoteDialog(Frame parent, final String inputText, TmNeuron neuron, Long annotationID) {
+    public AddEditNoteDialog(Frame parent, final String inputText, TmNeuronMetadata tmNeuronMetadata, Long annotationID) {
         super(parent, "Add note", true);
 
         // set up the UI
@@ -66,7 +75,7 @@ public class AddEditNoteDialog extends JDialog {
             });
             // if a predefined note can't be applied to the input
             //  annotation, leave the button but disable it
-            if (!predefNote.isValid(neuron, annotationID)) {
+            if (!predefNote.isValid(tmNeuronMetadata, annotationID)) {
                 predefButton.setEnabled(false);
             }
             predefinedPanel.add(predefButton);

@@ -45,7 +45,7 @@ public class FilteredAnnotationModel extends AbstractTableModel {
             case 0:
                 return annotations.get(row).getModificationDate();
             case 1:
-                return annotations.get(row).getGeometryText();
+                return annotations.get(row).getGeometry();
             case 2:
                 return annotations.get(row).getNoteText();
             default:
@@ -55,14 +55,14 @@ public class FilteredAnnotationModel extends AbstractTableModel {
     }
 
     // this needs to be done to get Date column to sort right
-    public Class getColumnClass(int column) {
+    public Class<?> getColumnClass(int column) {
         switch (column) {
             case 0:
                 // date
                 return Date.class;
             case 1:
-                // geometry string
-                return String.class;
+                // geometry
+                return AnnotationGeometry.class;
             case 2:
                 // note string
                 return String.class;

@@ -1,18 +1,19 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.janelia.it.workstation.gui.large_volume_viewer.controller;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javax.swing.JComponent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
@@ -63,6 +64,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
 
     public static SkeletonController getInstance() {
         return instance;
+    }
+    
+    public boolean editsAllowed() {
+        return annoMgr.editsAllowed();
     }
     
     /** In a "driving" client that would normally construct, call this instead. */
@@ -188,6 +193,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
+    public void anchorMoved(TmGeoAnnotation anchor) {
+        skeleton.moveTmGeoAnchor(anchor);
+    }
+
+    @Override
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {
@@ -217,7 +227,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
-    public void neuronStyleChanged(TmNeuron neuron, NeuronStyle style) {
+    public void neuronStyleChanged(TmNeuronMetadata neuron, NeuronStyle style) {
         for (SkeletonActor actor: actors) {
             actor.getModel().changeNeuronStyle(neuron, style);
         }
@@ -226,11 +236,9 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
-    public void neuronStylesChanged(Map<TmNeuron, NeuronStyle> neuronStyleMap) {
-        for (TmNeuron neuron: neuronStyleMap.keySet()) {
-            for (SkeletonActor actor: actors) {
-                actor.getModel().changeNeuronStyle(neuron, neuronStyleMap.get(neuron));
-            }
+    public void neuronStylesChanged(Map<TmNeuronMetadata, NeuronStyle> neuronStyleMap) {
+        for (SkeletonActor actor: actors) {
+            actor.getModel().updateNeuronStyles(neuronStyleMap);
         }
         refreshMeshDrawUpdateTimer();
         fireComponentUpdate();
@@ -247,7 +255,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             }
             refreshMeshDrawUpdateTimer();
             fireComponentUpdate();
-            log.info("anchor time=" + TraceMode.getTimerMs());
+            log.debug("anchor time=" + TraceMode.getTimerMs());
         }
     }
 
@@ -275,6 +283,10 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         annoMgr.addEditNoteRequested(anchor);
     }
 
+    public void editNeuronTagRequested(Anchor anchor) {
+        annoMgr.editNeuronTagsRequested(anchor);
+    }
+
     public void moveNeuriteRequested(Anchor anchor) {
         annoMgr.moveNeuriteRequested(anchor);
     }
@@ -295,7 +307,7 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
         qvController.pathTraceRequested(id);
     }
 
-    public void navigationRelative(Long id, TmNeuron.AnnotationNavigationDirection direction) {
+    public void navigationRelative(Long id, AnnotationNavigationDirection direction) {
         Anchor anchor = skeleton.getAnchorByID(annoMgr.relativeAnnotation(id, direction));
         setNextParent(anchor);
         qvController.setCameraFocus(anchor.getLocation());
@@ -333,6 +345,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             }
         };
         meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
+    }
+
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        // Do nothing: radius has no effect on skeleton view
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

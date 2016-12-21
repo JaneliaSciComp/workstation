@@ -1,33 +1,41 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-
-// std lib imports
-
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.HeadlessException;
 import java.awt.Insets;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.util.Icons;
-
-import javax.swing.*;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSeparator;
+
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.gui.support.Icons;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkChangeNeuronColorAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.BulkNeuronTagAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronCreateAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronDeleteAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.NeuronExportAllAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceInformationAction;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.WorkspaceSaveAsAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.ViewStateListener;
-
 
 /**
  * this is the main class for large volume viewer annotation GUI; it instantiates and contains
@@ -51,8 +59,6 @@ public class AnnotationPanel extends JPanel
     private FilteredAnnotationList filteredList;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
-    private JCheckBoxMenuItem automaticTracingMenuItem;
-    private JCheckBoxMenuItem automaticRefinementMenuItem;
     private ViewStateListener viewStateListener;
     private LVVDevPanel lvvDevPanel;
 
@@ -63,24 +69,13 @@ public class AnnotationPanel extends JPanel
     private static final boolean defaultAutomaticRefinement = false;
 
     // ----- actions
-    private final Action createNeuronAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            annotationMgr.createNeuron();
-        }
-    };
-
-    private final Action deleteNeuronAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            annotationMgr.deleteCurrentNeuron();
-        }
-    };
+    private final NeuronCreateAction createNeuronAction = new NeuronCreateAction();
+    private final NeuronDeleteAction deleteNeuronAction = new NeuronDeleteAction();
 
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            annotationMgr.createWorkspace();
+                annotationMgr.createWorkspace();
             }
         };
 
@@ -91,6 +86,24 @@ public class AnnotationPanel extends JPanel
             viewStateListener.centerNextParent();
         }
     };
+    
+    private JButton createWorkspaceButtonPlus;
+    private WorkspaceSaveAsAction saveAsAction;
+    private JCheckBoxMenuItem automaticTracingMenuItem;
+    private JCheckBoxMenuItem automaticRefinementMenuItem;
+    private NeuronExportAllAction exportAllSWCAction;
+    private ImportSWCAction importSWCAction;
+    private ImportSWCAction importSWCActionMulti;
+    private AbstractAction saveColorModelAction;
+
+    private AbstractAction showAllNeuronsAction;
+    private AbstractAction hideAllNeuronsAction;
+    private AbstractAction bulkChangeNeuronStyleAction;
+    private AbstractAction bulkNeuronTagAction;
+    
+
+    private JMenu sortSubmenu;
+
 
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -111,23 +124,31 @@ public class AnnotationPanel extends JPanel
     }
     
     public void loadWorkspace(TmWorkspace workspace) {
+        
         if (workspace != null) {
-            boolean state;
-            String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-            if (automaticRefinementPref != null) {
-                state = Boolean.parseBoolean(automaticRefinementPref);
-            } else {
-                state = false;
-            }
-            automaticRefinementMenuItem.setSelected(state);
-            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-            if (automaticTracingPref != null) {
-                state = Boolean.parseBoolean(automaticTracingPref);
-            } else {
-                state = false;
-            }
-            automaticTracingMenuItem.setSelected(state);
+            automaticRefinementMenuItem.setSelected(workspace.isAutoPointRefinement());
+            automaticTracingMenuItem.setSelected(workspace.isAutoTracing());
         }
+    
+        // Disable all change functionality if the user has no write access to the workspace
+        boolean enabled = annotationMgr.editsAllowed();
+        automaticRefinementMenuItem.setEnabled(enabled);
+        automaticTracingMenuItem.setEnabled(enabled);
+        importSWCAction.setEnabled(enabled);
+        importSWCActionMulti.setEnabled(enabled);
+        saveColorModelAction.setEnabled(enabled);
+        bulkNeuronTagAction.setEnabled(enabled);
+        bulkChangeNeuronStyleAction.setEnabled(enabled);
+        showAllNeuronsAction.setEnabled(enabled);
+        hideAllNeuronsAction.setEnabled(enabled);
+        sortSubmenu.setEnabled(enabled);
+        // These actions override isEnabled, but they still need to be set in order to fire the right updates
+        createNeuronAction.fireEnabledChangeEvent();
+        deleteNeuronAction.fireEnabledChangeEvent();
+        exportAllSWCAction.fireEnabledChangeEvent();
+        saveAsAction.fireEnabledChangeEvent();
+        
+        updateUI();
     }
     
     @Override
@@ -178,7 +199,7 @@ public class AnnotationPanel extends JPanel
         // testing
         // showOutline(workspaceButtonsPanel, Color.green);
 
-        JButton createWorkspaceButtonPlus = new JButton("+");
+        createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);
         createWorkspaceAction.putValue(Action.NAME, "+");
         createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
@@ -186,7 +207,7 @@ public class AnnotationPanel extends JPanel
 
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
-
+        
         automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic point refinement");
         automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
         automaticRefinementMenuItem.addItemListener(new ItemListener() {
@@ -207,38 +228,34 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
 
-        ExportAllSWCAction exportAllSWCAction = new ExportAllSWCAction();
-        exportAllSWCAction.putValue(Action.NAME, "Export SWC file...");
-        exportAllSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Export all neurons to SWC file");
+        exportAllSWCAction = new NeuronExportAllAction();
         workspaceToolMenu.add(new JMenuItem(exportAllSWCAction));
 
-        ImportSWCAction importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
+        importSWCAction = new ImportSWCAction(this, annotationModel, annotationMgr);
         importSWCAction.putValue(Action.NAME, "Import SWC file as one neuron...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCAction));
 
-        ImportSWCAction importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
+        importSWCActionMulti = new ImportSWCAction(true, this, annotationModel, annotationMgr);
         importSWCActionMulti.putValue(Action.NAME, "Import SWC file as separate neurons...");
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
 
-        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
+        saveColorModelAction = new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                annotationMgr.saveColorModel();
+                annotationMgr.saveQuadViewColorModel();
             }
-        }));
+        };
+        workspaceToolMenu.add(new JMenuItem(saveColorModelAction));
 
-        workspaceToolMenu.add(new JMenuItem((new AbstractAction("Show workspace info...") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.showWorkspaceInfoDialog();
-            }
-        })));
+        workspaceToolMenu.add(new WorkspaceInformationAction(annotationModel));
 
+        saveAsAction = new WorkspaceSaveAsAction();
+        workspaceToolMenu.add(new JMenuItem(saveAsAction));
+        
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
@@ -265,48 +282,36 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
-        neuronToolMenu.add(new AbstractAction("Choose neuron style...") {
+
+        JMenuItem titleMenuItem = new JMenuItem("Change neurons showing above:");
+        titleMenuItem.setEnabled(false);
+        neuronToolMenu.add(titleMenuItem);
+
+        showAllNeuronsAction = new AbstractAction("Show neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                annotationMgr.chooseNeuronStyle();
+                annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), true);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Show neuron") {
+        };
+        neuronToolMenu.add(showAllNeuronsAction);
+        
+        hideAllNeuronsAction = new AbstractAction("Hide neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(true);
+                annotationMgr.setBulkNeuronVisibility(workspaceNeuronList.getNeuronList(), false);
             }
-        });
-        neuronToolMenu.add(new AbstractAction("Hide neuron") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setNeuronVisibility(false);
-            }
-        });
-        neuronToolMenu.add(new AbstractAction("Show all neurons") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setAllNeuronVisibility(true);
-            }
-        });
-        neuronToolMenu.add(new AbstractAction("Hide all neurons") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.setAllNeuronVisibility(false);
-            }
-        });
-        ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
-        exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
-        exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
-                "Export selected neuron as an SWC file");
-        neuronToolMenu.add(exportCurrentSWCAction);
-        neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
-            public void actionPerformed(ActionEvent e) {
-                annotationMgr.renameNeuron();
-            }
-        }));
-        // neuron sort submenu
-        JMenu sortSubmenu = new JMenu("Sort");
+        };
+        neuronToolMenu.add(hideAllNeuronsAction);
+        
+        bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkChangeNeuronStyleAction);
+        
+        bulkNeuronTagAction = new BulkNeuronTagAction(annotationModel, workspaceNeuronList);
+        neuronToolMenu.add(bulkNeuronTagAction);
+                
+        neuronToolMenu.add(new JSeparator());
+                        
+        sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -390,7 +395,7 @@ public class AnnotationPanel extends JPanel
 
 
         // developer panel, only shown to me; used for various testing things
-        if (SessionMgr.getSessionMgr().getSubject().getName().equals("olbrisd")) {
+        if (AccessManager.getAccessManager().getSubject().getName().equals("olbrisd")) {
             lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
             add(lvvDevPanel, cVert);
         }
@@ -406,105 +411,16 @@ public class AnnotationPanel extends JPanel
         add(Box.createVerticalGlue(), cBottom);
     }
 
-    /**
-     * add a visible border (default green) to a panel to help debug alignment/packing problems
-     */
-    private void showOutline(JPanel panel) {
-        showOutline(panel, Color.green);
-
-    }
-
-    /** Somewhat complex interaction with file chooser. */
-    private ExportParameters getExportParameters( String seedName ) throws HeadlessException {
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Save swc file");
-        chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
-        JPanel layoutPanel = new JPanel();
-        layoutPanel.setLayout(new BorderLayout());
-        // Force-out to desired size.
-        JTextField downsampleModuloField = new JTextField("10");
-        final Dimension dimension = new Dimension(80, 40);
-        downsampleModuloField.setMinimumSize( dimension );
-        downsampleModuloField.setSize( dimension );
-        downsampleModuloField.setPreferredSize( dimension );
-        layoutPanel.add( downsampleModuloField, BorderLayout.SOUTH );
-
-        final TitledBorder titledBorder = new TitledBorder( 
-                new EmptyBorder(8, 2, 0, 0), "Density", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, getFont().deriveFont(8)
-        );
-        downsampleModuloField.setBorder(titledBorder);
-        downsampleModuloField.setToolTipText("Only every Nth autocomputed point will be exported.");
-        downsampleModuloField.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyTyped(KeyEvent ke) {
-                if (!Character.isDigit(ke.getKeyChar())) {
-                    // Eliminate non-numeric characters, including signs.
-                    ke.consume();
-                }
-            }
-        });
-        chooser.setAccessory(layoutPanel);
-        int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
-        final String textInput = downsampleModuloField.getText().trim();
-        
-        ExportParameters rtnVal = null;
-        try {
-            int downsampleModulo = Integer.parseInt(textInput);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                rtnVal = new ExportParameters();
-                rtnVal.setDownsampleModulo(downsampleModulo);
-                rtnVal.setSelectedFile(chooser.getSelectedFile().getAbsoluteFile());
-            }
-        } catch (NumberFormatException nfe) {
-            annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");
-            JOptionPane.showMessageDialog(AnnotationPanel.this, nfe);
-        }
-        return rtnVal;
-    }
-
-    private void showOutline(JPanel panel, Color color) {
-        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
-    }
-
-    class ExportParameters {
-        private File selectedFile;
-        private int downsampleModulo;
-
-        public File getSelectedFile() { return selectedFile; }
-        public void setSelectedFile(File selectedFile) {
-            this.selectedFile = selectedFile;
-        }
-
-        public int getDownsampleModulo() { return downsampleModulo; }
-        public void setDownsampleModulo(int downsampleModulo) {
-            this.downsampleModulo = downsampleModulo;
-        }
-    }
-
-    class ExportAllSWCAction extends AbstractAction {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            ExportParameters params = getExportParameters(annotationModel.getCurrentWorkspace().getName());
-            if ( params != null ) {
-                annotationMgr.exportAllNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
-            }
-        }
-    }
-
-    class ExportCurrentSWCAction extends AbstractAction {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (annotationModel.getCurrentNeuron() == null) {
-                annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
-            }
-            else {
-                ExportParameters params = getExportParameters(annotationModel.getCurrentNeuron().getName());
-                if ( params != null ) {
-                    annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
-                }
-            }
-        }
-    }
-
+//    /**
+//     * add a visible border (default green) to a panel to help debug alignment/packing problems
+//     */
+//    private void showOutline(JPanel panel) {
+//        showOutline(panel, Color.green);
+//
+//    }
+//    
+//    private void showOutline(JPanel panel, Color color) {
+//        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
+//    }
 }
 
