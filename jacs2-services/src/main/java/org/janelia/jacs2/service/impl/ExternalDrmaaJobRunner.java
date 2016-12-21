@@ -142,6 +142,11 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         } else {
             logger.debug("Use '{}' as working directory for {}", workingDirectory, serviceData);
         }
+        try {
+            jt.setWorkingDirectory(workingDirectory.getAbsolutePath());
+        } catch (DrmaaException e) {
+            throw new IllegalStateException(e);
+        }
         return workingDirectory;
     }
 }
