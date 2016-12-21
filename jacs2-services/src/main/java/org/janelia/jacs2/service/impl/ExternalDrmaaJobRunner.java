@@ -1,5 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.JobInfo;
 import org.ggf.drmaa.JobTemplate;
@@ -41,11 +42,19 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             jt.setJobName(serviceData.getName());
             jt.setRemoteCommand(cmd);
             jt.setArgs(cmdArgs);
-            jt.setWorkingDirectory(serviceData.getWorkspace());
+            if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
+                jt.setWorkingDirectory(serviceData.getWorkspace());
+            }
             jt.setJobEnvironment(env);
-            jt.setInputPath(":" + serviceData.getInputPath());
-            jt.setOutputPath(":" + serviceData.getOutputPath());
-            jt.setErrorPath(":" + serviceData.getErrorPath());
+            if (StringUtils.isNotBlank(serviceData.getInputPath())) {
+                jt.setInputPath(":" + serviceData.getInputPath());
+            }
+            if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
+                jt.setOutputPath(":" + serviceData.getOutputPath());
+            }
+            if (StringUtils.isNotBlank(serviceData.getErrorPath())) {
+                jt.setErrorPath(":" + serviceData.getErrorPath());
+            }
             String jobId = drmaaSession.runJob(jt);
             logger.info("Submitted job {} for {}", jobId, serviceContext);
             drmaaSession.deleteJobTemplate(jt);
