@@ -68,8 +68,7 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     @Override
     protected Map<String, String> prepareEnvironment(JacsServiceData si) {
         return ImmutableMap.of(
-            PATH_VARNAME, getUpdatedEnvValue(PATH_VARNAME, perlModule),
-            PERLLIB_VARNAME, getUpdatedEnvValue(PERLLIB_VARNAME, perlModule)
+            PERLLIB_VARNAME, perlModule
         );
     }
 
