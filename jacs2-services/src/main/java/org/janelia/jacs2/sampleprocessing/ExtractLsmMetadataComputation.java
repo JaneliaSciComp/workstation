@@ -3,6 +3,7 @@ package org.janelia.jacs2.sampleprocessing;
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -13,6 +14,8 @@ import org.janelia.jacs2.service.impl.JacsService;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -61,7 +64,8 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder
                 .add(getFullExecutableName(scriptName))
-                .add(StringUtils.wrapIfMissing(getInputFileName(lsmMetadataArgs), '"'));
+                .add(StringUtils.wrapIfMissing(getInputFile(lsmMetadataArgs).getAbsolutePath(), '"'));
+        jacsServiceData.setWorkspace(getOutputFile(lsmMetadataArgs).getParent());
         return cmdLineBuilder.build();
     }
 
@@ -78,12 +82,18 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         return lsmMetadataArgs;
     }
 
-    private String getInputFileName(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
-        return new File(lsmMetadataArg.inputLSMFile).getAbsolutePath();
+    private File getInputFile(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
+        return new File(lsmMetadataArg.inputLSMFile);
     }
 
-    private String getOutputFileName(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
-        return new File(lsmMetadataArg.outputLSMMetadata).getAbsolutePath();
+    private File getOutputFile(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
+        try {
+            File outputFile = new File(lsmMetadataArg.outputLSMMetadata);
+            Files.createParentDirs(outputFile);
+            return outputFile;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
 }
