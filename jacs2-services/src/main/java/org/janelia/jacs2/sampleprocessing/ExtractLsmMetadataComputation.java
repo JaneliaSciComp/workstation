@@ -9,21 +9,17 @@ import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
 import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
@@ -35,7 +31,6 @@ import java.util.concurrent.CompletionStage;
 @Named("lsmMetadataService")
 public class ExtractLsmMetadataComputation extends AbstractExternalProcessComputation<Void> {
 
-    private static final String PATH_VARNAME = "PATH";
     private static final String PERLLIB_VARNAME = "PERL5LIB";
 
     @PropertyValue(name = "Perl.Path")
@@ -47,6 +42,8 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     @PropertyValue(name = "LSMJSONDump.CMD")
     @Inject
     private String scriptName;
+    @Inject
+    private Logger logger;
 
     @Override
     public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
@@ -127,6 +124,17 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
             return outputFile;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public void postProcessData(JacsService<Void> jacsService, Throwable exc) {
+        if (exc == null) {
+            try {
+                Files.deleteIfExists(new File(jacsService.getJacsServiceData().getServiceCmd()).toPath());
+            } catch (IOException e) {
+                logger.error("Error deleting the service script {}", jacsService.getJacsServiceData().getServiceCmd(), e);
+            }
         }
     }
 
