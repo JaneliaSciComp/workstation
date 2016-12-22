@@ -46,11 +46,11 @@ Keep in mind that since the integrationTests are configured to run as part of th
 set you you run the build:
 `JACS2_CONFIG_TEST=/my/prefered/location/for/dev/my-config-test.properties ./gradlew build`
 
-For example my-config-test.properties could look as below (if you want to run this on the grid make sure you use the IP if the DB is installed 
-on your local dev workstation):
+For example my-config-test.properties could look as below if you want to use the dev mongo database. I recommend to prefix the database name with your
+user name so that your tests will not clash with other users' tests in case the build runs simultaneously.
 `
-MongoDB.ConnectionURL=mongodb://10.101.10.158:27017
-MongoDB.Database=jacs_test
+MongoDB.ConnectionURL=mongodb://dev-mongodb:27017
+MongoDB.Database=myusername_jacs_test
 `
 
 and to build the application you simply run:

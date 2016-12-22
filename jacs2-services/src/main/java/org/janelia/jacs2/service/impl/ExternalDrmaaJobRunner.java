@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -78,10 +79,16 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s never ran", jobId)));
             } else if (jobInfo.hasExited()) {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
-                ExternalProcessIOHandler processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(outputFile));
-                processStdoutHandler.run();
-                ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, new FileInputStream(errorFile));
-                processStderrHandler.run();
+                ExternalProcessIOHandler processStdoutHandler = null;
+                try (InputStream outputStream = new FileInputStream(outputFile)) {
+                    processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, outputStream);
+                    processStdoutHandler.run();
+                }
+                ExternalProcessIOHandler processStderrHandler = null;
+                try (InputStream errorStream = new FileInputStream(errorFile)) {
+                    processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, errorStream);
+                    processStderrHandler.run();
+                }
                 if (jobInfo.getExitStatus() != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));
                 } else if (processStdoutHandler.getResult() != null) {

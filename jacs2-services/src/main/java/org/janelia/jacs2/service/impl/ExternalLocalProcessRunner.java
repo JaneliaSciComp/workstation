@@ -1,7 +1,6 @@
 package org.janelia.jacs2.service.impl;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -10,7 +9,6 @@ import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +30,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
                                                       JacsService<R> serviceContext) {
         logger.debug("Begin local process invocation for {}", serviceContext);
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
+        processBuilder.environment().putAll(env);
         JacsServiceData serviceData = serviceContext.getJacsServiceData();
         if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
             File workingDirectory = new File(serviceData.getWorkspace());
@@ -40,7 +39,6 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
             File workingDirectory = new File(defaultWorkingDir, serviceData.getName());
             processBuilder.directory(workingDirectory);
         }
-        processBuilder.environment().putAll(env);
         logger.info("Start {} with {} {}; env={}", serviceContext, cmd, cmdArgs, processBuilder.environment());
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;

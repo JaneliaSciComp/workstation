@@ -77,7 +77,7 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
         Preconditions.checkArgument(StringUtils.isNotBlank(addedValue), "Cannot update environment variable " + varName + " with a null or empty value");
         Optional<String> currentValue = getEnvVar(varName);
         if (currentValue.isPresent()) {
-            return currentValue.get() + ":" + addedValue;
+            return currentValue.get().endsWith(":")  ? currentValue.get() + addedValue : currentValue.get() + ":" + addedValue;
         } else {
             return addedValue;
         }
@@ -92,25 +92,22 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     }
 
     private String streamHandler(InputStream outStream, Consumer<String> logWriter) {
-        try (BufferedReader outputReader = new BufferedReader(new InputStreamReader(outStream))) {
-            String error = null;
-            for (; ; ) {
-                try {
-                    String l = outputReader.readLine();
-                    if (l == null) break;
-                    logWriter.accept(l);
-                    if (checkForErrors(l)) {
-                        error = l;
-                    }
-                } catch (IOException re) {
-                    logger.error("Error reading process output", re);
-                    return "Error reading process output";
+        BufferedReader outputReader = new BufferedReader(new InputStreamReader(outStream));
+        String error = null;
+        for (; ; ) {
+            try {
+                String l = outputReader.readLine();
+                if (l == null) break;
+                logWriter.accept(l);
+                if (checkForErrors(l)) {
+                    error = l;
                 }
+            } catch (IOException re) {
+                logger.error("Error reading process output", re);
+                return "Error reading process output";
             }
-            return error;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
+        return error;
     }
 
     protected boolean checkForErrors(String l) {
