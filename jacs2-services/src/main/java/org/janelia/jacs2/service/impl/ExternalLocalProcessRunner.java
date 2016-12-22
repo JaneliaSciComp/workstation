@@ -47,6 +47,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
+            processBuilder.inheritIO();
             if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
                 outputFile = new File(serviceData.getOutputPath());
                 Files.createParentDirs(outputFile);
