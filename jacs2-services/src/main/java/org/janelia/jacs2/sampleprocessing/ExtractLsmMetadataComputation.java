@@ -57,12 +57,11 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
         ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
         jacsServiceData.setServiceCmd(perlExecutable);
+        jacsServiceData.setOutputPath(getOutputFileName(lsmMetadataArgs));
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder
                 .add(getFullExecutableName(scriptName))
-                .add(StringUtils.wrapIfMissing(getInputFileName(lsmMetadataArgs), '"'))
-                .add(">")
-                .add(StringUtils.wrapIfMissing(getOutputFileName(lsmMetadataArgs), '"'));
+                .add(StringUtils.wrapIfMissing(getInputFileName(lsmMetadataArgs), '"'));
         return cmdLineBuilder.build();
     }
 
@@ -87,4 +86,5 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     private String getOutputFileName(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
         return new File(lsmMetadataArg.outputLSMMetadata).getAbsolutePath();
     }
+
 }
