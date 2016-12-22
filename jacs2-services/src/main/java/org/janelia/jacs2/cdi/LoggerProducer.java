@@ -10,11 +10,8 @@ import javax.inject.Singleton;
 
 @Singleton
 public class LoggerProducer {
-
-    @Named("SLF4J")
     @Produces
     Logger createLogger(final InjectionPoint ip){
         return LoggerFactory.getLogger(ip.getMember().getDeclaringClass());
     }
-
 }

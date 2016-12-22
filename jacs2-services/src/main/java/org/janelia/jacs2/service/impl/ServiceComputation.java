@@ -1,7 +1,5 @@
 package org.janelia.jacs2.service.impl;
 
-import org.janelia.jacs2.model.service.JacsServiceData;
-
 import java.util.concurrent.CompletionStage;
 
 /**

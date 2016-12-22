@@ -7,13 +7,11 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 
 public class JacsServiceRegistry implements ServiceRegistry {
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
 

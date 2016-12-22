@@ -26,7 +26,6 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @PropertyValue(name = "VAA3D.LibraryPath")

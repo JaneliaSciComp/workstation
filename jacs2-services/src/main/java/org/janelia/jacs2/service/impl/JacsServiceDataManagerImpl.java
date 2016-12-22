@@ -1,6 +1,5 @@
 package org.janelia.jacs2.service.impl;
 
-
 import org.janelia.jacs2.dao.JacsServiceDataDao;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -10,7 +9,6 @@ import org.janelia.jacs2.service.JacsServiceDataManager;
 
 import javax.inject.Inject;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 public class JacsServiceDataManagerImpl implements JacsServiceDataManager {

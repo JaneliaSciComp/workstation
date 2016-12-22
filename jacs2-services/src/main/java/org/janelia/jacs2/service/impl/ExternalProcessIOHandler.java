@@ -2,9 +2,6 @@ package org.janelia.jacs2.service.impl;
 
 import java.io.InputStream;
 
-/**
- * Created by goinac on 12/21/16.
- */
 class ExternalProcessIOHandler extends Thread {
     private ExternalProcessOutputHandler processOutputHandler;
     private InputStream processOutput;

@@ -8,7 +8,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 public class AbstractDataPersistence<D extends Dao<T, I>, T, I> {
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     protected Instance<D> daoSource;

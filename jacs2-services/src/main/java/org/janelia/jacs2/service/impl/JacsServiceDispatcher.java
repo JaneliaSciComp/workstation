@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -35,7 +34,6 @@ public class JacsServiceDispatcher {
     private static final int MAX_WAITING_SLOTS = 20;
     private static final int MAX_RUNNING_SLOTS = 1000;
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @Inject

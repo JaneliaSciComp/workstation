@@ -6,18 +6,14 @@ import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.JobInfo;
 import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
-import org.ggf.drmaa.SessionFactory;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.qualifier.ClusterJob;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -26,7 +22,6 @@ import java.util.concurrent.CompletionStage;
 @ClusterJob
 public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @PropertyValue(name = "service.DefaultWorkingDir")

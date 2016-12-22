@@ -5,7 +5,6 @@ import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractServiceComputation<R> implements ServiceComputation<R> {
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @Inject

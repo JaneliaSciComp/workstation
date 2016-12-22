@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +27,6 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     private static final String LOCAL_RUNNER = "local";
     private static final String CLUSTER_RUNNER = "cluster";
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @PropertyValue(name = "Executables.ModuleBase") @Inject

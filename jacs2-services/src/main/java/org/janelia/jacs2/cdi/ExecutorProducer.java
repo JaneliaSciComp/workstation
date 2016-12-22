@@ -18,7 +18,6 @@ public class ExecutorProducer {
 
     private final static int DEFAULT_THREAD_POOL_SIZE = 100;
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
 

@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class JacsQueueSyncer {
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @Inject

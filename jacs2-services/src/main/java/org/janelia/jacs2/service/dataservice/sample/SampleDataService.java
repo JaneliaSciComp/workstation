@@ -30,7 +30,6 @@ import java.util.function.Function;
 
 public class SampleDataService {
 
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @Inject

@@ -9,7 +9,6 @@ import org.janelia.jacs2.service.qualifier.LocalJob;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -60,29 +59,15 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
             }
             localProcess = processBuilder.start();
             ExternalProcessIOHandler processStdoutHandler = null;
-            if (outputFile == null) {
-                processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
-                processStdoutHandler.start();
-            }
+            processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
+            processStdoutHandler.start();
             ExternalProcessIOHandler processStderrHandler = null;
-            if (errorFile == null) {
-                processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, localProcess.getErrorStream());
-                processStderrHandler.start();
-            }
+            processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, localProcess.getErrorStream());
+            processStderrHandler.start();
             try {
                 int returnCode = localProcess.waitFor();
-                if (processStdoutHandler != null) {
-                    processStdoutHandler.join();
-                } else {
-                    processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(outputFile));
-                    processStdoutHandler.run();
-                }
-                if (processStderrHandler != null) {
-                    processStderrHandler.join();
-                } else {
-                    processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, new FileInputStream(errorFile));
-                    processStderrHandler.run();
-                }
+                processStdoutHandler.join();
+                processStderrHandler.join();
                 logger.info("Process {} for {} terminated with code {}", localProcess, serviceContext, returnCode);
                 if (returnCode != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process terminated with code " + returnCode));
