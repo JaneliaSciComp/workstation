@@ -88,7 +88,7 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
                     Paths.get(workingDir.getAbsolutePath(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh"),
                     PosixFilePermissions.asFileAttribute(perms)).toFile();
             outputStream = new BufferedWriter(new FileWriter(scriptFile));
-            outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, scriptName, inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
+            outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, getFullExecutableName(scriptName), inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
             outputStream.flush();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
