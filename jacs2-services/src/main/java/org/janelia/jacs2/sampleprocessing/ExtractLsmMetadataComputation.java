@@ -13,7 +13,11 @@ import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
@@ -60,13 +64,23 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     @Override
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
         ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
-        jacsServiceData.setServiceCmd(perlExecutable);
-        ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
-        cmdLineBuilder
-                .add(getFullExecutableName(scriptName))
-                .add(StringUtils.wrapIfMissing(getInputFile(lsmMetadataArgs).getAbsolutePath(), '"'));
-        jacsServiceData.setWorkspace(getOutputFile(lsmMetadataArgs).getParent());
-        return cmdLineBuilder.build();
+        File scriptFile = createScript(jacsServiceData, lsmMetadataArgs);
+        jacsServiceData.setServiceCmd(scriptFile.getAbsolutePath());
+        return ImmutableList.of();
+    }
+
+    private File createScript(JacsServiceData jacsServiceData, ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs) {
+        File inputFile = getInputFile(lsmMetadataArgs);
+        File outputFile = getOutputFile(lsmMetadataArgs);
+        File workingDir = outputFile.getParentFile();
+        File scriptFile = new File(workingDir, jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh");
+        try (BufferedWriter outputStream = new BufferedWriter(new FileWriter(scriptFile))) {
+            outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, scriptName, inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
+            outputStream.flush();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return scriptFile;
     }
 
     @Override
