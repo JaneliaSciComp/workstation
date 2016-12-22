@@ -3,7 +3,6 @@ package org.janelia.jacs2.sampleprocessing;
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -20,8 +19,16 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -73,12 +80,25 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         File inputFile = getInputFile(lsmMetadataArgs);
         File outputFile = getOutputFile(lsmMetadataArgs);
         File workingDir = outputFile.getParentFile();
-        File scriptFile = new File(workingDir, jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh");
-        try (BufferedWriter outputStream = new BufferedWriter(new FileWriter(scriptFile))) {
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwx------");
+        BufferedWriter outputStream = null;
+        File scriptFile = null;
+        try {
+            scriptFile = Files.createFile(
+                    Paths.get(workingDir.getAbsolutePath(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh"),
+                    PosixFilePermissions.asFileAttribute(perms)).toFile();
+            outputStream = new BufferedWriter(new FileWriter(scriptFile));
             outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, scriptName, inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
             outputStream.flush();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            if (outputStream != null) {
+                try {
+                    outputStream.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
         return scriptFile;
     }
@@ -103,7 +123,7 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     private File getOutputFile(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
         try {
             File outputFile = new File(lsmMetadataArg.outputLSMMetadata);
-            Files.createParentDirs(outputFile);
+            Files.createDirectories(outputFile.getParentFile().toPath());
             return outputFile;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
