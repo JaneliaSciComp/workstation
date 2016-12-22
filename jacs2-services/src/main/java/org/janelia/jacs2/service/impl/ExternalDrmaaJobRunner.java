@@ -33,7 +33,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
     @Inject
     private String defaultWorkingDir;
     @Inject
-    private SessionFactory drmaaSessionFactory;
+    private Session drmaaSession;
 
     @Override
     public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
@@ -41,13 +41,11 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                                                       ExternalProcessOutputHandler errStreamHandler,
                                                       JacsService<R> serviceContext) {
         logger.debug("Begin DRMAA job invocation for {}", serviceContext);
-        Session drmaaSession = drmaaSessionFactory.getSession();
         JobTemplate jt = null;
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         File outputFile = null;
         File errorFile = null;
         try {
-            drmaaSession.init(null); // initialize DRMAA session
             JacsServiceData serviceData = serviceContext.getJacsServiceData();
             jt = drmaaSession.createJobTemplate();
             jt.setJobName(serviceData.getName());
@@ -115,11 +113,6 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 } catch (DrmaaException e) {
                     logger.warn("Error deleting the DRMAA job template for {} with {}", serviceContext, cmdArgs, e);
                 }
-            }
-            try {
-                drmaaSession.exit();
-            } catch (DrmaaException e) {
-                logger.warn("Error exiting DRMAA session for {} with {}", serviceContext, cmdArgs, e);
             }
         }
         return completableFuture;
