@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
+import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
 import org.slf4j.Logger;
 
@@ -41,11 +42,17 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
         CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
         FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
-            preProcess.completeExceptionally(new IllegalArgumentException("Source file name must be specified"));
+            preProcess.completeExceptionally(new ComputationException(jacsService, "Source file name must be specified"));
         } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
-            preProcess.completeExceptionally(new IllegalArgumentException("Target file name must be specified"));
+            preProcess.completeExceptionally(new ComputationException(jacsService, "Target file name must be specified"));
         } else {
-            preProcess.complete(jacsService);
+            try {
+                Files.createDirectories(new File(fileCopyArgs.targetFilename).getParentFile().toPath());
+                preProcess.complete(jacsService);
+            } catch (IOException e) {
+                logger.error("Error creating the target directories", e);
+                preProcess.completeExceptionally(new ComputationException(jacsService, e));
+            }
         }
         return preProcess;
     }
