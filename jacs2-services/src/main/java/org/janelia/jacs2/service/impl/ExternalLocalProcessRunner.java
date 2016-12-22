@@ -50,12 +50,12 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
             if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
                 outputFile = new File(serviceData.getOutputPath());
                 Files.createParentDirs(outputFile);
-                processBuilder.redirectOutput(outputFile);
+                processBuilder.redirectOutput(ProcessBuilder.Redirect.to(outputFile));
             }
             if (StringUtils.isNotBlank(serviceData.getErrorPath())) {
                 errorFile = new File(serviceData.getErrorPath());
                 Files.createParentDirs(errorFile);
-                processBuilder.redirectError(errorFile);
+                processBuilder.redirectError(ProcessBuilder.Redirect.to(errorFile));
             }
             localProcess = processBuilder.start();
             ExternalProcessIOHandler processStdoutHandler = null;
