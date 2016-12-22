@@ -40,24 +40,11 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
             File workingDirectory = new File(defaultWorkingDir, serviceData.getName());
             processBuilder.directory(workingDirectory);
         }
-        File outputFile = null;
-        File errorFile = null;
         processBuilder.environment().putAll(env);
         logger.info("Start {} with {} {}; env={}", serviceContext, cmd, cmdArgs, processBuilder.environment());
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
-            processBuilder.inheritIO();
-            if (StringUtils.isNotBlank(serviceData.getOutputPath())) {
-                outputFile = new File(serviceData.getOutputPath());
-                Files.createParentDirs(outputFile);
-                processBuilder.redirectOutput(ProcessBuilder.Redirect.to(outputFile));
-            }
-            if (StringUtils.isNotBlank(serviceData.getErrorPath())) {
-                errorFile = new File(serviceData.getErrorPath());
-                Files.createParentDirs(errorFile);
-                processBuilder.redirectError(ProcessBuilder.Redirect.to(errorFile));
-            }
             localProcess = processBuilder.start();
             ExternalProcessIOHandler processStdoutHandler = null;
             processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
