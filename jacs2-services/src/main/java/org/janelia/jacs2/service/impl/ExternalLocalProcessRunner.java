@@ -44,7 +44,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
         File outputFile = null;
         File errorFile = null;
         processBuilder.environment().putAll(env);
-        logger.info("Start {} with {}; env={}", serviceContext, cmdArgs, processBuilder.environment());
+        logger.info("Start {} with {} {}; env={}", serviceContext, cmd, cmdArgs, processBuilder.environment());
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
@@ -66,7 +66,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
             }
             ExternalProcessIOHandler processStderrHandler = null;
             if (errorFile == null) {
-                processStderrHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
+                processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, localProcess.getErrorStream());
                 processStderrHandler.start();
             }
             try {
@@ -80,7 +80,7 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
                 if (processStderrHandler != null) {
                     processStderrHandler.join();
                 } else {
-                    processStderrHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(errorFile));
+                    processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, new FileInputStream(errorFile));
                     processStderrHandler.run();
                 }
                 logger.info("Process {} for {} terminated with code {}", localProcess, serviceContext, returnCode);

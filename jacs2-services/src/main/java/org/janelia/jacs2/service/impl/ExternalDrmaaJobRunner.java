@@ -67,7 +67,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 jt.setErrorPath(":" + errorFile.getAbsolutePath());
             }
             String jobId = drmaaSession.runJob(jt);
-            logger.info("Submitted job {} for {}", jobId, serviceContext);
+            logger.info("Submitted job {} for {} with {} {}; env={}", jobId, serviceContext, cmd, cmdArgs, env);
             drmaaSession.deleteJobTemplate(jt);
             jt = null;
             if (outputFile == null) {
@@ -85,7 +85,7 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
                 logger.info("Job {} for {} completed with exist status {}", jobId, serviceContext, jobInfo.getExitStatus());
                 ExternalProcessIOHandler processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(outputFile));
                 processStdoutHandler.run();
-                ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(outStreamHandler, new FileInputStream(errorFile));
+                ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, new FileInputStream(errorFile));
                 processStderrHandler.run();
                 if (jobInfo.getExitStatus() != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, String.format("Job %s completed with status %d", jobId, jobInfo.getExitStatus())));

@@ -23,6 +23,7 @@
     </appender>
 
     <logger name="org.mongodb.driver" level="error" />
+    <logger name="org.xnio.nio" level="error" />
     <logger name="org.janelia.jacs2.service.impl" level="info" />
 
     <root level="debug">
