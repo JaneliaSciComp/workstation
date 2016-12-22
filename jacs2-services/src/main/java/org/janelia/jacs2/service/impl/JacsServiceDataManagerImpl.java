@@ -2,11 +2,15 @@ package org.janelia.jacs2.service.impl;
 
 
 import org.janelia.jacs2.dao.JacsServiceDataDao;
+import org.janelia.jacs2.model.page.PageRequest;
+import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.ServerStats;
 import org.janelia.jacs2.service.JacsServiceDataManager;
 
 import javax.inject.Inject;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
@@ -21,8 +25,13 @@ public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
     }
 
     @Override
-    public JacsServiceData retrieveServiceData(Long instanceId) {
+    public JacsServiceData retrieveServiceById(Long instanceId) {
         return jacsServiceDataDao.findById(instanceId);
+    }
+
+    @Override
+    public PageResult<JacsServiceData> searchServices(JacsServiceData ref, Date from, Date to, PageRequest pageRequest) {
+        return jacsServiceDataDao.findMatchingServices(ref, from, to, pageRequest);
     }
 
     @Override

@@ -17,7 +17,6 @@ import java.util.concurrent.CompletionStage;
 
 @LocalJob
 public class ExternalLocalProcessRunner implements ExternalProcessRunner {
-    @Named("SLF4J")
     @Inject
     private Logger logger;
     @PropertyValue(name = "service.DefaultWorkingDir")

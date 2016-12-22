@@ -26,10 +26,9 @@ public class AsyncServiceInfoResource {
     private JacsServiceDataManager jacsServiceDataManager;
 
     @POST
-    @Path("/{user}/{service-name}")
+    @Path("/{service-name}")
     @Consumes("application/json")
-    public Response createAsyncService(@PathParam("user") String userName, @PathParam("service-name") String serviceName, JacsServiceData si) {
-        si.setOwner(userName);
+    public Response createAsyncService(@PathParam("service-name") String serviceName, JacsServiceData si) {
         si.setName(serviceName);
         JacsServiceData newJacsServiceData = jacsServiceDataManager.submitServiceAsync(si, Optional.empty());
         UriBuilder locationURIBuilder = UriBuilder.fromResource(ServiceInfoResource.class);

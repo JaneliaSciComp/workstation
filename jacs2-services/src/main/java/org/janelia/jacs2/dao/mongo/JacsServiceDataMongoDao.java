@@ -13,6 +13,7 @@ import org.janelia.jacs2.model.service.JacsServiceState;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +56,12 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
             }
         });
         return serviceHierarchy;
+    }
+
+    @Override
+    public PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, Date from, Date to, PageRequest pageRequest) {
+        // !!!!!!!!!!!!!!!!! TODO
+        return null;
     }
 
     @Override
