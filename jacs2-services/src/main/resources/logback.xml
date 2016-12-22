@@ -23,7 +23,7 @@
     </appender>
 
     <logger name="org.mongodb.driver" level="error" />
-    <logger name="org.janelia.jacs2.service.impl" level="error" />
+    <logger name="org.janelia.jacs2.service.impl" level="info" />
 
     <root level="debug">
         <appender-ref ref="CONSOLE" />
