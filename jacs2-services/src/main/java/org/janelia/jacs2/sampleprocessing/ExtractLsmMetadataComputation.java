@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.impl.AbstractExternalProcessComputation;
+import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
 
 import javax.inject.Inject;
@@ -38,9 +39,9 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
         CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
         ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsService.getJacsServiceData());
         if (StringUtils.isBlank(lsmMetadataArgs.inputLSMFile)) {
-            preProcess.completeExceptionally(new IllegalArgumentException("Input LSM file name must be specified"));
+            preProcess.completeExceptionally(new ComputationException(jacsService, "Input LSM file name must be specified"));
         } else if (StringUtils.isBlank(lsmMetadataArgs.outputLSMMetadata)) {
-            preProcess.completeExceptionally(new IllegalArgumentException("Output LSM metadata name must be specified"));
+            preProcess.completeExceptionally(new ComputationException(jacsService, "Output LSM metadata name must be specified"));
         } else {
             preProcess.complete(jacsService);
         }
@@ -57,7 +58,6 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
         ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
         jacsServiceData.setServiceCmd(perlExecutable);
-        jacsServiceData.setOutputPath(getOutputFileName(lsmMetadataArgs));
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder
                 .add(getFullExecutableName(scriptName))
