@@ -28,52 +28,76 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.commands;
 
+import org.janelia.console.viewerapi.Command;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
-import org.janelia.console.viewerapi.Command;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
- * Seeds a new neuron with a single root anchor
+ * Applies Command design pattern to the act of manually adding one vertex to a neuron
  * @author brunsc
  */
-public class MoveNeuronAnchorCommand 
+public class AppendNeuronVertexCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command
+implements UndoableEdit, Command, VertexAdder
 {
     private final NeuronModel neuron;
-    private final NeuronVertex anchor;
-    private final float[] initialCoordinates;
-    private final float[] finalCoordinates;
+    private NeuronVertex parentVertex;
+    private NeuronVertex newVertex = null; // caches the newly added vertex
+    private final float[] coordinates;
+    private final float radius;
+    private final VertexAdder parentCommand; // maintains a linked list, to help resolve stale parent vertices after serial undo/redo
     
-    public MoveNeuronAnchorCommand(
-            NeuronModel neuron,
-            NeuronVertex anchor,
-            float[] destinationXyz)
+    public AppendNeuronVertexCommand(
+            NeuronModel neuron, 
+            NeuronVertex parentVertex,
+            VertexAdder parentCommand, // to help unravel serial undo/redo, with replaced parent vertices, in case parentVertex is stale
+            float[] micronXyz,
+            float radius) 
     {
         this.neuron = neuron;
-        this.anchor = anchor;
-        this.initialCoordinates = new float[] {
-            anchor.getLocation()[0],
-            anchor.getLocation()[1],
-            anchor.getLocation()[2]
-        };
-        this.finalCoordinates = new float[] {
-            destinationXyz[0],
-            destinationXyz[1],
-            destinationXyz[2]
-        };
+        this.parentVertex = parentVertex;
+        this.parentCommand = parentCommand;
+        this.coordinates = micronXyz;
+        this.radius = radius;
     }
-
+    
+    // Command-like semantics execute is almost a synonym for redo()
     @Override
     public boolean execute() {
-        return neuron.moveVertex(anchor, finalCoordinates);
+        refreshParent();
+        newVertex = neuron.appendVertex(parentVertex, coordinates, radius);
+        if (newVertex == null) {
+            return false;
+        }
+        return true;
     }
-
+    
+    @Override
+    public NeuronVertex getAddedVertex() {
+        return newVertex;
+    }
+    
+    private void refreshParent() {
+        if (parentCommand != null) { // check in case serial undo/redo made parentVertex stale
+            NeuronVertex updatedParent = parentCommand.getAddedVertex();
+            if (updatedParent != parentVertex)
+                parentVertex = updatedParent; // update link
+        }        
+    }
+    
+    @Override
+    public NeuronVertex getParentVertex() {
+        refreshParent();
+        return parentVertex;
+    }
+    
     @Override
     public String getPresentationName() {
-        return "Move Neuron Anchor";
+        return "Append Neuron Anchor";
     }
     
     @Override
@@ -82,10 +106,18 @@ implements UndoableEdit, Command
         if (! execute())
             die(); // Something went wrong. This Command object is no longer useful.
     }
-
+    
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        neuron.moveVertex(anchor, initialCoordinates);
+        try {
+            if (! neuron.deleteVertex(newVertex))
+                die();
+        } catch (Exception exc) {
+            // Something went wrong. Perhaps this anchor no longer exists
+            die(); // This Command object is no longer useful
+        }
+        newVertex = null;
     }
+
 }
