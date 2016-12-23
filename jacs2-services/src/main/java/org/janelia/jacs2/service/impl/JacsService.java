@@ -60,4 +60,8 @@ public class JacsService<R> {
         return jacsServiceData.getProcessingLocation();
     }
 
+    @Override
+    public String toString() {
+        return jacsServiceData.toString();
+    }
 }

@@ -42,14 +42,14 @@ public abstract class AbstractServiceComputation<R> implements ServiceComputatio
 
     protected CompletionStage<JacsService<R>> waitForChildServiceToComplete(JacsService<R> jacsService) {
         CompletableFuture<JacsService<R>> waitForChildrenToEndFuture = new CompletableFuture<>();
-        JacsServiceData jacsServiceData = jacsService.getJacsServiceData();
-        List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsServiceData.getId());
+        List<JacsServiceData> uncompletedChildServices = jacsServiceDataPersistence.findServiceHierarchy(jacsService.getId());
         for (;;) {
             if (uncompletedChildServices.isEmpty()) {
                 waitForChildrenToEndFuture.complete(jacsService);
                 break;
             }
             List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
+                    .filter(ti -> !ti.getId().equals(jacsService.getId()))
                     .map(ti -> jacsServiceDataPersistence.findById(ti.getId()))
                     .filter(ti -> !ti.hasCompleted())
                     .collect(Collectors.toList());
@@ -57,7 +57,7 @@ public abstract class AbstractServiceComputation<R> implements ServiceComputatio
             try {
                 Thread.currentThread().sleep(1000);
             } catch (InterruptedException e) {
-                logger.warn("Interrup {}", jacsServiceData, e);
+                logger.warn("Interrupt {}", jacsService, e);
                 waitForChildrenToEndFuture.completeExceptionally(new ComputationException(jacsService, e));
                 break;
             }
