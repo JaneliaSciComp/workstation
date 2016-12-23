@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.collection.IsIn.isIn;
 import static org.junit.Assert.assertThat;
@@ -35,6 +36,15 @@ public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
     public void tearDown() {
         // delete the data that was created for testing
         deleteAll(testDao, testData);
+    }
+
+    @Test
+    public void persistLSMWithSmallerFileSize() {
+        LSMImage testImage = createLSM("line", "area");
+        testImage.setFileSize(100L);
+        testDao.save(testImage);
+        Image retrievedImage = testDao.findById(testImage.getId());
+        assertThat(retrievedImage, equalTo(testImage));
     }
 
     @Test
@@ -86,6 +96,7 @@ public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
         lsmImage.setLine(line);
         lsmImage.setAnatomicalArea(area);
         lsmImage.setOwnerKey(TEST_OWNER_KEY);
+        lsmImage.setFileSize(8234568900000000000L);
         testData.add(lsmImage);
         return lsmImage;
     }

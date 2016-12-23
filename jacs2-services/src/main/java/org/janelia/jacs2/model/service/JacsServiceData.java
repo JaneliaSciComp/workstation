@@ -7,7 +7,8 @@ import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.jacs2.utils.ISODateDeserializer;
-import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
+import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
+import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,7 +17,7 @@ import java.util.List;
 @MongoMapping(collectionName="jacsService", label="JacsService")
 public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonProperty("_id")
-    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String name;
     private String serviceType;
@@ -29,9 +30,9 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private String errorPath;
     private List<String> args = new ArrayList<>();
     private String workspace;
-    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number parentServiceId;
-    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number rootServiceId;
     private List<JacsServiceEvent> events;
     @JsonDeserialize(using = ISODateDeserializer.class)

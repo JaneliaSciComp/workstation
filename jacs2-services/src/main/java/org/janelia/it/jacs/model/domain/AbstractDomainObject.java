@@ -10,7 +10,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.jacs2.utils.DomainUtils;
 import org.janelia.jacs2.utils.ISODateDeserializer;
-import org.janelia.jacs2.utils.MongoObjectIdDeserializer;
+import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
+import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ import java.util.Set;
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "class")
 public abstract class AbstractDomainObject implements DomainObject {
     @JsonProperty("_id")
-    @JsonDeserialize(using = MongoObjectIdDeserializer.class)
+    @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String name;
     private String ownerKey;

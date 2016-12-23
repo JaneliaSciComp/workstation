@@ -9,11 +9,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.math.BigInteger;
 
-public class MongoObjectIdDeserializer extends JsonDeserializer<Number> {
+public class MongoNumberLongDeserializer extends JsonDeserializer<Number> {
 
     @Override
     public Number deserialize(JsonParser jsonParser, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         JsonNode node = jsonParser.readValueAsTree();
-        return new BigInteger(node.get("$numberLong").asText());
+        if (node.get("$numberLong") != null) {
+            return Long.valueOf(node.get("$numberLong").asText());
+        } else {
+            return Long.valueOf(node.asText());
+        }
     }
 }
