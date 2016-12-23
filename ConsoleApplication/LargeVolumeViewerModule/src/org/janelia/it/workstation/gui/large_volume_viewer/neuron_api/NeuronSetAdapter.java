@@ -81,14 +81,28 @@ implements NeuronSet// , LookupListener
     private HortaMetaWorkspace cachedHortaWorkspace = null;
     private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NeuronList innerList;
 
 
-    public NeuronSetAdapter()
-    {
-        super("LVV Neurons", new NeuronList());
+    private NeuronSetAdapter(NeuronList innerNeuronList) {
+        super("LVV neurons", innerNeuronList);
+        innerList = innerNeuronList;
         globalAnnotationListener = new MyGlobalAnnotationListener();
         annotationModListener = new MyTmGeoAnnotationModListener();
         hortaWorkspaceResult.addLookupListener(new NSALookupListener());
+    }
+    
+    public NeuronSetAdapter()
+    {
+        this(new NeuronList());
+    }
+    
+    @Override 
+    public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
+        if (! (anchor instanceof NeuronVertexAdapter))
+            return null;
+        TmGeoAnnotation annotation = ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();
+        return neuronModelForTmGeoAnnotation(annotation);
     }
     
     @Override
@@ -175,22 +189,15 @@ implements NeuronSet// , LookupListener
         cachedHortaWorkspace.notifyObservers();                
     }
 
+    private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
+    {
+        Long neuronId = annotation.getNeuronId();
+        TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
+        return innerList.neuronModelForTmNeuron(neuronMetadata);
+    }
+        
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
-        
-        private NeuronModelAdapter neuronModelForTmGeoAnnotation(TmGeoAnnotation annotation) 
-        {
-            // TODO: Use a more efficient index here...            
-            // Find neuron
-            Long neuronId = annotation.getNeuronId();
-            NeuronModelAdapter neuron = null;
-            for (NeuronModel neuron0 : NeuronSetAdapter.this) {
-                neuron = (NeuronModelAdapter)neuron0;
-                if (neuron.getTmNeuronMetadata().getId().equals(neuronId))
-                    break;
-            }
-            return neuron;
-        }
         
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
@@ -437,7 +444,7 @@ implements NeuronSet// , LookupListener
         private AnnotationModel annotationModel;
         private final Logger logger = LoggerFactory.getLogger(this.getClass());
         
-        private NeuronModel neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) 
+        NeuronModelAdapter neuronModelForTmNeuron(TmNeuronMetadata tmNeuron) 
         {
             if (tmNeuron == null)
                 return null;
