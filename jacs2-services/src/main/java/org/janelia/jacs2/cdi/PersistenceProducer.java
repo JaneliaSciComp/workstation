@@ -9,6 +9,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceState;
+import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.janelia.jacs2.utils.EnumCodec;
@@ -30,7 +31,10 @@ public class PersistenceProducer {
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
                 CodecRegistries.fromProviders(new DomainCodecProvider(objectMapper)),
-                CodecRegistries.fromCodecs(new BigIntegerCodec(), new EnumCodec<>(JacsServiceState.class))
+                CodecRegistries.fromCodecs(
+                        new BigIntegerCodec(),
+                        new EnumCodec<>(JacsServiceState.class),
+                        new EnumCodec<>(ProcessingLocation.class))
         );
         MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
         MongoClientURI mongoConnectionString = new MongoClientURI(nmongoConnectionURL, optionsBuilder);

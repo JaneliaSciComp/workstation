@@ -3,7 +3,7 @@ package org.janelia.jacs2.service.impl;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
-import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.service.qualifier.ClusterJob;
 import org.janelia.jacs2.service.qualifier.LocalJob;
 import org.slf4j.Logger;
@@ -15,8 +15,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,8 +22,6 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceComputation<R> {
-    private static final String LOCAL_RUNNER = "local";
-    private static final String CLUSTER_RUNNER = "cluster";
 
     @Inject
     private Logger logger;
@@ -34,24 +30,14 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     @Any @Inject
     private Instance<ExternalProcessRunner> serviceRunners;
 
-    private ExternalProcessRunner getProcessRunner(String whichRunner) {
-        String processRunner = StringUtils.defaultIfBlank(whichRunner, LOCAL_RUNNER);
-
-        Class<? extends Annotation> annotationType;
-        switch (processRunner) {
-            case CLUSTER_RUNNER:
-                annotationType = ClusterJob.class;
-                break;
-            case LOCAL_RUNNER:
-            default:
-                annotationType = LocalJob.class;
-        }
+    private ExternalProcessRunner getProcessRunner(ProcessingLocation processingLocation) {
+        ProcessingLocation location = processingLocation == null ? ProcessingLocation.LOCAL : processingLocation;
         for (ExternalProcessRunner serviceRunner : serviceRunners) {
-            if (serviceRunner.getClass().isAnnotationPresent(annotationType)) {
+            if (serviceRunner.getClass().isAnnotationPresent(location.getProcessingAnnotationClass())) {
                 return serviceRunner;
             }
         }
-        throw new IllegalArgumentException("Unsupported runner: " + whichRunner);
+        throw new IllegalArgumentException("Unsupported runner: " + processingLocation);
     }
 
     protected abstract List<String> prepareCmdArgs(JacsService<R> jacsService);
@@ -118,7 +104,7 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     public CompletionStage<JacsService<R>> processData(JacsService<R> jacsService) {
         List<String> args = prepareCmdArgs(jacsService);
         Map<String, String> env = prepareEnvironment(jacsService);
-        return getProcessRunner(jacsService.getServiceType()).runCmd(
+        return getProcessRunner(jacsService.getProcessingLocation()).runCmd(
                 jacsService.getServiceCmd(),
                 args,
                 env,

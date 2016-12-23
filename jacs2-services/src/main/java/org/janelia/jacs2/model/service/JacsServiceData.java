@@ -3,14 +3,12 @@ package org.janelia.jacs2.model.service;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.jacs2.utils.ISODateDeserializer;
 import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
-import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,7 +21,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number id;
     private String name;
-    private String serviceType;
+    private ProcessingLocation processingLocation;
     private String serviceCmd;
     private JacsServiceState state = JacsServiceState.CREATED;
     private Integer priority = 0;
@@ -61,12 +59,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.name = name;
     }
 
-    public String getServiceType() {
-        return serviceType;
+    public ProcessingLocation getProcessingLocation() {
+        return processingLocation;
     }
 
-    public void setServiceType(String serviceType) {
-        this.serviceType = serviceType;
+    public void setProcessingLocation(ProcessingLocation processingLocation) {
+        this.processingLocation = processingLocation;
     }
 
     public String getServiceCmd() {

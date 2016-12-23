@@ -8,6 +8,9 @@ public class JacsServiceDataBuilder {
         if (serviceContext != null) {
             serviceData.setOwner(serviceContext.getOwner());
             serviceData.updateParentService(serviceContext);
+            if (serviceContext.getProcessingLocation() != null) {
+                serviceData.setProcessingLocation(serviceContext.getProcessingLocation());
+            }
         }
     }
 
@@ -23,13 +26,8 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
-    public JacsServiceDataBuilder setOwner(String owner) {
-        serviceData.setOwner(owner);
-        return this;
-    }
-
-    public JacsServiceDataBuilder setPriority(int priority) {
-        serviceData.setPriority(priority);
+    public JacsServiceDataBuilder setProcessingLocation(ProcessingLocation processingLocation) {
+        serviceData.setProcessingLocation(processingLocation);
         return this;
     }
 

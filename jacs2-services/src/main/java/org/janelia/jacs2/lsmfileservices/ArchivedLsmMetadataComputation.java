@@ -4,6 +4,7 @@ import com.beust.jcommander.JCommander;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
+import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.service.impl.AbstractServiceComputation;
 import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
@@ -45,6 +46,7 @@ public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<F
                     .setName("fileCopy")
                     .addArg("-src", getInputFile(args).getAbsolutePath())
                     .addArg("-dst", workingLsmFile.getAbsolutePath())
+                    .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
                     .build());
             jacsService.submitChildServiceAsync(extractLsmMetadataService);
             preProcess.complete(jacsService);

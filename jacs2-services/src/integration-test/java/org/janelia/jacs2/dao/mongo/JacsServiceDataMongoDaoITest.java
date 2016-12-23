@@ -9,6 +9,7 @@ import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceEvent;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceState;
+import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
 
     @Test
     public void persistServiceData() {
-        JacsServiceData si = persistServiceWithEvents(createTestService("s", "t"),
+        JacsServiceData si = persistServiceWithEvents(createTestService("s", ProcessingLocation.LOCAL),
                 createTestServiceEvent("e1", "v1"),
                 createTestServiceEvent("e2", "v2"));
         JacsServiceData retrievedSi = testDao.findById(si.getId());
@@ -52,7 +53,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
 
     @Test
     public void addServiceEvent() {
-        JacsServiceData si = persistServiceWithEvents(createTestService("s", "t"),
+        JacsServiceData si = persistServiceWithEvents(createTestService("s", ProcessingLocation.LOCAL),
                 createTestServiceEvent("e1", "v1"),
                 createTestServiceEvent("e2", "v2"));
         si.addEvent(createTestServiceEvent("e3", "v3"));
@@ -64,13 +65,13 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
 
     @Test
     public void persistServiceHierarchyOneAtATime() {
-        JacsServiceData si1 = persistServiceWithEvents(createTestService("s1", "t1"));
+        JacsServiceData si1 = persistServiceWithEvents(createTestService("s1", ProcessingLocation.LOCAL));
         JacsServiceData retrievedSi1 = testDao.findById(si1.getId());
         assertThat(retrievedSi1, allOf(
                 hasProperty("parentServiceId", nullValue(Long.class)),
                 hasProperty("rootServiceId", nullValue(Long.class))
         ));
-        JacsServiceData si1_1 = createTestService("s1.1", "t1.1");
+        JacsServiceData si1_1 = createTestService("s1.1", ProcessingLocation.LOCAL);
         si1_1.updateParentService(si1);
         testDao.save(si1_1);
         JacsServiceData retrievedSi1_1 = testDao.findById(si1_1.getId());
@@ -79,7 +80,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
                 hasProperty("rootServiceId", equalTo(si1.getId()))
         ));
 
-        JacsServiceData si1_2 = createTestService("s1.2", "t1.2");
+        JacsServiceData si1_2 = createTestService("s1.2", ProcessingLocation.LOCAL);
         si1_2.updateParentService(si1);
         testDao.save(si1_2);
         JacsServiceData retrievedSi1_2 = testDao.findById(si1_2.getId());
@@ -88,7 +89,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
                 hasProperty("rootServiceId", equalTo(si1.getId()))
         ));
 
-        JacsServiceData si1_2_1 = createTestService("s1.2.1", "t1.2.1");
+        JacsServiceData si1_2_1 = createTestService("s1.2.1", ProcessingLocation.LOCAL);
         si1_2_1.updateParentService(si1_2);
         testDao.save(si1_2_1);
 
@@ -110,10 +111,10 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
 
     @Test
     public void persistServiceHierarchyAllAtOnce() {
-        JacsServiceData si1 = createTestService("s1", "t1");
-        JacsServiceData si1_1 = createTestService("s1.1", "t1.1");
-        JacsServiceData si1_2 = createTestService("s1.2", "t1.2");
-        JacsServiceData si1_2_1 = createTestService("s1.2.1", "t1.2.1");
+        JacsServiceData si1 = createTestService("s1", ProcessingLocation.LOCAL);
+        JacsServiceData si1_1 = createTestService("s1.1", ProcessingLocation.LOCAL);
+        JacsServiceData si1_2 = createTestService("s1.2", ProcessingLocation.LOCAL);
+        JacsServiceData si1_2_1 = createTestService("s1.2.1", ProcessingLocation.LOCAL);
         si1.addChildService(si1_1);
         si1.addChildService(si1_2);
         si1_2.addChildService(si1_2_1);
@@ -132,20 +133,20 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
     @Test
     public void retrieveServicesByState() {
         List<JacsServiceData> servicesInQueuedState = ImmutableList.of(
-                createTestService("s1.1", "t1"),
-                createTestService("s1.2", "t1"),
-                createTestService("s1.3", "t1"),
-                createTestService("s1.4", "t1")
+                createTestService("s1.1", ProcessingLocation.LOCAL),
+                createTestService("s1.2", ProcessingLocation.LOCAL),
+                createTestService("s1.3", ProcessingLocation.LOCAL),
+                createTestService("s1.4", ProcessingLocation.LOCAL)
         );
         List<JacsServiceData> servicesInRunningState = ImmutableList.of(
-                createTestService("s2.4", "t1"),
-                createTestService("s2.5", "t1"),
-                createTestService("s2.6", "t1")
+                createTestService("s2.4", ProcessingLocation.CLUSTER),
+                createTestService("s2.5", ProcessingLocation.CLUSTER),
+                createTestService("s2.6", ProcessingLocation.CLUSTER)
         );
         List<JacsServiceData> servicesInCanceledState = ImmutableList.of(
-                createTestService("s7", "t1"),
-                createTestService("s8", "t1"),
-                createTestService("s9", "t1")
+                createTestService("s7", null),
+                createTestService("s8", null),
+                createTestService("s9", null)
         );
         servicesInQueuedState.stream().forEach(s -> {
             s.setState(JacsServiceState.QUEUED);
@@ -180,15 +181,15 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
     protected List<JacsServiceData> createMultipleTestItems(int nItems) {
         List<JacsServiceData> testItems = new ArrayList<>();
         for (int i = 0; i < nItems; i++) {
-            testItems.add(createTestService("s" + (i + 1), "t" + (i + 1)));
+            testItems.add(createTestService("s" + (i + 1), i % 2 == 0 ? ProcessingLocation.LOCAL : ProcessingLocation.CLUSTER));
         }
         return testItems;
     }
 
-    private JacsServiceData createTestService(String serviceName, String serviceType) {
+    private JacsServiceData createTestService(String serviceName, ProcessingLocation processingLocation) {
         JacsServiceData si = new JacsServiceData();
         si.setName(serviceName);
-        si.setServiceType(serviceType);
+        si.setProcessingLocation(processingLocation);
         si.addArg("I1");
         si.addArg("I2");
         testData.add(si);
