@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -32,17 +33,19 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
         processBuilder.environment().putAll(env);
         JacsServiceData serviceData = serviceContext.getJacsServiceData();
-        if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
-            File workingDirectory = new File(serviceData.getWorkspace());
-            processBuilder.directory(workingDirectory);
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            File workingDirectory = new File(defaultWorkingDir, serviceData.getName());
-            processBuilder.directory(workingDirectory);
-        }
         logger.info("Start {} with {} {}; env={}", serviceContext, cmd, cmdArgs, processBuilder.environment());
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
+            if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
+                File workingDirectory = new File(serviceData.getWorkspace());
+                Files.createDirectories(workingDirectory.toPath());
+                processBuilder.directory(workingDirectory);
+            } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+                File workingDirectory = new File(defaultWorkingDir, serviceData.getName());
+                Files.createDirectories(workingDirectory.toPath());
+                processBuilder.directory(workingDirectory);
+            }
             localProcess = processBuilder.start();
             ExternalProcessIOHandler processStdoutHandler = null;
             processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
