@@ -90,6 +90,7 @@ public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<F
             File lsmMetadataFile = getOutputFile(args);
             File workingLsmFile = getWorkingLsmFile(jacsService, lsmMetadataFile);
             try {
+                logger.debug("Delete working LSM file {}", workingLsmFile);
                 Files.deleteIfExists(workingLsmFile.toPath());
             } catch (IOException e) {
                 logger.error("Error deleting the working LSM file {}", workingLsmFile, e);

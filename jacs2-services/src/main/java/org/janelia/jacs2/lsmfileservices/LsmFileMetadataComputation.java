@@ -126,9 +126,10 @@ public class LsmFileMetadataComputation extends AbstractExternalProcessComputati
     public void postProcessData(JacsService<File> jacsService, Throwable exc) {
         if (exc == null) {
             try {
+                logger.debug("Delete temporary service script: {}", jacsService.getServiceCmd());
                 Files.deleteIfExists(new File(jacsService.getJacsServiceData().getServiceCmd()).toPath());
             } catch (IOException e) {
-                logger.error("Error deleting the service script {}", jacsService.getJacsServiceData().getServiceCmd(), e);
+                logger.error("Error deleting the service script {}", jacsService.getServiceCmd(), e);
             }
         }
     }
