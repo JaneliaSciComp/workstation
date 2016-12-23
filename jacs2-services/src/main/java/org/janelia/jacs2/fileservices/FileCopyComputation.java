@@ -59,12 +59,6 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<File
     }
 
     @Override
-    public CompletionStage<JacsService<File>> isReadyToProcess(JacsService<File> jacsService) {
-        // this service has no child services
-        return CompletableFuture.completedFuture(jacsService);
-    }
-
-    @Override
     public CompletionStage<JacsService<File>> isDone(JacsService<File> jacsService) {
         CompletableFuture<JacsService<File>> doneFuture = new CompletableFuture<>();
         FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);

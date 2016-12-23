@@ -60,12 +60,6 @@ public class LsmFileMetadataComputation extends AbstractExternalProcessComputati
     }
 
     @Override
-    public CompletionStage<JacsService<File>> isReadyToProcess(JacsService<File> jacsService) {
-        // this service has no child services
-        return CompletableFuture.completedFuture(jacsService);
-    }
-
-    @Override
     protected List<String> prepareCmdArgs(JacsService<File> jacsService) {
         LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsService);
         File scriptFile = createScript(jacsService, args);
