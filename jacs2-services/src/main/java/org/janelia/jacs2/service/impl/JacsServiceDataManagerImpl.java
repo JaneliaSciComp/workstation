@@ -9,7 +9,6 @@ import org.janelia.jacs2.service.JacsServiceDataManager;
 
 import javax.inject.Inject;
 import java.util.Date;
-import java.util.Optional;
 
 public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
 
@@ -33,8 +32,8 @@ public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
     }
 
     @Override
-    public JacsServiceData submitServiceAsync(JacsServiceData serviceArgs, Optional<JacsServiceData> parentService) {
-        return jacsServiceDispatcher.submitServiceAsync(serviceArgs, parentService);
+    public JacsServiceData submitServiceAsync(JacsServiceData serviceArgs) {
+        return jacsServiceDispatcher.submitServiceAsync(serviceArgs);
     }
 
     @Override

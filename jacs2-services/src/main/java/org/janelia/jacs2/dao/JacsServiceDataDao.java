@@ -19,4 +19,5 @@ public interface JacsServiceDataDao extends Dao<JacsServiceData, Number> {
     List<JacsServiceData> findServiceHierarchy(Number serviceId);
     PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, Date from, Date to, PageRequest pageRequest);
     PageResult<JacsServiceData> findServiceByState(Set<JacsServiceState> requestStates, PageRequest pageRequest);
+    void saveServiceHierarchy(JacsServiceData serviceData);
 }

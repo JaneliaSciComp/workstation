@@ -1,4 +1,4 @@
-package org.janelia.jacs2.sampleprocessing;
+package org.janelia.jacs2.lsmfileservices;
 
 import com.beust.jcommander.JCommander;
 import com.google.common.collect.ImmutableList;
@@ -28,8 +28,8 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-@Named("lsmMetadataService")
-public class ExtractLsmMetadataComputation extends AbstractExternalProcessComputation<Void> {
+@Named("lsmFileMetadataService")
+public class LsmFileMetadataComputation extends AbstractExternalProcessComputation<File> {
 
     private static final String PERLLIB_VARNAME = "PERL5LIB";
 
@@ -46,12 +46,12 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     private Logger logger;
 
     @Override
-    public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
-        CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
-        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsService.getJacsServiceData());
-        if (StringUtils.isBlank(lsmMetadataArgs.inputLSMFile)) {
+    public CompletionStage<JacsService<File>> preProcessData(JacsService<File> jacsService) {
+        CompletableFuture<JacsService<File>> preProcess = new CompletableFuture<>();
+        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsService);
+        if (StringUtils.isBlank(args.inputLSMFile)) {
             preProcess.completeExceptionally(new ComputationException(jacsService, "Input LSM file name must be specified"));
-        } else if (StringUtils.isBlank(lsmMetadataArgs.outputLSMMetadata)) {
+        } else if (StringUtils.isBlank(args.outputLSMMetadata)) {
             preProcess.completeExceptionally(new ComputationException(jacsService, "Output LSM metadata name must be specified"));
         } else {
             preProcess.complete(jacsService);
@@ -60,33 +60,34 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     }
 
     @Override
-    public CompletionStage<JacsService<Void>> isReadyToProcess(JacsService<Void> jacsService) {
+    public CompletionStage<JacsService<File>> isReadyToProcess(JacsService<File> jacsService) {
         // this service has no child services
         return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
-        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = getArgs(jacsServiceData);
-        File scriptFile = createScript(jacsServiceData, lsmMetadataArgs);
-        jacsServiceData.setServiceCmd(scriptFile.getAbsolutePath());
+    protected List<String> prepareCmdArgs(JacsService<File> jacsService) {
+        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = getArgs(jacsService);
+        File scriptFile = createScript(jacsService, args);
+        jacsService.setServiceCmd(scriptFile.getAbsolutePath());
         return ImmutableList.of();
     }
 
-    private File createScript(JacsServiceData jacsServiceData, ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs) {
-        File inputFile = getInputFile(lsmMetadataArgs);
-        File outputFile = getOutputFile(lsmMetadataArgs);
+    private File createScript(JacsService<File> jacsService, LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
+        File inputFile = getInputFile(args);
+        File outputFile = getOutputFile(args);
         File workingDir = outputFile.getParentFile();
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwx------");
         BufferedWriter outputStream = null;
         File scriptFile = null;
         try {
             scriptFile = Files.createFile(
-                    Paths.get(workingDir.getAbsolutePath(), jacsServiceData.getName() + "_" + jacsServiceData.getId() + ".sh"),
+                    Paths.get(workingDir.getAbsolutePath(), jacsService.getName() + "_" + jacsService.getId() + ".sh"),
                     PosixFilePermissions.asFileAttribute(perms)).toFile();
             outputStream = new BufferedWriter(new FileWriter(scriptFile));
             outputStream.append(String.format("%s %s %s > %s\n", perlExecutable, getFullExecutableName(scriptName), inputFile.getAbsoluteFile(), outputFile.getAbsoluteFile()));
             outputStream.flush();
+            jacsService.setResult(outputFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
@@ -101,25 +102,25 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     }
 
     @Override
-    protected Map<String, String> prepareEnvironment(JacsServiceData si) {
+    protected Map<String, String> prepareEnvironment(JacsService<File> jacsService) {
         return ImmutableMap.of(
             PERLLIB_VARNAME, perlModule
         );
     }
 
-    private ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
-        ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArgs = new ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs();
-        new JCommander(lsmMetadataArgs).parse(jacsServiceData.getArgsAsArray());
-        return lsmMetadataArgs;
+    private LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs getArgs(JacsService<File> jacsService) {
+        LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args = new LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs();
+        new JCommander(args).parse(jacsService.getArgsArray());
+        return args;
     }
 
-    private File getInputFile(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
-        return new File(lsmMetadataArg.inputLSMFile);
+    private File getInputFile(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
+        return new File(args.inputLSMFile);
     }
 
-    private File getOutputFile(ExtractLsmMetadataServiceDescriptor.LsmMetadataArgs lsmMetadataArg) {
+    private File getOutputFile(LsmFileMetadataServiceDescriptor.LsmFileMetadataArgs args) {
         try {
-            File outputFile = new File(lsmMetadataArg.outputLSMMetadata);
+            File outputFile = new File(args.outputLSMMetadata);
             Files.createDirectories(outputFile.getParentFile().toPath());
             return outputFile;
         } catch (IOException e) {
@@ -128,7 +129,7 @@ public class ExtractLsmMetadataComputation extends AbstractExternalProcessComput
     }
 
     @Override
-    public void postProcessData(JacsService<Void> jacsService, Throwable exc) {
+    public void postProcessData(JacsService<File> jacsService, Throwable exc) {
         if (exc == null) {
             try {
                 Files.deleteIfExists(new File(jacsService.getJacsServiceData().getServiceCmd()).toPath());

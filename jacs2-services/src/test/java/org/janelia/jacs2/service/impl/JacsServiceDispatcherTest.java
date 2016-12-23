@@ -73,12 +73,12 @@ public class JacsServiceDispatcherTest {
             ti.setId(TEST_ID);
             return null;
         };
-        doAnswer(saveServiceData).when(jacsServiceDataPersistence).save(any(JacsServiceData.class));
+        doAnswer(saveServiceData).when(jacsServiceDataPersistence).saveHierarchy(any(JacsServiceData.class));
     }
 
     @Test
-    public void mainServiceAsyncSubmit() {
-        JacsServiceData serviceData = submitTestService("test", null);
+    public void serviceAsyncSubmit() {
+        JacsServiceData serviceData = submitTestService("test");
 
         assertThat(serviceData.getId(), equalTo(TEST_ID));
     }
@@ -90,27 +90,15 @@ public class JacsServiceDispatcherTest {
         return testService;
     }
 
-    private JacsServiceData submitTestService(String serviceName, JacsServiceData testParentService) {
+    private JacsServiceData submitTestService(String serviceName) {
         JacsServiceData testService = createTestService(null, serviceName);
-        return testDispatcher.submitServiceAsync(testService, testParentService == null ? Optional.<JacsServiceData>empty() : Optional.of(testParentService));
-    }
-
-    @Test
-    public void childServiceAsyncSubmit() {
-        JacsServiceData mainServiceData = new JacsServiceData();
-        mainServiceData.setId(1L);
-        mainServiceData.setName("main");
-
-        JacsServiceData childServiceData = submitTestService("test", mainServiceData);
-
-        assertThat(childServiceData.getId(), equalTo(TEST_ID));
-        assertThat(childServiceData.getParentServiceId(), equalTo(mainServiceData.getId()));
+        return testDispatcher.submitServiceAsync(testService);
     }
 
     @Test
     public void dispatchServiceWhenNoSlotsAreAvailable() {
         testDispatcher.setAvailableSlots(0);
-        submitTestService("test", null);
+        submitTestService("test");
         testDispatcher.dispatchServices();
         verify(logger).info("No available processing slots");
     }
@@ -126,7 +114,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void runSubmittedService() {
-        JacsServiceData testServiceData = submitTestService("submittedService", null);
+        JacsServiceData testServiceData = submitTestService("submittedService");
 
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<>());
@@ -216,7 +204,7 @@ public class JacsServiceDispatcherTest {
 
     @Test
     public void serviceProcessingError() {
-        JacsServiceData testServiceData = submitTestService("submittedService", null);
+        JacsServiceData testServiceData = submitTestService("submittedService");
         when(jacsServiceDataPersistence.findServicesByState(any(Set.class), any(PageRequest.class)))
                 .thenReturn(new PageResult<JacsServiceData>());
         ServiceSyncer done = new ServiceSyncer();

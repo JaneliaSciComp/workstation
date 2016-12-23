@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.in;
@@ -69,5 +71,17 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
         Preconditions.checkArgument(CollectionUtils.isNotEmpty(requestStates));
         List<JacsServiceData> results = find(in("state", requestStates), createBsonSortCriteria(pageRequest.getSortCriteria()), pageRequest.getOffset(), pageRequest.getPageSize(), JacsServiceData.class);
         return new PageResult<>(pageRequest, results);
+    }
+
+    @Override
+    public void saveServiceHierarchy(JacsServiceData serviceData) {
+        List<JacsServiceData> serviceHierarchy = serviceData.serviceHierarchyStream().map(s -> {
+            if (s.getId() == null) {
+                s.setId(idGenerator.generateId());
+            }
+            s.updateParentService(s.getParentService());
+            return s;
+        }).collect(Collectors.toList());
+        saveAll(serviceHierarchy);
     }
 }

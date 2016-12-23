@@ -19,7 +19,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -70,11 +69,8 @@ public class JacsServiceDispatcher {
         }
     }
 
-    public JacsServiceData submitServiceAsync(JacsServiceData serviceData, Optional<JacsServiceData> optionalParentService) {
-        logger.info("Submitted {} as a {}", serviceData, optionalParentService.isPresent() ? "child of " + optionalParentService.get().getId() : "root service");
-        if (optionalParentService.isPresent()) {
-            serviceData.updateParentService(optionalParentService.get());
-        }
+    public JacsServiceData submitServiceAsync(JacsServiceData serviceData) {
+        logger.info("Submitted {}", serviceData);
         persistServiceInfo(serviceData);
         enqueueService(serviceData);
         return serviceData;
@@ -132,6 +128,7 @@ public class JacsServiceDispatcher {
                 return;
             }
             logger.info("Dispatch service {}", queuedService);
+            @SuppressWarnings("unchecked")
             ServiceComputation<Object> serviceComputation = (ServiceComputation<Object>) getServiceComputation(queuedService);
             // The service lifecycle is: preprocess -> isReadyToProcess -> processData -> isDone -> postProcess
             CompletableFuture
@@ -141,7 +138,7 @@ public class JacsServiceDispatcher {
                         serviceData.setState(JacsServiceState.SUBMITTED);
                         updateServiceInfo(serviceData);
                         availableSlots.release();
-                        return new JacsService<Object>(this, serviceData);
+                        return new JacsService<>(this, serviceData);
                     }, serviceExecutor)
                     .thenComposeAsync(serviceComputation::preProcessData, serviceExecutor)
                     .thenComposeAsync(serviceComputation::isReadyToProcess, serviceExecutor)
@@ -168,7 +165,7 @@ public class JacsServiceDispatcher {
                     .whenCompleteAsync((js, exc) -> {
                         JacsService<Object> jacsService;
                         if (js == null) {
-                            jacsService = new JacsService<Object>(this, queuedService);
+                            jacsService = new JacsService<>(this, queuedService);
                         } else {
                             jacsService = js;
                         }
@@ -232,7 +229,7 @@ public class JacsServiceDispatcher {
 
     private void persistServiceInfo(JacsServiceData jacsServiceData) {
         jacsServiceData.setState(JacsServiceState.CREATED);
-        jacsServiceDataPersistence.save(jacsServiceData);
+        jacsServiceDataPersistence.saveHierarchy(jacsServiceData);
     }
 
     private void updateServiceInfo(JacsServiceData jacsServiceData) {

@@ -17,11 +17,7 @@ public class JacsService<R> {
     }
 
     public ServiceComputation<?> submitChildServiceAsync(JacsServiceData childServiceData) {
-        if (childServiceData.priority() <= jacsServiceData.priority()) {
-            // child services must have a higher priority, otherwise we may run into deadlocks
-            childServiceData.setPriority(jacsServiceData.priority() + 1);
-        }
-        JacsServiceData serviceData = serviceDispatcher.submitServiceAsync(childServiceData, Optional.of(jacsServiceData));
+        JacsServiceData serviceData = serviceDispatcher.submitServiceAsync(childServiceData);
         return serviceDispatcher.getServiceComputation(serviceData);
     }
 
@@ -37,7 +33,32 @@ public class JacsService<R> {
         this.result = result;
     }
 
+    public Number getId() {
+        return jacsServiceData.getId();
+    }
+
+    public String getName() {
+        return jacsServiceData.getName();
+    }
+
+    public String[] getArgsArray() {
+        return jacsServiceData.getArgsArray();
+    }
+
     public String getOwner() {
         return jacsServiceData.getOwner();
     }
+
+    public String getServiceCmd() {
+        return jacsServiceData.getServiceCmd();
+    }
+
+    public void setServiceCmd(String serviceCmd) {
+        jacsServiceData.setServiceCmd(serviceCmd);
+    }
+
+    public String getServiceType() {
+        return jacsServiceData.getServiceType();
+    }
+
 }

@@ -1,7 +1,9 @@
 package org.janelia.jacs2.model.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
@@ -13,6 +15,7 @@ import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 @MongoMapping(collectionName="jacsService", label="JacsService")
 public class JacsServiceData implements BaseEntity, HasIdentifier {
@@ -37,6 +40,10 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private List<JacsServiceEvent> events;
     @JsonDeserialize(using = ISODateDeserializer.class)
     private Date creationDate = new Date();
+    @JsonIgnore
+    private JacsServiceData parentService;
+    @JsonIgnore
+    private List<JacsServiceData> childServices = new ArrayList<>();
 
     public Number getId() {
         return id;
@@ -126,7 +133,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.args = args;
     }
 
-    public String[] getArgsAsArray() {
+    public String[] getArgsArray() {
         if (args == null) {
             return new String[0];
         } else {
@@ -188,18 +195,43 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.events.add(se);
     }
 
+    public List<JacsServiceData> getChildServices() {
+        return childServices;
+    }
+
+    public void addChildService(JacsServiceData childService) {
+        childServices.add(childService);
+        childService.updateParentService(this);
+    }
+
+    public JacsServiceData getParentService() {
+        return parentService;
+    }
+
     public void updateParentService(JacsServiceData parentService) {
         if (parentService != null) {
+            this.parentService = parentService;
             setParentServiceId(parentService.getId());
             if (parentService.getRootServiceId() == null) {
                 setRootServiceId(parentService.getId());
             } else {
                 setRootServiceId(parentService.getRootServiceId());
             }
+            if (priority == null || priority() <= parentService.priority()) {
+                priority = parentService.priority() + 1;
+            }
         } else {
+            this.parentService = null;
             setParentServiceId(null);
             setRootServiceId(null);
         }
+    }
+
+    public Stream<JacsServiceData> serviceHierarchyStream() {
+        return Stream.concat(
+                Stream.of(this),
+                childServices.stream().flatMap(JacsServiceData::serviceHierarchyStream)
+        );
     }
 
     public int priority() {

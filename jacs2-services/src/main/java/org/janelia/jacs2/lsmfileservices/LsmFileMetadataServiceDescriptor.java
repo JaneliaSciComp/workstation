@@ -1,4 +1,4 @@
-package org.janelia.jacs2.sampleprocessing;
+package org.janelia.jacs2.lsmfileservices;
 
 import com.beust.jcommander.Parameter;
 import org.janelia.jacs2.model.service.ServiceMetaData;
@@ -9,11 +9,11 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-@Named("lsmMetadata")
-public class ExtractLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "lsmMetadata";
+@Named("lsmFileMetadata")
+public class LsmFileMetadataServiceDescriptor implements ServiceDescriptor {
+    private static String SERVICE_NAME = "lsmFileMetadata";
 
-    static class LsmMetadataArgs {
+    static class LsmFileMetadataArgs {
         @Parameter(names = "-inputLSM", description = "LSM Input file name", required = true)
         String inputLSMFile;
         @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
@@ -21,7 +21,7 @@ public class ExtractLsmMetadataServiceDescriptor implements ServiceDescriptor {
     }
 
     @Inject
-    private Instance<ExtractLsmMetadataComputation> lsmMetadataComputationSource;
+    private Instance<LsmFileMetadataComputation> lsmMetadataComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {

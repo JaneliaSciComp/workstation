@@ -22,7 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 @Named("fileCopyService")
-public class FileCopyComputation extends AbstractExternalProcessComputation<Void> {
+public class FileCopyComputation extends AbstractExternalProcessComputation<File> {
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
@@ -37,16 +37,18 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
 
 
     @Override
-    public CompletionStage<JacsService<Void>> preProcessData(JacsService<Void> jacsService) {
-        CompletableFuture<JacsService<Void>> preProcess = new CompletableFuture<>();
-        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
+    public CompletionStage<JacsService<File>> preProcessData(JacsService<File> jacsService) {
+        CompletableFuture<JacsService<File>> preProcess = new CompletableFuture<>();
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
         if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
             preProcess.completeExceptionally(new ComputationException(jacsService, "Source file name must be specified"));
         } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
             preProcess.completeExceptionally(new ComputationException(jacsService, "Target file name must be specified"));
         } else {
             try {
-                Files.createDirectories(new File(fileCopyArgs.targetFilename).getParentFile().toPath());
+                File targetFile = new File(fileCopyArgs.targetFilename);
+                Files.createDirectories(targetFile.getParentFile().toPath());
+                jacsService.setResult(targetFile);
                 preProcess.complete(jacsService);
             } catch (IOException e) {
                 logger.error("Error creating the target directories", e);
@@ -57,15 +59,15 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
     }
 
     @Override
-    public CompletionStage<JacsService<Void>> isReadyToProcess(JacsService<Void> jacsService) {
+    public CompletionStage<JacsService<File>> isReadyToProcess(JacsService<File> jacsService) {
         // this service has no child services
         return CompletableFuture.completedFuture(jacsService);
     }
 
     @Override
-    public CompletionStage<JacsService<Void>> isDone(JacsService<Void> jacsService) {
-        CompletableFuture<JacsService<Void>> doneFuture = new CompletableFuture<>();
-        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService.getJacsServiceData());
+    public CompletionStage<JacsService<File>> isDone(JacsService<File> jacsService) {
+        CompletableFuture<JacsService<File>> doneFuture = new CompletableFuture<>();
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
         if (fileCopyArgs.deleteSourceFile) {
             try {
                 File sourceFile = new File(fileCopyArgs.sourceFilename);
@@ -80,9 +82,9 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
     }
 
     @Override
-    protected List<String> prepareCmdArgs(JacsServiceData jacsServiceData) {
-        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsServiceData);
-        jacsServiceData.setServiceCmd(getFullExecutableName(scriptName));
+    protected List<String> prepareCmdArgs(JacsService<File> jacsService) {
+        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
+        jacsService.setServiceCmd(getFullExecutableName(scriptName));
         ImmutableList.Builder<String> cmdLineBuilder = new ImmutableList.Builder<>();
         cmdLineBuilder.add(fileCopyArgs.sourceFilename);
         cmdLineBuilder.add(fileCopyArgs.targetFilename);
@@ -93,13 +95,13 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<Void
     }
 
     @Override
-    protected Map<String, String> prepareEnvironment(JacsServiceData si) {
+    protected Map<String, String> prepareEnvironment(JacsService<File> jacsService) {
         return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
     }
 
-    private FileCopyServiceDescriptor.FileCopyArgs getArgs(JacsServiceData jacsServiceData) {
+    private FileCopyServiceDescriptor.FileCopyArgs getArgs(JacsService<File> jacsService) {
         FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = new FileCopyServiceDescriptor.FileCopyArgs();
-        new JCommander(fileCopyArgs).parse(jacsServiceData.getArgsAsArray());
+        new JCommander(fileCopyArgs).parse(jacsService.getArgsArray());
         return fileCopyArgs;
     }
 

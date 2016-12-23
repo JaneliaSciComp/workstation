@@ -35,17 +35,16 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
             preProcessExc.completeExceptionally(new IllegalArgumentException("No anatomical area found for " + serviceData));
             return preProcessExc;
         } else {
-            anatomicalArea
-                .map(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()).collect(Collectors.toList())).map(lsmFiles -> lsmFiles.stream().map(lf -> {
-                    JacsServiceData lsmMetadataServiceData =
+            anatomicalArea.map(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()).map(lsmImage -> {
+                JacsServiceData lsmMetadataServiceData =
                         new JacsServiceDataBuilder(serviceData)
-                                .setName("lsmMetadata")
-                                .addArg("-inputLSM", lf.getFilepath())
-                                .addArg("-outputLSMMetadata", getOutputFileName(sampleLsmMetadataArgs.outputDir, lf.getFilepath()))
+                                .setName("archivedLsmMetadata")
+                                .addArg("-archivedLSM", lsmImage.getFilepath())
+                                .addArg("-outputLSMMetadata", getOutputFileName(sampleLsmMetadataArgs.outputDir, lsmImage.getFilepath()))
                                 .build();
-                    jacsService.submitChildServiceAsync(lsmMetadataServiceData);
-                    return lsmMetadataServiceData.getId();
-                }));
+                jacsService.submitChildServiceAsync(lsmMetadataServiceData);
+                return lsmMetadataServiceData.getId();
+            }));
             return super.preProcessData(jacsService);
         }
     }
@@ -78,7 +77,7 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
 
     private CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
         CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = new CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs();
-        new JCommander(sampleLsmMetadataArgs).parse(jacsServiceData.getArgsAsArray());
+        new JCommander(sampleLsmMetadataArgs).parse(jacsServiceData.getArgsArray());
         return sampleLsmMetadataArgs;
     }
 

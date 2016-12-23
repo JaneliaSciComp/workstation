@@ -15,7 +15,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.util.Optional;
 
 @ApplicationScoped
 @Produces("application/json")
@@ -30,7 +29,7 @@ public class AsyncServiceInfoResource {
     @Consumes("application/json")
     public Response createAsyncService(@PathParam("service-name") String serviceName, JacsServiceData si) {
         si.setName(serviceName);
-        JacsServiceData newJacsServiceData = jacsServiceDataManager.submitServiceAsync(si, Optional.empty());
+        JacsServiceData newJacsServiceData = jacsServiceDataManager.submitServiceAsync(si);
         UriBuilder locationURIBuilder = UriBuilder.fromResource(ServiceInfoResource.class);
         locationURIBuilder.path(newJacsServiceData.getId().toString());
         return Response

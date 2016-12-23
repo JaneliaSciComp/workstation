@@ -63,7 +63,7 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
     }
 
     @Test
-    public void persistServiceHierarchy() {
+    public void persistServiceHierarchyOneAtATime() {
         JacsServiceData si1 = persistServiceWithEvents(createTestService("s1", "t1"));
         JacsServiceData retrievedSi1 = testDao.findById(si1.getId());
         assertThat(retrievedSi1, allOf(
@@ -106,6 +106,27 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         assertThat(s1Hierarchy.size(), equalTo(4));
         assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
         assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
+    }
+
+    @Test
+    public void persistServiceHierarchyAllAtOnce() {
+        JacsServiceData si1 = createTestService("s1", "t1");
+        JacsServiceData si1_1 = createTestService("s1.1", "t1.1");
+        JacsServiceData si1_2 = createTestService("s1.2", "t1.2");
+        JacsServiceData si1_2_1 = createTestService("s1.2.1", "t1.2.1");
+        si1.addChildService(si1_1);
+        si1.addChildService(si1_2);
+        si1_2.addChildService(si1_2_1);
+        testDao.saveServiceHierarchy(si1);
+
+        List<JacsServiceData> s1Hierarchy = testDao.findServiceHierarchy(si1.getId());
+        assertThat(s1Hierarchy.size(), equalTo(4));
+        assertThat(s1Hierarchy.subList(1, s1Hierarchy.size()), everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
+        assertThat(s1Hierarchy.get(0), Matchers.hasProperty("rootServiceId", Matchers.nullValue()));
+
+        List<JacsServiceData> s1_2Hierarchy = testDao.findServiceHierarchy(si1_2.getId());
+        assertThat(s1_2Hierarchy.size(), equalTo(2));
+        assertThat(s1_2Hierarchy, everyItem(Matchers.hasProperty("rootServiceId", equalTo(si1.getId()))));
     }
 
     @Test

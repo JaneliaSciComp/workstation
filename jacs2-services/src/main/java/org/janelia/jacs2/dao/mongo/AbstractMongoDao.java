@@ -22,6 +22,7 @@ import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,8 +109,20 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
 
     @Override
     public void save(T entity) {
-        entity.setId(idGenerator.generateId());
+        if (entity.getId() == null) {
+            entity.setId(idGenerator.generateId());
+        }
         mongoCollection.insertOne(entity);
+    }
+
+    public void saveAll(List<T> entities) {
+        Iterator<Number> idIterator = idGenerator.generateIdList(entities.size()).iterator();
+        entities.forEach(e -> {
+            if (e.getId() == null) {
+                e.setId(idIterator.next());
+            }
+        });
+        mongoCollection.insertMany(entities);
     }
 
     /**
@@ -134,6 +147,11 @@ public abstract class AbstractMongoDao<T extends HasIdentifier> extends Abstract
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public void updateAll(List<T> entities) {
+        entities.forEach(this::update);
     }
 
     @Override

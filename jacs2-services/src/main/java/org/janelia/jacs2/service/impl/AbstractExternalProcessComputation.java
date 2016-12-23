@@ -54,8 +54,8 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
         throw new IllegalArgumentException("Unsupported runner: " + whichRunner);
     }
 
-    protected abstract List<String> prepareCmdArgs(JacsServiceData jacsServiceData);
-    protected abstract Map<String, String> prepareEnvironment(JacsServiceData jacsServiceData);
+    protected abstract List<String> prepareCmdArgs(JacsService<R> jacsService);
+    protected abstract Map<String, String> prepareEnvironment(JacsService<R> jacsServiceData);
 
     protected Optional<String> getEnvVar(String varName) {
         return Optional.ofNullable(System.getenv(varName));
@@ -116,11 +116,10 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
 
     @Override
     public CompletionStage<JacsService<R>> processData(JacsService<R> jacsService) {
-        JacsServiceData serviceData = jacsService.getJacsServiceData();
-        List<String> args = prepareCmdArgs(serviceData);
-        Map<String, String> env = prepareEnvironment(serviceData);
-        return getProcessRunner(serviceData.getServiceType()).runCmd(
-                serviceData.getServiceCmd(),
+        List<String> args = prepareCmdArgs(jacsService);
+        Map<String, String> env = prepareEnvironment(jacsService);
+        return getProcessRunner(jacsService.getServiceType()).runCmd(
+                jacsService.getServiceCmd(),
                 args,
                 env,
                 this::outputStreamHandler,

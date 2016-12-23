@@ -35,4 +35,14 @@ public class JacsServiceDataPersistence extends AbstractDataPersistence<JacsServ
             daoSource.destroy(jacsServiceDataDao);
         }
     }
+
+    public void saveHierarchy(JacsServiceData jacsServiceData) {
+        JacsServiceDataDao jacsServiceDataDao = daoSource.get();
+        try {
+            jacsServiceDataDao.saveServiceHierarchy(jacsServiceData);
+        } finally {
+            daoSource.destroy(jacsServiceDataDao);
+        }
+    }
+
 }
