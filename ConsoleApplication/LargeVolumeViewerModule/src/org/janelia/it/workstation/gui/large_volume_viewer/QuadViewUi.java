@@ -477,11 +477,11 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener
                     Tiled3dSampleLocationProviderAcceptor originator =
                         helper.getSampleLocationProviderByName(LargeVolumeViewerLocationProvider.PROVIDER_UNIQUE_NAME);
                     RelocationMenuBuilder menuBuilder = new RelocationMenuBuilder();
-                    JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
+                    // JMenu navigateToHortaMenu = new JMenu("Navigate to this location in Horta");
                     for (JMenuItem navItem : menuBuilder.buildSyncMenu(locationProviders, originator, quadViewController.getLocationAcceptor())) {
-                        navigateToHortaMenu.add(navItem);
+                        result.add(navItem);
                     }
-                    result.add(navigateToHortaMenu);
+                    // result.add(navigateToHortaMenu);
 
                     return result;
                 }

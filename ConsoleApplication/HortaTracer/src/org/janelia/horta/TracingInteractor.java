@@ -35,6 +35,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,12 +47,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.JDialog;
+import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
+import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
-import org.janelia.console.viewerapi.BasicGenericObservable;
-import org.janelia.console.viewerapi.GenericObservable;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
@@ -63,12 +70,13 @@ import org.janelia.horta.actors.DensityCursorActor;
 import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
-import org.janelia.console.viewerapi.model.AppendNeuronVertexCommand;
-import org.janelia.console.viewerapi.model.CreateNeuronCommand;
+import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
 import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.model.MoveNeuronAnchorCommand;
+import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
 import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.model.VertexAdder;
+import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
+import org.janelia.console.viewerapi.commands.VertexAdder;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
@@ -109,6 +117,8 @@ public class TracingInteractor extends MouseAdapter
     // This is the new neuron cursor
     private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
     private Vector3 cachedDensityCursorXyz = null;
+    
+    private final NeuronModel anchorEditModel = new BasicNeuronModel("Interactive anchor edit view");
     
     private final UndoRedo.Manager undoRedoManager;
     
@@ -180,6 +190,9 @@ public class TracingInteractor extends MouseAdapter
         SpheresActor densityCursorActor = new DensityCursorActor(densityCursorModel);
         densityCursorActor.setMinPixelRadius(1.0f);
         result.add(densityCursorActor);
+        
+        SpheresActor anchorEditActor = new VertexHighlightActor(anchorEditModel);
+        result.add(anchorEditActor);
         
         return result;
     }
@@ -837,7 +850,7 @@ public class TracingInteractor extends MouseAdapter
                     parentVertex, 
                     parentAppendCmd,
                     densityVertex.getLocation(), 
-                    densityVertex.getRadius());
+                    parentVertex.getRadius());
             long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
                 long endExecuteTime = System.nanoTime();
@@ -981,6 +994,196 @@ public class TracingInteractor extends MouseAdapter
         
         public boolean selectParent() {
             return selectParentVertex(hoveredVertex, hoveredNeuron);
+        }
+
+        boolean canUpdateAnchorRadius() {
+            if (hoveredVertex == null) return false;
+            if (hoveredNeuron == null) return false;
+            return true;
+        }
+
+        boolean updateAnchorRadius() {
+            if (! canUpdateAnchorRadius()) {
+                return false;
+            }
+            
+            RadiusDialog radiusDialog = new RadiusDialog(hoveredNeuron, hoveredVertex);
+            Object selectedValue = radiusDialog.getValue();
+            int result = -1;
+            if (selectedValue == null) {
+                result = JOptionPane.CLOSED_OPTION;
+            }
+            else {
+                result = Integer.parseInt(selectedValue.toString());
+            }
+            
+            if ( result == JOptionPane.CANCEL_OPTION )
+            {
+                log.info("Radius dialog canceled");
+                radiusDialog.revertRadiusChange();
+                return false;
+            }
+            else if (result == JOptionPane.CLOSED_OPTION) {
+                log.info("Radius dialog closed");
+                radiusDialog.revertRadiusChange();
+                return false;                
+            }
+            else {
+                log.info("Radius dialog accepted");
+                radiusDialog.commitRadius();
+                return true;
+            }
+        }
+    }
+    
+    class RadiusDialog extends JOptionPane 
+    {
+        private final float radiusMin = 0.10f;
+        private final float radiusMax = 10.0f;
+        private final float logRadiusRange = (float)Math.log(radiusMax/radiusMin);
+        
+        private final JSlider slider;
+        private final int sliderMax = 100;
+        private final JFormattedTextField radiusField; 
+
+        private final float initialRadius;
+        private float currentRadius;
+        
+        private final NeuronVertex anchor;
+        private final NeuronModel neuron;
+        
+        private float radiusForSliderValue(int sliderValue) 
+        {
+            double intRatio = sliderValue / (double)sliderMax; // range 0-1
+            double logRadius = logRadiusRange * intRatio; // range 0-logRadiusRange
+            double radius = Math.exp(logRadius) * radiusMin;
+            return (float)radius;
+        }
+        
+        private int sliderValueForRadius(float radius) {
+            double radiusRatio = Math.log(radius / radiusMin) / logRadiusRange; // range 0-1
+            int sliderValue = (int)Math.round(radiusRatio * sliderMax);
+            return sliderValue;
+        }
+        
+        public void revertRadiusChange() {
+            anchor.setRadius(initialRadius);
+        }
+        
+        public void commitRadius() {
+            if (currentRadius == initialRadius)
+                return; // no change
+            String errorMessage = "Failed to adjust anchor radius";
+            UpdateNeuronAnchorRadiusCommand cmd = new UpdateNeuronAnchorRadiusCommand(neuron, anchor, initialRadius, currentRadius);
+            try {
+                if (cmd.execute()) {
+                    log.info("User adjusted anchor radius in Horta");
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+
+                    // repaint right now...
+                    highlightHoverModel.getVertexUpdatedObservable().setChanged();
+                    highlightHoverModel.getVertexUpdatedObservable().notifyObservers(null);
+                    return;
+                }
+            }
+            catch (Exception exc) {
+                errorMessage += ":\n" + exc.getMessage();
+            }
+            JOptionPane.showMessageDialog(
+                    volumeProjection.getMouseableComponent(),
+                    errorMessage,
+                    "Failed to adjust neuron anchor radius",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        public RadiusDialog(NeuronModel parentNeuron, NeuronVertex vertex) 
+        {
+            anchor = vertex;
+            neuron = parentNeuron;
+            initialRadius = vertex.getRadius();
+            currentRadius = initialRadius;
+            
+            // Populate a temporary little neuron model, to display current radius before comitting
+            anchorEditModel.getVertexes().clear();
+            anchorEditModel.getVertexes().add(anchor);
+            // Also add adjacent anchors TODO:
+            /*
+            for (NeuronEdge edge : neuron.getEdges()) {
+                for (NeuronVertex a : edge) {
+                    if (a == anchor)
+                }
+            }
+            */
+            anchorEditModel.getVertexUpdatedObservable().setChanged();
+            anchorEditModel.getVertexUpdatedObservable().notifyObservers(new VertexWithNeuron(anchor, anchorEditModel));
+            
+            slider = new JSlider();
+            slider.setMaximum(sliderMax);
+            slider.setValue(sliderValueForRadius(currentRadius));
+
+            slider.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(ChangeEvent e) {
+                    int sliderValue = slider.getValue();
+                    int oldValue = sliderValueForRadius(currentRadius);
+                    
+                    if (oldValue == sliderValue) {
+                        return; // no (significant) change
+                    }
+                    
+                    float newRadius = radiusForSliderValue(sliderValue);
+                    
+                    int sanityCheck = sliderValueForRadius(newRadius);
+                    if (sliderValue != sanityCheck) {
+                        log.error("Radius slider value {} diverged to {} with radius {}", sliderValue, sanityCheck, newRadius);
+                    }
+                    // log.info("Radius visually adjusted to {} micrometers", newRadius);
+                    
+                    anchor.setRadius(currentRadius);
+                    
+                    // Update the display only, by signalling change to the model, but not to the neuron (yet)
+                    anchorEditModel.getVertexUpdatedObservable().setChanged();
+                    anchorEditModel.getVertexUpdatedObservable().notifyObservers(new VertexWithNeuron(anchor, anchorEditModel));
+                    
+                    currentRadius = newRadius;
+                    radiusField.setValue(newRadius);
+                }
+            });
+            
+            NumberFormat radiusFormat = new DecimalFormat("#.##"); 
+            radiusField = new JFormattedTextField(radiusFormat);
+            radiusField.setValue(currentRadius);
+            radiusField.addPropertyChangeListener("value", new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    float newRadius = Float.parseFloat(radiusField.getValue().toString());
+                    if (newRadius < radiusMin)
+                        return;
+                    if (newRadius > radiusMax)
+                        return;
+                    int sliderValue = sliderValueForRadius(newRadius);
+                    if (sliderValue == slider.getValue())
+                        return;
+                    slider.setValue(sliderValue);
+                }
+            });
+            
+            setMessage(new Object[] {
+                "Adjust Radius for Neuron Anchor",
+                slider,
+                radiusField
+            });
+            setOptionType(JOptionPane.OK_CANCEL_OPTION);
+            
+            JDialog dialog = createDialog("Adjust Radius");
+            dialog.setVisible(true);
+            
+            // Turn off editing model after dialog is done displaying
+            anchorEditModel.getVertexes().clear();
+            anchorEditModel.getEdges().clear();
+            anchorEditModel.getVertexesRemovedObservable().setChanged();
+            anchorEditModel.getVertexesRemovedObservable().notifyObservers(null);
         }
     }
 

@@ -5,3 +5,6 @@ MouseLight
 * Synchronize Horta display after moving an anchor in LVV
 * Add ability to create new Neurons in Horta
 * Add ability to drag anchors in Horta
+* Reduce blackening of dim KTX intensities in Horta
+* Add ability to edit anchor radius in Horta
+* Synchronize LVV display after moving anchors in Horta

@@ -31,7 +31,15 @@ public class RESTClientManager {
     private static final String REMOTE_MOUSELIGHT_DATA_PREFIX = "mouselight/data";
     private static final String REMOTE_DATA_PREFIX = "data";
     private static final String REMOTE_PROCESS_PREFIX = "process";
+    
+    // Singleton
     private static RESTClientManager instance;
+    public static RESTClientManager getInstance() {
+        if (instance==null) {
+            instance = new RESTClientManager();
+        }
+        return instance;
+    }
 
     private Client client;
     private String serverUrl;
@@ -80,13 +88,6 @@ public class RESTClientManager {
         serviceEndpoints.put("sample", client.target(serverUrl  + REMOTE_DATA_PREFIX + "/sample"));
         serviceEndpoints.put("release", client.target(serverUrl  + REMOTE_PROCESS_PREFIX + "/release"));
         
-    }
-
-    public static RESTClientManager getInstance() {
-        if (instance==null) {
-            instance = new RESTClientManager();
-        }
-        return instance;
     }
 
     public WebTarget getMouselightEndpoint(String suffix) {

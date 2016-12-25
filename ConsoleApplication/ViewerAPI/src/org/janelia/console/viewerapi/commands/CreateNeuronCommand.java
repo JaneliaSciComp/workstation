@@ -28,11 +28,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.commands;
 
+import org.janelia.console.viewerapi.commands.VertexAdder;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
  * Seeds a new neuron with a single root anchor

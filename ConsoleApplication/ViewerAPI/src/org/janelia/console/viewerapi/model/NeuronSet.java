@@ -44,4 +44,7 @@ public interface NeuronSet extends Collection<NeuronModel>
     ObservableInterface getNameChangeObservable();
     String getName();
     NeuronModel createNeuron(String initialNeuronName);
+    
+    // NeuronVertex getAnchorClosestTo(float[] micronXYZ);
+    NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 }

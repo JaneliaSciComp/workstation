@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.browser.actions;
 
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -21,6 +23,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.integration.FrameworkImplProvider;
 import org.janelia.it.jacs.model.domain.DomainConstants;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -63,12 +66,12 @@ import org.janelia.it.workstation.browser.gui.listview.WrapperCreatorItemFactory
 import org.janelia.it.workstation.browser.gui.support.PopupContextMenu;
 import org.janelia.it.workstation.browser.nb_action.AddToFolderAction;
 import org.janelia.it.workstation.browser.nb_action.ApplyAnnotationAction;
+import org.janelia.it.workstation.browser.nb_action.SetPublishingNameAction;
 import org.janelia.it.workstation.browser.tools.ToolMgr;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.browser.workers.TaskMonitoringWorker;
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,6 +162,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         addPartialSecondaryDataDeletiontItem();
         add(getSampleCompressionTypeItem());
         add(getProcessingBlockItem());
+        add(getApplyPublishingNameItem());
         add(getMergeItem());
         
         setNextAddRequiresSeparator(true);
@@ -349,12 +353,12 @@ public class DomainObjectContextMenu extends PopupContextMenu {
                     final ApplyAnnotationAction action = ApplyAnnotationAction.get();
                     final String value = (String)JOptionPane.showInputDialog(mainFrame,
                             "Please provide details:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if (value==null || value.equals("")) return;
+                    if (StringUtils.isEmpty(value)) return;
 
                     SimpleWorker simpleWorker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            action.doAnnotation(domainObject, term, value);
+                            action.addAnnotation(domainObject, term, value);
                             String annotationValue = "";
                             List<Annotation> annotations = DomainMgr.getDomainMgr().getModel().getAnnotations(domainObject);
                             for (Annotation annotation : annotations) {
@@ -607,6 +611,20 @@ public class DomainObjectContextMenu extends PopupContextMenu {
         }
 
         return blockItem;
+    }
+
+    protected JMenuItem getApplyPublishingNameItem() {
+        
+        List<Sample> samples = new ArrayList<>();
+        for(DomainObject domainObject : domainObjectList) {
+            if (domainObject instanceof Sample) {
+                samples.add((Sample)domainObject);
+            }
+        }
+        
+        if (samples.size()!=domainObjectList.size()) return null;
+        
+        return getNamedActionItem(new SetPublishingNameAction(samples));
     }
 
     /** Allows users to rerun their own samples. */

@@ -337,6 +337,7 @@ public class ToolMgr extends PreferenceManager {
                     log.error("Could not open file path "+standardFilepath);
                     JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
                 else {
                     ToolInfo tmpTool = getToolMgr().getTool(tool);
@@ -370,11 +371,13 @@ public class ToolMgr extends PreferenceManager {
                         String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") does not exist.";
                         log.error(msg);
                         JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
                     } 
                     else if (! exeFile.canExecute()) {
                         String msg = "Tool " + tool + " (" + exeFile.getAbsolutePath() + ") cannot be executed.";
                         log.error(msg);
                         JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), msg, "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
                     }
 
                     final String exeCmd = cmd.toString();

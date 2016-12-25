@@ -28,52 +28,47 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.commands;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
+import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
  * Seeds a new neuron with a single root anchor
  * @author brunsc
  */
-public class MoveNeuronAnchorCommand 
+public class UpdateNeuronAnchorRadiusCommand 
 extends AbstractUndoableEdit
 implements UndoableEdit, Command
 {
     private final NeuronModel neuron;
     private final NeuronVertex anchor;
-    private final float[] initialCoordinates;
-    private final float[] finalCoordinates;
+    private final float initialRadius;
+    private final float finalRadius;
     
-    public MoveNeuronAnchorCommand(
+    public UpdateNeuronAnchorRadiusCommand(
             NeuronModel neuron,
             NeuronVertex anchor,
-            float[] destinationXyz)
+            float initialRadius,
+            float finalRadius)
     {
         this.neuron = neuron;
         this.anchor = anchor;
-        this.initialCoordinates = new float[] {
-            anchor.getLocation()[0],
-            anchor.getLocation()[1],
-            anchor.getLocation()[2]
-        };
-        this.finalCoordinates = new float[] {
-            destinationXyz[0],
-            destinationXyz[1],
-            destinationXyz[2]
-        };
+        this.initialRadius = initialRadius;
+        this.finalRadius = finalRadius;
     }
 
     @Override
     public boolean execute() {
-        return neuron.moveVertex(anchor, finalCoordinates);
+        return neuron.updateVertexRadius(anchor, finalRadius);
     }
 
     @Override
     public String getPresentationName() {
-        return "Move Neuron Anchor";
+        return "Update Neuron Anchor Radius";
     }
     
     @Override
@@ -86,6 +81,6 @@ implements UndoableEdit, Command
     @Override
     public void undo() {
         super.undo(); // raises exception if canUndo() is false
-        neuron.moveVertex(anchor, initialCoordinates);
+        neuron.updateVertexRadius(anchor, initialRadius);
     }
 }

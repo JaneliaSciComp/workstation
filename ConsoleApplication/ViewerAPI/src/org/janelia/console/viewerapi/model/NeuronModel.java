@@ -68,6 +68,7 @@ extends Hideable
     NeuronVertex appendVertex(NeuronVertex parentVertex, float[] micronXyz, float radius);
     boolean mergeNeurite(NeuronVertex source, NeuronVertex target);
     boolean moveVertex(NeuronVertex vertex, float[] micronXyz);
+    boolean updateVertexRadius(NeuronVertex vertex, float micronRadius);
     
     boolean deleteVertex(NeuronVertex doomedVertex);
 }
