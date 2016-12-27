@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.gui.geometric_search.viewer;
 
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3ShaderActionSequence;
-import org.janelia.it.workstation.gui.geometric_search.gl.GL3SimpleActor;
-import org.janelia.it.workstation.gui.opengl.GLResource;
+import org.janelia.it.workstation.gui.geometric_search.gl.GL4ShaderActionSequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +14,10 @@ import java.awt.event.*;
 /**
  * Created by murphys on 4/10/15.
  */
-public class GL3Viewer extends GLJPanel
+public class GL4Viewer extends GLJPanel
         implements MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(GL3Viewer.class);
+    private static final Logger logger = LoggerFactory.getLogger(GL4Viewer.class);
 
     protected static GLProfile profile = null;
     protected static GLCapabilities capabilities = null;
@@ -31,8 +29,8 @@ public class GL3Viewer extends GLJPanel
         ZOOM
     }
 
-    GL3Model model;
-    GL3Renderer renderer;
+    GL4Model model;
+    GL4Renderer renderer;
 
     protected Point previousMousePos;
     protected boolean bMouseIsDragging = false;
@@ -40,7 +38,7 @@ public class GL3Viewer extends GLJPanel
 
     static {
         try {
-            profile = GLProfile.get(GLProfile.GL3);
+            profile = GLProfile.get(GLProfile.GL4);
             capabilities = new GLCapabilities(profile);
         } catch ( Throwable th ) {
             profile = null;
@@ -51,7 +49,7 @@ public class GL3Viewer extends GLJPanel
 
     public JPopupMenu popupMenu;
 
-    public GL3Viewer() {
+    public GL4Viewer() {
         super(capabilities);
         popupMenu = new JPopupMenu();
         addMouseListener(this);
@@ -64,19 +62,22 @@ public class GL3Viewer extends GLJPanel
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
-        model=new GL3Model();
-        renderer=new GL3Renderer(model);
+        model=new GL4Model();
+        renderer=new GL4Renderer(model);
         addGLEventListener(renderer);
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-
+        maybeShowPopup(e);
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        if (bMouseIsDragging) {
+            bMouseIsDragging=false;
+        }
+        maybeShowPopup(e);
     }
 
     @Override
@@ -89,11 +90,11 @@ public class GL3Viewer extends GLJPanel
 
     }
 
-    public GL3Model getModel() {
+    public GL4Model getModel() {
         return model;
     }
 
-    public GL3Renderer getRenderer() { return renderer; }
+    public GL4Renderer getRenderer() { return renderer; }
 
     /** External addition to this conveniently-central popup menu. */
     public void addMenuAction( Action action ) {
@@ -118,7 +119,6 @@ public class GL3Viewer extends GLJPanel
 
     @Override
     public void actionPerformed(ActionEvent arg0) {
-        // System.out.println("reset view");
         resetView();
     }
 
@@ -134,7 +134,7 @@ public class GL3Viewer extends GLJPanel
     /**
      * Add any actor to this Mip as desired.
      */
-    public void addShaderAction(GL3ShaderActionSequence shaderAction) {
+    public void addShaderAction(GL4ShaderActionSequence shaderAction) {
         addActorToRenderer(shaderAction);
     }
 
@@ -200,10 +200,18 @@ public class GL3Viewer extends GLJPanel
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(GL3ShaderActionSequence shaderAction) {
+    private void addActorToRenderer(GL4ShaderActionSequence shaderAction) {
         synchronized ( this ) {
             renderer.addShaderAction(shaderAction);
-            renderer.resetView();
+            //renderer.resetView();
+        }
+    }
+
+    protected void maybeShowPopup(MouseEvent event)
+    {
+        if (event.isPopupTrigger()) {
+            popupMenu.show(event.getComponent(),
+                    event.getX(), event.getY());
         }
     }
 

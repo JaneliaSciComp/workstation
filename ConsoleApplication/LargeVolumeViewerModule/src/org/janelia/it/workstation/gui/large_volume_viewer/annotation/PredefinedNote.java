@@ -24,6 +24,9 @@ public enum PredefinedNote {
     // interesting point to return to later
     POINT_OF_INTEREST ("interesting"),
 
+    // somethign that needs review
+    REVIEW          ("review"),
+
     // end of branch that can't be traced further but
     //  is clearly not complete (biologically)
     PROBLEM_END     ("problem end")

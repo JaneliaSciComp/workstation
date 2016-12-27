@@ -20,8 +20,10 @@ import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.jacs.shared.mesh_loader.TriangleSource;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.jacs.shared.mesh_loader.wavefront_obj.OBJWriter;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.full_skeleton_view.data_source.AnnotationSkeletonDataSourceI;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.style.NeuronStyle;
@@ -76,21 +78,8 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             throw new Exception("Please set all model information before execution.");
         }
         
-        createVerticesAndBuffers();
-
-        // Build triangle sources and render buffers, from input neuron info.
-        Long sourceNumber = 0L;
-        for ( TriangleSource factory: triangleSources ) {
-            // Now have a full complement of triangles and vertices.  For this source, can traverse the
-            // vertices, making a "composite normal" based on the normals of all entangling triangles.
-            NormalCompositor normalCompositor = new NormalCompositor();
-            normalCompositor.combineCustomNormals(factory);
-            BufferPackager packager = new BufferPackager();
-            RenderBuffersBean rbb = renderIdToBuffers.get( sourceNumber );
-            rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
-            rbb.setIndexBuffer(packager.getIndices(factory));
-            sourceNumber++;
-        }
+        createVertices();
+        populateNormals(triangleSources, renderIdToBuffers);
         exportVertices(new File("/Users/fosterl/"), "NeuronTraceVtxAttribMgr_Test");
         
         return triangleSources;
@@ -109,16 +98,30 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
 
     @Override
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
-        OBJWriter objWriter = new OBJWriter();
         Skeleton skeleton = dataSource.getSkeleton();
         if (skeleton == null || skeleton.getAnchors().isEmpty()) {
             throw new IllegalStateException("Nothing to export.");
         }
         Anchor anAnchor = skeleton.getAnchors().iterator().next();
         Long id = anAnchor.getNeuronID();
+        exportVertices(outputLocation, filenamePrefix, triangleSources, id);
+    }
+    
+    /**
+     * This is a test-accessible function which does not rely on the skeleton
+     * as a data source.
+     * 
+     * @param outputLocation where to place file.
+     * @param filenamePrefix prefix for its name.
+     * @param triangleSources iterate for OBJ content.
+     * @param id also in the name
+     * @throws Exception thrown by called methods.
+     */
+    public void exportVertices(File outputLocation, String filenamePrefix, List<TriangleSource> triangleSources, Long id) throws Exception {
+        OBJWriter objWriter = new OBJWriter();
         for (TriangleSource triangleSource : triangleSources) {
             objWriter.writeVertices(
-                    outputLocation, 
+                    outputLocation,
                     filenamePrefix,
                     OBJWriter.FILE_SUFFIX,
                     id,
@@ -150,19 +153,49 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
     }
 
     /**
+     * Test accessible method which does not rely on skeleton data.  Will
+     * calculate the normal vectors for the triangles in the triangle source.
+     * 
+     * @param triangleSources iterated for normals data.
+     * @param renderIdToBuffers populated with normals data.
+     */
+    public void populateNormals(
+            List<TriangleSource> triangleSources,
+            Map<Long, RenderBuffersBean> renderIdToBuffers
+    ) {
+        Long sourceNumber = 0L;
+        BufferPackager packager = new BufferPackager();
+        for (TriangleSource factory : triangleSources) {
+            // Now have a full complement of triangles and vertices.  For this source, can traverse the
+            // vertices, making a "composite normal" based on the normals of all entangling triangles.
+            NormalCompositor normalCompositor = new NormalCompositor();
+            normalCompositor.combineCustomNormals(factory);
+            RenderBuffersBean rbb = renderIdToBuffers.get(sourceNumber);
+            if ( rbb == null ) {
+                rbb = new RenderBuffersBean();
+                renderIdToBuffers.put( sourceNumber, rbb );
+            }
+            rbb.setAttributesBuffer(packager.getVertexAttributes(factory));
+            rbb.setIndexBuffer(packager.getIndices(factory));
+            sourceNumber++;
+        }
+    }
+
+    /**
      * Here is where the 'model' is transformed into vertices and render
      * buffers.
      * 
      * @throws Exception 
      */
-    private synchronized void createVerticesAndBuffers() throws Exception {
+    private synchronized void createVertices() throws Exception {
         // Make triangle sources.
-		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(6, 8);
-        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(5, 4);
+		LineEnclosureFactory tracedSegmentEnclosureFactory = new LineEnclosureFactory(10, 3);
+        LineEnclosureFactory manualSegmentEnclosureFactory = new LineEnclosureFactory(8, 2);
         
         Set<SegmentIndex> voxelPathAnchorPairs = new HashSet<>();
-        
-		// Iterate over all the traced segments, and add enclosures for each.
+        TileFormat tileFormat = dataSource.getTileFormat();
+
+		// Iterate over all the traced segments, and add enclosures for each.           
         for ( AnchoredVoxelPath voxelPath: getSkeleton().getTracedSegments() ) {            
             final SegmentIndex segmentIndex = voxelPath.getSegmentIndex();
             if (segmentIndex == null) {
@@ -180,22 +213,46 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
             }
             Long neuronId = anchor.getNeuronID();
             NeuronStyle style = getNeuronStyle(neuronId);
-
-            double[] previousCoords = null; 
+            final float[] colorAsFloatArray = style.getColorAsFloatArray();
+            
+            double[] previousCoords = null;
+            VoxelPosition previousVoxelPos = null;
             for ( VoxelPosition voxelPos: voxelPath.getPath() ) {
+                TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                        new TileFormat.VoxelXyz(
+                                voxelPos.getX(),
+                                voxelPos.getY(),
+                                voxelPos.getZ()
+                        ),
+                        CoordinateAxis.Z
+                );
+                Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
                 double[] currentCoords = new double[] {
-                    voxelPos.getX(), voxelPos.getY(), voxelPos.getZ()
+                    v.getX(), v.getY(), v.getZ()
                 };
+                
                 if ( previousCoords != null ) {                    
-                    tracedSegmentEnclosureFactory.addEnclosure(
-                            previousCoords, currentCoords, style.getColorAsFloatArray()
-                    );
-                }                
+                    int coordsAdded = tracedSegmentEnclosureFactory.addEnclosure(
+                            previousCoords, currentCoords, colorAsFloatArray);
+                    if (coordsAdded == 0) {
+                        if (previousVoxelPos != null) {
+                            log.info("Encountered identical endpoints: " + fmtVoxelPos(previousVoxelPos) + ":" + fmtVoxelPos(voxelPos) + 
+                                     ".  Encountered identical converted coords: " + fmtCoords(previousCoords) + ":" + fmtCoords(currentCoords) +
+                                     ".  Found in segment index: " + voxelPath.getSegmentIndex() + ", and in neuron " + neuronId + ".");
+                        }
+                    }
+                }
                 previousCoords = currentCoords;
+                previousVoxelPos = voxelPos;
             }
         }
 
-        // Now get the lines.
+        // Now get the lines.  Must offset to latest vertex number, so that
+        // the triangle pointers are contiguous across factories.
+        manualSegmentEnclosureFactory.setCurrentVertexNumber(
+                tracedSegmentEnclosureFactory.getCurrentVertexNumber() 
+        );
+
         Collection<AnchorLinesReturn> anchorLines = getAnchorLines(voxelPathAnchorPairs);
         for ( AnchorLinesReturn anchorLine: anchorLines ) {            
             manualSegmentEnclosureFactory.addEnclosure(
@@ -203,30 +260,28 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                     anchorLine.getEnd(),
                     anchorLine.getStyle().getColorAsFloatArray()
             );
+            
+            //break; // TEMP: add only a single enclosure, so dump is easier to understand.
         }
 
 		// Add each factory to the collection.
 		triangleSources.add(tracedSegmentEnclosureFactory);
         triangleSources.add(manualSegmentEnclosureFactory);
 		
-		// Establish the indexes.
-		BufferPackager packager = new BufferPackager();
-        long i = 0;
-        for ( TriangleSource source: triangleSources ) {
-            RenderBuffersBean rbb = new RenderBuffersBean();
-            rbb.setAttributesBuffer(packager.getVertexAttributes(source));
-            rbb.setIndexBuffer(packager.getIndices(source));
+    }
+    
+    private String fmtVoxelPos( VoxelPosition pos ) {
+        return String.format("[%d,%d,%d]", pos.getX(), pos.getY(), pos.getZ());
+    }
 
-            rbb = new RenderBuffersBean();
-            renderIdToBuffers.put(i++, rbb);
-        }
+    private String fmtCoords(double[] coords) {
+        return String.format("[%f,%f,%f]", coords[0], coords[1], coords[2]);
     }
 
     private double[] toDoubleArr( Vec3 input ) {
         return new double[] { input.getX(), input.getY(), input.getZ() };
     }
     
-    //TODO return different value in collection.  Needs to have location and style.
     private Collection<AnchorLinesReturn> getAnchorLines(Set<SegmentIndex> tracedPathPairs) {
         Collection<AnchorLinesReturn> rtnVal = new ArrayList<>();
         int currentIndex = 0;
@@ -235,6 +290,7 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
         for (Anchor anchor: getSkeleton().getAnchors()) {
             anchorToIndex.put(anchor, currentIndex++);
         }
+        int tracedPairSkipCount = 0;
         for (Anchor anchor: getSkeleton().getAnchors()) {
             NeuronStyle style = getNeuronStyle(anchor.getNeuronID());
                     
@@ -251,12 +307,26 @@ public class NeuronTraceVtxAttribMgr implements VertexAttributeSourceI {
                         traceRtn.setEnd( toDoubleArr(neighbor.getLocation()) );
                         traceRtn.setStyle( style );
                         rtnVal.add( traceRtn );
+                        log.debug("Adding anchor line: " + i1 + "->" + i2);
+                    }
+                    else {
+                        log.debug("Skipped one line--i2 >= i1.  i1=" + i1 +", i2=" + i2);                        
                     }
                     existing.add( pathTestInx );
+                }
+                else {
+                    if (tracedPathPairs.contains(pathTestInx)) {
+                        log.debug("Skipped one line--in traced pairs: " + pathTestInx);
+                        tracedPairSkipCount ++;
+                    }
+                    else {
+                        log.debug("Skipped one line--existing: " + pathTestInx);
+                    }
                 }
             }
         }
         
+        log.debug("Skipped " + tracedPairSkipCount + " for being in a traced pair.");
         return rtnVal;
     }
 

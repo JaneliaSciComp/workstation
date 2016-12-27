@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.passive_3d;
 import org.janelia.it.workstation.gui.static_view.*;
 import org.janelia.it.workstation.gui.passive_3d.shader.SnapshotShader;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +72,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     public void init( GLAutoDrawable glDrawable ) {
         logger.info("Ensuring initialization takes place....");
         super.init( glDrawable );
-        super.bIsInitialized = true;
+        //super.bIsInitialized = true;
     }
 
     @Override
@@ -84,6 +85,10 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
 
         if (!bIsInitialized) {
             init(glDrawable);
+            // Check again after.  Could have failed.
+            if (!bIsInitialized) {
+                return;
+            }
         }
 
         GL2 gl = glDrawable.getGL().getGL2();

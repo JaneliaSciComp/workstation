@@ -7,7 +7,6 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.CreateOntologyTermAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationTermAction;
-import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
@@ -25,13 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class OntologyContextMenu extends EntityContextMenu {
 
-    protected static final Browser browser = SessionMgr.getBrowser();
-
     // Current selection
     protected final OntologyElement ontologyElement;
-
-    // Internal state
-    protected boolean nextAddRequiresSeparator = false;
 
     public OntologyContextMenu(RootedEntity rootedEntity, OntologyElement ontologyElement) {
         super(rootedEntity);
@@ -45,7 +39,6 @@ public class OntologyContextMenu extends EntityContextMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
-        add(getPermissionItem());
         setNextAddRequiresSeparator(true);
         add(getAssignShortcutItem());
         add(getAddItemMenu());
@@ -124,35 +117,5 @@ public class OntologyContextMenu extends EntityContextMenu {
             }
         };
         return getActionItem(action);
-    }
-
-    @Override
-    public JMenuItem add(JMenuItem menuItem) {
-
-        if (menuItem == null)
-            return null;
-
-        if ((menuItem instanceof JMenu)) {
-            JMenu menu = (JMenu) menuItem;
-            if (menu.getItemCount() == 0)
-                return null;
-        }
-
-        if (nextAddRequiresSeparator) {
-            addSeparator();
-            nextAddRequiresSeparator = false;
-        }
-
-        return super.add(menuItem);
-    }
-
-    public JMenuItem add(JMenu menu, JMenuItem menuItem) {
-        if (menu == null || menuItem == null)
-            return null;
-        return menu.add(menuItem);
-    }
-
-    public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
-        this.nextAddRequiresSeparator = nextAddRequiresSeparator;
     }
 }

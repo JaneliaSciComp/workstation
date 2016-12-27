@@ -67,6 +67,7 @@ public class TaskMonitoringWorker extends BackgroundWorker {
         return task;
     }
     
+    @Override
     public String getName() {
         if (task==null) return "None";
         return task.getDisplayName();

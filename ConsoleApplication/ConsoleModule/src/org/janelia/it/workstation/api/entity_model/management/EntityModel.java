@@ -338,7 +338,12 @@ public class EntityModel {
         // Reload the entity and stick it into the cache
         Entity canonicalEntity = null;
         try {
-            canonicalEntity = putOrUpdate(entityFacade.getEntityById(entity.getId()));
+            canonicalEntity = entityFacade.getEntityById(entity.getId());
+            if (canonicalEntity==null) {
+                log.warn("Entity no longer exists: "+entity.getId());
+                return;
+            }
+            canonicalEntity = putOrUpdate(entity);
             log.debug("Got new canonical entity: {}", EntityUtils.identify(canonicalEntity));
         }
         catch (Exception e) {

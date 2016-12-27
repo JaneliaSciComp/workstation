@@ -6,15 +6,13 @@ import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
-import org.janelia.it.jacs.shared.mesh_loader.RenderBuffersBean;
 import org.janelia.it.workstation.gui.viewer3d.mesh.shader.MeshDrawShader;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.reportError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.*;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.Map;
 import org.janelia.it.jacs.shared.mesh_loader.VertexAttributeSourceI;
 import org.janelia.it.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.it.workstation.gui.viewer3d.matrix_support.MatrixManager;
@@ -41,16 +39,10 @@ public class MeshDrawActor implements GLActor {
     private static Logger logger = LoggerFactory.getLogger( MeshDrawActor.class );
 
     private boolean bBuffersNeedUpload = true;
-    private boolean bIsInitialized;
-    private int inxBufferHandle;
-    private int vtxAttribBufferHandle = -1;
     private int vertexAttributeLoc = -1;
     private int normalAttributeLoc = -1;
     private int colorAttributeLoc = -1;
     
-    private BoundingBox3d boundingBox;
-    private int indexCount;
-
     private MeshDrawActorConfigurator configurator;
 
     private MeshDrawShader shader;
@@ -74,6 +66,8 @@ public class MeshDrawActor implements GLActor {
         private double[] axisLengths;
         private MatrixScope matrixScope = MatrixScope.EXTERNAL;
         private ColoringStrategy coloringStrategy = ColoringStrategy.UNIFORM;
+        private BoundingBox3d boundingBox;
+        private BufferUploader bufferUploader;
 
         public void setAxisLengths( double[] axisLengths ) {
             this.axisLengths = axisLengths;
@@ -142,6 +136,34 @@ public class MeshDrawActor implements GLActor {
             this.matrixScope = matrixScope;
         }
 
+        /**
+         * @return the boundingBox
+         */
+        public BoundingBox3d getBoundingBox() {
+            return boundingBox;
+        }
+
+        /**
+         * @param boundingBox the boundingBox to set
+         */
+        public void setBoundingBox(BoundingBox3d boundingBox) {
+            this.boundingBox = boundingBox;
+        }
+
+        /**
+         * @return the bufferUploader
+         */
+        public BufferUploader getBufferUploader() {
+            return bufferUploader;
+        }
+
+        /**
+         * @param bufferUploader the bufferUploader to set
+         */
+        public void setBufferUploader(BufferUploader bufferUploader) {
+            this.bufferUploader = bufferUploader;
+        }
+
     }
 
     @Override
@@ -174,30 +196,48 @@ public class MeshDrawActor implements GLActor {
                 }
                 // Uploading buffers sufficient to draw the mesh.
                 //   Gonna dance this mesh a-round...
-                initializeShaderValues(gl);
-                uploadBuffers(gl);
-
+                if (! initializeShaderValues(gl) ) {
+                    bBuffersNeedUpload = true;
+                    return;
+                }
+                dropBuffers(gl);
+                configurator.getBufferUploader().uploadBuffers(gl);
+            } catch ( BufferStateException bse ) {
+                // Failure at this level.  Need to do this again.
+                bBuffersNeedUpload = true;
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
         }
 
-        // tidy up
-        bIsInitialized = true;
     }
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        if (! bBuffersNeedUpload && shader == null) {
+            // Cover strange, overlapping-display-attempts case.
+            return;
+        }
+        BufferUploader bufferUploader = configurator.getBufferUploader();
         if (bBuffersNeedUpload) {
             init(glDrawable);
+            if (bBuffersNeedUpload) {
+                // Implies the initialization failed.  Do nothing further.
+                return;
+            }
         }
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
-        reportError(gl, "Display of mesh-draw-actor upon entry");
+        if (reportError(gl, "Display of mesh-draw-actor upon entry"))
+            return;
 
         gl.glEnable(GL2GL3.GL_DEPTH_TEST);
         gl.glDepthFunc(GL2GL3.GL_LESS);
 
-        reportError( gl, "Display of mesh-draw-actor render characteristics" );
+        gl.glFrontFace(GL2.GL_CCW);
+        gl.glEnable(GL2.GL_CULL_FACE);
+
+        if (reportError( gl, "Display of mesh-draw-actor render characteristics" ))
+            return;
 
         // Draw the little triangles.
         tempBuffer.rewind();
@@ -205,8 +245,9 @@ public class MeshDrawActor implements GLActor {
         int oldProgram = tempBuffer.get();
 
         gl.glUseProgram( shader.getShaderProgram() );
-        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
-        reportError( gl, "Display of mesh-draw-actor 1" );
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, bufferUploader.getVtxAttribBufferHandle());
+        if (reportError( gl, "Display of mesh-draw-actor 1" ))
+            return;
         
         if (matrixManager != null)
             matrixManager.recalculate(gl);
@@ -217,57 +258,66 @@ public class MeshDrawActor implements GLActor {
         mdShader.setUniformMatrix4v(gl, PROJECTION_UNIFORM_NAME, false, context.getPerspectiveMatrix());
         mdShader.setUniformMatrix4v(gl, MODEL_VIEW_UNIFORM_NAME, false, context.getModelViewMatrix());
         mdShader.setUniformMatrix4v(gl, NORMAL_MATRIX_UNIFORM_NAME, false, vms.computeNormalMatrix(context.getModelViewMatrix()));
-        reportError(gl, "Pushing matrix uniforms.");
+        if (reportError(gl, "Pushing matrix uniforms."))
+            return;
         shader.setColorByAttribute(gl, true);
-        reportError(gl, "Telling shader to use attribute coloring.");
+        if (reportError(gl, "Telling shader to use attribute coloring."))
+            return;
 
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
-        gl.glEnableVertexAttribArray(vertexAttributeLoc);
-
         int numberFloatsInStride = 6;
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
             numberFloatsInStride += 3;
         }
         int stride = numberFloatsInStride * BYTES_PER_FLOAT;
+        logger.debug("Stride for upload is " + stride);
         int storagePerVertex = 3 * BYTES_PER_FLOAT;
-        int storagePerVertexNormal = 2 * 3 * BYTES_PER_FLOAT;
+        int storagePerVertexNormal = 2 * storagePerVertex;
 
+        gl.glEnableVertexAttribArray(vertexAttributeLoc);
         gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
-        reportError( gl, "Display of mesh-draw-actor 2" );
+        if (reportError( gl, "Display of mesh-draw-actor 2" ))
+            return;
 
         // 3 floats per normal. Stride is size of all data combined, offset to first is 1 vertex worth.
         gl.glEnableVertexAttribArray(normalAttributeLoc);
         gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertex);
-        reportError( gl, "Display of mesh-draw-actor 3" );
+        if (reportError( gl, "Display of mesh-draw-actor 3" ))
+            return;
 
         if (configurator.getColoringStrategy() == ColoringStrategy.ATTRIBUTE) {
+            logger.debug("Also doing color attribute.");
             // 3 floats per color. Stride is size of all data combined, offset to first is 1 vertex + 1 normal worth.
             gl.glEnableVertexAttribArray(colorAttributeLoc);
             gl.glVertexAttribPointer(colorAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertexNormal);
-            reportError(gl, "Display of mesh-draw-actor 3-opt");
+            if (reportError(gl, "Display of mesh-draw-actor 3-opt"))
+                return;
 
         }
-        gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        reportError(gl, "Display of mesh-draw-actor 4.");
+        gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, bufferUploader.getInxBufferHandle() );
+        if (reportError(gl, "Display of mesh-draw-actor 4."))
+            return;
 
         // One triangle every three indices.  But count corresponds to the number of vertices.
-        gl.glDrawElements( GL2.GL_TRIANGLES, indexCount, GL2.GL_UNSIGNED_INT, 0 );
-        reportError( gl, "Display of mesh-draw-actor 5" );
+        gl.glDrawElements( GL2.GL_TRIANGLES, bufferUploader.getIndexCount(), GL2.GL_UNSIGNED_INT, 0 );
+        if (reportError( gl, "Display of mesh-draw-actor 5" ))
+            return;
 
         gl.glUseProgram( oldProgram );
 
-        reportError(gl, "mesh-draw-actor, end of display.");
+        if (reportError(gl, "mesh-draw-actor, end of display."))
+            return;
         gl.glDisable( GL2.GL_DEPTH_TEST );
 
     }
 
     @Override
     public BoundingBox3d getBoundingBox3d() {
-        if ( boundingBox == null ) {
+        if ( configurator.getBoundingBox() == null ) {
             setupBoundingBox();
         }
-        return boundingBox;
+        return configurator.getBoundingBox();
     }
 
     @Override
@@ -279,7 +329,8 @@ public class MeshDrawActor implements GLActor {
         bBuffersNeedUpload = true;
     }
 
-    private void initializeShaderValues(GL2GL3 gl) {
+    private boolean initializeShaderValues(GL2GL3 gl) {
+        boolean rtnVal = true;
         try {
             shader = new MeshDrawShader();
             shader.init( gl.getGL2() );
@@ -299,9 +350,9 @@ public class MeshDrawActor implements GLActor {
 
         } catch ( AbstractShader.ShaderCreationException sce ) {
             sce.printStackTrace();
-            throw new RuntimeException( sce );
+            rtnVal = false;
         }
-
+        return rtnVal;
     }
 
     /** Use axes from caller to establish the bounding box. */
@@ -314,10 +365,10 @@ public class MeshDrawActor implements GLActor {
 
         result.include(half.minus());
         result.include(half);
-        boundingBox = result;
+        configurator.setBoundingBox(result);
     }
 
-    private void setColoring(GL2GL3 gl) {
+    private void setColoring(GL2GL3 gl) throws AbstractShader.ShaderCreationException {
         // Must upload the color value for display, at init time.
         //TODO get a meaningful coloring.
         this.tempBuffer.rewind();
@@ -334,112 +385,15 @@ public class MeshDrawActor implements GLActor {
         }
         gl.glUseProgram(oldShader);
 
-        reportError( gl, "Set coloring." );
-    }
-
-    private void uploadBuffers(GL2GL3 gl) {
-        dropBuffers(gl);
-        // Push the coords over to GPU.
-        // Make handles for subsequent use.
-        int[] handleArr = new int[ 1 ];
-        gl.glGenBuffers( 1, handleArr, 0 );
-        vtxAttribBufferHandle = handleArr[ 0 ];
-
-        gl.glGenBuffers( 1, handleArr, 0 );
-        inxBufferHandle = handleArr[ 0 ];
-
-        reportError( gl, "Bind buffer" );
-        final Map<Long, RenderBuffersBean> renderIdToBuffers =
-                configurator.getVertexAttributeManager().getRenderIdToBuffers();
-        long combinedVtxSize = 0L;
-        long combinedInxSize = 0L;
-        
-        // One pass for size.
-        for ( Long renderId: renderIdToBuffers.keySet() ) {
-            RenderBuffersBean buffersBean = renderIdToBuffers.get(renderId);
-            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
-            if (attribBuffer != null  &&  attribBuffer.capacity() > 0) {
-                long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
-                combinedVtxSize += bufferBytes;
-
-                IntBuffer inxBuf = buffersBean.getIndexBuffer();
-                bufferBytes = inxBuf.capacity() * BYTES_PER_INT;
-                combinedInxSize += bufferBytes;
-                logger.info("Found attributes for {}.", renderId);
-            }
-            else {
-                logger.warn("No attributes for renderer id: {}.", renderId);
-            }
+        if (reportError( gl, "Set coloring." )) {
+            throw new AbstractShader.ShaderCreationException("Failed to set coloring");
         }
-        
-        logger.info("Allocating buffers");
-        
-        // Allocate enough remote buffer data for all the vertices/attributes
-        // to be thrown across in segments.
-        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
-        gl.glBufferData(
-                GL2GL3.GL_ARRAY_BUFFER,
-                combinedVtxSize,
-                null,
-                GL2GL3.GL_STATIC_DRAW
-        );
-        reportError(gl, "Allocate Vertex Buffer");
-        
-        // Allocate enough remote buffer data for all the indices to be
-        // thrown across in segments.
-        gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-        gl.glBufferData(
-                GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                combinedInxSize,
-                null,
-                GL2GL3.GL_STATIC_DRAW
-        );
-        reportError(gl, "Allocate Index Buffer");
-
-        long verticesOffset = 0;
-        long indicesOffset = 0;
-        logger.info("Buffers allocated.");
-        for ( Long renderId: renderIdToBuffers.keySet() ) {
-            RenderBuffersBean buffersBean = renderIdToBuffers.get( renderId );
-            FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
-            if (attribBuffer != null  &&  attribBuffer.capacity() > 0) {
-                long bufferBytes = (long) (attribBuffer.capacity() * (BYTES_PER_FLOAT));
-                attribBuffer.rewind();
-                gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
-                reportError(gl, "Bind Attribs Buf");
-                logger.info("Uploading chunk of vertex attributes data.");
-                gl.glBufferSubData(
-                        GL2GL3.GL_ARRAY_BUFFER,
-                        verticesOffset,
-                        bufferBytes,
-                        attribBuffer
-                );
-                verticesOffset += bufferBytes;
-                reportError(gl, "Buffer Data");
-
-                IntBuffer inxBuf = buffersBean.getIndexBuffer();
-                inxBuf.rewind();
-                indexCount += inxBuf.capacity();
-                bufferBytes = (long) (inxBuf.capacity() * BYTES_PER_INT);
-
-                gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
-                reportError(gl, "Bind Inx Buf");
-                logger.info("Uploading chunk of element array.");
-                gl.glBufferSubData(
-                        GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
-                        bufferBytes,
-                        indicesOffset,
-                        inxBuf
-                );
-                indicesOffset += bufferBytes;
-                reportError(gl, "Upload index buffer segment.");
-            }
-        }
-
-        //configurator.getVertexAttributeManager().close();
     }
-
+    
     protected void dropBuffers(GL2GL3 gl) {
+        BufferUploader bufferUploader = configurator.getBufferUploader();
+        int vtxAttribBufferHandle = bufferUploader.getVtxAttribBufferHandle();
+        int inxBufferHandle = bufferUploader.getInxBufferHandle();
         if (vtxAttribBufferHandle > -1) {
             gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
             tempBuffer.rewind();
@@ -447,6 +401,7 @@ public class MeshDrawActor implements GLActor {
             tempBuffer.rewind();
             gl.glDeleteBuffers(1, tempBuffer);
             gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, 0);
+            reportError( gl, "Drop Vertex Buffer");
         }
         if (inxBufferHandle > -1) {
             gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
@@ -455,16 +410,7 @@ public class MeshDrawActor implements GLActor {
             tempBuffer.rewind();
             gl.glDeleteBuffers(1, tempBuffer);
             gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, 0);
-        }
-    }
-
-    private void reportError(GL gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
+            reportError( gl, "Drop Index Buffer");
         }
     }
 

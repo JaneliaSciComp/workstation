@@ -44,8 +44,6 @@ public class LineEnclosureFactoryTest {
     @Test
     public void hexagonalPrismEnclosure() {
         LineEnclosureFactory factory = new LineEnclosureFactory( 6, 16.0 );
-        double[] startingCoords;
-        double[] endingCoords;
         
         int totalCoordCount = 0;
 		double[] origin = {0,0,0};

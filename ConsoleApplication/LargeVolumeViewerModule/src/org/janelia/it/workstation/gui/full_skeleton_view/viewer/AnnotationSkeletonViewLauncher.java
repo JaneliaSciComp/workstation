@@ -49,7 +49,10 @@ public class AnnotationSkeletonViewLauncher {
     }
     
     private void refreshView() {
-        getTopComponent().componentOpened();
+        AnnotationSkeletalViewTopComponent comp = getTopComponent();
+        if (comp == null) 
+            return;
+        comp.componentOpened();
     }
 
     protected AnnotationSkeletalViewTopComponent getTopComponent() {

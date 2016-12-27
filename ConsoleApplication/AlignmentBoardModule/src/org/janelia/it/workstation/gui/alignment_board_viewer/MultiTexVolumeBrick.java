@@ -122,9 +122,14 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         }
 
         GL2 gl = glDrawable.getGL().getGL2();
-        reportError( gl, "mult-tex init upon entry" );
+        if (reportError( gl, "mult-tex init upon entry" )) {
+            return;
+        }
 
-        initMediators( gl );
+        // Initialization of mediators has failed.  Await next cycle.
+        if (! initMediators( gl )) {
+            return;
+        }
         if (bUseSyntheticData) {
             createSyntheticData();
         }
@@ -132,17 +137,23 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         gl.glEnable(GL2.GL_TEXTURE_3D);
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
-            reportError( gl, "init mux brick - upload signal" );
+            if (reportError( gl, "init mux brick - upload signal" )) {
+                return;
+            }
         }
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
-                reportError( gl, "init mux brick - upload mask" );
+                if (reportError( gl, "init mux brick - upload mask" )) {
+                    return;
+                }
             }
 
             if ( colorMapTextureMediator != null  &&  bColorMapTextureNeedsUpload ) {
                 uploadColorMapTexture(gl);
-                reportError( gl, "init mux brick - upload color" );
+                if (reportError( gl, "init mux brick - upload color" )) {
+                    return;
+                }
             }
 
             try {
@@ -150,7 +161,9 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                         signalTextureMediator, maskTextureMediator, colorMapTextureMediator
                 );
                 volumeBrickShader.init(gl);
-                reportError( gl, "init mux brick - shader" );
+                if (reportError( gl, "init mux brick - shader" )) {
+                    return;
+                }
             } catch ( ShaderCreationException ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
@@ -162,12 +175,15 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                 bufferManager.buildBuffers();
                 reportError( gl, "building buffers" );
 
-                bufferManager.enableBuffers( gl );
-                reportError( gl, "uploading buffers" );
-                bufferManager.dropBuffers();
+                if (! bufferManager.enableBuffers( gl )) {
+                    logger.error("Failed to enable buffers");
+                }
+                else {
+                    bufferManager.dropBuffers();
 
-                bBuffersNeedUpload = false;
-                reportError( gl, "init mux brick - buffers" );
+                    bBuffersNeedUpload = false;
+                    reportError(gl, "init mux brick - buffers");
+                }
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
@@ -373,18 +389,24 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
             a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
 
-        setupSignalTexture(gl);
-        setupMaskingTexture(gl);
-        setupColorMapTexture(gl);
-        reportError( gl, "Volume Brick, display vol slices - setup tex's" );
+        if (setupSignalTexture(gl) &&
+            setupMaskingTexture(gl) &&
+            setupColorMapTexture(gl)) {
+            
+            // If principal axis points away from viewer, draw slices front to back,
+            // instead of back to front.
+            double direction = 1.0; // points away from viewer, render back to front, n to 0
+            if (vv.get(a1.index()) < 0.0) {
+                direction = -1.0; // points toward, front to back, 0 to n
+            }
+            bufferManager.draw(gl, a1, direction);
+            reportError(gl, "Volume Brick, after draw.");            
+        }
+        else {
+            logger.error("Volume Brick, display vol slices - failed setup tex's" );
+            return;
+        }
 
-        // If principal axis points away from viewer, draw slices front to back,
-        // instead of back to front.
-        double direction = 1.0; // points away from viewer, render back to front, n to 0
-        if (vv.get(a1.index()) < 0.0)
-            direction = -1.0; // points toward, front to back, 0 to n
-        bufferManager.draw( gl, a1, direction );
-        reportError(gl, "Volume Brick, after draw.");
 
     }
 
@@ -405,8 +427,11 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         volumeModel.addUpdateListener(updateVolumeListener);
     }
 
-    private void initMediators( GL2 gl ) {
+    private boolean initMediators( GL2 gl ) {
         textureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
+        if (reportError(gl, "Generating tex ids")) {
+            return false;
+        }
         if ( signalTextureMediator != null ) {
             signalTextureMediator.init( textureIds[ 0 ], TextureMediator.SIGNAL_TEXTURE_OFFSET );
         }
@@ -416,6 +441,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         if ( colorMapTextureMediator != null  &&  textureIds.length >= 3 ) {
             colorMapTextureMediator.init( textureIds[ 2 ], TextureMediator.COLOR_MAP_TEXTURE_OFFSET );
         }
+        return true;
     }
 
     private void createSyntheticData() {
@@ -448,7 +474,9 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private void uploadSignalTexture(GL2 gl) {
         if ( signalTextureMediator != null ) {
             signalTextureMediator.deleteTexture( gl );
-            signalTextureMediator.uploadTexture( gl );
+            if (! signalTextureMediator.uploadTexture( gl )) {
+                return;
+            }        
         }
         bSignalTextureNeedsUpload = false;
     }
@@ -457,7 +485,9 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private void uploadMaskingTexture(GL2 gl) {
         if ( maskTextureMediator != null ) {
             maskTextureMediator.deleteTexture( gl );
-            maskTextureMediator.uploadTexture( gl );
+            if (! maskTextureMediator.uploadTexture( gl )) {
+                return;
+            }
         }
         bMaskTextureNeedsUpload = false;
     }
@@ -465,27 +495,35 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private void uploadColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null ) {
             colorMapTextureMediator.deleteTexture( gl );
-            colorMapTextureMediator.uploadTexture( gl );
+            if (! colorMapTextureMediator.uploadTexture( gl )) {
+                return;
+            }
         }
         bColorMapTextureNeedsUpload = false;
     }
 
-    private void setupMaskingTexture(GL2 gl) {
+    private boolean setupMaskingTexture(GL2 gl) {
+        boolean rtnVal = true;
         if ( maskTextureMediator != null ) {
-            maskTextureMediator.setupTexture( gl );
+            rtnVal = maskTextureMediator.setupTexture( gl );
         }
+        return rtnVal;
     }
 
-    private void setupSignalTexture(GL2 gl) {
+    private boolean setupSignalTexture(GL2 gl) {
+        boolean rtnVal = true;
         if ( signalTextureMediator != null ) {
-            signalTextureMediator.setupTexture( gl );
+            rtnVal = signalTextureMediator.setupTexture( gl );
         }
+        return rtnVal;
     }
 
-    private void setupColorMapTexture(GL2 gl) {
+    private boolean setupColorMapTexture(GL2 gl) {
+        boolean rtnVal = true;
         if ( colorMapTextureMediator != null ) {
-            colorMapTextureMediator.setupTexture( gl );
+            rtnVal = colorMapTextureMediator.setupTexture( gl );
         }
+        return rtnVal;
     }
 
     /** DEBUG code to help understand what is happening with vtx or tex points. */

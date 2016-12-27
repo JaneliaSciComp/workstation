@@ -45,7 +45,12 @@ class MipRenderer
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );
         double unitsPerPixel = glUnitsPerPixel();
-        Vec3 c = f.plus(rotation.times(getVolumeModel().getCameraDepth().times(unitsPerPixel)));
+        Vec3 cameraDepth = getVolumeModel().getCameraDepth();
+        if (cameraDepth == null) {
+            cameraDepth = new Vec3(0, 0, f.getZ());
+            getVolumeModel().setCameraDepth( cameraDepth ); 
+        }
+        Vec3 c = f.plus(rotation.times(cameraDepth.times(unitsPerPixel)));
         gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground

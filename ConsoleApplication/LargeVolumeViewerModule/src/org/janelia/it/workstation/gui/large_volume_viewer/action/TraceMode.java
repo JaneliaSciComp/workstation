@@ -13,6 +13,7 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
@@ -22,8 +23,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
@@ -461,14 +460,16 @@ implements MouseMode, KeyListener
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
+		Anchor nextParent = skeletonActor.getNextParent();
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
-			Anchor parentAnchor = skeletonActor.getNextParent();
-			if (parentAnchor != null) {
-                skeleton.deleteLinkRequest(parentAnchor);
+			if (nextParent != null) {
+                skeleton.deleteLinkRequest(nextParent);
 			}
 			break;
+		/*
+		// disabling history nav for now
 		case KeyEvent.VK_LEFT:
 			// System.out.println("back");
 			historyAnchor = skeleton.getHistory().back();
@@ -477,9 +478,43 @@ implements MouseMode, KeyListener
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
 			break;
+		*/
+		case KeyEvent.VK_LEFT:
+			if (nextParent != null) {
+				if (event.isAltDown()) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.ROOTWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ROOTWARD_JUMP);
+				}
+			}
+			break;
+		case KeyEvent.VK_RIGHT:
+			if (nextParent != null) {
+				if (event.isAltDown()) {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_STEP);
+				} else {
+					controller.navigationRelative(nextParent.getGuid(),
+							TmNeuron.AnnotationNavigationDirection.ENDWARD_JUMP);
+				}
+			}
+			break;
+		case KeyEvent.VK_UP:
+			if (nextParent != null) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.PREV_PARALLEL);
+			}
+			break;
+		case KeyEvent.VK_DOWN:
+			if (nextParent != null) {
+				controller.navigationRelative(nextParent.getGuid(),
+						TmNeuron.AnnotationNavigationDirection.NEXT_PARALLEL);
+			}
+			break;
 		case KeyEvent.VK_A:
 			// add/edit note dialog
-			Anchor nextParent = skeletonActor.getNextParent();
 			if (nextParent != null) {
 				skeleton.addEditNoteRequest(nextParent);
 			}

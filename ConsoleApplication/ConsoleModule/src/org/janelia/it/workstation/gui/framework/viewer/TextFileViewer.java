@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import java.net.URL;
+import java.io.File;
+import java.io.FileReader;
 
 import org.apache.commons.io.IOUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -21,7 +22,7 @@ public class TextFileViewer extends TextViewer {
     @Override
     public String getText(RootedEntity rootedEntity) throws Exception {
         String filepath = rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-        URL fileURL = SessionMgr.getURL(filepath);
-        return IOUtils.toString(fileURL.openStream(), "UTF-8");
+        File file = SessionMgr.getCachedFile(filepath, false);
+        return IOUtils.toString(new FileReader(file));
     }
 }
