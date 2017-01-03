@@ -310,6 +310,9 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                         TreeNode originalParent = originalParentNode.getTreeNode();
                         originalParents.add(originalParent);
                     }
+                    else {
+                        originalParents.add(null);
+                    }
                 }
                 
                 List<DomainObject> toAdd = new ArrayList<>();
@@ -321,7 +324,9 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                     DomainObject domainObject = node.getDomainObject();
                     
                     TreeNode originalParent = originalParents.get(i);
-                    log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
+                    if (originalParent!=null) {
+                        log.trace("{} has parent {}",newParent.getId(),originalParent.getId());
+                    }
 
                     if (domainObject.getId().equals(newParent.getId())) {
                         log.info("Cannot move a node into itself: {}",domainObject.getId());
@@ -334,7 +339,7 @@ public class TreeNodeNode extends DomainObjectNode<TreeNode> {
                     log.info("Pasting '{}' on '{}'",domainObject.getName(),newParent.getName());
                     toAdd.add(domainObject);
 
-                    if (ClientDomainUtils.hasWriteAccess(originalParent)) {
+                    if (originalParent!=null && ClientDomainUtils.hasWriteAccess(originalParent)) {
                         toDestroy.add(node);
                     }
                     
