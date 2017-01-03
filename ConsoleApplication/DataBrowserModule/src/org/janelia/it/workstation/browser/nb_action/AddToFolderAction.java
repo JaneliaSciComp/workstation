@@ -77,9 +77,11 @@ public class AddToFolderAction extends NodePresenterAction {
         // Build list of things to add
         domainObjects.clear();
         for(Node node : selectedNodes) {
-            @SuppressWarnings("unchecked")
-            DomainObjectNode<DomainObject> selectedNode = (DomainObjectNode<DomainObject>)node;
-            domainObjects.add(selectedNode.getDomainObject());
+            if (node instanceof DomainObjectNode) {
+                @SuppressWarnings("unchecked")
+                DomainObjectNode<DomainObject> selectedNode = (DomainObjectNode<DomainObject>)node;
+                domainObjects.add(selectedNode.getDomainObject());
+            }
         }
 
         return enabled;
