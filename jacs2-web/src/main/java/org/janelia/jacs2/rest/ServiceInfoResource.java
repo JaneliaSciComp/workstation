@@ -35,13 +35,19 @@ public class ServiceInfoResource {
 
     @GET
     public Response getAllServices(@QueryParam("service-name") String serviceName,
-                                                      @QueryParam("service-owner") String serviceOwner,
-                                                      @QueryParam("service-state") String serviceState,
-                                                      @QueryParam("service-from") Date from,
-                                                      @QueryParam("service-to") Date to,
-                                                      @QueryParam("page") Integer pageNumber,
-                                                      @QueryParam("length") Integer pageSize) {
+                                   @QueryParam("service-id") Long serviceId,
+                                   @QueryParam("parent-id") Long parentServiceId,
+                                   @QueryParam("root-id") Long rootServiceId,
+                                   @QueryParam("service-owner") String serviceOwner,
+                                   @QueryParam("service-state") String serviceState,
+                                   @QueryParam("service-from") Date from,
+                                   @QueryParam("service-to") Date to,
+                                   @QueryParam("page") Integer pageNumber,
+                                   @QueryParam("length") Integer pageSize) {
         JacsServiceData pattern = new JacsServiceData();
+        pattern.setId(serviceId);
+        pattern.setParentServiceId(parentServiceId);
+        pattern.setRootServiceId(rootServiceId);
         pattern.setName(serviceName);
         pattern.setOwner(serviceOwner);
         try {

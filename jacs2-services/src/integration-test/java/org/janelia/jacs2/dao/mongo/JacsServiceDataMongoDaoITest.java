@@ -16,12 +16,15 @@ import org.junit.Test;
 
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.junit.Assert.assertThat;
 
@@ -168,6 +171,75 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         PageResult<JacsServiceData> retrievedRunningOrCanceledServices = testDao.findServiceByState(
                 ImmutableSet.of(JacsServiceState.RUNNING, JacsServiceState.CANCELED), pageRequest);
         assertThat(retrievedRunningOrCanceledServices.getResultList().size(), equalTo(servicesInRunningState.size() + servicesInCanceledState.size()));
+    }
+
+    @Test
+    public void searchServicesByUserStateAndDateRange() {
+        Calendar testCal = Calendar.getInstance();
+        testCal.add(Calendar.DATE, -100);
+        Date startDate = testCal.getTime();
+        testCal.add(Calendar.DATE, 1);
+        List<JacsServiceData> testServices = persistServicesForSearchTest(testCal);
+        testCal.add(Calendar.DATE, 1);
+        Date endDate = testCal.getTime();
+
+        JacsServiceData emptyRequest = new JacsServiceData();
+        PageRequest pageRequest = new PageRequest();
+        PageResult<JacsServiceData> retrievedQueuedServices;
+
+        retrievedQueuedServices = testDao.findMatchingServices(emptyRequest, null, null, pageRequest);
+        assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("id", Matchers.isIn(testServices.stream().map(e->e.getId()).toArray()))));
+
+        JacsServiceData u1ServicesRequest = new JacsServiceData();
+        u1ServicesRequest.setOwner("user:u1");
+        u1ServicesRequest.setState(JacsServiceState.QUEUED);
+
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, null, null, pageRequest);
+        assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("state", equalTo(JacsServiceState.QUEUED))));
+        assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("owner", equalTo("user:u1"))));
+
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, startDate, endDate, pageRequest);
+        assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("state", equalTo(JacsServiceState.QUEUED))));
+        assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("owner", equalTo("user:u1"))));
+
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, null, startDate, pageRequest);
+        assertThat(retrievedQueuedServices.getResultList(), hasSize(0));
+
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, endDate, null, pageRequest);
+        assertThat(retrievedQueuedServices.getResultList(), hasSize(0));
+    }
+
+
+    private List<JacsServiceData> persistServicesForSearchTest(Calendar calDate) {
+        List<JacsServiceData> testServices = new ArrayList<>();
+        List<JacsServiceData> u1Services = ImmutableList.of(
+                createTestService("s1.1", ProcessingLocation.LOCAL),
+                createTestService("s1.2", ProcessingLocation.LOCAL),
+                createTestService("s1.3", ProcessingLocation.LOCAL),
+                createTestService("s1.4", ProcessingLocation.LOCAL)
+        );
+        List<JacsServiceData> u2Services = ImmutableList.of(
+                createTestService("s2.1", ProcessingLocation.CLUSTER),
+                createTestService("s2.2", ProcessingLocation.CLUSTER),
+                createTestService("s2.3", ProcessingLocation.CLUSTER)
+        );
+        u1Services.stream().forEach(s -> {
+            s.setOwner("user:u1");
+            s.setState(JacsServiceState.QUEUED);
+            s.setCreationDate(calDate.getTime());
+            calDate.add(Calendar.DATE, 1);
+            persistServiceWithEvents(s);
+            testServices.add(s);
+        });
+        u2Services.stream().forEach(s -> {
+            s.setOwner("group:u2");
+            s.setState(JacsServiceState.RUNNING);
+            s.setCreationDate(calDate.getTime());
+            calDate.add(Calendar.DATE, 1);
+            persistServiceWithEvents(s);
+            testServices.add(s);
+        });
+        return testServices;
     }
 
     private JacsServiceData persistServiceWithEvents(JacsServiceData si, JacsServiceEvent... jacsServiceEvents) {

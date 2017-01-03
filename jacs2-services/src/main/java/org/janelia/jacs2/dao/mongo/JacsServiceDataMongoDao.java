@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.mongodb.client.MongoDatabase;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.JacsServiceDataDao;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
@@ -18,10 +20,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gte;
 import static com.mongodb.client.model.Filters.in;
+import static com.mongodb.client.model.Filters.lt;
 
 /**
  * Mongo based implementation of JacsServiceDataDao
@@ -62,8 +66,34 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
 
     @Override
     public PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, Date from, Date to, PageRequest pageRequest) {
-        // !!!!!!!!!!!!!!!!! TODO
-        return null;
+        ImmutableList.Builder<Bson> filtersBuilder = new ImmutableList.Builder<>();
+        if (pattern.getId() != null) {
+            filtersBuilder.add(eq("_id", pattern.getId()));
+        }
+        if (pattern.getParentServiceId() != null) {
+            filtersBuilder.add(eq("parentServiceId", pattern.getParentServiceId()));
+        }
+        if (pattern.getRootServiceId() != null) {
+            filtersBuilder.add(eq("rootServiceId", pattern.getRootServiceId()));
+        }
+        if (StringUtils.isNotBlank(pattern.getName())) {
+            filtersBuilder.add(eq("name", pattern.getName()));
+        }
+        if (StringUtils.isNotBlank(pattern.getOwner())) {
+            filtersBuilder.add(eq("owner", pattern.getOwner()));
+        }
+        if (from != null) {
+            filtersBuilder.add(gte("creationDate", from));
+        }
+        if (to != null) {
+            filtersBuilder.add(lt("creationDate", to));
+        }
+        ImmutableList<Bson> filters = filtersBuilder.build();
+
+        Bson bsonFilter = null;
+        if (!filters.isEmpty()) bsonFilter = and(filters);
+        List<JacsServiceData> results = find(bsonFilter, createBsonSortCriteria(pageRequest.getSortCriteria()), pageRequest.getOffset(), pageRequest.getPageSize(), JacsServiceData.class);
+        return new PageResult<>(pageRequest, results);
     }
 
     @Override
