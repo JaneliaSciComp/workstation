@@ -1,12 +1,12 @@
 // 5.7.0
 
-General
+Workstation Browser
 * The project website has been revamped: http://workstation.int.janelia.org
 * Added better error messages for permission errors
 * Fixed error when dragging an item from the Recently Opened folder
 * Other minor bug fixes
 
-Fly
+FlyLight
 * Restored missing Gen1 samples
 
 MouseLight
