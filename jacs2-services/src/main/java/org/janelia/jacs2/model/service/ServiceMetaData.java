@@ -5,9 +5,8 @@ import java.util.List;
 public class ServiceMetaData {
 
     private String serviceName;
+    private String usage;
     private String description;
-    private List<ServiceArgDescriptor> inputArgs;
-    private List<ServiceArgDescriptor> results;
 
     public String getServiceName() {
         return serviceName;
@@ -25,19 +24,11 @@ public class ServiceMetaData {
         this.description = description;
     }
 
-    public List<ServiceArgDescriptor> getInputArgs() {
-        return inputArgs;
+    public String getUsage() {
+        return usage;
     }
 
-    public void setInputArgs(List<ServiceArgDescriptor> inputArgs) {
-        this.inputArgs = inputArgs;
-    }
-
-    public List<ServiceArgDescriptor> getResults() {
-        return results;
-    }
-
-    public void setResults(List<ServiceArgDescriptor> results) {
-        this.results = results;
+    public void setUsage(String usage) {
+        this.usage = usage;
     }
 }
