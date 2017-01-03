@@ -156,8 +156,11 @@ public class JacsServiceDispatcher {
                             logger.info("Successfully completed {}", updatedServiceData);
                             updatedServiceData.setState(JacsServiceState.SUCCESSFUL);
                         } else {
-                            logger.error("Error executing {}", updatedServiceData, exc);
-                            updatedServiceData.setState(JacsServiceState.ERROR);
+                            // if the service data state has already been marked as cancelled or error leave it as is
+                            if (!updatedServiceData.hasCompletedUnsuccessfully()) {
+                                logger.error("Error executing {}", updatedServiceData, exc);
+                                updatedServiceData.setState(JacsServiceState.ERROR);
+                            }
                         }
                         updateServiceInfo(updatedServiceData);
                         submittedServicesSet.remove(updatedServiceData.getId());

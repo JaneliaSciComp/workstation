@@ -241,8 +241,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         return ReflectionToStringBuilder.toString(this);
     }
 
-    public boolean hasCompleted() {
-        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR || state == JacsServiceState.SUCCESSFUL;
+    public boolean hasCompletedUnsuccessfully() {
+        return state == JacsServiceState.CANCELED || state == JacsServiceState.ERROR;
+    }
+
+    public boolean hasCompletedSuccessfully() {
+        return state == JacsServiceState.SUCCESSFUL;
     }
 
 }

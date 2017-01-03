@@ -1,16 +1,23 @@
 package org.janelia.jacs2.service.impl;
 
 import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-import java.util.stream.Collectors;
 
 public abstract class AbstractServiceComputation<R> implements ServiceComputation<R> {
+
+    private static class ChildServiceResults {
+        private List<JacsServiceData> successfullyCompleted = new ArrayList<>();
+        private List<JacsServiceData> unsuccessfullyCompleted = new ArrayList<>();
+        private List<JacsServiceData> uncompleted = new ArrayList<>();
+    }
 
     @Inject
     private Logger logger;
@@ -48,12 +55,30 @@ public abstract class AbstractServiceComputation<R> implements ServiceComputatio
                 waitForChildrenToEndFuture.complete(jacsService);
                 break;
             }
-            List<JacsServiceData> firstPass =  uncompletedChildServices.stream()
+            ChildServiceResults childServiceResults =  uncompletedChildServices.stream()
                     .filter(ti -> !ti.getId().equals(jacsService.getId()))
                     .map(ti -> jacsServiceDataPersistence.findById(ti.getId()))
-                    .filter(ti -> !ti.hasCompleted())
-                    .collect(Collectors.toList());
-            uncompletedChildServices = firstPass;
+                    .collect(ChildServiceResults::new, (cr, ti) -> {
+                        if (ti.hasCompletedSuccessfully()) {
+                            cr.successfullyCompleted.add(ti);
+                        } else if (ti.hasCompletedUnsuccessfully()) {
+                            cr.unsuccessfullyCompleted.add(ti);
+                        } else {
+                            cr.uncompleted.add(ti);
+                        }
+                    }, (cr1, cr2) -> {
+                        cr1.successfullyCompleted.addAll(cr2.successfullyCompleted);
+                        cr1.unsuccessfullyCompleted.addAll(cr2.unsuccessfullyCompleted);
+                        cr1.uncompleted.addAll(cr2.uncompleted);
+                    });
+            if (!childServiceResults.unsuccessfullyCompleted.isEmpty()) {
+                // one of the children has not completed successfully so cancel this
+                jacsService.setState(JacsServiceState.CANCELED);
+                waitForChildrenToEndFuture.completeExceptionally(new ComputationException(jacsService,
+                        String.format("Some child services have completed unsucessfully: %s", childServiceResults.unsuccessfullyCompleted.toString())));
+                break;
+            }
+            uncompletedChildServices = childServiceResults.uncompleted;
             try {
                 Thread.currentThread().sleep(1000);
             } catch (InterruptedException e) {

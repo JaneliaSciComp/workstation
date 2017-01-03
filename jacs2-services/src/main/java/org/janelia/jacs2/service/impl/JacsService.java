@@ -1,6 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
 import org.janelia.jacs2.model.service.JacsServiceData;
+import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ProcessingLocation;
 
 public class JacsService<R> {
@@ -54,6 +55,10 @@ public class JacsService<R> {
 
     public void setServiceCmd(String serviceCmd) {
         jacsServiceData.setServiceCmd(serviceCmd);
+    }
+
+    public void setState(JacsServiceState state) {
+        jacsServiceData.setState(state);
     }
 
     public ProcessingLocation getProcessingLocation() {
