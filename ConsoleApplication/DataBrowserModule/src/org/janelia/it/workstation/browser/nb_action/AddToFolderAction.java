@@ -22,7 +22,7 @@ import org.janelia.it.workstation.browser.api.DomainMgr;
 import org.janelia.it.workstation.browser.api.DomainModel;
 import org.janelia.it.workstation.browser.api.StateMgr;
 import org.janelia.it.workstation.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.browser.gui.support.NodeChooser;
+import org.janelia.it.workstation.browser.gui.support.TreeNodeChooser;
 import org.janelia.it.workstation.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.browser.nodes.NodeUtils;
 import org.janelia.it.workstation.browser.nodes.UserViewConfiguration;
@@ -158,14 +158,15 @@ public class AddToFolderAction extends NodePresenterAction {
 
                 ActivityLogHelper.logUserAction("AddToFolderAction.chooseFolder");
 
-                NodeChooser nodeChooser = new NodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to");
+                TreeNodeChooser nodeChooser = new TreeNodeChooser(new UserViewRootNode(UserViewConfiguration.create(TreeNode.class)), "Choose folder to add to", true);
                 nodeChooser.setRootVisible(false);
                 
                 int returnVal = nodeChooser.showDialog(explorer);
-                if (returnVal != NodeChooser.CHOOSE_OPTION) return;
+                if (returnVal != TreeNodeChooser.CHOOSE_OPTION) return;
                 if (nodeChooser.getChosenElements().isEmpty()) return;
                 final UserViewTreeNodeNode selectedNode = (UserViewTreeNodeNode)nodeChooser.getChosenElements().get(0);
                 final TreeNode folder = selectedNode.getTreeNode();
+                
                 addUniqueItemsToFolder(folder, NodeUtils.createIdPath(selectedNode));
             }
         });
