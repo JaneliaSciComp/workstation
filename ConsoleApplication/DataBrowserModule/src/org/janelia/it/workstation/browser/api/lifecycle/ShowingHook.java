@@ -56,7 +56,7 @@ public class ShowingHook implements Runnable {
 
         log.info("Showing main window");
         frame.setVisible(true);
-        
+
         if (Startup.isBrandingValidationException()) {
             JOptionPane.showMessageDialog(
                     WindowLocator.getMainFrame(),
@@ -95,5 +95,7 @@ public class ShowingHook implements Runnable {
                 frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
             }
         }
+        
+        ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
     }
 }

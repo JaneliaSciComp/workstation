@@ -16,6 +16,7 @@ import javax.swing.SwingUtilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.api.lifecycle.ConsoleState;
 import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
 import org.janelia.it.workstation.browser.util.SystemInfo;
@@ -74,7 +75,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             //if (record.getLevel().intValue() < Level.SEVERE.intValue()) return;
             
             // JW-25430: Only attempt to auto-send exceptions once the user has logged in
-            if (!AccessManager.getAccessManager().isLoggedIn()) return; 
+            if (ConsoleState.getCurrState()<ConsoleState.LOGGED_IN) return; 
             
             try {
                 autoSendNovelExceptions();
