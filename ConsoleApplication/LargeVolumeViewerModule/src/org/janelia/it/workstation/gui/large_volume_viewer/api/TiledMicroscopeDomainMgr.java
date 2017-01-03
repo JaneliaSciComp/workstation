@@ -63,11 +63,7 @@ public class TiledMicroscopeDomainMgr {
     
     public TmSample getSample(Long sampleId) throws Exception {
         log.debug("getSample(sampleId={})",sampleId);
-        TmSample sample = model.getDomainObject(TmSample.class, sampleId);
-        if (sample==null) {
-            throw new Exception("Sample with id="+sampleId+" does not exist");
-        }
-        return sample;
+        return model.getDomainObject(TmSample.class, sampleId);
     }
 
     public TmSample getSample(TmWorkspace workspace) throws Exception {
