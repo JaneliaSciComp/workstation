@@ -101,7 +101,7 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<File
 
     @Override
     protected boolean checkForErrors(String l) {
-        if (StringUtils.isNotBlank(l) && l.regionMatches(true, 0, "error", 0, "error".length())) {
+        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
             logger.error(l);
             return true;
         } else {
