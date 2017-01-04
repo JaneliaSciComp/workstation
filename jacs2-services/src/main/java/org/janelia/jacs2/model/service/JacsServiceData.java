@@ -186,6 +186,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.args.add(arg);
     }
 
+    public void clearArgs() {
+        if (this.args != null) {
+            this.args.clear();
+        }
+    }
+
     public void addEvent(JacsServiceEvent se) {
         if (this.events == null) {
             this.events = new ArrayList<>();

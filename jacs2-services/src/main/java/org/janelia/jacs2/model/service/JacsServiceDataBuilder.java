@@ -21,6 +21,11 @@ public class JacsServiceDataBuilder {
         return this;
     }
 
+    public JacsServiceDataBuilder clearArgs() {
+        serviceData.clearArgs();
+        return this;
+    }
+
     public JacsServiceDataBuilder setName(String name) {
         serviceData.setName(name);
         return this;

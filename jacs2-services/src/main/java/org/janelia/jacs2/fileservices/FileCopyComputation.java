@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -61,16 +60,17 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<File
     @Override
     public CompletionStage<JacsService<File>> isDone(JacsService<File> jacsService) {
         CompletableFuture<JacsService<File>> doneFuture = new CompletableFuture<>();
-        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
-        if (fileCopyArgs.deleteSourceFile) {
-            try {
+        try {
+            FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
+            if (fileCopyArgs.deleteSourceFile) {
                 File sourceFile = new File(fileCopyArgs.sourceFilename);
                 Files.deleteIfExists(sourceFile.toPath());
-            } catch (IOException e) {
-                doneFuture.completeExceptionally(e);
+                doneFuture.complete(jacsService);
+            } else {
+                doneFuture.complete(jacsService);
             }
-        } else {
-            doneFuture.complete(jacsService);
+        } catch (Exception e) {
+            doneFuture.completeExceptionally(e);
         }
         return doneFuture;
     }
