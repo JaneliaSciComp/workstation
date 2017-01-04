@@ -28,23 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.listener;
 
-import java.util.Collection;
-import org.janelia.console.viewerapi.ObservableInterface;
+import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
- * @author Christopher Bruns
+ * @author brunsc
  */
-public interface NeuronSet extends Collection<NeuronModel>
-{
-    // getMembershipChangeObservable() signals when whole neurons are added or removed from the collection
-    ObservableInterface getMembershipChangeObservable();
-    ObservableInterface getNameChangeObservable();
-    String getName();
-    NeuronModel createNeuron(String initialNeuronName);
+public interface NeuronWorkspaceChangeListener {
+
+    void workspaceChanged(NeuronSet workspace);
     
-    // NeuronVertex getAnchorClosestTo(float[] micronXYZ);
-    NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 }

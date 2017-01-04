@@ -49,6 +49,7 @@ import org.janelia.console.viewerapi.listener.NeuronCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.listener.NeuronWorkspaceChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,10 +61,10 @@ import org.slf4j.LoggerFactory;
 public class NeuronVertexSpatialIndex 
 implements Collection<NeuronVertex>, NeuronCreationListener, 
         NeuronVertexCreationListener, NeuronVertexDeletionListener,
-        NeuronVertexUpdateListener
+        NeuronVertexUpdateListener, NeuronWorkspaceChangeListener
 {
     private KDTree<NeuronVertex> index = new KDTree<>(3);
-    private Map<NeuronVertex, Vector3> cachedKeys = new HashMap<>();
+    private final Map<NeuronVertex, Vector3> cachedKeys = new HashMap<>();
     private final NeuronEditDispatcher neuronManager;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -75,6 +76,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
         neuronEditDispatcher.addNeuronVertexCreationListener(this);
         neuronEditDispatcher.addNeuronVertexUpdateListener(this);
         neuronEditDispatcher.addNeuronVertexDeletionListener(this);
+        neuronEditDispatcher.addWorkspaceChangeListener(this);
     }
     
     public NeuronModel neuronForVertex(NeuronVertex vertex)
@@ -244,7 +246,9 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     @Override
     public void clear()
     {
+        log.info("Clearing spatial index");
         index = new KDTree<>(3);
+        cachedKeys.clear();
     }
 
     @Override
@@ -270,6 +274,11 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     public void neuronVertexUpdated(VertexWithNeuron vertexWithNeuron) {
         remove(vertexWithNeuron.vertex);
         addPrivately(vertexWithNeuron.vertex);
+    }
+
+    @Override
+    public void workspaceChanged(NeuronSet workspace) {
+        rebuildIndex(this.neuronManager.getWorkspace());
     }
 
 }

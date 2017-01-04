@@ -28,7 +28,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.console.viewerapi.model;
+package org.janelia.console.viewerapi.commands;
+
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
  * Interface for commands that add an anchor to a neuron

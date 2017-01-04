@@ -35,6 +35,7 @@
             <public-packages>
                 <package>org.janelia.console.viewerapi</package>
                 <package>org.janelia.console.viewerapi.color_slider</package>
+                <package>org.janelia.console.viewerapi.commands</package>
                 <package>org.janelia.console.viewerapi.controller</package>
                 <package>org.janelia.console.viewerapi.listener</package>
                 <package>org.janelia.console.viewerapi.model</package>

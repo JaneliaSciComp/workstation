@@ -172,5 +172,10 @@ implements NeuronSet
     public NeuronModel createNeuron(String initialNeuronName) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

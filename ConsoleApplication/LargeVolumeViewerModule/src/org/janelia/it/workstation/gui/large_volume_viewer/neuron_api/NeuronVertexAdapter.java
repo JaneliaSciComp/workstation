@@ -32,6 +32,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.neuron_api;
 
 import java.util.Objects;
 
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmSample;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
@@ -106,7 +107,7 @@ public class NeuronVertexAdapter implements NeuronVertex
     @Override
     public float getRadius()
     {
-        return vertex.getRadius().floatValue();
+        return hasRadius() ? vertex.getRadius().floatValue() : DefaultNeuron.radius;
     }
 
     @Override

@@ -83,6 +83,8 @@ implements StaticVolumeBrickSource
         // Index tiles for easy retrieval
         int tileCount = 0;
         float totalTiles = tiles.size();
+        Double resolution = null;
+        
         for (Map<String, Object> tile : tiles) {
             String tilePath = (String) tile.get("path");
             
@@ -92,10 +94,16 @@ implements StaticVolumeBrickSource
             boundingBox.include(tileInfo.getBoundingBox());
             
             // Compute resolution
-            Double resolution = tileInfo.getResolutionMicrometers();
+            // Jan 2017 CMB - Treat all tiles in YAML file as same resolution as the first tile.
+            // (There is no dynamic loading by resolution at the moment for raw tiles in yaml file)
+            if (resolution == null) {
+                resolution = tileInfo.getResolutionMicrometers();
+                resMap.put(resolution, new BrickInfoSet());
+            }
+            
+            /*
             // KLUDGE: Treat resolutions within 30% as equivalent
             resolution = getNearbyResolution(resolution);
-            
             for (Double oldRes : resMap.keySet() ) {
                 double ratio = resolution / oldRes;
                 final double threshold = 1.30;
@@ -105,6 +113,8 @@ implements StaticVolumeBrickSource
            
             if (! resMap.containsKey(resolution))
                 resMap.put(resolution, new BrickInfoSet());
+            */
+            
             BrickInfoSet brickSet = resMap.get(resolution);
             brickSet.add(tileInfo);
             // System.out.println(tilePath);

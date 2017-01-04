@@ -1,6 +1,17 @@
 // 5.7.0
 
+General
+* The project website has been revamped: http://workstation.int.janelia.org
+* Added better error messages for permission errors
+* Fixed error when dragging an item from the Recently Opened folder
+* Other minor bug fixes
+
+Fly
+* Restored missing Gen1 samples
+
 MouseLight
+* Raw tile loading in Horta no longer depends on zoom level, even when raw tiles appear to have very different resolutions
+* Move "Navigate to Horta" menu items to top level of context menu
 * Add Horta menu to toggle loading of Ktx/Rendered tiles vs Raw/Unsupported tiles
 * Synchronize Horta display after moving an anchor in LVV
 * Add ability to create new Neurons in Horta
@@ -8,3 +19,4 @@ MouseLight
 * Reduce blackening of dim KTX intensities in Horta
 * Add ability to edit anchor radius in Horta
 * Synchronize LVV display after moving anchors in Horta
+* Fixed "timer already canceled" error

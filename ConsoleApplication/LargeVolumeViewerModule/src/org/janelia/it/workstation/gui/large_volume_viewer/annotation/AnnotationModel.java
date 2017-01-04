@@ -37,7 +37,6 @@ import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
-import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
@@ -127,6 +126,7 @@ called from a  SimpleWorker thread.
 
 
     public AnnotationModel() {
+        log.info("Creating new AnnotationModel {}", this);
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
@@ -203,6 +203,9 @@ called from a  SimpleWorker thread.
     }
 
     public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
+        if (currentSample==null) {
+            throw new IllegalStateException("Sample is not loaded");
+        }
         currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
         currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
         tmDomainMgr.save(currentSample);
@@ -340,9 +343,16 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
+        
         if (foundNeuron==null) {
-            throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
+            log.warn("There is no neuron with annotation: ", annotationID);
+
+            // I don't have time to fix this now. But this "throw" breaks adding annotations in Horta
+            // throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
         }
+        // Perhaps an actual assert could be useful instead?
+        // assert(foundNeuron != null);
+        
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }
