@@ -11,6 +11,7 @@ Fly
 
 MouseLight
 * Raw tile loading in Horta no longer depends on zoom level, even when raw tiles appear to have very different resolutions
+* Move "Navigate to Horta" menu items to top level of context menu
 * Add Horta menu to toggle loading of Ktx/Rendered tiles vs Raw/Unsupported tiles
 * Synchronize Horta display after moving an anchor in LVV
 * Add ability to create new Neurons in Horta
