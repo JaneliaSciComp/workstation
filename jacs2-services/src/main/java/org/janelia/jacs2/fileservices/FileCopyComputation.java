@@ -25,34 +25,35 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<File
 
     private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
-    @Inject
-    private Logger logger;
-    @PropertyValue(name = "VAA3D.LibraryPath")
-    @Inject
-    private String libraryPath;
-    @PropertyValue(name = "Convert.ScriptPath")
-    @Inject
-    private String scriptName;
+    private final Logger logger;
+    private final String libraryPath;
+    private final String scriptName;
 
+    @Inject
+    FileCopyComputation(@PropertyValue(name = "VAA3D.LibraryPath") String libraryPath, @PropertyValue(name = "Convert.ScriptPath") String scriptName, Logger logger) {
+        this.libraryPath = libraryPath;
+        this.scriptName = scriptName;
+        this.logger = logger;
+    }
 
     @Override
     public CompletionStage<JacsService<File>> preProcessData(JacsService<File> jacsService) {
         CompletableFuture<JacsService<File>> preProcess = new CompletableFuture<>();
-        FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
-        if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
-            preProcess.completeExceptionally(new ComputationException(jacsService, "Source file name must be specified"));
-        } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
-            preProcess.completeExceptionally(new ComputationException(jacsService, "Target file name must be specified"));
-        } else {
-            try {
+        try {
+            FileCopyServiceDescriptor.FileCopyArgs fileCopyArgs = getArgs(jacsService);
+            if (StringUtils.isBlank(fileCopyArgs.sourceFilename)) {
+                preProcess.completeExceptionally(new ComputationException(jacsService, "Source file name must be specified"));
+            } else if (StringUtils.isBlank(fileCopyArgs.targetFilename)) {
+                preProcess.completeExceptionally(new ComputationException(jacsService, "Target file name must be specified"));
+            } else {
                 File targetFile = new File(fileCopyArgs.targetFilename);
                 Files.createDirectories(targetFile.getParentFile().toPath());
                 jacsService.setResult(targetFile);
                 preProcess.complete(jacsService);
-            } catch (IOException e) {
-                logger.error("Error creating the target directories", e);
-                preProcess.completeExceptionally(new ComputationException(jacsService, e));
             }
+        } catch (Exception e) {
+            logger.error("FileCopy preprocess error", e);
+            preProcess.completeExceptionally(new ComputationException(jacsService, e));
         }
         return preProcess;
     }
