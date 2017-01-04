@@ -10,20 +10,16 @@ import org.junit.Test;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertNull;
@@ -189,7 +185,7 @@ public class FileCopyComputationTest {
                 .build();
         JacsService<File> testService = new JacsService<>(null, testServiceData);
         Map<String, String> env = testComputation.prepareEnvironment(testService);
-        assertThat(env, hasEntry("LD_LIBRARY_PATH", libraryPath));
+        assertThat(env, hasEntry(equalTo("LD_LIBRARY_PATH"), containsString(libraryPath)));
     }
 
     @Test
