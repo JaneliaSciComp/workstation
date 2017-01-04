@@ -4,11 +4,43 @@
     <title>jacs webgl state viewer</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            background: rgba(0,0,0,0.0);
+            color:#fff;
+            padding:0;
+            margin:0;
+            overflow:hidden;
+            font-family:Georgia;
+            text-align:center;
+        }
+        h1 { }
+        a { color:skyblue; text-decoration:none }
+
+        #d { position:absolute; width: 100%; text-align:center; margin:1em 0 -4.5em 0; z-index:1000; }
+
+        .wrap { margin:0.5em 0 0 0 }
+        button { font-family:Georgia; border:0; background:#000; color:#fff; padding:0.2em 0.5em; cursor:pointer; border-radius:3px; }
+        button:hover { background:#333 }
+
+        #note_info_1 { text-align:center; color: rgb(255,0,0); position:fixed; left:0; z-index:10000; top:100px; }
+        #note_info_2 { text-align:center; color: rgb(255,0,0); position:fixed; left:0; z-index:10000; top:200px; }
+
+        #note_name { font-size:1em }
+        #note_author { font-size:1em }
+
+    </style>
 </head>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <body>
 
-<div id="container"></div>
+<div id="message">
+    <span id="note_info_1">This is Message 1</span>
+</div>
+
+<div id="container">
+    <span id="note_info_2">This is Message 2</span>
+</div>
 
 <script src="js/vendor/threejs/three.js"></script>
 <script src="js/vendor/threejs/controls/TrackballControls.js"></script>
