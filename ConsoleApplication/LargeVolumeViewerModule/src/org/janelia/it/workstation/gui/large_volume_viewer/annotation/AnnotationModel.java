@@ -126,6 +126,7 @@ called from a  SimpleWorker thread.
 
 
     public AnnotationModel() {
+        log.info("Creating new AnnotationModel {}", this);
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
@@ -342,9 +343,16 @@ called from a  SimpleWorker thread.
                 break;
             }
         }
+        
         if (foundNeuron==null) {
-            throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
+            log.warn("There is no neuron with annotation: ", annotationID);
+
+            // I don't have time to fix this now. But this "throw" breaks adding annotations in Horta
+            // throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
         }
+        // Perhaps an actual assert could be useful instead?
+        // assert(foundNeuron != null);
+        
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }

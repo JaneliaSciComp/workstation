@@ -45,6 +45,7 @@ import org.janelia.console.viewerapi.GenericObserver;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.listener.NeuronWorkspaceChangeListener;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronModel;
@@ -124,6 +125,8 @@ public class NeuronEditDispatcher implements LookupListener
             new VertexUpdateObservable();
     private final VertexDeletionObservable neuronVertexDeletionObservable =
             new VertexDeletionObservable();
+    private final NeuronWorkspaceChangeObservable neuronWorkspaceChangeObservable =
+            new NeuronWorkspaceChangeObservable();
     
     public NeuronEditDispatcher(HortaMetaWorkspace workspace) {
         this.workspace = workspace;
@@ -145,6 +148,10 @@ public class NeuronEditDispatcher implements LookupListener
         neuronVertexDeletionObservable.addNeuronVertexDeletionListener(listener);
     }
     
+    void addWorkspaceChangeListener(NeuronWorkspaceChangeListener listener) {
+        neuronWorkspaceChangeObservable.addNeuronWorkspaceChangeListener(listener);
+    }
+
     public NeuronModel neuronForVertex(NeuronVertex vertex)
     {
         return vertexNeurons.get(vertex);
@@ -252,6 +259,34 @@ public class NeuronEditDispatcher implements LookupListener
         
     }
     
+    private static class NeuronWorkspaceChangeObservable {
+        private final GenericObservable<NeuronSet> observable = new BasicGenericObservable<>();
+
+        public void addNeuronWorkspaceChangeListener(NeuronWorkspaceChangeListener listener) {
+            observable.addObserver(new NeuronWorkspaceChangeListenerAdapter(listener));
+        }
+        
+        public void setChangedAndNotifyObservers(NeuronSet workspace) {
+            observable.setChanged();
+            observable.notifyObservers(workspace);
+        }
+
+        private static class NeuronWorkspaceChangeListenerAdapter 
+        implements GenericObserver<NeuronSet>
+        {
+            private final NeuronWorkspaceChangeListener listener;
+
+            private NeuronWorkspaceChangeListenerAdapter(NeuronWorkspaceChangeListener listener) {
+                this.listener = listener;
+            }
+
+            @Override
+            public void update(GenericObservable<NeuronSet> object, NeuronSet data) {
+                listener.workspaceChanged(data);
+            }
+            
+        }        
+    }
     
     private static class VertexCreationObservable {
         private final GenericObservable<VertexWithNeuron> observable = new BasicGenericObservable<>();

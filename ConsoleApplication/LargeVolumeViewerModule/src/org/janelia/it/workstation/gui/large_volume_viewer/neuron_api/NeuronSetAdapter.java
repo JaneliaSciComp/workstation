@@ -124,13 +124,17 @@ implements NeuronSet// , LookupListener
         if (this.annotationModel == annotationModel)
             return; // already watching this model
         // Stop listening to whatever we were listening to earlier
-        if (this.annotationModel != null) {
-            this.annotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
-            this.annotationModel.removeTmGeoAnnotationModListener(annotationModListener);
-        }
+        AnnotationModel oldAnnotationModel = this.annotationModel;
         this.annotationModel = annotationModel;
+        if (oldAnnotationModel != null) {
+            oldAnnotationModel.removeGlobalAnnotationListener(globalAnnotationListener);
+            oldAnnotationModel.removeTmGeoAnnotationModListener(annotationModListener);
+        }
+        sanityCheckWorkspace();
         annotationModel.addGlobalAnnotationListener(globalAnnotationListener);
         annotationModel.addTmGeoAnnotationModListener(annotationModListener);
+        getMembershipChangeObservable().notifyObservers();
+        logger.info("Observing new Annotation Model {}", annotationModel);
     }
     
     // Sometimes the TmWorkspace instance changes, even though the semantic workspace has not changed.
@@ -202,7 +206,7 @@ implements NeuronSet// , LookupListener
         @Override
         public void annotationAdded(TmGeoAnnotation annotation)
         {
-            // logger.info("annotationAdded");
+            logger.info("annotationAdded");
             sanityCheckWorkspace(); // beware of shifting sands beneath us...
             // updateEdges(); // Brute force approach reanalyzes all edges            
             // Surgical approach only adds the one new edge
