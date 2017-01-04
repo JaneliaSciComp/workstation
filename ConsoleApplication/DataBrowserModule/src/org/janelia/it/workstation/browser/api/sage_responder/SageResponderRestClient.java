@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.browser.api.sage_responder;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
@@ -13,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * RESTful client for getting data from the SAGE Responder web service. 
@@ -49,5 +52,24 @@ public class SageResponderRestClient extends RESTClientImpl {
             }
         }
         return names;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getImageProperties(Integer sageImageId) throws Exception {
+        Response response = manager.getImageInfoLineEndpoint().path(sageImageId.toString())
+                .request("application/json")
+                .get();
+        if (checkBadResponse(response.getStatus(), "problem making request getImagePublishingName from server")) {
+            throw new WebApplicationException(response);
+        }
+
+        JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
+        if (data!=null) {
+            JsonNode imageData = data.get("image_data");
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.convertValue(imageData, Map.class);
+        }
+        
+        return null;
     }
 }
