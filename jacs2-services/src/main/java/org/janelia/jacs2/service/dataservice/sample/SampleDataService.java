@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.jacs2.dao.DaoFactory;
 import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.dao.SampleDao;
-import org.janelia.jacs2.dao.SampleImageDao;
+import org.janelia.jacs2.dao.ImageDao;
 import org.janelia.jacs2.dao.SubjectDao;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -22,7 +22,6 @@ import org.janelia.jacs2.utils.DomainUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +38,7 @@ public class SampleDataService {
     @Inject
     private DaoFactory daoFactory;
     @Inject
-    private SampleImageDao sampleImageDao;
+    private ImageDao imageDao;
 
     public Sample getSampleById(String subjectName, Number sampleId) {
         Subject subject = null;
@@ -143,6 +142,6 @@ public class SampleDataService {
 
     public void updateLMSMetadata(LSMImage lsmImage, String lsmMetadata) {
         DomainUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
-        sampleImageDao.updateImageFiles(lsmImage);
+        imageDao.updateImageFiles(lsmImage);
     }
 }

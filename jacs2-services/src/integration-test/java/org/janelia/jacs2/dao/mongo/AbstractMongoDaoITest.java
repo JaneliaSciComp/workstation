@@ -7,6 +7,7 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.jacs2.AbstractITest;
 import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.dao.Dao;
@@ -15,11 +16,13 @@ import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.janelia.jacs2.utils.EnumCodec;
+import org.janelia.jacs2.utils.MapOfEnumCodec;
 import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -39,7 +42,11 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
                 CodecRegistries.fromProviders(new DomainCodecProvider(testObjectMapper)),
-                CodecRegistries.fromCodecs(new BigIntegerCodec(), new EnumCodec<JacsServiceState>(JacsServiceState.class))
+                CodecRegistries.fromCodecs(
+                        new BigIntegerCodec(),
+                        new EnumCodec<>(JacsServiceState.class),
+                        new MapOfEnumCodec<>(FileType.class, HashMap.class)
+                )
         );
         MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry).maxConnectionIdleTime(60000);
         MongoClientURI mongoConnectionString = new MongoClientURI(integrationTestsConfig.getProperty("MongoDB.ConnectionURL"), optionsBuilder);

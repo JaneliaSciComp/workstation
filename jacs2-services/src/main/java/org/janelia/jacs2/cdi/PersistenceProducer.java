@@ -7,15 +7,18 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoDatabase;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.utils.BigIntegerCodec;
 import org.janelia.jacs2.utils.DomainCodecProvider;
 import org.janelia.jacs2.utils.EnumCodec;
+import org.janelia.jacs2.utils.MapOfEnumCodec;
 
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import java.util.HashMap;
 
 public class PersistenceProducer {
 
@@ -34,7 +37,10 @@ public class PersistenceProducer {
                 CodecRegistries.fromCodecs(
                         new BigIntegerCodec(),
                         new EnumCodec<>(JacsServiceState.class),
-                        new EnumCodec<>(ProcessingLocation.class))
+                        new EnumCodec<>(ProcessingLocation.class),
+                        new EnumCodec<>(FileType.class),
+                        new MapOfEnumCodec<>(FileType.class, HashMap.class)
+                )
         );
         MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
         MongoClientURI mongoConnectionString = new MongoClientURI(nmongoConnectionURL, optionsBuilder);

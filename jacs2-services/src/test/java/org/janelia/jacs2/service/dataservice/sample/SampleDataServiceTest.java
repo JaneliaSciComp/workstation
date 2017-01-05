@@ -3,7 +3,7 @@ package org.janelia.jacs2.service.dataservice.sample;
 import com.google.common.collect.ImmutableList;
 import org.janelia.jacs2.dao.DaoFactory;
 import org.janelia.jacs2.dao.SampleDao;
-import org.janelia.jacs2.dao.SampleImageDao;
+import org.janelia.jacs2.dao.ImageDao;
 import org.janelia.jacs2.dao.SubjectDao;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Subject;
@@ -43,7 +43,7 @@ public class SampleDataServiceTest {
     @Mock
     private SubjectDao subjectDao;
     @Mock
-    private SampleImageDao sampleImageDao;
+    private ImageDao imageDao;
     @Mock
     private DaoFactory daoFactory;
     @InjectMocks
@@ -53,7 +53,7 @@ public class SampleDataServiceTest {
     public void setUp() {
         testService = new SampleDataService();
         MockitoAnnotations.initMocks(this);
-        when(daoFactory.createDomainObjectDao("LSMImage")).thenAnswer(invocation -> sampleImageDao);
+        when(daoFactory.createDomainObjectDao("LSMImage")).thenAnswer(invocation -> imageDao);
     }
 
     @Test
@@ -86,7 +86,7 @@ public class SampleDataServiceTest {
         assertThatThrownBy(() -> testService.getAnatomicalAreaBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No LSM found for LSMImage#1");
-        when(sampleImageDao.findByIds(null, new ArrayList<>(ImmutableList.of(1L, 2L)))).thenReturn(ImmutableList.of(createLSMImage(1L, null)));
+        when(imageDao.findByIds(null, new ArrayList<>(ImmutableList.of(1L, 2L)))).thenReturn(ImmutableList.of(createLSMImage(1L, null)));
         assertThatThrownBy(() -> testService.getAnatomicalAreaBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No LSM found for LSMImage#2");
@@ -98,7 +98,7 @@ public class SampleDataServiceTest {
                 createSampleTile(1L, 2L),
                 createSampleTile(3L),
                 createSampleTile(5L, 6L)));
-        when(sampleImageDao.findByIds(null, new ArrayList<>(ImmutableList.of(1L, 2L, 3L, 5L, 6L))))
+        when(imageDao.findByIds(null, new ArrayList<>(ImmutableList.of(1L, 2L, 3L, 5L, 6L))))
                 .thenReturn(
                         ImmutableList.of(
                                 createLSMImage(1L, null),

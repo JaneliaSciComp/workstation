@@ -1,6 +1,5 @@
 package org.janelia.it.jacs.model.domain.sample;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasRelativeFiles;
@@ -65,5 +64,9 @@ public class Image extends AbstractDomainObject implements HasRelativeFiles {
 
     public void setFiles(Map<FileType, String> files) {
         this.files = files;
+    }
+
+    public void addFile(FileType fileType, String fileName) {
+        this.files.put(fileType, fileName);
     }
 }

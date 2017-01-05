@@ -2,7 +2,8 @@ package org.janelia.jacs2.dao.mongo;
 
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
-import org.janelia.jacs2.dao.SampleImageDao;
+import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.jacs2.dao.ImageDao;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.jacs2.model.page.PageRequest;
@@ -20,16 +21,17 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.collection.IsIn.isIn;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
 import static org.junit.Assert.assertThat;
 
 public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
     private List<Image> testData = new ArrayList<>();
-    private SampleImageDao testDao;
+    private ImageDao testDao;
 
     @Before
     public void setUp() {
-        testDao = new SampleImageMongoDao(testMongoDatabase);
-        setIdGeneratorAndObjectMapper((SampleImageMongoDao) testDao);
+        testDao = new ImageMongoDao(testMongoDatabase);
+        setIdGeneratorAndObjectMapper((ImageMongoDao) testDao);
     }
 
     @After
@@ -76,6 +78,18 @@ public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
     @Test
     public void findByIdsWithSubject() {
         findByIdsWithSubject(testDao);
+    }
+
+    @Test
+    public void updateImageFiles() {
+        Image testLSM = createLSM("line", "area");
+        testDao.save(testLSM);
+        testLSM.addFile(FileType.ChanFile, "chan");
+        testLSM.addFile(FileType.MaskFile, "mask");
+        testDao.updateImageFiles(testLSM);
+        Image retrievedLSM = testDao.findById(testLSM.getId());
+        assertThat(retrievedLSM.getFiles(), hasEntry(FileType.ChanFile, "chan"));
+        assertThat(retrievedLSM.getFiles(), hasEntry(FileType.MaskFile, "mask"));
     }
 
     @Override
