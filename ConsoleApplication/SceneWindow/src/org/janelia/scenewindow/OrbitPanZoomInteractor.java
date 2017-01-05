@@ -50,6 +50,7 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
+import javax.swing.event.MouseInputListener;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ import org.slf4j.LoggerFactory;
  */
 public class OrbitPanZoomInteractor
 extends SceneInteractor
-implements MouseListener, MouseMotionListener, MouseWheelListener
+implements MouseListener, MouseMotionListener, MouseWheelListener, MouseInputListener
 {
     private Point previousPoint = null;
     private Cursor openHandCursor;
@@ -75,9 +76,6 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     public OrbitPanZoomInteractor(AbstractCamera camera, Component component) 
     {
         super(camera, component);
-        component.addMouseListener(this);
-        component.addMouseMotionListener(this);
-        component.addMouseWheelListener(this);
         createCursorImages();
         this.component = component;
         checkCursor(crosshairCursor);

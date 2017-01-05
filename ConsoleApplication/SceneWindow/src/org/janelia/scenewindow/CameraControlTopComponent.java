@@ -1047,7 +1047,7 @@ implements LookupListener
     // For better user interaction, throttle updates to GUI camera parameter fields
     private Timer fieldUpdateTimer;
     private long previousUpdateTime = System.nanoTime();
-    private void throttledUpdateControllerFields()
+    private synchronized void throttledUpdateControllerFields()
     {
         // Make this number larger if the GL animation gets too jerky when 
         // the camera control widget is shown
@@ -1077,7 +1077,7 @@ implements LookupListener
                     try {
                         immediateUpdateControllerFields();
                     }
-                    catch (Exception e) {
+                    catch (Throwable e) {
                         FrameworkImplProvider.handleException("Error updating controller fields",e);
                     }
                 }

@@ -45,7 +45,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author fosterl
  */
-@ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
+@ServiceProvider(
+        service = Tiled3dSampleLocationProviderAcceptor.class, 
+        path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH,
+        position=110)
 public class HortaLocationProvider implements Tiled3dSampleLocationProviderAcceptor {
     public static final String UNIQUE_NAME = "Horta";
     public static final String DESCRIPTION = "Horta (channel 1)";

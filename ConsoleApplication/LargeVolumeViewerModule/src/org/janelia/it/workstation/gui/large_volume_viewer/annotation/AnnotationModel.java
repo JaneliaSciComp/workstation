@@ -33,10 +33,10 @@ import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.swc.SWCData;
 import org.janelia.it.jacs.shared.swc.SWCDataConverter;
 import org.janelia.it.jacs.shared.swc.SWCNode;
+import org.janelia.it.jacs.shared.utils.Progress;
 import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionModel;
 import org.janelia.it.workstation.browser.events.selection.DomainObjectSelectionSupport;
-import org.janelia.it.workstation.browser.workers.BackgroundWorker;
 import org.janelia.it.workstation.browser.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.browser.workers.SimpleWorker;
 import org.janelia.it.workstation.gui.large_volume_viewer.LoadTimer;
@@ -126,6 +126,7 @@ called from a  SimpleWorker thread.
 
 
     public AnnotationModel() {
+        log.info("Creating new AnnotationModel {}", this);
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         this.modelAdapter = new DomainMgrTmModelAdapter();
         this.neuronManager = new TmModelManipulator(modelAdapter);
@@ -202,6 +203,9 @@ called from a  SimpleWorker thread.
     }
 
     public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
+        if (currentSample==null) {
+            throw new IllegalStateException("Sample is not loaded");
+        }
         currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
         currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
         tmDomainMgr.save(currentSample);
@@ -333,12 +337,22 @@ called from a  SimpleWorker thread.
         }
 
         TmNeuronMetadata foundNeuron = null;
-        for (TmNeuronMetadata neuron: getNeuronList()) {
+        for (TmNeuronMetadata neuron : getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
                 break;
             }
         }
+        
+        if (foundNeuron==null) {
+            log.warn("There is no neuron with annotation: ", annotationID);
+
+            // I don't have time to fix this now. But this "throw" breaks adding annotations in Horta
+            // throw new IllegalStateException("There is no neuron with annotation: "+annotationID);
+        }
+        // Perhaps an actual assert could be useful instead?
+        // assert(foundNeuron != null);
+        
         log.debug("getNeuronFromAnnotationID({}) = {}",annotationID, foundNeuron);
         return foundNeuron;
     }
@@ -361,7 +375,7 @@ called from a  SimpleWorker thread.
             return annotation;
         }
 
-        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());
+        TmNeuronMetadata neuron = getNeuronFromAnnotationID(annotation.getId());        
         TmGeoAnnotation current = annotation;
         TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
@@ -706,6 +720,71 @@ called from a  SimpleWorker thread.
                     }
                 }
                 activityLog.logEndOfOperation(getWsId(), location);
+            }
+        });
+    }
+
+    /**
+     * change radius of an existing annotation
+     *
+     * @param annotationID = ID of annotation to move
+     * @param radius = new radius, in units of micrometers
+     * @throws Exception
+     */
+    public synchronized void updateAnnotationRadius(final Long annotationID, final float radius) throws Exception {
+        final TmNeuronMetadata neuron = this.getNeuronFromAnnotationID(annotationID);
+        final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
+
+        // update local annotation object
+        final Double oldRadius = annotation.getRadius();
+        synchronized(annotation) {
+            annotation.setRadius(new Double(radius));
+        }
+
+        try {
+            // Update value in database.
+            synchronized(neuron) {
+                neuronManager.saveNeuronData(neuron);
+                fireAnnotationRadiusUpdated(annotationID);
+            }
+        } catch (Exception e) {
+            // error means not persisted; however, in the process of moving,
+            //  the marker's already been moved, to give interactive feedback
+            //  to the user; so in case of error, tell the view to update to current
+            //  position (pre-move)
+            // this is unfortunately untested, because I couldn't think of an
+            //  easy way to simulate or force a failure!
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    annotation.setRadius(oldRadius);
+                    // activityLog.logEndOfOperation(getWsId(), location);
+                }
+            });
+            throw e;
+        }
+
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        if (automatedTracingEnabled()) {
+            // trace to parent, and each child to this parent:
+            viewStateListener.pathTraceRequested(annotation.getId());
+            for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
+                viewStateListener.pathTraceRequested(child.getId());
+            }
+        }
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fireNotesUpdated(workspace);
+
+                if (getCurrentNeuron() != null) {
+                    if (neuron.getId().equals(getCurrentNeuron().getId())) {
+                        fireNeuronSelected(getCurrentNeuron());
+                    }
+                }
+                // activityLog.logEndOfOperation(getWsId(), location);
             }
         });
     }
@@ -1440,10 +1519,10 @@ called from a  SimpleWorker thread.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, BackgroundWorker worker) throws Exception {
+    public void exportSWCData(File swcFile, int downsampleModulo, Collection<TmNeuronMetadata> neurons, Progress progress) throws Exception {
 
         log.info("Exporting {} neurons to SWC file {}",neurons.size(),swcFile);
-        worker.setStatus("Creating headers");
+        progress.setStatus("Creating headers");
         
         Map<Long,List<String>> neuronHeaders = new HashMap<>();
         for (TmNeuronMetadata neuron: neurons) {
@@ -1462,7 +1541,7 @@ called from a  SimpleWorker thread.
             }
         }
         
-        worker.setStatus("Exporting neuron files");
+        progress.setStatus("Exporting neuron files");
 
         // get swcdata via converter, then write; conversion from TmNeurons is done
         //  all at once so all neurons are off set from the same center of mass
@@ -1472,19 +1551,19 @@ called from a  SimpleWorker thread.
         if (swcDatas != null && !swcDatas.isEmpty()) {
             int i = 0;
             for (SWCData swcData: swcDatas) {
-                worker.setStatus("Exporting neuron file "+(i+1));
+                progress.setStatus("Exporting neuron file "+(i+1));
                 if (swcDatas.size() == 1) {
                     swcData.write(swcFile, -1);
                 }
                 else {
                     swcData.write(swcFile, i);
                 }
-                worker.setProgress(i, total);
+                progress.setProgress(i, total);
                 i++;
             }
         }
 
-        worker.setStatus("Exporting combined file");
+        progress.setStatus("Exporting combined file");
         
         // Next write one file containing all neurons, if there are more than one.
         if (swcDatas != null  &&  swcDatas.size() > 1) {
@@ -1495,13 +1574,13 @@ called from a  SimpleWorker thread.
             }
         }
 
-        worker.setProgress(total, total);
-        worker.setStatus("Done");
+        progress.setProgress(total, total);
+        progress.setStatus("Done");
     }
 
     // TODO: This method seems to be almost exactly the same as the one on the server-side (TiledMicroscopeDAO), except this one
     // updates the SimpleWorker. These code bases should be factored in a common class in the Shared modules.
-    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, SimpleWorker worker) throws Exception {
+    public synchronized TmNeuronMetadata importBulkSWCData(final File swcFile, TmWorkspace tmWorkspace, Progress progress) throws Exception {
 
         log.info("Importing neuron from SWC file {}",swcFile);
         
@@ -1537,8 +1616,8 @@ called from a  SimpleWorker thread.
         if (updateFrequency == 0) {
             updateFrequency = 1;
         }
-        if (worker != null) {
-            worker.setProgress(0L, totalLength);
+        if (progress != null) {
+            progress.setProgress(0L, totalLength);
         }
 
         Map<Integer, Integer> nodeParentLinkage = new HashMap<>();
@@ -1565,8 +1644,8 @@ called from a  SimpleWorker thread.
             annotations.put(node.getIndex(), unserializedAnnotation);
             nodeParentLinkage.put(node.getIndex(), node.getParentIndex());
             
-            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
-                worker.setProgress(node.getIndex(), totalLength);
+            if (progress != null && (node.getIndex() % updateFrequency) == 0) {
+                progress.setProgress(node.getIndex(), totalLength);
             }
         }
 
@@ -1678,6 +1757,12 @@ called from a  SimpleWorker thread.
         }
     }
 
+    public void fireAnnotationRadiusUpdated(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationRadiusUpdated(annotation);
+        }
+    }
+
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
         final TmWorkspace workspace = getCurrentWorkspace();
         // update workspace; update and select new neuron; this will draw points as well
@@ -1696,6 +1781,10 @@ called from a  SimpleWorker thread.
 
     void fireAnnotationNotMoved(Long annotationID) {
         fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
+    }
+
+    void fireAnnotationRadiusUpdated(Long annotationID) {
+        fireAnnotationRadiusUpdated(getGeoAnnotationFromID(annotationID));
     }
 
     void fireAnnotationAdded(TmGeoAnnotation annotation) {

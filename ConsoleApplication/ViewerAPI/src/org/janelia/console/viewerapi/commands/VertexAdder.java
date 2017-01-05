@@ -28,17 +28,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.console.viewerapi.commands;
 
-import javax.swing.event.MouseInputAdapter;
-import javax.swing.event.MouseInputListener;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 
 /**
- *
+ * Interface for commands that add an anchor to a neuron
  * @author brunsc
  */
-public class HortaMouseInteractor 
-extends MouseInputAdapter
-implements MouseInputListener
-{
+public interface VertexAdder {
+    NeuronVertex getAddedVertex();
+    NeuronVertex getParentVertex();
 }

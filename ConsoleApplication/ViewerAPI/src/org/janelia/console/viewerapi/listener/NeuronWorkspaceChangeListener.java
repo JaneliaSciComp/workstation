@@ -28,23 +28,16 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.horta;
+package org.janelia.console.viewerapi.listener;
 
-import java.awt.Component;
-import java.awt.geom.Point2D;
-import org.janelia.geometry3d.Vector3;
+import org.janelia.console.viewerapi.model.NeuronSet;
 
 /**
  *
- * @author Christopher Bruns
+ * @author brunsc
  */
-public interface VolumeProjection {
-    public Component getMouseableComponent();
-    public double getIntensity(Point2D xy);
-    public Vector3 worldXyzForScreenXy(Point2D xy);
-    public Vector3 worldXyzForScreenXyInPlane(Point2D xy);
-    public float getPixelsPerSceneUnit();
-    public boolean isNeuronModelAt(Point2D xy);
-    public boolean isVolumeDensityAt(Point2D xy);
-    public NeuronVertexSpatialIndex getVertexIndex();
+public interface NeuronWorkspaceChangeListener {
+
+    void workspaceChanged(NeuronSet workspace);
+    
 }

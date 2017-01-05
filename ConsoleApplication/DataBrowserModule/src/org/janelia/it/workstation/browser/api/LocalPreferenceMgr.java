@@ -57,7 +57,8 @@ public class LocalPreferenceMgr {
         this.modelProperties = new TreeMap<>();
         this.settingsFile = new File(prefsFile);
         try {
-            boolean success = settingsFile.createNewFile();  //only creates if does not exist
+            new File(prefsDir).mkdirs(); // Ensure that the settings directory exists
+            boolean success = settingsFile.createNewFile();  // only creates if does not exist
             if (success) {
                 log.info("Created a new settings file in {}",settingsFile.getAbsolutePath());
                 writeSettings();

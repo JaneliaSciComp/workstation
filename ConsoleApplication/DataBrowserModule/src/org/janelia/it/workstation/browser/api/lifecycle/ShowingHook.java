@@ -8,10 +8,15 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.browser.ConsoleApp;
+import org.janelia.it.workstation.browser.api.AccessManager;
+import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.SystemInfo;
+import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +61,7 @@ public class ShowingHook implements Runnable {
 
         log.info("Showing main window");
         frame.setVisible(true);
-        
+
         if (Startup.isBrandingValidationException()) {
             JOptionPane.showMessageDialog(
                     WindowLocator.getMainFrame(),
@@ -93,6 +98,44 @@ public class ShowingHook implements Runnable {
                 double height = screenSize.getHeight();
                 frame.setLocation(new Point(0, 30)); // 30 pixels down to avoid Mac toolbar at the top of the screen
                 frame.setSize(new Dimension((int)Math.round(width*0.8), (int)Math.round(height*0.8)));
+            }
+        }
+        
+        ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
+        
+        if (SystemInfo.getJavaInfo().contains("1.7")) {
+
+            String html = "<html><body width='420'>" +
+                "<p>You are using Java 7, which will be unsupported in the near future. It is recommended that you upgrade to Java 8.</p>" +
+                "<br>" +
+                "<p>You can download and install Java 8 on your own, or contact the Workstation Team for assistance.</p>" +
+                "</body></html>";
+            
+            String[] buttons = { "Download Java 8", "Request Assistance", "Ignore For Now" };
+            int selectedOption = JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
+                    "Java Upgrade Recommended", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[2]);
+
+            if (selectedOption==0) {
+                Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Java+Installation");
+            }
+            else if (selectedOption==1) {
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("\nSubject Key: ").append(AccessManager.getSubjectKey());
+                sb.append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
+                sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
+                sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
+                sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
+                sb.append("\n\nMessage:\n");
+                
+                String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+                MailDialogueBox popup = new MailDialogueBox(WindowLocator.getMainFrame(), email, 
+                        "[JW] Java Upgrade Request", // Email subject
+                        sb.toString(), 
+                        "I need help upgrading my Java version.", // Body text 
+                        "Create A Ticket", // Window title
+                        "Request Description"); // Prompt label
+                popup.showPopupThenSendEmail();
             }
         }
     }

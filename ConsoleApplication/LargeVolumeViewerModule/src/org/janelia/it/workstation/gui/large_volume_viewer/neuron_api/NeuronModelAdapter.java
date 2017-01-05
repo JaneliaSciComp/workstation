@@ -189,6 +189,51 @@ public class NeuronModelAdapter implements NeuronModel
     }
     
     @Override
+    public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
+        try {
+            if (! (vertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            annotationModel.updateAnnotationRadius(annotation.getId(), micronRadius);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean moveVertex(NeuronVertex vertex, float[] micronXyz) {
+        try {
+            if (! (vertex instanceof NeuronVertexAdapter) )
+                return false;
+            NeuronVertexAdapter nva = (NeuronVertexAdapter)vertex;
+            
+            // Be Careful! I'm calling setLocation() here, so I don't have
+            // recompute the coordinate transform.
+            // But moveAnnotation() might someday notice that the 
+            // destination coordinates are already there
+            nva.setLocation(
+                    micronXyz[0],
+                    micronXyz[1],
+                    micronXyz[2]);
+            TmGeoAnnotation annotation = nva.getTmGeoAnnotation();
+            Vec3 destination = new Vec3(
+                    annotation.getX(),
+                    annotation.getY(),
+                    annotation.getZ());
+            annotationModel.moveAnnotation(annotation.getId(), destination);
+            return true;
+        }
+        catch (Exception ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
+    }
+
+    @Override
     public boolean deleteVertex(NeuronVertex doomedVertex) {
         try {
             if (! (doomedVertex instanceof NeuronVertexAdapter) )

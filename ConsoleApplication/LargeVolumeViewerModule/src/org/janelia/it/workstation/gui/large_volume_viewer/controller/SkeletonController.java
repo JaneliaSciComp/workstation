@@ -193,6 +193,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
     }
 
     @Override
+    public void anchorMoved(TmGeoAnnotation anchor) {
+        skeleton.moveTmGeoAnchor(anchor);
+    }
+
+    @Override
     public void clearAnchors() {
         skeleton.clear();
         for (SkeletonActor actor: actors) {
@@ -340,6 +345,11 @@ public class SkeletonController implements AnchoredVoxelPathListener, TmGeoAnnot
             }
         };
         meshDrawUpdateTimer.schedule(meshDrawUpdateTask, 10000);
+    }
+
+    @Override
+    public void anchorRadiusChanged(TmGeoAnnotation anchor) {
+        // Do nothing: radius has no effect on skeleton view
     }
 
     private class ControllerSkeletonAnchorListener implements SkeletonAnchorListener {

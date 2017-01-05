@@ -2,6 +2,7 @@ package org.janelia.it.workstation.browser.util;
 
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
@@ -730,5 +732,17 @@ public class Utils {
             c = c.getParent();
         }
         return null;
+    }
+    
+    public static void openUrlInBrowser(String url) {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(URI.create(url));
+            }
+            catch (IOException ex) {
+                log.error("Could not open URL: "+url, ex);
+            }
+        }
     }
 }

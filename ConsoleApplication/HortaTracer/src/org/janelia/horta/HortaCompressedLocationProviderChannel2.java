@@ -40,7 +40,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author fosterl
  */
-@ServiceProvider(service = Tiled3dSampleLocationProviderAcceptor.class, path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH)
+@ServiceProvider(
+        service = Tiled3dSampleLocationProviderAcceptor.class, 
+        path=Tiled3dSampleLocationProviderAcceptor.LOOKUP_PATH,
+        position=420)
 public class HortaCompressedLocationProviderChannel2 
     extends HortaLocationProviderBase
     implements Tiled3dSampleLocationProviderAcceptor 

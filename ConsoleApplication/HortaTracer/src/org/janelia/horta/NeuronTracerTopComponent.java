@@ -145,6 +145,7 @@ import org.janelia.horta.volume.BrickInfo;
 import org.janelia.console.viewerapi.listener.TolerantMouseClickListener;
 import org.janelia.console.viewerapi.model.ChannelColorModel;
 import org.janelia.console.viewerapi.model.ImageColorModel;
+import org.janelia.console.viewerapi.model.NeuronVertexUpdateObserver;
 import org.janelia.horta.actions.ResetRotationAction;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.BlockTileSource;
@@ -203,7 +204,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public static final String BASE_YML_FILE = "tilebase.cache.yml";
     
     private SceneWindow sceneWindow;
-    private OrbitPanZoomInteractor interactor;
+    private OrbitPanZoomInteractor worldInteractor;
     private HortaMetaWorkspace metaWorkspace;
     private final NeuronVertexSpatialIndex neuronVertexIndex;
     
@@ -303,7 +304,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 neuronMPRenderer.setIntensityBufferDirty();
             }
         });
-
+        
         // Create right-click context menu
         setupContextMenu(sceneWindow.getInnerComponent());
         
@@ -556,6 +557,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                         redrawNow();
                     }
                 });
+                spheresActor.getNeuron().getVertexUpdatedObservable().addObserver(new NeuronVertexUpdateObserver() {
+                    @Override
+                    public void update(GenericObservable<VertexWithNeuron> object, VertexWithNeuron data) {
+                        redrawNow();
+                    }
+                });
             }
         }
 
@@ -626,11 +633,29 @@ public final class NeuronTracerTopComponent extends TopComponent
         
         // Delegate tracing interaction to customized class
         tracingInteractor = new TracingInteractor(this, undoRedoManager);
-
+        
+        // push listening into HortaMouseEventDispatcher
+        final boolean bDispatchMouseEvents = true;
+        
+        Component interactorComponent = getMouseableComponent();
+        MouseInputListener listener = new TolerantMouseClickListener(tracingInteractor, 5);
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(listener);
+            interactorComponent.addMouseMotionListener(listener);
+        }
+        interactorComponent.addKeyListener(tracingInteractor);
+        
         // Setup 3D viewer mouse interaction
-        interactor = new OrbitPanZoomInteractor(
+        worldInteractor = new OrbitPanZoomInteractor(
                 sceneWindow.getCamera(),
                 sceneWindow.getInnerComponent());
+        
+        // TODO: push listening into HortaMouseEventDispatcher
+        if (! bDispatchMouseEvents) {
+            interactorComponent.addMouseListener(worldInteractor);
+            interactorComponent.addMouseMotionListener(worldInteractor);
+        }
+        interactorComponent.addMouseWheelListener(worldInteractor);
         
         // 3) Add custom interactions
         MouseInputListener hortaMouseListener = new MouseInputAdapter() 
@@ -700,10 +725,21 @@ public final class NeuronTracerTopComponent extends TopComponent
                 }
             }
         };
-        // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
-        TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
-        sceneWindow.getInnerComponent().addMouseListener(tolerantMouseClickListener);
-        sceneWindow.getInnerComponent().addMouseMotionListener(tolerantMouseClickListener);
+        
+        if (! bDispatchMouseEvents) {
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(hortaMouseListener, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
+        
+        if (bDispatchMouseEvents) {
+            HortaMouseEventDispatcher listener0 = new HortaMouseEventDispatcher(tracingInteractor, worldInteractor, hortaMouseListener);
+            // Allow some slop in mouse position during mouse click to match tracing interactor behavior July 2016 CMB
+            TolerantMouseClickListener tolerantMouseClickListener = new TolerantMouseClickListener(listener0, 5);
+            interactorComponent.addMouseListener(tolerantMouseClickListener);
+            interactorComponent.addMouseMotionListener(tolerantMouseClickListener);
+        }
 
     }
 
@@ -1539,13 +1575,22 @@ public final class NeuronTracerTopComponent extends TopComponent
                 topMenu.add(new JPopupMenu.Separator());
                 final TracingInteractor.InteractorContext interactorContext = tracingInteractor.createContext();
 
+                if (interactorContext.canUpdateAnchorRadius()) {
+                    topMenu.add(new AbstractAction("Adjust Anchor Radius") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.updateAnchorRadius();
+                        }
+                    });
+
                 if (interactorContext.canClearParent()) {
                     topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        interactorContext.clearParent();
-                    }
-                });
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.clearParent();
+                        }
+                    });
+                }
                 }
                 
                 if (interactorContext.getCurrentParentAnchor() != null) {
@@ -1707,6 +1752,17 @@ public final class NeuronTracerTopComponent extends TopComponent
     public Vector3 worldXyzForScreenXy(Point2D xy) {
         PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
         double depthOffset = neuronMPRenderer.depthOffsetForScreenXy(xy, pCam);
+        Vector3 xyz = worldXyzForScreenXy(
+                xy,
+                pCam,
+                depthOffset);
+        return xyz;
+    }
+
+    @Override
+    public Vector3 worldXyzForScreenXyInPlane(Point2D xy) {
+        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+        double depthOffset = 0.0;
         Vector3 xyz = worldXyzForScreenXy(
                 xy,
                 pCam,
