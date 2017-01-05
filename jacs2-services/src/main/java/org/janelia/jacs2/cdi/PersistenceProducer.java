@@ -19,6 +19,7 @@ import org.janelia.jacs2.utils.MapOfEnumCodec;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 public class PersistenceProducer {
 
@@ -39,7 +40,8 @@ public class PersistenceProducer {
                         new EnumCodec<>(JacsServiceState.class),
                         new EnumCodec<>(ProcessingLocation.class),
                         new EnumCodec<>(FileType.class),
-                        new MapOfEnumCodec<>(FileType.class, HashMap.class)
+                        new MapOfEnumCodec<>(FileType.class, HashMap.class),
+                        new MapOfEnumCodec<>(FileType.class, LinkedHashMap.class)
                 )
         );
         MongoClientOptions.Builder optionsBuilder = MongoClientOptions.builder().codecRegistry(codecRegistry);
