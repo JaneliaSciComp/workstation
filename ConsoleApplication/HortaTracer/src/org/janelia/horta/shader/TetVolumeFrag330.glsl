@@ -198,7 +198,7 @@ vec3 cold_color_for_hue_intensity(in float hue, in float saturation, in float in
     return hot_color_for_hue_intensity(hue, saturation, 1.0 - intensity);
 }
 
-vec4 rgba_for_scaled_intensities(in vec3 rescaled) {
+vec3 rgb_for_scaled_intensities(in vec3 rescaled) {
     // hot color map
     vec3 ch1 = hot_color_for_hue_intensity(channelColorHue.r, channelColorSaturation.r, rescaled.r); // green
     vec3 ch2 = hot_color_for_hue_intensity(channelColorHue.g, channelColorSaturation.g, rescaled.g); // magenta
@@ -206,6 +206,11 @@ vec4 rgba_for_scaled_intensities(in vec3 rescaled) {
     const vec3 ones = vec3(1);
     vec3 combined = ones - (ones - ch1)*(ones - ch2)*(ones - ch3); // compromise between sum and max
     combined = clamp(combined, 0, 1);
+    return combined;
+}
+
+vec4 rgba_for_scaled_intensities(in vec3 rescaled) {
+    vec3 combined = rgb_for_scaled_intensities(rescaled);
     float opacity = opacity_from_rescaled_channels(rescaled);
     return vec4(combined, opacity);
 }
@@ -298,6 +303,10 @@ CHANNEL_VEC fetch_texture_sample(in vec3 texCoord, in int levelOfDetail)
 
 // Maximum intensity projection
 vec4 integrate_max_intensity(in vec4 front, in vec4 back) 
+{
+    return clamp(max(front, back), 0, 1);
+}
+vec3 integrate_max_intensity(in vec3 front, in vec3 back) 
 {
     return clamp(max(front, back), 0, 1);
 }
@@ -422,7 +431,8 @@ void main()
     vec3 rearTexel = rearTexCoord * texelsPerVolume;
 
     // Cast ray through volume
-    vec4 integratedColor = vec4(0);
+    OUTPUT_CHANNEL_VEC integratedIntensity = OUTPUT_CHANNEL_VEC(0);
+    float integratedOpacity = 0;
     float t0 = minRay;
     TracingCore tracingCore = TracingCore(false, tFocus, tFocus, -1.0);
     for (int s = 0; s < 1000; ++s) // Step through each texel in our path, one at at time
@@ -460,23 +470,47 @@ void main()
         OUTPUT_CHANNEL_VEC localCombined = OUTPUT_CHANNEL_VEC(localIntensity, tracingIntensity);
         // Apply brightness correction and compute final colors
         OUTPUT_CHANNEL_VEC localRescaled = rescale_intensities(localCombined);
-        vec4 localColor = rgba_for_scaled_intensities(localRescaled);
+
+        // vec4 localColor = rgba_for_scaled_intensities(localRescaled);
+        float localOpacity = opacity_from_rescaled_channels(localRescaled);
 
         float fade = 1.0;
         if (t < fadeNear)
             fade = (t - slabMin) / (fadeNear - slabMin);
         if (t > fadeFar)
             fade = (slabMax - t) / (slabMax - fadeFar);
-        localColor.a *= fade;
+        localOpacity *= fade;
 
         if (projectionMode == PROJECTION_MAXIMUM)
-            integratedColor = integrate_max_intensity(integratedColor, localColor);
+            integratedIntensity = integrate_max_intensity(integratedIntensity, localCombined);
         else { // PROJECTION_OCCLUDING
+
+            // Taken from VolumeMipFrag.glsl
+            // Incorporate path length into voxel opacity
+            float segmentLengthInRayParam = t1 - t0;
+            const vec3 volumeMicrometers = vec3(200, 200, 200); // TODO - set to correct value
+            vec3 fineVoxelMicrometers = volumeMicrometers / textureSize(volumeTexture, 0);
+            vec3 voxelMicrometers = fineVoxelMicrometers; // generally pops lighter at coarser LOD, but it's closer
+            // TODO: optimization: precompute umPerRayParam once per ray
+            float umPerRayParam = dot(abs(rayDirectionInTexels), voxelMicrometers);
+            float segmentLengthInUm = segmentLengthInRayParam * umPerRayParam;
+            // see Beer Lambert law
+            float transmittance = 1.0 - localOpacity;
+            const float canonicalOccludingPathLengthUm = 1.5;
+            float exponent = segmentLengthInUm / canonicalOccludingPathLengthUm;
+            transmittance = pow(transmittance, exponent);
+            localOpacity = 1.0 - transmittance;
+
+            /*
             // Use Beer-Lambert law to compute opacity
             float pathLength = (t1 - t0) / standardPathLength;
-            float concentration = localColor.a;
-            localColor.a = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
-            integratedColor = integrate_occluding(integratedColor, localColor);
+            float concentration = localOpacity;
+            localOpacity = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
+            */
+
+            vec4 integrated = integrate_occluding(vec4(integratedIntensity, integratedOpacity), vec4(localCombined, localOpacity));
+            integratedIntensity = integrated.rgb;
+            integratedOpacity = integrated.a;
         }
 
         // Check for ray termination
@@ -487,7 +521,7 @@ void main()
         else if (tracingCore.inLocalBody)
             rayIsFinished = false; // Keep climbing toward the bright neurite core
         // Terminate early if we hit an opaque surface
-        else if (integratedColor.a >= 0.999) { // 0.99 is too small
+        else if (integratedOpacity >= 0.999) { // 0.99 is too small
             rayIsFinished = true;
         }
 
@@ -496,5 +530,7 @@ void main()
         t0 = t1;
     }
 
+    OUTPUT_CHANNEL_VEC rescaled = rescale_intensities(integratedIntensity);
+    vec4 integratedColor = vec4(rgb_for_scaled_intensities(rescaled), integratedOpacity);
     save_color(integratedColor, tracingCore, slabMin, slabMax);
 }
