@@ -484,10 +484,30 @@ void main()
         if (projectionMode == PROJECTION_MAXIMUM)
             integratedIntensity = integrate_max_intensity(integratedIntensity, localCombined);
         else { // PROJECTION_OCCLUDING
+
+            // Taken from VolumeMipFrag.glsl
+            // Incorporate path length into voxel opacity
+            float segmentLengthInRayParam = t1 - t0;
+            const vec3 volumeMicrometers = vec3(200, 200, 200); // TODO - set to correct value
+            vec3 fineVoxelMicrometers = volumeMicrometers / textureSize(volumeTexture, 0);
+            vec3 voxelMicrometers = fineVoxelMicrometers; // generally pops lighter at coarser LOD, but it's closer
+            // TODO: optimization: precompute umPerRayParam once per ray
+            float umPerRayParam = dot(abs(rayDirectionInTexels), voxelMicrometers);
+            float segmentLengthInUm = segmentLengthInRayParam * umPerRayParam;
+            // see Beer Lambert law
+            float transmittance = 1.0 - localOpacity;
+            const float canonicalOccludingPathLengthUm = 1.5;
+            float exponent = segmentLengthInUm / canonicalOccludingPathLengthUm;
+            transmittance = pow(transmittance, exponent);
+            localOpacity = 1.0 - transmittance;
+
+            /*
             // Use Beer-Lambert law to compute opacity
             float pathLength = (t1 - t0) / standardPathLength;
             float concentration = localOpacity;
             localOpacity = 1.0 - exp(-pathLength * concentration); // Longer path -> more opacity
+            */
+
             vec4 integrated = integrate_occluding(vec4(integratedIntensity, integratedOpacity), vec4(localCombined, localOpacity));
             integratedIntensity = integrated.rgb;
             integratedOpacity = integrated.a;
