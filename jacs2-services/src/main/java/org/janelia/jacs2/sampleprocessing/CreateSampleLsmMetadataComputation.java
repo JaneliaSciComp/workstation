@@ -33,8 +33,6 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
         this.logger = logger;
     }
 
-    @Inject
-
     @Override
     public CompletionStage<JacsService<List<File>>> preProcessData(JacsService<List<File>> jacsService) {
         JacsServiceData serviceData = jacsService.getJacsServiceData();

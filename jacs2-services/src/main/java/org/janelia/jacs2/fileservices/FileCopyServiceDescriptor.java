@@ -26,7 +26,7 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
     }
 
     @Inject
-    private Instance<FileCopyComputation> sageComputationSource;
+    private Instance<FileCopyComputation> fileCopyComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {
@@ -43,7 +43,7 @@ public class FileCopyServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceComputation createComputationInstance() {
-        return sageComputationSource.get();
+        return fileCopyComputationSource.get();
     }
 
 }
