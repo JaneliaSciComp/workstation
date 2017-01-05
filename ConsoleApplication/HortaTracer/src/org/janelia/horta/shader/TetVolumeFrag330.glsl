@@ -481,8 +481,10 @@ void main()
             fade = (slabMax - t) / (slabMax - fadeFar);
         localOpacity *= fade;
 
-        if (projectionMode == PROJECTION_MAXIMUM)
+        if (projectionMode == PROJECTION_MAXIMUM) {
             integratedIntensity = integrate_max_intensity(integratedIntensity, localCombined);
+            integratedOpacity = clamp(max(integratedOpacity, localOpacity), 0, 1);
+        }
         else { // PROJECTION_OCCLUDING
 
             // Taken from VolumeMipFrag.glsl
