@@ -11,17 +11,20 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.janelia.it.jacs.shared.utils.MailHelper;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.browser.ConsoleApp;
 import org.janelia.it.workstation.browser.api.AccessManager;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
+import org.janelia.it.workstation.browser.util.SystemInfo;
 import org.openide.modules.Places;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created with IntelliJ IDEA.
- * User: kimmelr
- * Date: 5/22/12
- * Time: 2:51 PM
+ * Creates a dialog to get the user's input and then sends an email to JIRA to create a ticket.
+ * 
+ * @author kimmelr
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class MailDialogueBox {
 
@@ -33,36 +36,60 @@ public class MailDialogueBox {
     private String fromEmail;
     private String subject = "";
     private String initialBody = "";
-    private String title = "Problem Description";
-    private String promptText = "If possible, please describe what you were doing when the error occured.";
-    private String messagePrefix = "";
-    private String messageSuffix = "";
+    private String title = "";
+    private String promptText = "";
+    private StringBuffer body = new StringBuffer();
     private JFrame parentFrame;
 
-    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject) {
+    private MailDialogueBox(JFrame parentFrame, String fromEmail) {
         this.parentFrame = parentFrame;
         this.fromEmail = fromEmail;
-        this.subject = subject;
+    }
+    
+    public static MailDialogueBox newDialog(JFrame parentFrame, String fromEmail) {
+        return new MailDialogueBox(parentFrame, fromEmail);
     }
 
-    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix) {
-        this.parentFrame = parentFrame;
-        this.fromEmail = fromEmail;
-        this.subject = subject;
-        this.messagePrefix = messagePrefix;
-    }
-
-    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix, String initialBody, String title, String promptText) {
-        this.parentFrame = parentFrame;
-        this.fromEmail = fromEmail;
-        this.subject = subject;
+    public MailDialogueBox withTitle(String title) {
         this.title = title;
-        this.promptText = promptText;
-        this.initialBody = initialBody;
-        this.messagePrefix = messagePrefix;
+        return this;
     }
 
-    public void showPopupThenSendEmail() {
+    public MailDialogueBox withPromptText(String promptText) {
+        this.promptText = promptText;
+        return this;
+    }
+
+    public MailDialogueBox withTextAreaBody(String initialBody) {
+        this.initialBody = initialBody;
+        return this;
+    }
+    
+    public MailDialogueBox withEmailSubject(String subject) {
+        this.subject = subject;
+        return this;
+    }
+
+    public MailDialogueBox append(String str) {
+        body.append(str);
+        return this;
+    }
+    
+    public MailDialogueBox appendStandardPrefix() {
+        append("\nSubject Key: ").append(AccessManager.getSubjectKey());
+        append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
+        append("\nOperating System: ").append(SystemInfo.getOSInfo());
+        append("\nJava: ").append(SystemInfo.getJavaInfo());
+        append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
+        return this;
+    }
+
+    public MailDialogueBox appendLine(String str) {
+        body.append(str).append("\n");
+        return this;
+    }
+    
+    public String showPopup() {
         String desc = null;
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
@@ -71,19 +98,15 @@ public class MailDialogueBox {
         textArea.setText(initialBody);
         panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
         int ans;
-        while (desc == null || desc.equals("")) {
+        while (StringUtils.isBlank(desc)) {
             ans = JOptionPane.showConfirmDialog(parentFrame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-            if (ans == JOptionPane.CANCEL_OPTION) return;
-            desc = textArea.getText() +"\n";
+            if (ans == JOptionPane.CANCEL_OPTION) return null;
+            desc = textArea.getText() + "\n";
         }
-        sendEmail(desc);
-    }
-
-    public void sendEmail() {
-        sendEmail("");
+        return desc;
     }
     
-    private void sendEmail(String desc) {
+    public void sendEmail() {
         
         // Flush all long handlers so that we have a complete log file
         java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
@@ -102,19 +125,9 @@ public class MailDialogueBox {
             filename = AccessManager.getUsername()+"_"+LOG_FILE_NAME;
         }
         
-        String body = messagePrefix + desc + messageSuffix;
-        
         log.info("Sending email from {} to {} with attachment {}",fromEmail,toEmail, logfile);
         
         MailHelper helper = new MailHelper();
-        helper.sendEmail(fromEmail, toEmail, subject, body, logfile, filename);
-    }
-    
-    /**
-     * This method gives the caller a way to place text at the end of the message.
-     * @param messageSuffixInformation Text to display after everything else.
-     */
-    public void addMessageSuffix(String messageSuffixInformation) {
-        this.messageSuffix = messageSuffixInformation;
+        helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
     }
 }

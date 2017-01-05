@@ -28,14 +28,22 @@ public final class ReportABugMenuAction extends AbstractAction {
 
     @Override
     public void actionPerformed(ActionEvent e) {
+        
         JFrame parentFrame = WindowLocator.getMainFrame();
         String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
-        MailDialogueBox popup = new MailDialogueBox(parentFrame, email, 
-                "[JW] Bug Report",
-                "",
-                "",
-                "Create A Ticket",
-                "Request Description");
-        popup.showPopupThenSendEmail();
+        
+        MailDialogueBox popup = MailDialogueBox.newDialog(parentFrame, email)
+                .withTitle("Create A Ticket")
+                .withPromptText("Problem Description:")
+                .withEmailSubject("Bug Report")
+                .appendStandardPrefix()
+                .append("\n\nMessage:\n");
+        
+        String desc = popup.showPopup();
+        if (desc!=null) {
+            popup.appendLine(desc);
+            popup.sendEmail();
+        }
+        
     }
 }

@@ -118,24 +118,24 @@ public class ShowingHook implements Runnable {
             if (selectedOption==0) {
                 Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Java+Installation");
             }
-            else if (selectedOption==1) {
-
-                StringBuilder sb = new StringBuilder();
-                sb.append("\nSubject Key: ").append(AccessManager.getSubjectKey());
-                sb.append("\nApplication: ").append(ConsoleApp.getConsoleApp().getApplicationName()).append(" v").append(ConsoleApp.getConsoleApp().getApplicationVersion());
-                sb.append("\nOperating System: ").append(SystemInfo.getOSInfo());
-                sb.append("\nJava: ").append(SystemInfo.getJavaInfo());
-                sb.append("\nRuntime: ").append(SystemInfo.getRuntimeJavaInfo());
-                sb.append("\n\nMessage:\n");
+            else if (selectedOption==1) {                
                 
                 String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
-                MailDialogueBox popup = new MailDialogueBox(WindowLocator.getMainFrame(), email, 
-                        "[JW] Java Upgrade Request", // Email subject
-                        sb.toString(), 
-                        "I need help upgrading my Java version.", // Body text 
-                        "Create A Ticket", // Window title
-                        "Request Description"); // Prompt label
-                popup.showPopupThenSendEmail();
+                
+                MailDialogueBox popup = MailDialogueBox.newDialog(WindowLocator.getMainFrame(), email)
+                        .withTitle("Create A Ticket")
+                        .withPromptText("Problem Description:")
+                        .withEmailSubject("Java Upgrade Request")
+                        .withTextAreaBody("I need help upgrading my Java version.")
+                        .appendStandardPrefix()
+                        .append("\n\nMessage:\n");
+                
+                String desc = popup.showPopup();
+                if (desc!=null) {
+                    popup.appendLine(desc);
+                    popup.sendEmail();
+                }
+                
             }
         }
     }

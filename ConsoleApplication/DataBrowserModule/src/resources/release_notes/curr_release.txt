@@ -4,6 +4,7 @@ Workstation Browser
 * The project website has been revamped: http://workstation.int.janelia.org
 * Added better error messages for permission errors
 * Fixed error when dragging an item from the Recently Opened folder
+* Added message at startup which alerts the user if they are running Java 7
 * Other minor bug fixes
 
 FlyLight
