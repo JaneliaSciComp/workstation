@@ -13,19 +13,19 @@ import org.openide.util.NbBundle.Messages;
 
 @ActionID(
         category = "Help",
-        id = "UserManualMenuAction"
+        id = "WebsiteMenuAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_UserGuideMenuAction",
+        displayName = "#CTL_WebsiteMenuAction",
         lazy = true
 )
-@ActionReference(path = "Menu/Help", position = 120)
-@Messages("CTL_UserGuideMenuAction=User Manual")
-public final class UserManualMenuAction extends AbstractAction {
+@ActionReference(path = "Menu/Help", position = 130)
+@Messages("CTL_WebsiteMenuAction=Workstation Website")
+public final class WebsiteMenuAction extends AbstractAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        ActivityLogHelper.logUserAction("UserManualMenuAction.actionPerformed");
-        Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Introduction");
+        ActivityLogHelper.logUserAction("WebsiteMenuAction.actionPerformed");
+        Utils.openUrlInBrowser("http://workstation.int.janelia.org");
     }
 }

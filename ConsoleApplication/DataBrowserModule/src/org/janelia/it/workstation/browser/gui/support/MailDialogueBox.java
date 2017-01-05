@@ -1,9 +1,8 @@
 package org.janelia.it.workstation.browser.gui.support;
 
+import java.awt.BorderLayout;
 import java.io.File;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -33,34 +32,47 @@ public class MailDialogueBox {
     private final String toEmail = ConsoleProperties.getString("console.HelpEmail");
     private String fromEmail;
     private String subject = "";
+    private String initialBody = "";
+    private String title = "Problem Description";
+    private String promptText = "If possible, please describe what you were doing when the error occured.";
     private String messagePrefix = "";
     private String messageSuffix = "";
     private JFrame parentFrame;
 
     public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject) {
+        this.parentFrame = parentFrame;
         this.fromEmail = fromEmail;
         this.subject = subject;
-        this.parentFrame = parentFrame;
     }
 
-    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix){
+    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix) {
+        this.parentFrame = parentFrame;
         this.fromEmail = fromEmail;
         this.subject = subject;
-        this.parentFrame = parentFrame;
         this.messagePrefix = messagePrefix;
     }
 
-    public void showPopupThenSendEmail(){
+    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix, String initialBody, String title, String promptText) {
+        this.parentFrame = parentFrame;
+        this.fromEmail = fromEmail;
+        this.subject = subject;
+        this.title = title;
+        this.promptText = promptText;
+        this.initialBody = initialBody;
+        this.messagePrefix = messagePrefix;
+    }
+
+    public void showPopupThenSendEmail() {
         String desc = null;
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.add(new JLabel("If possible, please describe what you were doing when the error occured."));
-        panel.add(Box.createVerticalStrut(15));
-        JTextArea textArea = new JTextArea(4, 20);
-        panel.add(new JScrollPane(textArea));
+        panel.setLayout(new BorderLayout());
+        panel.add(new JLabel(promptText), BorderLayout.NORTH);
+        JTextArea textArea = new JTextArea(4, 40);
+        textArea.setText(initialBody);
+        panel.add(new JScrollPane(textArea), BorderLayout.CENTER);
         int ans;
         while (desc == null || desc.equals("")) {
-            ans = JOptionPane.showConfirmDialog(parentFrame, panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            ans = JOptionPane.showConfirmDialog(parentFrame, panel, title, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (ans == JOptionPane.CANCEL_OPTION) return;
             desc = textArea.getText() +"\n";
         }
