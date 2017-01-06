@@ -103,40 +103,40 @@ public class ShowingHook implements Runnable {
         
         ConsoleState.setCurrState(ConsoleState.WINDOW_SHOWN);
         
-        if (SystemInfo.getJavaInfo().contains("1.7")) {
-
-            String html = "<html><body width='420'>" +
-                "<p>You are using Java 7, which will be unsupported in the near future. It is recommended that you upgrade to Java 8.</p>" +
-                "<br>" +
-                "<p>You can download and install Java 8 on your own, or contact the Workstation Team for assistance.</p>" +
-                "</body></html>";
-            
-            String[] buttons = { "Download Java 8", "Request Assistance", "Ignore For Now" };
-            int selectedOption = JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
-                    "Java Upgrade Recommended", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[2]);
-
-            if (selectedOption==0) {
-                Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Java+Installation");
-            }
-            else if (selectedOption==1) {                
-                
-                String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
-                
-                MailDialogueBox popup = MailDialogueBox.newDialog(WindowLocator.getMainFrame(), email)
-                        .withTitle("Create A Ticket")
-                        .withPromptText("Problem Description:")
-                        .withEmailSubject("Java Upgrade Request")
-                        .withTextAreaBody("I need help upgrading my Java version.")
-                        .appendStandardPrefix()
-                        .append("\n\nMessage:\n");
-                
-                String desc = popup.showPopup();
-                if (desc!=null) {
-                    popup.appendLine(desc);
-                    popup.sendEmail();
-                }
-                
-            }
-        }
+//        if (SystemInfo.getJavaInfo().contains("1.7")) {
+//
+//            String html = "<html><body width='420'>" +
+//                "<p>You are using Java 7, which will be unsupported in the near future. It is recommended that you upgrade to Java 8.</p>" +
+//                "<br>" +
+//                "<p>You can download and install Java 8 on your own, or contact the Workstation Team for assistance.</p>" +
+//                "</body></html>";
+//            
+//            String[] buttons = { "Download Java 8", "Request Assistance", "Ignore For Now" };
+//            int selectedOption = JOptionPane.showOptionDialog(WindowLocator.getMainFrame(), html,
+//                    "Java Upgrade Recommended", JOptionPane.INFORMATION_MESSAGE, 0, null, buttons, buttons[2]);
+//
+//            if (selectedOption==0) {
+//                Utils.openUrlInBrowser("http://wiki.int.janelia.org/wiki/display/JW/Java+Installation");
+//            }
+//            else if (selectedOption==1) {                
+//                
+//                String email = (String) ConsoleApp.getConsoleApp().getModelProperty(AccessManager.USER_EMAIL);
+//                
+//                MailDialogueBox popup = MailDialogueBox.newDialog(WindowLocator.getMainFrame(), email)
+//                        .withTitle("Create A Ticket")
+//                        .withPromptText("Problem Description:")
+//                        .withEmailSubject("Java Upgrade Request")
+//                        .withTextAreaBody("I need help upgrading my Java version.")
+//                        .appendStandardPrefix()
+//                        .append("\n\nMessage:\n");
+//                
+//                String desc = popup.showPopup();
+//                if (desc!=null) {
+//                    popup.appendLine(desc);
+//                    popup.sendEmail();
+//                }
+//                
+//            }
+//        }
     }
 }
