@@ -8,7 +8,6 @@ public class JacsService<R> {
 
     private final JacsServiceData jacsServiceData;
     private final JacsServiceDispatcher serviceDispatcher;
-
     private R result;
 
     public JacsService(JacsServiceDispatcher serviceDispatcher, JacsServiceData jacsServiceData) {
