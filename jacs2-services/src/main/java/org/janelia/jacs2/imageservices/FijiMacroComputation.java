@@ -81,7 +81,7 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
         try {
             Path scratchDir = Paths.get(scratchLocation, jacsService.getName(), jacsService.getName() + "_" + jacsService.getId());
             Path workingDir = Paths.get(getWorkingDirectory(jacsService, null), jacsService.getName());
-            Files.createDirectory(workingDir);
+            Files.createDirectories(workingDir);
             scriptFile = Files.createFile(
                     Paths.get(workingDir.toString(), jacsService.getName() + "_" + jacsService.getId() + ".sh"),
                     PosixFilePermissions.asFileAttribute(perms)).toFile();
