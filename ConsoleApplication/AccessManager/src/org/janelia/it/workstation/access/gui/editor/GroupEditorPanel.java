@@ -15,8 +15,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.subjects.Group;
 import org.janelia.it.jacs.model.domain.subjects.User;
 import org.janelia.it.jacs.model.domain.subjects.UserGroupRole;
 import org.janelia.it.jacs.model.domain.support.DomainUtils;
@@ -46,7 +49,7 @@ public class GroupEditorPanel extends JPanel {
     private JButton saveButton;
     
     private List<Subject> subjects;
-    private Subject group;
+    private Group group;
     
     public GroupEditorPanel(List<Subject> subjects) {
 
@@ -62,6 +65,17 @@ public class GroupEditorPanel extends JPanel {
         attrPanel.addItem("Group Name", keyInput);
         
         nameInput = new JTextField(30);
+        nameInput.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                saveButton.setEnabled(true);
+            }
+            public void removeUpdate(DocumentEvent e) {
+                saveButton.setEnabled(true);
+            }
+            public void insertUpdate(DocumentEvent e) {
+                saveButton.setEnabled(true);
+            }
+        });
         attrPanel.addItem("Full Name", nameInput);
         
         attrPanel.addSeparator("Group Membership");
@@ -69,27 +83,31 @@ public class GroupEditorPanel extends JPanel {
         membersPanel = new MembershipTablePanel<User>() {
             
             protected User showAddItemDialog() {
-                // TODO: show edit dialog
+                UserRoleDialog<Group> dialog = new UserRoleDialog<Group>(subjects, group);
+                dialog.showForNewRole();
+                saveButton.setEnabled(true);
                 return null;
             }
             
             public void populatePopupMenu(JPopupMenu menu, User user) {
 
-                JMenuItem changeRoleItem = new JMenuItem("  Change role");
+                JMenuItem changeRoleItem = new JMenuItem("  Change Role");
                 changeRoleItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         // TODO: show edit dialog
+                        saveButton.setEnabled(true);
                     }
                 });
                 menu.add(changeRoleItem);
 
-                JMenuItem removeItem = new JMenuItem("  Remove from group");
+                JMenuItem removeItem = new JMenuItem("  Remove From Group");
                 removeItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         User selectedUser = getSelectedItem();
                         removeItemFromList(selectedUser);
+                        saveButton.setEnabled(true);
                     }
                 });
                 menu.add(removeItem);
@@ -118,9 +136,10 @@ public class GroupEditorPanel extends JPanel {
         
         //membersPanel.updateView();
         
-        attrPanel.addItem(membersPanel);
+        attrPanel.addItem(membersPanel, "filly");
 
-        saveButton = new JButton("Save");
+        saveButton = new JButton("Save Changes");
+        saveButton.setEnabled(false);
         saveButton.setToolTipText("Save changes");
         saveButton.addActionListener(new ActionListener() {
             @Override
@@ -151,7 +170,7 @@ public class GroupEditorPanel extends JPanel {
         return false;
     }
 
-    public void loadGroup(final Subject group) {
+    public void loadGroup(final Group group) {
 
         this.group = group;
         Utils.setWaitingCursor(GroupEditorPanel.this);
