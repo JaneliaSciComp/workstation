@@ -19,6 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -78,15 +79,16 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
         BufferedWriter scriptStream = null;
         File scriptFile = null;
         try {
-            String scratchDir = new File(scratchLocation, jacsService.getName() + "_" + jacsService.getId()).getAbsolutePath();
+            Path scratchDir = Paths.get(scratchLocation, jacsService.getName(), jacsService.getName() + "_" + jacsService.getId());
+            Path workingDir = Paths.get(getWorkingDirectory(jacsService, null), jacsService.getName());
             scriptFile = Files.createFile(
-                    Paths.get(getWorkingDirectory(jacsService, null), jacsService.getName() + "_" + jacsService.getId() + ".sh"),
+                    Paths.get(workingDir.toString(), jacsService.getName() + "_" + jacsService.getId() + ".sh"),
                     PosixFilePermissions.asFileAttribute(perms)).toFile();
             scriptStream = new BufferedWriter(new FileWriter(scriptFile));
             scriptStream.append("DISPLAY_PORT=").append(Integer.toString(ScriptingUtils.getRandomPort(START_DISPLAY_PORT))).append('\n');
             scriptStream.append(ScriptingUtils.startScreenCapture("$DISPLAY_PORT", "1280x1024x24")).append('\n');
             // Create temp dir so that large temporary avis are not created on the network drive
-            scriptStream.append("export TMPDIR=").append(scratchDir).append("\n");
+            scriptStream.append("export TMPDIR=").append(scratchDir.toString()).append("\n");
             scriptStream.append("mkdir -p $TMPDIR\n");
             scriptStream.append("TEMP_DIR=`mktemp -d`\n");
             scriptStream.append("function cleanTemp {\n");
@@ -99,7 +101,7 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
             scriptStream.append("trap exitHandler EXIT\n");
 
             String fijiCmd = String.format("%s -macro %s %s\n", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs);
-            scriptStream.append(fijiCmd).append('\n');
+            scriptStream.append(fijiCmd).append('&').append('\n');
             // Monitor Fiji and take periodic screenshots, killing it eventually
             scriptStream.append("fpid=$!\n");
             scriptStream.append(ScriptingUtils.screenCaptureLoop(scratchDir + "/xvfb.${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
