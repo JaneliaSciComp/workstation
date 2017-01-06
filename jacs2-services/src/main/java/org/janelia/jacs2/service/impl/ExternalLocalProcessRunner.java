@@ -20,29 +20,22 @@ import java.util.concurrent.CompletionStage;
 public class ExternalLocalProcessRunner implements ExternalProcessRunner {
     @Inject
     private Logger logger;
-    @PropertyValue(name = "service.DefaultWorkingDir")
-    @Inject
-    private String defaultWorkingDir;
 
     @Override
     public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
+                                                      String workingDirName,
                                                       ExternalProcessOutputHandler outStreamHandler,
                                                       ExternalProcessOutputHandler errStreamHandler,
                                                       JacsService<R> serviceContext) {
         logger.debug("Begin local process invocation for {}", serviceContext);
         ProcessBuilder processBuilder = new ProcessBuilder(ImmutableList.<String>builder().add(cmd).addAll(cmdArgs).build());
         processBuilder.environment().putAll(env);
-        JacsServiceData serviceData = serviceContext.getJacsServiceData();
         logger.info("Start {} with {} {}; env={}", serviceContext, cmd, cmdArgs, processBuilder.environment());
         CompletableFuture<JacsService<R>> completableFuture = new CompletableFuture<>();
         Process localProcess;
         try {
-            if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
-                File workingDirectory = new File(serviceData.getWorkspace());
-                Files.createDirectories(workingDirectory.toPath());
-                processBuilder.directory(workingDirectory);
-            } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-                File workingDirectory = new File(defaultWorkingDir, serviceData.getName());
+            if (StringUtils.isNotBlank(workingDirName)) {
+                File workingDirectory = new File(workingDirName);
                 Files.createDirectories(workingDirectory.toPath());
                 processBuilder.directory(workingDirectory);
             }

@@ -6,7 +6,6 @@ import org.ggf.drmaa.DrmaaException;
 import org.ggf.drmaa.JobInfo;
 import org.ggf.drmaa.JobTemplate;
 import org.ggf.drmaa.Session;
-import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.service.qualifier.ClusterJob;
 import org.slf4j.Logger;
@@ -25,14 +24,12 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
 
     @Inject
     private Logger logger;
-    @PropertyValue(name = "service.DefaultWorkingDir")
-    @Inject
-    private String defaultWorkingDir;
     @Inject
     private Session drmaaSession;
 
     @Override
     public <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
+                                                      String workingDirName,
                                                       ExternalProcessOutputHandler outStreamHandler,
                                                       ExternalProcessOutputHandler errStreamHandler,
                                                       JacsService<R> serviceContext) {
@@ -47,7 +44,8 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
             jt.setJobName(serviceData.getName());
             jt.setRemoteCommand(cmd);
             jt.setArgs(cmdArgs);
-            File workingDirectory = setJobWorkingDirectory(jt, serviceData);
+            File workingDirectory = setJobWorkingDirectory(jt, workingDirName);
+            logger.debug("Using working directory {} for {}", workingDirectory, serviceContext);
             jt.setJobEnvironment(env);
             if (StringUtils.isNotBlank(serviceData.getInputPath())) {
                 jt.setInputPath(":" + serviceData.getInputPath());
@@ -120,12 +118,10 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         return completableFuture;
     }
 
-    private File setJobWorkingDirectory(JobTemplate jt, JacsServiceData serviceData) {
+    private File setJobWorkingDirectory(JobTemplate jt, String workingDirName) {
         File workingDirectory;
-        if (StringUtils.isNotBlank(serviceData.getWorkspace())) {
-            workingDirectory = new File(serviceData.getWorkspace());
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            workingDirectory = new File(defaultWorkingDir, serviceData.getName());
+        if (StringUtils.isNotBlank(workingDirName)) {
+            workingDirectory = new File(workingDirName);
         } else {
             workingDirectory = Files.createTempDir();
         }
@@ -134,8 +130,6 @@ public class ExternalDrmaaJobRunner implements ExternalProcessRunner {
         }
         if (!workingDirectory.exists()) {
             throw new IllegalStateException("Cannot create working directory " + workingDirectory.getAbsolutePath());
-        } else {
-            logger.debug("Use '{}' as working directory for {}", workingDirectory, serviceData);
         }
         try {
             jt.setWorkingDirectory(workingDirectory.getAbsolutePath());

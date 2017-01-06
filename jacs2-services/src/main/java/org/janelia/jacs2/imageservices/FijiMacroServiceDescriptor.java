@@ -20,7 +20,6 @@ public class FijiMacroServiceDescriptor implements ServiceDescriptor {
         String macroName;
         @Parameter(names = "-macroArgs", description = "Arguments for the fiji macro")
         String macroArgs;
-        String workingDir;
     }
 
     @Inject

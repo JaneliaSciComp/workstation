@@ -6,6 +6,7 @@ import java.util.concurrent.CompletionStage;
 
 public interface ExternalProcessRunner {
     <R> CompletionStage<JacsService<R>> runCmd(String cmd, List<String> cmdArgs, Map<String, String> env,
+                                               String workingDirName,
                                                ExternalProcessOutputHandler outStreamHandler,
                                                ExternalProcessOutputHandler errStreamHandler,
                                                JacsService<R> serviceContext);

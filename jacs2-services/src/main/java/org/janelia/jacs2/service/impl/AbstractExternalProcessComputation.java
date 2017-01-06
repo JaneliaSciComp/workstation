@@ -4,8 +4,6 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.ProcessingLocation;
-import org.janelia.jacs2.service.qualifier.ClusterJob;
-import org.janelia.jacs2.service.qualifier.LocalJob;
 import org.slf4j.Logger;
 
 import javax.enterprise.inject.Any;
@@ -29,8 +27,12 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
 
     @Inject
     private Logger logger;
-    @PropertyValue(name = "Executables.ModuleBase") @Inject
+    @PropertyValue(name = "Executables.ModuleBase")
+    @Inject
     private String executablesBaseDir;
+    @PropertyValue(name = "service.DefaultWorkingDir")
+    @Inject
+    private String defaultWorkingDir;
     @Any @Inject
     private Instance<ExternalProcessRunner> serviceRunners;
 
@@ -46,6 +48,18 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
 
     protected abstract List<String> prepareCmdArgs(JacsService<R> jacsService);
     protected abstract Map<String, String> prepareEnvironment(JacsService<R> jacsServiceData);
+
+    protected String getWorkingDirectory(JacsService<R> jacsService, String workingDir) {
+        if (StringUtils.isNotBlank(workingDir)) {
+            return workingDir;
+        } else if (StringUtils.isNotBlank(jacsService.getWorkspace())) {
+            return jacsService.getWorkspace();
+        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+            return defaultWorkingDir;
+        } else {
+            return System.getProperty("java.io.tmpdir");
+        }
+    }
 
     protected Optional<String> getEnvVar(String varName) {
         return Optional.ofNullable(System.getenv(varName));
@@ -110,6 +124,7 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
                 jacsService.getServiceCmd(),
                 args,
                 env,
+                getWorkingDirectory(jacsService, defaultWorkingDir),
                 this::outputStreamHandler,
                 this::errStreamHandler,
                 jacsService);

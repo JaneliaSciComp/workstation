@@ -10,7 +10,6 @@ import org.janelia.jacs2.service.impl.ComputationException;
 import org.janelia.jacs2.service.impl.JacsService;
 import org.janelia.jacs2.utils.ScriptingUtils;
 import org.slf4j.Logger;
-import sun.font.Script;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -29,7 +28,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-@Named("basicMIPAndMovieGenerationService")
+@Named("fijiMacroService")
 public class FijiMacroComputation extends AbstractExternalProcessComputation<File> {
 
     protected static final int START_DISPLAY_PORT = 890;
@@ -38,19 +37,19 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
     private final String fijiExecutable;
     private final String fijiMacrosPath;
     private final String libraryPath;
-    private final String defaultWorkingDir;
+    private final String scratchLocation;
     private final Logger logger;
 
     @Inject
     public FijiMacroComputation(@PropertyValue(name = "Fiji.Bin.Path") String fijiExecutable,
                                 @PropertyValue(name = "Fiji.Macro.Path") String fijiMacrosPath,
                                 @PropertyValue(name = "VAA3D.LibraryPath") String libraryPath,
-                                @PropertyValue(name = "service.DefaultWorkingDir") String defaultWorkingDir,
+                                @PropertyValue(name = "service.DefaultScratchDir") String scratchLocation,
                                 Logger logger) {
         this.fijiExecutable = fijiExecutable;
         this.fijiMacrosPath = fijiMacrosPath;
         this.libraryPath = libraryPath;
-        this.defaultWorkingDir = defaultWorkingDir;
+        this.scratchLocation = scratchLocation;
         this.logger = logger;
     }
 
@@ -79,14 +78,15 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
         BufferedWriter scriptStream = null;
         File scriptFile = null;
         try {
+            String scratchDir = new File(scratchLocation, jacsService.getName() + "_" + jacsService.getId()).getAbsolutePath();
             scriptFile = Files.createFile(
-                    Paths.get(args.workingDir, jacsService.getName() + "_" + jacsService.getId() + ".sh"),
+                    Paths.get(getWorkingDirectory(jacsService, null), jacsService.getName() + "_" + jacsService.getId() + ".sh"),
                     PosixFilePermissions.asFileAttribute(perms)).toFile();
             scriptStream = new BufferedWriter(new FileWriter(scriptFile));
             scriptStream.append("DISPLAY_PORT=").append(Integer.toString(ScriptingUtils.getRandomPort(START_DISPLAY_PORT))).append('\n');
             scriptStream.append(ScriptingUtils.startScreenCapture("$DISPLAY_PORT", "1280x1024x24")).append('\n');
             // Create temp dir so that large temporary avis are not created on the network drive
-            scriptStream.append("export TMPDIR=").append(args.workingDir).append("\n");
+            scriptStream.append("export TMPDIR=").append(scratchDir).append("\n");
             scriptStream.append("mkdir -p $TMPDIR\n");
             scriptStream.append("TEMP_DIR=`mktemp -d`\n");
             scriptStream.append("function cleanTemp {\n");
@@ -98,11 +98,11 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
             scriptStream.append("function exitHandler() { cleanXvfb; cleanTemp; }\n");
             scriptStream.append("trap exitHandler EXIT\n");
 
-            String fijiCmd = String.format("%s -macro %s %s\n", getFijiExecutable(args), getFullFijiMacro(args), args.macroArgs);
+            String fijiCmd = String.format("%s -macro %s %s\n", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs);
             scriptStream.append(fijiCmd).append('\n');
             // Monitor Fiji and take periodic screenshots, killing it eventually
             scriptStream.append("fpid=$!\n");
-            scriptStream.append(ScriptingUtils.screenCaptureLoop("./xvfb.${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
+            scriptStream.append(ScriptingUtils.screenCaptureLoop(scratchDir + "/xvfb.${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
 
             scriptStream.flush();
         } catch (IOException e) {
@@ -126,17 +126,10 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
     private FijiMacroServiceDescriptor.FijiMacroArgs getArgs(JacsService<File> jacsService) {
         FijiMacroServiceDescriptor.FijiMacroArgs args = new FijiMacroServiceDescriptor.FijiMacroArgs();
         new JCommander(args).parse(jacsService.getArgsArray());
-        if (StringUtils.isNotBlank(jacsService.getWorkspace())) {
-            args.workingDir = jacsService.getWorkspace();
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            args.workingDir = defaultWorkingDir;
-        } else {
-            args.workingDir = System.getProperty("java.io.tmpdir");
-        }
         return args;
     }
 
-    private String getFijiExecutable(FijiMacroServiceDescriptor.FijiMacroArgs args) {
+    private String getFijiExecutable() {
         return getFullExecutableName(fijiExecutable);
     }
 

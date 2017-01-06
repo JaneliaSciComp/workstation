@@ -1,5 +1,7 @@
 package org.janelia.jacs2.utils;
 
+import java.util.Random;
+
 public class ScriptingUtils {
 
     private static final int DEFAULT_RETRIES = 10;
@@ -81,7 +83,7 @@ public class ScriptingUtils {
 
         script.append("XVFB_SCREENSHOT_DIR=\"").append(outputDir).append("\"\n");
         script.append("mkdir -p $XVFB_SCREENSHOT_DIR\n");
-        script.append("ssinc="+secs+"\n"); // increment in how often to take a screenshot
+        script.append("ssinc=" + secs + "\n"); // increment in how often to take a screenshot
         script.append("freq=$ssinc\n"); // how often to take a screenshot
         script.append("inc=5\n"); // how often to wake up and check if the process is still running
         script.append("t=0\n"); // time counter
