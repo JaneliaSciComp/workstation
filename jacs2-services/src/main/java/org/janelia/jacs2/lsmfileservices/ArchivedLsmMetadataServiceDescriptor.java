@@ -19,6 +19,8 @@ public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
         String archiveLSMFile;
         @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
         String outputLSMMetadata;
+        @Parameter(names = "-keepIntermediateLSM", arity = 0, description = "If used the temporary LSM file created from the archive will not be deleted", required = false)
+        boolean keepIntermediateLSM = false;
     }
 
     @Inject

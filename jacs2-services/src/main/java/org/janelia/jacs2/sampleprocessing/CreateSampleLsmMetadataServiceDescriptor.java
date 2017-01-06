@@ -21,6 +21,8 @@ public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescript
         String sampleObjective;
         @Parameter(names = "-outputDir", description = "Destination directory", required = true)
         String outputDir;
+        @Parameter(names = "-keepIntermediateLSMFiles", arity = 0, description = "If used the temporary LSM files created from the archive will not be deleted", required = false)
+        boolean keepIntermediateLSMFiles = false;
     }
 
     @Inject

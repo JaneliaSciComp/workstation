@@ -52,12 +52,15 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
             List<Number> childServiceIds = new ArrayList<>();
             lsmFiles.forEach(lf -> {
                 File lsmMetadataFileName = getOutputFileName(sampleLsmMetadataArgs.outputDir, lf.getFilepath());
-                JacsServiceData lsmMetadataServiceData =
+                JacsServiceDataBuilder lsmMetadataServiceDataBuilder =
                         new JacsServiceDataBuilder(serviceData)
                                 .setName("archivedLsmMetadata")
                                 .addArg("-archivedLSM", lf.getFilepath())
-                                .addArg("-outputLSMMetadata", lsmMetadataFileName.getAbsolutePath())
-                                .build();
+                                .addArg("-outputLSMMetadata", lsmMetadataFileName.getAbsolutePath());
+                if (sampleLsmMetadataArgs.keepIntermediateLSMFiles) {
+                    lsmMetadataServiceDataBuilder.addArg("-keepIntermediateLSM");
+                }
+                JacsServiceData lsmMetadataServiceData = lsmMetadataServiceDataBuilder.build();
                 jacsService.submitChildServiceAsync(lsmMetadataServiceData);
                 childServiceIds.add(lsmMetadataServiceData.getId());
                 metadataFiles.add(lsmMetadataFileName);

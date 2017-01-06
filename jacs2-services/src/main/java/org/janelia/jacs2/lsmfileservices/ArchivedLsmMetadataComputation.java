@@ -54,6 +54,7 @@ public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<F
         return preProcess;
     }
 
+
     private File getWorkingLsmFile(JacsService<File> jacsService, File lsmMetadataFile) {
         return new File(lsmMetadataFile.getParentFile(), jacsService.getName() + "_" + jacsService.getId() + "_working.lsm");
     }
@@ -80,6 +81,9 @@ public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<F
 
     @Override
     public CompletionStage<JacsService<File>> processData(JacsService<File> jacsService) {
+        ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = getArgs(jacsService);
+        File lsmMetadataFile = getOutputFile(args);
+        jacsService.setResult(lsmMetadataFile);
         return CompletableFuture.completedFuture(jacsService);
     }
 
@@ -87,13 +91,15 @@ public class ArchivedLsmMetadataComputation extends AbstractServiceComputation<F
     public void postProcessData(JacsService<File> jacsService, Throwable exc) {
         if (exc == null) {
             ArchivedLsmMetadataServiceDescriptor.ArchivedLsmMetadataArgs args = getArgs(jacsService);
-            File lsmMetadataFile = getOutputFile(args);
-            File workingLsmFile = getWorkingLsmFile(jacsService, lsmMetadataFile);
-            try {
-                logger.debug("Delete working LSM file {}", workingLsmFile);
-                Files.deleteIfExists(workingLsmFile.toPath());
-            } catch (IOException e) {
-                logger.error("Error deleting the working LSM file {}", workingLsmFile, e);
+            if (!args.keepIntermediateLSM) {
+                File lsmMetadataFile = getOutputFile(args);
+                File workingLsmFile = getWorkingLsmFile(jacsService, lsmMetadataFile);
+                try {
+                    logger.debug("Delete working LSM file {}", workingLsmFile);
+                    Files.deleteIfExists(workingLsmFile.toPath());
+                } catch (IOException e) {
+                    logger.error("Error deleting the working LSM file {}", workingLsmFile, e);
+                }
             }
         }
     }
