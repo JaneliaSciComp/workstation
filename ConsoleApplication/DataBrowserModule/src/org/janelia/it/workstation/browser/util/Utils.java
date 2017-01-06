@@ -29,7 +29,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -744,5 +748,17 @@ public class Utils {
                 log.error("Could not open URL: "+url, ex);
             }
         }
+    }
+    
+    public static boolean replaceInFile(String filepath, String target, String replacement) throws IOException {
+        Path path = Paths.get(filepath);
+        Charset charset = StandardCharsets.UTF_8;
+        String content = new String(Files.readAllBytes(path), charset);
+        String fixed = content.replace(target, replacement);
+        if (!content.equals(fixed)) {
+            Files.write(path, fixed.getBytes(charset));
+            return true;
+        }
+        return false;
     }
 }
