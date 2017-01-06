@@ -8,15 +8,10 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
-import org.janelia.it.workstation.browser.ConsoleApp;
-import org.janelia.it.workstation.browser.api.AccessManager;
-import org.janelia.it.workstation.browser.gui.support.MailDialogueBox;
 import org.janelia.it.workstation.browser.gui.support.WindowLocator;
 import org.janelia.it.workstation.browser.logging.EDTExceptionInterceptor;
 import org.janelia.it.workstation.browser.util.BrandingConfig;
 import org.janelia.it.workstation.browser.util.ConsoleProperties;
-import org.janelia.it.workstation.browser.util.SystemInfo;
-import org.janelia.it.workstation.browser.util.Utils;
 import org.openide.windows.OnShowing;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
