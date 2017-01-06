@@ -97,13 +97,4 @@ public class FileCopyComputation extends AbstractExternalProcessComputation<File
         return fileCopyArgs;
     }
 
-    @Override
-    protected boolean checkForErrors(String l) {
-        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
-            logger.error(l);
-            return true;
-        } else {
-            return false;
-        }
-    }
 }

@@ -188,17 +188,4 @@ public class FileCopyComputationTest {
         assertThat(env, hasEntry(equalTo("LD_LIBRARY_PATH"), containsString(libraryPath)));
     }
 
-    @Test
-    public void checkOutputErrors() {
-        ImmutableMap<String, Boolean> testData =
-                new ImmutableMap.Builder<String, Boolean>()
-                        .put("This has an error here", true)
-                        .put("This has an ERROR here", true)
-                        .put("This has an exception here", true)
-                        .put("No Exception", true)
-                        .put("OK here", false)
-                        .put("\n", false)
-                    .build();
-        testData.forEach((l, r) -> assertThat(testComputation.checkForErrors(l), equalTo(r)));
-    }
 }

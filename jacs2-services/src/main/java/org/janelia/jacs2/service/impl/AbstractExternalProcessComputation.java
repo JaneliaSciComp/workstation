@@ -113,7 +113,12 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     }
 
     protected boolean checkForErrors(String l) {
-        return false;
+        if (StringUtils.isNotBlank(l) && l.matches("(?i:.*(error|exception).*)")) {
+            logger.error(l);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     @Override
