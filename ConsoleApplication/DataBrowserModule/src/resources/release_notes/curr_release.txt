@@ -1,4 +1,25 @@
-// 5.8.0
+// 5.7.1
 
 Workstation Browser
-* 
+* The project website has been revamped: http://workstation.int.janelia.org
+* Added better error messages for permission errors
+* Fixed error when dragging an item from the Recently Opened folder
+* Added message at startup which alerts the user if they are running Java 7
+* Other minor bug fixes
+
+FlyLight
+* Restored missing Gen1 samples
+* Added "Set Publication Name" right-click option for Samples
+
+MouseLight
+* Raw tile loading in Horta no longer depends on zoom level, even when raw tiles appear to have very different resolutions
+* Move "Navigate to Horta" menu items to top level of context menu
+* Add Horta menu to toggle loading of Ktx/Rendered tiles vs Raw/Unsupported tiles
+* Synchronize Horta display after moving an anchor in LVV
+* Add ability to create new Neurons in Horta
+* Add ability to drag anchors in Horta
+* Reduce blackening of dim KTX intensities in Horta
+* Add ability to edit anchor radius in Horta
+* Synchronize LVV display after moving anchors in Horta
+* Fixed "timer already canceled" error
+ 
