@@ -15,6 +15,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,6 +24,8 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
 
 public abstract class AbstractExternalProcessComputation<R> extends AbstractServiceComputation<R> {
+
+    protected static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
 
     @Inject
     private Logger logger;
@@ -47,16 +51,14 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
         return Optional.ofNullable(System.getenv(varName));
     }
 
-    protected String getFullExecutableName(String exeName) {
-        StringBuilder cmdBuilder = new StringBuilder();
+    protected String getFullExecutableName(String... execPathComponents) {
+        Path cmdPath;
         if (StringUtils.isNotBlank(executablesBaseDir)) {
-            cmdBuilder.append(executablesBaseDir);
-            if (cmdBuilder.charAt(cmdBuilder.length() - 1) != '/') {
-                cmdBuilder.append('/');
-            }
+            cmdPath = Paths.get(executablesBaseDir, execPathComponents);
+        } else {
+            cmdPath = Paths.get("", execPathComponents);
         }
-        cmdBuilder.append(exeName);
-        return cmdBuilder.toString();
+        return cmdPath.toString();
     }
 
     protected String getUpdatedEnvValue(String varName, String addedValue) {

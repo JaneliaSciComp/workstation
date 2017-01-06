@@ -22,8 +22,6 @@ import java.util.concurrent.CompletionStage;
 @Named("fileCopyService")
 public class FileCopyComputation extends AbstractExternalProcessComputation<File> {
 
-    private static final String DY_LIBRARY_PATH_VARNAME = "LD_LIBRARY_PATH";
-
     private final Logger logger;
     private final String libraryPath;
     private final String scriptName;

@@ -1,4 +1,4 @@
-package org.janelia.jacs2.lsmfileservices;
+package org.janelia.jacs2.imageservices;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -9,26 +9,28 @@ import org.janelia.jacs2.service.impl.ServiceDescriptor;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 
-@Named("archivedLsmMetadata")
-public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "archivedLsmMetadata";
+@Named("fijiMacro")
+public class FijiMacroServiceDescriptor implements ServiceDescriptor {
+    private static String SERVICE_NAME = "fijiMacro";
 
-    static class ArchivedLsmMetadataArgs {
-        @Parameter(names = "-archivedLSM", description = "Archived LSM file name", required = true)
-        String archiveLSMFile;
-        @Parameter(names = "-outputLSMMetadata", description = "Destination directory", required = true)
-        String outputLSMMetadata;
+    static class FijiMacroArgs {
+        @Parameter(names = "-macro", description = "FIJI macro name", required = true)
+        String macroName;
+        @Parameter(names = "-macroArgs", description = "Arguments for the fiji macro")
+        String macroArgs;
+        String workingDir;
     }
 
     @Inject
-    private Instance<ArchivedLsmMetadataComputation> archivedLsmMetadataComputationSource;
+    private Instance<FijiMacroComputation> fijiMacroComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {
         ServiceMetaData smd = new ServiceMetaData();
         smd.setServiceName(SERVICE_NAME);
-        ArchivedLsmMetadataArgs args = new ArchivedLsmMetadataArgs();
+        FijiMacroArgs args = new FijiMacroArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
         jc.setProgramName(SERVICE_NAME);
@@ -39,7 +41,7 @@ public class ArchivedLsmMetadataServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceComputation createComputationInstance() {
-        return archivedLsmMetadataComputationSource.get();
+        return fijiMacroComputationSource.get();
     }
 
 }
