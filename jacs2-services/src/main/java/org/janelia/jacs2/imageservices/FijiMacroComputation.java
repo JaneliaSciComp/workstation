@@ -101,7 +101,7 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
             scriptStream.append("function exitHandler() { cleanXvfb; cleanTemp; }\n");
             scriptStream.append("trap exitHandler EXIT\n");
 
-            String fijiCmd = String.format("%s -macro %s %s\n", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs);
+            String fijiCmd = String.format("%s -macro %s %s", getFijiExecutable(), getFullFijiMacro(args), args.macroArgs);
             scriptStream.append(fijiCmd).append('&').append('\n');
             // Monitor Fiji and take periodic screenshots, killing it eventually
             scriptStream.append("fpid=$!\n");
