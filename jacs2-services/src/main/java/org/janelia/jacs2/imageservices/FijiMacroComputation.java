@@ -105,7 +105,7 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
             scriptStream.append(fijiCmd).append('&').append('\n');
             // Monitor Fiji and take periodic screenshots, killing it eventually
             scriptStream.append("fpid=$!\n");
-            scriptStream.append(ScriptingUtils.screenCaptureLoop(scratchDir + "/xvfb.${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
+            scriptStream.append(ScriptingUtils.screenCaptureLoop(scratchDir + "/xvfb-" + jacsService.getId() + ".${PORT}", "PORT", "fpid", 30, TIMEOUT_SECONDS));
 
             scriptStream.flush();
         } catch (IOException e) {

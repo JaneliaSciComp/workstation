@@ -40,17 +40,15 @@ public class ExternalLocalProcessRunner implements ExternalProcessRunner {
                 processBuilder.directory(workingDirectory);
             }
             localProcess = processBuilder.start();
-            ExternalProcessIOHandler processStdoutHandler = null;
-            processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
+            ExternalProcessIOHandler processStdoutHandler = new ExternalProcessIOHandler(outStreamHandler, localProcess.getInputStream());
             processStdoutHandler.start();
-            ExternalProcessIOHandler processStderrHandler = null;
-            processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, localProcess.getErrorStream());
+            ExternalProcessIOHandler processStderrHandler = new ExternalProcessIOHandler(errStreamHandler, localProcess.getErrorStream());
             processStderrHandler.start();
             try {
                 int returnCode = localProcess.waitFor();
                 processStdoutHandler.join();
                 processStderrHandler.join();
-                logger.info("Process {} for {} terminated with code {}", localProcess, serviceContext, returnCode);
+                logger.info("Process {} {}; env={} for {} terminated with code {}", cmd, cmdArgs, processBuilder.environment(), serviceContext, returnCode);
                 if (returnCode != 0) {
                     completableFuture.completeExceptionally(new ComputationException(serviceContext, "Process terminated with code " + returnCode));
                 } else if (processStdoutHandler.getResult() != null) {
