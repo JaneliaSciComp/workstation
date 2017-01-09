@@ -23,24 +23,14 @@
         button { font-family:Georgia; border:0; background:#000; color:#fff; padding:0.2em 0.5em; cursor:pointer; border-radius:3px; }
         button:hover { background:#333 }
 
-        #note_info_1 { text-align:center; color: rgb(255,0,0); position:fixed; left:0; z-index:10000; top:100px; }
-        #note_info_2 { text-align:center; color: rgb(255,0,0); position:fixed; left:0; z-index:10000; top:200px; }
-
-        #note_name { font-size:1em }
-        #note_author { font-size:1em }
+        #state_summary { font-size:1em; text-align:left; background: rgba(60, 60, 60, 0.5); color: rgb(180,180,180); position:fixed; left:0; z-index:10000; bottom:0px; }
 
     </style>
 </head>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
 <body>
 
-<div id="message">
-    <span id="note_info_1">This is Message 1</span>
-</div>
-
-<div id="container">
-    <span id="note_info_2">This is Message 2</span>
-</div>
+<div id="container"></div>
 
 <script src="js/vendor/threejs/three.js"></script>
 <script src="js/vendor/threejs/controls/TrackballControls.js"></script>
@@ -59,17 +49,19 @@
     <button ng-click="getCurrentServices()">Current Services</button>
 
     <div ng-show="isMode('stateSummary')">
-        <h1>State Summary {{stateCount}}</h1>
-        <table>
-            <tr>Created: {{stateSummary.createdCountString}}</tr>
-            <tr>Submitted: {{stateSummary.submittedCountString}}</tr>
-            <tr>Queued: {{stateSummary.queuedCountString}}</tr>
-            <tr>Running: {{stateSummary.runningCountString}}</tr>
-            <tr>Waiting: {{stateSummary.waitingCountString}}</tr>
-            <tr>Canceled: {{stateSummary.canceledCountString}}</tr>
-            <tr>Error: {{stateSummary.errorCountString}}</tr>
-            <tr>Successful: {{stateSummary.successfulCountString}}</tr>
-        </table>
+        <span id="state_summary">
+            <table>
+                <tr><td>Update: {{stateCount}}</td></tr>
+                <tr><td>Created: {{stateSummary.createdCountString}}</td></tr>
+                <tr><td>Submitted: {{stateSummary.submittedCountString}}</td></tr>
+                <tr><td>Queued: {{stateSummary.queuedCountString}}</td></tr>
+                <tr><td>Running: {{stateSummary.runningCountString}}</td></tr>
+                <tr><td>Waiting: {{stateSummary.waitingCountString}}</td></tr>
+                <tr><td>Canceled: {{stateSummary.canceledCountString}}</td></tr>
+                <tr><td>Error: {{stateSummary.errorCountString}}</td></tr>
+                <tr><td>Successful: {{stateSummary.successfulCountString}}</td></tr>
+            </table>
+        </span>
     </div>
 
     <div ng-show="isMode('currentServices')">
@@ -303,7 +295,7 @@
         var intervalFunction;
         intervalFunction=$interval( $scope.getStateSummary, 1000);
 
-        // $scope.getStateSummary();
+        $scope.modeStateSummary();
 
     });
 </script>
