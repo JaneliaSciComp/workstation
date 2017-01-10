@@ -100,14 +100,14 @@ public class TracingInteractor extends MouseAdapter
     // For selection affordance
     // For GUI feedback on existing model, contains zero or one vertex.
     // Larger yellow overlay over an existing vertex under the mouse pointer.
-    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight");
+    private final NeuronModel highlightHoverModel = new BasicNeuronModel("Hover highlight", null);
     private NeuronVertex cachedHighlightVertex = null;
     private NeuronModel cachedHighlightNeuron = null;
     
     // For Tracing
     // Larger blueish vertex with a "P" for current selected persisted parent
     // first model is an ephemeral single vertex neuron model for display of "P"
-    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex"); // TODO: begin point of auto tracing
+    private final NeuronModel parentVertexModel = new BasicNeuronModel("Selected parent vertex", null); // TODO: begin point of auto tracing
     private NeuronVertex cachedParentVertex = null;
     // second model is the actual associated in-memory full parent neuron domain model
     private NeuronModel cachedParentNeuronModel = null;
@@ -115,12 +115,12 @@ public class TracingInteractor extends MouseAdapter
     // White ghost vertex for potential new vertex under cursor 
     // TODO: Maybe color RED until a good path from parent is found
     // This is the new neuron cursor
-    private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density");
+    private final NeuronModel densityCursorModel = new BasicNeuronModel("Hover density", null);
     private Vector3 cachedDensityCursorXyz = null;
     
-    private final NeuronModel anchorEditModel = new BasicNeuronModel("Interactive anchor edit view");
+    private final NeuronModel anchorEditModel = new BasicNeuronModel("Interactive anchor edit view", null);
     
-    private final UndoRedo.Manager undoRedoManager;
+    private UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
     Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
@@ -144,6 +144,7 @@ public class TracingInteractor extends MouseAdapter
         if (this.defaultWorkspace == defaultWorkspace)
             return;
         this.defaultWorkspace = defaultWorkspace;
+        this.undoRedoManager = defaultWorkspace.getUndoRedo();
     }
     
     @Override
@@ -286,7 +287,7 @@ public class TracingInteractor extends MouseAdapter
         float loc[] = vertex.getLocation();
 
         // Create a modified vertex to represent the enlarged, highlighted actor
-        BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
+        BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2], null); // same center location as real vertex
         // Set parent actor radius X% larger than true vertex radius, and at least 2 pixels larger
         float startRadius = DefaultNeuron.radius;
         if (vertex.hasRadius())
@@ -374,7 +375,7 @@ public class TracingInteractor extends MouseAdapter
         densityCursorModel.getEdges().clear();
 
         // Create a modified vertex to represent the enlarged, highlighted actor
-        BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
+        BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ(), null); // same center location as real vertex
 
         float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
         // densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
@@ -443,7 +444,7 @@ public class TracingInteractor extends MouseAdapter
             highlightHoverModel.getEdges().clear();
 
             // Create a modified vertex to represent the enlarged, highlighted actor
-            BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
+            BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2], null); // same center location as real vertex
             // Set highlight actor radius X% larger than true vertex radius, and at least 2 pixels larger
             float startRadius = DefaultNeuron.radius;
             if (vertex.hasRadius())
@@ -579,7 +580,9 @@ public class TracingInteractor extends MouseAdapter
         try {
             if (cmd.execute()) {
                 log.info("User drag-moved anchor in Horta");
-                undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                
+                if (undoRedoManager != null)
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
 
                 // repaint right now...
                 highlightHoverModel.getVertexUpdatedObservable().setChanged();
@@ -859,7 +862,8 @@ public class TracingInteractor extends MouseAdapter
                 if (addedVertex != null) {
                     selectParentVertex(addedVertex, parentNeuron);
                     // undoRedoManager.addEdit(appendCmd);
-                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
+                    if (undoRedoManager != null)
+                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
                     appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
                     return true;
                 }
@@ -919,7 +923,8 @@ public class TracingInteractor extends MouseAdapter
                     NeuronVertex addedVertex = cmd.getAddedVertex();
                     if (addedVertex != null) {
                         selectParentVertex(addedVertex, cmd.getNewNeuron());
-                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                        if (undoRedoManager != null)
+                            undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
                         appendCommandForVertex.put(vtxKey(addedVertex), cmd);
                     }
                     return true;
@@ -963,7 +968,8 @@ public class TracingInteractor extends MouseAdapter
             if (answer == JOptionPane.YES_OPTION) 
             {
                 // merging is not undoable, and thus taints previous edits 
-                undoRedoManager.discardAllEdits();
+                if (undoRedoManager != null)    
+                    undoRedoManager.discardAllEdits();
                 
                 // TODO: Create Undo-able command for mergeNeurite, and activate it from context menu
                 // 3/18/2016 reverse order of merge, with respect to traditional LVV behavior
@@ -1078,7 +1084,8 @@ public class TracingInteractor extends MouseAdapter
             try {
                 if (cmd.execute()) {
                     log.info("User adjusted anchor radius in Horta");
-                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                    if (undoRedoManager != null)
+                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
 
                     // repaint right now...
                     highlightHoverModel.getVertexUpdatedObservable().setChanged();

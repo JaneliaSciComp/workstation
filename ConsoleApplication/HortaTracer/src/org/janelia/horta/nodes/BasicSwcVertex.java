@@ -30,6 +30,7 @@
 
 package org.janelia.horta.nodes;
 
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.modelapi.SwcVertex;
 
@@ -44,12 +45,14 @@ public class BasicSwcVertex implements SwcVertex
     private int label = 1;
     private int typeIndex = 0;
     private SwcVertex parent = null;
+    private final NeuronModel parentNeuron;
 
-    public BasicSwcVertex(float x, float y, float z)
+    public BasicSwcVertex(float x, float y, float z, NeuronModel parentNeuron)
     {
         location[0] = x;
         location[1] = y;
         location[2] = z;
+        this.parentNeuron = parentNeuron;
     }
 
     @Override
@@ -123,6 +126,11 @@ public class BasicSwcVertex implements SwcVertex
     public boolean hasRadius()
     {
         return true;
+    }
+
+    @Override
+    public NeuronModel getNeuron() {
+        return parentNeuron;
     }
 
 }
