@@ -32,6 +32,8 @@ package org.janelia.console.viewerapi.model;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
 
@@ -51,7 +53,7 @@ implements NeuronSet
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
         this.name = name;
-        neurons = contents;
+        this.neurons = contents;
     }
 
     @Override
@@ -170,12 +172,31 @@ implements NeuronSet
 
     @Override
     public NeuronModel createNeuron(String initialNeuronName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+    @Override
+    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public NeuronVertex getAnchorClosestToMicronLocation(double[] micronXYZ) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+    @Override
+    public NeuronVertex getAnchorClosestToVoxelLocation(double[] voxelXYZ) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
 }

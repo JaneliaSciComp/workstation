@@ -618,6 +618,10 @@ public class TracingInteractor extends MouseAdapter
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
             NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
+            
+            // TODO: use new API
+            // defaultWorkspace.getAnchorClosestTo(micronXYZ);
+            
             nearestVertex = vix.getNearest(cursorXyz);
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
