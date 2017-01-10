@@ -22,8 +22,6 @@ public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
         String sampleObjective;
         @Parameter(names = "-dest", description = "Destination directory or URL", required = true)
         String destFolder;
-        @Parameter(names = "-keepIntermediateLSMFiles", arity = 0, description = "If used the temporary LSM files created from the archive will not be deleted", required = false)
-        boolean keepIntermediateLSMFiles = false;
     }
 
     @Inject

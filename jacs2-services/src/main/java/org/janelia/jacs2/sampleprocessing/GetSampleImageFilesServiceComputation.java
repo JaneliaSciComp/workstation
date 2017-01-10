@@ -1,6 +1,7 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.beust.jcommander.JCommander;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
 import org.janelia.it.jacs.model.domain.sample.Image;
@@ -109,7 +110,7 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
                     .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
                     .forEach(lf -> {
                         File imageFile = getIntermediateImageFile(workingDirectory, lf);
-                        writeToFileOrUrl(imageFile, args.destFolder);
+                        results.add(writeToFileOrUrl(imageFile, args.destFolder));
                     });
             jacsService.setResult(results);
             processData.complete(jacsService);
@@ -119,36 +120,29 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
         return processData;
     }
 
-    private void writeToFileOrUrl(File imageFile, String destFolder) {
+    private String writeToFileOrUrl(File imageFile, String destFolder) {
         if (destFolder.startsWith("http://")) { // for now only consider http (no https)
             // HTTP POST to destination
             try {
-                writeToHttpUrl(imageFile, new URL(destFolder));
+                return writeToHttpUrl(imageFile, new URL(destFolder));
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException("Invalid URL: " + destFolder, e);
             }
         } else if (destFolder.startsWith("file://")) {
-            // copy file
             URI destURL;
             try {
                 destURL = new URL(destFolder).toURI();
-                Files.copy(imageFile.toPath(), Paths.get(destURL));
+                Path destPath = Paths.get(destURL);
+                return copyFileToFolder(imageFile, destPath);
             } catch (MalformedURLException | URISyntaxException e) {
                 throw new IllegalArgumentException("Invalid URL: " + destFolder, e);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
         } else {
-            // copy file
-            try {
-                Files.copy(imageFile.toPath(), Paths.get(destFolder));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
+            return copyFileToFolder(imageFile, Paths.get(destFolder));
         }
     }
 
-    private void writeToHttpUrl(File imageFile, URL url) {
+    private String writeToHttpUrl(File imageFile, URL url) {
         HttpURLConnection conn = null;
         InputStream is = null;
         try {
@@ -164,10 +158,12 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
             }
             is = conn.getInputStream();
             BufferedReader br = new BufferedReader(new InputStreamReader((is)));
+            // consume the response
             String serverOutput;
             while ((serverOutput = br.readLine()) != null) {
                 logger.debug(serverOutput);
             }
+            return url.toString();
         } catch (Exception e) {
             logger.error("Error writing {} to {}", imageFile, url, e);
             throw new IllegalStateException(e);
@@ -176,12 +172,55 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
                 try {
                     is.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.warn("Error closing the response stream", e);
                 }
             }
             if (conn != null)
                 conn.disconnect();
         }
+    }
+
+    private String copyFileToFolder(File imageFile, Path destFolder) {
+        String fileName = imageFile.getName();
+        Path destFile = destFolder.resolve(fileName);
+        try {
+            Files.createDirectories(destFolder); // ensure the destination folder exists
+            Files.copy(imageFile.toPath(), destFile);
+            return destFile.toString();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Override
+    public CompletionStage<JacsService<List<String>>> isDone(JacsService<List<String>> jacsService) {
+        CompletableFuture<JacsService<List<String>>> doneFuture = new CompletableFuture<>();
+        try {
+            GetSampleImageFilesServiceDescriptor.SampleImageFilesArgs args = getArgs(jacsService);
+            List<String> results = jacsService.getResult();
+            if (CollectionUtils.isNotEmpty(results)) {
+                List<AnatomicalArea> anatomicalAreas =
+                        sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsService.getOwner(), args.sampleId, args.sampleObjective);
+                Path workingDirectory = getWorkingDirectory(jacsService);
+                anatomicalAreas.stream()
+                        .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
+                        .map(lf -> getIntermediateImageFile(workingDirectory, lf).toString())
+                        .filter(workingFileName -> !results.contains(workingFileName))
+                        .forEach(workingFileName -> {
+                            try {
+                                Files.deleteIfExists(Paths.get(workingFileName));
+                            } catch (IOException e) {
+                                logger.warn("Error deleting working file {}", workingFileName, e);
+                            }
+                        });
+                doneFuture.complete(jacsService);
+            } else {
+                doneFuture.complete(jacsService);
+            }
+        } catch (Exception e) {
+            doneFuture.completeExceptionally(e);
+        }
+        return doneFuture;
     }
 
     private GetSampleImageFilesServiceDescriptor.SampleImageFilesArgs getArgs(JacsService jacsService) {
@@ -191,6 +230,12 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
     }
 
     private File getIntermediateImageFile(Path workingDir, Image image) {
-        return new File(workingDir.toFile(), new File(image.getFilepath()).getName());
+        String fileName = new File(image.getFilepath()).getName();
+        if (fileName.endsWith(".bz2")) {
+            fileName = fileName.substring(0, fileName.length() - ".bz2".length());
+        } else if (fileName.endsWith(".gz")) {
+            fileName = fileName.substring(0, fileName.length() - ".gz".length());
+        }
+        return new File(workingDir.toFile(), fileName);
     }
 }
