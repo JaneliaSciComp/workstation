@@ -1582,6 +1582,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             interactorContext.updateAnchorRadius();
                         }
                     });
+                }
 
                 if (interactorContext.canClearParent()) {
                     topMenu.add(new AbstractAction("Clear Current Parent Anchor") {
@@ -1590,7 +1591,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                             interactorContext.clearParent();
                         }
                     });
-                }
                 }
                 
                 if (interactorContext.getCurrentParentAnchor() != null) {
