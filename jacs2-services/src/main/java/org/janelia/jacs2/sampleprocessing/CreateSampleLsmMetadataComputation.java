@@ -1,8 +1,8 @@
 package org.janelia.jacs2.sampleprocessing;
 
 import com.beust.jcommander.JCommander;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.sample.AnatomicalArea;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.service.JacsServiceState;
@@ -16,7 +16,6 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Collectors;
@@ -35,80 +34,71 @@ public class CreateSampleLsmMetadataComputation extends AbstractServiceComputati
 
     @Override
     public CompletionStage<JacsService<List<File>>> preProcessData(JacsService<List<File>> jacsService) {
-        JacsServiceData serviceData = jacsService.getJacsServiceData();
-        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
-        Optional<AnatomicalArea> anatomicalArea =
-                sampleDataService.getAnatomicalAreaBySampleIdAndObjective(jacsService.getOwner(), sampleLsmMetadataArgs.sampleId, sampleLsmMetadataArgs.sampleObjective);
-        if (!anatomicalArea.isPresent()) {
+        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs args = getArgs(jacsService);
+        List<AnatomicalArea> anatomicalAreas =
+                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsService.getOwner(), args.sampleId, args.sampleObjective);
+        if (anatomicalAreas.isEmpty()) {
             CompletableFuture<JacsService<List<File>>> preProcessExc = new CompletableFuture<>();
-            preProcessExc.completeExceptionally(new IllegalArgumentException("No anatomical area found for " + serviceData));
+            preProcessExc.completeExceptionally(new IllegalArgumentException("No anatomical areas found for " +
+                    args.sampleId +
+                    (StringUtils.isBlank(args.sampleObjective) ? "" : args.sampleObjective)));
             return preProcessExc;
         }
-        Optional<List<Number>> result = anatomicalArea.map(ar -> {
-            List<LSMImage> lsmFiles = ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()).collect(Collectors.toList());
-            return lsmFiles;
-        }).map(lsmFiles -> {
-            List<File> metadataFiles = new ArrayList<>();
-            List<Number> childServiceIds = new ArrayList<>();
-            lsmFiles.forEach(lf -> {
-                File lsmMetadataFileName = getOutputFileName(sampleLsmMetadataArgs.outputDir, lf.getFilepath());
-                JacsServiceDataBuilder lsmMetadataServiceDataBuilder =
-                        new JacsServiceDataBuilder(serviceData)
-                                .setName("archivedLsmMetadata")
-                                .addArg("-archivedLSM", lf.getFilepath())
-                                .addArg("-outputLSMMetadata", lsmMetadataFileName.getAbsolutePath());
-                if (sampleLsmMetadataArgs.keepIntermediateLSMFiles) {
-                    lsmMetadataServiceDataBuilder.addArg("-keepIntermediateLSM");
-                }
-                JacsServiceData lsmMetadataServiceData = lsmMetadataServiceDataBuilder.build();
-                jacsService.submitChildServiceAsync(lsmMetadataServiceData);
-                childServiceIds.add(lsmMetadataServiceData.getId());
-                metadataFiles.add(lsmMetadataFileName);
-            });
-            return childServiceIds;
-        });
-        if (!result.isPresent() || result.get().isEmpty()) {
+        List<Number> result = anatomicalAreas.stream()
+                .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
+                .map(lf -> {
+                    File lsmMetadataFileName = getOutputFileName(args.outputDir, lf.getFilepath());
+                    JacsServiceDataBuilder lsmMetadataServiceDataBuilder =
+                            new JacsServiceDataBuilder(jacsService.getJacsServiceData())
+                                    .setName("archivedLsmMetadata")
+                                    .addArg("-archivedLSM", lf.getFilepath())
+                                    .addArg("-outputLSMMetadata", lsmMetadataFileName.getAbsolutePath());
+                    if (args.keepIntermediateLSMFiles) {
+                        lsmMetadataServiceDataBuilder.addArg("-keepIntermediateLSM");
+                    }
+                    JacsServiceData lsmMetadataServiceData = lsmMetadataServiceDataBuilder.build();
+                    jacsService.submitChildServiceAsync(lsmMetadataServiceData);
+                    return lsmMetadataServiceData.getId();
+                }).collect(Collectors.toList());
+        if (result.isEmpty()) {
             jacsService.setState(JacsServiceState.CANCELED);
             CompletableFuture<JacsService<List<File>>> preProcessExc = new CompletableFuture<>();
-            preProcessExc.completeExceptionally(new IllegalArgumentException("No LSM image found for " + serviceData));
+            preProcessExc.completeExceptionally(new IllegalArgumentException("No LSM image found for " +
+                    args.sampleId +
+                    (StringUtils.isBlank(args.sampleObjective) ? "" : args.sampleObjective)));
             return preProcessExc;
         }
-        logger.info("Created child services {} to extract metadata from the LSMs for {}", result.get(), serviceData);
+        logger.info("Created child services {} to extract metadata from the LSMs for {}", result, jacsService.getJacsServiceData());
         return super.preProcessData(jacsService);
     }
 
     @Override
     public CompletionStage<JacsService<List<File>>> processData(JacsService<List<File>> jacsService) {
         // collect the metadata files and update the corresponding LSMs
-        JacsServiceData serviceData = jacsService.getJacsServiceData();
-        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = getArgs(serviceData);
-        Optional<AnatomicalArea> anatomicalArea =
-                sampleDataService.getAnatomicalAreaBySampleIdAndObjective(jacsService.getOwner(), sampleLsmMetadataArgs.sampleId, sampleLsmMetadataArgs.sampleObjective);
         CompletableFuture<JacsService<List<File>>> processData = new CompletableFuture<>();
-        Optional<Boolean> result = anatomicalArea.map(ar -> {
-            List<LSMImage> lsmFiles = ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()).collect(Collectors.toList());
-            return lsmFiles;
-        }).map(lsmFiles -> {
-            List<File> metadataFiles = new ArrayList<>();
-            lsmFiles.forEach(lf -> {
-                File lsmMetadataFile = getOutputFileName(sampleLsmMetadataArgs.outputDir, lf.getFilepath());
-                sampleDataService.updateLMSMetadata(lf, lsmMetadataFile.getAbsolutePath());
-                metadataFiles.add(lsmMetadataFile);
-            });
-            jacsService.setResult(metadataFiles);
-            return true;
-        });
-        if (result.isPresent()) {
-            processData.complete(jacsService);
-        } else {
+        CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs args = getArgs(jacsService);
+        List<AnatomicalArea> anatomicalAreas =
+                sampleDataService.getAnatomicalAreasBySampleIdAndObjective(jacsService.getOwner(), args.sampleId, args.sampleObjective);
+        List<File> metadataFiles = new ArrayList<>();
+        anatomicalAreas.stream()
+                .flatMap(ar -> ar.getTileLsmPairs().stream().flatMap(lsmp -> lsmp.getLsmFiles().stream()))
+                .forEach(lf -> {
+                    File lsmMetadataFile = getOutputFileName(args.outputDir, lf.getFilepath());
+                    sampleDataService.updateLMSMetadata(lf, lsmMetadataFile.getAbsolutePath());
+                    metadataFiles.add(lsmMetadataFile);
+                });
+        if (metadataFiles.isEmpty()) {
             processData.completeExceptionally(new IllegalStateException("Something must have gone wrong because not all sample LSMs had their metadata updated"));
+        } else {
+            jacsService.setResult(metadataFiles);
+            processData.complete(jacsService);
         }
         return processData;
     }
 
-    private CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs getArgs(JacsServiceData jacsServiceData) {
+    private CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs getArgs(JacsService jacsService) {
         CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs sampleLsmMetadataArgs = new CreateSampleLsmMetadataServiceDescriptor.SampleLsmMetadataArgs();
-        new JCommander(sampleLsmMetadataArgs).parse(jacsServiceData.getArgsArray());
+        new JCommander(sampleLsmMetadataArgs).parse(jacsService.getArgsArray());
         return sampleLsmMetadataArgs;
     }
 

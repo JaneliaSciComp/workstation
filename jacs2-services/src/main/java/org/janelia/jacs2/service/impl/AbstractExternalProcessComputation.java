@@ -30,9 +30,6 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
     @PropertyValue(name = "Executables.ModuleBase")
     @Inject
     private String executablesBaseDir;
-    @PropertyValue(name = "service.DefaultWorkingDir")
-    @Inject
-    private String defaultWorkingDir;
     @Any @Inject
     private Instance<ExternalProcessRunner> serviceRunners;
 
@@ -48,18 +45,6 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
 
     protected abstract List<String> prepareCmdArgs(JacsService<R> jacsService);
     protected abstract Map<String, String> prepareEnvironment(JacsService<R> jacsServiceData);
-
-    protected String getWorkingDirectory(JacsService<R> jacsService, String workingDir) {
-        if (StringUtils.isNotBlank(workingDir)) {
-            return workingDir;
-        } else if (StringUtils.isNotBlank(jacsService.getWorkspace())) {
-            return jacsService.getWorkspace();
-        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
-            return defaultWorkingDir;
-        } else {
-            return System.getProperty("java.io.tmpdir");
-        }
-    }
 
     protected Optional<String> getEnvVar(String varName) {
         return Optional.ofNullable(System.getenv(varName));
@@ -129,7 +114,7 @@ public abstract class AbstractExternalProcessComputation<R> extends AbstractServ
                 jacsService.getServiceCmd(),
                 args,
                 env,
-                getWorkingDirectory(jacsService, defaultWorkingDir),
+                getWorkingDirectory(jacsService).toString(),
                 this::outputStreamHandler,
                 this::errStreamHandler,
                 jacsService);

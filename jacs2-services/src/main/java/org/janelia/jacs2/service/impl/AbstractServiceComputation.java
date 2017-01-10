@@ -1,11 +1,15 @@
 package org.janelia.jacs2.service.impl;
 
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceState;
 import org.janelia.jacs2.persistence.JacsServiceDataPersistence;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +23,9 @@ public abstract class AbstractServiceComputation<R> implements ServiceComputatio
         private List<JacsServiceData> uncompleted = new ArrayList<>();
     }
 
+    @PropertyValue(name = "service.DefaultWorkingDir")
+    @Inject
+    private String defaultWorkingDir;
     @Inject
     private Logger logger;
     @Inject
@@ -88,6 +95,18 @@ public abstract class AbstractServiceComputation<R> implements ServiceComputatio
             }
         }
         return waitForChildrenToEndFuture;
+    }
+
+    protected Path getWorkingDirectory(JacsService<R> jacsService) {
+        String workingDir;
+        if (StringUtils.isNotBlank(jacsService.getWorkspace())) {
+            workingDir = jacsService.getWorkspace();
+        } else if (StringUtils.isNotBlank(defaultWorkingDir)) {
+            workingDir = defaultWorkingDir;
+        } else {
+            workingDir = System.getProperty("java.io.tmpdir");
+        }
+        return Paths.get(workingDir, jacsService.getName() + "_" + jacsService.getId().toString()).toAbsolutePath();
     }
 
 }

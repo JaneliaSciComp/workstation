@@ -12,22 +12,20 @@ import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
+import org.janelia.jacs2.service.dataservice.DomainObjectService;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class SampleDataServiceTest {
@@ -36,23 +34,21 @@ public class SampleDataServiceTest {
     private static final String TEST_SUBJECT = "testSubject";
     private static final String TEST_OBJECTIVE = "testObjective";
 
-    @Mock
-    private Logger logger;
-    @Mock
     private SampleDao sampleDao;
-    @Mock
     private SubjectDao subjectDao;
-    @Mock
     private ImageDao imageDao;
-    @Mock
-    private DaoFactory daoFactory;
-    @InjectMocks
+
     private SampleDataService testService;
 
     @Before
     public void setUp() {
-        testService = new SampleDataService();
-        MockitoAnnotations.initMocks(this);
+        Logger logger = mock(Logger.class);
+        sampleDao = mock(SampleDao.class);
+        subjectDao = mock(SubjectDao.class);
+        DaoFactory daoFactory = mock(DaoFactory.class);
+        imageDao = mock(ImageDao.class);
+        DomainObjectService domainObjectService = new DomainObjectService(daoFactory);
+        testService = new SampleDataService(domainObjectService, sampleDao, subjectDao, imageDao, logger);
         when(daoFactory.createDomainObjectDao("LSMImage")).thenAnswer(invocation -> imageDao);
     }
 
@@ -83,11 +79,11 @@ public class SampleDataServiceTest {
     @Test
     public void missingLSMsGenerateExceptionOnGetAnatomicalArea() {
         when(sampleDao.findById(TEST_SAMPLE_ID)).thenReturn(createTestSample(createSampleTile(1L, 2L)));
-        assertThatThrownBy(() -> testService.getAnatomicalAreaBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
+        assertThatThrownBy(() -> testService.getAnatomicalAreasBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No LSM found for LSMImage#1");
         when(imageDao.findByIds(null, new ArrayList<>(ImmutableList.of(1L, 2L)))).thenReturn(ImmutableList.of(createLSMImage(1L, null)));
-        assertThatThrownBy(() -> testService.getAnatomicalAreaBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
+        assertThatThrownBy(() -> testService.getAnatomicalAreasBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("No LSM found for LSMImage#2");
     }
@@ -107,15 +103,15 @@ public class SampleDataServiceTest {
                                 createLSMImage(5L, 2),
                                 createLSMImage(6L, null)
                         ));
-        Optional<AnatomicalArea> anatomicaAreaResult = testService.getAnatomicalAreaBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE);
-        assertTrue(anatomicaAreaResult.isPresent());
-        assertEquals(3, anatomicaAreaResult.get().getTileLsmPairs().size());
-        assertEquals(1L, anatomicaAreaResult.get().getTileLsmPairs().get(0).getFirstLsm().getId());
-        assertEquals(2L, anatomicaAreaResult.get().getTileLsmPairs().get(0).getSecondLsm().getId());
-        assertEquals(3L, anatomicaAreaResult.get().getTileLsmPairs().get(1).getFirstLsm().getId());
-        assertNull(anatomicaAreaResult.get().getTileLsmPairs().get(1).getSecondLsm());
-        assertEquals(6L, anatomicaAreaResult.get().getTileLsmPairs().get(2).getFirstLsm().getId());
-        assertEquals(5L, anatomicaAreaResult.get().getTileLsmPairs().get(2).getSecondLsm().getId());
+        List<AnatomicalArea> anatomicaAreaResult = testService.getAnatomicalAreasBySampleIdAndObjective(null, TEST_SAMPLE_ID, TEST_OBJECTIVE);
+        assertTrue(anatomicaAreaResult.size() > 0);
+        assertEquals(3, anatomicaAreaResult.get(0).getTileLsmPairs().size());
+        assertEquals(1L, anatomicaAreaResult.get(0).getTileLsmPairs().get(0).getFirstLsm().getId());
+        assertEquals(2L, anatomicaAreaResult.get(0).getTileLsmPairs().get(0).getSecondLsm().getId());
+        assertEquals(3L, anatomicaAreaResult.get(0).getTileLsmPairs().get(1).getFirstLsm().getId());
+        assertNull(anatomicaAreaResult.get(0).getTileLsmPairs().get(1).getSecondLsm());
+        assertEquals(6L, anatomicaAreaResult.get(0).getTileLsmPairs().get(2).getFirstLsm().getId());
+        assertEquals(5L, anatomicaAreaResult.get(0).getTileLsmPairs().get(2).getSecondLsm().getId());
     }
 
     private Sample createTestSample(SampleTile... sampleTiles) {

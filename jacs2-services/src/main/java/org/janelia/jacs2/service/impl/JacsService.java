@@ -30,6 +30,7 @@ public class JacsService<R> {
 
     public void setResult(R result) {
         this.result = result;
+        jacsServiceData.setResult(result);
     }
 
     public Number getId() {

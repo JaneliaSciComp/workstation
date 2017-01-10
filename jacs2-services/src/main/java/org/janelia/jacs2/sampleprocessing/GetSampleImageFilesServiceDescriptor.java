@@ -10,17 +10,18 @@ import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-@Named("sampleLsmMetadata")
-public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescriptor {
-    private static String SERVICE_NAME = "sampleLsmMetadata";
+@Named("sampleImageFiles")
+public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
+    private static String SERVICE_NAME = "sampleImageFiles";
 
-    static class SampleLsmMetadataArgs {
+    static class SampleImageFilesArgs {
         @Parameter(names = "-sampleId", description = "Sample ID", required = true)
         Long sampleId;
-        @Parameter(names = "-objective", description = "Sample objective", required = false)
+        @Parameter(names = "-objective",
+                   description = "Optional sample objective. If specified it retrieves all sample image files, otherwise it only retrieves the ones for the given objective", required = false)
         String sampleObjective;
-        @Parameter(names = "-outputDir", description = "Destination directory", required = true)
-        String outputDir;
+        @Parameter(names = "-dest", description = "Destination directory or URL", required = true)
+        String destFolder;
         @Parameter(names = "-keepIntermediateLSMFiles", arity = 0, description = "If used the temporary LSM files created from the archive will not be deleted", required = false)
         boolean keepIntermediateLSMFiles = false;
     }
@@ -32,7 +33,7 @@ public class CreateSampleLsmMetadataServiceDescriptor implements ServiceDescript
     public ServiceMetaData getMetadata() {
         ServiceMetaData smd = new ServiceMetaData();
         smd.setServiceName(SERVICE_NAME);
-        SampleLsmMetadataArgs args = new SampleLsmMetadataArgs();
+        SampleImageFilesArgs args = new SampleImageFilesArgs();
         StringBuilder usageOutput = new StringBuilder();
         JCommander jc = new JCommander(args);
         jc.setProgramName(SERVICE_NAME);

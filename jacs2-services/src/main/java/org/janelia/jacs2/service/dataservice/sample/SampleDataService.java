@@ -1,12 +1,8 @@
 package org.janelia.jacs2.service.dataservice.sample;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.jacs2.dao.DaoFactory;
-import org.janelia.jacs2.dao.DomainObjectDao;
 import org.janelia.jacs2.dao.SampleDao;
 import org.janelia.jacs2.dao.ImageDao;
 import org.janelia.jacs2.dao.SubjectDao;
@@ -18,27 +14,37 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.sample.TileLsmPair;
+import org.janelia.jacs2.service.dataservice.DomainObjectService;
 import org.janelia.jacs2.utils.DomainUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SampleDataService {
 
+    private final DomainObjectService domainObjectService;
+    private final SampleDao sampleDao;
+    private final SubjectDao subjectDao;
+    private final ImageDao imageDao;
+    private final Logger logger;
+
     @Inject
-    private Logger logger;
-    @Inject
-    private SampleDao sampleDao;
-    @Inject
-    private SubjectDao subjectDao;
-    @Inject
-    private DaoFactory daoFactory;
-    @Inject
-    private ImageDao imageDao;
+    public SampleDataService(DomainObjectService domainObjectService, SampleDao sampleDao, SubjectDao subjectDao, ImageDao imageDao, Logger logger) {
+        this.domainObjectService = domainObjectService;
+        this.sampleDao = sampleDao;
+        this.subjectDao = subjectDao;
+        this.imageDao = imageDao;
+        this.logger = logger;
+    }
 
     public Sample getSampleById(String subjectName, Number sampleId) {
         Subject subject = null;
@@ -57,52 +63,52 @@ public class SampleDataService {
         }
     }
 
-    public Optional<AnatomicalArea> getAnatomicalAreaBySampleIdAndObjective(String subjectName, Number sampleId, String objective) {
+    public List<AnatomicalArea> getAnatomicalAreasBySampleIdAndObjective(String subjectName, Number sampleId, String objective) {
         Preconditions.checkArgument(sampleId != null, "Sample ID must be specified for anatomical area retrieval");
-        Preconditions.checkArgument(StringUtils.isNotBlank(objective), "Objective must be specified for anatomical area retrieval");
         Subject subject = null;
         Sample sample = getSampleById(subjectName, sampleId);
-        Optional<ObjectiveSample> sampleObjective = Optional.empty();
-
+        if (sample == null) {
+            logger.info("Invalid sampleId {} or subject {} has no access", sampleId, subjectName);
+            return Collections.emptyList();
+        }
         if (StringUtils.isNotBlank(subjectName)) {
             subject = subjectDao.findByName(subjectName);
         }
+        final Subject currentSubject = subject;
+        Map<String, LSMImage> indexedLsms = new LinkedHashMap<>();
+        Predicate<ObjectiveSample> objectiveFilter = objectiveSample -> {
+            if (StringUtils.isBlank(objective)) {
+                return true;
+            } else {
+                return objective.equals(objectiveSample.getObjective());
+            }
+        };
+        sample.getObjectiveSamples().stream()
+                .filter(objectiveFilter)
+                .flatMap(objectiveSample -> streamAllLSMs(currentSubject, objectiveSample))
+                .forEach(lsm -> indexedLsms.put(lsm.getEntityRefId(), lsm));
 
-        if (sample != null) {
-            sampleObjective = sample.lookupObjective(objective);
-        }
-        if (sampleObjective.isPresent()) {
-            ObjectiveSample selectedObjective = sampleObjective.get();
-            Map<String, LSMImage> indexedLsmSampleImages = retrieveAllLSMs(subject, selectedObjective);
-            AnatomicalArea anatomicalArea = new AnatomicalArea();
-            anatomicalArea.setName(sample.getName());
-            anatomicalArea.setSampleId(sample.getId());
-            anatomicalArea.setObjective(selectedObjective.getObjective());
-
-            selectedObjective.getTiles().stream()
-                            .forEach(t -> {
-                                TileLsmPair lsmPair = getTileLsmPair(sample, selectedObjective, t, refId -> indexedLsmSampleImages.get(refId));
-                                anatomicalArea.addLsmPair(lsmPair);
-                            });
-            return Optional.of(anatomicalArea);
-        } else {
-            return Optional.empty();
-        }
+        return sample.getObjectiveSamples().stream()
+                .filter(objectiveFilter)
+                .map(objectiveSample -> {
+                        AnatomicalArea anatomicalArea = new AnatomicalArea();
+                        anatomicalArea.setName(sample.getName());
+                        anatomicalArea.setSampleId(sample.getId());
+                        anatomicalArea.setObjective(objectiveSample.getObjective());
+                        objectiveSample.getTiles().stream()
+                                .forEach(t -> {
+                                    TileLsmPair lsmPair = getTileLsmPair(sample, objectiveSample, t, indexedLsms::get);
+                                    anatomicalArea.addLsmPair(lsmPair);
+                                });
+                        return anatomicalArea;
+                    })
+                .collect(Collectors.toList());
     }
 
-    private Map<String, LSMImage> retrieveAllLSMs(Subject subject, ObjectiveSample sampleObjective) {
-        ListMultimap<String, Number> allLSMReferences = ArrayListMultimap.create();
-        sampleObjective.getTiles().stream()
-                .flatMap(t -> t.getLsmReferences().stream())
-                .forEach(ref -> allLSMReferences.put(ref.getTargetClassname(), ref.getTargetId()));
-        Map<String, LSMImage> indexedLsmResults = new LinkedHashMap<>();
-        allLSMReferences.keySet().stream().flatMap(referenceName -> {
-            DomainObjectDao<?> dao = daoFactory.createDomainObjectDao(referenceName);
-            return dao.findByIds(subject, allLSMReferences.get(referenceName)).stream();
-        }).forEach(dobj -> {
-            indexedLsmResults.put(dobj.getEntityRefId(), (LSMImage) dobj);
-        });
-        return indexedLsmResults;
+    private Stream<LSMImage> streamAllLSMs(Subject subject, ObjectiveSample sampleObjective) {
+        return domainObjectService
+                .streamAllReferences(subject, sampleObjective.getTiles().stream().flatMap(t -> t.getLsmReferences().stream()))
+                .map(dobj -> (LSMImage) dobj);
     }
 
     private TileLsmPair getTileLsmPair(Sample sample, ObjectiveSample sampleObjective, SampleTile tile, Function<String, LSMImage> lsmByRefIdRetriever) {
