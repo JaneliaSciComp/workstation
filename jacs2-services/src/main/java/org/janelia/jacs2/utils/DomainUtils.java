@@ -8,13 +8,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.jacs2.model.BaseEntity;
 import org.janelia.it.jacs.model.domain.Subject;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
-import org.janelia.it.jacs.model.domain.sample.LSMImage;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.Image;
-import org.janelia.jacs2.model.service.JacsServiceData;
-import org.janelia.jacs2.model.service.JacsServiceEvent;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.reflections.util.FilterBuilder;
@@ -78,7 +72,6 @@ public class DomainUtils {
 
     public static Class<?> getBasePersistedEntityClass(String entityType) {
         Class<?> entityClass = getEntityClass(entityType);
-        MongoMapping mongoMapping = null;
         for(Class<?> clazz = entityClass; clazz != null; clazz = clazz.getSuperclass()) {
             if (clazz.isAnnotationPresent(MongoMapping.class)) {
                 return clazz; // first class encountered going up the hierarchy that has a MongoMapping annotation
@@ -101,9 +94,9 @@ public class DomainUtils {
 
     public static void setFileType(HasFiles objWithFiles, FileType fileType, String fileName) {
         if (StringUtils.isBlank(fileName)) {
-            objWithFiles.getFiles().remove(fileType);
+            objWithFiles.removeFileType(fileType);
         } else {
-            objWithFiles.getFiles().put(fileType, fileName);
+            objWithFiles.addFileType(fileType, fileName);
         }
     }
 

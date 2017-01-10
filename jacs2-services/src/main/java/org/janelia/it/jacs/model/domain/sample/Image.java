@@ -1,11 +1,15 @@
 package org.janelia.it.jacs.model.domain.sample;
 
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.domain.AbstractDomainObject;
+import org.janelia.it.jacs.model.domain.FileReference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasRelativeFiles;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @MongoMapping(collectionName="image", label="Image")
@@ -17,6 +21,8 @@ public class Image extends AbstractDomainObject implements HasRelativeFiles {
     private Integer numChannels;
     // files are in fact alternate representations of this image instance
     private Map<FileType, String> files = new HashMap<>();
+    private List<FileReference> deprecatedFiles = new ArrayList<>();
+
 
     public String getFilepath() {
         return filepath;
@@ -66,7 +72,35 @@ public class Image extends AbstractDomainObject implements HasRelativeFiles {
         this.files = files;
     }
 
-    public void addFile(FileType fileType, String fileName) {
-        this.files.put(fileType, fileName);
+    @Override
+    public void addFileType(FileType fileType, String fileName) {
+        String existingFile = files.get(fileType);
+        if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
+            deprecatedFiles.add(new FileReference(fileType, fileName));
+        }
+        files.put(fileType, fileName);
     }
+
+    @Override
+    public String getFileName(FileType fileType) {
+        return files.get(fileType);
+    }
+
+    @Override
+    public void removeFileType(FileType fileType) {
+        String existingFile = files.get(fileType);
+        if (StringUtils.isNotBlank(existingFile)) {
+            deprecatedFiles.add(new FileReference(fileType, existingFile));
+        }
+        files.remove(fileType);
+    }
+
+    public List<FileReference> getDeprecatedFiles() {
+        return deprecatedFiles;
+    }
+
+    public void setDeprecatedFiles(List<FileReference> deprecatedFiles) {
+        this.deprecatedFiles = deprecatedFiles;
+    }
+
 }

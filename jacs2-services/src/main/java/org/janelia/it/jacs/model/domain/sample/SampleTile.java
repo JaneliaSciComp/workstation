@@ -1,6 +1,8 @@
 package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.it.jacs.model.domain.FileReference;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
@@ -22,6 +24,7 @@ public class SampleTile implements HasFiles {
     private String anatomicalArea;
     private List<Reference> lsmReferences;
     private Map<FileType, String> files = new HashMap<>();
+    private List<FileReference> deprecatedFiles = new ArrayList<>();
     @JsonIgnore
     private transient ObjectiveSample parent;
     private Boolean blockAreaImageCreation = null;
@@ -69,6 +72,29 @@ public class SampleTile implements HasFiles {
 
     public void setFiles(Map<FileType, String> files) {
         this.files = files;
+    }
+
+    @Override
+    public void addFileType(FileType fileType, String fileName) {
+        String existingFile = files.get(fileType);
+        if (StringUtils.isNotBlank(existingFile) && !StringUtils.equals(existingFile, fileName)) {
+            deprecatedFiles.add(new FileReference(fileType, fileName));
+        }
+        files.put(fileType, fileName);
+    }
+
+    @Override
+    public String getFileName(FileType fileType) {
+        return files.get(fileType);
+    }
+
+    @Override
+    public void removeFileType(FileType fileType) {
+        String existingFile = files.get(fileType);
+        if (StringUtils.isNotBlank(existingFile)) {
+            deprecatedFiles.add(new FileReference(fileType, existingFile));
+        }
+        files.remove(fileType);
     }
 
     public ObjectiveSample getParent() {

@@ -84,8 +84,8 @@ public class ImageMongoDaoITest extends AbstractDomainObjectDaoITest<Image> {
     public void updateImageFiles() {
         Image testLSM = createLSM("line", "area");
         testDao.save(testLSM);
-        testLSM.addFile(FileType.ChanFile, "chan");
-        testLSM.addFile(FileType.MaskFile, "mask");
+        testLSM.addFileType(FileType.ChanFile, "chan");
+        testLSM.addFileType(FileType.MaskFile, "mask");
         testDao.updateImageFiles(testLSM);
         Image retrievedLSM = testDao.findById(testLSM.getId());
         assertThat(retrievedLSM.getFiles(), hasEntry(FileType.ChanFile, "chan"));
