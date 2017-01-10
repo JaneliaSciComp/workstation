@@ -27,7 +27,7 @@ public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
     }
 
     @Inject
-    private Instance<CreateSampleLsmMetadataComputation> sampleLsmMetadataComputationSource;
+    private Instance<GetSampleImageFilesServiceComputation> sampleImageFilesComputationSource;
 
     @Override
     public ServiceMetaData getMetadata() {
@@ -44,7 +44,7 @@ public class GetSampleImageFilesServiceDescriptor implements ServiceDescriptor {
 
     @Override
     public ServiceComputation createComputationInstance() {
-        return sampleLsmMetadataComputationSource.get();
+        return sampleImageFilesComputationSource.get();
     }
 
 }
