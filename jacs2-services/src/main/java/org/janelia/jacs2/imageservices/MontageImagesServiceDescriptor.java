@@ -25,7 +25,7 @@ public class MontageImagesServiceDescriptor implements ServiceDescriptor {
         @Parameter(names = "-target", description = "Name of the target montage")
         String target;
         @Parameter(names = "-imageFilePattern", description = "The extension of the image files from the input folder")
-        String imageFilePattern = "*.png";
+        String imageFilePattern = "glob:**/*.png";
     }
 
     @Inject

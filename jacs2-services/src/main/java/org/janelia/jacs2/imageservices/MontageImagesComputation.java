@@ -49,7 +49,7 @@ public class MontageImagesComputation extends AbstractExternalProcessComputation
         List<String> inputFiles = new ArrayList<>();
         try {
             PathMatcher inputFileMatcher =
-                    FileSystems.getDefault().getPathMatcher("glob:" + args.imageFilePattern);
+                    FileSystems.getDefault().getPathMatcher(args.imageFilePattern);
             Files.find(inputPath, 1, (p, a) -> inputFileMatcher.matches(p)).forEach(p -> {
                 inputFiles.add(p.toString());
             });
