@@ -73,7 +73,7 @@ public class MontageImagesComputation extends AbstractExternalProcessComputation
 
     @Override
     protected Map<String, String> prepareEnvironment(JacsService<File> jacsService) {
-        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, libraryPath));
+        return ImmutableMap.of(DY_LIBRARY_PATH_VARNAME, getUpdatedEnvValue(DY_LIBRARY_PATH_VARNAME, getFullExecutableName(libraryPath)));
     }
 
     private MontageImagesServiceDescriptor.MontageImagesArgs getArgs(JacsService<File> jacsService) {
