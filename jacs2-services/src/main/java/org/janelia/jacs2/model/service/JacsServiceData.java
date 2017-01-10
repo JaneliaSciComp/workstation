@@ -30,7 +30,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     private String outputPath;
     private String errorPath;
     private List<String> args = new ArrayList<>();
-    private Object result;
+    private String stringifiedResult;
     private String workspace;
     @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number parentServiceId;
@@ -132,6 +132,7 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         this.args = args;
     }
 
+    @JsonIgnore
     public String[] getArgsArray() {
         if (args == null) {
             return new String[0];
@@ -193,12 +194,12 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
         }
     }
 
-    public Object getResult() {
-        return result;
+    public String getStringifiedResult() {
+        return stringifiedResult;
     }
 
-    public void setResult(Object result) {
-        this.result = result;
+    public void setStringifiedResult(String stringifiedResult) {
+        this.stringifiedResult = stringifiedResult;
     }
 
     public void addEvent(JacsServiceEvent se) {
