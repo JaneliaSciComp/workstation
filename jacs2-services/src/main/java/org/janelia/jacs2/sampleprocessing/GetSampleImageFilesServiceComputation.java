@@ -8,6 +8,7 @@ import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.model.service.JacsServiceData;
 import org.janelia.jacs2.model.service.JacsServiceDataBuilder;
 import org.janelia.jacs2.model.service.JacsServiceState;
+import org.janelia.jacs2.model.service.ProcessingLocation;
 import org.janelia.jacs2.service.dataservice.sample.SampleDataService;
 import org.janelia.jacs2.service.impl.AbstractServiceComputation;
 import org.janelia.jacs2.service.impl.ComputationException;
@@ -73,6 +74,7 @@ public class GetSampleImageFilesServiceComputation extends AbstractServiceComput
                                     .setName("fileCopy")
                                     .addArg("-src", lf.getFilepath())
                                     .addArg("-dst", getIntermediateImageFile(workingDirectory, lf).getAbsolutePath())
+                                    .setProcessingLocation(ProcessingLocation.CLUSTER) // fileCopy only works on the cluster for now
                                     .build();
                     jacsService.submitChildServiceAsync(retrieveImageFileService);
                     return retrieveImageFileService.getId();
