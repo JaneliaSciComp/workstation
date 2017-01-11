@@ -201,7 +201,7 @@ implements MouseMode, KeyListener
         stopwatch.stop();
         
         if (spatial != null) {
-            logger.info("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
+            logger.trace("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
         }
 
 //        stopwatch = new StopWatch();

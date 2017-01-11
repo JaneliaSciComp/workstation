@@ -139,6 +139,9 @@ public class NeuronVertexSpatialIndex {
     }
 
     public void rebuildIndex(Collection<NeuronModel> neuronList) {
+        
+        // TODO: This is called twice whenever a neuron is merged because both mergeNeurite 
+        // and deleteNeuron incorrectly call fireWorkspaceLoaded. That should be fixed in those methods.  
         log.info("Rebuilding spatial index");
         index = new KDTree<>(3);
         for (NeuronModel neuronModel : neuronList) {
