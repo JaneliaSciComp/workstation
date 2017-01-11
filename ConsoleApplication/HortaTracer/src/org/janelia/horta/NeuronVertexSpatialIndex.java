@@ -192,6 +192,7 @@ implements Collection<NeuronVertex>, NeuronCreationListener,
     {
         try {
             double[] key = keyForVertex(e);
+            //log.info("Adding to old index: ({},{},{})",key[0],key[1],key[2]);
             index.insert(key, e);
             // Store original key, in case the old position changes
             cachedKeys.put(e, cacheableKey(key));

@@ -73,6 +73,8 @@ public class NeuronSetAdapter
 extends BasicNeuronSet
 implements NeuronSet// , LookupListener
 {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    
     private TmWorkspace workspace; // LVV workspace, as opposed to Horta workspace
     private TmSample sample;
     private AnnotationModel annotationModel;
@@ -80,21 +82,41 @@ implements NeuronSet// , LookupListener
     private final TmGeoAnnotationModListener annotationModListener;
     private HortaMetaWorkspace cachedHortaWorkspace = null;
     private final Lookup.Result<HortaMetaWorkspace> hortaWorkspaceResult = Utilities.actionsGlobalContext().lookupResult(HortaMetaWorkspace.class);
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final NeuronList innerList;
-
+    private final NeuronVertexSpatialIndex spatialIndex = new NeuronVertexSpatialIndex();
 
     private NeuronSetAdapter(NeuronList innerNeuronList) {
         super("LVV neurons", innerNeuronList);
-        innerList = innerNeuronList;
-        globalAnnotationListener = new MyGlobalAnnotationListener();
-        annotationModListener = new MyTmGeoAnnotationModListener();
-        hortaWorkspaceResult.addLookupListener(new NSALookupListener());
+        this.innerList = innerNeuronList;
+        this.globalAnnotationListener = new MyGlobalAnnotationListener();
+        this.annotationModListener = new MyTmGeoAnnotationModListener();
+        this.hortaWorkspaceResult.addLookupListener(new NSALookupListener());
+        spatialIndex.rebuildIndex(innerList);
     }
     
     public NeuronSetAdapter()
     {
         this(new NeuronList());
+    }
+
+    @Override
+    public List<NeuronVertex> getAnchorClosestToMicronLocation(double[] micronXYZ, int n) {
+        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ, n);
+    }
+    
+    @Override
+    public List<NeuronVertex> getAnchorClosestToVoxelLocation(double[] voxelXYZ, int n) {
+        return spatialIndex.getAnchorClosestToVoxelLocation(voxelXYZ, n);
+    }
+
+    @Override 
+    public NeuronVertex getAnchorClosestToMicronLocation(double[] voxelXYZ) {
+        return spatialIndex.getAnchorClosestToMicronLocation(voxelXYZ);
+    }
+
+    @Override 
+    public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
+        return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
     }
     
     @Override 
@@ -179,6 +201,7 @@ implements NeuronSet// , LookupListener
             getNameChangeObservable().setChanged();
         this.workspace = workspace;
         this.sample = annotationModel.getCurrentSample();
+        spatialIndex.initSample(sample);
         NeuronList nl = (NeuronList) neurons;
         if (nl.wrap(workspace, annotationModel))
             getMembershipChangeObservable().setChanged();
@@ -199,7 +222,7 @@ implements NeuronSet// , LookupListener
         TmNeuronMetadata neuronMetadata = annotationModel.getNeuronFromNeuronID(neuronId);
         return innerList.neuronModelForTmNeuron(neuronMetadata);
     }
-        
+    
     private class MyTmGeoAnnotationModListener implements TmGeoAnnotationModListener
     {
         
@@ -246,6 +269,8 @@ implements NeuronSet// , LookupListener
                 addedSignal.setChanged();
                 addedSignal.notifyObservers(new VertexWithNeuron(newVertex, neuron));
             }
+            
+            spatialIndex.addToIndex(newVertex);
         }
         
         @Override
@@ -277,6 +302,8 @@ implements NeuronSet// , LookupListener
                     if (! deletedVerticesByNeuron.containsKey(neuron))
                         deletedVerticesByNeuron.put(neuron, new ArrayList<NeuronVertex>());
                     deletedVerticesByNeuron.get(neuron).add(vertex);
+                    
+                    spatialIndex.removeFromIndex(vertex);
                 }
                 // Send out one signal per neuron
                 for (NeuronModel neuron : deletedVerticesByNeuron.keySet()) {
@@ -324,6 +351,9 @@ implements NeuronSet// , LookupListener
                 logger.info("Skipping moved anchor not yet instantiated in Horta");
                 return;
             }
+            
+            spatialIndex.updateIndex(movedVertex);
+            
             NeuronVertexUpdateObservable signal = neuron.getVertexUpdatedObservable();
             signal.setChanged();
             signal.notifyObservers(new VertexWithNeuron(movedVertex, neuron));
@@ -367,6 +397,7 @@ implements NeuronSet// , LookupListener
         {
             logger.debug("Workspace loaded");
             setWorkspace(workspace);
+            spatialIndex.rebuildIndex(innerList);
             // Propagate LVV "workspaceLoaded" signal to Horta NeuronSet::membershipChanged signal
             getMembershipChangeObservable().setChanged();
             getNameChangeObservable().setChanged();
