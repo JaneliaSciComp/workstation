@@ -11,6 +11,7 @@ import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.jacs2.cdi.ObjectMapperFactory;
 import org.janelia.jacs2.model.service.JacsServiceData;
 
 import java.io.IOException;
@@ -20,8 +21,8 @@ public class DomainCodecProvider implements CodecProvider {
 
     private final ObjectMapper objectMapper;
 
-    public DomainCodecProvider(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
+    public DomainCodecProvider(ObjectMapperFactory objectMapperFactory) {
+        this.objectMapper = objectMapperFactory.newObjectMapper().registerModule(new MongoModule());
     }
 
     @Override

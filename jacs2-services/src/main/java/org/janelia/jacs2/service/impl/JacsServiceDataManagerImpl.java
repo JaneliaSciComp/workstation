@@ -1,6 +1,7 @@
 package org.janelia.jacs2.service.impl;
 
 import org.janelia.jacs2.dao.JacsServiceDataDao;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -27,8 +28,8 @@ public class JacsServiceDataManagerImpl implements JacsServiceDataManager {
     }
 
     @Override
-    public PageResult<JacsServiceData> searchServices(JacsServiceData ref, Date from, Date to, PageRequest pageRequest) {
-        return jacsServiceDataDao.findMatchingServices(ref, from, to, pageRequest);
+    public PageResult<JacsServiceData> searchServices(JacsServiceData ref, DataInterval<Date> creationInterval, PageRequest pageRequest) {
+        return jacsServiceDataDao.findMatchingServices(ref, creationInterval, pageRequest);
     }
 
     @Override

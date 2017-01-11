@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -17,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,6 +110,39 @@ public class SampleMongoDaoITest extends AbstractDomainObjectDaoITest<Sample> {
     @Test
     public void findByIdsWithSubject() {
         findByIdsWithSubject(testDao);
+    }
+
+    @Test
+    public void findMatchingSamples() {
+        Calendar currentCal = Calendar.getInstance();
+        currentCal.add(Calendar.HOUR, -24);
+        Date startDate = currentCal.getTime();
+        List<Sample> testSamples = ImmutableList.of(
+                createTestSample("ds1", "sc1"),
+                createTestSample("ds1", "sc2"),
+                createTestSample("ds1", "sc3"),
+                createTestSample("ds1", "sc4"),
+                createTestSample("ds1", "sc5"),
+                createTestSample("ds2", "sc1"),
+                createTestSample("ds2", "sc2"),
+                createTestSample("ds2", "sc3"),
+                createTestSample("ds2", "sc4"),
+                createTestSample("ds2", "sc5")
+        );
+        currentCal.add(Calendar.HOUR, 48);
+        Date endDate = currentCal.getTime();
+        testDao.saveAll(testSamples);
+        Sample testRequest = new Sample();
+        testRequest.setDataSet("ds1");
+
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setPageNumber(1);
+        pageRequest.setPageSize(3);
+        PageResult<Sample> retrievedSamples;
+
+        retrievedSamples = testDao.findMatchingSamples(null, testRequest, new DataInterval<>(startDate, endDate), pageRequest);
+        assertThat(retrievedSamples.getResultList(), hasSize(2)); // only 2 items are left on the last page
+        assertThat(retrievedSamples.getResultList(), everyItem(hasProperty("dataSet", equalTo("ds1"))));
     }
 
     @Test

@@ -2,7 +2,6 @@ package org.janelia.it.jacs.model.domain.sample;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.janelia.it.jacs.model.domain.Reference;
-import org.janelia.jacs2.utils.ISODateDeserializer;
 import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.Date;
@@ -13,11 +12,9 @@ public class LSMImage extends Image {
     private String channelColors;
     private String channelDyeNames;
     private String brightnessCompensation;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date completionDate;
 
     // SAGE Terms
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date tmogDate;
     private Integer sageId;
     private String line;
@@ -28,7 +25,6 @@ public class LSMImage extends Image {
     private String bcCorrection1;
     private String bcCorrection2;
     private Integer bitsPerSample;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date captureDate;
     private String chanSpec;
     private String detectionChannel1DetectorGain;

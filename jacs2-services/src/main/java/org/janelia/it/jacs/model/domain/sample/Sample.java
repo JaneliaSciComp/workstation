@@ -1,10 +1,8 @@
 package org.janelia.it.jacs.model.domain.sample;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.collections4.CollectionUtils;
 import org.janelia.it.jacs.model.domain.AbstractDomainObject;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
-import org.janelia.jacs2.utils.ISODateDeserializer;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,9 +31,7 @@ public class Sample extends AbstractDomainObject {
     private Boolean visited = false;
     private Boolean sageSynced = false;
     private String compressionType;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date tmogDate;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date completionDate;
     private List<ObjectiveSample> objectiveSamples = new ArrayList<>();
 

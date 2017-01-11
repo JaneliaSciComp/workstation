@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.hamcrest.Matchers;
 import org.janelia.jacs2.dao.JacsServiceDataDao;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceEvent;
@@ -187,25 +188,25 @@ public class JacsServiceDataMongoDaoITest extends AbstractMongoDaoITest<JacsServ
         PageRequest pageRequest = new PageRequest();
         PageResult<JacsServiceData> retrievedQueuedServices;
 
-        retrievedQueuedServices = testDao.findMatchingServices(emptyRequest, null, null, pageRequest);
+        retrievedQueuedServices = testDao.findMatchingServices(emptyRequest, new DataInterval<>(null, null), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("id", Matchers.isIn(testServices.stream().map(e->e.getId()).toArray()))));
 
         JacsServiceData u1ServicesRequest = new JacsServiceData();
         u1ServicesRequest.setOwner("user:u1");
         u1ServicesRequest.setState(JacsServiceState.QUEUED);
 
-        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, null, null, pageRequest);
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, new DataInterval<>(null, null), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("state", equalTo(JacsServiceState.QUEUED))));
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("owner", equalTo("user:u1"))));
 
-        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, startDate, endDate, pageRequest);
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, new DataInterval<>(startDate, endDate), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("state", equalTo(JacsServiceState.QUEUED))));
         assertThat(retrievedQueuedServices.getResultList(), everyItem(Matchers.hasProperty("owner", equalTo("user:u1"))));
 
-        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, null, startDate, pageRequest);
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, new DataInterval<>(null, startDate), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), hasSize(0));
 
-        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, endDate, null, pageRequest);
+        retrievedQueuedServices = testDao.findMatchingServices(u1ServicesRequest, new DataInterval<>(endDate, null), pageRequest);
         assertThat(retrievedQueuedServices.getResultList(), hasSize(0));
     }
 

@@ -31,10 +31,10 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
     protected static final String TEST_OWNER_KEY = "user:test";
 
     private static MongoClient testMongoClient;
-    private static ObjectMapper testObjectMapper = ObjectMapperFactory.instance().getObjectMapper();
+    private static ObjectMapperFactory testObjectMapperFactory = ObjectMapperFactory.instance();
 
     protected MongoDatabase testMongoDatabase;
-    protected ObjectMapper objectMapper = ObjectMapperFactory.instance().getObjectMapper();
+    protected ObjectMapper objectMapper = testObjectMapperFactory.getDefaultObjectMapper();
     protected TimebasedIdentifierGenerator idGenerator = new TimebasedIdentifierGenerator(0);
     protected Random dataGenerator = new Random();
 
@@ -42,7 +42,7 @@ public abstract class AbstractMongoDaoITest<T extends HasIdentifier> extends Abs
     public static void setUpMongoClient() throws IOException {
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
-                CodecRegistries.fromProviders(new DomainCodecProvider(testObjectMapper)),
+                CodecRegistries.fromProviders(new DomainCodecProvider(ObjectMapperFactory.instance())),
                 CodecRegistries.fromCodecs(
                         new BigIntegerCodec(),
                         new EnumCodec<>(JacsServiceState.class),

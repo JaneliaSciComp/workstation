@@ -7,6 +7,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.conversions.Bson;
 import org.janelia.jacs2.dao.JacsServiceDataDao;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.page.SortCriteria;
@@ -65,7 +66,7 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
     }
 
     @Override
-    public PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, Date from, Date to, PageRequest pageRequest) {
+    public PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, DataInterval<Date> creationInterval, PageRequest pageRequest) {
         ImmutableList.Builder<Bson> filtersBuilder = new ImmutableList.Builder<>();
         if (pattern.getId() != null) {
             filtersBuilder.add(eq("_id", pattern.getId()));
@@ -82,11 +83,11 @@ public class JacsServiceDataMongoDao extends AbstractMongoDao<JacsServiceData> i
         if (StringUtils.isNotBlank(pattern.getOwner())) {
             filtersBuilder.add(eq("owner", pattern.getOwner()));
         }
-        if (from != null) {
-            filtersBuilder.add(gte("creationDate", from));
+        if (creationInterval.hasFrom()) {
+            filtersBuilder.add(gte("creationDate", creationInterval.getFrom()));
         }
-        if (to != null) {
-            filtersBuilder.add(lt("creationDate", to));
+        if (creationInterval.hasTo()) {
+            filtersBuilder.add(lt("creationDate", creationInterval.getTo()));
         }
         ImmutableList<Bson> filters = filtersBuilder.build();
 

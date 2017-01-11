@@ -14,12 +14,16 @@ import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.jacs.model.domain.sample.TileLsmPair;
+import org.janelia.jacs2.model.DataInterval;
+import org.janelia.jacs2.model.page.PageRequest;
+import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.service.dataservice.DomainObjectService;
 import org.janelia.jacs2.utils.DomainUtils;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +54,7 @@ public class SampleDataService {
         Subject subject = null;
         if (StringUtils.isNotBlank(subjectName)) {
             subject = subjectDao.findByName(subjectName);
+            Preconditions.checkArgument(subject != null);
         }
         Sample sample = sampleDao.findById(sampleId);
         if (subject != null) {
@@ -150,4 +155,14 @@ public class SampleDataService {
         DomainUtils.setFileType(lsmImage, FileType.LsmMetadata, lsmMetadata);
         imageDao.updateImageFiles(lsmImage);
     }
+
+    public PageResult<Sample> searchSamples(String subjectName, Sample pattern, DataInterval<Date> tmogInterval, PageRequest pageRequest) {
+        Subject subject = null;
+        if (StringUtils.isNotBlank(subjectName)) {
+            subject = subjectDao.findByName(subjectName);
+            Preconditions.checkArgument(subject != null);
+        }
+        return sampleDao.findMatchingSamples(subject, pattern, tmogInterval, pageRequest);
+    }
+
 }

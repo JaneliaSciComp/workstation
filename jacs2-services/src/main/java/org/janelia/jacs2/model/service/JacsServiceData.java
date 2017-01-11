@@ -7,7 +7,6 @@ import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.janelia.it.jacs.model.domain.interfaces.HasIdentifier;
 import org.janelia.it.jacs.model.domain.support.MongoMapping;
 import org.janelia.jacs2.model.BaseEntity;
-import org.janelia.jacs2.utils.ISODateDeserializer;
 import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
 
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ public class JacsServiceData implements BaseEntity, HasIdentifier {
     @JsonDeserialize(using = MongoNumberBigIntegerDeserializer.class)
     private Number rootServiceId;
     private List<JacsServiceEvent> events;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date creationDate = new Date();
     @JsonIgnore
     private JacsServiceData parentService;

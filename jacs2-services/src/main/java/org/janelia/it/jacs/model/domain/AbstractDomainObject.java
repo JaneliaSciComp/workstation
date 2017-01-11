@@ -9,9 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.janelia.jacs2.utils.DomainUtils;
-import org.janelia.jacs2.utils.ISODateDeserializer;
 import org.janelia.jacs2.utils.MongoNumberBigIntegerDeserializer;
-import org.janelia.jacs2.utils.MongoNumberLongDeserializer;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -33,9 +31,7 @@ public abstract class AbstractDomainObject implements DomainObject {
     private String ownerKey;
     private Set<String> readers = new HashSet<>();
     private Set<String> writers = new HashSet<>();
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date creationDate;
-    @JsonDeserialize(using = ISODateDeserializer.class)
     private Date updatedDate;
 
     @JsonIgnore

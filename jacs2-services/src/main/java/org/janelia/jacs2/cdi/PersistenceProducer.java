@@ -31,10 +31,10 @@ public class PersistenceProducer {
     private String mongoDatabase;
 
     @Produces
-    public MongoClient createMongoClient(ObjectMapper objectMapper) {
+    public MongoClient createMongoClient(ObjectMapperFactory objectMapperFactory) {
         CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
                 MongoClient.getDefaultCodecRegistry(),
-                CodecRegistries.fromProviders(new DomainCodecProvider(objectMapper)),
+                CodecRegistries.fromProviders(new DomainCodecProvider(objectMapperFactory)),
                 CodecRegistries.fromCodecs(
                         new BigIntegerCodec(),
                         new EnumCodec<>(JacsServiceState.class),

@@ -9,22 +9,29 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 public class ObjectMapperFactory {
     private static final ObjectMapperFactory INSTANCE = new ObjectMapperFactory();
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper defaultObjectMapper;
 
     private ObjectMapperFactory() {
-        objectMapper = new ObjectMapper()
-                .registerModule(new JodaModule())
-                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
-                .configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        defaultObjectMapper = newObjectMapper();
     }
 
     public static ObjectMapperFactory instance() {
         return INSTANCE;
     }
 
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
+    public ObjectMapper getDefaultObjectMapper() {
+        return defaultObjectMapper;
     }
+
+    public ObjectMapper newObjectMapper() {
+        return new ObjectMapper()
+                .registerModule(new JodaModule())
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(SerializationFeature.WRITE_DATES_WITH_ZONE_ID, true)
+                .configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, true)
+                .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+    }
+
 }

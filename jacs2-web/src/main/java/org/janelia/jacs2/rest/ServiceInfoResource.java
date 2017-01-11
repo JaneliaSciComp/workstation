@@ -1,6 +1,7 @@
 package org.janelia.jacs2.rest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -25,6 +26,7 @@ import java.util.Date;
 @Produces("application/json")
 @Path("/v2/services")
 public class ServiceInfoResource {
+    private static final int DEFAULT_PAGE_SIZE = 100;
 
     @Inject
     private Logger logger;
@@ -43,7 +45,7 @@ public class ServiceInfoResource {
                                    @QueryParam("service-from") Date from,
                                    @QueryParam("service-to") Date to,
                                    @QueryParam("page") Integer pageNumber,
-                                   @QueryParam("length") Integer pageSize) {
+                                   @QueryParam("length") Integer pageLength) {
         JacsServiceData pattern = new JacsServiceData();
         pattern.setId(serviceId);
         pattern.setParentServiceId(parentServiceId);
@@ -63,10 +65,12 @@ public class ServiceInfoResource {
         if (pageNumber != null) {
             pageRequest.setPageNumber(pageNumber);
         }
-        if (pageSize != null) {
-            pageRequest.setPageSize(pageSize);
+        if (pageLength != null) {
+            pageRequest.setPageSize(pageLength);
+        } else {
+            pageRequest.setPageSize(DEFAULT_PAGE_SIZE);
         }
-        PageResult<JacsServiceData> results = jacsServiceDataManager.searchServices(pattern, from, to, pageRequest);
+        PageResult<JacsServiceData> results = jacsServiceDataManager.searchServices(pattern, new DataInterval<>(from, to), pageRequest);
         return Response
                 .status(Response.Status.OK)
                 .entity(results)

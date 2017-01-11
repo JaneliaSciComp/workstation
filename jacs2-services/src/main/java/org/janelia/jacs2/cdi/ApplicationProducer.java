@@ -1,10 +1,6 @@
 package org.janelia.jacs2.cdi;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.jacs2.cdi.qualifier.ApplicationProperties;
 import org.janelia.jacs2.cdi.qualifier.PropertyValue;
 import org.janelia.jacs2.utils.TimebasedIdentifierGenerator;
@@ -13,10 +9,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Singleton;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
 public class ApplicationProducer {
@@ -24,7 +17,7 @@ public class ApplicationProducer {
     @Singleton
     @Produces
     public ObjectMapper objectMapper() {
-        return ObjectMapperFactory.instance().getObjectMapper();
+        return ObjectMapperFactory.instance().getDefaultObjectMapper();
     }
 
     @Produces

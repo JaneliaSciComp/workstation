@@ -1,5 +1,6 @@
 package org.janelia.jacs2.dao;
 
+import org.janelia.jacs2.model.DataInterval;
 import org.janelia.jacs2.model.page.PageRequest;
 import org.janelia.jacs2.model.page.PageResult;
 import org.janelia.jacs2.model.service.JacsServiceData;
@@ -17,7 +18,7 @@ public interface JacsServiceDataDao extends Dao<JacsServiceData, Number> {
      * @return service hierarchy as a pre-order traversal of the tree.
      */
     List<JacsServiceData> findServiceHierarchy(Number serviceId);
-    PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, Date from, Date to, PageRequest pageRequest);
+    PageResult<JacsServiceData> findMatchingServices(JacsServiceData pattern, DataInterval<Date> creationInterval, PageRequest pageRequest);
     PageResult<JacsServiceData> findServiceByState(Set<JacsServiceState> requestStates, PageRequest pageRequest);
     void saveServiceHierarchy(JacsServiceData serviceData);
 }
