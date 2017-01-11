@@ -360,7 +360,7 @@ called from a  SimpleWorker thread.
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
         TmNeuronMetadata foundNeuron = neuronManager.getNeuronById(neuronID);
         if (foundNeuron==null) {
-            throw new IllegalStateException("Neuron does not exist: "+neuronID);
+            log.warn("There is no neuron with id: ", neuronID);
         }
         log.debug("getNeuronFromNeuronID({}) = {}",neuronID,foundNeuron);
         return foundNeuron;
