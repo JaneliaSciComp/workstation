@@ -116,7 +116,7 @@ implements NeuronSet// , LookupListener
 
     @Override 
     public NeuronVertex getAnchorClosestToVoxelLocation(double[] micronXYZ) {
-        return spatialIndex.getAnchorClosestToMicronLocation(micronXYZ);
+        return spatialIndex.getAnchorClosestToVoxelLocation(micronXYZ);
     }
     
     @Override 

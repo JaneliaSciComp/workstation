@@ -37,7 +37,7 @@ public class NeuronVertexSpatialIndex {
     public NeuronVertexSpatialIndex() {
         log.trace("Creating spatial index");
     }
-
+            
     public void initSample(TmSample sample) {
         log.info("Initializing spatial index with sample={}", sample.getId());
         // TODO: this matrix should get deserialized once when the sample is loaded, not all over the place
@@ -104,6 +104,7 @@ public class NeuronVertexSpatialIndex {
     public boolean addToIndex(NeuronVertex vertex) {
         try {
             double[] key = keyForVertex(vertex);
+            //log.info("Adding to new index: ({},{},{})",key[0],key[1],key[2]);
             index.insert(key, vertex);
             // Store original key, in case the old position changes
             cachedKeys.put(vertex, cacheableKey(key));
