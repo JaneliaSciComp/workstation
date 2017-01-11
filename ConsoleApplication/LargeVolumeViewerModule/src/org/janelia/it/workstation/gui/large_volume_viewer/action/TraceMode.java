@@ -7,6 +7,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +17,6 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
@@ -40,6 +41,9 @@ public class TraceMode extends BasicMouseMode
 implements MouseMode, KeyListener
 {
     private Logger logger = LoggerFactory.getLogger(TraceMode.class);
+
+    // Radius of an anchor
+    private static final int pixelRadius = 5;
     
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
@@ -158,8 +162,6 @@ implements MouseMode, KeyListener
 				getCamera().setFocus(boundingBox.clip(getCamera().getFocus()));
 		}
 	}
-
-    private static final int pixelRadius = 5;
     
 	// Amplify size of anchor when hovered
 	@Override
@@ -180,93 +182,35 @@ implements MouseMode, KeyListener
         Anchor spatial = null;
         NeuronSet neuronSet = LargeVolumeViewerTopComponent.getInstance().getLvvv().getNeuronSetAdapter();
         if (neuronSet != null) {
-            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToVoxelLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 10);
+                        
+            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToVoxelLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
             if (vertexList != null) {
                 logger.trace("Got {} closest neurons for mouse position {}", vertexList.size(), xyz);
-                
-                double minDist2 = 10 * cutoff; // start too big
-                
+                List<Anchor> anchors = new ArrayList<>();
                 for (NeuronVertex vertex : vertexList) {
-                    
                     TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
                     Anchor anchor = skeleton.getAnchorByID(annotation.getId());
-                                        
-                    if (anchor==null) continue;
-
-                    Vec3 du2 = xyz.minus(anchor.getLocation());
-                    double dist = Math.sqrt(du2.dot(du2));
-
-                    logger.trace("   Inspecting {} at {} (dist={})", anchor.getGuid(), anchor.getLocation(), dist);
-                    
-                    // we don't interact with invisible anchors, and since hovering
-                    //  is the key to all interactions, we can elegantly prevent that
-                    // interaction here
-                    if (!skeletonActorModel.anchorIsVisible(anchor)) {
-                        logger.trace("     Invisible");
-                        continue;
+                    if (anchor!=null) {
+                        anchors.add(anchor);
                     }
-                    double dz = Math.abs(2.0 * (xyz.getZ() - anchor.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
-                    if (dz >= 0.95 * viewport.getDepth()) {
-                        logger.trace("     Outside Z range");
-                        continue; // outside of Z (most of) range
-                    }
-                    // Use X/Y (not Z) for distance comparison
-                    Vec3 dv = xyz.minus(anchor.getLocation());
-                    dv = viewerInGround.inverse().times(dv); // rotate into screen space
-                    double dx = dv.getX();
-                    double dy = dv.getY();
-                    double d2 = dx*dx + dy*dy;
-                    if (d2 > cutoff) {
-                        logger.trace("     Outside cutoff");
-                        continue;
-                    }
-                    if (d2 >= minDist2) {
-                        logger.trace("     Outside min dist");
-                        continue;
-                    }
-                    minDist2 = d2;
-                    spatial = anchor;
                 }
-                
-                stopwatch.stop();
-                
-                if (spatial != null) {
-                    logger.trace("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
-                }
+                spatial = findBestAnchor(anchors, xyz, cutoff);
             }
         }
 
+        stopwatch.stop();
         
+        if (spatial != null) {
+            logger.info("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
+        }
+
         stopwatch = new StopWatch();
         stopwatch.start();
 
         Anchor closest = null;
-        double minDist2 = 10 * cutoff; // start too big
-        
         Set<Anchor> anchors = skeleton.getAnchors();
         synchronized (anchors) {
-    		for (Anchor a : anchors) {
-                // we don't interact with invisible anchors, and since hovering
-                //  is the key to all interactions, we can elegantly prevent that
-                // interaction here
-                if (!skeletonActorModel.anchorIsVisible(a))
-                    continue;
-    			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
-    			if (dz >= 0.95 * viewport.getDepth())
-    				continue; // outside of Z (most of) range
-    			// Use X/Y (not Z) for distance comparison
-    			Vec3 dv = xyz.minus(a.getLocation());
-    			dv = viewerInGround.inverse().times(dv); // rotate into screen space
-    			double dx = dv.getX();
-    			double dy = dv.getY();
-    			double d2 = dx*dx + dy*dy;
-    			if (d2 > cutoff)
-    				continue;
-    			if (d2 >= minDist2)
-    				continue;
-    			minDist2 = d2;
-    			closest = a;
-    		}
+            closest = findBestAnchor(anchors, xyz, cutoff);
         }
 
         stopwatch.stop();
@@ -277,31 +221,31 @@ implements MouseMode, KeyListener
         if (spatial!=closest) {
             if (spatial==null) {
                 Vec3 d2 = xyz.minus(closest.getLocation());
-                double dist2 = d2.dot(d2);               
-                logger.info("Spatial is null, but closest is: {} (dist={})", xyz.minus(closest.getLocation()), dist2);
+                double dist2 = Math.sqrt(d2.dot(d2));               
+                logger.info("Differing anchors with mouse at {}", xyz);
+                logger.info("  spatial is null, but closest is: {} (dist={})", closest.getLocation(), dist2);
             }
             else if (closest==null) {
                 Vec3 d1 = xyz.minus(spatial.getLocation());
-                double dist1 = d1.dot(d1);
-                logger.info("Closest is null, but spatial is: {} (dist={})", xyz.minus(spatial.getLocation()), dist1);
+                double dist1 = Math.sqrt(d1.dot(d1));
+                logger.info("Differing anchors with mouse at {}", xyz);
+                logger.info("  closest is null, but spatial is: {} (dist={})", spatial.getLocation(), dist1);
             }
             else {
                 Vec3 d1 = xyz.minus(spatial.getLocation());
-                double dist1 = d1.dot(d1);
-
+                double dist1 = Math.sqrt(d1.dot(d1));
                 Vec3 d2 = xyz.minus(closest.getLocation());
-                double dist2 = d2.dot(d2);                
-                
+                double dist2 = Math.sqrt(d2.dot(d2));
                 logger.info("Differing anchors with mouse at {}", xyz);
-                logger.info("  spatial distance is: {} , location: {}",dist1,spatial.getLocation());
-                logger.info("  closest distance is: {} , location: {}",dist2,closest.getLocation());
+                logger.info("  spatial distance is: {} (dist={})",spatial.getLocation(),dist1);
+                logger.info("  closest distance is: {} (dist={})",closest.getLocation(),dist2);
             }
         }
         else if (closest!=null) {
             logger.info("Agreement on closest: {}", closest.getGuid());
         }
         
-//        Anchor closest = spatial;
+        closest = spatial;
         
         // closest == null means you're not on an anchor anymore
 		if (skeletonActor != null && closest != hoverAnchor) {
@@ -314,6 +258,46 @@ implements MouseMode, KeyListener
 		}
 
 		checkShiftPlusCursor(event);
+	}
+	
+	private Anchor findBestAnchor(Collection<Anchor> anchors, Vec3 xyz, double cutoff) {
+	    
+	    SkeletonActorModel skeletonActorModel = skeletonActor.getModel();
+        double minDist2 = 10 * cutoff; // start too big
+        Anchor best = null;
+        
+        for (Anchor anchor : anchors) {
+            //Vec3 du2 = xyz.minus(anchor.getLocation());
+            //double dist = Math.sqrt(du2.dot(du2));
+            //logger.trace("   Inspecting {} at {} (dist={})", anchor.getGuid(), anchor.getLocation(), dist);
+            
+            // we don't interact with invisible anchors, and since hovering
+            //  is the key to all interactions, we can elegantly prevent that
+            // interaction here
+            if (!skeletonActorModel.anchorIsVisible(anchor)) {
+                continue;
+            }
+            double dz = Math.abs(2.0 * (xyz.getZ() - anchor.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
+            if (dz >= 0.95 * viewport.getDepth()) {
+                continue; // outside of Z (most of) range
+            }
+            // Use X/Y (not Z) for distance comparison
+            Vec3 dv = xyz.minus(anchor.getLocation());
+            dv = viewerInGround.inverse().times(dv); // rotate into screen space
+            double dx = dv.getX();
+            double dy = dv.getY();
+            double d2 = dx*dx + dy*dy;
+            if (d2 > cutoff) {
+                continue;
+            }
+            if (d2 >= minDist2) {
+                continue;
+            }
+            minDist2 = d2;
+            best = anchor;
+        }
+        
+        return best;
 	}
 
 	@Override
