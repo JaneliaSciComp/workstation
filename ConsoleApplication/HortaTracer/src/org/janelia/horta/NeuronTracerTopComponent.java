@@ -116,6 +116,7 @@ import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.console.viewerapi.SynchronizationHelper;
 import org.janelia.console.viewerapi.Tiled3dSampleLocationProviderAcceptor;
 import org.janelia.console.viewerapi.ViewerLocationAcceptor;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.controller.ColorModelListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
@@ -1611,13 +1612,24 @@ public final class NeuronTracerTopComponent extends TopComponent
                 if (interactorContext.getCurrentParentAnchor() != null) {
                     topMenu.add(new AbstractAction("Center on Current Parent Anchor") {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
-                        PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
-                        Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
-                        loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
-                    }
-                });
+                        public void actionPerformed(ActionEvent e) {
+                            PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                            Vector3 xyz = new Vector3(interactorContext.getCurrentParentAnchor().getLocation());
+                            loader.animateToFocusXyz(xyz, pCam.getVantage(), 150);
+                        }
+                    });
                 }
+                
+                if (interactorContext.getHighlightedAnchor() != null) {
+                    // logger.info("Found highlighted anchor");
+                    if (! interactorContext.getHighlightedAnchor().equals(interactorContext.getCurrentParentAnchor())) {
+                        topMenu.add(new SelectParentAnchorAction(
+                                activeNeuronSet,
+                                interactorContext.getHighlightedAnchor()
+                        ));
+                    }
+                }
+                
                 // SECTION: Undo/redo
                 UndoRedo.Manager undoRedo = getUndoRedoManager();
                 if ((undoRedo != null) && (undoRedo.canUndoOrRedo())) {

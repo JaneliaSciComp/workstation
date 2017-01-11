@@ -33,7 +33,6 @@ package org.janelia.console.viewerapi.commands;
 import javax.swing.undo.AbstractUndoableEdit;
 import javax.swing.undo.UndoableEdit;
 import org.janelia.console.viewerapi.Command;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 
@@ -63,7 +62,7 @@ implements UndoableEdit, Command
         if (oldPrimary == newPrimary)
             return false;
         workspace.setPrimaryAnchor(newPrimary);
-        if (! workspace.getPrimaryAnchor().equals(newPrimary))
+        if (workspace.getPrimaryAnchor() != newPrimary)
             return false;
         workspace.getPrimaryAnchorObservable().notifyObservers();
         return true;
@@ -93,7 +92,7 @@ implements UndoableEdit, Command
         }
         try {
             workspace.setPrimaryAnchor(oldPrimary);
-            if (! workspace.getPrimaryAnchor().equals(oldPrimary)) {
+            if (workspace.getPrimaryAnchor() != oldPrimary) {
                 die();
                 return;
             }

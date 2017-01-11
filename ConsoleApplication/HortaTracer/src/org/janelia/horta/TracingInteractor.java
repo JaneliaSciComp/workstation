@@ -46,6 +46,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Set;
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
@@ -56,6 +58,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
@@ -135,16 +138,32 @@ public class TracingInteractor extends MouseAdapter
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
     private NeuronVertex cachedDragVertex;
-
-    public NeuronSet getDefaultWorkspace() {
-        return defaultWorkspace;
-    }
+    private final Observer primaryAnchorObserver = new Observer() {
+        @Override
+        public void update(Observable o, Object arg) {
+            log.info("Parent anchor updated");
+            if (defaultWorkspace == null)
+                return;
+            NeuronVertex newParent = defaultWorkspace.getPrimaryAnchor();
+            if (newParent == null) {
+                clearParentVertexAndNotify();
+            }
+            else {
+                NeuronModel parentNeuron = defaultWorkspace.getNeuronForAnchor(newParent);
+                selectParentVertex(newParent, parentNeuron);
+            }
+        }
+    };
 
     public void setDefaultWorkspace(NeuronSet defaultWorkspace) {
         if (this.defaultWorkspace == defaultWorkspace)
             return;
+        if (this.defaultWorkspace != null) {
+            this.defaultWorkspace.getPrimaryAnchorObservable().deleteObserver(primaryAnchorObserver);
+        }
         this.defaultWorkspace = defaultWorkspace;
         this.undoRedoManager = defaultWorkspace.getUndoRedo();
+        this.defaultWorkspace.getPrimaryAnchorObservable().addObserver(primaryAnchorObserver);
     }
     
     @Override
@@ -287,7 +306,7 @@ public class TracingInteractor extends MouseAdapter
         float loc[] = vertex.getLocation();
 
         // Create a modified vertex to represent the enlarged, highlighted actor
-        BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2], null); // same center location as real vertex
+        BasicSwcVertex parentVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
         // Set parent actor radius X% larger than true vertex radius, and at least 2 pixels larger
         float startRadius = DefaultNeuron.radius;
         if (vertex.hasRadius())
@@ -375,7 +394,7 @@ public class TracingInteractor extends MouseAdapter
         densityCursorModel.getEdges().clear();
 
         // Create a modified vertex to represent the enlarged, highlighted actor
-        BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ(), null); // same center location as real vertex
+        BasicSwcVertex densityVertex = new BasicSwcVertex(xyz.getX(), xyz.getY(), xyz.getZ()); // same center location as real vertex
 
         float radius = radiusEstimator.estimateRadius(screenPoint, volumeProjection);
         // densityVertex.setRadius(DefaultNeuron.radius); // TODO: measure radius and set this rationally
@@ -444,7 +463,7 @@ public class TracingInteractor extends MouseAdapter
             highlightHoverModel.getEdges().clear();
 
             // Create a modified vertex to represent the enlarged, highlighted actor
-            BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2], null); // same center location as real vertex
+            BasicSwcVertex highlightVertex = new BasicSwcVertex(loc[0], loc[1], loc[2]); // same center location as real vertex
             // Set highlight actor radius X% larger than true vertex radius, and at least 2 pixels larger
             float startRadius = DefaultNeuron.radius;
             if (vertex.hasRadius())
@@ -877,10 +896,10 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean clearParent() {
+        public void clearParent() {
             if (! canClearParent())
-                return false;
-            return clearParentVertexAndNotify();
+                return;
+            new SelectParentAnchorAction(defaultWorkspace, null).actionPerformed(null);
         }
         
         public boolean canCreateNeuron() {
@@ -998,8 +1017,8 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean selectParent() {
-            return selectParentVertex(hoveredVertex, hoveredNeuron);
+        public void selectParent() {
+            new SelectParentAnchorAction(defaultWorkspace, hoveredVertex).actionPerformed(null);
         }
 
         boolean canUpdateAnchorRadius() {

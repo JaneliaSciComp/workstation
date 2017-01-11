@@ -47,7 +47,7 @@ public interface NeuronSet extends Collection<NeuronModel>
     NeuronModel createNeuron(String initialNeuronName);
     
     // NeuronVertex getAnchorClosestTo(float[] micronXYZ);
-    // NeuronModel getNeuronForAnchor(NeuronVertex anchor);
+    NeuronModel getNeuronForAnchor(NeuronVertex anchor);
 
     public UndoRedo.Manager getUndoRedo(); // Manage edit operations per neuron collection
     // Sometimes there is one anchor selected for edit operations

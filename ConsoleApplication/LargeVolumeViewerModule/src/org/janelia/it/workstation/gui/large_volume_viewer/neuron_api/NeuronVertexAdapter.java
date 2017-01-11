@@ -143,9 +143,4 @@ public class NeuronVertexAdapter implements NeuronVertex
         return vertex;
     }
 
-    @Override
-    public NeuronModel getNeuron() {
-        return workspace.getNeuronForAnchor(this);
-    }
-
 }

@@ -115,7 +115,8 @@ implements NeuronSet// , LookupListener
         return micronToVoxMatrix;
     }
     
-    NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
+    @Override
+    public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
         if (! (anchor instanceof NeuronVertexAdapter))
             return null;
         TmGeoAnnotation annotation = ((NeuronVertexAdapter)anchor).getTmGeoAnnotation();

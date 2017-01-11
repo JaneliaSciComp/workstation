@@ -30,75 +30,47 @@
 package org.janelia.console.viewerapi.actions;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.SelectPrimaryAnchorCommand;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionRegistration;
 import org.openide.awt.UndoRedo;
-import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@ActionID(
-        category = "Edit",
-        id = "org.janelia.console.viewerapi.actions.SelectParentAnchorAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_SelectParentAnchorAction"
-)
-@ActionReference(path = "Menu/Edit", position = 2100, separatorBefore = 2000)
-@Messages("CTL_SelectParentAnchorAction=Create a New Neuron Model Here...")
-public final class SelectParentAnchorAction implements ActionListener 
+public final class SelectParentAnchorAction extends AbstractAction implements Action
 {
-    private final SelectParentAnchorContext selectParentContext;
+    private final NeuronSet workspace;
+    private final NeuronVertex newParentAnchor;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    public SelectParentAnchorAction(SelectParentAnchorContext context)
+    public SelectParentAnchorAction(NeuronSet workspace, NeuronVertex anchor)
     {
-        this.selectParentContext = context;
+        super("Set Anchor As Parent");
+        this.workspace = workspace;
+        this.newParentAnchor = anchor;
     }
 
     @Override
     public void actionPerformed(ActionEvent ev) 
     {
-        NeuronVertex anchor = selectParentContext.newParentAnchor;
-        if (anchor == null)
-            return;
-        NeuronSet workspace = anchor.getNeuron().getWorkspace();
         if (workspace == null)
             return;
         SelectPrimaryAnchorCommand cmd = new SelectPrimaryAnchorCommand(
                 workspace,
-                anchor);
+                newParentAnchor);
         try {
             if (cmd.execute()) {
-                log.info("Parent anchor selected");
-                UndoRedo.Manager undoRedo = selectParentContext.undoRedoManager;
+                // log.info("Parent anchor selected");
+                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
                 if (undoRedo != null)
                     undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
             }
         }
         catch (Exception exc) {
-            log.info("Parent anchor selection failed");
+            // log.info("Parent anchor selection failed");
         }              
-    }
-    
-    public static class SelectParentAnchorContext
-    {
-        private final UndoRedo.Manager undoRedoManager;
-        private final NeuronVertex newParentAnchor;
-        
-        public SelectParentAnchorContext(
-                UndoRedo.Manager undoRedoManager,
-                NeuronVertex newParentAnchor)
-        {
-            this.undoRedoManager = undoRedoManager;
-            this.newParentAnchor = newParentAnchor;
-        }
     }
 }

@@ -35,8 +35,6 @@ import java.awt.event.ActionListener;
 import javax.swing.JOptionPane;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
-import org.janelia.console.viewerapi.model.HortaMetaWorkspace;
-import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.awt.ActionID;
@@ -95,10 +93,9 @@ public final class CreateNeuronAction implements ActionListener
                 log.info("Neuron created");
                 NeuronVertex addedVertex = cmd.getAddedVertex();
                 if (addedVertex != null) {
-                    NeuronModel neuron = addedVertex.getNeuron();
-                    NeuronSet workspace = neuron.getWorkspace();
+                    NeuronSet workspace = creationContext.workspace;
                     workspace.setPrimaryAnchor(addedVertex);
-                    UndoRedo.Manager undoRedo = creationContext.undoRedoManager;
+                    UndoRedo.Manager undoRedo = workspace.getUndoRedo();
                     if (undoRedo != null)
                         undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
                 }
@@ -120,11 +117,9 @@ public final class CreateNeuronAction implements ActionListener
         private final NeuronSet workspace;
         private final float[] anchorXyz = new float[3];
         private final float anchorRadius;
-        private final UndoRedo.Manager undoRedoManager;
         
         public NeuronCreationContext(
                 Component parentWidget,
-                UndoRedo.Manager undoRedoManager,
                 NeuronSet workspace,
                 float[] anchorXyz,
                 float anchorRadius)
@@ -133,7 +128,6 @@ public final class CreateNeuronAction implements ActionListener
             this.workspace = workspace;
             System.arraycopy(anchorXyz, 0, this.anchorXyz, 0, 3);
             this.anchorRadius = anchorRadius;
-            this.undoRedoManager = undoRedoManager;
         }
     }
 }

@@ -466,11 +466,6 @@ public class NeuronModelAdapter implements NeuronModel
         return vertexUpdatedObservable;
     }
 
-    @Override
-    public NeuronSet getWorkspace() {
-        return neuronSet;
-    }
-
     // TODO: - implement Edges correctly
     private static class EdgeList 
     implements Collection<NeuronEdge>

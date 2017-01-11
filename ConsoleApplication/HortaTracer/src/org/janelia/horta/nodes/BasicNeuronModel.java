@@ -170,7 +170,7 @@ public class BasicNeuronModel implements NeuronModel
             float z = Float.parseFloat(fields[4]) + originOffset.getZ();
             float radius = Float.parseFloat(fields[5]);
             int parentLabel = Integer.parseInt(fields[6]);
-            SwcVertex node = new BasicSwcVertex(x, y, z, this);
+            SwcVertex node = new BasicSwcVertex(x, y, z);
             node.setLabel(label);
             node.setTypeIndex(type);
             node.setRadius(radius);
@@ -315,11 +315,6 @@ public class BasicNeuronModel implements NeuronModel
     @Override
     public boolean updateVertexRadius(NeuronVertex vertex, float micronRadius) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public NeuronSet getWorkspace() {
-        return parentSet;
     }
     
 }

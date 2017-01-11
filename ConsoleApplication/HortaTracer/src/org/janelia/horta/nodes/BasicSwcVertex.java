@@ -45,14 +45,12 @@ public class BasicSwcVertex implements SwcVertex
     private int label = 1;
     private int typeIndex = 0;
     private SwcVertex parent = null;
-    private final NeuronModel parentNeuron;
 
-    public BasicSwcVertex(float x, float y, float z, NeuronModel parentNeuron)
+    public BasicSwcVertex(float x, float y, float z)
     {
         location[0] = x;
         location[1] = y;
         location[2] = z;
-        this.parentNeuron = parentNeuron;
     }
 
     @Override
@@ -126,11 +124,6 @@ public class BasicSwcVertex implements SwcVertex
     public boolean hasRadius()
     {
         return true;
-    }
-
-    @Override
-    public NeuronModel getNeuron() {
-        return parentNeuron;
     }
 
 }

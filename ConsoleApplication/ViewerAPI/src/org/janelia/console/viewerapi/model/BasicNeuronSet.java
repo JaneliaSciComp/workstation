@@ -52,6 +52,7 @@ implements NeuronSet
     protected final Collection<NeuronModel> neurons;
     // private HortaMetaWorkspace cachedHortaWorkspace = null;
     private final UndoRedo.Manager undoRedo = new UndoRedo.Manager();
+    private NeuronVertex currentParentAnchor;
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
         this.name = name;
@@ -184,17 +185,25 @@ implements NeuronSet
 
     @Override
     public NeuronVertex getPrimaryAnchor() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return currentParentAnchor;
     }
 
     @Override
     public void setPrimaryAnchor(NeuronVertex anchor) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (anchor == currentParentAnchor)
+            return; // no change
+        currentParentAnchor = anchor;
+        getPrimaryAnchorObservable().setChanged();
     }
 
     @Override
     public ObservableInterface getPrimaryAnchorObservable() {
         return primaryAnchorObservable;
+    }
+
+    @Override
+    public NeuronModel getNeuronForAnchor(NeuronVertex anchor) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }
