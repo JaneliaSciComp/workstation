@@ -601,6 +601,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
+    private NeuronSet unsupportedSet = null;
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -623,31 +624,31 @@ public class TracingInteractor extends MouseAdapter
 
             if (defaultWorkspace != null) {
                 try {
-                    nearestVertex = defaultWorkspace.getAnchorClosestToVoxelLocation(new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()});
+                    double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
+                    nearestVertex = defaultWorkspace.getAnchorClosestToVoxelLocation(loc);
                 }
                 catch (UnsupportedOperationException e) {
-                    log.warn("Workspace does not support spatial queries", e);
+                    // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.
+                    if (unsupportedSet!=defaultWorkspace) {
+                        log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
+                        unsupportedSet = defaultWorkspace;
+                    }
+                    nearestVertex = vix.getNearest(cursorXyz);
+                }
+                if (nearestVertex!=null) {
+                    neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
                 }
             }
             else {
-                log.error("No default workspace");
-            }
-
-            NeuronVertex oldVertex = vix.getNearest(cursorXyz);
-            if (oldVertex!=nearestVertex && oldVertex!=null && nearestVertex!=null) {
-                float[] l = oldVertex.getLocation();
-                float[] k = nearestVertex.getLocation();
-                log.warn("Disagreement: ({},{},{}) != ({},{},{})",l[0],l[1],l[2],k[0],k[1],k[2]);
+                log.error("No default workspace found");
             }
             
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
             else {
-                neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
-                //neuronModel = vix.neuronForVertex(nearestVertex);
                 if (neuronModel == null) {
                     // TODO: Should not happen
-                    System.out.println("Unexpected null neuron");
+                    log.warn("Unexpected null neuron");
                 }
                 // Is cursor too far from closest vertex?
                 Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
