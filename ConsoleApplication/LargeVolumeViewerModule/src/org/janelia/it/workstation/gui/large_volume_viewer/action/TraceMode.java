@@ -204,48 +204,48 @@ implements MouseMode, KeyListener
             logger.info("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
         }
 
-        stopwatch = new StopWatch();
-        stopwatch.start();
-
-        Anchor closest = null;
-        Set<Anchor> anchors = skeleton.getAnchors();
-        synchronized (anchors) {
-            closest = findBestAnchor(anchors, xyz, cutoff);
-        }
-
-        stopwatch.stop();
-        if (closest!=null) {
-            logger.trace("Found closest anchor: {} (elapsed = {} ms)", closest.getGuid(), stopwatch.getElapsedTime());
-        }
-
-        if (spatial!=closest) {
-            if (spatial==null) {
-                Vec3 d2 = xyz.minus(closest.getLocation());
-                double dist2 = Math.sqrt(d2.dot(d2));               
-                logger.info("Differing anchors with mouse at {}", xyz);
-                logger.info("  spatial is null, but closest is: {} (dist={})", closest.getLocation(), dist2);
-            }
-            else if (closest==null) {
-                Vec3 d1 = xyz.minus(spatial.getLocation());
-                double dist1 = Math.sqrt(d1.dot(d1));
-                logger.info("Differing anchors with mouse at {}", xyz);
-                logger.info("  closest is null, but spatial is: {} (dist={})", spatial.getLocation(), dist1);
-            }
-            else {
-                Vec3 d1 = xyz.minus(spatial.getLocation());
-                double dist1 = Math.sqrt(d1.dot(d1));
-                Vec3 d2 = xyz.minus(closest.getLocation());
-                double dist2 = Math.sqrt(d2.dot(d2));
-                logger.info("Differing anchors with mouse at {}", xyz);
-                logger.info("  spatial distance is: {} (dist={})",spatial.getLocation(),dist1);
-                logger.info("  closest distance is: {} (dist={})",closest.getLocation(),dist2);
-            }
-        }
-        else if (closest!=null) {
-            logger.info("Agreement on closest: {}", closest.getGuid());
-        }
+//        stopwatch = new StopWatch();
+//        stopwatch.start();
+//
+//        Anchor closest = null;
+//        Set<Anchor> anchors = skeleton.getAnchors();
+//        synchronized (anchors) {
+//            closest = findBestAnchor(anchors, xyz, cutoff);
+//        }
+//
+//        stopwatch.stop();
+//        if (closest!=null) {
+//            logger.trace("Found closest anchor: {} (elapsed = {} ms)", closest.getGuid(), stopwatch.getElapsedTime());
+//        }
+//
+//        if (spatial!=closest) {
+//            if (spatial==null) {
+//                Vec3 d2 = xyz.minus(closest.getLocation());
+//                double dist2 = Math.sqrt(d2.dot(d2));               
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  spatial is null, but closest is: {} (dist={})", closest.getLocation(), dist2);
+//            }
+//            else if (closest==null) {
+//                Vec3 d1 = xyz.minus(spatial.getLocation());
+//                double dist1 = Math.sqrt(d1.dot(d1));
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  closest is null, but spatial is: {} (dist={})", spatial.getLocation(), dist1);
+//            }
+//            else {
+//                Vec3 d1 = xyz.minus(spatial.getLocation());
+//                double dist1 = Math.sqrt(d1.dot(d1));
+//                Vec3 d2 = xyz.minus(closest.getLocation());
+//                double dist2 = Math.sqrt(d2.dot(d2));
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  spatial distance is: {} (dist={})",spatial.getLocation(),dist1);
+//                logger.info("  closest distance is: {} (dist={})",closest.getLocation(),dist2);
+//            }
+//        }
+//        else if (closest!=null) {
+//            logger.info("Agreement on closest: {}", closest.getGuid());
+//        }
         
-        closest = spatial;
+        Anchor closest = spatial;
         
         // closest == null means you're not on an anchor anymore
 		if (skeletonActor != null && closest != hoverAnchor) {

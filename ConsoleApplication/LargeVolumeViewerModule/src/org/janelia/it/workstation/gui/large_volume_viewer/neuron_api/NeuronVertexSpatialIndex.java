@@ -22,6 +22,7 @@ import edu.wlu.cs.levy.CG.KeySizeException;
 /**
  * Spatial index for fast access to local NeuronVertexes, given a position in micron space.
  *
+ * @author Christopher Bruns
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class NeuronVertexSpatialIndex {
