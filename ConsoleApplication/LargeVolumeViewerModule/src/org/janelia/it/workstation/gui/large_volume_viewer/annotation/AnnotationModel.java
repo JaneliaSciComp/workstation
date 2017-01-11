@@ -680,8 +680,14 @@ called from a  SimpleWorker thread.
             // Update value in database.
             synchronized(neuron) {
                 neuronManager.saveNeuronData(neuron);
-                fireAnnotationMoved(annotationID);
             }
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    fireAnnotationMoved(annotationID);
+                    activityLog.logEndOfOperation(getWsId(), location);
+                }
+            });
         } catch (Exception e) {
             // error means not persisted; however, in the process of moving,
             //  the marker's already been moved, to give interactive feedback
