@@ -27,22 +27,50 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.janelia.console.viewerapi.actions;
 
-package org.janelia.console.viewerapi.model;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.commands.SelectPrimaryAnchorCommand;
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
+import org.openide.awt.UndoRedo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
- * Method in common to all neuron reconstructions
- * @author Christopher Bruns
- */
-public interface NeuronVertex
+public final class SelectParentAnchorAction extends AbstractAction implements Action
 {
-    float[] getLocation();
-    void setLocation(float x, float y, float z);
+    private final NeuronSet workspace;
+    private final NeuronVertex newParentAnchor;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
     
-    // NeuronVertex getParentVertex(); // can be null
-    // void setParentVertex(NeuronVertex parent);
-    
-    boolean hasRadius();
-    float getRadius();
-    void setRadius(float radius);
+    public SelectParentAnchorAction(NeuronSet workspace, NeuronVertex anchor)
+    {
+        super("Set Anchor As Parent");
+        this.workspace = workspace;
+        this.newParentAnchor = anchor;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ev) 
+    {
+        if (workspace == null)
+            return;
+        SelectPrimaryAnchorCommand cmd = new SelectPrimaryAnchorCommand(
+                workspace,
+                newParentAnchor);
+        try {
+            if (cmd.execute()) {
+                // log.info("Parent anchor selected");
+                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
+                if (undoRedo != null)
+                    undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
+            }
+        }
+        catch (Exception exc) {
+            // log.info("Parent anchor selection failed");
+        }              
+    }
 }

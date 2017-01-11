@@ -16,6 +16,22 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.awt</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.59.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.loaders</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.51.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.util</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -34,6 +50,7 @@
             </module-dependencies>
             <public-packages>
                 <package>org.janelia.console.viewerapi</package>
+                <package>org.janelia.console.viewerapi.actions</package>
                 <package>org.janelia.console.viewerapi.color_slider</package>
                 <package>org.janelia.console.viewerapi.commands</package>
                 <package>org.janelia.console.viewerapi.controller</package>

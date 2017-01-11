@@ -56,6 +56,7 @@ import org.janelia.geometry3d.Vector3;
 import org.janelia.console.viewerapi.model.NeuronEdge;
 import org.janelia.horta.modelapi.SwcVertex;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.NeuronVertexDeletionObservable;
@@ -81,26 +82,29 @@ public class BasicNeuronModel implements NeuronModel
     private Color color = new Color(86, 142, 216); // default color is "neuron blue"
     private boolean visible = true;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final NeuronSet parentSet;
 
     
     /*
      * Creates an empty neuron model
     */
-    public BasicNeuronModel(String modelName)    
+    public BasicNeuronModel(String modelName, NeuronSet parentSet)    
     {
         this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
         this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();
         this.name = modelName;
+        this.parentSet = parentSet;
     }
     
-    public BasicNeuronModel(File swcFile) throws FileNotFoundException, IOException
+    public BasicNeuronModel(File swcFile, NeuronSet parentSet) throws FileNotFoundException, IOException
     {
-        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName());
+        this(new BufferedInputStream(new FileInputStream(swcFile)), swcFile.getName(), parentSet);
     }
     
-    public BasicNeuronModel(InputStream swcStream, String fileName) throws IOException
+    public BasicNeuronModel(InputStream swcStream, String fileName, NeuronSet parentSet) throws IOException
     {
+        this.parentSet = parentSet;
         this.membersAddedObservable = new BasicNeuronVertexCreationObservable();
         this.membersRemovedObservable = new BasicNeuronVertexDeletionObservable();
         this.vertexUpdatedObservable = new BasicNeuronVertexUpdateObservable();

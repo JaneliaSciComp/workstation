@@ -36,6 +36,7 @@ import java.util.List;
 
 import org.janelia.console.viewerapi.ComposableObservable;
 import org.janelia.console.viewerapi.ObservableInterface;
+import org.openide.awt.UndoRedo;
 
 /**
  *
@@ -49,7 +50,11 @@ implements NeuronSet
     private final String name;
     private final ComposableObservable membershipChangeObservable = new ComposableObservable();
     private final ComposableObservable nameChangeObservable = new ComposableObservable();
+    private final ComposableObservable primaryAnchorObservable = new ComposableObservable();
     protected final Collection<NeuronModel> neurons;
+    // private HortaMetaWorkspace cachedHortaWorkspace = null;
+    private final UndoRedo.Manager undoRedo = new UndoRedo.Manager();
+    private NeuronVertex currentParentAnchor;
     
     public BasicNeuronSet(String name, Collection<NeuronModel> contents) {
         this.name = name;
@@ -173,6 +178,29 @@ implements NeuronSet
     @Override
     public NeuronModel createNeuron(String initialNeuronName) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public UndoRedo.Manager getUndoRedo() {
+        return undoRedo;
+    }
+
+    @Override
+    public NeuronVertex getPrimaryAnchor() {
+        return currentParentAnchor;
+    }
+
+    @Override
+    public void setPrimaryAnchor(NeuronVertex anchor) {
+        if (anchor == currentParentAnchor)
+            return; // no change
+        currentParentAnchor = anchor;
+        getPrimaryAnchorObservable().setChanged();
+    }
+
+    @Override
+    public ObservableInterface getPrimaryAnchorObservable() {
+        return primaryAnchorObservable;
     }
 
     @Override
