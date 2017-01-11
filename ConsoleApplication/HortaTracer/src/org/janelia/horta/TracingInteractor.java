@@ -126,7 +126,7 @@ public class TracingInteractor extends MouseAdapter
     private UndoRedo.Manager undoRedoManager;
     
     // Data structure to help unravel serial undo/redo appendVertex commands
-    Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
+    // Map<List<Float>, VertexAdder> appendCommandForVertex = new HashMap<>();
     
     RadiusEstimator radiusEstimator = 
             // new TwoDimensionalRadiusEstimator(); // TODO: Use this again
@@ -774,26 +774,13 @@ public class TracingInteractor extends MouseAdapter
         // Possibly remove parent glyph, if vertex is deleted
         if (cachedParentVertex == null) 
             return; // no sense checking 
-        NeuronModel neuron = cachedParentNeuronModel; // In case we want to select a different parent below
-        NeuronVertex removedParent = null;
         Set<NeuronVertex> allDoomedVertexes = new HashSet<>(); // remember them efficiently, for later checking reparent
         List<Float> pvXyz = vtxKey(cachedParentVertex);
         for (NeuronVertex doomedVertex : doomed.vertexes) {
             allDoomedVertexes.add(doomedVertex);
             if (vtxKey(doomedVertex).equals(pvXyz)) {
-                removedParent = doomedVertex;
                 clearParentVertex();
                 break;
-            }
-        }
-        // Maybe set parent to previous parent
-        if (removedParent != null) {
-            VertexAdder removedParentAppendCommand = appendCommandForVertex.get(vtxKey(removedParent));
-            if (removedParentAppendCommand != null) {
-                NeuronVertex previousParent = removedParentAppendCommand.getParentVertex();
-                if (previousParent != null) {
-                    selectParentVertex(previousParent, neuron);
-                }
             }
         }
     }
@@ -866,26 +853,21 @@ public class TracingInteractor extends MouseAdapter
                 return false;
             // OLD WAY, pre Undo: NeuronVertex addedVertex = neuron.appendVertex(parentVertex, templateVertex.getLocation(), templateVertex.getRadius());
             // First, store a link to upstream append command, to be able to handle serial undo/redo, and the resulting chain of replaced parent vertices
-            VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
+            // VertexAdder parentAppendCmd = appendCommandForVertex.get(vtxKey(parentVertex));
+            defaultWorkspace.setPrimaryAnchor(parentVertex);
             AppendNeuronVertexCommand appendCmd = new AppendNeuronVertexCommand(
-                    parentNeuron, 
-                    parentVertex, 
-                    parentAppendCmd,
+                    defaultWorkspace,
+                    // parentNeuron, 
+                    // parentVertex, 
+                    // parentAppendCmd,
                     densityVertex.getLocation(), 
                     parentVertex.getRadius());
             long beginExecuteTime = System.nanoTime();
             if (appendCmd.execute()) {
                 long endExecuteTime = System.nanoTime();
-                // System.out.println("appendCmd.execute() took " + (endExecuteTime - beginExecuteTime) / 1.0e6 + " milliseconds");
-                NeuronVertex addedVertex = appendCmd.getAddedVertex();
-                if (addedVertex != null) {
-                    selectParentVertex(addedVertex, parentNeuron);
-                    // undoRedoManager.addEdit(appendCmd);
-                    if (undoRedoManager != null)
-                        undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
-                    appendCommandForVertex.put(vtxKey(addedVertex), appendCmd);
-                    return true;
-                }
+                if (undoRedoManager != null)
+                    undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, appendCmd));
+                return true;
             }
             return false;
         }
@@ -944,7 +926,7 @@ public class TracingInteractor extends MouseAdapter
                         selectParentVertex(addedVertex, cmd.getNewNeuron());
                         if (undoRedoManager != null)
                             undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                        appendCommandForVertex.put(vtxKey(addedVertex), cmd);
+                        // appendCommandForVertex.put(vtxKey(addedVertex), cmd);
                     }
                     return true;
                 }
