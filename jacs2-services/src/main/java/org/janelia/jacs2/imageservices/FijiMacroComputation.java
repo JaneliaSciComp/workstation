@@ -115,6 +115,7 @@ public class FijiMacroComputation extends AbstractExternalProcessComputation<Fil
                 try {
                     scriptStream.close();
                 } catch (IOException ignore) {
+                    logger.warn("Error closing the FIJI script stream");
                 }
             }
         }
