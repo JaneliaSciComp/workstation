@@ -141,7 +141,7 @@ public class NeuronVertexAdapter implements NeuronVertex
         return true;
     }
 
-    TmGeoAnnotation getTmGeoAnnotation()
+    public TmGeoAnnotation getTmGeoAnnotation()
     {
         return vertex;
     }

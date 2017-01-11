@@ -7,6 +7,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -15,23 +17,34 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.console.viewerapi.model.NeuronSet;
+import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.it.jacs.model.domain.tiledMicroscope.AnnotationNavigationDirection;
+import org.janelia.it.jacs.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.jacs.shared.geom.Vec3;
 import org.janelia.it.jacs.shared.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.MenuItemGenerator;
 import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.SkeletonController;
+import org.janelia.it.workstation.gui.large_volume_viewer.neuron_api.NeuronVertexAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActorModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
 {
+    private Logger logger = LoggerFactory.getLogger(TraceMode.class);
+
+    // Radius of an anchor
+    private static final int pixelRadius = 5;
+    
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
     private SkeletonController controller = SkeletonController.getInstance();
@@ -49,8 +62,6 @@ implements MouseMode, KeyListener
 	private BoundingBox3d boundingBox;
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
-    private Logger logger = LoggerFactory.getLogger(TraceMode.class);
-
 	private static long time1;
 	public static void startTimer() { time1=new Date().getTime();}
 	public static String getTimerMs() { return new Long(new Date().getTime() - time1).toString(); }
@@ -151,46 +162,91 @@ implements MouseMode, KeyListener
 				getCamera().setFocus(boundingBox.clip(getCamera().getFocus()));
 		}
 	}
-	
+    
 	// Amplify size of anchor when hovered
 	@Override
 	public void mouseMoved(MouseEvent event) {
 		super.mouseMoved(event);
-		Vec3 xyz = worldFromPixel(event.getPoint());
-		int pixelRadius = 5;
-		double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
-		// TODO - if this gets slow, use a more efficient search structure, like an octree
-		// Find smallest squared distance
-		double cutoff = worldRadius * worldRadius;
-		double minDist2 = 10 * cutoff; // start too big
-		Anchor closest = null;
-        Set<Anchor> anchors = skeleton.getAnchors();
+		final Vec3 xyz = worldFromPixel(event.getPoint());
         SkeletonActorModel skeletonActorModel = skeletonActor.getModel();
-        synchronized (anchors) {
-    		for (Anchor a : anchors) {
-                // we don't interact with invisible anchors, and since hovering
-                //  is the key to all interactions, we can elegantly prevent that
-                // interaction here
-                if (!skeletonActorModel.anchorIsVisible(a))
-                    continue;
-    			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
-    			if (dz >= 0.95 * viewport.getDepth())
-    				continue; // outside of Z (most of) range
-    			// Use X/Y (not Z) for distance comparison
-    			Vec3 dv = xyz.minus(a.getLocation());
-    			dv = viewerInGround.inverse().times(dv); // rotate into screen space
-    			double dx = dv.getX();
-    			double dy = dv.getY();
-    			double d2 = dx*dx + dy*dy;
-    			if (d2 > cutoff)
-    				continue;
-    			if (d2 >= minDist2)
-    				continue;
-    			minDist2 = d2;
-    			closest = a;
-    		}
+
+        final double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
+        // Find smallest squared distance
+        final double cutoff = worldRadius * worldRadius;
+        
+        StopWatch stopwatch = new StopWatch();
+        stopwatch.start();
+        
+        logger.trace("---------------------------------------------");
+        
+        Anchor spatial = null;
+        NeuronSet neuronSet = LargeVolumeViewerTopComponent.getInstance().getLvvv().getNeuronSetAdapter();
+        if (neuronSet != null) {
+                        
+            List<NeuronVertex> vertexList = neuronSet.getAnchorClosestToVoxelLocation(new double[]{xyz.x(), xyz.y(), xyz.z()}, 20);
+            if (vertexList != null) {
+                logger.trace("Got {} closest neurons for mouse position {}", vertexList.size(), xyz);
+                List<Anchor> anchors = new ArrayList<>();
+                for (NeuronVertex vertex : vertexList) {
+                    TmGeoAnnotation annotation = ((NeuronVertexAdapter) vertex).getTmGeoAnnotation();
+                    Anchor anchor = skeleton.getAnchorByID(annotation.getId());
+                    if (anchor!=null) {
+                        anchors.add(anchor);
+                    }
+                }
+                spatial = findBestAnchor(anchors, xyz, cutoff);
+            }
         }
 
+        stopwatch.stop();
+        
+        if (spatial != null) {
+            logger.trace("Found closest anchor in spatial index: {} (elapsed = {} ms)", spatial.getGuid(), stopwatch.getElapsedTime());
+        }
+
+//        stopwatch = new StopWatch();
+//        stopwatch.start();
+//
+//        Anchor closest = null;
+//        Set<Anchor> anchors = skeleton.getAnchors();
+//        synchronized (anchors) {
+//            closest = findBestAnchor(anchors, xyz, cutoff);
+//        }
+//
+//        stopwatch.stop();
+//        if (closest!=null) {
+//            logger.trace("Found closest anchor: {} (elapsed = {} ms)", closest.getGuid(), stopwatch.getElapsedTime());
+//        }
+//
+//        if (spatial!=closest) {
+//            if (spatial==null) {
+//                Vec3 d2 = xyz.minus(closest.getLocation());
+//                double dist2 = Math.sqrt(d2.dot(d2));               
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  spatial is null, but closest is: {} (dist={})", closest.getLocation(), dist2);
+//            }
+//            else if (closest==null) {
+//                Vec3 d1 = xyz.minus(spatial.getLocation());
+//                double dist1 = Math.sqrt(d1.dot(d1));
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  closest is null, but spatial is: {} (dist={})", spatial.getLocation(), dist1);
+//            }
+//            else {
+//                Vec3 d1 = xyz.minus(spatial.getLocation());
+//                double dist1 = Math.sqrt(d1.dot(d1));
+//                Vec3 d2 = xyz.minus(closest.getLocation());
+//                double dist2 = Math.sqrt(d2.dot(d2));
+//                logger.info("Differing anchors with mouse at {}", xyz);
+//                logger.info("  spatial distance is: {} (dist={})",spatial.getLocation(),dist1);
+//                logger.info("  closest distance is: {} (dist={})",closest.getLocation(),dist2);
+//            }
+//        }
+//        else if (closest!=null) {
+//            logger.info("Agreement on closest: {}", closest.getGuid());
+//        }
+        
+        Anchor closest = spatial;
+        
         // closest == null means you're not on an anchor anymore
 		if (skeletonActor != null && closest != hoverAnchor) {
 			// test for closest == null because null will come back invisible,
@@ -202,6 +258,46 @@ implements MouseMode, KeyListener
 		}
 
 		checkShiftPlusCursor(event);
+	}
+	
+	private Anchor findBestAnchor(Collection<Anchor> anchors, Vec3 xyz, double cutoff) {
+	    
+	    SkeletonActorModel skeletonActorModel = skeletonActor.getModel();
+        double minDist2 = 10 * cutoff; // start too big
+        Anchor best = null;
+        
+        for (Anchor anchor : anchors) {
+            //Vec3 du2 = xyz.minus(anchor.getLocation());
+            //double dist = Math.sqrt(du2.dot(du2));
+            //logger.trace("   Inspecting {} at {} (dist={})", anchor.getGuid(), anchor.getLocation(), dist);
+            
+            // we don't interact with invisible anchors, and since hovering
+            //  is the key to all interactions, we can elegantly prevent that
+            // interaction here
+            if (!skeletonActorModel.anchorIsVisible(anchor)) {
+                continue;
+            }
+            double dz = Math.abs(2.0 * (xyz.getZ() - anchor.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
+            if (dz >= 0.95 * viewport.getDepth()) {
+                continue; // outside of Z (most of) range
+            }
+            // Use X/Y (not Z) for distance comparison
+            Vec3 dv = xyz.minus(anchor.getLocation());
+            dv = viewerInGround.inverse().times(dv); // rotate into screen space
+            double dx = dv.getX();
+            double dy = dv.getY();
+            double d2 = dx*dx + dy*dy;
+            if (d2 > cutoff) {
+                continue;
+            }
+            if (d2 >= minDist2) {
+                continue;
+            }
+            minDist2 = d2;
+            best = anchor;
+        }
+        
+        return best;
 	}
 
 	@Override

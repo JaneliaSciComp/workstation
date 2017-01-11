@@ -458,7 +458,7 @@ public class NeuronModelAdapter implements NeuronModel
         return true;
     }
 
-    TmNeuronMetadata getTmNeuronMetadata()
+    public TmNeuronMetadata getTmNeuronMetadata()
     {
         return neuron;
     }

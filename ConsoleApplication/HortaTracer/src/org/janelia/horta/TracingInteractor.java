@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JOptionPane;
@@ -56,28 +57,29 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
+
+import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
+import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
+import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
+import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
+import org.janelia.console.viewerapi.commands.VertexAdder;
 import org.janelia.console.viewerapi.listener.NeuronVertexCreationListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexDeletionListener;
 import org.janelia.console.viewerapi.listener.NeuronVertexUpdateListener;
+import org.janelia.console.viewerapi.model.DefaultNeuron;
 import org.janelia.console.viewerapi.model.NeuronModel;
+import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.janelia.console.viewerapi.model.NeuronVertexCreationObservable;
 import org.janelia.console.viewerapi.model.VertexCollectionWithNeuron;
 import org.janelia.console.viewerapi.model.VertexWithNeuron;
+import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.DensityCursorActor;
 import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
-import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
-import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
-import org.janelia.console.viewerapi.model.DefaultNeuron;
-import org.janelia.console.viewerapi.commands.MoveNeuronAnchorCommand;
-import org.janelia.console.viewerapi.model.NeuronSet;
-import org.janelia.console.viewerapi.commands.UpdateNeuronAnchorRadiusCommand;
-import org.janelia.console.viewerapi.commands.VertexAdder;
-import org.janelia.geometry3d.ConstVector3;
 import org.janelia.horta.nodes.BasicNeuronModel;
 import org.janelia.horta.nodes.BasicSwcVertex;
 import org.openide.awt.StatusDisplayer;
@@ -599,6 +601,7 @@ public class TracingInteractor extends MouseAdapter
     }
 
     // Show provisional Anchor radius and position for current mouse location
+    private NeuronSet unsupportedSet = null;
     private Point previousHoverPoint = null;
     public void moveHoverCursor(Point screenPoint) {
         if (screenPoint == previousHoverPoint)
@@ -618,14 +621,34 @@ public class TracingInteractor extends MouseAdapter
         if (volumeProjection.isNeuronModelAt(hoverPoint)) { // found an existing annotation model under the cursor
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(hoverPoint);
             NeuronVertexSpatialIndex vix = volumeProjection.getVertexIndex();
-            nearestVertex = vix.getNearest(cursorXyz);
+
+            if (defaultWorkspace != null) {
+                try {
+                    double[] loc = new double[]{cursorXyz.getX(), cursorXyz.getY(), cursorXyz.getZ()};
+                    nearestVertex = defaultWorkspace.getAnchorClosestToVoxelLocation(loc);
+                }
+                catch (UnsupportedOperationException e) {
+                    // TODO: this needs to be fixed so that Horta doesn't need to maintain its own spatial index for every neuron.
+                    if (unsupportedSet!=defaultWorkspace) {
+                        log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
+                        unsupportedSet = defaultWorkspace;
+                    }
+                    nearestVertex = vix.getNearest(cursorXyz);
+                }
+                if (nearestVertex!=null) {
+                    neuronModel = defaultWorkspace.getNeuronForAnchor(nearestVertex);
+                }
+            }
+            else {
+                log.error("No default workspace found");
+            }
+            
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
             else {
-                neuronModel = vix.neuronForVertex(nearestVertex);
                 if (neuronModel == null) {
                     // TODO: Should not happen
-                    System.out.println("Unexpected null neuron");
+                    log.warn("Unexpected null neuron");
                 }
                 // Is cursor too far from closest vertex?
                 Vector3 vertexXyz = new Vector3(nearestVertex.getLocation());
