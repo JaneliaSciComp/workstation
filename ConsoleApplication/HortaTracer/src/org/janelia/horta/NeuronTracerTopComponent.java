@@ -1668,10 +1668,20 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 }
 
+                if (interactorContext.canRecolorNeuron()) {
+                    topMenu.add(new JPopupMenu.Separator());                
+                    topMenu.add(new AbstractAction("Change Neuron Color...") {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            interactorContext.recolorNeuron();
+                        }
+                    });
+                }
+
                 // DANGER!
                 if (interactorContext.canDeleteNeuron()) {
                     topMenu.add(new JPopupMenu.Separator());                
-                    topMenu.add(new AbstractAction("!!! DELETE This Neuron !!!!") {
+                    topMenu.add(new AbstractAction("!!! DELETE This Neuron... !!!") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             interactorContext.deleteNeuron();

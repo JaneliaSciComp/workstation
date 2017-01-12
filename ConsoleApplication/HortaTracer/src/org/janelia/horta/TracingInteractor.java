@@ -59,6 +59,7 @@ import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.actions.CreateNeuronAction;
 import org.janelia.console.viewerapi.actions.DeleteNeuronAction;
+import org.janelia.console.viewerapi.actions.RecolorNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
@@ -994,6 +995,23 @@ public class TracingInteractor extends MouseAdapter
             else {
                 return false;
             }
+        }
+        
+        public boolean canRecolorNeuron() {
+            if (hoveredVertex == null)
+                return false;
+            if (hoveredNeuron == null)
+                return false;
+            return true;
+        }
+        
+        public void recolorNeuron() {
+            if (! canRecolorNeuron())
+                return;
+            new RecolorNeuronAction(
+                    volumeProjection.getMouseableComponent(),
+                    defaultWorkspace,
+                    hoveredNeuron).actionPerformed(null);
         }
         
         public boolean canSelectParent() {
