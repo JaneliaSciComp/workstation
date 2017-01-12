@@ -44,6 +44,10 @@ import org.openide.awt.UndoRedo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+ * GUI-level Action to create a new neuron rooted at a particular XYZ location.
+ */
+
 public final class CreateNeuronAction extends AbstractAction
 {
     private final Component parentWidget;
@@ -71,7 +75,7 @@ public final class CreateNeuronAction extends AbstractAction
         // come up with a unique neuron name
         String defaultName = getNextNeuronName();
 
-        //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
+        // ask the user to confirm creation, and to review name
         Object neuronName = JOptionPane.showInputDialog(
                 parentWidget,
                 "Create new neuron here?",
@@ -83,24 +87,20 @@ public final class CreateNeuronAction extends AbstractAction
         if (neuronName == null) {
             return; // User pressed "Cancel"
         }
-        CreateNeuronCommand cmd = new CreateNeuronCommand(
-                workspace,
-                neuronName.toString(),
-                anchorXyz,
-                anchorRadius);
         String errorMessage = "Failed to create neuron";
         try {
+            CreateNeuronCommand cmd = new CreateNeuronCommand(
+                    workspace,
+                    neuronName.toString(),
+                    anchorXyz,
+                    anchorRadius);
             cmd.setNotify(true); // Because it's a top-level Command now
             if (cmd.execute()) {
                 log.info("Neuron created");
-                NeuronVertex addedVertex = cmd.getAddedVertex();
-                if (addedVertex != null) {
-                    workspace.setPrimaryAnchor(addedVertex);
-                    UndoRedo.Manager undoRedo = workspace.getUndoRedo();
-                    if (undoRedo != null)
-                        undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                    return;
-                }
+                UndoRedo.Manager undoRedo = workspace.getUndoRedo();
+                if (undoRedo != null)
+                    undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                return;
             }
         }
         catch (Exception exc) {
@@ -111,8 +111,7 @@ public final class CreateNeuronAction extends AbstractAction
                 errorMessage,
                 "Failed to create neuron",
                 JOptionPane.WARNING_MESSAGE);                
-    }
-    
+    }    
     
     /**
      * Lifted/modified from LVV AnnotationManager.getNextNeuronName
@@ -136,6 +135,5 @@ public final class CreateNeuronAction extends AbstractAction
         }
         return String.format("Neuron %d", maximum + 1);
     }
-
 
 }
