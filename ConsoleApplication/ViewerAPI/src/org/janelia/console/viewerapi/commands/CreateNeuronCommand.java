@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class CreateNeuronCommand 
 extends AbstractUndoableEdit
-implements UndoableEdit, Command, VertexAdder, Notifier
+implements UndoableEdit, Command, Notifier
 {
     private final NeuronSet workspace;
     private final String initialNeuronName;
@@ -154,14 +154,8 @@ implements UndoableEdit, Command, VertexAdder, Notifier
         }
     }
 
-    @Override
     public NeuronVertex getAddedVertex() {
         return rootVertex;
-    }
-
-    @Override
-    public NeuronVertex getParentVertex() {
-        return null; // root vertex has no parent
     }
     
     public NeuronModel getNewNeuron() {
