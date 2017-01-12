@@ -96,6 +96,7 @@ public final class CreateNeuronAction extends AbstractAction
                     UndoRedo.Manager undoRedo = workspace.getUndoRedo();
                     if (undoRedo != null)
                         undoRedo.undoableEditHappened(new UndoableEditEvent(this, cmd));
+                    return;
                 }
             }
         }

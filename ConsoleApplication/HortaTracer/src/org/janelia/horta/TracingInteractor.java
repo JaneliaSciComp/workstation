@@ -57,6 +57,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import javax.swing.event.UndoableEditEvent;
+import org.janelia.console.viewerapi.actions.CreateNeuronAction;
 import org.janelia.console.viewerapi.actions.SelectParentAnchorAction;
 import org.janelia.console.viewerapi.commands.AppendNeuronVertexCommand;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
@@ -915,53 +916,15 @@ public class TracingInteractor extends MouseAdapter
             return true;
         }
         
-        public boolean createNeuron() {
+        public void createNeuron() {
             if (! canCreateNeuron())
-                return false;
+                return;
             
-            // TODO: come up with a unique neuron name
-            String defaultName = "Neuron 1";
-            
-            //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
-            Object neuronName = JOptionPane.showInputDialog(
+            new CreateNeuronAction(
                     volumeProjection.getMouseableComponent(),
-                    "Create new neuron here?",
-                    "Create new neuron",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    null,
-                    defaultName); // default button
-            if (neuronName == null) {
-                return false; // User pressed "Cancel"
-            }
-            CreateNeuronCommand cmd = new CreateNeuronCommand(
                     defaultWorkspace,
-                    neuronName.toString(),
                     densityVertex.getLocation(),
-                    densityVertex.getRadius());
-            String errorMessage = "Failed to create neuron";
-            try {
-                if (cmd.execute()) {
-                    log.info("Neuron created in Horta");
-                    NeuronVertex addedVertex = cmd.getAddedVertex();
-                    if (addedVertex != null) {
-                        selectParentVertex(addedVertex, cmd.getNewNeuron());
-                        if (undoRedoManager != null)
-                            undoRedoManager.undoableEditHappened(new UndoableEditEvent(this, cmd));
-                        // appendCommandForVertex.put(vtxKey(addedVertex), cmd);
-                    }
-                    return true;
-                }
-            }
-            catch (Exception exc) {
-                errorMessage += ":\n" + exc.getMessage();
-            }
-            JOptionPane.showMessageDialog(
-                    volumeProjection.getMouseableComponent(),
-                    errorMessage,
-                    "Failed to create neuron",
-                    JOptionPane.WARNING_MESSAGE);                
-            return false;
+                    densityVertex.getRadius()).actionPerformed(null);
         }
         
         public boolean canMergeNeurite() {

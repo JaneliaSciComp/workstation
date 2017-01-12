@@ -47,7 +47,7 @@ implements UndoableEdit, Command, Notifier
     private final NeuronVertex newPrimary;
     private final NeuronSet workspace;
     private NeuronVertex oldPrimary;
-    private boolean doNotify = false;
+    private boolean doNotify = true;
     
     public SelectPrimaryAnchorCommand(NeuronSet workspace, NeuronVertex primary)
     {

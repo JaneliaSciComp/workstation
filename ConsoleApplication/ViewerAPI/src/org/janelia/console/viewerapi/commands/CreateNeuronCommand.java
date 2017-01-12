@@ -54,7 +54,7 @@ implements UndoableEdit, Command, VertexAdder, Notifier
     private NeuronModel newNeuron = null;
     private NeuronVertex rootVertex = null;
     private NeuronVertex previousParentAnchor = null;
-    private boolean doNotify = false;
+    private boolean doNotify = true;
     private final Logger log = LoggerFactory.getLogger(this.getClass());
     
     public CreateNeuronCommand(
@@ -118,24 +118,30 @@ implements UndoableEdit, Command, VertexAdder, Notifier
             // First remove the root vertex
             if (rootVertex != null) {
                 try {
-                    if (! newNeuron.deleteVertex(rootVertex))
+                    if (newNeuron.deleteVertex(rootVertex)) {
+                    }
+                    else {
                         die();
+                    }
                 } catch (Exception exc) {
                     // Something went wrong. Perhaps this anchor no longer exists
                     die(); // This Command object is no longer useful
                 }
                 rootVertex = null;
             }
-            if (! workspace.remove(newNeuron)) {
+            if (workspace.remove(newNeuron)) {
+                workspace.setPrimaryAnchor(previousParentAnchor);
+                if (doesNotify()) {
+                    workspace.getMembershipChangeObservable().notifyObservers();
+                    workspace.getPrimaryAnchorObservable().notifyObservers();
+                }
+            }
+            else {
                 newNeuron = null;
                 die();
             }
-            workspace.setPrimaryAnchor(previousParentAnchor);
-            if (doesNotify()) {
-                workspace.getMembershipChangeObservable().notifyObservers();
-                workspace.getPrimaryAnchorObservable().notifyObservers();
-            }
-        } catch (Exception exc) {
+        } 
+        catch (Exception exc) {
             // Something went wrong. Perhaps this neuron no longer exists
             newNeuron = null;
             die(); // This Command object is no longer useful
