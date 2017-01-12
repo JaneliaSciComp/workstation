@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.browser.actions;
 
-import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION;
+import static org.janelia.it.workstation.browser.util.Utils.SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -650,7 +650,7 @@ public class DomainObjectContextMenu extends PopupContextMenu {
             secondaryDeletionMenu.add(itm);
         }
         /* Removing this feature until such time as this level of flexibility has user demand. */
-        if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION) {
+        if (SUPPORT_NEURON_SEPARATION_PARTIAL_DELETION_IN_GUI) {
             itm = getNeuronSeparationDeletionItem();
             if (itm != null) {
                 secondaryDeletionMenu.add(itm);
