@@ -30,6 +30,7 @@
 package org.janelia.gltools;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
@@ -48,7 +49,8 @@ implements GL3Resource
     private final List<RenderPass> children = new ArrayList<>();
     protected final List<RenderTarget> renderTargets = new ArrayList<>();
     protected final Framebuffer framebuffer;
-    private final List<GL3Actor> actors = new ArrayList<>();
+    // Using synchronizedList to avoid ConcurrentModificationException in renderScene() JW-27392
+    private final List<GL3Actor> actors = Collections.synchronizedList(new ArrayList<GL3Actor>());
 
     // Queue old resources for deletion
     private final List<GL3Resource> obsoleteResources = new ArrayList<>();
