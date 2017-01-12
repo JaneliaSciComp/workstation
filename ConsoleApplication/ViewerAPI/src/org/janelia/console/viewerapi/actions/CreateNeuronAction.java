@@ -31,10 +31,13 @@ package org.janelia.console.viewerapi.actions;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
 import javax.swing.event.UndoableEditEvent;
 import org.janelia.console.viewerapi.commands.CreateNeuronCommand;
+import org.janelia.console.viewerapi.model.NeuronModel;
 import org.janelia.console.viewerapi.model.NeuronSet;
 import org.janelia.console.viewerapi.model.NeuronVertex;
 import org.openide.awt.UndoRedo;
@@ -65,8 +68,8 @@ public final class CreateNeuronAction extends AbstractAction
     @Override
     public void actionPerformed(ActionEvent ev) 
     {
-        // TODO: come up with a unique neuron name
-        String defaultName = "Neuron 1";
+        // come up with a unique neuron name
+        String defaultName = getNextNeuronName();
 
         //  showInputDialog(Component parentComponent, Object message, String title, int messageType, Icon icon, Object[] selectionValues, Object initialSelectionValue)
         Object neuronName = JOptionPane.showInputDialog(
@@ -109,4 +112,30 @@ public final class CreateNeuronAction extends AbstractAction
                 "Failed to create neuron",
                 JOptionPane.WARNING_MESSAGE);                
     }
+    
+    
+    /**
+     * Lifted/modified from LVV AnnotationManager.getNextNeuronName
+     * given a workspace, return a new generic neuron name (probably something
+     * like "Neuron 12", where the integer is based on whatever similarly
+     * named neurons exist already)
+     */
+    private String getNextNeuronName() 
+    {
+        // go through existing neuron names; try to parse against
+        //  standard template; remember largest integer found
+        Pattern pattern = Pattern.compile("Neuron[ _]([0-9]+)");
+        Long maximum = 0L;
+        for (NeuronModel neuron : workspace) {
+            Matcher matcher = pattern.matcher(neuron.getName());
+            if (matcher.matches()) {
+                Long index = Long.parseLong(matcher.group(1));
+                if (index > maximum)
+                    maximum = index;
+            }
+        }
+        return String.format("Neuron %d", maximum + 1);
+    }
+
+
 }
